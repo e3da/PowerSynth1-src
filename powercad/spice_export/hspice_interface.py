@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from hspice_plot import *
 from pylab import figure, show
 from netlist_graph import Module_SPICE_netlist_graph
+from powercad.sym_layout.symbolic_layout import build_test_layout
 
 def write_SPICE_netlist(directory, simulation, *modules):
     """
@@ -45,7 +46,7 @@ def write_SPICE_netlist(directory, simulation, *modules):
     # end netlist file
     spice_file.write('\n\n.END')
     spice_file.close()
-    
+
 
 def run_hspice(self):
     """
@@ -77,28 +78,32 @@ def draw_HSPICE_output(self):
 if __name__ == '__main__':
     from test_functions import *
     test_graph = None
-#    test_graph = build_test_graph();
-#    test_graph = build_diode_test_graph()
-#    test_graph = build_diode_test_graph_2()
-#    test_graph = build_mosfet_test_graph()
-#    test_graph = build_mosfet_test_graph_2()
-  
+
+    #    test_graph = build_test_graph();
+    #    test_graph = build_diode_test_graph()
+    #    test_graph = build_diode_test_graph_2()
+    #    test_graph = build_mosfet_test_graph()
+    #    test_graph = build_mosfet_test_graph_2()
+
     def load_symbolic_layout(filename):
         f = open(filename, 'r')
         sym_layout = pickle.load(f)
         f.close()
         return sym_layout
-    
-    sym_layout = load_symbolic_layout("../../../export_data/symlayout.p")
+    '''    
+    sym_layout = load_symbolic_layout("../../../export_data/run4.p")
+    '''
+        
+    sym_layout = build_test_layout()
     
     spice_graph = Module_SPICE_netlist_graph('Power Module 1', sym_layout, 98, test_graph)
-    spice_graph.write_SPICE_subcircuit('C:/Users/pxt002/Desktop/powersynth projects/')
+    spice_graph.write_SPICE_subcircuit('C:/Users/jhmain/Dropbox/Spice Import and Export files')
     
-#    spice_graph.draw_layout()
-#    spice_graph.draw_graph()
+    #    spice_graph.draw_layout()
+    #    spice_graph.draw_graph()
 
     from simulations import *
     trans_sim = TransientSimulation('Trans Simulation 1', 'NL1', 'NL2', 'NL1', 'NL3')
-    netlist = write_SPICE_netlist('C:/Users/pxt002/Desktop/powersynth projects/',trans_sim, spice_graph)
-#    spice_graph.run_hspice()
-#    spice_graph.draw_HSPICE_output()
+    netlist = write_SPICE_netlist('C:/Users/jhmain/Dropbox/Spice Import and Export files',trans_sim, spice_graph)
+    #    spice_graph.run_hspice()
+    #    spice_graph.draw_HSPICE_output()

@@ -36,6 +36,7 @@ from copy import copy, deepcopy
 import random
 import pickle
 import inspect
+import os
 
 import networkx as nx
 import numpy as np
@@ -54,6 +55,9 @@ from powercad.parasitics.models import wire_inductance, wire_resistance
 from powercad.thermal.analysis import perform_thermal_analysis, TFSM_MODEL, RECT_FLUX_MODEL
 from powercad.sol_browser.solution_lib import SolutionLibrary
 from powercad.thermal.elmer_characterize import characterize_devices
+import powercad.settings as settings
+
+
 
 class LayoutError(Exception):
     def __init__(self, msg):
@@ -262,6 +266,7 @@ class SymbolicLayout(object):
     DEV_DV = 3
     BONDWIRE_DV = 4
     
+
     def __init__(self):
         self.design_rules = None
         self.sub_dim = None
@@ -362,7 +367,7 @@ class SymbolicLayout(object):
                 self.points.append(sym)
             self.all_sym.append(sym)
                             
-    def form_design_problem(self, module, temp_dir):
+    def form_design_problem(self, module, temp_dir=settings.TEMP_DIR): 
         """ Formulate and check the design problem before optimization.
         
         Keyword Arguments:
@@ -372,6 +377,8 @@ class SymbolicLayout(object):
         self.module = module
         self.design_rules = module.design_rules
         self.module.check_data()
+        self.temp_dir = temp_dir
+        print "symbolic_layout.py > form_design_problem() > temp_dir=", self.temp_dir
         
         ledge_width = module.substrate.ledge_width
         self.sub_dim = (module.substrate.dimensions[0]-2*ledge_width, module.substrate.dimensions[1]-2*ledge_width)
@@ -402,7 +409,7 @@ class SymbolicLayout(object):
         self.bondwire_design_values = [None]*len(self.bondwire_dv_list)
         
         # Check Device Thermal Characterizations (checks for cached characterizations)
-        dev_char_dict, sub_tf = characterize_devices(self, temp_dir)
+        dev_char_dict, sub_tf = characterize_devices(self, temp_dir) 
         self.module.sublayers_thermal = sub_tf
         for dev in self.devices:
             dev.tech.thermal_features = dev_char_dict[dev.tech]
@@ -776,6 +783,7 @@ class SymbolicLayout(object):
     def _find_parent_lines(self):
         self.leads = []
         self.devices = []
+        
         self.bondwires = []
         for sym in self.all_sym:
             if isinstance(sym.element, LayoutLine):
@@ -866,6 +874,7 @@ class SymbolicLayout(object):
         """ Finds what devices/leads reside on a trace. """
         # Todo: Need to consider moving this method into the check_formulation method
         trace.child_pts = []
+        name=1
         for point in self.points:
             pele = point.element
             tele = trace.element
@@ -884,6 +893,8 @@ class SymbolicLayout(object):
                 if isinstance(point.tech, DeviceInstance):
                     point.dv_index = len(self.devices)
                     self.devices.append(point)
+                    #self.devices_name.append(str(name))
+                    name+=1
                 elif isinstance(point.tech, Lead):
                     self.leads.append(point)
     
@@ -2066,7 +2077,7 @@ class SymbolicLayout(object):
             elif dv_type == self.VERT_DV:
                 self.v_design_values[index] = individual[i]
             elif dv_type == self.DEV_DV:
-                self.dev_design_values[index] = individual[i]
+                self.dev_design_values[index] =  individual[i]
             elif dv_type == self.BONDWIRE_DV:
                 self.bondwire_design_values[index] = individual[i]
                 
@@ -2170,17 +2181,21 @@ class SymbolicLayout(object):
     
     def _thermal_analysis(self, measure):
         # RECT_FLUX_MODEL
-        temps = perform_thermal_analysis(self, TFSM_MODEL)
-        
-        if measure.stat_fn == ThermalMeasure.FIND_MAX:
-            return np.max(temps)
-        elif measure.stat_fn == ThermalMeasure.FIND_AVG:
-            return np.average(temps)
-        elif measure.stat_fn == ThermalMeasure.FIND_STD_DEV:
-            return np.std(temps)
+        temps = perform_thermal_analysis(self, RECT_FLUX_MODEL)#<--TFSM_MODEL
+        if isinstance(measure,int):
+            return temps
         else:
-            return np.max(temps)
+            if measure.stat_fn == ThermalMeasure.FIND_MAX:
+                return np.max(temps)
+            elif measure.stat_fn == ThermalMeasure.FIND_AVG:
+                return np.average(temps)
+            elif measure.stat_fn == ThermalMeasure.FIND_STD_DEV:
+                return np.std(temps)
+            else:
+                return np.max(temps)
+        
             
+                
     def _build_lumped_graph(self):
         # To do:
         # 1. Implement bondwire to spine connection parasitic eval
@@ -2820,8 +2835,8 @@ def make_test_setup():
     from powercad.tech_lib.test_techlib import get_power_lead, get_signal_lead
     from powercad.tech_lib.test_techlib import get_power_bondwire, get_signal_bondwire
     from powercad.tech_lib.test_techlib import get_device, get_dieattach
-                                                
-    temp_dir = os.path.abspath(r'../../../export_data/temp')
+                                        
+    temp_dir = os.path.abspath(settings.TEMP_DIR)
     test_file = os.path.abspath('../../../sym_layouts/rd100.svg')
     
     sym_layout = SymbolicLayout()
@@ -2844,6 +2859,7 @@ def make_test_setup():
     add_test_measures(sym_layout)
     
     module = gen_test_module_data()
+    print "symbolic_layout.py > make_test_setup() > temp_dir=", temp_dir
     sym_layout.form_design_problem(module, temp_dir)
     return sym_layout
 

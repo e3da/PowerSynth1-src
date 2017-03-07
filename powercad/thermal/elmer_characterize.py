@@ -2,6 +2,7 @@
 Created on Apr 16, 2013
 
 @author: bxs003
+sxm063 - added parameter CACHED_CHAR_PATH to settings.py; Called here as settings.CACHED_CHAR_PATH; Reason for addition: change of path between release=True and release=False in settings.py
 '''
 import os
 import hashlib
@@ -14,9 +15,7 @@ from powercad.export.gmsh import create_box_stack_mesh
 from powercad.export.elmer import write_module_elmer_sif, elmer_solve, get_nodes_near_z_value
 from powercad.thermal.characterization import characterize_dist
 from powercad.thermal.fast_thermal import DieThermalFeatures, SublayerThermalFeatures
-import powercad.settings as settings 
-
-CACHED_CHAR_PATH = "..\\..\\..\\export_data\\cached_thermal"
+import powercad.settings as settings
 
 MIN_LAYER_THICKNESS = 0.01 # minimum layer thickness in mm
 
@@ -43,7 +42,7 @@ def characterize_devices(sym_layout, temp_dir=settings.TEMP_DIR, conv_tol=1e-6):
         temp_dir -- A string path name of the temporary directory in which to store files
         conv_tol -- The convergence tolerance used for solving the FEM thermal characterization model
     """
-       
+    
     # Get all different types of device instance objects in project
     dev_dict = {}
     for dev in sym_layout.devices:
@@ -112,7 +111,7 @@ def characterize_devices(sym_layout, temp_dir=settings.TEMP_DIR, conv_tol=1e-6):
         
         # Generate hash id before ws, ls, and ts get scaled to mm
         hash_id = gen_cache_hash(ws, ls, ts, materials, bp_coeff, heat_flow)
-        cache_file = check_for_cached_char(CACHED_CHAR_PATH, hash_id)
+        cache_file = check_for_cached_char(settings.CACHED_CHAR_PATH, hash_id)
         
         # Check for a cached characterization first
         if cache_file is not None:
@@ -135,7 +134,6 @@ def characterize_devices(sym_layout, temp_dir=settings.TEMP_DIR, conv_tol=1e-6):
             
             dir_name = os.path.join(temp_dir, 'char'+str(i))
             
-            
             if not os.path.exists(dir_name):
                 os.makedirs(dir_name)
             else:
@@ -155,13 +153,14 @@ def characterize_devices(sym_layout, temp_dir=settings.TEMP_DIR, conv_tol=1e-6):
             print 'Solving Model...'
             write_module_elmer_sif(dir_name, sif_name, data_name, mesh_name, materials,
                                    heat_flow, t_amb, bp_coeff, (dev_dim[0], dev_dim[1]), conv_tol)
-            
+            print "write_module_elmer_sif() completed; next: elmer_solve()"
+            print dir_name,sif_name,mesh_name
             elmer_solve(dir_name, sif_name, mesh_name)
             print 'Model Solved.'
             
             print 'Characterizing data...'
             data_path = os.path.join(dir_name, mesh_name, data_name+'.ep')
-            
+            print data_path
             top_iso_z = 0.0
             found_iso = False
             for t, name in zip(ts, layer_names):
@@ -212,10 +211,10 @@ def characterize_devices(sym_layout, temp_dir=settings.TEMP_DIR, conv_tol=1e-6):
             # Write a cached copy of the characterization to file
             dims = [ws, ls, ts, lcs]
             cached_char = CachedCharacterization(sub_tf, tf, dims, materials, bp_coeff)
-            print os.path.join(CACHED_CHAR_PATH,hash_id+'.p')
-            if not os.path.exists(CACHED_CHAR_PATH):
-                os.makedirs(CACHED_CHAR_PATH)
-            f = open(os.path.join(CACHED_CHAR_PATH,hash_id+'.p'), 'w')
+            print os.path.join(settings.CACHED_CHAR_PATH,hash_id+'.p')
+            if not os.path.exists(settings.CACHED_CHAR_PATH):
+                os.makedirs(settings.CACHED_CHAR_PATH)
+            f = open(os.path.join(settings.CACHED_CHAR_PATH,hash_id+'.p'), 'w')
             pickle.dump(cached_char, f)
             f.close()
         i += 1 # Next, device
@@ -282,7 +281,7 @@ def convert_to_float(data_list):
 if __name__ == '__main__':
     from powercad.sym_layout.testing_tools import load_symbolic_layout
     sym_layout = load_symbolic_layout("../../../export_data/Optimizer Runs/run4.p")
-    sym_layout.gen_solution_layout(100)
+    sym_layout.gen_solution_layout(58)
     
-    temp = r"C:\Users\anizam\Dropbox\workspace\PowerCAD\export_data\temp"
+    temp = os.path.abspath("..\..\..\export_data\temp")
     characterize_devices(sym_layout, temp)

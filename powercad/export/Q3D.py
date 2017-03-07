@@ -20,6 +20,7 @@ def output_q3d_vbscript(md, filename):
     filename -- the output filename of the vbscript file
     
     """
+    filename=filename+'.vbs'
     text_file = open(filename, "w")
     # output is used to write the text file. Everything added to output will be put in the text file later
     # format is a .vbs

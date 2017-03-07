@@ -23,7 +23,12 @@ class Resistor:
             value = 1e-5
         # SPICE description
         self.SPICE = "R{name} {N1} {N2} {value}".format(name=name, N1=N1, N2=N2, value=value)
-        
+        self.type='res'
+        self.name=name
+        self.N1=N1
+        self.N2=N2
+        self.value=value
+        self.parent=None # used in thermal network to map with an island
         # optional fields
         if mname is not None:            
             self.SPICE += " {mname}".format(mname=mname)
@@ -50,7 +55,11 @@ class Capacitor:
         '''
         
         self.SPICE = "C{name} {pos} {neg} {value}".format(name=name, pos=pos, neg=neg, value=value)
-                    
+        #Quang:
+        self.type='cap'
+        self.name=name
+        self.value=value   
+        self.parent=None # used in thermal network to map with an island        
         # optional fields
         if IC is not None:
             self.SPICE += " IC={IC}".format(IC=IC)
@@ -70,6 +79,8 @@ class Inductor:
         '''
         
         # SPICE description
+        self.value=value
+        self.name=name
         self.SPICE = "L{name} {pos} {neg} {value}".format(name=name, pos=pos, neg=neg, value=value)
                     
         # optional fields
@@ -107,6 +118,10 @@ class Mosfet:
         '''
         
         # SPICE description
+        self.name=name
+        self.drain=drain
+        self.gate=gate
+        self.source=source
         self.SPICE = "X{name} {drain} {gate} {source} {model}".format(name=name, drain=drain, gate=gate, source=source, model=model)     
      
 class Short:
@@ -119,8 +134,48 @@ class Short:
         '''
         
         # SPICE description
+        self.type='short'
+        self.name=name
         self.SPICE = ".connect {} {}".format(node_1,node_2)
       
+      
+class Current_Source:
+    def __init__(self, name, pos, neg, value):
+        '''
+        DC Current Source Component
+        
+        Keyword Arguments:
+            name -- source name
+            pos -- positive terminal
+            neg -- negative terminal
+            value -- DC current value
+        '''
+        
+        # SPICE description
+        self.value=value
+        self.type='c_src'
+        self.name=name
+        self.SPICE = "I{name} {pos} {neg} {value}".format(name=name, pos=pos, neg=neg, value=value)
+
+
+class Voltage_Source:
+    def __init__(self, name, pos, neg, value):
+        '''
+        DC Voltage Source Component
+        
+        Keyword Arguments:
+            name -- source name
+            pos -- positive terminal
+            neg -- negative terminal
+            value -- DC voltage value
+        '''
+        
+        # SPICE description
+        self.type='v_src'
+        self.value=value
+        self.name=name
+        self.SPICE = "V{name} {pos} {neg} {value}".format(name=name, pos=pos, neg=neg, value=value)
+
 
 class TerminalError(Exception):    
     def __init__(self, type, device, terminal): 

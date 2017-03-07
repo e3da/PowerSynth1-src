@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1181</width>
-    <height>865</height>
+    <width>1222</width>
+    <height>960</height>
    </rect>
   </property>
   <property name="palette">
@@ -217,6 +217,32 @@ p, li { white-space: pre-wrap; }
           </property>
          </spacer>
         </item>
+        <item row="1" column="2">
+         <spacer name="horizontalSpacer_8">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>182</width>
+            <height>123</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item row="2" column="1">
+         <spacer name="verticalSpacer_17">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>273</width>
+            <height>276</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
         <item row="1" column="1">
          <widget class="QFrame" name="frame">
           <property name="styleSheet">
@@ -320,32 +346,6 @@ p, li { white-space: pre-wrap; }
            </item>
           </layout>
          </widget>
-        </item>
-        <item row="1" column="2">
-         <spacer name="horizontalSpacer_8">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>182</width>
-            <height>123</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item row="2" column="1">
-         <spacer name="verticalSpacer_17">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>273</width>
-            <height>276</height>
-           </size>
-          </property>
-         </spacer>
         </item>
        </layout>
       </widget>
@@ -646,11 +646,7 @@ p, li { white-space: pre-wrap; }
        <string notr="true">background-color: qradialgradient(spread:pad, cx:0.5, cy:0.5, radius:0.481, fx:0.653409, fy:0.312, stop:0.698864 rgba(255, 255, 255, 194), stop:1 rgba(255, 255, 255, 0));</string>
       </property>
       <property name="text">
-       <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
-&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
-p, li { white-space: pre-wrap; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;img src=&quot;:/images/images/main_window/PowerSynth_Logo_Temp3.png&quot; /&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       <string/>
       </property>
       <property name="pixmap">
        <pixmap>:/logo/PowerSynth_Logo_Temp2.png</pixmap>
@@ -664,6 +660,12 @@ p, li { white-space: pre-wrap; }
      <widget class="QToolBox" name="navigation">
       <property name="enabled">
        <bool>true</bool>
+      </property>
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
       </property>
       <property name="minimumSize">
        <size>
@@ -793,15 +795,15 @@ p, li { white-space: pre-wrap; }
        <number>2</number>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>4</number>
       </property>
       <widget class="QWidget" name="page_12">
        <property name="geometry">
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>359</width>
-         <height>598</height>
+         <width>376</width>
+         <height>599</height>
         </rect>
        </property>
        <attribute name="label">
@@ -875,6 +877,9 @@ p, li { white-space: pre-wrap; }
              <property name="alignment">
               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
              </property>
+             <property name="buddy">
+              <cstring>cmb_baseMaterial</cstring>
+             </property>
             </widget>
            </item>
            <item row="1" column="0">
@@ -888,15 +893,8 @@ p, li { white-space: pre-wrap; }
              <property name="alignment">
               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
              </property>
-            </widget>
-           </item>
-           <item row="0" column="1">
-            <widget class="QComboBox" name="cmb_baseMaterial">
-             <property name="styleSheet">
-              <string notr="true">background-color: rgb(255, 255, 255);</string>
-             </property>
-             <property name="editable">
-              <bool>true</bool>
+             <property name="buddy">
+              <cstring>txt_baseWidth</cstring>
              </property>
             </widget>
            </item>
@@ -957,6 +955,9 @@ p, li { white-space: pre-wrap; }
              <property name="alignment">
               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
              </property>
+             <property name="buddy">
+              <cstring>txt_baseLength</cstring>
+             </property>
             </widget>
            </item>
            <item row="3" column="0">
@@ -969,6 +970,9 @@ p, li { white-space: pre-wrap; }
              </property>
              <property name="alignment">
               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+             </property>
+             <property name="buddy">
+              <cstring>txt_baseThickness</cstring>
              </property>
             </widget>
            </item>
@@ -1014,6 +1018,9 @@ p, li { white-space: pre-wrap; }
              </property>
              <property name="wordWrap">
               <bool>true</bool>
+             </property>
+             <property name="buddy">
+              <cstring>txt_baseConvection</cstring>
              </property>
             </widget>
            </item>
@@ -1145,6 +1152,22 @@ p, li { white-space: pre-wrap; }
              </property>
             </widget>
            </item>
+           <item row="0" column="1" colspan="2">
+            <widget class="QComboBox" name="cmb_baseMaterial">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+               <horstretch>1</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">background-color: rgb(255, 255, 255);</string>
+             </property>
+             <property name="editable">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
           </layout>
          </widget>
         </item>
@@ -1160,16 +1183,6 @@ p, li { white-space: pre-wrap; }
            <string>Substrate Attach Properties</string>
           </property>
           <layout class="QGridLayout" name="gridLayout_19">
-           <item row="0" column="1" colspan="2">
-            <widget class="QComboBox" name="cmb_subAttchMaterial">
-             <property name="styleSheet">
-              <string notr="true">background-color: rgb(255, 255, 255);</string>
-             </property>
-             <property name="editable">
-              <bool>true</bool>
-             </property>
-            </widget>
-           </item>
            <item row="2" column="0">
             <widget class="QLabel" name="label_29">
              <property name="layoutDirection">
@@ -1180,6 +1193,9 @@ p, li { white-space: pre-wrap; }
              </property>
              <property name="alignment">
               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+             </property>
+             <property name="buddy">
+              <cstring>txt_subAttchThickness</cstring>
              </property>
             </widget>
            </item>
@@ -1217,6 +1233,9 @@ p, li { white-space: pre-wrap; }
              <property name="alignment">
               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
              </property>
+             <property name="buddy">
+              <cstring>cmb_subAttchMaterial</cstring>
+             </property>
             </widget>
            </item>
            <item row="2" column="3">
@@ -1245,6 +1264,22 @@ p, li { white-space: pre-wrap; }
              </property>
             </widget>
            </item>
+           <item row="0" column="1" colspan="2">
+            <widget class="QComboBox" name="cmb_subAttchMaterial">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+               <horstretch>1</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">background-color: rgb(255, 255, 255);</string>
+             </property>
+             <property name="editable">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
           </layout>
          </widget>
         </item>
@@ -1262,6 +1297,12 @@ p, li { white-space: pre-wrap; }
           <layout class="QGridLayout" name="gridLayout_10">
            <item row="0" column="0">
             <widget class="QLabel" name="label_12">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
              <property name="layoutDirection">
               <enum>Qt::LeftToRight</enum>
              </property>
@@ -1271,10 +1312,19 @@ p, li { white-space: pre-wrap; }
              <property name="alignment">
               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
              </property>
+             <property name="buddy">
+              <cstring>cmb_subMaterial</cstring>
+             </property>
             </widget>
            </item>
            <item row="0" column="1" colspan="2">
             <widget class="QComboBox" name="cmb_subMaterial">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+               <horstretch>1</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
              <property name="palette">
               <palette>
                <active>
@@ -1388,6 +1438,9 @@ p, li { white-space: pre-wrap; }
              <property name="alignment">
               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
              </property>
+             <property name="buddy">
+              <cstring>txt_subWidth</cstring>
+             </property>
             </widget>
            </item>
            <item row="1" column="1">
@@ -1424,6 +1477,9 @@ p, li { white-space: pre-wrap; }
              <property name="alignment">
               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
              </property>
+             <property name="buddy">
+              <cstring>txt_subLength</cstring>
+             </property>
             </widget>
            </item>
            <item row="2" column="1">
@@ -1459,6 +1515,9 @@ p, li { white-space: pre-wrap; }
              </property>
              <property name="alignment">
               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+             </property>
+             <property name="buddy">
+              <cstring>txt_subLedge</cstring>
              </property>
             </widget>
            </item>
@@ -1552,54 +1611,6 @@ p, li { white-space: pre-wrap; }
            <string>System Properties</string>
           </property>
           <layout class="QGridLayout" name="gridLayout_21">
-           <item row="0" column="0">
-            <widget class="QLabel" name="label_64">
-             <property name="maximumSize">
-              <size>
-               <width>75</width>
-               <height>16777215</height>
-              </size>
-             </property>
-             <property name="layoutDirection">
-              <enum>Qt::LeftToRight</enum>
-             </property>
-             <property name="text">
-              <string>Switching Frequency</string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-             </property>
-             <property name="wordWrap">
-              <bool>true</bool>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="1">
-            <widget class="QLineEdit" name="txt_switchFreq">
-             <property name="enabled">
-              <bool>true</bool>
-             </property>
-             <property name="maximumSize">
-              <size>
-               <width>50</width>
-               <height>16777215</height>
-              </size>
-             </property>
-             <property name="styleSheet">
-              <string notr="true">background-color: rgb(255, 255, 255);</string>
-             </property>
-             <property name="readOnly">
-              <bool>false</bool>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="2">
-            <widget class="QLabel" name="label_66">
-             <property name="text">
-              <string>kHz</string>
-             </property>
-            </widget>
-           </item>
            <item row="1" column="1">
             <widget class="QLineEdit" name="txt_ambTemp">
              <property name="enabled">
@@ -1646,6 +1657,9 @@ p, li { white-space: pre-wrap; }
              <property name="wordWrap">
               <bool>true</bool>
              </property>
+             <property name="buddy">
+              <cstring>txt_ambTemp</cstring>
+             </property>
             </widget>
            </item>
            <item row="0" column="3">
@@ -1674,6 +1688,69 @@ p, li { white-space: pre-wrap; }
              </property>
             </widget>
            </item>
+           <item row="0" column="1">
+            <widget class="QLineEdit" name="txt_switchFreq">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>50</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">background-color: rgb(255, 255, 255);</string>
+             </property>
+             <property name="readOnly">
+              <bool>false</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_64">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>75</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="layoutDirection">
+              <enum>Qt::LeftToRight</enum>
+             </property>
+             <property name="text">
+              <string>Switching Frequency</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+             </property>
+             <property name="wordWrap">
+              <bool>true</bool>
+             </property>
+             <property name="buddy">
+              <cstring>txt_switchFreq</cstring>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="2">
+            <widget class="QLabel" name="label_66">
+             <property name="text">
+              <string>kHz</string>
+             </property>
+            </widget>
+           </item>
           </layout>
          </widget>
         </item>
@@ -1683,9 +1760,9 @@ p, li { white-space: pre-wrap; }
        <property name="geometry">
         <rect>
          <x>0</x>
-         <y>0</y>
-         <width>282</width>
-         <height>832</height>
+         <y>-207</y>
+         <width>359</width>
+         <height>806</height>
         </rect>
        </property>
        <attribute name="label">
@@ -1918,6 +1995,9 @@ p, li { white-space: pre-wrap; }
           <property name="text">
            <string>Device Heat Flow:</string>
           </property>
+          <property name="buddy">
+           <cstring>txt_device_heat_flow</cstring>
+          </property>
          </widget>
         </item>
         <item row="8" column="1">
@@ -2038,6 +2118,9 @@ p, li { white-space: pre-wrap; }
          <widget class="QLabel" name="label_20">
           <property name="text">
            <string>Attach Thickness:</string>
+          </property>
+          <property name="buddy">
+           <cstring>txt_devAttchThickness</cstring>
           </property>
          </widget>
         </item>
@@ -2160,6 +2243,9 @@ p, li { white-space: pre-wrap; }
           <property name="text">
            <string>Number of Wires:</string>
           </property>
+          <property name="buddy">
+           <cstring>txt_bondwire_count</cstring>
+          </property>
          </widget>
         </item>
         <item row="10" column="1">
@@ -2269,17 +2355,13 @@ p, li { white-space: pre-wrap; }
           </property>
          </widget>
         </item>
-        <item row="10" column="2">
-         <widget class="QLabel" name="label_44">
-          <property name="text">
-           <string>mm</string>
-          </property>
-         </widget>
-        </item>
         <item row="11" column="0">
          <widget class="QLabel" name="label_38">
           <property name="text">
            <string>Wire Separation:</string>
+          </property>
+          <property name="buddy">
+           <cstring>txt_bondwire_separation</cstring>
           </property>
          </widget>
         </item>
@@ -2723,8 +2805,8 @@ p, li { white-space: pre-wrap; }
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>125</width>
-         <height>681</height>
+         <width>376</width>
+         <height>599</height>
         </rect>
        </property>
        <attribute name="label">
@@ -3019,8 +3101,8 @@ p, li { white-space: pre-wrap; }
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>215</width>
-         <height>386</height>
+         <width>376</width>
+         <height>599</height>
         </rect>
        </property>
        <attribute name="label">
@@ -3031,6 +3113,9 @@ p, li { white-space: pre-wrap; }
          <widget class="QLabel" name="label_9">
           <property name="text">
            <string>Min Width</string>
+          </property>
+          <property name="buddy">
+           <cstring>txt_minWidth</cstring>
           </property>
          </widget>
         </item>
@@ -3046,6 +3131,9 @@ p, li { white-space: pre-wrap; }
           <property name="text">
            <string>Max Width</string>
           </property>
+          <property name="buddy">
+           <cstring>txt_maxWidth</cstring>
+          </property>
          </widget>
         </item>
         <item row="7" column="2">
@@ -3059,6 +3147,9 @@ p, li { white-space: pre-wrap; }
          <widget class="QLabel" name="label_11">
           <property name="text">
            <string>Fixed Width</string>
+          </property>
+          <property name="buddy">
+           <cstring>txt_fixedWidth</cstring>
           </property>
          </widget>
         </item>
@@ -3204,8 +3295,8 @@ p, li { white-space: pre-wrap; }
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>300</width>
-         <height>517</height>
+         <width>376</width>
+         <height>599</height>
         </rect>
        </property>
        <attribute name="label">
@@ -3463,6 +3554,9 @@ p, li { white-space: pre-wrap; }
           <property name="text">
            <string>Step 3:</string>
           </property>
+          <property name="buddy">
+           <cstring>btn_perform_addPerformance</cstring>
+          </property>
          </widget>
         </item>
         <item row="9" column="1" colspan="3">
@@ -3624,8 +3718,8 @@ p, li { white-space: pre-wrap; }
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>271</width>
-         <height>465</height>
+         <width>376</width>
+         <height>599</height>
         </rect>
        </property>
        <attribute name="label">
@@ -3687,6 +3781,9 @@ p, li { white-space: pre-wrap; }
          <widget class="QLabel" name="label_26">
           <property name="text">
            <string>Number of optimizer generations:</string>
+          </property>
+          <property name="buddy">
+           <cstring>txt_numGenerations</cstring>
           </property>
          </widget>
         </item>
@@ -3972,7 +4069,7 @@ p, li { white-space: pre-wrap; }
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1181</width>
+     <width>1222</width>
      <height>21</height>
     </rect>
    </property>
@@ -4066,30 +4163,47 @@ p, li { white-space: pre-wrap; }
  <tabstops>
   <tabstop>btn_newProject</tabstop>
   <tabstop>btn_openProject</tabstop>
-  <tabstop>txt_subWidth</tabstop>
-  <tabstop>txt_subLength</tabstop>
-  <tabstop>cmb_subAttchMaterial</tabstop>
-  <tabstop>txt_subAttchThickness</tabstop>
   <tabstop>cmb_baseMaterial</tabstop>
   <tabstop>txt_baseWidth</tabstop>
   <tabstop>txt_baseLength</tabstop>
   <tabstop>txt_baseThickness</tabstop>
+  <tabstop>txt_baseConvection</tabstop>
+  <tabstop>cmb_subAttchMaterial</tabstop>
+  <tabstop>txt_subAttchThickness</tabstop>
+  <tabstop>cmb_subMaterial</tabstop>
+  <tabstop>txt_subWidth</tabstop>
+  <tabstop>txt_subLength</tabstop>
+  <tabstop>txt_subLedge</tabstop>
   <tabstop>txt_switchFreq</tabstop>
+  <tabstop>txt_ambTemp</tabstop>
+  <tabstop>btn_previous</tabstop>
+  <tabstop>btn_next</tabstop>
   <tabstop>lst_categories</tabstop>
   <tabstop>lst_devices</tabstop>
   <tabstop>lst_devices_att</tabstop>
+  <tabstop>txt_device_heat_flow</tabstop>
   <tabstop>txt_devAttchThickness</tabstop>
+  <tabstop>txt_bondwire_count</tabstop>
+  <tabstop>txt_bondwire_separation</tabstop>
+  <tabstop>btn_modify_component</tabstop>
+  <tabstop>btn_addDevice</tabstop>
+  <tabstop>btn_removeDevice</tabstop>
   <tabstop>tbl_projDevices</tabstop>
   <tabstop>btn_new_symmetry</tabstop>
   <tabstop>tbl_symmetry</tabstop>
   <tabstop>txt_minWidth</tabstop>
   <tabstop>txt_maxWidth</tabstop>
   <tabstop>txt_fixedWidth</tabstop>
+  <tabstop>btn_remove_constraint</tabstop>
   <tabstop>txt_perform_name</tabstop>
   <tabstop>cmb_perform_elecTherm</tabstop>
   <tabstop>cmb_perform_type</tabstop>
   <tabstop>btn_perform_addPerformance</tabstop>
   <tabstop>tbl_performance</tabstop>
+  <tabstop>txt_numGenerations</tabstop>
+  <tabstop>btn_runSim</tabstop>
+  <tabstop>lst_solution</tabstop>
+  <tabstop>btn_open_sol_browser</tabstop>
  </tabstops>
  <resources>
   <include location="main_window_images.qrc"/>

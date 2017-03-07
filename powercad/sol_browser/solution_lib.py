@@ -19,7 +19,7 @@ class SolutionLibrary:
                 
         for sol in sym_layout.solutions:
             self.individuals.append(list(sol))
-                
+         
 #        print "measure_names_units", self.measure_names_units
 #        print "measure_data", self.measure_data
          

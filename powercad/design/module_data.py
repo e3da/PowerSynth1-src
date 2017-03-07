@@ -5,12 +5,14 @@ Created on Mar 4, 2013
 '''
 
 from powercad.tech_lib.test_techlib import get_baseplate, get_sub_attach, get_substrate
-from powercad.design.project_structures import BaseplateInstance, SubstrateAttachInstance
+from powercad.design.project_structures import BaseplateInstance, SubstrateAttachInstance, DeviceInstance
 from powercad.design.project_structures import SubstrateInstance, ProcessDesignRules
 from powercad.thermal.fast_thermal import SublayerThermalFeatures
-
 class ModuleData(object):
     def __init__(self):
+        #Quang:
+        #self.device= None #DeviceInstance obj
+        #
         self.baseplate = None # BaseplateInstance obj
         self.substrate_attach = None # SubstrateAttachInstance obj
         self.substrate = None # SubstrateInstance obj
@@ -22,6 +24,8 @@ class ModuleData(object):
         self.sublayers_thermal = None # Project thermal characterization data (fast_thermal.SublayerThermalFeatures)
         
     def check_data(self):
+        #Quang:
+        #
         if self.baseplate is None:
             raise Exception('Baseplate information not supplied!')
         if self.substrate_attach is None:

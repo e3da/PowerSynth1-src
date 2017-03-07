@@ -160,20 +160,32 @@ def elmer_solve(directory, sif_fn, mesh_fn):
     f.write(sif_fn+'\n')
     f.write("1\n")
     f.close()
-    
+    #print "ELMERSOLVER_STARTINFO file written"    
     # Run ElmerGrid on msh file
-    exec_path = os.path.join(ELMER_BIN_PATH, "ElmerGrid")
-    args = [exec_path, "14", "2", mesh_fn]
+    print 'Run ElmerGrid'
+    exec_path = os.path.join(ELMER_BIN_PATH, "ElmerGrid").replace("/","\\")
+    
+    print "exec_path= ", exec_path
+    args = [exec_path, "14", "2", mesh_fn] 
+    print "Popen", args, subprocess.PIPE, directory
+    
     p = subprocess.Popen(args, stdout=subprocess.PIPE, cwd=directory)
+    print "subprocess.Popen() completed"
     stdout, stderr = p.communicate()
+    print stdout, stderr
     if stdout.count("The opening of the mesh file thermal_char.msh failed!") > 0:
         raise Exception("The opening of the mesh file failed! (Check permissions on temp data directory)")
-    
+    print stdout
     # Run ElmerSolver
-    exec_path = os.path.join(ELMER_BIN_PATH, "ElmerSolver")
+    
+    print 'Run ElmerSolver'
+    print ELMER_BIN_PATH
+    exec_path = os.path.join(ELMER_BIN_PATH, "ElmerSolver").replace("/","\\")
     args = [exec_path]
-    p = subprocess.Popen(args, stdout=subprocess.PIPE, cwd=directory)
+    print args
+    p = subprocess.Popen(args, shell=False, stdout=subprocess.PIPE, cwd=directory)
     stdout, stderr = p.communicate()
+    print stdout,stderr
     if stdout.count("Failed convergence tolerances.") > 0:
         print stdout
         raise Exception("Thermal characterization FEM model failed to converge!")

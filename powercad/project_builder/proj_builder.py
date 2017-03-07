@@ -6,7 +6,15 @@ Brett Shook - Added separate Performance Measure List system 4/29/2013
 Brett Shook - Added separate Component Selection system 3/21/2014
             - 
 '''
+# add for packaging
+#import six
 
+#import packaging
+
+#import packaging.version
+
+#import packaging.specifiers
+'''----------------------------------'''
 import os
 import sys
 import pickle
@@ -18,6 +26,8 @@ from PySide import QtCore, QtGui
 from PySide.QtGui import QFileDialog, QMessageBox, QTreeWidgetItem
 
 import powercad.sym_layout.plot as plot
+import powercad
+from powercad import export
 plot.plt.matplotlib.use('Qt4Agg')
 plot.plt.matplotlib.rcParams['backend.qt4']='PySide'
 
@@ -42,16 +52,16 @@ from powercad.sol_browser.graph_app import GrapheneWindow
 from powercad.design.project_structures import *
 from powercad.util import Rect
 
+from powercad.settings import TEMP_DIR
+
 class ProjectBuilder(QtGui.QMainWindow):
     
     # Relative paths -> use forward slashes for platform independence
-    TEMP_DIR = os.path.abspath(r'..\..\..\export_data\temp')
-    LOGO_PATH = os.path.abspath(r'..\..\..\images\main_window\PowerSynth_Logo_Temp2.png')
-    STACK_IMG_PATH = os.path.abspath(r'..\..\..\images\main_window\dimensions.png')
+    TEMP_DIR = os.path.abspath(TEMP_DIR)
     
     LAYOUT_SELECTION_PLOT = 0
     SYMMETRY_PLOT = 1
-    CONSTRAINT_PLOT = 2
+    CONSTRAINT_PLOT = 2 
     MEASURES_PLOT = 3
     
     STACK_PAGE = 0
@@ -73,6 +83,12 @@ class ProjectBuilder(QtGui.QMainWindow):
         # set up main window GUI 
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
+        
+        # display logo
+#        self.ui.label_4.setPixmap(self.LOGO_PATH)
+        
+        # display module stack image
+#        self.ui.lbl_modStackImg.setPixmap(self.STACK_IMG_PATH)
         
         # connect actions
         self.ui.navigation.currentChanged.connect(self.change_stacked)
@@ -144,12 +160,21 @@ class ProjectBuilder(QtGui.QMainWindow):
         self.ui.action_open_tech_lib_editor.setEnabled(enable)
         self.ui.action_edit_tech_path.setEnabled(enable)
         self.ui.action_load_symbolic_layout.setEnabled(enable)
+    def refresh_ui(self):
+        #Quang: clear all the old project    
+        self.ui.tbl_projDevices.clear()
+        self.ui.tbl_projDevices.setRowCount(0)
+        self.ui.tbl_symmetry.clear()
+        self.ui.tbl_symmetry.setRowCount(0)
+        self.ui.tbl_performance.clear()
+        self.ui.tbl_performance.setRowCount(0)
+        
         
     def reload_ui(self):
         # setup fields in subsections
+        self.refresh_ui()
         self.setup_dev_select_fields()
         self.ui.txt_numGenerations.setText(str(100)) # default number of generations to 100
-        
         # the color wheel is not that long, so these are used in different sections to just loop back to the beginning once the end is reached
         self.cw1 = 0
         
@@ -324,7 +349,6 @@ class ProjectBuilder(QtGui.QMainWindow):
                     
             else: # circle
                 temp_circ_objs.append(obj) # save for later
-                
         # next plot all horizontal lines        
         for obj in temp_horz_objs:
             patch = Rectangle((obj.element.pt1[0]-lw/2.0,obj.element.pt1[1]-lw/2.0),obj.element.pt2[0]-obj.element.pt1[0]+lw,lw,facecolor=self.default_color,alpha=0.5,picker=True)
@@ -394,7 +418,7 @@ class ProjectBuilder(QtGui.QMainWindow):
             error = True
         if(not self.ui.txt_baseLength.text().replace(".", "", 1).replace("e", "", 1).isdigit()):
             self.ui.lbl_err_baseLength.setText("Error: Must be a number")
-            error = True
+            error = True 
         if(not self.ui.txt_baseThickness.text().replace(".", "", 1).replace("e", "", 1).isdigit()):
             self.ui.lbl_err_baseThickness.setText("Error: Must be a number")
             error = True
@@ -1079,7 +1103,7 @@ class ProjectBuilder(QtGui.QMainWindow):
         # check if saved solutions already exist
         if len(self.project.solutions) > 0:
             reply = QtGui.QMessageBox.question(self, "Data Loss Warning", 
-                                             "Warning: Previously saved solution data will be lost if new optimization is ran!",
+                                             "Warning: Previously saved solution data will be lost if new optimization is run!",
                                              QtGui.QMessageBox.Ok, QtGui.QMessageBox.Cancel)
             
             # if the user hit 'Ok', run the opt.
@@ -1111,12 +1135,13 @@ class ProjectBuilder(QtGui.QMainWindow):
             try:
                 print "Starting Optimization"
                 starttime = time.time()
+                print "proj_builder.py > start_optimization() > TEMP_DIR=", self.TEMP_DIR
                 self.project.symb_layout.form_design_problem(self.project.module_data, self.TEMP_DIR)
+                print "project.symb_layout.form_design_problem() completed."
                 self.project.symb_layout.optimize(inum_gen = self.project.num_gen, progress_fn=self.update_opt_progress_bar)
                 print 'Optimization Complete'
                 print 'Runtime:',time.time()-starttime,'seconds.'
-                print 'Opening Solution Browser...'
-                
+                print 'Opening Solution Browser...'                
                 self.update_opt_progress_bar(100)
                 self.project.symb_layout.opt_progress_fn = None
                 self.sol_browser = GrapheneWindow(self)
@@ -1128,6 +1153,11 @@ class ProjectBuilder(QtGui.QMainWindow):
                 print traceback.print_exc()
                 
         self.ui.btn_runSim.setEnabled(True)
+        
+        # Save out newly generated solution set and then (export data to csv)--> runs when btn clicked in graphing_form.py
+        #new_solution_set = self.sol_browser.solution_library.measure_data
+        #new_names_units = self.sol_browser.solution_library.measure_names_units
+        #py_csv(self.sol_browser.solution_library.measure_data, self.sol_browser.solution_library.measure_names_units, "no_btn01.csv")
                 
     def update_opt_progress_bar(self, val):
         print val, '%'
@@ -1169,6 +1199,27 @@ class ProjectBuilder(QtGui.QMainWindow):
         m = SolutionWindow(sol, self.project.symb_layout)
         self.ui.mdiArea.addSubWindow(m)
         m.show()
+        
+        '''
+        # create hspice export netlist (test)
+        from powercad.spice_export.netlist_graph import Module_SPICE_netlist_graph
+        from powercad.spice_export.hspice_interface import write_SPICE_netlist
+        from powercad.spice_export.simulations import TransientSimulation
+        
+        export_path = 'C:\Users\jhmain\Dropbox\Spice Import and Export files\spice export\R&D 100'
+        
+        spice_netlist_graph = Module_SPICE_netlist_graph('netlist_test', self.project.symb_layout, sol.index, template_graph=None)
+        spice_netlist_graph.write_SPICE_subcircuit(export_path)
+
+        #trans_sim = TransientSimulation('Trans Simulation 1', 'NL1', 'NL2', 'NL1', 'NL3')
+        #netlist = write_SPICE_netlist(export_path,trans_sim, spice_netlist_graph)
+
+        #spice_netlist_graph.run_hspice()
+        #spice_netlist_graph.draw_HSPICE_output()
+        
+        print 'SPICE export path:', export_path
+        print 'SPICE export complete.'
+        '''
         
     def clear_saved_solutions_ui(self):
         # close windows in the mdi area
@@ -1255,7 +1306,6 @@ class ProjectBuilder(QtGui.QMainWindow):
         QtGui.QMessageBox.warning(self, "Load Symbolic Layout", "Not implemented yet.")
         if self.ui.navigation.isEnabled():
             symbolic_file = QFileDialog.getOpenFileName(self, "Select Symbolic Layout", self.project.directory, "SVG Files (*.svg)", "SVG Files (*.svg)")
-            print symbolic_file[0]
 
 class PatchDictionary(dict):
     def __init__(self):
@@ -1273,4 +1323,11 @@ if __name__ == "__main__":
     main_window = ProjectBuilder()
     main_window.show()
     sys.exit(app.exec_())
+    
+# --------------- Bugs found/ To do --------------------
+# 
+# - Optimization progress bar (graphic) pauses even though optimization is in progress (as seen on console). This is especially true for large number of generations.
+# 
+# - "Open Solution Browser" button needs to be disabled while solution browser is already open, and vice versa. 
+
         

@@ -1,7 +1,11 @@
 '''
 Created on Aug 24, 2011
 
-@author: shook
+@author: shook Quang
+This update is commented out in the code for now:
+    Quang: adding thermal capacitance
+    Note:  dims are in mm
+    Note: for this project, Csub only need to compute once, need to look at this later. For easy mode now, we compute it every iteration
 '''
 
 import math
@@ -10,9 +14,38 @@ import numpy as np
 import networkx as nx
 from matplotlib.patches import Rectangle
 import matplotlib.pyplot as plt
-
-from powercad.util import Rect
-
+import time
+from powercad.util import Rect, SolveVolume  
+#quang:
+class ThermalProperties:
+    '''Think about a better method for properties and reduce the complexity of this code.
+       names=['dies','substrate_att','metal','isolation','baseplate']
+       properties=MaterialProperties instance
+       dimensions= list of dims [die,substrate_att,metal.isolation,baseplate]
+    '''
+    def __init__(self,names,properties,dimensions):
+        self.layers_names=names
+        self.properties=properties 
+        self.dimensions=dimensions
+    def get_properties(self,name):
+        index=0
+        for names in self.layers_names:
+            if names==name:
+                print index
+                return self.properties[index]
+                
+            else:
+                index+=1
+    def get_dims(self,name):
+        index=0   
+        for names in self.layers_names:
+            print names
+            if names==name:
+                return self.dimensions[index]
+                print index
+            else:
+                index+=1     
+#quang/:                
 class TFSMInputError(Exception):
     def __init__(self, value):
         self.value = value
@@ -52,7 +85,6 @@ class DieThermal:
         self.dimensions = dimensions
         self.thermal_features = thermal_features
         self.local_traces = local_traces
-        
 class DieThermalFeatures:
     def __init__(self):
         self.iso_top_fluxes = None
@@ -75,24 +107,64 @@ class SublayerThermalFeatures:
         self.sub_res = sub_res # float -- sublayer resistance (from top of isolation to ambient temp)
         self.t_amb = t_amb # float -- ambient temperature
         self.metal_cond = metal_cond # float -- metal trace conductivity
-        self.metal_thickness = metal_thickness # float - metal trace thickness
-            
+        self.metal_thickness = metal_thickness # float - metal trace thickness  
+'''         
+#Quang:                 
+def SolveThermalSubCap(thermal_properties):
+    #baseplate:
+    bp_props=thermal_properties.get_properties('baseplate')
+    bp_dims=thermal_properties.get_dims('baseplate')
+    bp_cap=bp_props.density*bp_props.spec_heat_cap*SolveVolume(bp_dims)
+    #next metal layer:
+    mt_props=thermal_properties.get_properties('metal')
+    mt_dims=thermal_properties.get_dims('metal')
+    mt_cap=mt_props.density*mt_props.spec_heat_cap*SolveVolume(mt_dims)
+    #isolation layer
+    iso_props=thermal_properties.get_properties('isolation')
+    iso_dims=thermal_properties.get_dims('isolation')
+    iso_cap=iso_props.density*iso_props.spec_heat_cap*SolveVolume(iso_dims)
+    Csub=1/(1/iso_cap+1/bp_cap+1/mt_cap)
+    return Csub
+def SolveDieCap(thermal_properties):
+    #die
+    die_props=thermal_properties.get_properties('dies')
+    die_dims=thermal_properties.get_dims('dies')
+    die_cap=die_props.density*die_props.spec_heat_cap*SolveVolume(die_dims)
+    #die attach
+    att_props=thermal_properties.get_properties('substrate_att')
+    att_dims=thermal_properties.get_dims('substrate_att')
+    att_cap=att_props.density*att_props.spec_heat_cap*SolveVolume(att_dims)
+    d_cap=1/(1/die_cap+1/att_cap)
+    return d_cap
+    
+#Quang/    
+'''    
+    
+#def solve_TFSM(thermal_geometry,thermal_properties, power_scale):
 def solve_TFSM(thermal_geometry, power_scale):
     # Solves a Temperature and Flux Superposition Model
     # Returns list of die temps
     islands = thermal_geometry.trace_islands
     all_dies = thermal_geometry.all_dies
+    '''
+    #Quang: 
+    Csub=SolveThermalSubCap(thermal_properties)
+    Cdie=SolveDieCap(thermal_properties)   
+    thermal_cap=nx.Graph()
+    thermal_cap.add_edge(0,1,{'C':Csub})
+    mt_props=thermal_properties.get_properties('metal')
     
+    #Quang\
+    '''
     # Begin thermal network with sublayer resistance (everything below isolation)
     metal_thickness = thermal_geometry.sublayer_features.metal_thickness
     metal_cond = thermal_geometry.sublayer_features.metal_cond
     
+    # Find total isolation temperature
     t_amb = thermal_geometry.sublayer_features.t_amb
     Rsub = thermal_geometry.sublayer_features.sub_res
     thermal_net = nx.Graph()
     thermal_net.add_edge(0, 1, {'G':1.0/Rsub})
-    
-    # Find total isolation temperature
     total_iso_temp = 0.0
     for die in all_dies:
         # Check that each die has a self_temp
@@ -101,43 +173,52 @@ def solve_TFSM(thermal_geometry, power_scale):
         total_iso_temp += die.thermal_features.iso_top_avg_temp
     
     # Build up lumped network for each island
-    node_count = 2
+    Res_Node = 2
     src_nodes = []
     for island in islands:
-        Rsp2, dies = eval_island(island, all_dies, total_iso_temp, metal_thickness, metal_cond)
-        thermal_net.add_edge(1, node_count, {'G':1.0/Rsp2})
-        island_node = node_count
-        node_count += 1
+        Rm,Rsp2, dies,island_area = eval_island(island, all_dies, total_iso_temp, metal_thickness, metal_cond)
+        Rsp=Rsp2+Rm
+        thermal_net.add_edge(1, Res_Node, {'G':1.0/Rsp})
+        island_node = Res_Node
+        Res_Node +=1
         for die in dies:
-            thermal_net.add_edge(island_node, node_count, {'G':1.0/die[0]})
-            src_nodes.append((node_count, die[1]*power_scale))
-            node_count += 1
-        
+            thermal_net.add_edge(island_node, Res_Node, {'G':1.0/die[0]})
+            #print die[1]
+            src_nodes.append((Res_Node, die[1]*power_scale))
+            #print src_nodes
+            Res_Node += 1
+            
     # Build source and sink flows
     X_st = np.zeros(len(thermal_net.nodes()))
     for src in src_nodes:
         X_st[src[0]] = src[1] # branch flow (positive)
-        X_st[0] -= src[1] # ground flow (negative)
-        
+        X_st[0] -= src[1] # ground flow (negative)   
     # Build Laplacian; Solve system
     L = nx.laplacian_matrix(thermal_net, weight='G')
     L = L.todense()
     Linv = np.linalg.pinv(L)
     V = np.dot(Linv, X_st)
-    
     # Get node voltages (die temperatures)
     die_temps = []
     for src in src_nodes:
-        die_temps.append(V[:,src[0]]-V[:,0])
-        
+        die_temps.append(V[:,src[0]]-V[:,0])    
     die_temps = np.array(die_temps)+t_amb
+    # addding 
+    '''
+    #Quang
+    pos = nx.spring_layout(thermal_cap)
+    nx.draw(thermal_cap, pos)
+    nx.draw_networkx_edge_labels(thermal_cap, pos)
+    plt.show()
+    '''
 #    print die_temps
-    
-#    pos = nx.spring_layout(thermal_net)
-#    nx.draw(thermal_net, pos)
-#    nx.draw_networkx_edge_labels(thermal_net, pos)
-#    plt.show()
-#    test_plot_layout(thermal_geometry.all_traces, all_dies, (83.82, 54.61))
+    '''
+    pos = nx.spring_layout(thermal_net)
+    nx.draw(thermal_net, pos)
+    nx.draw_networkx_edge_labels(thermal_net, pos)
+    plt.show()
+    '''
+    #test_plot_layout(thermal_geometry.all_traces, all_dies, (83.82, 54.61))
     return die_temps
 
 def eval_island(island, all_dies, total_iso_temp, metal_thickness, metal_cond):
@@ -152,7 +233,6 @@ def eval_island(island, all_dies, total_iso_temp, metal_thickness, metal_cond):
     #    - Calculate Rsp1
     
     island_area = find_trace_area(island.trace_rects)
-    
     # Find trace island avg. metal temperature and effective power
     metal_temp = 0.0
     eff_power = 0.0
@@ -193,7 +273,7 @@ def eval_island(island, all_dies, total_iso_temp, metal_thickness, metal_cond):
     Rc = (metal_temp - total_iso_temp)/actual_power
     Rsp2 = Rc + Re
     Rm = (metal_thickness/(metal_cond*island_area))*1e3
-    Rmetal = Rsp2 + Rm
+    
 #    print 'Rsp2:', Rsp2
     
     dies = []
@@ -228,7 +308,7 @@ def eval_island(island, all_dies, total_iso_temp, metal_thickness, metal_cond):
         Re = (die_temp - metal_temp)*(tf.die_power - pe)/(tf.die_power*pe)
         dies.append((Rc+Re+tf.die_res, tf.die_power))
         
-    return Rmetal, dies
+    return Rm,Rsp2, dies,island_area
 
 def integrate_contours(contours, pos, rect):
     prev_an = 0.0
@@ -263,14 +343,16 @@ def test_plot_layout(traces, dies, bounds):
     for rect in traces:
         r = Rectangle((rect.left, rect.bottom), rect.width(), rect.height(), alpha=0.5, facecolor='#FF0000', edgecolor='None')
         ax.add_patch(r)
-        
+    die_count=1   
     for die in dies:
+        die_label="die%s"%(die_count)
         w2 = die.dimensions[0]/2.0
         l2 = die.dimensions[1]/2.0
         rect = Rect(die.position[1]+l2, die.position[1]-l2, die.position[0]-w2, die.position[0]+w2)
         r = Rectangle((rect.left, rect.bottom), rect.width(), rect.height(), alpha=0.5, facecolor='#00FF00', edgecolor='None')
         ax.add_patch(r)
-        
+        ax.text(rect.left, rect.bottom,die_label)
+        die_count+=1
     ax.axis([-1.0, bounds[0], -1, bounds[1]])
     plt.show()
     
@@ -307,7 +389,7 @@ def simple_square_test():
 def rd100_example():
     from powercad.thermal.characterization import load_pickle_characterization
     dev_char = load_pickle_characterization('../../../thermal_data/characterized/rd100_fet.p')
-    
+    setuptime = time.time()
     top = 52.07
     right = 81.28
     gap = 1.27
@@ -387,9 +469,15 @@ def rd100_example():
         #print i, ':', die.position[0]-1.2,',', die.position[1]+0.8
     
     #print (881.8 - 857.6)/30
-    
+    totalsettime=time.time()-setuptime
+    print totalsettime
     #print (883.65 - 861.9)/30
+    properties=None
+    stime=time.time()
     temps = solve_TFSM(geometry, 0.3)
+    runtime=time.time()-stime
+    print runtime 
+    
     print np.max(temps)
     
 

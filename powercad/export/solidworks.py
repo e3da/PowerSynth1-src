@@ -160,11 +160,11 @@ def output_solidworks_vbscript(md, output_filename, data_dir, final_dir):
     
     # add baseplate, solder, metal, and dielectric layer to BuildParts macro
     BpName = "BasePlate"
-    BuildParts += create_part.format(BaseXSize/2.0,BaseYSize/2.0, BaseZSize, BpMatName, BpName, final_dir=part_dir, temp_dir=template_dir, material_path=material_path)
+    BuildParts += create_part.format(BaseXSize,BaseYSize, BaseZSize, BpMatName, BpName, final_dir=part_dir, temp_dir=template_dir, material_path=material_path)
     SolderName = "SubstrateAttach"
-    BuildParts += create_part.format(SolderXSize/2.0, SolderYSize/2.0, SolderZSize, SolderMatName,SolderName,final_dir=part_dir, temp_dir=template_dir, material_path=material_path)
+    BuildParts += create_part.format(SolderXSize, SolderYSize, SolderZSize, SolderMatName,SolderName,final_dir=part_dir, temp_dir=template_dir, material_path=material_path)
     SubName = "Substrate"
-    BuildParts += create_part.format(MetalXSize/2.0, MetalYSize/2.0, MetalZSize,SubMatName,SubName,final_dir=part_dir, temp_dir=template_dir, material_path=material_path)
+    BuildParts += create_part.format(MetalXSize, MetalYSize, MetalZSize,SubMatName,SubName,final_dir=part_dir, temp_dir=template_dir, material_path=material_path)
     IsoName = "Isolation"
     BuildParts += create_part.format( DielectricXSize/2.0,DielectricYSize/2.0, DielectricZSize,IsoMatName, IsoName,final_dir=part_dir, temp_dir=template_dir, material_path=material_path)
     
@@ -210,11 +210,11 @@ def output_solidworks_vbscript(md, output_filename, data_dir, final_dir):
         DieName = "die" + str(index+1)
         DieAttachMatName = die.device_instance.attach_tech.properties.name
         DieMatName = die.device_instance.device_tech.properties.name
-        BuildParts += create_part.format(DieWidth/2, DieLength/2, DieThick, DieMatName, DieName,final_dir=part_dir, temp_dir=template_dir, material_path=material_path)
+        BuildParts += create_part.format(DieWidth, DieLength, DieThick, DieMatName, DieName,final_dir=part_dir, temp_dir=template_dir, material_path=material_path)
         # attach layer specific coordinates
         AttachThick = die.device_instance.attach_thickness/1000
         AttachName = "die_attach" + str(index +1)
-        BuildParts += create_part.format(DieWidth/2, DieLength/2, AttachThick, DieAttachMatName, AttachName, final_dir=part_dir, temp_dir=template_dir, material_path=material_path)
+        BuildParts += create_part.format(DieWidth, DieLength, AttachThick, DieAttachMatName, AttachName, final_dir=part_dir, temp_dir=template_dir, material_path=material_path)
         BuildAssembly += add_trace.format(AttachName, DieCenterX, DieCenterY, zpos+(0.5*AttachThick), final_dir=part_dir)
         zpos_die = zpos + AttachThick
         BuildAssembly += add_trace.format(DieName, DieCenterX, DieCenterY, zpos_die+(0.5*DieThick), final_dir=part_dir)
@@ -231,7 +231,7 @@ def output_solidworks_vbscript(md, output_filename, data_dir, final_dir):
     text_file.write(MaterialLib)
     text_file.close()
     
-    asm_file = os.path.join(final_dir, output_filename)
+    asm_file = os.path.join(final_dir, output_filename+'.swp')
     text_file = open(asm_file, "w")
     text_file.write(BuildParts+BuildAssembly)
     text_file.close()
@@ -268,7 +268,7 @@ Set myModelView = Part.ActiveView
 myModelView.FrameState = swWindowState_e.swWindowMaximized
 Part.ViewZoomin
 Part.ClearSelection2 True
-vSkLines = Part.SketchManager.CreateCornerRectangle(-{0}, {1}, 0, {0}, -{1}, 0)
+vSkLines = Part.SketchManager.CreateCornerRectangle(0, 0, 0, {0}, {1}, 0)
 Part.ClearSelection2 True
 Set myFeature = Part.FeatureManager.FeatureExtrusion2(True, False, False, 0, 0, {2}, 0, False, False, False, False, 0.0, 0.0, False, False, False, False, True, True, True, 0, 0, False)
 Part.SelectionManager.EnableContourSelection = False

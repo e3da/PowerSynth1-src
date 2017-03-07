@@ -306,7 +306,10 @@ def check_for_overlap(layout):
             if not(obj1 is obj2):
                 if isinstance(obj1, LayoutLine)and \
                    isinstance(obj2, LayoutLine):
-                    check_line_overlap(obj1, obj2)
+                    # exception for overlap check: if a line is a bondwire.
+                    if ('pow_bw' not in obj1.path_id) and ('sig_bw' not in obj1.path_id) and \
+                       ('pow_bw' not in obj2.path_id) and ('sig_bw' not in obj2.path_id):
+                        check_line_overlap(obj1, obj2)
                 if isinstance(obj1, LayoutPoint)and \
                    isinstance(obj2, LayoutPoint):
                     check_pt_overlapt(obj1, obj2)
@@ -314,12 +317,13 @@ def check_for_overlap(layout):
 def check_line_overlap(obj1, obj2):
     if obj1.vertical and obj2.vertical and obj1.pt1[0] == obj2.pt1[0]:
         if (obj2.pt1[1] > obj1.pt1[1] and obj2.pt1[1] < obj1.pt2[1]) or \
-           (obj2.pt2[1] > obj1.pt1[1] and obj2.pt2[1] < obj1.pt2[1]):
+        (obj2.pt2[1] > obj1.pt1[1] and obj2.pt2[1] < obj1.pt2[1]):
             raise LayoutError('Overlapping vertical lines found!')
     elif (not obj1.vertical) and (not obj2.vertical) and obj1.pt1[1] == obj2.pt1[1]:
         if (obj2.pt1[0] > obj1.pt1[0] and obj2.pt1[0] < obj1.pt2[0]) or \
-           (obj2.pt2[0] > obj1.pt1[0] and obj2.pt2[0] < obj1.pt2[0]):
+        (obj2.pt2[0] > obj1.pt1[0] and obj2.pt2[0] < obj1.pt2[0]):
             raise LayoutError('Overlapping horizontal lines found!')
+                
         
 def check_pt_overlapt(obj1, obj2):
     if obj1.pt[0] == obj2.pt[0] and obj1.pt[1] == obj2.pt[1]:
@@ -328,9 +332,9 @@ def check_pt_overlapt(obj1, obj2):
 if __name__ == '__main__':
     import matplotlib
     from powercad.sym_layout.plot import plot_svg_objs
-    from powercad.sym_layout.svg import load_svg, normalize_layout
+    #from powercad.sym_layout.svg import load_svg, normalize_layout
     layout = load_svg('../../../sym_layouts/simple.svg')
-    #normalize_layout(layout, 0.001)
+    normalize_layout(layout, 0.001)
     matplotlib.rc('font', family="Times New Roman", size=24)
     plot_svg_objs(layout)
     

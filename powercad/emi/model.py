@@ -3,26 +3,17 @@ Created on May 26, 2015
 
 @author: anizam
 '''
+import math#, cmath
 
 # This module is a stand-alone model for Electro-magnetic Interference in power modules.
 # Based on: Li Longtao, Wang Lixin, Lv Chao, Sun Chao, "A Simulation of Conducted EMI in Flyback Converters", 
-#           2012 7th Int. Power Electronics and Motion Control Conf. (IPEMC), vol.3, pp.1794-1798.
+#           2012 7th Intl Power Electronics and Motion Control Conference (IPEMC), vol.3, pp.1794-1798.
 
-import math, cmath
-
-# #--------------------------------------------------------------------------
-# #-----------------------------  CM model  ---------------------------------
-# #--------------------------------------------------------------------------
-# def commom_mode_emi(f, w, l, t, h, k = 8.8):
-#     # A traditional MOSFET model has inter-terminal capacitances: Cgs, Cgd, and Cds, parasitic resistances: Rg, Rd.
-#     # Source of information: Datasheet and power MOS equations
+#    A traditional MOSFET model has internal capacitances: Cgs, Cgd, and Cds, parasitic resistances: Rg, Rd.
+#    Cgs, Cgd, and Cds can be calculated from the module data sheet. 
 #     
-#     # Rg would increase the switching speed, which directly has an effect on the pulsating voltage. 
-#     # Small Rg may have a big CM noise current
-#     pass
-#     
-#     
-    
+#     Rg would increase the switching speed, which directly has an effect on the pulsating voltage. 
+#     Small Rg may have a big CM noise current
 
 def parasitic_capacitance(w, l, t, h, k = 0.0):
     # w: mm (trace width, perpendicular to current flow)
@@ -47,13 +38,12 @@ def parasitic_capacitance(w, l, t, h, k = 0.0):
     A = 2.0*t1*(w1 + l1)
     
     # parasitic capacitance
-    cp =  k*e_0*(w1*l1)/h1
+    cp =  k*e_0*(w1*l1)/h1_eff
     cp *= 1e12 # unit in pF
     if cp <= 0.0:
-        c = 1e-6
+        cp = 1e-6
     
-    return c      
-
+    return cp
 
 def mosfet(ciss, coss, crss, rg, parasitic_capacitance, f):
     # ciss = cgs + cgd    (uF) (input capacitance) 

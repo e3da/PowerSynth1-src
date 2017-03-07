@@ -1,15 +1,17 @@
 '''
 Created on March 6, 2012
 
-@author: shook
+@author: shook, mukherjee
 '''
 
 import sys
 import operator
-
+import networkx as nx
+import matplotlib.pyplot as plt
 from PySide import QtCore, QtGui
 
 import powercad.sym_layout.plot as plot
+#from matplotlib.sphinxext.plot_directive import align # SM - unused import
 plot.plt.matplotlib.use('Qt4Agg')
 plot.plt.matplotlib.rcParams['backend.qt4']='PySide'
 
@@ -29,6 +31,9 @@ from objective_widget import ObjectiveWidget
 from powercad.sol_browser.solution import Solution
 from powercad.sol_browser.solution_lib import SolutionLibrary
 from powercad.sym_layout.plot import plot_layout
+from powercad.electro_thermal.ElectroThermal_toolbox import ET_analysis
+from powercad.spice_export.thermal_netlist_graph import Module_Full_Thermal_Netlist_Graph
+from powercad.export.py_csv import py_csv 
 
 class GrapheneWindow(QtGui.QMainWindow):
     def __init__(self, parent):
@@ -110,13 +115,16 @@ class GrapheneWindow(QtGui.QMainWindow):
         # connect actions to methods
         self.canvas.mpl_connect('pick_event', self.select_solution)
         self.ui.bnt_saveLayout.pressed.connect(self.save_solution)
-        
+        self.ui.btn_export_csv.pressed.connect(self.save_solution_set)
+        self.ui.Electro_Thermal_btn.pressed.connect(self.test_ET)
         # Setup selected solution objective values
         self.obj_values_model = ObjectiveValuesTableModel(self)
         self.ui.objective_values_table.setModel(self.obj_values_model)
-         
+    '''     
     # Called when an x, y, or z checkbox is clicked    
-    def set_graph_axis(self, objective, axis):
+    # This is the original method. A duplicate called set_graph_axis() was created to test what happens when no boxes are checked.
+    # NOTE: THIS METHOD IS NEVER CALLED IN GRAPH_APP
+    def set_graph_axis2(self, objective, axis):
         # if the check box got checked
         if objective.chkbox_dict[axis].isChecked() is True:
             # if there is already another objective on this axis
@@ -138,7 +146,63 @@ class GrapheneWindow(QtGui.QMainWindow):
             self.graph_axis[axis] = None
         # redraw the graph
         self.draw_graph()
-        
+    '''
+    # Called when an x, y, or z checkbox is clicked. This is a duplicate of set_graph_axis2() to test what happens when no boxes are checked.
+    # NOTE: THIS METHOD IS NEVER CALLED IN GRAPH_APP.PY; It is called from objective_widget.py
+    def set_graph_axis(self, objective, axis):
+        print axis, objective.name_units[0]
+        print "graph axis (previous state): ", "x", self.graph_axis['x'].name_units[0] if self.graph_axis['x'] is not None else "none", "y", self.graph_axis['y'].name_units[0] if self.graph_axis['y'] is not None else "none", "z", self.graph_axis['z'].name_units[0] if self.graph_axis['z'] is not None else "none"
+        # if the check box got checked
+        if objective.chkbox_dict[axis].isChecked() is True:            
+            # if there is already another objective on this axis
+            if self.graph_axis[axis] is not None: # CHECKING PREVIOUS STATE
+                # uncheck old objective's checkbox
+                self.graph_axis[axis].chkbox_dict[axis].setCheckState(QtCore.Qt.Unchecked)
+                ''' self.graph_axis[axis] = objective '''
+            # if there is already an axis assigned for this objective
+            for i in objective.chkbox_dict:
+                if objective.chkbox_dict[i].isChecked() is True:
+                    # uncheck it
+                    objective.chkbox_dict[i].setCheckState(QtCore.Qt.Unchecked)
+                    # remove it from the axis list
+                    self.graph_axis[i] = None
+            # assign this objective to the axis
+            self.graph_axis[axis] = objective
+            # check the checkbox
+            objective.chkbox_dict[axis].setCheckState(QtCore.Qt.Checked)
+        # if the check box got unchecked
+        elif objective.chkbox_dict[axis].isChecked() is False:
+            # uncheck it
+            objective.chkbox_dict[axis].setCheckState(QtCore.Qt.Unchecked)
+            # remove it from the axis list
+            self.graph_axis[axis] = None
+            #print "graph axis (new state): ", "x", self.graph_axis['x'].name_units[0] if self.graph_axis['x'] is not None else "none", "y", self.graph_axis['y'].name_units[0] if self.graph_axis['y'] is not None else "none", "z", self.graph_axis['z'].name_units[0] if self.graph_axis['z'] is not None else "none"
+            # count how many axes are already assigned
+        n = 0
+        for i in self.graph_axis:
+            if self.graph_axis[i] is not None:
+                n += 1
+        # if less than 2 axes have been assigned
+        if n<2:
+            # clear graph
+            print "clearing graph..."
+            self.figure.clear()  
+            # add empty subplot
+            self.figure.add_subplot(111)
+            # add text at specified coordinates # FIND A WAY TO CENTER THE TEXT (currently hard coded)
+            self.figure.text(0.3, 0.5, "Select at least two performance parameters.")
+            #self.figure.suptitle("Select at least two performance parameters.") # ADDS TEXT ABOVE THE GRAPH (CENTERED)
+            # draw canvas as specified above (blank plot with text)
+            self.canvas.draw() 
+            print "graph cleared."
+        else:
+            # redraw the graph
+            self.draw_graph()
+            print "new graph drawn."
+        print "graph axis (new state): ", "x", self.graph_axis['x'].name_units[0] if self.graph_axis['x'] is not None else "none", "y", self.graph_axis['y'].name_units[0] if self.graph_axis['y'] is not None else "none", "z", self.graph_axis['z'].name_units[0] if self.graph_axis['z'] is not None else "none"
+            
+    def save_2D_paretofront_solutions(self):
+        print 'here'    
     def draw_graph(self):
         #clear figure
         self.figure.clear()
@@ -163,14 +227,28 @@ class GrapheneWindow(QtGui.QMainWindow):
     def draw_graph_2D(self):
         # plot data
         self.axes = self.figure.add_subplot(111)
-        self.axes.scatter(self.x_axis.displayable_data, self.y_axis.displayable_data, picker=1)
+        [P_X,P_Y]=self.pareto_frontiter2D(self.x_axis.displayable_data, self.y_axis.displayable_data, MinX=True, MinY=True)
+        #self.axes.scatter(self.x_axis.displayable_data, self.y_axis.displayable_data, picker=1)
+        self.axes.scatter(P_X, P_Y, picker=1)
+        
+        
         # set limits
         self.axes.set_xlim(self.x_axis.position-(self.x_axis.envelope/2), self.x_axis.position+(self.x_axis.envelope/2))
-        self.axes.set_ylim(self.y_axis.position-(self.y_axis.envelope/2), self.y_axis.position+(self.y_axis.envelope/2))   
+        self.axes.set_ylim(self.y_axis.position-(self.y_axis.envelope/2), self.y_axis.position+(self.y_axis.envelope/2))  
         # set labels
         self.axes.set_xlabel(self.x_axis.name_units[0] + " (" + self.x_axis.name_units[1] + ")")
         self.axes.set_ylabel(self.y_axis.name_units[0] + " (" + self.y_axis.name_units[1] + ")") 
         
+        for point in range(len(P_X)):
+            self.sol_params = [[objective.name_units[0],objective.name_units[1],objective.data[self.disp_data_indx_map[point]]] 
+                           for objective in self.obj_widg]
+            self.obj_values_model.set_table(self.sol_params)
+           
+        # draw layout preview
+            self.sol_index = self.disp_data_indx_map[point]
+            self.draw_layout_preview(self.sol_index)
+   
+
     def draw_graph_3D(self):
         # plot data
 #        self.axes = self.figure.add_subplot(111, projection='3d')
@@ -193,7 +271,24 @@ class GrapheneWindow(QtGui.QMainWindow):
 #        
 #    def filter_graph2(self):
 #        print 'filter2'
+    def test_ET(self):
+        self.solution = Solution()
+        self.solution.index = self.sol_index
+        self.solution.params = self.sol_params  
+        thermal_netlist_graph = Module_Full_Thermal_Netlist_Graph('dont care', self.sym_layout, self.solution.index)
+        T_list= self.sym_layout._thermal_analysis(4).tolist()
+        print T_list
+        T_list=(x[0][0] for x in T_list)
         
+        electrothermal=ET_analysis(thermal_netlist_graph)
+        thermal_mdl=electrothermal.ET_formation_1(20e3)
+        filedes='C:\Users\qmle\Desktop\Transistors_data\cpmf_1200_0080B'
+        rds_fn='Rdson.csv'
+        crss_fn='Crss.csv'
+        vth_fn='Vth.csv'
+        parameters=electrothermal.curve_fitting_all(filedes, rds_fn, crss_fn,vth_fn)
+        electrothermal.Run_sim(thermal_mdl , parameters, 300000)
+        print electrothermal.ptot_all(T_list, parameters)  
     def filter_graph(self):
         for objective in self.obj_widg:
             # clear all old points
@@ -214,7 +309,20 @@ class GrapheneWindow(QtGui.QMainWindow):
             
         # redraw graph
         self.draw_graph()
-
+    def pareto_frontiter2D(self,X,Y,MinX=True,MinY=True):
+        #Display only the pareto front solution
+        data_list=sorted([[X[i], Y[i]] for i in range(len(X))], reverse=not(MinX))
+        p_front=[data_list[0]]
+        for pair in data_list[1:]:
+            if MinY: 
+                if pair[1] <= p_front[-1][1]: # Look for higher values of Y
+                    p_front.append(pair) # and add them to the Pareto frontier
+            else:
+                if pair[1] >= p_front[-1][1]: # Look for lower values of Y
+                    p_front.append(pair) # and add them to the Pareto frontie
+        p_frontX = [pair[0] for pair in p_front]
+        p_frontY = [pair[1] for pair in p_front]
+        return p_frontX, p_frontY
     def select_solution(self, event):
         # check that there are some indices
         if not len(event.ind): return True
@@ -237,7 +345,15 @@ class GrapheneWindow(QtGui.QMainWindow):
         self.sol_params = [[objective.name_units[0],objective.name_units[1],objective.data[self.disp_data_indx_map[closest_point]]] 
                            for objective in self.obj_widg]
         self.obj_values_model.set_table(self.sol_params)
-        
+        print "here down"
+        '''
+        pos = nx.spring_layout(self.sym_layout.lumped_graph)
+        nx.draw(self.sym_layout.lumped_graph, pos)
+        nx.draw_networkx_edge_labels(self.sym_layout.lumped_graph, pos)
+        plt.show()
+        '''
+        print closest_point
+        print self.disp_data_indx_map[closest_point]
         # draw layout preview
         self.sol_index = self.disp_data_indx_map[closest_point]
         self.draw_layout_preview(self.sol_index)
@@ -288,6 +404,24 @@ class GrapheneWindow(QtGui.QMainWindow):
             pickle.dump(self.sym_layout, f)
             f.close()
             
+    def save_solution_set(self):
+    # Called when "Export Solution Set" button is clicked. Opens file browser to select file save location and specify a csv file name. 
+    # Collects solution data and sends it to py_csv module for csv export
+        
+        '''print 'specify file name' ''' # for developer
+        
+        # open file browser and get file name and directory (restrict to csv):
+        tgt_file = QtGui.QFileDialog.getSaveFileName(self, "Export CSV", "", 'CSV (Comma separated values) (*.csv)', options=QtGui.QFileDialog.ShowDirsOnly)
+        '''print tgt_file # for developer'''
+        
+        # if target file name was entered
+        if tgt_file[0]!="":
+            # send data, file name, and directory to py_csv 
+            py_csv(self.solution_library.measure_data, self.solution_library.measure_names_units, tgt_file[0])
+        else: # if name is blank or user clicks 'cancel'
+            pass
+        
+                              
 class ObjectiveValuesTableModel(QtCore.QAbstractTableModel):
     def __init__(self, parent, *args):
         QtCore.QAbstractTableModel.__init__(self, parent, *args)
@@ -326,13 +460,13 @@ class ObjectiveValuesTableModel(QtCore.QAbstractTableModel):
 #----------------------------------------------------------------------------------------------------PNT---
 #    To do:
 #    
-#    1.  Error checking - for everything
-#    2.  Make sure everything is getting passed by reference to conserve memory (i think it is)
-#    3.  Add docstrings to everything
-#    4.  Everything is rounded to two decimal places.  What if we need smaller than that?
-#    5.  Edit ScrollArea's max height for different number of objectives
+#    1.  Error checking - for everything # how to do this?
+#    2.  Make sure everything is getting passed by reference to conserve memory (i think it is) # how to chk this? self.object?
+#    3.  Add docstrings to everything # not affecting code; comments sufficient
+#    4.  Everything is rounded to two decimal places.  What if we need smaller than that? # CHK THIS
+#    5.  Edit ScrollArea's max height for different number of objectives #SM- fixed window size
 #    6.  What if envelope min needs to be smaller than 1?
-#    7.  What if only one axis is checked to be graphed?
+#    7.  What if only one axis is checked to be graphed? # SM - completed
 #    8.  Make certain variables and functions private
 #    9.  Speed up filtering or add "apply"/"dynamic" button
 #    10. To fix warning that comes up at start, play around with the order of the imports
@@ -343,6 +477,7 @@ class ObjectiveValuesTableModel(QtCore.QAbstractTableModel):
 #    15. Do gradient colors on points to see extra dimensions
 #    16. Matt mentioned something about maybe "profilers" or "decorators" to speed up the filtering
 #    17. Get envelopes in sync with the matplotlib toolbar
+#    18. Show layoutID in Solution browser when a solution is clicked
 #    ...
 #    ------------------------------------------------------------------------------------------------------
 

@@ -3,9 +3,10 @@ Created on Jul 11, 2013
 
 @author: apsimms (edited by jhmain)
 '''
-# Renamed get_netlist for naming consistency with other files (previously getnetlist)
+# - Renamed get_netlist for naming consistency with other files (previously getnetlist)
 
-class netdata(): #Defines components that were used in this class
+
+class Netdata(): # Defines components that were used in this class
     
     def __init__(self):
         self.str = ''
@@ -16,18 +17,17 @@ class netdata(): #Defines components that were used in this class
         self.components = ['Thyristors','Mosfets','Diodes','Resistors','Inductors','Capacitors','Voltage Source']
         self.index = 0
     
-    def netlistconverter(self,netlist_file): #Opens netlist file and reads line by line to determine the components of the circuit
+    def netlistconverter(self,netlist_file): # Opens netlist file and reads line by line to determine the components of the circuit
         netfile = open(str(netlist_file))
         infile = netfile.readline()
         self.str = ''.join(infile)
-        print '\n'
         while infile:
             self.data = self.findcomponent()
             infile = netfile.readline()
             self.str = ''.join(infile)
         netfile.close()
         
-    def findcomponent(self): #Finds all components from a netlist and records all necessary information on a list (data)
+    def findcomponent(self): # Finds all components from a netlist and records all necessary information on a list (data)
         for num in range(len(self.complist)):
             if self.str.find(self.complist[num]) is not -1:
                 self.comp = []
@@ -35,7 +35,7 @@ class netdata(): #Defines components that were used in this class
                 self.data.append(self.comp)
         return self.data
     
-    def getcomp(self): #Gets the information for one component
+    def getcomp(self): # Gets the information for one component
         for num2 in range(len(self.str)-1):
             if self.str[num2] is not ' ':
                 self.word += self.str[num2]
@@ -57,7 +57,7 @@ class netdata(): #Defines components that were used in this class
     def getcomponents(self):
         return self.components
     
-    def display(self):  #Displays the data after the operation
+    def display(self):  # Displays the data after the operation
         for i in range(len(self.data)):
             print self.data[i]
             print '\n'

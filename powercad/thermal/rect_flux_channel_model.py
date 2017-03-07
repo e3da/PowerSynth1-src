@@ -6,7 +6,7 @@ Created on Feb 17, 2014
 Rectangular Flux Channel Model
 Closed-form equation based thermal model, steady state temperature estimation
 '''
-
+import time
 from math import pi, sin, cos, sinh, cosh, sqrt, exp
     
 class Baseplate:
@@ -309,7 +309,10 @@ if __name__ == '__main__':
                  length = 5.0e-3,
                  center = (30.0e-3, 30.0e-3),
                  Q = 10.0)
-    
+    starttime=time.time()
     print single_layer_top_surface_pt(bp, [dev1, dev2], 15.0e-3, 10.0e-3)
     print single_layer_top_surface_avg(bp, [dev1, dev2], 1)
     print compound_top_surface_avg(bp, layer, [dev1, dev2], 0)
+    tot_time=time.time()-starttime
+    print tot_time
+    

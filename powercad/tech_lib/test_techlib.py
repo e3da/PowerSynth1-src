@@ -160,6 +160,7 @@ def make_sub_dir(dir_name):
 
 def pickle_those_devices():
     dir = "../../../tech_lib/"
+    print dir
     test_tech_dict = {"Substrates": [get_substrate, get_substrate2],
                       "Substrate_Attaches": [get_sub_attach, get_sub_attach2],
                       "Baseplates": [get_baseplate],
@@ -172,6 +173,7 @@ def pickle_those_devices():
     for key in test_tech_dict:
         value = test_tech_dict[key]
         sub_dir = os.path.join(dir, key)
+        print sub_dir
         make_sub_dir(sub_dir)
         for func in value:
             obj = func()

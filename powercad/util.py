@@ -144,7 +144,9 @@ def seed_rand(num):
 # Generate a random number in the range
 def rand(num_range):
     return random.uniform(num_range[0], num_range[1])
-
+def SolveVolume(dims):
+        #mm -> m
+        return dims[0]*dims[1]*dims[2]*1e-9 
 def distance(x1, x2):
     dist = 0
     for i in range(len(x1)):

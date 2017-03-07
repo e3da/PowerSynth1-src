@@ -14,8 +14,8 @@ import subprocess
 PYTHON_PATH = r"C:\Python27"
 NUITKA_PATH = r"C:\Python27\Scripts"
 
-MODULE_PATH = r"C:\Users\bxs003\Dropbox\PMLST\code\workspace\PowerCAD\src\powercad\project_builder\proj_builder.py"
-OUTPUT_PATH = r"C:\Users\bxs003\Desktop\PowerSynth_build"
+MODULE_PATH = r"C:\Users\qmle\workspace\PowerCAD\src\powercad\project_builder\proj_builder.py"
+OUTPUT_PATH = r"C:\Users\qmle\Desktop\PowerSynth_build"
 
 if __name__ == '__main__':
     python_call = os.path.join(PYTHON_PATH, "python")

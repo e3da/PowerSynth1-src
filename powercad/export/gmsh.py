@@ -7,7 +7,7 @@ Created on Apr 9, 2013
 import os
 import subprocess
 
-from powercad.settings import GMSH_BIN_PATH
+from powercad.settings import GMSH_BIN_PATH, TEMP_DIR
 
 gmsh_script_top = """
 Function BoxSurfaces
@@ -195,7 +195,6 @@ def create_box_stack_mesh(directory, geo_fn, mesh_fn, ws, ls, ts, lcs):
     Outputs:
         A .msh file of the box stack
     """
-    
     if len(ws) != len(ls) or len(ws) != len(ts) or len(ws) != len(lcs):
         raise Exception("Error: Could not generate box stack mesh file! Input dimensions do not agree!")
     
@@ -207,17 +206,24 @@ def create_box_stack_mesh(directory, geo_fn, mesh_fn, ws, ls, ts, lcs):
                             ts=thicks, lcs=ele_lengths)
     
     geo_string = gmsh_script_top + dims + gmsh_script_bottom
-    
     geo_path = os.path.join(directory, geo_fn)
     f = open(geo_path, 'w')
     f.write(geo_string)
+    print geo_string
     f.close()
-    
     msh_path = os.path.join(directory, mesh_fn)
-    exec_path = os.path.join(GMSH_BIN_PATH, "gmsh")
+    "define Gmsh's file path"
+    print GMSH_BIN_PATH
+    exec_path = os.path.join(GMSH_BIN_PATH, "gmsh").replace("/","\\")
+    print 'gmsh bin path:', exec_path
+    print "geo_path=", geo_path
     args = [exec_path, "-3", "-algo", "front3d", "-optimize", geo_path]
-    p = subprocess.Popen(args, stdout=subprocess.PIPE)
+    
+    print args
+    p = subprocess.Popen(args, shell=False,stdout=subprocess.PIPE)
     stdout, stderr = p.communicate()
+    print 'GMSH RUN'
+    print stdout, stderr
     
 def gen_str_list(ws):
     out = ""
