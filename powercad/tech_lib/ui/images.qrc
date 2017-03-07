@@ -1,0 +1,16 @@
+<RCC>
+  <qresource prefix="images">
+    <file>../../../../images/module_layers_small.png</file>
+    <file>../../../../images/lead_round.png</file>
+    <file>../../../../images/lead_busbar.png</file>
+    <file>../../../../images/bondwire_ribbon.png</file>
+    <file>../../../../images/bondwire_round.png</file>
+    <file>../../../../images/bondwire_landing.png</file>
+    <file>../../../../images/bondwire_location.png</file>
+    <file>../../../../images/die_attach.png</file>
+    <file>../../../../images/substrate.png</file>
+    <file>../../../../images/substrate_attach.png</file>
+    <file>../../../../images/baseplate.png</file>
+    <file>../../../../images/process_design_rules.png</file>
+  </qresource>
+</RCC>

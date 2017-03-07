@@ -1,0 +1,6 @@
+<RCC>
+  <qresource prefix="images">
+    <file>../../../../images/main_window/dimensions.png</file>
+    <file>../../../../images/main_window/PowerSynth_Logo_Temp3.png</file>
+  </qresource>
+</RCC>
