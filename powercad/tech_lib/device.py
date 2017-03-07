@@ -151,7 +151,7 @@ class DevicePage(object):
         # Check if the device filename is unique (if not, don't save the device, ask user to rename)
         dir_list = os.listdir(self.sub_dir)
         for filename in dir_list:
-            if filename==self.ui.DeviceNameInput.text()+'.p':
+            if filename==self.ui.DeviceNameInput.text()+'.dv':
                 error = True
                 QMessageBox.warning(self.parent, 'File Name Error', 'Device name already exists. Please choose another.')
         

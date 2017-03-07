@@ -5,12 +5,13 @@ Created on Dec 23, 2012
 '''
 
 import xml.dom.minidom as xml
-
+import ctypes
 from powercad.util import Rect
 from matplotlib.pyplot import plot
 
 class LayoutError(Exception):
     def __init__(self, msg):
+        ctypes.windll.user32.MessageBoxA(0, msg, "Layout Error", 1)    # Open a Message Box to notify users about the error
         self.args = [msg]
 
 class LayoutLine(object):
@@ -18,13 +19,70 @@ class LayoutLine(object):
         self.path_id = path_id
         self.pt1 = pt1
         self.pt2 = pt2
-        self.vertical = vertical
-        
+        self.vertical = vertical        
 class LayoutPoint(object):
     def __init__(self, path_id, pt):
         self.path_id = path_id
         self.pt = pt
-
+# Quang: testing input rectangle
+class LayoutRect(object):
+    def __init__(self,path_id,pt, w, l):
+        # Constructor: pt: the left high corner point of a rectangle
+        #              w, l: width and length of the rectangle  
+        self.path_id=path_id
+        self.pt = pt
+        self.w = w 
+        self.l = l 
+        
+def load_script(sript_path):
+    # qmle added 10-18-2016
+    # A specific script language for PS layout:
+    #    To specify a line: ID l pos1 pos2
+    #    To specify a point ID p pos
+    # The script is written in text form or specified by .psc (powersynth script code) 
+    layout=[]    # layout is a set of LayoutLines and LayoutPoints
+    print sript_path
+    with open(sript_path, 'rb') as f: # open the directory of script code
+        print f
+        objs=[]                      # specified a list of objs (lines and points)
+        for line in f:               # read every line of the script 
+            if line[0]=='#' or line[0]=='': # check for comments or blank lines
+                x=1                         # do nothing if so
+            else:                           # in case a line contains layout information
+                path_id=line[0:3]           # load path_id
+                type=line[5]                # check for layout type (line: l vs point: p)
+                if type =='l':              # in case it is a line
+                    line_str=line[7:len(line)] # read the layout information
+                    dat1,dat2=line_str.split(' ')   # split out 2 points positions
+                    dat1=dat1.split('(')[1]         # split out the open bracket
+                    dat1=dat1.split(')')[0]         # split out the close bracket
+                    x1,y1= dat1.split(',')          # split out string information of position
+                    pt1=(float(x1),float(y1))       # convert to float data type
+                    dat2=dat2.split('(')[1]         # split out the open bracket
+                    dat2=dat2.split(')')[0]         # split out the close bracket
+                    x2,y2= dat2.split(',')          # split out string information of position
+                    pt2=(float(x2),float(y2))       # convert to float data type
+                    if pt1[0]==pt2[0]:              # check if the line is vertical (manhattan style)
+                        vert = True                 # set vertical = True
+                    elif pt1[1]==pt2[1]:            # check if the line is horizontal (manhattan style)
+                        vert = False                # set vertical = True
+                    else:                           # Non-Manhattan will be implemented later
+                        LayoutError('non-manhattan will be added later')    
+                    objs.append(LayoutLine(path_id,pt1,pt2,vert)) # add obj to layout list
+                elif type=='p':                     # in case this is a point
+                    dat1=line[7:len(line)]          # read the layout information
+                    dat1=dat1.split('(')[1]         # split out the open bracket
+                    dat1=dat1.split(')')[0]         # split out the close bracket
+                    x1,y1= dat1.split(',')          # split out string information of position
+                    pt=(float(x1),float(y1))        # convert to float data type
+                    objs.append(LayoutPoint(path_id,pt))  # add obj to layout list
+    if len(objs) > 0:                               # If there are objs in layout list
+            for t in objs:
+                layout.append(t)                    # append obj to layout
+    print layout
+    return layout                                   # return layout
+              
+                
 def load_svg(svg_path):
     f = open(svg_path, 'r')
     dom = xml.parse(f)
@@ -105,30 +163,33 @@ def get_translation(ele):
     return trans_tuple
 
 def normalize_layout(layout, tol):
-    xlist = []
-    ylist = []
+    # This method will take the scaleable vector graphic files and normalize its coordinate  
+    xlist = [] # Initialize a blank list
+    ylist = [] # Initialize a blank list
     
     # Build Coord Lists
-    for obj in layout:
-        if isinstance(obj, LayoutLine):
-            xlist.append(obj.pt1[0])
-            ylist.append(obj.pt1[1])
-            xlist.append(obj.pt2[0])
-            ylist.append(obj.pt2[1])
+    for obj in layout:                  # Read through all objects in SVG   
+        if isinstance(obj, LayoutLine): # if this is a SVG Line
+            xlist.append(obj.pt1[0])    # add Line's End Point X value to the list
+            ylist.append(obj.pt1[1])    # add Line's End Point Y value to the list
+            xlist.append(obj.pt2[0])    # add Line's End Point X value to the list
+            ylist.append(obj.pt2[1])    # add Line's End Point Y value to the list
         elif isinstance(obj, LayoutPoint):
-            xlist.append(obj.pt[0])
-            ylist.append(obj.pt[1])
-        
-    xlist.sort()
-    ylist.sort()
+            xlist.append(obj.pt[0])     # add Point's X value to the list
+            ylist.append(obj.pt[1])     # add Point's Y value to the list
+    # Now when we have a list of coordinate values we want to sort them so they will be in right order    
+    xlist.sort()                        # sort the X values (from low to high) https://wiki.python.org/moin/HowTo/Sorting
+    ylist.sort()                        # sort the Y values (from low to high) https://wiki.python.org/moin/HowTo/Sorting
     
     # Organize Lists in dicts
-    xlen, xdict = norm_dict(xlist, tol)
-    ylen, ydict = norm_dict(ylist, tol)
+    xlen, xdict = norm_dict(xlist, tol) # report the dictionary of normalized coordinate as well as its length
+    ylen, ydict = norm_dict(ylist, tol) # report the dictionary of normalized coordinate as well as its length
     
     for obj in layout:
-        if isinstance(obj, LayoutLine):
-            x0 = xdict[obj.pt1[0]]
+        
+        if isinstance(obj, LayoutLine): # Read through all objects in SVG again
+            print obj.pt1
+            x0 = xdict[obj.pt1[0]]      #
             y0 = ydict[obj.pt1[1]]
             x1 = xdict[obj.pt2[0]]
             y1 = ydict[obj.pt2[1]]
@@ -139,7 +200,7 @@ def normalize_layout(layout, tol):
             x0 = xdict[obj.pt[0]]
             y0 = ydict[obj.pt[1]]
             obj.pt = (x0, y0)
-            
+    print 'xlen ylen', xlen, ylen        
     xlen = xlen+1
     ylen = ylen+1
     
@@ -159,7 +220,7 @@ def find_layout_bounds(layout):
             xlist.append(obj.pt[0])
             ylist.append(obj.pt[1])
             
-    xlist.sort()
+    xlist.sort()   
     ylist.sort()
     return ylist[-1], ylist[0], xlist[0], xlist[-1]
 
@@ -191,6 +252,7 @@ def handle_circle(path, trans_list):
                 
                 path_id = get_id(path)
                 pt_obj = LayoutPoint(path_id, cxy)
+                print 'pt_obj ', pt_obj
                 return [pt_obj]
             except KeyError:
                 raise Exception('Failed to retrieve arc\'s center!')
@@ -283,22 +345,25 @@ def handle_linepath(path, trans_list):
         raise Exception('Path object has no drawing information!')
 
 def norm_dict(clist, tol):
-    cdict = {}
-    
-    last_c = clist[0]
-    cdict[last_c] = 0
-    inc = 0
+    # To coders: in order to understand this, go to powercad> sym_layout > symbolic_layout and run the main fucntion.. This will load rd100.svg saved in CVS
+    # Now open rd100.svg.. look at the picture and at the same time printing out the variables in the for loop e.g: c, last_c, Now try to count the number of coordinates 
+    # on the picture and compare to the print results... you should understand how this work. -- Quang  
+    cdict = {}            # coordinate dictionary
+    last_c = clist[0]     # take last coordinate
+    cdict[last_c] = 0     # initialize it to 0 again
+    inc = 0               # initialize the counter
     for c in clist[1:]:
-        if c == last_c or (c > last_c-tol and c < last_c+tol):
+        if (c > last_c-tol and c < last_c+tol):  # Here c==last_c is not necessary
             if c != last_c:
-                cdict[c] = inc
+                cdict[c] = inc                   # if not the first coordinate then update the counter. increase of last coordinate counter==0
         else:
-            inc += 1
-            cdict[c] = inc
+            inc += 1                             # update the counter
+            cdict[c] = inc                       # use this as the normalized value
             
-        last_c = c
-        
-    return (inc, cdict)
+        last_c = c                               # move to the next coordinate and continue the normalization
+    
+    print 'cdict', cdict    
+    return (inc, cdict)                          # return the counter value as well as the normalized values
 
 def check_for_overlap(layout):
     for obj1 in layout:
@@ -336,5 +401,5 @@ if __name__ == '__main__':
     layout = load_svg('../../../sym_layouts/simple.svg')
     normalize_layout(layout, 0.001)
     matplotlib.rc('font', family="Times New Roman", size=24)
-    plot_svg_objs(layout)
+    #plot_svg_objs(layout)
     

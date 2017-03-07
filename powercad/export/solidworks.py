@@ -166,7 +166,7 @@ def output_solidworks_vbscript(md, output_filename, data_dir, final_dir):
     SubName = "Substrate"
     BuildParts += create_part.format(MetalXSize, MetalYSize, MetalZSize,SubMatName,SubName,final_dir=part_dir, temp_dir=template_dir, material_path=material_path)
     IsoName = "Isolation"
-    BuildParts += create_part.format( DielectricXSize/2.0,DielectricYSize/2.0, DielectricZSize,IsoMatName, IsoName,final_dir=part_dir, temp_dir=template_dir, material_path=material_path)
+    BuildParts += create_part.format( DielectricXSize,DielectricYSize, DielectricZSize,IsoMatName, IsoName,final_dir=part_dir, temp_dir=template_dir, material_path=material_path)
     
     # adding these parts to an assembly
     BuildAssembly += add_part_initial.format(temp_dir=template_dir)

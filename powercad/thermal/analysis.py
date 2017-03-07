@@ -2,6 +2,7 @@
 Created on Nov 2, 2012
 
 @author: bxs003
+         qmle added successive approximation model (date - time)
 '''
 
 import numpy as np
@@ -9,11 +10,13 @@ import numpy as np
 from powercad.thermal.fast_thermal import ThermalGeometry, TraceIsland, DieThermal, solve_TFSM,\
     ThermalProperties
 from powercad.thermal.rect_flux_channel_model import Baseplate, ExtaLayer, Device, layer_average, compound_top_surface_avg
-
+from powercad.electro_thermal.ElectroThermal_toolbox import *
 TFSM_MODEL = 1
 RECT_FLUX_MODEL = 2
+Successive_approximation_model=3
 
-def perform_thermal_analysis(sym_layout, model=2):
+
+def perform_thermal_analysis(sym_layout, model=1):
     ret = None
     if model == TFSM_MODEL:
         ret = tfsm_analysis(sym_layout)
@@ -22,6 +25,7 @@ def perform_thermal_analysis(sym_layout, model=2):
     else:
         ret = tfsm_analysis(sym_layout)
     return ret
+
 
 def rect_flux_analysis(sym_layout):
     baseplate = sym_layout.module.baseplate
@@ -65,31 +69,81 @@ def rect_flux_analysis(sym_layout):
     
     return temps
 
+
+def successive_appoximation(sym_layout):  # in math this is known as bisection method, in CS this is binary search
+    '''
+    Description:
+    This method will take the symbolic layout and user's information to perform a fast thermal approximation
+    taking into account rdson vs temperature effect of mosfet and diode (not yet defined). This effect leads to a big
+    change in power dissipation over time
+    Input: symbolic_layout.average_current  [list] <- average_current through each device, which can be found from
+                                                      analysis prior to optimization process
+           symbolic_layout.p_model_choice   [list] <- A list of power dissipation models for each device, each element
+                                                      in this list should have 2 tuple [params,name]
+                                                        - params: (list) set of curve_fit parameters
+                                                        - name:   (string) This defines which device is used so the
+                                                          algorithm can map to the right equations set.
+    Output: Temperature_list of each device
+            Corresponding device positions [x,y] list <- this will ease the FEM validation process    '''
+
+    ''' The first part of this model is simply the same as the fast thermal model, we will first build the thermal
+    resistance network
+    '''
+    islands = []
+    all_dies = []
+    all_traces = []
+
+    for comp in sym_layout.trace_graph_components:
+        if len(comp[1]) > 0:
+            trace_rects = []
+            die_thermals = []
+
+            # Add trace rectangles
+
+            for trace in comp[0]:
+                trace_rects.append(trace.trace_rect)
+                all_traces.append(trace.trace_rect)
+            # Add devices
+            for dev in comp[1]:
+                dt = DieThermal()
+                dt.position = dev.center_position
+                dt.dimensions = dev.tech.device_tech.dimensions[0:2]
+                dt.thermal_features = dev.tech.thermal_features
+
+                # Build up list of traces near the device
+                local_traces = []
+                parent = dev.parent_line
+                local_traces.append(parent.trace_rect)
+                for conn in parent.trace_connections:
+                    if not conn.is_supertrace():
+                        local_traces.append(conn.trace_rect)
+                for sconn in parent.super_connections:
+                    local_traces.append(sconn[0][0].trace_rect)
+                dt.local_traces = local_traces
+                die_thermals.append(dt)
+                all_dies.append(dt)
+            ti = TraceIsland()
+            ti.dies = die_thermals
+            ti.trace_rects = trace_rects
+            islands.append(ti)
+
+    tg = ThermalGeometry()
+    tg.all_dies = all_dies
+    tg.all_traces = all_traces
+    tg.trace_islands = islands
+    tg.sublayer_features = sym_layout.module.sublayers_thermal
+
 def tfsm_analysis(sym_layout):
     # Create trace islands
     islands = []
     all_dies = []
     all_traces = []
-    #quang_temp:
-    '''
-    properties=[]
-    dimensions=[]
-    dev_1=sym_layout.devices[0]
-    dev_properties=dev_1.tech.device_tech.properties
-    dev_dimensions=dev_1.tech.device_tech.dimensions
-    att_properties=dev_1.tech.attach_tech.properties
-    att_thick=dev_1.tech.attach_thickness
-    att_dimensions=[dev_dimensions[0],dev_dimensions[1],att_thick]
-    print att_dimensions
-    '''
-    #quang_temp/
+
     for comp in sym_layout.trace_graph_components:
         if len(comp[1]) > 0:
             trace_rects = []
             die_thermals = []
-         
-            
-            
+
             # Add trace rectangles
             
             for trace in comp[0]:
@@ -124,43 +178,7 @@ def tfsm_analysis(sym_layout):
     tg.all_traces = all_traces
     tg.trace_islands = islands
     tg.sublayer_features=sym_layout.module.sublayers_thermal
-    '''
-    #Quang:
-    names=['dies','substrate_att','metal','isolation','baseplate']
-    # pull out material properties
-    #dies properties        
-    properties.append(dev_properties)
-    #substrate_att' properties
-    properties.append(att_properties)  
-    #metal properties
-    properties.append(sym_layout.module.substrate.substrate_tech.metal_properties)  
-    #isolation
-    properties.append(sym_layout.module.substrate.substrate_tech.isolation_properties)
-    #baseplate
-    properties.append(sym_layout.module.baseplate.baseplate_tech.properties)
-    #die dimensions
-    dimensions.append(dev_dimensions)
-    #die attach dimensions
-    dimensions.append(att_dimensions)
-    #metal
-    substrate_dims=sym_layout.module.substrate.dimensions
-    ledge_width=sym_layout.module.substrate.ledge_width
-    substrate_tech=sym_layout.module.substrate.substrate_tech
-    metal_dims=[]
-    metal_dims=[substrate_dims[0]-ledge_width,substrate_dims[1],substrate_tech.metal_thickness]
-    dimensions.append(metal_dims)
-    #isolation
-    substrate_dims=[substrate_dims[0],substrate_dims[1],substrate_tech.isolation_thickness]
-    dimensions.append(substrate_dims)
-    #baseplate
-    dimensions.append(sym_layout.module.baseplate.dimensions)
-    print dimensions
-    tp=ThermalProperties(names,properties,dimensions)
-    tp.layers_names=names
-    #Quang/
     
-    return solve_TFSM(tg,tp, 1.0)
-    '''
     return solve_TFSM(tg, 1.0)    
 if __name__ == '__main__':
     from powercad.sym_layout.symbolic_layout import build_test_layout
