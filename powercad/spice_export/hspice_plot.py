@@ -1,3 +1,17 @@
+'''
+Created in 2011
+
+@author: AM Francis
+
+PURPOSE:
+ - This script is used to compare and plot HSPICE output files
+ - This can be used to test the thermal equivalent circuit netlist generated for export to HSPICE
+
+I was never able to use this properly, but it might be useful for future work
+Added documentation comments - jhmain 7-1-16
+
+'''
+
 #!/usr/bin/python
 # Diff hspice outputs and plot the result
 # (C) 2011 AM Francis 

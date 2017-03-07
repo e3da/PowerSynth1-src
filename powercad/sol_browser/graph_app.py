@@ -1,7 +1,7 @@
 '''
 Created on March 6, 2012
 
-@author: shook, mukherjee
+@author: shook, mukherjee, qmle
 '''
 
 import sys
@@ -116,7 +116,7 @@ class GrapheneWindow(QtGui.QMainWindow):
         self.canvas.mpl_connect('pick_event', self.select_solution)
         self.ui.bnt_saveLayout.pressed.connect(self.save_solution)
         self.ui.btn_export_csv.pressed.connect(self.save_solution_set)
-        self.ui.Electro_Thermal_btn.pressed.connect(self.test_ET)
+        #self.ui.Electro_Thermal_btn.pressed.connect(self.test_ET)
         # Setup selected solution objective values
         self.obj_values_model = ObjectiveValuesTableModel(self)
         self.ui.objective_values_table.setModel(self.obj_values_model)
@@ -227,9 +227,9 @@ class GrapheneWindow(QtGui.QMainWindow):
     def draw_graph_2D(self):
         # plot data
         self.axes = self.figure.add_subplot(111)
-        [P_X,P_Y]=self.pareto_frontiter2D(self.x_axis.displayable_data, self.y_axis.displayable_data, MinX=True, MinY=True)
-        #self.axes.scatter(self.x_axis.displayable_data, self.y_axis.displayable_data, picker=1)
-        self.axes.scatter(P_X, P_Y, picker=1)
+        #[P_X,P_Y]=self.pareto_frontiter2D(self.x_axis.displayable_data, self.y_axis.displayable_data, MinX=True, MinY=True)
+        self.axes.scatter(self.x_axis.displayable_data, self.y_axis.displayable_data, picker=1)
+        #self.axes.scatter(P_X, P_Y, picker=1)
         
         
         # set limits
@@ -238,7 +238,7 @@ class GrapheneWindow(QtGui.QMainWindow):
         # set labels
         self.axes.set_xlabel(self.x_axis.name_units[0] + " (" + self.x_axis.name_units[1] + ")")
         self.axes.set_ylabel(self.y_axis.name_units[0] + " (" + self.y_axis.name_units[1] + ")") 
-        
+        '''
         for point in range(len(P_X)):
             self.sol_params = [[objective.name_units[0],objective.name_units[1],objective.data[self.disp_data_indx_map[point]]] 
                            for objective in self.obj_widg]
@@ -247,7 +247,7 @@ class GrapheneWindow(QtGui.QMainWindow):
         # draw layout preview
             self.sol_index = self.disp_data_indx_map[point]
             self.draw_layout_preview(self.sol_index)
-   
+        '''
 
     def draw_graph_3D(self):
         # plot data

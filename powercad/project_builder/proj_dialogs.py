@@ -164,8 +164,8 @@ class NewProjectDialog(QtGui.QDialog):
     def convert_netlist(self):
         netlist_file_name, netlist_file_extension = os.path.splitext(self.ui.txt_symbnet_address.text())
         
-        Converter = Netlist_SVG_converter.converter(self.ui.txt_symbnet_address.text(), netlist_file_name)
-        symbnet_file = Converter.convert(vp=str(self.ui.txt_positive_source.text()), 
+        NetlistConverter = Netlist_SVG_converter.Converter(self.ui.txt_symbnet_address.text(), netlist_file_name)
+        symbnet_file = NetlistConverter.convert(vp=str(self.ui.txt_positive_source.text()), 
                                          vn=str(self.ui.txt_negative_source.text()), 
                                          output_node=str(self.ui.txt_output.text()))
         
