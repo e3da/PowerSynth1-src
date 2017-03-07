@@ -709,7 +709,7 @@ class Module_SPICE_netlist_graph_v2():
         # write SPICE line for each node that has a component
         spice_file.write('\n*** {} Components ***\n'.format(self.name))  
         
-        # sxm - 
+        # sxm063 - splicing each line of the netlist to extract node names, nodes, and values into a separate array for easier access through indices
         a=[]
         #print self.spice_graph.nodes
         for node in self.spice_graph.nodes(data=True):       
@@ -721,8 +721,7 @@ class Module_SPICE_netlist_graph_v2():
                 sub_a.append(node[1]['component'].SPICE[14:18])
                 sub_a.append(node[1]['component'].SPICE[19:])
                 a.append(sub_a)
-        print a
-        print "---------------"
+        
         #print a[0]
                 
         # sxm - add  capacitances that are in parallel
@@ -732,40 +731,31 @@ class Module_SPICE_netlist_graph_v2():
                     #print j
                     if (a[j][0][:1]=="C" and len(a[j])==4): # check if both components are capacitors
                         if ((a[i][1]==a[j][1] and a[i][2]==a[j][2]) or (a[i][2]==a[j][1] and a[i][1]==a[j][2])): # check if the two devices are in parallel by checking node commonality (node 1&2 of component1 = node 1&2 of component2 OR node 1&2 of component1 = node 2&1 of component2)
-                            #print i,j
-                            #print a[i]
-                            #print a[j]
-                            #print a[i][3]+a[j][3]
                             #update the first row
-                            a[i].insert(3, add(float(a[i][3]), float(a[j][3]))) # insert equivalent capacitor value at appropriate location of the line                                
-                            #print "line " + i + ":" + a[i]
+                            a[i].insert(3, add(float(a[i][3]), float(a[j][3]))) # insert equivalent capacitor value at appropriate location of the line    
                             a[i].pop(4) # remove old capacitor value
                             #mark the second row for removal
-                            a[j].insert(4, "remove") # remove the 2nd of the two capacitor lines (since it is already accounted for in the equivalent value)
-                            #print "Equivalent:"
-                            #print a[i]
-                            #print a[j]                           
+                            a[j].insert(4, "remove") # remove the 2nd of the two capacitor lines (since it is already accounted for in the equivalent value)                         
                             #j-=1 # since one line was removed, all lines will move up by one. Therefore, decrement j so as not to miss a line in the comparison.
-                            #print i,j 
-        print "\n Old"
+        '''print "\n Old"
         for items in a:
-            print items
+            print items'''
         
         # remove the lines that have been accounted for (i.e. that lines marked with the word "remove")
-        print "\n -------------"
-        print "\n To be removed"        
+        #print "\n -------------"
+        #print "\n To be removed"        
         count=0
-        print "initial count ", count
+        #print "initial count ", count
         for i in range(0,len(a)-1):
-            print "items removed (count) =", count, " i=", i, " index=", i-count, " len(a[i-count])=", len(a[i-count])            
+            #print "items removed (count) =", count, " i=", i, " index=", i-count, " len(a[i-count])=", len(a[i-count])            
             if len(a[i-count])>4:
-                print i-count, a[i-count] 
+                #print i-count, a[i-count] 
                 a.pop(i-count)
                 count = count + 1 
                 print "number of items removed (count) = ", count
             
                 
-        print "\n New"
+        print "\n New netlist"
         for items in a:
             print items
             
@@ -826,18 +816,11 @@ class Module_SPICE_netlist_graph_v2():
         
         
     def draw_graph(self):
-        """ Draws networkx graph of spice_graph """   
-        
-        # sxm testing 2016 Mar 31 ------- this section added for testing purposes only; to be deleted after testing ---------     
-        plt.close() #sxm test
-        ax = plt.subplot('111', adjustable='box', aspect=1.0) #sxm test
-        ax.set_axis_off() #sxm test
-        # sxm test block-----------------------------------------------------------------------------------------------------
-        
-        pos = nx.spring_layout(self.spice_graph,scale=50) #sxm test; original scale=50
-        nx.draw_networkx_nodes(self.spice_graph, pos, node_size=100, node_color='blue', node_shape='o', alpha=0.7) #sxm test; original node_size=400
+        """ Draws networkx graph of spice_graph """         
+        pos = nx.spring_layout(self.spice_graph,scale=50) 
+        nx.draw_networkx_nodes(self.spice_graph, pos, node_size=400, node_color='blue', node_shape='o', alpha=0.7) 
         nx.draw_networkx_edges(self.spice_graph, pos, edge_color='black')
-        nx.draw_networkx_labels(self.spice_graph, pos, font_size=7, font_weight=3) #sxm test; original font_size=10, weight=2
+        nx.draw_networkx_labels(self.spice_graph, pos, font_size=10, font_weight=2) 
         plt.show()
                
 # ------------------------------------------------------------------------------------------------------

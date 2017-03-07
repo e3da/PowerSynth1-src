@@ -19,10 +19,11 @@ else: # Debug
     LAST_ENTRIES_PATH = os.path.abspath("../../../export_data/app_data/last_entries.p")
     #ELMER_BIN_PATH = ""
     #GMSH_BIN_PATH = ""
-    ELMER_BIN_PATH = "C:\Program Files (x86)\Elmer 8.2-Release\\bin"
-    GMSH_BIN_PATH = ""
+    ELMER_BIN_PATH = "C:/Program Files (x86)/Elmer 8.2-Release/bin"
+    GMSH_BIN_PATH = "C:/gmsh-2.7.0" 
     TEMP_DIR = os.path.abspath(r"../../../export_data/temp")
     CACHED_CHAR_PATH = os.path.abspath("../../../export_data/cached_thermal") # sxm063
     
 if __name__ == '__main__':
     print GMSH_BIN_PATH
+    print ELMER_BIN_PATH

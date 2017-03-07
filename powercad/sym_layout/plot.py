@@ -2,6 +2,8 @@
 Created on Nov 6, 2012
 
 @author: shook
+
+sxm - This function is only used in svg.py's main().
 '''
 
 import numpy as np
@@ -13,9 +15,11 @@ from powercad.sym_layout.svg import LayoutLine, LayoutPoint, find_layout_bounds
 from powercad.util import Rect
 from _sqlite3 import Row
 
+# sxm - This function is only used in svg.py's main().
 def plot_svg_objs(layout):
+    print "plot_svg_objs() started"
     ax = plt.subplot('111', adjustable='box', aspect=1.0)
-    bounds = Rect(*find_layout_bounds(layout))
+    bounds = Rect(*find_layout_bounds(layout)) #sxm edit originally: bounds = Rect(*find_layout_bounds(layout))
     
     for element in layout:
         if isinstance(element, LayoutLine):
@@ -33,8 +37,10 @@ def plot_svg_objs(layout):
             
     ax.axis([bounds.left, bounds.right, bounds.bottom, bounds.top])
     plt.show()
+    print "plot_svg_objs() completed."
     
 def plot_layout(sym_layout,ax = plt.subplot('111', adjustable='box', aspect=1.0), new_window=True, plot_row_col=False):
+    print "plot_layout() started."
     hlist = sym_layout.h_rowcol_list
     vlist = sym_layout.v_rowcol_list
     traces = sym_layout.all_trace_lines
@@ -123,5 +129,6 @@ def plot_layout(sym_layout,ax = plt.subplot('111', adjustable='box', aspect=1.0)
     
     if new_window:
         plt.show()
-        
+    
+    print "plot_layout() completed."    
     return ax

@@ -6,7 +6,7 @@ Created on May 22, 2015
 # - mos_thy includes all MOSFETs and thyristors
 # - comp lists contain CompNode instances - other lists contain component names only
 
-
+import traceback
 import os
 import networkx as nx
 
@@ -24,19 +24,21 @@ class CompNode():   # Defines node for a component
         except:
             raise Exception('Invalid netlist format - could not find component type and name!')
         
-    def find_connections(self):
+    def find_connections(self): # saves the nodes that correspond to a certain component (in a single line of a netlist)
+        tb_list = traceback.extract_stack() #sxm- for tracing function call - remove after debugging
+        traceback.print_list(tb_list) #sxm- for tracing function call - prints current stack status - remove after debugging
         
         if self.type == 'D_' or self.type == 'V_':      # 2-port components (voltage sources and diodes)
-            self.connections = self.data[1:3]
+            self.connections = self.data[1:3] # saves node1 and node2 
             if len(self.connections) < 2:
                 raise Exception('Invalid netlist format for component "' + self.name + '" - voltage sources and diodes must have 2 connections!')
             
         elif self.type == 'M_' or self.type == 'X_':    # 3-port components (MOSFETs and thyristors)
-            self.connections = self.data[1:4]
+            self.connections = self.data[1:4] # saves node1, node2, and node3
             if len(self.connections) < 3:
                 raise Exception('Invalid netlist format for component "' + self.name + '" - MOSFETs and thyristors must have 3 connections!')
         
-        elif self.type == 'R_' or self.type == 'L_' or self.type == 'C_':
+        elif self.type == 'R_' or self.type == 'L_' or self.type == 'C_': 
             raise Exception('Design cannot include resistors, inductors, or capacitors!')
         
         else:
@@ -83,24 +85,24 @@ class LayoutBuilder():  # Creates symbolic layout from netlist
         self.create_graph()
         self.perform_checks()
         self.analyze_prepare_graph()
-        self.drawing_setup()
-        self.draw_layout_SVG()
+        self.drawing_setup() # Assign normalized coordinates for various components of the graph
+        self.draw_layout_SVG() # Open, write and close XML file
         
         
     def create_graph(self):     # Builds NetworkX graph from netlist data and identifies source leads, devices (MOSFETs, thyristors, diodes), and gate signal leads
         
         # Build NetworkX graph
         for i in range(len(self.data)):
-            tempcomp = CompNode(self.data[i])
-            tempcomp.find_connections()
-            self.graph.add_node(tempcomp.name)   # Add nodes for components
+            tempcomp = CompNode(self.data[i]) # saves the first element of a single line from a netlist (i.e. the netlist name of the component) 
+            tempcomp.find_connections() # saves the netlist nodes of a component 
+            self.graph.add_node(tempcomp.name) # Add a network-x node the component 
             
-            for i in tempcomp.connections:
-                if i not in self.graph:
-                    self.graph.add_node(i)   # Add nodes between components
-                self.graph.add_edge(tempcomp.name, i)    # Add edges between components and nodes
+            for i in tempcomp.connections: # for each netlist node of a component,
+                if i not in self.graph: # if the netlist node is not already in the graph,
+                    self.graph.add_node(i)   # Add nodes [between components]
+                self.graph.add_edge(tempcomp.name, i)    # Add edges between components and nodes 
                 
-            # Identify source leads, devices, and gate signal leads
+            # Identify source leads, devices, and gate signal leads and add them to their respective LayoutBuilder lists.
             if tempcomp.type == 'V_':
                 self.vsource_list.append(tempcomp.name)    
                 self.vsource_comp_list.append(tempcomp)
@@ -169,7 +171,7 @@ class LayoutBuilder():  # Creates symbolic layout from netlist
                or centrality_list[i][0] in self.gate_list 
                or centrality_list[i][0] in self.diode_list 
                or centrality_list[i][0] == self.vp 
-               or centrality_list[i][0] == self.vn):  #Ensure seminal node is not a source, gate, or device
+               or centrality_list[i][0] == self.vn):  # Ensure seminal node is not a source, gate, or device
             seminal_node = centrality_list[i+1][0]      
             i+=1
         if seminal_node != self.output_node:
@@ -207,14 +209,26 @@ class LayoutBuilder():  # Creates symbolic layout from netlist
             gate2 = self.gate_list[1]
             for gate_device in nx.all_neighbors(self.graph, self.gate_list[1]):
                 gate2_devices.append(gate_device)
+        ''' 
+        # Shilpi - Use this snippet of code (or your own version of it) and expand on it (reflect it throughout dependencies) 
+        # when you want to account for a generic number of gate traces.
+        
+        gate_device_connections = []
+        for gate in self.gate_list:
+            gate_devices = []
+            for gate_device in nx.all_neighbors(self.graph, gate):
+                gate_devices.append(gate_device)
+            gate_device_connections.append(gate_devices)
+        '''               
+        
       
-        # Remove gate node edges in graph
+        # Remove gate node edges in graph # Shilpi- Didn't understand the point of removing and adding the same node?
         for node in nx.nodes(self.graph):
             if node in self.gate_list:
                 self.graph.remove_node(node)
                 self.graph.add_node(node)
              
-        # Find paths from source leads to output node
+        # Find paths from source leads to output node # Shilpi - THis would only work for a schematic that had a positive src, a negative src, and an output node.
         self.paths_vp = list(nx.all_simple_paths(self.graph, self.vp, self.output_node))
         self.paths_vn = list(nx.all_simple_paths(self.graph, self.vn, self.output_node))
         
@@ -224,7 +238,8 @@ class LayoutBuilder():  # Creates symbolic layout from netlist
         if len(self.paths_vn) < 1:
             raise Exception('No paths found between negative voltage source and output!')
         
-        # Find devices on paths (limit of one device per path)
+        # Find devices on paths (limit of one device per path)        
+        # From positive lead to output
         for path in self.paths_vp:
             tempgroup = []
             for node in path:
@@ -235,6 +250,7 @@ class LayoutBuilder():  # Creates symbolic layout from netlist
             if len(tempgroup) > 1:
                 raise Exception('More than one device found on path between positive lead and output!')
             self.devices_vp.append(tempgroup[0])
+        # From negative lead to output
         for path in self.paths_vn:
             tempgroup = []
             for node in path:
@@ -246,29 +262,37 @@ class LayoutBuilder():  # Creates symbolic layout from netlist
                 raise Exception('More than one device found on path between negative lead and output!')
             self.devices_vn.append(tempgroup[0])
         
-        # Check that all gates on the positive [negative] side use the same gate signal lead
+        # Check that all gates on the positive [negative] side use the same gate signal lead # Shilpi - This is specific to a certain schematic, like a half-bridge. Need to generalize this to handle full bridge and other schematics.
+        # positive side
         for device in self.devices_vp:
             if device in gate1_devices and device in gate2_devices:
                 raise Exception('All gates on the positive side of the layout must use the same gate signal lead!')
+        # negative side
         for device in self.devices_vn:
             if device in gate1_devices and device in gate2_devices:
                 raise Exception('All gates on the negative side of the layout must use the same gate signal lead!')
         
-        # Identify gate locations by matching gate devices to paths      
+        # Identify gate locations by matching gate devices to paths  
+        # Check if Gate 1 devices are on the positive side or negative    
         if len(self.gate_list) >= 1:
+            # Check if Gate 1 devices are on the positive side
             for device in self.devices_vp:
                 if device in self.mos_thy_list and device in gate1_devices:
                         self.gate_vp = gate1
                         break
+            # Check if Gate 1 devices are on the negative side
             for device in self.devices_vn:
                 if device in self.mos_thy_list and device in gate1_devices:
                         self.gate_vn = gate1
                         break
+        # Check if Gate 2 devices are on the positive of negative side
         if len(self.gate_list) == 2:
+            # Check if Gate 2 devices are on the positive side
             for device in self.devices_vp:
                 if device in self.mos_thy_list and device in gate2_devices:
                         self.gate_vp = gate2
                         break
+            # Check if Gate 2 devices are on the negative side
             for device in self.devices_vn:
                 if device in self.mos_thy_list and device in gate2_devices:
                         self.gate_vn = gate2
@@ -278,7 +302,7 @@ class LayoutBuilder():  # Creates symbolic layout from netlist
         if self.gate_vp != '' and self.gate_vp == self.gate_vn:
             raise Exception('Gate "' + self.gate_vp + '" cannot be used on both the positive side and negative side of the layout!')
 
-        # Clear graph for rebuilding
+        # Clear graph for rebuilding # Shilpi - Why should the graph be cleared?
         for node in nx.nodes(self.graph):
             self.graph.remove_node(node)
         
@@ -286,7 +310,7 @@ class LayoutBuilder():  # Creates symbolic layout from netlist
     def drawing_setup(self):    # Rebuilds graph for drawing
            
         try:
-            # Determine height based on number of paths from source leads to output
+            # Determine height based on number of paths from source leads to output #Shilpi- What does height mean here? Height of what?
             self.height = (max(len(self.paths_vp), len(self.paths_vn)) / 2) + 2
             if max(len(self.paths_vp), len(self.paths_vn)) % 2 == 0:
                 self.height -= 1
@@ -296,9 +320,9 @@ class LayoutBuilder():  # Creates symbolic layout from netlist
             self.graph.add_node(self.vn, attr_dict={'type':'lead'})
             self.graph.add_node(self.output_node, attr_dict={'type':'lead'})
                 
-            # Assign node positions and add traces for source leads and output
+            # Assign node positions and add traces for source leads and output # Shilpi- Appears hard_coded. Need to generalize. 
             self.pos[self.output_node] = (0,0) 
-            self.graph.add_edge('SP1','SN1', attr_dict={'type':'trace'})
+            self.graph.add_edge('SP1','SN1', attr_dict={'type':'trace'}) # automatically creates nodes SP1 and SN1.
             if len(self.paths_vp) > 1:
                 self.pos['SP1'] = (-3,0)
                 self.pos['SP2'] = (-3,1)
@@ -386,28 +410,34 @@ class LayoutBuilder():  # Creates symbolic layout from netlist
                     self.pos['SNG'+str(i)] = (3,self.height+1-i)
             
             # Add device nodes and bondwires
+            # For positive side devices
             for i in range(len(self.devices_vp)):
                 self.graph.add_node(self.devices_vp[i], attr_dict={'type':'device'})
+                # If there are even number of devices on the positive side, place one device on the left-positive side, and one on the right-positive side.
                 if i % 2 == 0:
                     self.pos[self.devices_vp[i]] = (-4,self.height+1-i/2)
                     self.graph.add_edge(self.devices_vp[i], 'SPL' + str(i/2), attr_dict={'type':'bondwire'})
                 else:
                     self.pos[self.devices_vp[i]] = (-2,self.height+1-i/2)
                     self.graph.add_edge(self.devices_vp[i], 'SPR' + str(i/2), attr_dict={'type':'bondwire'})
+                # If the device is a mosfet or a thyristor, add another graph edge to represent the signal bondwire.
                 if self.devices_vp[i] in self.mos_thy_list:
                     self.graph.add_edge(self.devices_vp[i], 'SPG' + str(i/2), attr_dict={'type':'bondwire'})
+            # For negative side devices
             for i in range(len(self.devices_vn)):
                 self.graph.add_node(self.devices_vn[i], attr_dict={'type':'device'})
+                # If there are even number of devices on the negative side, place one device on the left-negative side, and one on the right-negative side.
                 if i % 2 == 0:
                     self.pos[self.devices_vn[i]] = (4,self.height+1-i/2)
                     self.graph.add_edge(self.devices_vn[i], 'SNR' + str(i/2), attr_dict={'type':'bondwire'})
                 else:
                     self.pos[self.devices_vn[i]] = (2,self.height+1-i/2)
                     self.graph.add_edge(self.devices_vn[i], 'SNL' + str(i/2), attr_dict={'type':'bondwire'})
+                # If the device is a mosfet or a thyristor, add another graph edge to represent the signal bondwire.
                 if self.devices_vn[i] in self.mos_thy_list:
                     self.graph.add_edge(self.devices_vn[i], 'SNG' + str(i/2), attr_dict={'type':'bondwire'})
 
-            # Check that all nodes have a type
+            # Check that all nodes have a type. If not, assign "shadow" as the type. 
             for node in self.graph.nodes(data=True):    
                 try:
                     node[1]['type']
@@ -422,12 +452,14 @@ class LayoutBuilder():  # Creates symbolic layout from netlist
         
         try:
             # Set image size
-            image_size = self.height*6
+            image_size = self.height*6 # Shilpi - Why '6'? Is it because it is the largest numerical coordinate in drawing_setup()? Need to generalize. 
            
             # Adjust node positions to keep layout on page
             for node in self.pos:
                 self.pos[node] = (self.pos[node][0]+(image_size/2),-self.pos[node][1]+image_size)
-        
+            # Note: The origin in svg is at the top left corner of the page, whereas, the coordinates assigned in drawing_setup() assume origin at the bottom left corner.
+            # For this reason, the y-coordinate is negated and moved upward by some units (how many units? -I'm not sure yet. it is a multiple of the height of the drawing.)
+       
         
             # Create XML file with header
             f = open(str(self.fname) + '.svg', 'w')
@@ -437,13 +469,13 @@ class LayoutBuilder():  # Creates symbolic layout from netlist
             
             path_count = 0
             
-            # Draw lines for edges (traces and bondwires)
+            # Draw lines for edges (traces and bondwires) # Shilpi - Why are there two different loops for traces and bondwires? The svg text is exactly the same. 
             for edge in self.graph.edges(data=True):
                 if edge[2]['type'] == 'trace':
                     path_count += 1
                     f.write('\t' + '<path\n')
                     f.write('\t\t' + 'id="path_' + str(path_count) + '"\n')
-                    f.write('\t\t' + 'd="M ' + str(self.pos[edge[0]][0]) + ',' + str(self.pos[edge[0]][1]) + ' L ' + str(self.pos[edge[1]][0]) + ',' + str(self.pos[edge[1]][1]) + '"\n')
+                    f.write('\t\t' + 'd="M ' + str(self.pos[edge[0]][0]) + ',' + str(self.pos[edge[0]][1]) + ' L ' + str(self.pos[edge[1]][0]) + ',' + str(self.pos[edge[1]][1]) + '"\n') # M= move to; L= line to; e.g: M 3, 9 L 5,9; where (3,9)=(x0,y0) and (5,9)=(x1,y1)
                     f.write('\t\t' + 'style="color:#000000;fill:none;stroke:#ff0000;stroke-width:0.1" />\n')
                 elif edge[2]['type'] == 'bondwire':
                     path_count += 1
@@ -456,7 +488,7 @@ class LayoutBuilder():  # Creates symbolic layout from netlist
             
             # Draw circles for nodes (source leads, output, gate signal leads, and devices)
             for node in self.graph.nodes(data=True):
-                if node[1]['type'] == 'lead' or node[1]['type'] == 'gate_signal_lead':
+                if node[1]['type'] == 'lead' or node[1]['type'] == 'gate_signal_lead': # Shilpi- Why not include devices here instead of creating a new loop (if the svg template is exactly the same)?
                     path_count += 1
                     f.write('\t' + '<path\n')
                     f.write('\t\t' + 'id="path_' + str(path_count) + '"\n')

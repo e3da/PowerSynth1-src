@@ -78,9 +78,9 @@ def trace_inductance(w, l, t, h):
     l1 = l*1e-3                     # transfer to unit in m;
     
     c = 3.0e8                        # speed of light;
-    u_r = 1.0                          # relative permeability of the isolation material;
+    u_r = 1.0                          # relative permeability of the isolation material; hardcoded (sxm)
     u_0 = 4.0*math.pi*1e-7             # permeability of vaccum;
-    e_r = 8.8                        # relative permittivity of the isolation material;
+    e_r = 8.8                        # relative permittivity of the isolation material; # hardcoded (sxm)
     e_0 = 8.85*1e-12                 # permittivity of vaccum;
     
     # effective dielectric permittivity and effective width:    
@@ -103,7 +103,7 @@ def trace_inductance(w, l, t, h):
     Ind = 0.5*(Ind_0 + Ind_1)
 
     if Ind <= 0.0:
-        if Ind_0 > 0.0:
+        if Ind_0 > 0.0: 
             Ind = Ind_0
         elif Ind_1 > 0.0:
             Ind = Ind_1
@@ -196,7 +196,7 @@ def trace_capacitance(w, l, t, h, k = 8.8):
     
     # effective dielectric constant:
     try:
-        keff = (k+1.0)/2.0 + ((k-1.0)/2.0)*math.pow(1.0 + (12.0*h1)/w1, -0.5) - 0.217*(k-1.0)*t1/math.sqrt(w1*h1)
+        keff = (k+1.0)/2.0 + ((k-1.0)/2.0)*math.pow(1.0 + (12.0*h1)/w1, -0.5) - 0.217*(k-1.0)*t1/math.sqrt(w1*h1) # same as below.
     except:
         print 'h1', h1, 'w1', w1
         print 1.0 + (12.0*h1)/w1
@@ -209,7 +209,7 @@ def trace_capacitance(w, l, t, h, k = 8.8):
     if c <= 0.0:
         c = 1e-6
     
-    return c      
+    return c      # in pF
 
 #-------------------------------------------------------------
 #----------- self-partial wire-bond inductance----------------

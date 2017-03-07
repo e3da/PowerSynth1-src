@@ -116,7 +116,7 @@ class GrapheneWindow(QtGui.QMainWindow):
         self.canvas.mpl_connect('pick_event', self.select_solution)
         self.ui.bnt_saveLayout.pressed.connect(self.save_solution)
         self.ui.btn_export_csv.pressed.connect(self.save_solution_set)
-        self.ui.Electro_Thermal_btn.pressed.connect(self.test_ET)
+        #self.ui.Electro_Thermal_btn.pressed.connect(self.test_ET)
         # Setup selected solution objective values
         self.obj_values_model = ObjectiveValuesTableModel(self)
         self.ui.objective_values_table.setModel(self.obj_values_model)
@@ -227,9 +227,9 @@ class GrapheneWindow(QtGui.QMainWindow):
     def draw_graph_2D(self):
         # plot data
         self.axes = self.figure.add_subplot(111)
-        [P_X,P_Y]=self.pareto_frontiter2D(self.x_axis.displayable_data, self.y_axis.displayable_data, MinX=True, MinY=True)
-        #self.axes.scatter(self.x_axis.displayable_data, self.y_axis.displayable_data, picker=1)
-        self.axes.scatter(P_X, P_Y, picker=1)
+        #[P_X,P_Y]=self.pareto_frontiter2D(self.x_axis.displayable_data, self.y_axis.displayable_data, MinX=True, MinY=True)
+        self.axes.scatter(self.x_axis.displayable_data, self.y_axis.displayable_data, picker=1)
+        #self.axes.scatter(P_X, P_Y, picker=1)
         
         
         # set limits
@@ -238,7 +238,8 @@ class GrapheneWindow(QtGui.QMainWindow):
         # set labels
         self.axes.set_xlabel(self.x_axis.name_units[0] + " (" + self.x_axis.name_units[1] + ")")
         self.axes.set_ylabel(self.y_axis.name_units[0] + " (" + self.y_axis.name_units[1] + ")") 
-        
+        self.draw_layout_preview(self.sol_index)
+        '''
         for point in range(len(P_X)):
             self.sol_params = [[objective.name_units[0],objective.name_units[1],objective.data[self.disp_data_indx_map[point]]] 
                            for objective in self.obj_widg]
@@ -247,7 +248,7 @@ class GrapheneWindow(QtGui.QMainWindow):
         # draw layout preview
             self.sol_index = self.disp_data_indx_map[point]
             self.draw_layout_preview(self.sol_index)
-   
+        '''
 
     def draw_graph_3D(self):
         # plot data
@@ -345,15 +346,15 @@ class GrapheneWindow(QtGui.QMainWindow):
         self.sol_params = [[objective.name_units[0],objective.name_units[1],objective.data[self.disp_data_indx_map[closest_point]]] 
                            for objective in self.obj_widg]
         self.obj_values_model.set_table(self.sol_params)
-        print "here down"
+        #print "here down"
         '''
         pos = nx.spring_layout(self.sym_layout.lumped_graph)
         nx.draw(self.sym_layout.lumped_graph, pos)
         nx.draw_networkx_edge_labels(self.sym_layout.lumped_graph, pos)
         plt.show()
         '''
-        print closest_point
-        print self.disp_data_indx_map[closest_point]
+        #print closest_point
+        #print self.disp_data_indx_map[closest_point]
         # draw layout preview
         self.sol_index = self.disp_data_indx_map[closest_point]
         self.draw_layout_preview(self.sol_index)
@@ -425,7 +426,7 @@ class GrapheneWindow(QtGui.QMainWindow):
 class ObjectiveValuesTableModel(QtCore.QAbstractTableModel):
     def __init__(self, parent, *args):
         QtCore.QAbstractTableModel.__init__(self, parent, *args)
-        self.header = ["Name", "Value", "Unit"]
+        self.header = ["Name", "Value", "Unit"] #edit this
         self.obj_values = []
     
     def rowCount(self, parent):

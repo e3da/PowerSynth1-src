@@ -30,6 +30,8 @@ Created on Jun 27, 2012
 # Break up the SymbolicLayout class into smaller class extensions (inheritance)
 # Remove the use of isinstance in determining SymPoints vs. SymLines, etc. (replace with homogeneous object lists)
 
+import traceback
+
 import math
 import time
 from copy import copy, deepcopy
@@ -179,7 +181,7 @@ class SymLine(object):
         self.num_wires = None # Number of wires in the trace to trace bondwire
         self.wire_sep = None # Separation between wires in trace to trace bondwire
         
-    def reset_to_pre_analysis(self):
+    def reset_to_pre_analysis(self): #done
         self.trace_line = None
         self.trace_rect = None
         self.child_pts = None
@@ -235,7 +237,7 @@ class SymPoint(object):
         self.sym_bondwires = []
         self.lumped_node = None
         
-    def reset_to_pre_analysis(self):
+    def reset_to_pre_analysis(self): #done
         self.parent_line = None
         self.dv_index = None
         self.center_position = None
@@ -294,7 +296,7 @@ class SymbolicLayout(object):
         
         # trace_trace_connections is a unique set of all regular trace connections in a layout
         self.trace_trace_connections = None # List of tuples (trace1, trace2, conn_type) conn_type: 1-ortho, 2-parallel
-#        self.trace_super_connections = None
+        # self.trace_super_connections = None
         self.boundary_connections = None # Trace to Trace connections made at the boundary of a supertrace
         
         self.symmetries = []
@@ -348,11 +350,12 @@ class SymbolicLayout(object):
                 sym.constraint = None
     
     def load_layout(self, svg_path):
-        self.__init__() # Invalidate old data
-        self.layout = load_svg(svg_path)
-        self.raw_layout = deepcopy(self.layout)
-        self.xlen, self.ylen = normalize_layout(self.layout, 0.01)
+        self.__init__() # Invalidate old data #sxm- I don't know why
+        self.layout = load_svg(svg_path) # sxm - parse the xml file, save circles as LayoutPoint objects, lines as LayoutLine objects in layout list. 
+        self.raw_layout = deepcopy(self.layout) # sxm - make a copy of the original layout[] before it is normalized.
+        self.xlen, self.ylen = normalize_layout(self.layout, 0.01) # sxm - normalize the layout using given tolerance
         check_for_overlap(self.layout)
+        
         
         # Create SymLines and SymPoints
         self.all_sym = []
@@ -365,13 +368,15 @@ class SymbolicLayout(object):
             elif isinstance(obj, LayoutPoint):
                 sym = SymPoint(obj, raw)
                 self.points.append(sym)
-            self.all_sym.append(sym)
+            self.all_sym.append(sym) #sxm - this list of objects contains the coordinates (both original and normalized) of all lines and points in the layout 
+        print "self.all_sym", self.all_sym
+        #--------sxm checked. So far, can be generalized for skew lines.
                             
     def form_design_problem(self, module, temp_dir=settings.TEMP_DIR): 
         """ Formulate and check the design problem before optimization.
         
         Keyword Arguments:
-        module: A powercad.sym_layout.module_data.ModuleData object
+        module: A powercad.sym_layout.module_data.ModuleData object 
         temp_dir: A path to a temp. dir. for doing thermal characterizations (must be absolute)
         """
         self.module = module
@@ -414,7 +419,7 @@ class SymbolicLayout(object):
         for dev in self.devices:
             dev.tech.thermal_features = dev_char_dict[dev.tech]
         
-    def _check_formulation(self):
+    def _check_formulation(self): #done
         # Every layout point should have a techlib object bound to it (devices, leads)
         for sym in self.all_sym:
             if isinstance(sym, SymPoint):
@@ -430,7 +435,7 @@ class SymbolicLayout(object):
         elif len(self.perf_measures) == 1:
             self.perf_measures.append(self.perf_measures[0])
     
-    def _build_trace_layout(self):
+    def _build_trace_layout(self): #done
         # Collect SymLine objects only
         self.trace_layout = []
         self.all_trace_lines = []
@@ -439,13 +444,15 @@ class SymbolicLayout(object):
         self.fixed_constraints = []
         self.tol_constraints = []
         
-        for sym in self.all_sym:
-            ele = sym.element
+        for sym in self.all_sym: #sym is a SymLine or SymPoint object
+            ele = sym.element #ele is a LayoutLine or LayoutPoint object
             if isinstance(ele, LayoutLine) and (not sym.wire):
                 trace_line = copy(sym.element)
                 sym.trace_line = trace_line
-                self.trace_layout.append(trace_line)
-                self.all_trace_lines.append(sym)
+                self.trace_layout.append(trace_line) # collect all traces (LayoutLines objects) in this list
+                
+                self.all_trace_lines.append(sym) # collect all the traces (SymLine objects) in this list
+                
                 
                 # Make new rectangle object
                 sym.trace_rect = Rect()
@@ -475,7 +482,7 @@ class SymbolicLayout(object):
                 if trace1 is not trace2:
                     vv = (trace1.element.vertical and trace2.element.vertical)
                     hh = (not trace1.element.vertical and not trace2.element.vertical)
-                    if trace1.element.vertical and (not trace2.element.vertical):
+                    if trace1.element.vertical and (not trace2.element.vertical): #what if trace1 is horiz. and trace2 is vert? Ans: applying this condition would create duplicates.
                         self._id_ortho_connections(trace1, trace2)
                     elif vv or hh:
                         self._id_adjancent_connections(hh, trace1, trace2)
@@ -492,7 +499,7 @@ class SymbolicLayout(object):
                 if supertrace1 is not supertrace2:
                     self._supertrace_connection(supertrace1, supertrace2)
                     
-        self._prune_trace_trace_connections()
+        self._prune_trace_trace_connections() # remove supertraces from trace-trace connections list
         
         # Id normal trace connections at supertrace boundaries
         self._id_supertrace_boundary_connections()
@@ -522,7 +529,8 @@ class SymbolicLayout(object):
             # trace1 is vertical, trace2 is horizontal
             self.all_super_traces.append((trace1, trace2, (obj2.pt1[0],obj2.pt2[0]), (obj1.pt1[1],obj1.pt2[1])))
     
-    def _intersection_pt(self, line1, line2):
+    # return the intersection point of two trace lines
+    def _intersection_pt(self, line1, line2): 
         x = 0
         y = 0
         if line1.vertical:
@@ -537,7 +545,7 @@ class SymbolicLayout(object):
             
         return x, y
             
-    def _id_adjancent_connections(self, horiz, trace1, trace2):
+    def _id_adjancent_connections(self, horiz, trace1, trace2): # horiz is not being used. Delete it.
         pt1 = trace1.trace_line.pt1
         pt2 = trace2.trace_line.pt2
         if (pt1[0] == pt2[0]) and (pt1[1] == pt2[1]):
@@ -547,7 +555,7 @@ class SymbolicLayout(object):
                 self.tmp_conn_dict[frozenset([trace2, trace1])] = 2
                 self.trace_trace_connections.append([trace1, trace2, pt1, False])
         
-    def _trace_supertrace_connection(self, trace, supertrace):
+    def _trace_supertrace_connection(self, trace, supertrace):        
         # Figure what traces are contacting the supertraces
         # No end points should be inside a supertrace
         # Lines should be just contacting the outside of the supertrace
@@ -568,8 +576,9 @@ class SymbolicLayout(object):
         long_pt = 0
         long_side = 0
         
+        print "trace", pt1[0],pt1[1], pt2[0],pt2[1]
         if pt1[0] >= left and pt1[0] <= right and pt1[1] >= bottom and pt1[1] <= top:
-            if pt1[0] > left and pt1[0] < right and pt1[1] > bottom and pt1[1] < top:
+            if pt1[0] > left and pt1[0] < right and pt1[1] > bottom and pt1[1] < top:                
                 raise LayoutError("A trace is inside a supertrace!")
             else:
                 pt1_contact = True
@@ -781,6 +790,9 @@ class SymbolicLayout(object):
             self.trace_graph_components.append([comp, comp_devices])
         
     def _find_parent_lines(self):
+#         tb_list = traceback.extract_stack() #sxm- for tracing function call - remove after debugging
+#         traceback.print_list(tb_list) #sxm- for tracing function call - prints current stack status - remove after debugging
+        
         self.leads = []
         self.devices = []
         
@@ -839,6 +851,7 @@ class SymbolicLayout(object):
                 pt = sym_wire.element.pt1 # check at pt1
             
             # Check against traces
+            print "sym_wire", sym_wire, "pt", pt
             trace = self._find_bondwire_trace_connection(sym_wire, pt)
             if trace is None:
                 raise FormulationError('A bondwire is connected to a device but not a trace!')
@@ -855,6 +868,7 @@ class SymbolicLayout(object):
                 # only take a look at the vertical element of the pair
                 # so, the connection is only checked once.
                 if trace.element.vertical:
+                    print "checking supertrace", "pt", pt
                     partner = trace.intersecting_trace
                     region = Rect(trace.element.pt2[1], trace.element.pt1[1], \
                                   partner.element.pt1[0], partner.element.pt2[0])
@@ -881,10 +895,10 @@ class SymbolicLayout(object):
             
             online = False
             if tele.vertical:
-                if tele.pt1[0] == pele.pt[0] and pele.pt[1] < tele.pt2[1] and pele.pt[1] > tele.pt1[1]:
+                if tele.pt1[0] == pele.pt[0] and pele.pt[1] <= tele.pt2[1] and pele.pt[1] >= tele.pt1[1]: #sxm - second and third conditions should include '=' (in device/lead is on the endpoint of a trace)
                     online = True
             else:
-                if tele.pt1[1] == pele.pt[1] and pele.pt[0] < tele.pt2[0] and pele.pt[0] > tele.pt1[0]:
+                if tele.pt1[1] == pele.pt[1] and pele.pt[0] <= tele.pt2[0] and pele.pt[0] >= tele.pt1[0]: #sxm - second and third conditions should include '=' (in device/lead is on the endpoint of a trace)
                     online = True
                     
             if online:
@@ -2099,7 +2113,7 @@ class SymbolicLayout(object):
             print '*'
             parasitic_time = 0.0
             start_time = time.time()
-            self._build_lumped_graph()
+            self._build_lumped_graph() # a massive high level function
             parasitic_time += time.time() - start_time;
             
 #            for edge in self.lumped_graph.edges():
@@ -2831,16 +2845,19 @@ def add_test_measures(sym_layout):
     sym_layout.perf_measures.append(m2)
 
 def make_test_setup():
+    print 'make_test_setup()' #sxm test
     import os
     from powercad.tech_lib.test_techlib import get_power_lead, get_signal_lead
     from powercad.tech_lib.test_techlib import get_power_bondwire, get_signal_bondwire
     from powercad.tech_lib.test_techlib import get_device, get_dieattach
                                         
     temp_dir = os.path.abspath(settings.TEMP_DIR)
-    test_file = os.path.abspath('../../../sym_layouts/rd100.svg')
+    test_file = os.path.abspath('../../../sym_layouts/simple.svg') #sxm test -  originally 'rd100.svg'
     
     sym_layout = SymbolicLayout()
+    #print sym_layout.trace_trace_connections #sxm test 
     sym_layout.load_layout(test_file)
+    sym_layout._find_trace_connections() #sxm test
     symbols = sym_layout.all_sym
     
     dev = DeviceInstance(0.08, 10.0, get_device(), get_dieattach())
@@ -2852,15 +2869,16 @@ def make_test_setup():
     make_test_devices(symbols, dev)
     make_test_leads(symbols, pow_lead, sig_lead)
     make_test_bonds(symbols, power_bw, signal_bw)
+    #print sym_layout.trace_trace_connections #sxm test 
+    make_test_symmetries(sym_layout) #sxm commented for testing
+    make_test_constraints(symbols) #sxm commented for testing
     
-    make_test_symmetries(sym_layout)
-    make_test_constraints(symbols)
+    add_test_measures(sym_layout) #sxm commented for testing
     
-    add_test_measures(sym_layout)
-    
-    module = gen_test_module_data()
+    module = gen_test_module_data() #sxm commented for testing
     print "symbolic_layout.py > make_test_setup() > temp_dir=", temp_dir
-    sym_layout.form_design_problem(module, temp_dir)
+    sym_layout.form_design_problem(module, temp_dir) #sxm commented for testing
+    print sym_layout.trace_trace_connections #sxm test
     return sym_layout
 
 def optimization_test(sym_layout):
@@ -2926,8 +2944,43 @@ def test_pickle_symbolic_layout():
     show()
 
 if __name__ == '__main__':
-    sym_layout = make_test_setup()
-    optimization_test(sym_layout)
+    #----sxm test block--------
+    import os
+    from powercad.tech_lib.test_techlib import get_power_lead, get_signal_lead
+    from powercad.tech_lib.test_techlib import get_power_bondwire, get_signal_bondwire
+    from powercad.tech_lib.test_techlib import get_device, get_dieattach
+    temp_dir = os.path.abspath(settings.TEMP_DIR)
+    test_file = os.path.abspath('../../../sym_layouts/simple.svg') #sxm test -  originally 'rd100.svg'
+    
+    sym_layout = SymbolicLayout()
+    #print sym_layout.trace_trace_connections #sxm test 
+    sym_layout.load_layout(test_file)
+    symbols = sym_layout.all_sym #sxm test
+    dev = DeviceInstance(0.08, 10.0, get_device(), get_dieattach())
+    pow_lead = get_power_lead()
+    sig_lead = get_signal_lead()
+    power_bw = get_power_bondwire()
+    signal_bw = get_signal_bondwire()
+    make_test_devices(symbols, dev)
+    make_test_leads(symbols, pow_lead, sig_lead)
+    make_test_bonds(symbols, power_bw, signal_bw)
+    make_test_symmetries(sym_layout) #sxm commented for testing
+    make_test_constraints(symbols) #sxm commented for testing
+    
+    #add_test_measures(sym_layout) #sxm commented for testing
+    sym_layout._build_trace_layout()
+    print "all trace lines: ", sym_layout.all_trace_lines
+    sym_layout._find_trace_connections() #sxm test
+    #--sxm test block---------
+    
+    #sym_layout = make_test_setup() #sxm commented for testing
+    print "trace_trace_connections: [<trace1>, <trace2>, intersection@(x,y), T/F", sym_layout.trace_trace_connections
+    
+    sym_layout._build_virtual_grid_matrix()
+    print "vg_matrix: ", sym_layout.vg_matrix
+    
+    
+    #optimization_test(sym_layout) #sxm commented for testing
     #sym_layout = build_test_layout()
     #test_pickle_symbolic_layout()
     
