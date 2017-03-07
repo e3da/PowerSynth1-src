@@ -3,8 +3,8 @@ Created on Jul 20, 2015
 modified on April 15th 2016
 @author: jhmain, Quang
 Module_Full_Thermal_Netlist is the newest update of Module_Thermal_Netlist written my Jhmain.
-Quang has added the thermal capacitance calculation in the network, rearrange the nodes in the netlist output. Finally, the component naming logic is changed
-so that the netlist is more readable.
+Quang has added the thermal capacitance calculation in the network, rearrange the nodes in the netlist output. Finally,
+the component naming logic is changed so that the netlist is more readable.
 '''
 import os
 import networkx as nx
@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 from powercad.thermal.fast_thermal import ThermalGeometry, DieThermal, TraceIsland, eval_island,test_plot_layout
 from powercad.spice_export.components import Resistor,Capacitor, Current_Source, Voltage_Source, SpiceNameError, SpiceNodeError
 from powercad.util import SolveVolume
+
 class Module_Full_Thermal_Netlist_Graph():
     def __init__(self, name, sym_layout, solution_index):
         """
@@ -150,8 +151,9 @@ class Module_Full_Thermal_Netlist_Graph():
         node_count = 3
         src_nodes = []
         island_count=1
+        island_die=[]
         for island in islands:
-            Rm, Rsp2, dies,island_area = eval_island(island, all_dies, total_iso_temp, metal_thickness, metal_cond)
+            Rm, Rsp2, dies,island_area,die_pos = eval_island(island, all_dies, total_iso_temp, metal_thickness, metal_cond)
             Cm=island_area*metal_thickness*1e-9*mt_props.spec_heat_cap  
             '''                                             # island thermal capacitance
             Csp2=0.0
@@ -166,7 +168,8 @@ class Module_Full_Thermal_Netlist_Graph():
                 self.thermal_res.add_edge('N{}'.format(island_node), 'N{}'.format(node_count), {'R':die[0],'prefix':'die','island':island_count})
                 self.thermal_cap.add_edge('N{}'.format(island_node), 'N{}'.format(node_count), {'C':dtot_cap,'prefix':'die','island':island_count})
                 src_nodes.append(('N{}'.format(node_count), die[1] * power_scale))
-                node_count += 1    
+                node_count += 1
+            island_die.append((island_count,die_pos))       
             island_count += 1    
         '''        
         pos = nx.spring_layout(self.thermal_res)
@@ -230,6 +233,7 @@ class Module_Full_Thermal_Netlist_Graph():
 
         # Check node types
         self.thermal_res = self._check_node_types(self.thermal_res)
+        self.die_pos=island_die
         # Draw network and layout (test)   
         '''
         pos1 = nx.spring_layout(self.thermal_cap)

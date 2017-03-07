@@ -220,7 +220,7 @@ def create_box_stack_mesh(directory, geo_fn, mesh_fn, ws, ls, ts, lcs):
     args = [exec_path, "-3", "-algo", "front3d", "-optimize", geo_path]
     
     print args
-    p = subprocess.Popen(args, shell=False,stdout=subprocess.PIPE)
+    p = subprocess.Popen(args, shell=True,stdout=subprocess.PIPE)
     stdout, stderr = p.communicate()
     print 'GMSH RUN'
     print stdout, stderr

@@ -10,22 +10,18 @@ from powercad.design.project_structures import SubstrateInstance, ProcessDesignR
 from powercad.thermal.fast_thermal import SublayerThermalFeatures
 class ModuleData(object):
     def __init__(self):
-        #Quang:
-        #self.device= None #DeviceInstance obj
-        #
-        self.baseplate = None # BaseplateInstance obj
-        self.substrate_attach = None # SubstrateAttachInstance obj
-        self.substrate = None # SubstrateInstance obj
-        self.design_rules = None # ProcessDesignRules obj
-        self.frequency = None # Project parasitic extraction frequency (Hertz)
-        self.ambient_temp = None # Project ambient temperature (Kelvin)
         
+        self.baseplate = None        # BaseplateInstance obj
+        self.substrate_attach = None # SubstrateAttachInstance obj
+        self.substrate = None        # SubstrateInstance obj
+        self.design_rules = None     # ProcessDesignRules obj
+        self.frequency = None        # Project parasitic extraction frequency (Hertz)
+        self.ambient_temp = None     # Project ambient temperature (Kelvin)  
         # This information is created by the auto thermal characterization step (not the GUI)
-        self.sublayers_thermal = None # Project thermal characterization data (fast_thermal.SublayerThermalFeatures)
+        self.sublayers_thermal = None# Project thermal characterization data (fast_therm'al.SublayerThermalFeatures)
         
     def check_data(self):
-        #Quang:
-        #
+        '''Quang: This method will make sure the inputs in user interface is not None'''
         if self.baseplate is None:
             raise Exception('Baseplate information not supplied!')
         if self.substrate_attach is None:

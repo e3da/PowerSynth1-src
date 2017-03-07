@@ -25,7 +25,7 @@ Created on Jul 11, 2013
 from powercad.spice_import.get_netlist import Netdata
 from powercad.spice_import.build_graph import LayoutBuilder
 
-class converter():
+class Converter():
 
     def __init__(self,netfile, name):
         self.netfile = netfile
@@ -57,7 +57,7 @@ if __name__ == '__main__':
     test_name = os.path.abspath('../../../test/' + file_name)
     
     def test_converter(filename,name):
-        test = converter(filename,name)
+        test = Converter(filename,name)
         return test.convert('V1', 'V2', 'V0')
     
     print test_converter(test_file, test_name)

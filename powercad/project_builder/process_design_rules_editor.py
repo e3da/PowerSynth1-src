@@ -8,7 +8,7 @@ import traceback
 from PySide import QtCore, QtGui
 
 from powercad.design.project_structures import ProcessDesignRules
-from powercad.project_builder.process_design_rules_editor_ui import Ui_design_rule_dialog
+from powercad.project_builder.dialogs.process_design_rules_editor_ui import Ui_design_rule_dialog
 
 class ProcessDesignRulesEditor(QtGui.QDialog):
     """Process Design Rules Dialog Editor"""

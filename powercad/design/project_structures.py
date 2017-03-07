@@ -54,13 +54,16 @@ class DeviceInstance:
         """
         Keyword arguments:
         attach_thickness -- device attach thickness (units in mm)
-        heat_flow -- estimated amount of power device will dissipate (units in Watts)
+        heat_flow -- estimated amount of power device will dissipate (units in Watts) <-- only used with analysis
+                     1 and 2 in thermal
         device_tech -- reference of Device Tech. Lib. Obj.
         attach_tech -- reference of DeviceAttach Tech. Lib. Obj.
+        average_current -- estimated average current through device (units in Ampere)
+        power_model --  Mosfet / Didoe Power Model Name {'model': 'mos/diode', 'fname': 'Name of model in the model
+                        directory'
         """
-        
+        self.heat_flow=heat_flow
         self.attach_thickness = attach_thickness
-        self.heat_flow = heat_flow
         self.device_tech = device_tech
         self.attach_tech = attach_tech
     

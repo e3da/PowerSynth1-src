@@ -40,13 +40,229 @@ from scipy.optimize import curve_fit
 '''@PowerSynth Packages'''
 from powercad.sym_layout.plot import plot_layout
 from powercad.spice_export.thermal_netlist_graph import Module_Full_Thermal_Netlist_Graph
+
 '''Additional Function'''
+
 def list2float(data):
         fdata=[]
         for i in range(len(data)):
             fdata.append(float(data[i]))
-        return fdata 
+        return fdata
+
 '''Main Class'''    
+class STMDL():
+    def __init__(self,symbolic_layout):
+        '''Electrical variables: added as the inputs of constructor'''
+        '''Values below might be changed or interfaced with P.S now they are just hard-coded'''
+        '''Below show the parameter for user input. For testing its just a fixed value now, we will decide how to interface later'''
+        '''Information from CPMF 1200-S0080B datasheet'''
+        self.vds_crss = 10  # Look at the value in C-V characteristic, this is the voltage at which the CRSS curve changing from a line to a parabolic form
+        self.f_sw = 20e3
+        self.Tref = 25
+        self.Tamb = 300
+        self.ID = 60  # A
+        self.VDD = 800  # V
+        self.Qrr = 192e-9
+        self.RG = 1
+        self.Vg = 16
+        self.Ciss = 1e-9
+        self.Vpl = 6
+
+
+def csv_load(filedes, filename, tuple):
+    lists = [[] for i in range(len(tuple))]
+    temp = open(os.path.join(filedes, filename), 'rb')
+    tempdata = csv.DictReader(temp)
+    for row in tempdata:
+        for i in range(len(row)):
+            lists[i].append(row[tuple[i]])
+    return lists
+
+def csv_load_file(filedir, tuple):
+    lists = [[] for i in range(len(tuple))]
+    temp = open(filedir, 'rb')
+    tempdata = csv.DictReader(temp)
+    for row in tempdata:
+        for i in range(len(row)):
+            lists[i].append(row[tuple[i]])
+    return lists
+def Eon(vdd, id, tri, tfv, Qrr):
+    return vdd * id * (tri + tfv) / 2 + Qrr * vdd
+
+
+def Eoff(vdd, id, trv, tfi):
+    return vdd * id * (trv + tfi) / 2
+
+
+def Psw_eval(Eon, Eoff, fsw):
+    return (Eon + Eoff) * fsw
+
+
+def rdson_eval_transistor(Tj, alpha, Ro):  # per unit curve
+    Tref=27
+    return (alpha * (Tj - Tref) + 1) * Ro
+
+
+def rdson_fit_transistor(xdata, ydata):
+    '''
+    Return a list of parameters for rdson_eval_transistor
+    '''
+    popt, pcov = curve_fit(rdson_eval_transistor, xdata, ydata)
+    [alpha, Ro] = popt
+    return [alpha, Ro]
+
+
+def fCRSS(Vds, a1, b1, c1, a2, b2, c2):
+    return np.piecewise(Vds, [Vds < 12],
+                        [lambda Vds: a1 * Vds ** 2 + b1 * Vds + c1, lambda Vds: a2 * Vds ** 2 + b2 * Vds + c2])
+
+
+def fCRSS_fit(volt, cap):
+    CRSS_volts = volt
+    CRSS_raw = cap
+    popt, pcov = curve_fit(fCRSS, CRSS_volts, CRSS_raw)
+    [a1, b1, c1, a2, b2, c2] = popt  # using fCoss
+    print 'Crss Fitting Error: '
+    return [a1, b1, c1, a2, b2, c2]
+
+
+def Vth(T, a, b):
+    return a * T + b
+
+
+def Vth_fit(temp, volt):
+    popt, pcov = curve_fit(Vth, temp, volt)
+    return popt
+
+
+def curve_fitting_all(filedes, rds_fn, crss_fn, vth_fn):
+    '''
+    Curve fitting all the required graph and return a list of parameters
+    '''
+    
+    fd = filedes
+    tuple = ['Tj', 'Rds']
+    rds_data = csv_load(filedes, rds_fn, tuple)
+    [alpha, Ro] = rdson_fit_transistor(list2float(rds_data[0]), list2float(rds_data[1]))
+    tuple = ['Vds', 'Cap']
+    crss_data = csv_load(filedes, crss_fn, tuple)
+    print crss_data[0]
+    print crss_data[1]
+    [a1, b1, c1, a2, b2, c2] = fCRSS_fit(list2float(crss_data[0]), list2float(crss_data[1]))
+    tuple = ['Tj', 'Vth']
+    Vth_dat = csv_load(filedes, vth_fn, tuple)
+    [a, b] = Vth_fit(list2float(Vth_dat[0]), list2float(Vth_dat[1]))
+    parameters = [alpha, Ro, a1, b1, c1, a2, b2, c2, a, b]
+    return parameters
+
+
+def ptot_all(T_list, parameters):
+    p_all = []
+    for T in T_list:
+        p_all.append(ptot_compute_single(T, parameters))
+    return p_all
+
+
+def ptot_compute_single(T, parameters):
+    '''
+    This model using the estimated value of I and V for every single dies, and the
+    temperature from previous stages to estimate the new power disipation. This required extra inputs from data sheet,
+    and some initial curve fitting algorithm (Least Square method)
+    inputs: Estimated Current through each die
+            Estimated Bus voltage of the Half Bridge
+            Temperature from last stage for a die
+    output: Power Dissipation for a die
+    '''
+    T = T - 273
+    num_island = max(self.r_parent)
+    num_dies = max(self.r_id)
+    ''' Control parameters'''
+    ''' Rds params'''
+    alpha = parameters[0]
+    Ro = parameters[1]
+    ''' CGD or CRSS parameters'''
+    a1 = parameters[2]
+    b1 = parameters[3]
+    c1 = parameters[4]
+    a2 = parameters[5]
+    b2 = parameters[6]
+    c2 = parameters[7]
+    a = parameters[8]
+    b = parameters[9]
+    ''' User's inputs'''
+    Id = self.ID / (num_dies / num_island)
+    Vdd = self.VDD
+    Qrr = self.Qrr
+    Rg = self.RG
+    Vgson = self.Vg
+    Ciss = self.Ciss
+    Vpl = self.Vpl
+    ''' First Vds is approximate using the new rdson'''
+    rds = self.rdson_eval_transistor(T, alpha, Ro)
+    # print 'rds: ' +str(rds)
+    Vds = Id * rds
+    ''' Compute Power Conduction'''
+    Pcond = Vds * Id  # ignore parasitic effect for now
+    # print 'Power conduction:' +str(Pcond) + 'at T: ' + str(T)
+    ''' Compute Eon'''
+    '''Find Vth'''
+    Vth = self.Vth(T, a, b)
+    # print 'Vth: ' + str(Vth)
+    '''Find Qgd'''
+    Qgd = self.fCRSS(Vds, a1, b1, c1, a2, b2, c2) * (Vdd - Vds)
+    # print 'Qgd is: ' +str(Qgd)
+    '''Find IGoff and IGon'''
+    Igoff = Vpl / Rg
+    Igon = (Vgson - Vpl) / Rg
+    '''Find rising time for current, falling time for voltage '''
+    tri = Rg * Ciss * np.log((Vgson - Vth) / (Vgson - Vpl))
+    tfv = Qgd / Igon
+    # print 'current rising time: '+ str(tri) +' voltage falling time: '+ str(tfv)
+    Eon = self.Eon(Vdd, Id, tri, tfv, Qrr)
+    # print 'Eon: ' +str(Eon)
+    ''' Compute Eoff'''
+    '''Find falling time for current, rising time for voltage '''
+    trv = Qgd / Igoff
+    tfi = Rg * Ciss * np.log(Vpl / Vth)
+    # print 'current falling time: '+ str(tfi) +' voltage rising time: '+ str(trv)
+    Eoff = self.Eoff(Vdd, Id, trv, tfi)
+    # print 'Eoff: ' +str(Eoff)
+    # Compute the total power using parameters list
+    # this is just the map how to do it. Remember it is a list of signal so need to call this in another function
+    # Only half of the cycle is taken care of now. (50% D)
+    Psw = self.Psw_eval(Eon, Eoff, self.f_sw)
+    Pave = (Pcond * (1 / (2 * self.f_sw) - tri - tfv - trv - tfi)) / (1 / (self.f_sw * 2)) + (Eon + Eoff) * self.f_sw
+    if T == 27:
+        print 'Temp: ' + str(T) + ' Conduction loss: ' + str(Pcond) + ' Switching loss: ' + str(Psw)
+    if T > 126 and T < 127:
+        print 'Temp: ' + str(T) + ' Conduction loss: ' + str(Pcond) + ' Switching loss: ' + str(Psw)
+    if T > 225 and T < 226:
+        print 'Temp: ' + str(T) + ' Conduction loss: ' + str(Pcond) + ' Switching loss: ' + str(Psw)
+        # print 'total loss: ' + str(Ptot)
+    print Pave
+    return Pave
+
+
+def Pcond_eval(self, Id_list, Vds_list, Ton, list=True):
+    '''
+    This method integrate through the list of Id-Vds output to compute power conduction
+    Ton: simulation time
+    Id_list: list of Id in 1 period
+    Vds_list: list of Vd in 1 period
+    If list is false, this function is used for approximation value of ID,VDS
+    '''
+    if list:  # simulation case
+        Pcond = []
+        for i in np.arange(0, len(Id_list), 1):
+            Pcond.append(Id_list[i] * Vds_list[i])
+        Power_cond = sum(Pcond) / float(Ton)
+    else:  # no simulation case
+        Power_cond = Id_list * Vds_list
+    return Power_cond
+
+
+'''---------------------------CODE under maintenance ---------------------------------------------------------------'''
+'''These functions below are still connected to PowerSynth, DONT delete///'''
 class ET_analysis():
     '''Constructor - Need to redefined, depends on how you want to interface it. Now I keep it as simple as possible'''
     def __init__(self,thermal_netlist_graph):
@@ -70,7 +286,7 @@ class ET_analysis():
         self.Cisl=[]
         self.Rsub={}
         self.Csub={}
-        '''Electrical variable: added as the inputs of constructor'''
+        '''Electrical variables: added as the inputs of constructor'''
         '''Values below might be changed or interfaced with P.S now they are just hard-coded'''
         '''Below show the parameter for user input. For testing its just a fixed value now, we will decide how to interface later'''
         '''Information from CPMF 1200-S0080B datasheet'''
@@ -196,7 +412,7 @@ class ET_analysis():
         ET.set_xlabel('Time (s)')
         ET.set_ylabel('Temperature (C)')
         die9=[x-273 for x in die9]
-        ET.plot(Time_list,die9,color=c[0], lw=1)
+        ET.plot(Time_list,die11,color=c[0], lw=1)
         #ET.plot(Time_list,die2,color=c[1], lw=1) 
         #ET.plot(Time_list,die3,color=c[2], lw=1)
         #ET.plot(Time_list,die4,color=c[3], lw=1)
@@ -295,7 +511,8 @@ class ET_analysis():
          
     def ET_formation_1(self,f_sw):
         '''
-        This method will first load the thermal data in R and C network_x to compute the state space model for thermal estimation
+        This method will first load the thermal data in R and C network_x to compute the state space model for thermal
+        estimation
         State Space model:
         T'=A*T + B*P(t) 
         y= C*T + D*P(t)
@@ -305,8 +522,8 @@ class ET_analysis():
         C is an Identity matrix 
         D is just a zero matrix with same dimension as B
         The method utilize control system tool box in Python check this link:
-        http://python-control.readthedocs.io/en/latest/
-        '''
+        http://python-control.readthedocs.io/en/latest/ '''
+
         for r_node in self.thermal_res.nodes(data=True):
             R=r_node[1].get('component')
             if R is not None:             # include all the sources and resistances
@@ -368,7 +585,8 @@ class ET_analysis():
         d_mat=np.asarray(d_mat)
         thermal_model=ct.ss(a_mat,b_mat,c_mat,d_mat)
         return thermal_model
-    def input_simple(self,p): #simple way to test the setup with one input
+
+    def input_simple(self,p):  #simple way to test the setup with one input
         '''
         Matrix P formation:
          size= (num of dies + 1)x1 
@@ -384,7 +602,8 @@ class ET_analysis():
         for i in np.arange(0,num_dies,1):
             pdiss.itemset(i,0,p)    
         pdiss.itemset(side-1,0,self.Tamb)  
-        return pdiss  
+        return pdiss
+
     def form_a_mat(self):
         '''
         Matrix A formation:
@@ -408,28 +627,23 @@ class ET_analysis():
         for i in np.arange(0,num_dies,1):
             R=self.Rdie[i]['val']
             C=self.Cdie[i]['val']
-            #print 'double check Rdie'+str(i+1)+': '+str(R) +' Cdie'+str(i+1)+': '+str(C) 
             A.itemset((i,i),-1/(R*C))
             if self.Rdie[i]['isl']==self.Cdie[i]['isl']: # check if they are on same isl else there is sth wrong here
                 isl_ind=self.Rdie[i]['isl']+num_dies-1
-                #print isl_ind
             A.itemset((i,isl_ind),1/(R*C))
         sub_layer_ind=num_dies+num_island  
         for j in np.arange(0,num_island,1):
             R=self.Risl[j]['val']  
             C=self.Cisl[j]['val']
-            #print 'double check Risl'+str(j+1)+': '+str(R) +' Cisl'+str(j+1)+': '+str(C)  
             isl_ind=j+num_dies
             A.itemset((isl_ind,isl_ind),-1/(R*C))
             A.itemset((isl_ind,sub_layer_ind),1/(R*C))
-        #print self.Rsub['val']
-        #print self.Csub['val']
+
         Rsub=self.Rsub['val']
         Csub=self.Csub['val']
-        #print sub_layer_ind
-        A.itemset(sub_layer_ind,sub_layer_ind,-1/(Rsub*Csub))    
-        #print A
-        return np.asarray(A)  
+        A.itemset(sub_layer_ind,sub_layer_ind,-1/(Rsub*Csub))
+        return np.asarray(A)
+
     def form_b_mat(self):
         '''
         Matrix B formation:
@@ -448,7 +662,6 @@ class ET_analysis():
         B=np.zeros((rows,cols),dtype=np.float64) 
         for i in np.arange(0,num_dies,1):
             C=self.Cdie[i]['val']
-            #print 'double check Cdie'+str(i+1)+': '+str(C)
             B.itemset(i,i,1/C)
         for i in np.arange(0,num_island,1):
             isl_row=i+num_dies
@@ -463,18 +676,22 @@ class ET_analysis():
             B.itemset(sub_layer_row,i,1/Csub)
         B.itemset(sub_layer_row,cols-1,1/(Rsub*Csub))    
         return np.asarray(B)    
-    
-    
-    ''' ----------------------------------------Power Dissipation Model From Here On-------------------------------------------------'''
-    def Eon(self,vdd,id,tri,tfv,Qrr):
+
+    '''------------------------------------Power Dissipation Model From Here On--------------------------------------'''
+
+    def Eon(self, vdd, id, tri, tfv, Qrr):
         return vdd*id*(tri+tfv)/2+Qrr*vdd
+
     def Eoff(self,vdd,id,trv,tfi):
         return vdd*id*(trv+tfi)/2
+
     def Psw_eval(self,Eon,Eoff,fsw):
         return (Eon+Eoff)*fsw
+
     def rdson_eval_transistor(self,Tj,alpha,Ro):  # per unit curve
         Tref=self.Tref
         return (alpha*(Tj-Tref)+1)*Ro
+
     def rdson_fit_transistor(self,xdata,ydata):
         '''
         Return a list of parameters for rdson_eval_transistor
@@ -482,8 +699,10 @@ class ET_analysis():
         popt, pcov = curve_fit(self.rdson_eval_transistor, xdata,ydata)
         [alpha,Ro]=popt
         return [alpha,Ro]
-    def fCRSS(self,Vds,a1,b1,c1,a2,b2,c2):   
+
+    def fCRSS(self,Vds,a1,b1,c1,a2,b2,c2):
         return np.piecewise(Vds, [Vds < 12], [lambda Vds:a1*Vds**2+b1*Vds+c1  , lambda Vds:a2*Vds**2+b2*Vds+c2]) 
+
     def fCRSS_fit(self,volt,cap):
         CRSS_volts=volt
         CRSS_raw=cap
@@ -491,11 +710,14 @@ class ET_analysis():
         [a1,b1,c1,a2,b2,c2]=popt # using fCoss  
         print 'Crss Fitting Error: '
         return [a1,b1,c1,a2,b2,c2]
+
     def Vth(self,T,a,b):
         return a*T+b
+
     def Vth_fit(self,temp,volt):
         popt, pcov = curve_fit(self.Vth, temp, volt)
         return popt
+
     def curve_fitting_all(self,filedes,rds_fn,crss_fn,vth_fn):
         '''
         Curve fitting all the required graph and return a list of parameters
@@ -518,6 +740,7 @@ class ET_analysis():
             b=0        
         parameters=[alpha,Ro,a1,b1,c1,a2,b2,c2,a,b]     
         return parameters
+
     def ptot_all(self,T_list,parameters):
         p_all=[]
         for T in T_list:
@@ -602,6 +825,7 @@ class ET_analysis():
         #print 'total loss: ' + str(Ptot)
         print Pave
         return Pave
+
     def Pcond_eval(self,Id_list,Vds_list,Ton,list=True):
         '''
         This method integrate through the list of Id-Vds output to compute power conduction 
@@ -628,7 +852,8 @@ class ET_analysis():
         for row in tempdata:
             for i in range(len(row)):
                 lists[i].append(row[tuple[i]])
-        return lists    
+        return lists
+
     def s_s_analysis(self,P_list):
         '''
         Analysis already avaiavle in fast_thermal, this is an extra version (more compatible)
@@ -651,41 +876,45 @@ class ET_analysis():
                 Pisl=Psub           
             T=Rdie*P_list[i]+self.Risl[self.Rdie[i]['isl']-1]['val']*Pisl+Psub*self.Rsub['val']+self.Tamb
             temps.append(T)   
-        return temps        
+        return temps
+
     def sucessive_approximation(self,Po,parameters):
         '''This is just a proof of concept for now. It will be added inside the optimization loop as an evaluate fucntion'''
         Plow=[x/2 for x in Po]
+        print Plow
         Tsso=self.s_s_analysis(Plow) # First use power dissipation at ambient temperature
         converged=False
         count=0
+        T_amb=[273]*len(Tsso)
         while(not(converged)):
             if count==0:
                 Phigh=self.ptot_all(Tsso, parameters)
                 Phigh=[x/2 for x in Phigh]
                 Pave=[(x+y)/2 for x,y in zip(Plow,Phigh)]
+                Pave=Phigh
                 T_new=self.s_s_analysis(Pave)
                 count+=1
                 dt=[x-y for x,y in zip(T_new,Tsso)]
-                if max(dt)<5:
+                if max(dt)<1:
                     converged=True
                 print count
-                print T_new
-                print Pave
+                print [T - 273 for T in T_new]
+                print Pave 
             else:
                 T_old=T_new
                 Plow=Phigh
                 Phigh=self.ptot_all(T_old, parameters)
                 Phigh=[x/2 for x in Phigh]
                 Pave=[(x+y)/2 for x,y in zip(Plow,Phigh)]
+                Pave=Phigh
                 T_new=self.s_s_analysis(Pave)
                 count+=1
                 dt=[x-y for x,y in zip(T_new,T_old)]   
-                if max(dt)<5:
+                if max(dt)<1:
                     converged=True
                 print count
-                print T_new 
+                print [T - 273 for T in T_new]
                 print Pave
-            
 if __name__ == '__main__':
     '''
     filedes='C:\Users\qmle\Desktop\cpmf_1200_s160b\cpmf_1200_s160b'

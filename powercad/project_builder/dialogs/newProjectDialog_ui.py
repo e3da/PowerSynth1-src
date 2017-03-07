@@ -356,6 +356,7 @@ class Ui_newProjectDialog(object):
         self.dropdown_filetype.addItem("")
         self.dropdown_filetype.addItem("")
         self.dropdown_filetype.addItem("")
+        self.dropdown_filetype.addItem("")
         self.horizontalLayout_5.addWidget(self.dropdown_filetype)
         self.layoutWidget5 = QtGui.QWidget(newProjectDialog)
         self.layoutWidget5.setGeometry(QtCore.QRect(10, 460, 491, 25))
@@ -400,6 +401,7 @@ class Ui_newProjectDialog(object):
         self.dropdown_filetype.setItemText(0, QtGui.QApplication.translate("newProjectDialog", "File type", None, QtGui.QApplication.UnicodeUTF8))
         self.dropdown_filetype.setItemText(1, QtGui.QApplication.translate("newProjectDialog", "Symbolic layout (.svg)", None, QtGui.QApplication.UnicodeUTF8))
         self.dropdown_filetype.setItemText(2, QtGui.QApplication.translate("newProjectDialog", "Netlist (.net or .txt)", None, QtGui.QApplication.UnicodeUTF8))
+        self.dropdown_filetype.setItemText(3, QtGui.QApplication.translate("newProjectDialog", "Layout Script (.psc or .txt)", None, QtGui.QApplication.UnicodeUTF8))
         self.btn_cancel.setText(QtGui.QApplication.translate("newProjectDialog", "Cancel", None, QtGui.QApplication.UnicodeUTF8))
         self.btn_create.setText(QtGui.QApplication.translate("newProjectDialog", "Create Project", None, QtGui.QApplication.UnicodeUTF8))
 
