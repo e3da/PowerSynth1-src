@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'C:\Users\jhmain\workspace\PowerCAD\src\powercad\project_builder\ui\newProjectDialog.ui'
+# Form implementation generated from reading ui file 'newProjectDialog.ui'
 #
-# Created: Thu Jun 25 15:11:12 2015
+# Created: Tue Jul 05 15:39:56 2016
 #      by: pyside-uic 0.2.15 running on PySide 1.2.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -356,6 +356,7 @@ class Ui_newProjectDialog(object): #setup the UI (window size, buttons, fonts, c
         self.dropdown_filetype.addItem("")
         self.dropdown_filetype.addItem("")
         self.dropdown_filetype.addItem("")
+        self.dropdown_filetype.addItem("")
         self.horizontalLayout_5.addWidget(self.dropdown_filetype)
         self.layoutWidget5 = QtGui.QWidget(newProjectDialog)
         self.layoutWidget5.setGeometry(QtCore.QRect(10, 460, 491, 25))
@@ -393,13 +394,14 @@ class Ui_newProjectDialog(object): #setup the UI (window size, buttons, fonts, c
         self.groupBox_advnetlist.setTitle(QtGui.QApplication.translate("newProjectDialog", "Netlist Details", None, QtGui.QApplication.UnicodeUTF8))
         self.label_9.setText(QtGui.QApplication.translate("newProjectDialog", "Positive Source  ", None, QtGui.QApplication.UnicodeUTF8))
         self.label_10.setText(QtGui.QApplication.translate("newProjectDialog", "Negative Source", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_6.setText(QtGui.QApplication.translate("newProjectDialog", "Enter netlist names for the source leads and output node. Source lead names should correspond to voltage sources defined in the netlist. The output node name should correspond to a net alias or node defined in the netlist.", None, QtGui.QApplication.UnicodeUTF8))
+        self.label_6.setText(QtGui.QApplication.translate("newProjectDialog", "Enter netlist names for the positive source, negative source, and output node. Source names should correspond to DC voltage sources defined in the netlist. The output node name should correspond to a net alias or node name defined in the netlist.", None, QtGui.QApplication.UnicodeUTF8))
         self.label_11.setText(QtGui.QApplication.translate("newProjectDialog", "Output Node      ", None, QtGui.QApplication.UnicodeUTF8))
         self.label_12.setText(QtGui.QApplication.translate("newProjectDialog", "Netlists will be automatically converted to a symbolic layout.", None, QtGui.QApplication.UnicodeUTF8))
         self.label_7.setText(QtGui.QApplication.translate("newProjectDialog", "Select file type", None, QtGui.QApplication.UnicodeUTF8))
         self.dropdown_filetype.setItemText(0, QtGui.QApplication.translate("newProjectDialog", "File type", None, QtGui.QApplication.UnicodeUTF8))
         self.dropdown_filetype.setItemText(1, QtGui.QApplication.translate("newProjectDialog", "Symbolic layout (.svg)", None, QtGui.QApplication.UnicodeUTF8))
         self.dropdown_filetype.setItemText(2, QtGui.QApplication.translate("newProjectDialog", "Netlist (.net or .txt)", None, QtGui.QApplication.UnicodeUTF8))
+        self.dropdown_filetype.setItemText(3, QtGui.QApplication.translate("newProjectDialog", "Layout Script (.psc or .txt)", None, QtGui.QApplication.UnicodeUTF8))
         self.btn_cancel.setText(QtGui.QApplication.translate("newProjectDialog", "Cancel", None, QtGui.QApplication.UnicodeUTF8))
         self.btn_create.setText(QtGui.QApplication.translate("newProjectDialog", "Create Project", None, QtGui.QApplication.UnicodeUTF8))
 

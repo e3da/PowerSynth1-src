@@ -1,5 +1,11 @@
 '''
 @author: Peter N. Tucker
+
+PURPOSE:
+ - This module is used to help set up HSPICE simulation profiles for testing netlist export for PowerSynth
+ - This module is connected to the module testing functions in hspice_interface
+
+Added documentation comments - jhmain 7-1-16
 '''
 
 class TransientSimulation():

@@ -1,18 +1,38 @@
 '''
 Created on Jul 20, 2015
-modified on April 15th 2016
-@author: jhmain, Quang
-Module_Full_Thermal_Netlist is the newest update of Module_Thermal_Netlist written my Jhmain.
+Modified on April 15, 2016
+
+@author: Jonathan Main, Quang
+
+PURPOSE:
+ - This module is used for the thermal equivalent circuit export feature in PowerSynth
+ - This module generates an HSPICE circuit netlist of the thermal equivalent network for a symbolic layout solution
+ - This module is called from the Solution Window
+
+INPUTS:
+ - Name for resulting netlist file
+ - Symbolic layout (object containing layout solutions from PowerSynth)
+ - Solution index (index of desired layout in the symbolic layout object)
+ 
+OUTPUTS:
+ - HSPICE netlist for thermal equivalent circuit
+
+Module_Full_Thermal_Netlist is the newest update of Module_Thermal_Netlist written by Jonathan.
 Quang has added the thermal capacitance calculation in the network, rearrange the nodes in the netlist output. Finally, the component naming logic is changed
 so that the netlist is more readable.
+
+Added documentation comments and spacing for better readability - jhmain 7-1-16
 '''
+
 import os
 import networkx as nx
 import matplotlib.pyplot as plt
 from powercad.thermal.fast_thermal import ThermalGeometry, DieThermal, TraceIsland, eval_island,test_plot_layout
 from powercad.spice_export.components import Resistor,Capacitor, Current_Source, Voltage_Source, SpiceNameError, SpiceNodeError
 from powercad.util import SolveVolume
+
 class Module_Full_Thermal_Netlist_Graph():
+    
     def __init__(self, name, sym_layout, solution_index):
         """
         Creates a graph to hold SPICE information for the thermal network of a symbolic layout solution
@@ -25,13 +45,12 @@ class Module_Full_Thermal_Netlist_Graph():
             thermal_res -- Complete NetworkX graph of thermal res network
             thermal_cap -- complete NetworkX graph of thermal cap network
         """
-        
         self.name = name.replace(' ', '')
         
         # Load symbolic layout
-        
         self.sym_layout = sym_layout
         self.sym_layout.gen_solution_layout(solution_index)
+        
         # load thermal properties, geometry data
         '''
         ------Die------------
@@ -60,6 +79,7 @@ class Module_Full_Thermal_Netlist_Graph():
         iso_dims=[substrate_dims[0],substrate_dims[1],substrate_tech.isolation_thickness]        # isolation dims
         bp_dims=sym_layout.module.baseplate.dimensions                                           #baseplate_dims
         bp_props=sym_layout.module.baseplate.baseplate_tech.properties                           #baseplate_props
+        
         # Compute Sub_Cap, Die_cap
         bp_cap=bp_props.density*bp_props.spec_heat_cap*SolveVolume(bp_dims)                      # base plate thermal capacitance    
         mt_cap=mt_props.density*mt_props.spec_heat_cap*SolveVolume(mt_dims)                      # metal thermal capacitance
@@ -71,6 +91,7 @@ class Module_Full_Thermal_Netlist_Graph():
         die_cap=die_props.density*die_props.spec_heat_cap*SolveVolume(die_dims)                  # die capacitance
         att_cap=att_props.density*att_props.spec_heat_cap*SolveVolume(att_dims)                  # die_attach_capacitance
         dtot_cap=1/(1/die_cap+1/att_cap)                                                         # equivalent thermal cap of die + die attach
+        
         # Build thermal geometry from symbolic layout
         
         # Create trace islands
@@ -113,14 +134,15 @@ class Module_Full_Thermal_Netlist_Graph():
                                            trace_islands=islands,
                                            sublayer_features=sym_layout.module.sublayers_thermal)
         
-        
         # Prepare spice_node dictionaries to map between networkx nodes and SPICE nodes/components
         self.spice_node = {'N0':'0000'}
         self.spice_node_count = 1  # node 0 is a special node reserved for ground
         self.spice_name = {}
         self.spice_name_count = 1
+        
         #Given Prefix names and initial count
         self.prefix_count={'sub':1,'die':1,'sp':1,'isl':1,'src':1,'amb':1}
+        
         # Build thermal network graph
         power_scale = 1.0
         self.thermal_res = nx.Graph()
@@ -150,8 +172,9 @@ class Module_Full_Thermal_Netlist_Graph():
         node_count = 3
         src_nodes = []
         island_count=1
+        island_die=[]
         for island in islands:
-            Rm, Rsp2, dies,island_area = eval_island(island, all_dies, total_iso_temp, metal_thickness, metal_cond)
+            Rm, Rsp2, dies,island_area,die_pos = eval_island(island, all_dies, total_iso_temp, metal_thickness, metal_cond)
             Cm=island_area*metal_thickness*1e-9*mt_props.spec_heat_cap  
             '''                                             # island thermal capacitance
             Csp2=0.0
@@ -166,7 +189,8 @@ class Module_Full_Thermal_Netlist_Graph():
                 self.thermal_res.add_edge('N{}'.format(island_node), 'N{}'.format(node_count), {'R':die[0],'prefix':'die','island':island_count})
                 self.thermal_cap.add_edge('N{}'.format(island_node), 'N{}'.format(node_count), {'C':dtot_cap,'prefix':'die','island':island_count})
                 src_nodes.append(('N{}'.format(node_count), die[1] * power_scale))
-                node_count += 1    
+                node_count += 1
+            island_die.append((island_count,die_pos))       
             island_count += 1    
         '''        
         pos = nx.spring_layout(self.thermal_res)
@@ -175,7 +199,6 @@ class Module_Full_Thermal_Netlist_Graph():
         '''
         #print 'src_nodes:' + str(src_nodes)                
         # Replace network edges with SPICE resistor and capacitor nodes
-        
         
         for edge in self.thermal_res.edges(data=True):
             node1 = edge[0]
@@ -207,6 +230,7 @@ class Module_Full_Thermal_Netlist_Graph():
             self.thermal_cap.add_node(cap_name, attr_dict={'type':'cap', 'component':spice_cap})
             self.thermal_cap.add_edge(cap_name, node1)
             self.thermal_cap.add_edge(cap_name, node2)
+            
         # Add a heat flow (current) source for each die
         src_pref='src'
         for src in src_nodes:
@@ -230,6 +254,7 @@ class Module_Full_Thermal_Netlist_Graph():
 
         # Check node types
         self.thermal_res = self._check_node_types(self.thermal_res)
+        self.die_pos=island_die
         # Draw network and layout (test)   
         '''
         pos1 = nx.spring_layout(self.thermal_cap)
@@ -240,6 +265,8 @@ class Module_Full_Thermal_Netlist_Graph():
         plt.show()
         test_plot_layout(thermal_geometry.all_traces, all_dies, (83.82, 54.61))
         '''
+        
+        
     def get_SPICE_node(self, nx_node):
         """
         Return a unique SPICE node for the networkx node.
@@ -257,6 +284,7 @@ class Module_Full_Thermal_Netlist_Graph():
         if self.spice_node.get(nx_node) is None:
             self.spice_node[nx_node] = str(self.spice_node_count).zfill(4)
             self.spice_node_count += 1
+            
             # check that node count is less than or equal to 9999
             if self.spice_node_count > 9999:
                 raise SpiceNodeError('Node count too high')
@@ -282,12 +310,15 @@ class Module_Full_Thermal_Netlist_Graph():
         if self.spice_name.get(nx_node) is None:
             self.spice_name[nx_node] = prefix+str(self.prefix_count[prefix])
             self.prefix_count[prefix] += 1
+            
             # check that node name is less than 7 characters
             if self.prefix_count[prefix] > 999999:
                 raise SpiceNameError('Name count too high')
         
         # return respective SPICE node
         return self.spice_name[nx_node]
+    
+    
     def get_NX_node(self, spice_node):
         """
         Return the networkx node name for the given SPICE node.
@@ -332,7 +363,6 @@ class Module_Full_Thermal_Netlist_Graph():
         Returns:
             SPICE file path
         """        
-        
         # Prepare netlist file
         full_path = os.path.join(directory, '{}'.format(self.name))
         spice_file = open(full_path, 'w')

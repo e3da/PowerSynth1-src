@@ -1,5 +1,11 @@
 '''
 @author: Peter N. Tucker
+
+PURPOSE:
+ - This module contains functions used by Peter to test netlist export for PowerSynth
+ - This module is connected to the module testing functions in hspice_interface
+
+Added documentation comments - jhmain 7-1-16
 '''
 
 import networkx as nx

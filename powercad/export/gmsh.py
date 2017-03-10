@@ -209,7 +209,7 @@ def create_box_stack_mesh(directory, geo_fn, mesh_fn, ws, ls, ts, lcs):
     geo_path = os.path.join(directory, geo_fn)
     f = open(geo_path, 'w')
     f.write(geo_string)
-    #print geo_string
+    print geo_string
     f.close()
     msh_path = os.path.join(directory, mesh_fn)
     "define Gmsh's file path"
@@ -220,7 +220,7 @@ def create_box_stack_mesh(directory, geo_fn, mesh_fn, ws, ls, ts, lcs):
     args = [exec_path, "-3", "-algo", "front3d", "-optimize", geo_path]
     
     print args
-    p = subprocess.Popen(args, shell=True,stdout=subprocess.PIPE)
+    p = subprocess.Popen(args, shell=True, stdout=subprocess.PIPE)
     stdout, stderr = p.communicate()
     print 'GMSH RUN'
     print stdout, stderr

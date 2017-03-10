@@ -1,15 +1,23 @@
 '''
 Created on Jul 14, 2015
 
-@author: jhmain
+@author: Jonathan Main
+
+PURPOSE:
+ - This module is an attempt to run HSPICE automatically to test a generated netlist 
+
+Added documentation comments - jhmain 7-1-16
 '''
+
 import os
 from hspice_plot import *
 from pylab import figure, show
 
 class test_HSPICE_graph():
+    
     def __init__(self, directory):
         self.directory = directory
+    
     
     def run_hspice(self):
         """
@@ -29,6 +37,7 @@ class test_HSPICE_graph():
         spice_file.close()
         
         return self.hspice_output
+    
     
     def draw_HSPICE_output(self):
         #self.hspice_output[0] = 'Run One'

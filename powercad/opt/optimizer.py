@@ -14,7 +14,7 @@ from deap import algorithms
 from deap import base
 from deap import creator
 from deap import tools
-
+import time
 class DesignVar(object):
     def __init__(self, constraints, init_values):
         """
@@ -25,8 +25,7 @@ class DesignVar(object):
         init_values -- tuple (length of 2) of min and max for design var initialization (min, max)
         """
         self.constraints = constraints
-        self.init_values = init_values
-
+        self.init_values = init_values     
 class NSGAII_Optimizer(object):
     def __init__(self, design_vars, eval_fn, num_measures, seed, num_gen, 
                  mu = 15, ilambda = 30, cxpb = 0.5, mutpb = 0.2): #sxm original values; cxpb=0.5, mutpb=0.2 
@@ -92,6 +91,7 @@ class NSGAII_Optimizer(object):
         ind = []
         for dv in self.design_vars:
             ind.append(random.uniform(dv.init_values[0], dv.init_values[1]))
+            print dv.init_values[0],dv.init_values[1]
         return Individual(ind)
         
     def run(self):
@@ -137,16 +137,18 @@ if __name__=='__main__':
         
     prob = TestProb()
     seed = 48575
-    ngen = 50
+    ngen = 2
     
     opt = NSGAII_Optimizer(prob.design_vars, prob.eval, 2, seed, ngen)
     opt.run()
     f1 = []
     f2 = []
+    count=0
     for sol in opt.solutions:
+        count+=1
         f1.append(sol.fitness.values[0])
         f2.append(sol.fitness.values[1])
-        
+    print count    
     plot(f1, f2, 'o')
     show()
         

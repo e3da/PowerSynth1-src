@@ -10,7 +10,7 @@ import sys
 import traceback
 import os
 import time
-from solutionWindow_ui import Ui_layout_form
+from powercad.project_builder.dialogs.solutionWindow_ui import Ui_layout_form
 from PySide import QtCore, QtGui, QtOpenGL
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
@@ -19,7 +19,7 @@ from powercad.sym_layout.plot import plot_layout
 from powercad.export.Q3D import output_q3d_vbscript
 from powercad.export.solidworks import output_solidworks_vbscript
 from powercad.design.module_design import ModuleDesign
-from powercad.spice_export.netlist_graph import Module_SPICE_netlist_graph,Module_SPICE_netlist_graph_v2,Module_SPICE_lumped_graph
+from powercad.spice_export.netlist_graph import Module_SPICE_netlist_graph,Module_SPICE_netlist_graph_v2, Module_SPICE_lumped_graph
 from powercad.spice_export.thermal_netlist_graph import Module_Full_Thermal_Netlist_Graph
 from powercad.electro_thermal.ElectroThermal_toolbox import ET_analysis
 import numpy as np
@@ -47,10 +47,10 @@ class SolutionWindow(QtGui.QWidget):
         for objective in solution.params:
             self.tbl_item = QtGui.QTableWidgetItem(objective[0])
             self.ui.tbl_info.setItem(self.i,0,self.tbl_item)
-            self.tbl_item = QtGui.QTableWidgetItem(str(round(objective[2],4)))
-            self.ui.tbl_info.setItem(self.i,1,self.tbl_item)
-            self.tbl_item = QtGui.QTableWidgetItem(objective[1])
+            self.tbl_item = QtGui.QTableWidgetItem(str(round(objective[1],4)))
             self.ui.tbl_info.setItem(self.i,2,self.tbl_item)
+            self.tbl_item = QtGui.QTableWidgetItem(objective[2])
+            self.ui.tbl_info.setItem(self.i,1,self.tbl_item)
             self.i += 1
         
         
@@ -66,6 +66,7 @@ class SolutionWindow(QtGui.QWidget):
         
     def export_q3d(self):
         fn = QtGui.QFileDialog.getSaveFileName(self, options=QtGui.QFileDialog.ShowDirsOnly)
+        print fn
         outname = fn[0]
         
         if len(outname) > 0:
@@ -115,6 +116,7 @@ class SolutionWindow(QtGui.QWidget):
             except:
                 QtGui.QMessageBox.warning(None, "SPICE Electrical Parasitics Netlist", "Failed to export netlist! Check log/console.")
                 print traceback.format_exc()
+
     def Run_Sucessive_approximation(self):
         outname='aaa'
         thermal_netlist_graph = Module_Full_Thermal_Netlist_Graph(os.path.basename(outname), self.sym_layout, self.solution.index)   
@@ -132,6 +134,7 @@ class SolutionWindow(QtGui.QWidget):
         To=electrothermal.Tamb*To
         To=np.asarray(To)
         Po=electrothermal.ptot_all(To[0:num_dies], parameters)
+        #electrothermal.Run_sim(thermal_mdl, parameters, 300000)
         start=time.time()
         electrothermal.sucessive_approximation(Po, parameters)
         runtime=time.time()-start

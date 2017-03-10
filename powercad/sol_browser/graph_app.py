@@ -1,7 +1,7 @@
 '''
 Created on March 6, 2012
 
-@author: shook, mukherjee
+@author: shook, mukherjee, qmle
 '''
 
 import sys
@@ -30,6 +30,7 @@ from graphing_form import Ui_GrapheneWindow
 from objective_widget import ObjectiveWidget
 from powercad.sol_browser.solution import Solution
 from powercad.sol_browser.solution_lib import SolutionLibrary
+
 from powercad.sym_layout.plot import plot_layout
 from powercad.electro_thermal.ElectroThermal_toolbox import ET_analysis
 from powercad.spice_export.thermal_netlist_graph import Module_Full_Thermal_Netlist_Graph
@@ -150,7 +151,7 @@ class GrapheneWindow(QtGui.QMainWindow):
     # Called when an x, y, or z checkbox is clicked. This is a duplicate of set_graph_axis2() to test what happens when no boxes are checked.
     # NOTE: THIS METHOD IS NEVER CALLED IN GRAPH_APP.PY; It is called from objective_widget.py
     def set_graph_axis(self, objective, axis):
-        print axis, objective.name_units[0]
+        #print axis, objective.name_units[0]
         print "graph axis (previous state): ", "x", self.graph_axis['x'].name_units[0] if self.graph_axis['x'] is not None else "none", "y", self.graph_axis['y'].name_units[0] if self.graph_axis['y'] is not None else "none", "z", self.graph_axis['z'].name_units[0] if self.graph_axis['z'] is not None else "none"
         # if the check box got checked
         if objective.chkbox_dict[axis].isChecked() is True:            
@@ -186,7 +187,7 @@ class GrapheneWindow(QtGui.QMainWindow):
         if n<2:
             # clear graph
             print "clearing graph..."
-            self.figure.clear()  
+            self.figure.clear()
             # add empty subplot
             self.figure.add_subplot(111)
             # add text at specified coordinates # FIND A WAY TO CENTER THE TEXT (currently hard coded)
@@ -233,12 +234,26 @@ class GrapheneWindow(QtGui.QMainWindow):
         
         
         # set limits
-        self.axes.set_xlim(self.x_axis.position-(self.x_axis.envelope/2), self.x_axis.position+(self.x_axis.envelope/2))
-        self.axes.set_ylim(self.y_axis.position-(self.y_axis.envelope/2), self.y_axis.position+(self.y_axis.envelope/2))  
+        self.axes.set_xlim(self.x_axis.position - (self.x_axis.envelope / 2),
+                           self.x_axis.position + (self.x_axis.envelope / 2))
+        self.axes.set_ylim(self.y_axis.position - (self.y_axis.envelope / 2),
+                           self.y_axis.position + (self.y_axis.envelope / 2))
+        # plot data
+        try:
+            self.axes.scatter(self.x_axis.displayable_data, self.y_axis.displayable_data, picker=1, marker='D', c='b')
+            sel_point = self.sel_ind
+            #print 'sel_point', sel_point
+            self.axes.scatter(self.x_axis.displayable_data[sel_point], self.y_axis.displayable_data[sel_point], picker=1, marker='D', c='r',s=100)
+        #[P_X,P_Y]=self.pareto_frontiter2D(self.x_axis.displayable_data, self.y_axis.displayable_data, MinX=True, MinY=True)
+
+        #self.axes.scatter(P_X, P_Y, picker=1)
+
+        except:
+            self.axes.scatter(self.x_axis.displayable_data, self.y_axis.displayable_data, picker=1, marker='o', c='b')
+
         # set labels
         self.axes.set_xlabel(self.x_axis.name_units[0] + " (" + self.x_axis.name_units[1] + ")")
         self.axes.set_ylabel(self.y_axis.name_units[0] + " (" + self.y_axis.name_units[1] + ")") 
-        self.draw_layout_preview(self.sol_index)
         '''
         for point in range(len(P_X)):
             self.sol_params = [[objective.name_units[0],objective.name_units[1],objective.data[self.disp_data_indx_map[point]]] 
@@ -254,7 +269,17 @@ class GrapheneWindow(QtGui.QMainWindow):
         # plot data
 #        self.axes = self.figure.add_subplot(111, projection='3d')
         self.axes = Axes3D(self.figure)
-        self.axes.scatter(self.graph_axis['x'].displayable_data, self.graph_axis['y'].displayable_data, self.graph_axis['z'].displayable_data, picker=1)
+        try:
+            self.axes.scatter(self.graph_axis['x'].displayable_data, self.graph_axis['y'].displayable_data,
+                              self.graph_axis['z'].displayable_data, picker=1)
+            sel_point=self.sel_ind
+            self.axes.scatter(self.graph_axis['x'].displayable_data[sel_point],
+                              self.graph_axis['y'].displayable_data[sel_point],
+                              self.graph_axis['z'].displayable_data[sel_point], picker=1, c='r',marker='D',s=100)
+        except:
+            self.axes.scatter(self.graph_axis['x'].displayable_data, self.graph_axis['y'].displayable_data,
+                              self.graph_axis['z'].displayable_data, picker=1)
+
         # set limits
         self.axes.set_xlim(self.graph_axis['x'].min-1, self.graph_axis['x'].max+1)
         self.axes.set_ylim(self.graph_axis['y'].min-1, self.graph_axis['y'].max+1)
@@ -278,7 +303,7 @@ class GrapheneWindow(QtGui.QMainWindow):
         self.solution.params = self.sol_params  
         thermal_netlist_graph = Module_Full_Thermal_Netlist_Graph('dont care', self.sym_layout, self.solution.index)
         T_list= self.sym_layout._thermal_analysis(4).tolist()
-        print T_list
+        #print T_list
         T_list=(x[0][0] for x in T_list)
         
         electrothermal=ET_analysis(thermal_netlist_graph)
@@ -289,7 +314,7 @@ class GrapheneWindow(QtGui.QMainWindow):
         vth_fn='Vth.csv'
         parameters=electrothermal.curve_fitting_all(filedes, rds_fn, crss_fn,vth_fn)
         electrothermal.Run_sim(thermal_mdl , parameters, 300000)
-        print electrothermal.ptot_all(T_list, parameters)  
+        #print electrothermal.ptot_all(T_list, parameters)  
     def filter_graph(self):
         for objective in self.obj_widg:
             # clear all old points
@@ -336,6 +361,7 @@ class GrapheneWindow(QtGui.QMainWindow):
         try:
             closest_point = None
             for point in event.ind:
+                #print event.ind
                 if (closest_point is None) or (npy.hypot(x-self.x_axis.displayable_data[point], y-self.y_axis.displayable_data[point]) < closest_point):
                     closest_point = point
         except:
@@ -343,20 +369,19 @@ class GrapheneWindow(QtGui.QMainWindow):
        
         #print 'Sol. Index', self.disp_data_indx_map[closest_point] 
         # obtain solution parameters as a list of lists: [[name1, units1, data1],[name2, units2, data2],...]
-        self.sol_params = [[objective.name_units[0],objective.name_units[1],objective.data[self.disp_data_indx_map[closest_point]]] 
+        self.sol_params = [[objective.name_units[0],objective.data[self.disp_data_indx_map[closest_point]],objective.name_units[1]]
                            for objective in self.obj_widg]
         self.obj_values_model.set_table(self.sol_params)
-        #print "here down"
         '''
         pos = nx.spring_layout(self.sym_layout.lumped_graph)
         nx.draw(self.sym_layout.lumped_graph, pos)
         nx.draw_networkx_edge_labels(self.sym_layout.lumped_graph, pos)
         plt.show()
         '''
-        #print closest_point
-        #print self.disp_data_indx_map[closest_point]
         # draw layout preview
         self.sol_index = self.disp_data_indx_map[closest_point]
+        self.sel_ind=closest_point
+        self.draw_graph()
         self.draw_layout_preview(self.sol_index)
 
 
@@ -426,7 +451,7 @@ class GrapheneWindow(QtGui.QMainWindow):
 class ObjectiveValuesTableModel(QtCore.QAbstractTableModel):
     def __init__(self, parent, *args):
         QtCore.QAbstractTableModel.__init__(self, parent, *args)
-        self.header = ["Name", "Value", "Unit"] #edit this
+        self.header = ["Name", "Value", "Unit"]
         self.obj_values = []
     
     def rowCount(self, parent):

@@ -599,7 +599,7 @@
       </font>
      </property>
      <property name="text">
-      <string>Enter netlist names for the source leads and output node. Source lead names should correspond to voltage sources defined in the netlist. The output node name should correspond to a net alias or node defined in the netlist.</string>
+      <string>Enter netlist names for the positive source, negative source, and output node. Source names should correspond to DC voltage sources defined in the netlist. The output node name should correspond to a net alias or node name defined in the netlist.</string>
      </property>
      <property name="wordWrap">
       <bool>true</bool>
