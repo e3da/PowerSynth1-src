@@ -5,6 +5,7 @@ import math as m
 from math import fabs
 import os
 import numpy as np
+import time
 import matplotlib.pyplot as plt
 from matplotlib import cm
 from mpl_toolkits.mplot3d import Axes3D
@@ -194,17 +195,26 @@ if __name__ == '__main__':
     mdl=pickle.load(open(os.path.join(mdl_dir,'C_mesh_100_krige.rsmdl'),"rb"))
     Q3D_C=mdl.input[0]
     print Q3D_C # pF
-    
-    print trace_res_krige(20,10, 20, mdl_dir, 'RAC_mesh_100_krige.rsmdl')
-    print trace_resistance(20000, 10, 20, 0.2, 0.5)*1000
-    
+
+    w=[]
+    for i in range(80):
+        w.append(i)
+    time1 = time.time()
+
+    a=trace_res_krige(20,w, w, mdl_dir, 'RAC_mesh_100_krige.rsmdl')
+    time2=time.time()
+    print 'Krigging time',time2-time1
+    time2=time.time()
+    for i in range(80):
+        n=trace_resistance(20000, 10, 20, 0.2, 0.5)*1000
+    print 'Microstrip time', time.time()-time2
     print trace_ind_krige(10,15, 10, mdl_dir, 'LAC_mesh_100_krige.rsmdl')
     print trace_inductance(15, 10, 0.2, 0.5)
     
     print trace_cap_kridge(8, 20, mdl_dir, 'C_mesh_100_krige.rsmdl')
     print trace_capacitance(8, 20, 0.2, 0.5)
     # Compare Q3D resistance with microstrip 
-    
+    '''
     # plot Q3D vs Microstrip resistance
     fig1 = plt.figure(0)
     ax = fig1.gca(projection='3d')
@@ -349,5 +359,5 @@ if __name__ == '__main__':
     
     plt.show()
 
-    
+   '''
     

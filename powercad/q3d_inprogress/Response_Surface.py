@@ -14,6 +14,7 @@ from pyDOE import *
 from sklearn.svm import SVR
 from sklearn.kernel_ridge import KernelRidge
 from scipy.optimize import curve_fit
+from scipy.interpolate import *
 from inspect import *
 from itertools import product
 from pykrige.ok import OrdinaryKriging as ok
@@ -328,6 +329,8 @@ class RS_model:
             values of the drift(s) at each data point and all grid points. With the 'functional' drift capability, the 
             user may provide callable function(s) of the spatial coordinates that define the drift(s). The package 
             includes a module that contains functions that should be useful in working with ASCII grid files (*.asc).
+        Scipy_interpolate:
+
         '''
         print self.op_point,' ',self.sweep_unit.to_string()
         print self.unit.to_string()
@@ -395,8 +398,18 @@ class RS_model:
                          verbose=False, enable_plotting=False)   
                 print 'score: ', best_score[i], 'best_v: ', best_variogram[i]      
                 self.model[i]=OK
-            
-            
+        elif mode=='Inter2D':
+            method=['cubic','quintic']
+            best_method = 'linear'
+            self.model = [None for i in range(len(self.input))]
+            for i in range(len(self.input)):
+                data = self.DOE
+                x,y,z=np.meshgrid(data[:, 0],data[:, 1],self.input[i])
+                f = interpolate.interp2d(x, y, z, kind= best_method)
+                print f
+                self.model[i] = f
+
+
     def plot_input(self,mode):
         
         ax = plt.figure(1).gca(projection='3d')
@@ -408,7 +421,7 @@ class RS_model:
             for [x,y] in self.DOE:
                 data= self.model.execute('grid', [x], [y])
                 z.append(data[0]) 
-            ax.scatter(self.DOE[:,0], self.DOE[:,1], z, c='r',s=10)    
+            ax.scatter(self.DOE[:,0], self.DOE[:,1], z, c='r',s=10)
     
     def plot_random(self,mode):  
         for i in range(len(self.input)):  
@@ -425,7 +438,13 @@ class RS_model:
                     data=np.ma.asarray(data[0])
                     z.append(data[0]) 
                 print z    
-                ax.scatter(self.DOE[:,0], self.DOE[:,1], z, c='r',s=10)    
+                ax.scatter(self.DOE[:,0], self.DOE[:,1], z, c='r',s=10)
+            elif mode=='Inter2D':
+                f=self.model[i]
+                x=self.DOE[:,0]
+                y=self.DOE[:, 1]
+                for x1,y1 in zip(x,y):
+                    ax.scatter(x1, y1,f(x1,y1),c='r',s=10)
             scatter1_proxy = lines.Line2D([0], [0], linestyle='none', c='b', marker='o')
             scatter2_proxy = lines.Line2D([0], [0], linestyle='none', c='r', marker='o')
             ax.legend([scatter1_proxy, scatter2_proxy], ['Q3D', 'ResposneSurface'], numpoints=1)
@@ -474,6 +493,8 @@ class RS_model:
         
         plt.show(3) 
         self.DOE=temp
+
+
 if __name__=="__main__":
     mdl1=RS_model(['width','length'],const=['height','thickness'])
     mdl1.set_data_bound([[1.2,20],[1.2,20]])

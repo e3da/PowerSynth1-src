@@ -44,7 +44,7 @@ if __name__ == '__main__':
     script1.create_report('Freq', 'ACR','SignalNet1', 'Source1','Sweep1',1)      # Create report 
     script1.update_report('Freq','ACL', 'SignalNet1', 'Source1','Sweep1',1)
     script1.update_report('Freq','C','SignalNet1','','Sweep1',1)
-    mdl1.create_uniform_DOE([10,10], True)
+    mdl1.create_uniform_DOE([4,4], True)
     #
     print mdl1.DOE
     mdl1.generate_fname()
@@ -61,10 +61,10 @@ if __name__ == '__main__':
     mdl1.set_sweep_unit('k', 'Hz')
     mdl1.read_file('csv', 'sweep', 15,('Hz','H'))
     
-    mdl1.build_RS_mdl('Krigging')
+    mdl1.build_RS_mdl('Inter2D')
     #mdl1.plot_input('FEM with Q3D for Inductance')
-    #mdl1.plot_random('Krigging')
-    mdl1.plot_sweep(15)
+    mdl1.plot_random('Inter2D')
+    #mdl1.plot_sweep(15)
     #mdl1.save_model()
     
     #script1.build('C:\Users\qmle\workspace\Python_Q3d_model\IronPython\ipy64.exe')  # Use Ipy64.exe to run simulation

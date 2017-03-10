@@ -2144,6 +2144,7 @@ class SymbolicLayout(object):
             parasitic_time = 0.0
             start_time = time.time()
             self._build_lumped_graph()
+
             parasitic_time += time.time() - start_time;            
             for measure in self.perf_measures:
                 if isinstance(measure, ElectricalMeasure):
@@ -2651,9 +2652,10 @@ class SymbolicLayout(object):
         
         msg = "Not all long contact supertrace connections were linked during lumped element graph generation."
         assert long_sum == 0, msg
-        
-        self.lumped_graph = lumped_graph
+        print len(self.lumped_graph)
 
+        self.lumped_graph = lumped_graph
+        print self.lumped_graph
     def _add_node(self, graph, vert_count, attrib):
         # point spine
         graph.add_node(vert_count, attr_dict=attrib)

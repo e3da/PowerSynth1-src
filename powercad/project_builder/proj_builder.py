@@ -553,6 +553,7 @@ class ProjectBuilder(QtGui.QMainWindow):
         try:
             thickness = float(self.ui.txt_subAttchThickness.text())
             tech_path = os.path.join(self.project.tech_lib_dir, "Substrate_Attaches", self.ui.cmb_subAttchMaterial.currentText())
+            print 'tech path', tech_path
             tech_lib_obj = pickle.load(open(tech_path,"rb"))
             self.project.module_data.substrate_attach = SubstrateAttachInstance(thickness,tech_lib_obj)
         except:
