@@ -41,9 +41,7 @@ def load_script(sript_path):
     #    To specify a point ID p pos
     # The script is written in text form or specified by .psc (powersynth script code) 
     layout=[]    # layout is a set of LayoutLines and LayoutPoints
-    print sript_path
     with open(sript_path, 'rb') as f: # open the directory of script code
-        print f
         objs=[]                      # specified a list of objs (lines and points)
         for line in f:               # read every line of the script 
             if line[0]=='#' or line[0]=='': # check for comments or blank lines
@@ -79,7 +77,6 @@ def load_script(sript_path):
     if len(objs) > 0:                               # If there are objs in layout list
             for t in objs:
                 layout.append(t)                    # append obj to layout
-    print layout
     return layout                                   # return layout
               
                 
@@ -188,7 +185,6 @@ def normalize_layout(layout, tol):
     for obj in layout:
         
         if isinstance(obj, LayoutLine): # Read through all objects in SVG again
-            print obj.pt1
             x0 = xdict[obj.pt1[0]]      #
             y0 = ydict[obj.pt1[1]]
             x1 = xdict[obj.pt2[0]]
@@ -200,7 +196,6 @@ def normalize_layout(layout, tol):
             x0 = xdict[obj.pt[0]]
             y0 = ydict[obj.pt[1]]
             obj.pt = (x0, y0)
-    print 'xlen ylen', xlen, ylen        
     xlen = xlen+1
     ylen = ylen+1
     
@@ -252,7 +247,6 @@ def handle_circle(path, trans_list):
                 
                 path_id = get_id(path)
                 pt_obj = LayoutPoint(path_id, cxy)
-                print 'pt_obj ', pt_obj
                 return [pt_obj]
             except KeyError:
                 raise Exception('Failed to retrieve arc\'s center!')
@@ -361,8 +355,7 @@ def norm_dict(clist, tol):
             cdict[c] = inc                       # use this as the normalized value
             
         last_c = c                               # move to the next coordinate and continue the normalization
-    
-    print 'cdict', cdict    
+
     return (inc, cdict)                          # return the counter value as well as the normalized values
 
 def check_for_overlap(layout):

@@ -150,69 +150,72 @@ def trace_capacitance(w, l, t, h, k=8.8):
         c = 1e-6
 
     return c
+def load_mdl(dir,mdl_name):
+    mdl=pickle.load(open(os.path.join(dir,mdl_name),"rb"))
+    print "model loaded"
+    return mdl
 
-def trace_res_krige(f,w,l,dir,mdl_name):
+def trace_res_krige(f,w,l,mdl):
     #unit is uOhm
-    mdl =pickle.load(open(os.path.join(dir,mdl_name),"rb"))
-    model=mdl.model[0]
+    model = mdl.model[0]
     op_freq=mdl.op_point
     r=model.execute('points',[w],[l])
-    
-    r=np.ma.asarray(r[0])[0]
+    r=np.ma.asarray(r[0])
+
     return r*m.sqrt(f/op_freq)
 
-def trace_ind_krige(f,w,l,dir,mdl_name):
+def trace_ind_krige(f,w,l,mdl):
     # unit is nH
-    mdl =pickle.load(open(os.path.join(dir,mdl_name),"rb"))
     n_params=len(mdl.input)
     params=[]
     for i in range(n_params):
         params.append(np.ma.asarray((mdl.model[i].execute('points',w,l)))[0])
     l=mdl.sweep_function(f,params[0],params[1])
-    l=l[0]
     return l
 
-def trace_cap_kridge(w,l,dir,mdl_name):
+def trace_cap_krige(w,l,mdl):
     # unit is pF
-    mdl =pickle.load(open(os.path.join(dir,mdl_name),"rb"))
     model=mdl.model[0]
     c=model.execute('points',[w],[l])   
-    c=np.ma.asarray(c[0])[0]
-    return c              
+    c=np.ma.asarray(c[0])
+
+    return c
 
 if __name__ == '__main__':
     mdl_dir='C:\Users\qmle\Desktop\Testing\Py_Q3D_test\All rs models'
-    mdl=pickle.load(open(os.path.join(mdl_dir,'RAC_mesh_100_krige.rsmdl'),"rb"))
-    
-    DOE=mdl.DOE
-    Q3D_R=mdl.input[0]
-    print mdl.unit.to_string()
+    mdl1=load_mdl(mdl_dir,'RAC_mesh_100_krige.rsmdl')
+    DOE=mdl1.DOE
+    Q3D_R=mdl1.input[0]
+    print mdl1.unit.to_string()
     print Q3D_R # uOhm
-    mdl=pickle.load(open(os.path.join(mdl_dir,'Mdl2.rsmdl'),"rb"))
-    Q3D_L=mdl.input[0]
-    print mdl.op_point
+    mdl2 = load_mdl(mdl_dir, 'Mdl2.rsmdl')
+    Q3D_L=mdl2.input[0]
+    mdl2=load_mdl(mdl_dir, 'LAC_mesh_100_krige.rsmdl')
+    print mdl2.op_point
     print Q3D_L # nH
-    mdl=pickle.load(open(os.path.join(mdl_dir,'C_mesh_100_krige.rsmdl'),"rb"))
-    Q3D_C=mdl.input[0]
+    mdl3=load_mdl(mdl_dir,'C_mesh_100_krige.rsmdl')
+    Q3D_C=mdl3.input[0]
     print Q3D_C # pF
 
     w=[]
-    for i in range(80):
-        w.append(i)
-    time1 = time.time()
+    l=[]
 
-    a=trace_res_krige(20,w, w, mdl_dir, 'RAC_mesh_100_krige.rsmdl')
+    for i in range(10):
+        for j in range (10):
+            w.append(i)
+            l.append(j)
+    time1 = time.time()
+    a = trace_res_krige(20, w, l, mdl1)
+    b = trace_ind_krige(20,w,l,mdl2)
+    c = trace_cap_krige(w,l,mdl3)
     time2=time.time()
     print 'Krigging time',time2-time1
     time2=time.time()
-    for i in range(80):
+    print time2
+    for i in range(100):
         n=trace_resistance(20000, 10, 20, 0.2, 0.5)*1000
-    print 'Microstrip time', time.time()-time2
-    print trace_ind_krige(10,15, 10, mdl_dir, 'LAC_mesh_100_krige.rsmdl')
-    print trace_inductance(15, 10, 0.2, 0.5)
-    
-    print trace_cap_kridge(8, 20, mdl_dir, 'C_mesh_100_krige.rsmdl')
-    print trace_capacitance(8, 20, 0.2, 0.5)
+
+    print 'Microstrip time', time.time()
     # Compare Q3D resistance with microstrip 
     '''
     # plot Q3D vs Microstrip resistance

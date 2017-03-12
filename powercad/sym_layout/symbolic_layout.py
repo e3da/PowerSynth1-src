@@ -51,6 +51,8 @@ from powercad.design.project_structures import DeviceInstance
 from powercad.opt.optimizer import NSGAII_Optimizer, DesignVar
 from powercad.parasitics.analysis import parasitic_analysis
 from powercad.parasitics.models import trace_inductance, trace_resistance, trace_capacitance
+#Testing
+from powercad.parasitics.mdl_compare import trace_cap_krige,trace_ind_krige,trace_res_krige,load_mdl
 from powercad.parasitics.models import wire_inductance, wire_resistance
 from powercad.thermal.analysis import perform_thermal_analysis, TFSM_MODEL, RECT_FLUX_MODEL
 from powercad.sol_browser.solution_lib import SolutionLibrary
@@ -362,6 +364,16 @@ class SymbolicLayout(object):
         self.ctest=0 # testing number of drc check
         self.err_report={} # a list of report for drc_check function
         self.mode=7
+
+        # Testing
+        self.trace_info = [] # used to save all width and length for evaluation
+        self.trace_nodes = [] # all nodes that will be used to connect traces to lumped_graph
+        self.mdl_dir = 'C:\Users\qmle\Desktop\Testing\Py_Q3D_test\All rs models'
+        print 'mdl_loaded'
+        self.LAC_mdl=load_mdl(self.mdl_dir,'LAC_mesh_100_krige.rsmdl')
+        self.RAC_mdl = load_mdl(self.mdl_dir, 'RAC_mesh_100_krige.rsmdl')
+        self.C_mdl = load_mdl(self.mdl_dir,'C_mesh_100_krige.rsmdl')
+
     '''-----------------------------------------------------------------------------------------------------------------------------------------------------'''        
     def add_constraints(self):
         ''' Adds a contraints field to any layout object which lacks it. '''
@@ -729,7 +741,7 @@ class SymbolicLayout(object):
         
         for line in self.all_trace_lines:
             self._lay_line_in_matrix(line)
-        print 'virtual matrix',self.vg_matrix            
+
     def _lay_line_in_matrix(self, line):
         # iterate over a line, laying it into the matrix
         # stamp the line into the matrix
@@ -1794,8 +1806,8 @@ class SymbolicLayout(object):
                Debug--- set equal True to print out error messages
         Return: 0 or 1 so that this value can be added in the err_counter'''
         if var_name >0.0:
-            if debug: print var_description, var_name
-            self.drc_err_dict_update(var_description)
+            if debug:
+                self.drc_err_dict_update(var_description)
             return var_name
         else:
             return 0
@@ -1813,9 +1825,7 @@ class SymbolicLayout(object):
             self.ctest += 1
         except:
             self.ctest = 1
-        print "error check", self.ctest
-           
-            #err_count=0
+
         err_count+= self.drc_single_check(self.h_overflow, 'Horizontal_Overflow', debug)
         err_count+= self.drc_single_check(self.v_overflow, 'Vertical_Overflow', debug)
         err_count+= self.drc_single_check(self.h_min_max_overflow[0], 'Min. Horizontal_Overflow', debug)
@@ -2133,11 +2143,9 @@ class SymbolicLayout(object):
         ret = []       
         drc_val = self.passes_drc(False)
         if drc_val > 0.0:                             # non-convergence case
-            print "total errors : " + str(drc_val)
             #Brett's method
             for i in xrange(len(self.perf_measures)):
                 ret.append(drc_val+10000)
-            print ret
             return ret         
         else:                 
             print ' new solution is found *******'    #convergence case 
@@ -2176,13 +2184,13 @@ class SymbolicLayout(object):
         percent_done = 100.0*float(self.eval_count)/float(0.8*self.eval_total)
         if percent_done > 100.0:
             percent_done = 100.0
-            
+
+
         if hasattr(self, 'opt_progress_fn'):
             if self.opt_progress_fn is not None:
                 self.opt_progress_fn(percent_done)
         else:
             print 'Eval. Count:', self.eval_count, ' %', percent_done, ' complete.'
-                
         return ret
     '''-----------------------------------------------------------------------------------------------------------------------------------------------------'''  
     def _measure_capacitance(self, measure):
@@ -2213,7 +2221,6 @@ class SymbolicLayout(object):
                     
                 if trace is not None:
                     total_cap += trace_capacitance(trace.width(), trace.height(), metal_t, iso_t, epsil)
-        
         return total_cap
     '''-----------------------------------------------------------------------------------------------------------------------------------------------------'''  
     def _thermal_analysis(self, measure):
@@ -2237,7 +2244,8 @@ class SymbolicLayout(object):
         # To do:
         # 1. Implement bondwire to spine connection parasitic eval
         # 2. Implement long contact point to spine connection eval
-        
+        self.trace_info = []  # used to save all width and length for evaluation
+        self.trace_nodes = []  # all nodes that will be used to connect traces to lumped_graph
         lumped_graph = nx.Graph()
         vert_count = 0
         conn_dict = {}; conn_sum = 0
@@ -2306,11 +2314,7 @@ class SymbolicLayout(object):
                             w2 = math.fabs(hPOI[i+1][1] - x)
                         width = 0.5*(w1 + w2)
                         length = math.fabs(y - vPOI[j-1][1])
-                        ind, res, cap = self._eval_supertrace_parasitic_models(width, length, 
-                                                                               thickness, sub_thick,
-                                                                               freq, resist, sub_epsil)
-                        lumped_graph.add_edge(node, col[j-1], {'ind': 1.0/ind, 'res':1.0/res, 'cap':1.0/cap,
-                                                               'type':'trace', 'width':width, 'length':length})
+                        self._collect_trace_parasitic_post_eval(width, length, node, col[j-1])
 
                     if i > 0:
                         w1 = 0.0
@@ -2321,11 +2325,7 @@ class SymbolicLayout(object):
                             w2 = math.fabs(vPOI[j+1][1] - y)
                         width = 0.5*(w1 + w2)
                         length = math.fabs(x - hPOI[i-1][1])
-                        ind, res, cap = self._eval_supertrace_parasitic_models(width, length,
-                                                                               thickness, sub_thick,
-                                                                               freq, resist, sub_epsil)
-                        lumped_graph.add_edge(node, mesh_nodes[i-1][j], {'ind': 1.0/ind, 'res':1.0/res, 'cap':1.0/cap,
-                                                                         'type':'trace', 'width':width, 'length':length})
+                        self._collect_trace_parasitic_post_eval(width, length, node, mesh_nodes[i-1][j])
                         
                     # Create trace connections
                     if j == 0 and hPOI[i][2] == Rect.BOTTOM_SIDE:
@@ -2497,9 +2497,7 @@ class SymbolicLayout(object):
                         attrib = {'type':'lead', 'point':pt[1].center_position, 'obj':pt[1]}
                         lead_node, vert_count = self._add_node(lumped_graph, vert_count, attrib) # add lead node
                         # Add connection edge for trace to lead from spine
-                        ind, res, cap, w, l = self._lead_trace_path_eval(lead_node, node, trace_data, pt[1])
-                        lumped_graph.add_edge(lead_node, node, {'ind': 1.0/ind, 'res':1.0/res, 'cap':1.0/cap,
-                                                                'type':'trace', 'width':w, 'length':l})
+                        self._lead_trace_path_eval(lead_node, node, trace_data, pt[1])
                         pt[1].lumped_node = lead_node # used for measurement
                     elif pt[0] == RND_LEAD_POI:
                         # Add round lead nodes
@@ -2514,9 +2512,7 @@ class SymbolicLayout(object):
                             attrib = {'type':'lead', 'point':pt[1].center_position, 'obj':pt[1]}
                             lead_node, vert_count = self._add_node(lumped_graph, vert_count, attrib) # add lead node
                             # Add connection edge for trace to lead from spine
-                            ind, res, cap, w, l = self._lead_trace_path_eval(lead_node, node, trace_data, pt[1])
-                            lumped_graph.add_edge(lead_node, node, {'ind': 1.0/ind, 'res':1.0/res, 'cap':1.0/cap,
-                                                                    'type':'trace', 'width':w, 'length':l})
+                            self._lead_trace_path_eval(lead_node, node,trace_data, pt[1])
                             pt[1].lumped_node = lead_node # used for measurement
                     elif pt[0] == TRACE_POI:
                         # Add trace node
@@ -2525,9 +2521,7 @@ class SymbolicLayout(object):
                             node, vert_count = self._add_node(lumped_graph, vert_count, {'point':pt[2]})
                             if frozenset([pt[1], trace]) in conn_dict:
                                 conn_node = conn_dict[frozenset([pt[1], trace])]
-                                ind, res, cap, w, l = self._trace_conn_path_eval(conn_node, node, trace_data, pt[1])
-                                lumped_graph.add_edge(conn_node, node, {'ind': 1.0/ind, 'res':1.0/res, 'cap':1.0/cap,
-                                                                        'type':'trace', 'width':w, 'length':l})
+                                self._trace_conn_path_eval(conn_node, node, trace_data, pt[1])
                                 conn_sum -= 1
                             else: # Add node to conn_dict and the connection will be found next time
                                 conn_dict[frozenset([pt[1], trace])] = node
@@ -2548,10 +2542,7 @@ class SymbolicLayout(object):
                         
                         # Add connection edge from spine to bondwire landing
                         num_wires = len(wire.end_pts) # count bondwires
-                        ind, res, cap, w, l = self._bondwire_to_spine_eval(node, bw_node, trace_data, num_wires, wire.tech.eff_diameter())
-                        lumped_graph.add_edge(bw_node, node, {'ind': 1.0/ind, 'res':1.0/res, 'cap':1.0/cap,
-                                                              'type':'trace', 'width':w, 'length':l})
-                        
+                        self._bondwire_to_spine_eval(node, bw_node, trace_data, num_wires, wire.tech.eff_diameter())
                         # Check for device to bondwire connection
                         if frozenset([wire, wire.device]) in wire_dev_dict:
                             dev_node = wire_dev_dict[frozenset([wire, wire.device])]
@@ -2579,9 +2570,7 @@ class SymbolicLayout(object):
                         
                         # Add connection edge from spine to bondwire landing
                         num_wires = len(wire.end_pts) # count bondwires
-                        ind, res, cap, w, l = self._bondwire_to_spine_eval(node, bw_node, trace_data, num_wires, wire.tech.eff_diameter())
-                        lumped_graph.add_edge(bw_node, node, {'ind': 1.0/ind, 'res':1.0/res, 'cap':1.0/cap,
-                                                              'type':'trace', 'width':w, 'length':l})
+                        self._bondwire_to_spine_eval(node, bw_node, trace_data, num_wires, wire.tech.eff_diameter())
                         
                         # Connecting to node on the other trace (use wire_wire_dict)
                         # Check for trace to trace (other end of bondwire) connection node
@@ -2619,18 +2608,13 @@ class SymbolicLayout(object):
                         elif side == Rect.LEFT_SIDE:   a=1; b=0
                         boundary_node = mesh_nodes[i][j]
                         internal_node = mesh_nodes[i+a][j+b]
-                        w = lumped_graph[boundary_node][internal_node]['width']
-                        l = distance(new_pt, point)
-                        
-                        ind, res, cap = self._eval_parasitic_models(w, l, trace_data)
-                        lumped_graph.add_edge(conn_node, node, {'ind': 1.0/ind, 'res':1.0/res, 'cap':1.0/cap,
-                                                                'type':'trace', 'width':w, 'length':l})
+                        width = lumped_graph[boundary_node][internal_node]['width']
+                        length = distance(new_pt, point)
+                        self._collect_trace_parasitic_post_eval(width, length, conn_node, node)
                         
                     # Add spine edge
                     if nprev is not None:
-                        ind, res, cap, w, l = self._spine_path_eval(nprev, node, trace_data)
-                        lumped_graph.add_edge(nprev, node, {'ind': 1.0/ind, 'res':1.0/res, 'cap':1.0/cap,
-                                                            'type':'trace', 'width':w, 'length':l})
+                        self._spine_path_eval(nprev, node, trace_data)
                     nprev = node
         # End For Trace
         
@@ -2652,17 +2636,15 @@ class SymbolicLayout(object):
         
         msg = "Not all long contact supertrace connections were linked during lumped element graph generation."
         assert long_sum == 0, msg
-        print len(self.lumped_graph)
+        self._build_lumped_edges(trace_data, lumped_graph)
 
-        self.lumped_graph = lumped_graph
-        print self.lumped_graph
     def _add_node(self, graph, vert_count, attrib):
         # point spine
         graph.add_node(vert_count, attr_dict=attrib)
         nodeout = vert_count
         vert_count += 1
         return nodeout, vert_count
-    
+
     def _spine_path_eval(self, n1, n2, trace_data):
         # trace_data = (trace, metal thickness, iso thickness, lumped_graph)
         pt1 = trace_data[3].node[n1]['point']
@@ -2673,18 +2655,15 @@ class SymbolicLayout(object):
         else:
             width = trace_data[0].trace_rect.height()
             length = math.fabs(pt2[0] - pt1[0])
-            
-        if length <= 0.00001 or width <= 0.00001:
-            return 1e-6, 1e-6, 1e-3, width, length # return small values
-        else:
-            return self._eval_parasitic_models(width, length, trace_data)+(width, length)
-    
+
+        self._collect_trace_parasitic_post_eval(width, length, n1, n2)
+
     def _trace_conn_path_eval(self, n1, n2, trace_data, conn_trace):
         pt1 = trace_data[3].node[n1]['point']
         pt2 = trace_data[3].node[n2]['point']
-        
-        main = None # main trace
-        conn = None # connecting trace
+
+        main = None  # main trace
+        conn = None  # connecting trace
         # Determine which trace is ortho. to conn. direction
         if pt1[0] == pt2[0]:
             # Conn. is vertical
@@ -2702,19 +2681,88 @@ class SymbolicLayout(object):
             else:
                 conn = trace_data[0]
                 main = conn_trace
-            
+
         if main.element.vertical:
             width = conn.trace_rect.height()
             length = math.fabs(pt2[0] - pt1[0])
         else:
             width = conn.trace_rect.width()
             length = math.fabs(pt2[1] - pt1[1])
-            
-        if length <= 1e-5 or width <= 1e-5:
-            return 1e-6, 1e-6, 1e-3, width, length # return small values
+
+        self._collect_trace_parasitic_post_eval(width, length, n1, n2)
+
+    def _lead_trace_path_eval(self, n1, n2,trace_data,lead):
+        pt1 = trace_data[3].node[n1]['point']
+        pt2 = trace_data[3].node[n2]['point']
+        if trace_data[0].element.vertical:
+            length = math.fabs(pt2[0] - pt1[0])
         else:
-            return self._eval_parasitic_models(width, length, trace_data)+(width, length)
-    
+            length = math.fabs(pt2[1] - pt1[1])
+
+        width = lead.tech.dimensions[0]
+        self._collect_trace_parasitic_post_eval(width, length, n1, n2)
+
+    def _bondwire_to_spine_eval(self, n1, n2, trace_data, num_wires, wire_eff_diam):
+        trace, thickness, sub_thick, lumped_graph, freq, resist, sub_epsil = trace_data
+        pt1 = lumped_graph.node[n1]['point']
+        pt2 = lumped_graph.node[n2]['point']
+        path_length = distance(pt1, pt2)
+
+        width = num_wires * wire_eff_diam
+        self._collect_trace_parasitic_post_eval(width, path_length, n1, n2)
+    '''
+        def _spine_path_eval(self, n1, n2, trace_data):
+        # trace_data = (trace, metal thickness, iso thickness, lumped_graph)
+        pt1 = trace_data[3].node[n1]['point']
+        pt2 = trace_data[3].node[n2]['point']
+        if trace_data[0].element.vertical:
+            width = trace_data[0].trace_rect.width()
+            length = math.fabs(pt2[1] - pt1[1])
+        else:
+            width = trace_data[0].trace_rect.height()
+            length = math.fabs(pt2[0] - pt1[0])
+
+        if length <= 0.00001 or width <= 0.00001:
+            return 1e-6, 1e-6, 1e-3, width, length  # return small values
+        else:
+            return self._eval_parasitic_models(width, length, trace_data) + (width, length)
+
+    def _trace_conn_path_eval(self, n1, n2, trace_data, conn_trace):
+        pt1 = trace_data[3].node[n1]['point']
+        pt2 = trace_data[3].node[n2]['point']
+
+        main = None  # main trace
+        conn = None  # connecting trace
+        # Determine which trace is ortho. to conn. direction
+        if pt1[0] == pt2[0]:
+            # Conn. is vertical
+            if conn_trace.element.vertical:
+                conn = conn_trace
+                main = trace_data[0]
+            else:
+                conn = trace_data[0]
+                main = conn_trace
+        else:
+            # Conn. is horizontal
+            if not conn_trace.element.vertical:
+                conn = conn_trace
+                main = trace_data[0]
+            else:
+                conn = trace_data[0]
+                main = conn_trace
+
+        if main.element.vertical:
+            width = conn.trace_rect.height()
+            length = math.fabs(pt2[0] - pt1[0])
+        else:
+            width = conn.trace_rect.width()
+            length = math.fabs(pt2[1] - pt1[1])
+
+        if length <= 1e-5 or width <= 1e-5:
+            return 1e-6, 1e-6, 1e-3, width, length  # return small values
+        else:
+            return self._eval_parasitic_models(width, length, trace_data) + (width, length)
+
     def _lead_trace_path_eval(self, n1, n2, trace_data, lead):
         pt1 = trace_data[3].node[n1]['point']
         pt2 = trace_data[3].node[n2]['point']
@@ -2722,25 +2770,25 @@ class SymbolicLayout(object):
             length = math.fabs(pt2[0] - pt1[0])
         else:
             length = math.fabs(pt2[1] - pt1[1])
-            
+
         width = lead.tech.dimensions[0]
         if length <= 1e-5 or width <= 1e-5:
-            return 1e-6, 1e-6, 1e-3, width, length # return small values
+            return 1e-6, 1e-6, 1e-3, width, length  # return small values
         else:
-            return self._eval_parasitic_models(width, length, trace_data)+(width, length)
-        
+            return self._eval_parasitic_models(width, length, trace_data) + (width, length)
+
     def _bondwire_to_spine_eval(self, n1, n2, trace_data, num_wires, wire_eff_diam):
-            trace, thickness, sub_thick, lumped_graph, freq, resist, sub_epsil = trace_data
-            pt1 = lumped_graph.node[n1]['point']
-            pt2 = lumped_graph.node[n2]['point']
-            path_length = distance(pt1, pt2)
-            
-            width = num_wires*wire_eff_diam
-            if path_length <= 0.01:
-                return 1e-6, 1e-6, 1e-3, width, path_length
-            else:
-                return self._eval_parasitic_models(width, path_length, trace_data)+(width, path_length)
-        
+        trace, thickness, sub_thick, lumped_graph, freq, resist, sub_epsil = trace_data
+        pt1 = lumped_graph.node[n1]['point']
+        pt2 = lumped_graph.node[n2]['point']
+        path_length = distance(pt1, pt2)
+
+        width = num_wires * wire_eff_diam
+        if path_length <= 0.01:
+            return 1e-6, 1e-6, 1e-3, width, path_length
+        else:
+            return self._eval_parasitic_models(width, path_length, trace_data) + (width, path_length)
+    '''
     def _bondwire_eval(self, n1, n2, trace_data, bw):
         wire_radius = 0.5*bw.tech.eff_diameter()
         resist = bw.tech.properties.electrical_res
@@ -2754,7 +2802,33 @@ class SymbolicLayout(object):
             inv_ind += 1.0/wire_ind
             
         return 1.0/inv_ind, 1.0/inv_res, 1e-3
-        
+
+    def _build_lumped_edges(self,trace_data,lumped_graph):
+        w_all=[]
+        l_all=[]
+        t_num=len(self.trace_info) # number of traces
+        print t_num
+        for w,l in self.trace_info:
+            w_all.append(w)
+            l_all.append(l)
+        ind1 = trace_ind_krige(trace_data[4],w_all, l_all,self.LAC_mdl).tolist()
+        res1 = trace_res_krige(trace_data[4], w_all, l_all,self.RAC_mdl).tolist()
+        cap1 = trace_cap_krige(w_all, l_all, self.C_mdl).tolist()
+        for i in range(t_num):
+            nodes=self.trace_nodes[i]
+            [w,l]=self.trace_info[i]
+            ind=ind1[i]
+            res=res1[i]
+            cap=cap1[i]
+            lumped_graph.add_edge(nodes[0], nodes[1], {'ind': 1.0/ind, 'res':1.0/res, 'cap':1.0/cap,
+                                                                'type':'trace', 'width':w, 'length':l})
+        self.lumped_graph=lumped_graph
+
+    def _collect_trace_parasitic_post_eval(self,width,length,node_l,node_r):
+        self.trace_info.append([width,length])
+        nodes=[node_l, node_r]
+        self.trace_nodes.append(nodes)
+
     def _eval_parasitic_models(self, width, length, trace_data):
         ind = trace_inductance(width, length, trace_data[1], trace_data[2])
         res = trace_resistance(trace_data[4], width, length, trace_data[1], trace_data[2], trace_data[5])
