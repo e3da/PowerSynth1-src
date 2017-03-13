@@ -553,24 +553,23 @@ class ProjectBuilder(QtGui.QMainWindow):
         try:
             thickness = float(self.ui.txt_subAttchThickness.text())
             tech_path = os.path.join(self.project.tech_lib_dir, "Substrate_Attaches", self.ui.cmb_subAttchMaterial.currentText())
-            print 'tech path', tech_path
             tech_lib_obj = pickle.load(open(tech_path,"rb"))
             self.project.module_data.substrate_attach = SubstrateAttachInstance(thickness,tech_lib_obj)
         except:
             self.ui.lbl_err_subAttchMaterial.setText("Error")
             error = True
             print traceback.print_exc()
-            
+
         if error:
             print "Error Creating Substrate Attach"
-       
+
         return error
-    
+
     def create_system_properties(self):
         # Reset all error messages
         for lbl in [self.ui.lbl_err_switchFreq, self.ui.lbl_err_ambTemp]:
             lbl.setText("")
-        
+
         # check switching frequency for errors
         switch_check = not (self.ui.txt_switchFreq.text().replace(".", "", 1).replace("e", "", 1).isdigit())
         if switch_check:
@@ -579,7 +578,7 @@ class ProjectBuilder(QtGui.QMainWindow):
         else:
             self.ui.lbl_err_switchFreq.setText("")
             self.project.module_data.frequency = float(self.ui.txt_switchFreq.text())
-            
+
         # check ambient temp for errors
         temp_check = not (self.ui.txt_ambTemp.text().replace(".", "", 1).replace("e", "", 1).isdigit())
         if temp_check:
@@ -588,9 +587,9 @@ class ProjectBuilder(QtGui.QMainWindow):
         else:
             self.ui.lbl_err_ambTemp.setText("")
             self.project.module_data.ambient_temp = float(self.ui.txt_ambTemp.text())
-        
+
         return (switch_check or temp_check)
-        
+
     def build_module_stack(self):
         """Build baseplate, substrate, and substrate attach for module stack and error check user input"""
         '''Quang: This method will check if the inputs of all materials properties in the Module stack are valid'''
@@ -599,14 +598,14 @@ class ProjectBuilder(QtGui.QMainWindow):
         sub_check = self.create_substrate()
         attach_check = self.create_substrate_attach()
         sys_prop_check = self.create_system_properties()
-        
+
         if (base_check) or (sub_check) or (attach_check) or (sys_prop_check): #error
             self.ui.navigation.setItemText(0, "Module Stack  *** Error ***")
             return False
         else:
             self.ui.navigation.setItemText(0, "Module Stack")
             return True
-        
+
     def save_moduleStack(self):
         self.project.module_stack_edit = [self.ui.cmb_subMaterial.currentText(),
                                           self.ui.txt_subWidth.text(),
@@ -621,7 +620,7 @@ class ProjectBuilder(QtGui.QMainWindow):
                                           self.ui.txt_baseConvection.text(),
                                           self.ui.txt_switchFreq.text(),
                                           self.ui.txt_ambTemp.text()]
-    
+
     def load_moduleStack(self):
         self.ui.cmb_subMaterial.setEditText(self.project.module_stack_edit[0])
         self.ui.txt_subWidth.setText(self.project.module_stack_edit[1])
@@ -638,9 +637,9 @@ class ProjectBuilder(QtGui.QMainWindow):
         self.ui.txt_ambTemp.setText(self.project.module_stack_edit[12])
 
 
-# ------------------------------------------------------------------------------------------        
+# ------------------------------------------------------------------------------------------
 # ------ Component Selection ------------------------------------------------------------------
-    
+
     def setup_dev_select_fields(self):
         # set up device categories
         self.tech_lib_path = os.path.join(self.project.tech_lib_dir, "Layout_Selection")
@@ -649,21 +648,21 @@ class ProjectBuilder(QtGui.QMainWindow):
         self.ui.lst_categories.setModel(self.categ_list_model)
         self.ui.lst_categories.setRootIndex(self.categ_list_model.setRootPath(self.tech_lib_path))
         self.categ_list_model.setFilter(QtCore.QDir.AllDirs | QtCore.QDir.NoDotAndDotDot | QtCore.QDir.NoSymLinks)
-        
+
         # used later to setup device category items
         self.device_list_model = QtGui.QFileSystemModel()
         self.attach_list_model = QtGui.QFileSystemModel()
         self.attach_list_model.setFilter(QtCore.QDir.Files | QtCore.QDir.NoDotAndDotDot)
-        
+
     def _clear_component_fields(self):
         self.ui.txt_device_heat_flow.setEnabled(False); self.ui.txt_device_heat_flow.setText("")
         self.ui.txt_devAttchThickness.setEnabled(False); self.ui.txt_devAttchThickness.setText("")
         self.ui.txt_bondwire_count.setEnabled(False); self.ui.txt_bondwire_count.setText("")
         self.ui.txt_bondwire_separation.setEnabled(False); self.ui.txt_bondwire_separation.setText("")
-    
+
     def display_categ_items(self,dir):
         """Display library items inside library category
-        
+
             Keyword Arguments:
             dir -- directory in which to find library items
         """
@@ -675,7 +674,7 @@ class ProjectBuilder(QtGui.QMainWindow):
         self._clear_component_fields()
         self.ui.lst_devices_att.setEnabled(False)
         self.ui.lst_devices_att.setModel(None)
-        
+
         categ = self.categ_list_model.fileName(self.ui.lst_categories.selectedIndexes()[0])
         if categ == 'Device':
             self.ui.lst_devices_att.setEnabled(True)
@@ -691,7 +690,7 @@ class ProjectBuilder(QtGui.QMainWindow):
     def add_device_error_check(self):
         error = False
         categ = self.ui.lst_categories.selectedIndexes()
-        
+
         if categ == []:
             error = True
             QtGui.QMessageBox.warning(self, "Add Component", "No category selected")
@@ -712,19 +711,19 @@ class ProjectBuilder(QtGui.QMainWindow):
                     if len(self.ui.txt_bondwire_count.text()) > 0:
                         if self._check_bondwire_fields():
                             error = True
-                    
+
         return error
-    
+
     def _check_device_fields(self):
-        error1 = self._check_field(self.ui.txt_devAttchThickness, float, "Component", "Must enter a numeric value for Attach Thickness") 
+        error1 = self._check_field(self.ui.txt_devAttchThickness, float, "Component", "Must enter a numeric value for Attach Thickness")
         error2 = self._check_field(self.ui.txt_device_heat_flow, float, "Component", "Must enter a numeric value for Device Heat Flow")
         return error1 or error2
-    
+
     def _check_bondwire_fields(self):
         error1 = self._check_field(self.ui.txt_bondwire_count, int, "Component", "Must enter an integer value for Number of Wires")
         error2 = self._check_field(self.ui.txt_bondwire_separation, float, "Component", "Must enter a numeric value for Wire Separation")
         return error1 or error2
-    
+
     def _check_field(self, field, func, error_title, error_msg):
         try:
             func(field.text())
@@ -732,7 +731,7 @@ class ProjectBuilder(QtGui.QMainWindow):
         except:
             QtGui.QMessageBox.warning(self, error_title, error_msg)
             return True
-    def get_color_index(self): 
+    def get_color_index(self):
         '''Quang: this method get the real color from the bar'''
         selected_row = self.ui.tbl_projDevices.currentRow()
         color= self.ui.tbl_projDevices.item(selected_row,0).background()
@@ -754,7 +753,7 @@ class ProjectBuilder(QtGui.QMainWindow):
             self.ui.tbl_projDevices.item(row_count,0).setBackground(QtGui.QBrush(self.color_wheel[self.cw1-1]))
             self.ui.tbl_projDevices.setItem(row_count,1,QtGui.QTableWidgetItem())
             self.ui.tbl_projDevices.item(row_count,1).setText('  ' + item.model().data(item))
-        
+
             # link to tech_lib obj
             try:
                 categ = self.categ_list_model.fileName(self.ui.lst_categories.selectedIndexes()[0])
@@ -790,8 +789,8 @@ class ProjectBuilder(QtGui.QMainWindow):
             self.ui.txt_device_heat_flow.setEnabled(False); self.ui.txt_device_heat_flow.setText("")
             self.ui.txt_devAttchThickness.setEnabled(False); self.ui.txt_devAttchThickness.setText("")
             self.ui.txt_bondwire_count.setEnabled(False); self.ui.txt_bondwire_count.setText("")
-            self.ui.txt_bondwire_separation.setEnabled(False); self.ui.txt_bondwire_separation.setText("")        
-            
+            self.ui.txt_bondwire_separation.setEnabled(False); self.ui.txt_bondwire_separation.setText("")
+
     def device_pick(self, event):
         """Pick event called when device selection symbolic layout is clicked"""
         # get technology from table
@@ -806,11 +805,11 @@ class ProjectBuilder(QtGui.QMainWindow):
                 # get color from table
                 color=self.get_color_index().getRgbF() #Quang
                 color = (color[0],color[1],color[2],0.5)
-                
+
                 # Check if patch is already chosen and if it matches the current component selection, clear the object
                 if event.artist in self.component_row_dict and self.component_row_dict[event.artist] == selected_row:
                         # set back to default color
-                        self.component_row_dict[event.artist]=None  
+                        self.component_row_dict[event.artist]=None
                         event.artist.set_facecolor(self.default_color)
                         # Reset layout object back to nothing
                         layout_obj = self.patch_dict.get_layout_obj(event.artist)
@@ -826,34 +825,34 @@ class ProjectBuilder(QtGui.QMainWindow):
                     # assign technology from table to object
                     layout_obj = self.patch_dict.get_layout_obj(event.artist)
                     layout_obj.tech = selected_tech
-                    
+
                     if isinstance(selected_tech, BondWire):
                         layout_obj.wire = True
                         layout_obj.num_wires = row_item.num_wires
                         layout_obj.wire_sep = row_item.wire_sep
-    
+
                 print self.patch_dict.get_layout_obj(event.artist).tech
-                
+
                 # redraw canvas
                 self.symb_canvas[0].draw()
         except:
-            QtGui.QMessageBox.warning(self, 'Error', 'Please Select Component on the Component Selection Tab')      
+            QtGui.QMessageBox.warning(self, 'Error', 'Please Select Component on the Component Selection Tab')
     def component_pressed(self):
         selected_row = self.ui.tbl_projDevices.currentRow()
         row_item = self.ui.tbl_projDevices.item(selected_row, 1)
         self._clear_component_fields()
-        
+
         if isinstance(row_item.tech, DeviceInstance):
-            self.ui.txt_device_heat_flow.setEnabled(True); 
+            self.ui.txt_device_heat_flow.setEnabled(True);
             self.ui.txt_device_heat_flow.setText(str(row_item.tech.heat_flow))
-            self.ui.txt_devAttchThickness.setEnabled(True); 
+            self.ui.txt_devAttchThickness.setEnabled(True);
             self.ui.txt_devAttchThickness.setText(str(row_item.tech.attach_thickness))
         elif isinstance(row_item.tech, BondWire):
             self.ui.txt_bondwire_count.setEnabled(True);
             self.ui.txt_bondwire_count.setText(str(row_item.num_wires))
             self.ui.txt_bondwire_separation.setEnabled(True);
             self.ui.txt_bondwire_separation.setText(str(row_item.wire_sep))
-            
+
     def remove_component(self):
         selected_row = self.ui.tbl_projDevices.currentRow()
         print "selected row"
@@ -861,7 +860,7 @@ class ProjectBuilder(QtGui.QMainWindow):
         self.ui.tbl_projDevices.selectionModel().selectedIndexes()[0].row()
         # Remove from row from table
         self.ui.tbl_projDevices.removeRow(selected_row)
-        
+
         # Clear and disable text fieldsdd
         self.ui.txt_device_heat_flow.setText("")
         self.ui.txt_device_heat_flow.setEnabled(False)
@@ -871,8 +870,8 @@ class ProjectBuilder(QtGui.QMainWindow):
         self.ui.txt_bondwire_count.setEnabled(False)
         self.ui.txt_bondwire_separation.setText("")
         self.ui.txt_bondwire_separation.setEnabled(False)
-        
-        # Remove colors from symbolic figure and reset layout object 
+
+        # Remove colors from symbolic figure and reset layout object
         for patch_key in self.component_row_dict:
             if self.component_row_dict[patch_key] == selected_row:
                 # Reset color
@@ -884,10 +883,10 @@ class ProjectBuilder(QtGui.QMainWindow):
                         layout_obj.num_wires = None
                         layout_obj.wire_sep = None
                 layout_obj.tech = None
-        
+
         # Redraw Canvas
         self.symb_canvas[self.LAYOUT_SELECTION_PLOT].draw()
-                
+
     def modify_component(self):
         selected_row = self.ui.tbl_projDevices.currentRow()
         row_item = self.ui.tbl_projDevices.item(selected_row, 1)
@@ -901,7 +900,7 @@ class ProjectBuilder(QtGui.QMainWindow):
             if not error:
                 row_item.num_wires = int(self.ui.txt_bondwire_count.text())
                 row_item.wire_sep = float(self.ui.txt_bondwire_separation.text())
-        
+
     def save_deviceTable(self):
         self.project.deviceTable = []
         for row in range(self.ui.tbl_projDevices.rowCount()):
@@ -910,14 +909,14 @@ class ProjectBuilder(QtGui.QMainWindow):
             if isinstance(row_obj.tech, BondWire):
                 component.append(row_obj.num_wires)
                 component.append(row_obj.wire_sep)
-            
+
             self.project.deviceTable.append(component)
-            
+
     def load_deviceTable(self):
         # clear component table
         for row in xrange(self.ui.tbl_projDevices.rowCount()):
             self.ui.tbl_projDevices.removeRow(row)
-            
+
         for row in self.project.deviceTable:
             if self.cw1 == len(self.color_wheel)-1:
                 raise Exception('Component color wheel overflow!')
@@ -932,7 +931,7 @@ class ProjectBuilder(QtGui.QMainWindow):
             if isinstance(row[1], BondWire):
                 self.ui.tbl_projDevices.item(row_count,1).num_wires = row[2]
                 self.ui.tbl_projDevices.item(row_count,1).wire_sep = row[3]
-            
+
             # Connect the drawing up
             col = self.color_wheel[self.cw1-1]
             color = col.getRgbF()
@@ -958,39 +957,39 @@ class ProjectBuilder(QtGui.QMainWindow):
                         # match tech
                         if (layout_obj.tech.name == row[1].name):
                             match = True
-                    
+
                     if match:
                         patch.set_facecolor(color)
                         self.component_row_dict[patch] = row_count
 
-# ------------------------------------------------------------------------------------------        
+# ------------------------------------------------------------------------------------------
 # ------ Constraint Creation ---------------------------------------------------------------
 
     def enter_constraint_page(self):
         self.clear_constraints()
-        
+
     def clear_constraints(self):
         # De-selects and clear everything
         self.constraint_select = None
         self.ui.txt_fixedWidth.setText(''); self.ui.txt_fixedWidth.setStyleSheet("background-color:white")
         self.ui.txt_minWidth.setText(''); self.ui.txt_fixedWidth.setStyleSheet("background-color:white")
         self.ui.txt_maxWidth.setText(''); self.ui.txt_fixedWidth.setStyleSheet("background-color:white")
-        
+
         # De-highlight everything
         children = self.symb_axis[self.CONSTRAINT_PLOT].get_children()
         for obj in children: obj.set_alpha(0.25)
         self.symb_canvas[self.CONSTRAINT_PLOT].draw()
-        
+
     def constraint_min_edit(self):
         # clear fixed textbox
         self.ui.txt_fixedWidth.setText('')
         self.ui.txt_fixedWidth.setStyleSheet("background-color:white")
-        
+
         # make sure something is selected
         if self.constraint_select is None:
             self.ui.txt_minWidth.setText('')
             return
-        
+
         # make sure its numeric
         if (not self.ui.txt_minWidth.text().replace(".", "", 1).replace("e", "", 1).isdigit()):
             self.constraint_error = True
@@ -998,7 +997,7 @@ class ProjectBuilder(QtGui.QMainWindow):
             return
         else:
             self.ui.txt_minWidth.setStyleSheet("background-color:white")
-        
+
         if self.patch_dict[self.constraint_select].constraint is None:
             # creating new constraint
             if self.constraint_select.symmetry is not None: # apply to everything in symmetry
@@ -1027,27 +1026,27 @@ class ProjectBuilder(QtGui.QMainWindow):
                     self.patch_dict[self.constraint_select].constraint = (float(self.ui.txt_minWidth.text()),None,None)
                 self.constraint_error = True
                 self.ui.txt_minWidth.setStyleSheet("background-color:pink")
-                
+
         #print self.patch_dict[self.constraint_select].constraint
-        
+
     def constraint_max_edit(self):
         # clear fixed textbox
         self.ui.txt_fixedWidth.setText('')
         self.ui.txt_fixedWidth.setStyleSheet("background-color:white")
-        
+
         # make sure something is selected
         if self.constraint_select is None:
             self.ui.txt_maxWidth.setText('')
             return
         else:
             self.ui.txt_maxWidth.setStyleSheet("background-color:white")
-        
+
         # make sure its numeric
         if (not self.ui.txt_maxWidth.text().replace(".", "", 1).replace("e", "", 1).isdigit()):
             self.constraint_error = True
             self.ui.txt_maxWidth.setStyleSheet("background-color:pink")
             return
-        
+
         if self.patch_dict[self.constraint_select].constraint is None:
             # creating new constraint
             if self.constraint_select.symmetry is not None: # apply to everything in symmetry
@@ -1069,7 +1068,7 @@ class ProjectBuilder(QtGui.QMainWindow):
                 self.ui.txt_minWidth.setStyleSheet("background-color:white")
                 self.ui.txt_maxWidth.setStyleSheet("background-color:white")
             else:
-                
+
                 if self.constraint_select.symmetry is not None: # apply to everything in symmetry
                     for obj in self.constraint_select.symmetry:
                         obj.constraint = (None,self.ui.txt_maxWidth.text(),None)
@@ -1077,21 +1076,21 @@ class ProjectBuilder(QtGui.QMainWindow):
                     self.patch_dict[self.constraint_select].constraint = (None,self.ui.txt_maxWidth.text(),None)
                 self.constraint_error = True
                 self.ui.txt_maxWidth.setStyleSheet("background-color:pink")
-                
+
         #print self.patch_dict[self.constraint_select].constraint
-    
+
     def constraint_fixed_edit(self):
         # clear min and max textboxes
         self.ui.txt_minWidth.setText('')
         self.ui.txt_minWidth.setStyleSheet("background-color:white")
         self.ui.txt_maxWidth.setText('')
         self.ui.txt_maxWidth.setStyleSheet("background-color:white")
-        
+
         # make sure something is selected
         if self.constraint_select is None:
             self.ui.txt_fixedWidth.setText('')
             return
-        
+
         # make sure its numeric
         if (not self.ui.txt_fixedWidth.text().replace(".", "", 1).replace("e", "", 1).isdigit()):
             self.constraint_error = True
@@ -1099,7 +1098,7 @@ class ProjectBuilder(QtGui.QMainWindow):
             return
         else:
             self.ui.txt_fixedWidth.setStyleSheet("background-color:white")
-        
+
         # add constraint
         if self.constraint_select.symmetry is not None: # apply to everything in symmetry
             for obj in self.constraint_select.symmetry:
@@ -1107,10 +1106,10 @@ class ProjectBuilder(QtGui.QMainWindow):
         else:
             self.patch_dict[self.constraint_select].constraint = (None, None, float(self.ui.txt_fixedWidth.text()),1.2)
         self.constraint_error = False
-        
+
         #print self.patch_dict[self.constraint_select]
         #print self.patch_dict[self.constraint_select].constraint
-    
+
     def constraint_pick(self, event):
         """Pick event called when constraint creation symbolic layout is clicked"""
         # dehighlight everything
@@ -1120,7 +1119,7 @@ class ProjectBuilder(QtGui.QMainWindow):
                 obj.set_alpha(0.25)
             except:
                 print traceback.print_exc()
-        
+
         # highlight everything in symmetry group
         if event.artist.symmetry is not None:
             for obj in event.artist.symmetry:
@@ -1128,11 +1127,11 @@ class ProjectBuilder(QtGui.QMainWindow):
         else:
             event.artist.set_alpha(0.5)
         self.symb_canvas[2].draw()
-        
+
         # clear constraints
         for text in [self.ui.txt_minWidth,self.ui.txt_maxWidth,self.ui.txt_fixedWidth]:
             text.setText('')
-            
+
         # display constraints
         if self.patch_dict.get_layout_obj(event.artist).constraint is not None:
             if self.patch_dict.get_layout_obj(event.artist).constraint[0] is not None:
@@ -1141,10 +1140,10 @@ class ProjectBuilder(QtGui.QMainWindow):
                 self.ui.txt_maxWidth.setText(str(self.patch_dict.get_layout_obj(event.artist).constraint[1]))
             if self.patch_dict.get_layout_obj(event.artist).constraint[2] is not None:
                 self.ui.txt_fixedWidth.setText(str(self.patch_dict.get_layout_obj(event.artist).constraint[2]))
-        
+
         # link to text boxes
         self.constraint_select = event.artist
-        
+
     def constraint_remove(self):
         if self.constraint_select is not None:
             # Check if in symmetry group
@@ -1157,7 +1156,7 @@ class ProjectBuilder(QtGui.QMainWindow):
         else:
             print 'Nothing selected.'
 
-# ------------------------------------------------------------------------------------------        
+# ------------------------------------------------------------------------------------------
 # ------ Results ---------------------------------------------------------------------------
 
     def start_optimization(self):
@@ -1165,30 +1164,30 @@ class ProjectBuilder(QtGui.QMainWindow):
         # check if saved solutions already exist
         # Quang And then ask user to save_as project to a different directory
         if len(self.project.solutions) > 0:
-            reply = QtGui.QMessageBox.question(self, "Data Loss Warning", 
+            reply = QtGui.QMessageBox.question(self, "Data Loss Warning",
                                              "Warning: Previously saved solution data will be lost if new optimization is run! Please save the previous data in a different file !",
                                              QtGui.QMessageBox.Ok, QtGui.QMessageBox.Cancel)
             if reply==QtGui.QMessageBox.Ok:  # if the user hit 'Ok', save the project in new place and run the optimization.
                 self.save_project_as()
-                run_optimization = True       
-            else: 
-                run_optimization = False    
-            
+                run_optimization = True
+            else:
+                run_optimization = False
+
         # create module stack
         if not self.build_module_stack():
             QtGui.QMessageBox.warning(self, "Module Stack Error", "One or more settings on the module stack page have an error.")
             run_optimization = False
-        
+
         if run_optimization:
             self.ui.btn_runSim.setEnabled(False)
             # clear out saved project solutions
             self.clear_saved_solutions_ui()
             self.project.solutions = []
-            
+
             if self.project.module_data.design_rules is None:
                 QtGui.QMessageBox.warning(self, "Input Error", "Process design rules not configured. Using defaults.")
                 self.project.module_data.design_rules = ProcessDesignRules(1.2, 1.2, 0.2, 0.1, 1.0, 0.2, 0.2, 0.2)
-            
+
             try:
                 self.project.num_gen = int(self.ui.txt_numGenerations.text())
             except:
@@ -1197,7 +1196,7 @@ class ProjectBuilder(QtGui.QMainWindow):
                 self.ui.txt_numGenerations.setText(str(self.project.num_gen))
                 print traceback.print_exc()
             '''QL'''
-            new_seed=int(time.time()) #load a new seed
+            new_seed=int(time.time()) #load a new seed     aaaa
             #fixedseed=1
             #iseed=fixedseed
             iseed=new_seed           
