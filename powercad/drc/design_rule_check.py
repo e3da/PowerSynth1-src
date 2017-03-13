@@ -17,6 +17,7 @@ class DesignRuleCheck():
     def __init__(self, symb_layout):
         
         self.symb_layout = symb_layout
+        self.err_count = 0
         self.err_report = {}
         
         
@@ -24,9 +25,9 @@ class DesignRuleCheck():
         '''
         Jonathan: Returns False if any DRC errors are found; only returns True if no DRC errors found
         '''
-        num_drc_errors = count_drc_errors(self)
-        if num_drc_errors > 0.0:
-            print "DRC ERRORS: " + num_drc_errors.tostr() + " DRC errors found."
+        self.err_count = count_drc_errors(self)
+        if self.err_count > 0.0:
+            print "DRC ERRORS: " + str(self.err_count) + " DRC errors found."
             return False
         else:
             print "No DRC errors found."
@@ -42,20 +43,20 @@ class DesignRuleCheck():
         I HAVE INCLUDED 2 methods to make this code concise
         plz check: drc_err_dict_update(self,name) and drc_single_check(self,var_name,var_description,debug):
         '''
-        err_count = 0
-        err_count += self.drc_single_check(self.symb_layout.h_overflow, 'Horizontal_Overflow', debug)
-        err_count += self.drc_single_check(self.symb_layout.v_overflow, 'Vertical_Overflow', debug)
-        err_count += self.drc_single_check(self.symb_layout.h_min_max_overflow[0], 'Min. Horizontal_Overflow', debug)
-        err_count += self.drc_single_check(self.symb_layout.h_min_max_overflow[1], 'Max. Horizontal_Overflow', debug)
-        err_count += self.drc_single_check(self.symb_layout.v_min_max_overflow[0], 'Min. Vertical_Overflow', debug)
-        err_count += self.drc_single_check(self.symb_layout.v_min_max_overflow[1], 'Max. Vertical_Overflow', debug)
-        err_count += self.drc_single_check(self.check_trace_min_width(), 'Traces less than Min_Width', debug) 
-        err_count += self.drc_single_check(self.check_lead_trace_overlap(), 'Leads are overlapping trace', debug)
-        err_count += self.drc_single_check(self.check_device_trace_overlap(), 'Devices are not overlapping trace', debug) 
-        err_count += self.drc_single_check(self.check_component_overlap(), 'Two or more components are overlapping', debug)
-        err_count += self.drc_single_check(self.check_bondwire_trace_overlap(), 'Bondwires are not contacting trace', debug)
-        err_count += self.drc_single_check(self.check_bondwire_component_overlap(), 'Bondwires are intersecting other layout components', debug)
-        return err_count
+        self.err_count = 0
+        self.err_count += self.drc_single_check(self.symb_layout.h_overflow, 'Horizontal_Overflow', debug)
+        self.err_count += self.drc_single_check(self.symb_layout.v_overflow, 'Vertical_Overflow', debug)
+        self.err_count += self.drc_single_check(self.symb_layout.h_min_max_overflow[0], 'Min. Horizontal_Overflow', debug)
+        self.err_count += self.drc_single_check(self.symb_layout.h_min_max_overflow[1], 'Max. Horizontal_Overflow', debug)
+        self.err_count += self.drc_single_check(self.symb_layout.v_min_max_overflow[0], 'Min. Vertical_Overflow', debug)
+        self.err_count += self.drc_single_check(self.symb_layout.v_min_max_overflow[1], 'Max. Vertical_Overflow', debug)
+        self.err_count += self.drc_single_check(self.check_trace_min_width(), 'Traces less than Min_Width', debug) 
+        self.err_count += self.drc_single_check(self.check_lead_trace_overlap(), 'Leads are overlapping trace', debug)
+        self.err_count += self.drc_single_check(self.check_device_trace_overlap(), 'Devices are not overlapping trace', debug) 
+        self.err_count += self.drc_single_check(self.check_component_overlap(), 'Two or more components are overlapping', debug)
+        self.err_count += self.drc_single_check(self.check_bondwire_trace_overlap(), 'Bondwires are not contacting trace', debug)
+        self.err_count += self.drc_single_check(self.check_bondwire_component_overlap(), 'Bondwires are intersecting other layout components', debug)
+        return self.err_count
         
         
     def drc_single_check(self,var_name,var_description,debug):

@@ -55,6 +55,7 @@ from powercad.parasitics.models import wire_inductance, wire_resistance
 from powercad.thermal.analysis import perform_thermal_analysis, TFSM_MODEL, RECT_FLUX_MODEL
 from powercad.sol_browser.solution_lib import SolutionLibrary
 from powercad.thermal.elmer_characterize import characterize_devices
+from powercad.drc.design_rule_check import DesignRuleCheck
 import powercad.settings as settings
 from PySide import QtCore, QtGui
 import ctypes
@@ -359,8 +360,7 @@ class SymbolicLayout(object):
         #analysis added by Quang
         self.algorithm= None # algorithm for optimizer
         self.seed=None
-        self.ctest=0 # testing number of drc check
-        self.err_report={} # a list of report for drc_check function
+#        self.err_report={} # a list of report for drc_check function
         self.mode=7
     '''-----------------------------------------------------------------------------------------------------------------------------------------------------'''        
     def add_constraints(self):
@@ -1773,218 +1773,8 @@ class SymbolicLayout(object):
             if line.has_rect:
                 self.trace_rects.append(line.trace_rect)
     '''-----------------------------------------------------------------------------------------------------------------------------------------------------'''  
-    def drc_err_dict_update(self,name):
-        '''
-        Quang:
-        This method is used to add a new error type to symbolic layout error dictionary.
-        Used for error analysis
-        Input: an error name, it will be counted up for each evaluation and saved in a python dictionary
-        Return: None
-        '''
-        try: 
-            self.err_report[str(name)]+=1 # update error count for existing tuples
-        except:
-            self.err_report[str(name)]=0 # when the error first occur, this method will add the new name to error dictionary
-    def drc_single_check(self,var_name,var_description,debug):
-        ''' 
-        Quang:
-        This method will check the drc for a drc type with descrition
-        Input: var_name --- The variable represent drc_error 
-               var_description --- Description in error dictionary and Debug mode
-               Debug--- set equal True to print out error messages
-        Return: 0 or 1 so that this value can be added in the err_counter'''
-        if var_name >0.0:
-            if debug: print var_description, var_name
-            self.drc_err_dict_update(var_description)
-            return var_name
-        else:
-            return 0
-    def passes_drc(self, debug = False):
-        '''
-        Quang: 
-        This method will check all the DRC error and report an error counter for each layout
-        It is then used in _opt_eval the more errors there are, the more disadvantage will be added to the individual (so that it will be eliminated)
-        Errors name and count will be added into self.err_report, this dictionary is used for analysis to improve the software
-        I HAVE INCLUDED 2 methods to make this code concise
-        plz check: drc_err_dict_update(self,name) and drc_single_check(self,var_name,var_description,debug):
-        '''
-        err_count=0
-        try:                                            # evaluations counter is store in self.ctest
-            self.ctest += 1
-        except:
-            self.ctest = 1
-        print "error check", self.ctest
-           
-            #err_count=0
-        err_count+= self.drc_single_check(self.h_overflow, 'Horizontal_Overflow', debug)
-        err_count+= self.drc_single_check(self.v_overflow, 'Vertical_Overflow', debug)
-        err_count+= self.drc_single_check(self.h_min_max_overflow[0], 'Min. Horizontal_Overflow', debug)
-        err_count+= self.drc_single_check(self.h_min_max_overflow[1], 'Max. Horizontal_Overflow', debug)
-        err_count+= self.drc_single_check(self.v_min_max_overflow[0], 'Min. Vertical_Overflow', debug)
-        err_count+= self.drc_single_check(self.v_min_max_overflow[1], 'Max. Vertical_Overflow', debug)
-        err_count+= self.drc_single_check(self._trace_min_width(), 'Traces less than Min_Width', debug) 
-        err_count+= self.drc_single_check(self._lead_trace_overlap(), 'Leads are overlapping trace', debug)
-        err_count+= self.drc_single_check(self._device_trace_overlap(), 'Devices are not overlapping trace', debug) 
-        err_count+= self.drc_single_check(self._component_overlap(), 'Two or more components are overlapping', debug)
-        err_count+= self.drc_single_check(self._bondwire_trace_overlap(), 'Bondwires are not contacting trace', debug)
-        err_count+= self.drc_single_check(self._bondwire_component_overlap(), 'Bondwires are intersecting other layout components', debug)
-        return err_count    
-
-    def _trace_min_width(self):
-        # Check that all traces are greater than minimum width
-        min_width = self.design_rules.min_trace_width
-        
-        total_error = 0.0
-        for rect in self.trace_rects:
-            if rect.width() < min_width:
-                total_error += min_width - rect.width()
-            if rect.height() < min_width:
-                total_error += min_width - rect.height()
-                
-        return total_error
+    # DRC functions here replaced by design_rule_check.py - Jonathan
     
-    def _lead_trace_overlap(self):
-        # Check Lead/Trace Overlap
-        total_error = 0.0
-        for lead in self.leads:
-            # only check against the parent line's immediate connections
-            # instead of going through all of the layouts traces
-            pline = lead.parent_line
-            traces = [pline.trace_rect]
-            for line in pline.trace_connections:
-                if line.is_supertrace():
-                    if line.element.vertical:
-                        traces.append(line.trace_rect)
-                    else:
-                        traces.append(line.intersecting_trace.trace_rect)
-                else:
-                    traces.append(line.trace_rect) 
-                
-            lead_rect = lead.footprint_rect.deepCopy()
-            #lead_rect.change_size(self.design_rules.min_die_trace_dist)
-            lead_area = lead_rect.area()
-            area_sum = 0.0
-            for rect in traces:
-                inter = rect.intersection(lead_rect)
-                if inter is not None:
-                    area_sum += inter.area()
-                if area_sum >= lead_area:
-                    break
-                
-            total_error += lead_area - area_sum
-            
-        return total_error
-            
-    def _device_trace_overlap(self):
-        # Check Device/Trace Overlap
-        total_error = 0.0
-        for device in self.devices:
-            # only check against the parent line
-            dev_rect = device.footprint_rect.deepCopy()
-            dev_rect.change_size(self.design_rules.min_die_trace_dist)
-            inter = device.parent_line.trace_rect.intersection(dev_rect)
-            if inter is not None:
-                total_error += dev_rect.area() - inter.area()
-            
-        return total_error
-    
-    def _component_overlap(self):
-        # Check Device->(Device or Trace) Overlap
-        checked = {}
-        total_error = 0.0
-        for pt1 in self.points:
-            for pt2 in self.points:
-                if pt1 is not pt2:
-                    if not((pt1, pt2) in checked):
-                        if isinstance(pt1.tech, DeviceInstance) and isinstance(pt2.tech, DeviceInstance):
-                            rect1 = pt1.footprint_rect.deepCopy()
-                            rect2 = pt2.footprint_rect
-                            rect1.change_size(self.design_rules.min_die_die_dist)
-                        else:
-                            rect1 = pt1.footprint_rect
-                            rect2 = pt2.footprint_rect
-                            
-                        inter = rect1.intersection(rect2)
-                        if inter is not None:
-                            total_error += inter.area()
-                                
-                        checked[(pt2, pt1)] = True
-        return total_error
-    
-    def _bondwire_trace_overlap(self):
-        total_error = 0.0
-        for bw in self.bondwires:
-            if bw.tech.wire_type == BondWire.POWER:
-                trace_inset = self.design_rules.power_wire_trace_dist
-            elif bw.tech.wire_type == BondWire.SIGNAL:
-                trace_inset = self.design_rules.signal_wire_trace_dist
-                
-            if (bw.land_pt is None) and (bw.land_pt2 is None):
-                # bondwires were not even able to be placed
-                total_error += len(bw.start_pts+bw.end_pts)
-            elif (bw.land_pt is not None) and (bw.land_pt2 is None):
-                # bondwire connects device to trace
-                rect = bw.trace.trace_rect.deepCopy()
-                rect.change_size(-trace_inset) # reduces size of trace by how much room the wire should be given via DRs
-                for pt in bw.end_pts:
-                    if not rect.encloses(pt[0], pt[1]):
-                        total_error += distance(pt, rect.center())
-            else: 
-                # bondwire connects trace to trace
-                start_rect = bw.start_pt_conn.trace_rect.deepCopy()
-                end_rect = bw.end_pt_conn.trace_rect.deepCopy()
-                # Reduce size of rects by the min. design rule width
-                start_rect.change_size(-trace_inset)
-                end_rect.change_size(-trace_inset)
-                # Check if points are within the design rule area inside rectangle
-                for pt in bw.start_pts:
-                    if not (start_rect.encloses(pt[0], pt[1])):
-                        total_error += distance(pt, start_rect.center())
-                
-                for pt in bw.end_pts:
-                    if not (end_rect.encloses(pt[0], pt[1])):
-                        total_error += distance(pt, end_rect.center())
-                
-        return total_error
-    
-    def _bondwire_component_overlap(self):
-        '''Checks whether the landing points of bondwires intersect with the wrong components'''
-        total_error = 0.0
-        for bw in self.bondwires:
-            if bw.tech.wire_type == BondWire.POWER:
-                trace_inset = self.design_rules.power_wire_component_dist
-            elif bw.tech.wire_type == BondWire.SIGNAL:
-                trace_inset = self.design_rules.signal_wire_component_dist
-                
-            if (bw.land_pt is not None) and (bw.land_pt2 is None):
-                # bondwire connects device to trace
-                for pt in self.points:
-                    if pt is not bw.dev_pt:
-                        # check for intersection
-                        for bwpt in bw.end_pts:
-                            rect = pt.footprint_rect.deepCopy()
-                            rect.change_size(trace_inset)
-                            if rect.encloses(bwpt[0], bwpt[1]):
-                                d=distance(bwpt, rect.center())
-                                if d!=0:
-                                    total_error += 1.0/(distance(bwpt, rect.center()))  # this can create divide for zero problem... In the case that it happen again set a big value as an answer
-                                else: 
-                                    total_error += float('Inf')
-            else:
-                # bondwire connects trace to trace
-                for pt in self.points:
-                    # check for intersection between all components
-                    for bwpt in bw.start_pts+bw.end_pts:
-                        rect = pt.footprint_rect.deepCopy()
-                        rect.change_size(trace_inset)
-                        if rect.encloses(bwpt[0], bwpt[1]):
-                            d=distance(bwpt, rect.center())
-                            if d!=0:
-                                total_error += 1.0/(distance(bwpt, rect.center()))  # this can create divide for zero problem... In the case that it happen again set a big value as an answer
-                            else: 
-                                total_error += float('Inf')
-                
-        return total_error
     '''-----------------------------------------------------------------------------------------------------------------------------------------------------'''  
     def optimize(self, iseed=None, inum_gen=800, mu=15, ilambda=30, progress_fn=None):
         self.eval_count = 0
@@ -2130,15 +1920,14 @@ class SymbolicLayout(object):
         
         self.rev_map_design_vars(individual)
         self.generate_layout()
-        ret = []       
-        drc_val = self.passes_drc(False)
-        if drc_val > 0.0:                             # non-convergence case
-            print "total errors : " + str(drc_val)
+        ret = []   
+        drc = DesignRuleCheck(self)
+        if not drc.passes_drc(False):   # Non-convergence case
             #Brett's method
             for i in xrange(len(self.perf_measures)):
                 ret.append(drc_val+10000)
-            print ret
-            return ret         
+            print "ret:" + str(ret)
+            return ret     
         else:                 
             print ' new solution is found *******'    #convergence case 
             parasitic_time = 0.0
