@@ -455,7 +455,12 @@ class NewProjectDialog(QtGui.QDialog):
                                          vn=str(self.ui.txt_negative_source.text()), # the negative source node mentioned by the user is converted to string type and saved in variable vn
                                          output_node=str(self.ui.txt_output.text())) # the output node mentioned by the user is converted to string type and saved in variable output_node 
         
-        return os.path.abspath(symbnet_file[0]) # sxm - return the converted file  
+        NetlistConverter = Netlist_SVG_converter.Converter(self.ui.txt_symbnet_address.text(), netlist_file_name)
+        symbnet_file = NetlistConverter.convert(vp=str(self.ui.txt_positive_source.text()), 
+                                         vn=str(self.ui.txt_negative_source.text()), 
+                                         output_node=str(self.ui.txt_output.text()))
+        
+        self.ui.txt_symbnet_address.setText(os.path.abspath(symbnet_file[0]))
 
     def create(self):
         # Save most recent entries

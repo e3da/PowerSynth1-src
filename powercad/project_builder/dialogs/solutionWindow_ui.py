@@ -67,9 +67,9 @@ class Ui_layout_form(object):
         self.tbl_info.horizontalHeader().setSortIndicatorShown(False)
         self.tbl_info.verticalHeader().setVisible(False)
         self.gridLayout.addWidget(self.tbl_info, 0, 1, 1, 1)
-        self.btn_run_succesive_approxomation = QtGui.QPushButton(layout_form)
-        self.btn_run_succesive_approxomation.setObjectName("btn_run_succesive_approxomation")
-        self.gridLayout.addWidget(self.btn_run_succesive_approxomation, 8, 1, 1, 1)
+        #self.btn_run_succesive_approxomation = QtGui.QPushButton(layout_form)
+        #self.btn_run_succesive_approxomation.setObjectName("btn_run_succesive_approxomation")
+        #self.gridLayout.addWidget(self.btn_run_succesive_approxomation, 8, 1, 1, 1)
         self.line = QtGui.QFrame(layout_form)
         self.line.setFrameShape(QtGui.QFrame.VLine)
         self.line.setFrameShadow(QtGui.QFrame.Sunken)
@@ -95,7 +95,7 @@ class Ui_layout_form(object):
 
     def retranslateUi(self, layout_form):
         layout_form.setWindowTitle(QtGui.QApplication.translate("layout_form", "Form", None, QtGui.QApplication.UnicodeUTF8))
-        self.btn_run_succesive_approxomation.setText(QtGui.QApplication.translate("layout_form", "Run Succesive Approximation", None, QtGui.QApplication.UnicodeUTF8))
+        #self.btn_run_succesive_approxomation.setText(QtGui.QApplication.translate("layout_form", "Run Succesive Approximation", None, QtGui.QApplication.UnicodeUTF8))
         self.btn_export_spice_parasitics.setText(QtGui.QApplication.translate("layout_form", "Export SPICE Electrical Parasitics Netlist", None, QtGui.QApplication.UnicodeUTF8))
         self.btn_export_spice_thermal.setText(QtGui.QApplication.translate("layout_form", "Export SPICE Thermal Netlist", None, QtGui.QApplication.UnicodeUTF8))
         self.btn_export_solidworks.setText(QtGui.QApplication.translate("layout_form", "Export Solution to SolidWorks", None, QtGui.QApplication.UnicodeUTF8))

@@ -1,7 +1,7 @@
 '''
 Created on March 6, 2012
 
-@author: shook, mukherjee
+@author: shook, mukherjee, qmle
 '''
 
 import sys
@@ -117,7 +117,7 @@ class GrapheneWindow(QtGui.QMainWindow):
         self.canvas.mpl_connect('pick_event', self.select_solution)
         self.ui.bnt_saveLayout.pressed.connect(self.save_solution)
         self.ui.btn_export_csv.pressed.connect(self.save_solution_set)
-        self.ui.Electro_Thermal_btn.pressed.connect(self.test_ET)
+        #self.ui.Electro_Thermal_btn.pressed.connect(self.test_ET)
         # Setup selected solution objective values
         self.obj_values_model = ObjectiveValuesTableModel(self)
         self.ui.objective_values_table.setModel(self.obj_values_model)
@@ -227,6 +227,11 @@ class GrapheneWindow(QtGui.QMainWindow):
         
     def draw_graph_2D(self):
         self.axes = self.figure.add_subplot(111)
+        #[P_X,P_Y]=self.pareto_frontiter2D(self.x_axis.displayable_data, self.y_axis.displayable_data, MinX=True, MinY=True)
+        self.axes.scatter(self.x_axis.displayable_data, self.y_axis.displayable_data, picker=1)
+        #self.axes.scatter(P_X, P_Y, picker=1)
+        
+        
         # set limits
         self.axes.set_xlim(self.x_axis.position - (self.x_axis.envelope / 2),
                            self.x_axis.position + (self.x_axis.envelope / 2))
@@ -258,7 +263,6 @@ class GrapheneWindow(QtGui.QMainWindow):
             self.sol_index = self.disp_data_indx_map[point]
             self.draw_layout_preview(self.sol_index)
         '''
-   
 
     def draw_graph_3D(self):
         # plot data

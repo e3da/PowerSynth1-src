@@ -407,7 +407,7 @@ class SymbolicLayout(object):
     def form_design_problem(self, module, temp_dir=settings.TEMP_DIR): 
         """ Formulate and check the design problem before optimization.
         Keyword Arguments:
-        module: A powercad.sym_layout.module_data.ModuleData object
+        module: A powercad.sym_layout.module_data.ModuleData object 
         temp_dir: A path to a temp. dir. for doing thermal characterizations (must be absolute)
         """
         #pause(True)  # add to graph
@@ -2220,7 +2220,7 @@ class SymbolicLayout(object):
     '''-----------------------------------------------------------------------------------------------------------------------------------------------------'''  
     def _thermal_analysis(self, measure):
         # RECT_FLUX_MODEL
-        temps = perform_thermal_analysis(self, TFSM_MODEL)#<--TFSM_MODEL
+        temps = perform_thermal_analysis(self, TFSM_MODEL)#<--RECT_FLUX_MODEL
         if isinstance(measure,int):
             return temps
         else:
