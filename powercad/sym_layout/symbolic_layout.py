@@ -2239,8 +2239,12 @@ class SymbolicLayout(object):
         # To do:
         # 1. Implement bondwire to spine connection parasitic eval
         # 2. Implement long contact point to spine connection eval
+
+        # Trace graph res ind cap and points for post model run
         self.trace_info = []  # used to save all width and length for evaluation
         self.trace_nodes = []  # all nodes that will be used to connect traces to lumped_graph
+
+        # Initialize nx.graph structure to store trace graph
         lumped_graph = nx.Graph()
         vert_count = 0
         conn_dict = {}; conn_sum = 0
@@ -2256,7 +2260,10 @@ class SymbolicLayout(object):
         sub_epsil = self.module.substrate.substrate_tech.isolation_properties.rel_permit
         resist = self.module.substrate.substrate_tech.metal_properties.electrical_res
         freq = self.module.frequency
+
+        # All graph value will be 1 prior to computation
         ind,res,cap=[1,1,1] # initialize parasitic values to build edges
+
         # Handle Supertraces first
         for st in self.all_super_traces:
             trace = st[0] # Only grab the vertical element (represents both h and v)
@@ -2732,9 +2739,12 @@ class SymbolicLayout(object):
         resist = bw.tech.properties.electrical_res
         inv_ind = 0.0
         inv_res = 0.0
+        b = bw.tech.b
+        a = bw.tech.a
         for pt1, pt2 in zip(bw.start_pts, bw.end_pts):
-            distance = distance(pt1, pt2)
-            length =
+            D = distance(pt1, pt2)
+            l1=D- b
+            length=a+b+l1/math.cos(math.atan(2*a/l1))
             wire_ind = wire_inductance(length, wire_radius)/num_wires
             wire_res = wire_resistance(trace_data[4], length, wire_radius, resist)/num_wires
             inv_res += 1.0/wire_res
