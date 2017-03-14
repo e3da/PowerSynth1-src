@@ -107,11 +107,13 @@ class ProjectBuilder(QtGui.QMainWindow):
         self.ui.btn_modify_component.pressed.connect(self.modify_component)
         self.ui.btn_removeDevice.pressed.connect(self.remove_component)
         
+        # Constraints page
         self.ui.txt_minWidth.textEdited.connect(self.constraint_min_edit)
         self.ui.txt_maxWidth.textEdited.connect(self.constraint_max_edit)
         self.ui.txt_fixedWidth.textEdited.connect(self.constraint_fixed_edit)
         self.ui.btn_remove_constraint.pressed.connect(self.constraint_remove)
         
+        # Menu bar items
         self.ui.actionNew_Project.triggered.connect(self.new_project)
         self.ui.actionSave_Project.triggered.connect(self.save_project)
         self.ui.action_save_project_as.triggered.connect(self.save_project_as)
@@ -185,7 +187,7 @@ class ProjectBuilder(QtGui.QMainWindow):
         self.constraint_error = False
         self.constraint_select = None
         
-        self.fill_material_cmbBoxes()
+        self.fill_material_cmbBoxes() # sxm- initialize dropdown menus of items in module stack
         
         # Used to store which artist object is bound to which component row
         self.component_row_dict = {}
@@ -207,7 +209,7 @@ class ProjectBuilder(QtGui.QMainWindow):
             # don't move on if error in constraints
             self.ui.navigation.setCurrentIndex(self.CONSTRAINT_PAGE)
 
-        self.ui.stackedWidget.setCurrentIndex(self.ui.navigation.currentIndex())
+        self.ui.stackedWidget.setCurrentIndex(self.ui.navigation.currentIndex()) # Ensure the content on the right frame of the window corresponds to the content on the selected tab on the left pane. 
         
         
     def new_project(self):
@@ -318,6 +320,8 @@ class ProjectBuilder(QtGui.QMainWindow):
                 self.ui.navigation.setCurrentIndex(index+1)
         
     def setup_layout_plots(self):
+        """ Create figures, canvases, axes, and layout for each stacked widget page. 
+        Connect all symbolic layouts to their respective pick events. """
         # create figures, canvases, axes, and layout for each stacked widget page
         self.symb_fig = [Figure(),Figure(),Figure(),Figure(),Figure()]
         self.symb_canvas = []
@@ -365,7 +369,7 @@ class ProjectBuilder(QtGui.QMainWindow):
             self.plot_sym_objects(layout, symlayout.xlen,symlayout.ylen,
                                   self.symb_fig[window],self.symb_axis[window],
                                   window, plt_devices)
-            self.symb_canvas[window].draw()
+            self.symb_canvas[window].draw() # sxm - displayes the symbolic layout to the user. (Until this point most of the work was happening in the backend). 
             #self.save_layout_plots()
             
     def plot_sym_objects(self, layout_objs, xlen, ylen, figure, axis, window, plt_circles=True):
@@ -375,8 +379,8 @@ class ProjectBuilder(QtGui.QMainWindow):
         temp_circ_objs = []
         
         axis.clear()
-        axis.set_frame_on(True)
-        #axis.set_axis_off()
+        axis.set_frame_on(True) #sxm originally false
+        #axis.set_axis_off()#sxm commented -- uncomment this to remove axis from symbolic layout
         # go through each object and plot all vertical lines
         for obj in layout_objs:
             if isinstance(obj, SymLine): 
@@ -838,6 +842,7 @@ class ProjectBuilder(QtGui.QMainWindow):
         except:
             QtGui.QMessageBox.warning(self, 'Error', 'Please Select Component on the Component Selection Tab')
     def component_pressed(self):
+        """Enable relevant text fields for the selected component and display the previously entered values for that component."""
         selected_row = self.ui.tbl_projDevices.currentRow()
         row_item = self.ui.tbl_projDevices.item(selected_row, 1)
         self._clear_component_fields()
@@ -888,6 +893,7 @@ class ProjectBuilder(QtGui.QMainWindow):
         self.symb_canvas[self.LAYOUT_SELECTION_PLOT].draw()
 
     def modify_component(self):
+        """Save updated device heat flow and attach thickness by reading in the current values from the text entered by the user."""
         selected_row = self.ui.tbl_projDevices.currentRow()
         row_item = self.ui.tbl_projDevices.item(selected_row, 1)
         if isinstance(row_item.tech, DeviceInstance):
@@ -977,7 +983,8 @@ class ProjectBuilder(QtGui.QMainWindow):
 
         # De-highlight everything
         children = self.symb_axis[self.CONSTRAINT_PLOT].get_children()
-        for obj in children: obj.set_alpha(0.25)
+        for obj in children: 
+            obj.set_alpha(0.25)
         self.symb_canvas[self.CONSTRAINT_PLOT].draw()
 
     def constraint_min_edit(self):

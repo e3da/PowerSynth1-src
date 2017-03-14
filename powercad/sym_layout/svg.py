@@ -41,7 +41,9 @@ def load_script(sript_path):
     #    To specify a point ID p pos
     # The script is written in text form or specified by .psc (powersynth script code) 
     layout=[]    # layout is a set of LayoutLines and LayoutPoints
+    print sript_path
     with open(sript_path, 'rb') as f: # open the directory of script code
+        print f
         objs=[]                      # specified a list of objs (lines and points)
         for line in f:               # read every line of the script 
             if line[0]=='#' or line[0]=='': # check for comments or blank lines
@@ -77,12 +79,13 @@ def load_script(sript_path):
     if len(objs) > 0:                               # If there are objs in layout list
             for t in objs:
                 layout.append(t)                    # append obj to layout
+    print layout
     return layout                                   # return layout
               
                 
 def load_svg(svg_path):
     f = open(svg_path, 'r')
-    dom = xml.parse(f)
+    dom = xml.parse(f) # sxm - document object model
     
     '''
     1. Build up list of path objects
@@ -93,6 +96,7 @@ def load_svg(svg_path):
     # Build up set of path objects
     path_trans_dict = {}
     paths = dom.getElementsByTagName("path")
+    # for every path, create a dictionary with paths as keys, and values empty (to be populated later).
     for path in paths:
         path_trans_dict[path] = []
     
@@ -102,25 +106,27 @@ def load_svg(svg_path):
         trans_tuple = get_translation(group)
     
         if trans_tuple is not None:
-            # Go through each path element in the group element and add the transformation
+            # Go through each path element in the group element and add the transformation to the dictionary at the right path key
             ele_paths = group.getElementsByTagName("path")
             for path in ele_paths:
                 path_trans_dict[path].append(trans_tuple)
+    print "path_trans_dict[]", path_trans_dict #sxm
     
+    # start building layout
     layout = []
     for path in path_trans_dict:
-        trans_list = path_trans_dict[path]
+        trans_list = path_trans_dict[path]        
         
         # Get path's local translation
         trans = get_translation(path)
         if trans is not None:
-            trans_list.append(trans)
+            trans_list.append(trans)        
         
-        objs = handle_circle(path, trans_list)
+        objs = handle_circle(path, trans_list)        
         
         if len(objs) <= 0:
             # Object may be a series of line paths
-            objs = handle_linepath(path, trans_list)
+            objs = handle_linepath(path, trans_list)            
             
         if len(objs) > 0:
             for t in objs:
@@ -130,7 +136,7 @@ def load_svg(svg_path):
     if len(layout) < 1:
         raise LayoutError("No layout objects were loaded! (Blank layout)")
                 
-    # Normalize and check the layout
+    # Normalize and return the layout #sxm- you are not actually normalizing it here.
     return layout
 
 def get_translation(ele):
@@ -182,6 +188,7 @@ def normalize_layout(layout, tol):
     xlen, xdict = norm_dict(xlist, tol) # report the dictionary of normalized coordinate as well as its length
     ylen, ydict = norm_dict(ylist, tol) # report the dictionary of normalized coordinate as well as its length
     
+    # sxm - convert every line/point from original coordinates to normalized coordinates    
     for obj in layout:
         
         if isinstance(obj, LayoutLine): # Read through all objects in SVG again
@@ -196,7 +203,9 @@ def normalize_layout(layout, tol):
             x0 = xdict[obj.pt[0]]
             y0 = ydict[obj.pt[1]]
             obj.pt = (x0, y0)
-    xlen = xlen+1
+    
+    # sxm - increment length of graph to leave room for margin        
+    xlen = xlen+1 
     ylen = ylen+1
     
     return xlen, ylen
@@ -294,7 +303,7 @@ def org_line(pt1, pt2):
         
     return npt1,npt2,vertical
 
-def handle_linepath(path, trans_list):
+def handle_linepath(path, trans_list): #sxm- returns the end points of a line and its path id as a LayoutLine object.
     objs = []
     
     path_id = get_id(path)
@@ -305,8 +314,8 @@ def handle_linepath(path, trans_list):
         pts = []
         for g in d.split(' '):
             if len(g) > 1:
-                pt_str = g.split(',')
-                pts.append((float(pt_str[0]), float(pt_str[1])))
+                pt_str = g.split(',') # sxm - point string in the form x,y
+                pts.append((float(pt_str[0]), float(pt_str[1]))) # sxm - separate x and y coordinates and save them both in pts[] list.
         
         rel = True
         if d.count('m') == 1:
@@ -320,7 +329,7 @@ def handle_linepath(path, trans_list):
             raise Exception('No support for curved paths!')
         
         if d.count('z') > 0 or d.count('Z') > 0:
-            raise Exception('No support for closed line paths!')
+            raise Exception('No support for closed line paths!') #sxm - closed line path is an area; 2D areas are not supported. Only 0D points and 1D lines are. 
         
         last_pt = translate_pt(pts[0], trans_list)
         for pt in pts[1:]:
@@ -330,7 +339,7 @@ def handle_linepath(path, trans_list):
                 tpt = translate_pt(pt, trans_list)
                 
             pt1, pt2, vert = org_line(invert_y(last_pt), invert_y(tpt))
-            line_obj = LayoutLine(path_id, pt1, pt2, vert)
+            line_obj = LayoutLine(path_id, pt1, pt2, vert) #sxm - to do - find out if/how pt1,pt2,vert special case is used. 
             objs.append(line_obj)
             last_pt = tpt
             
@@ -355,7 +364,8 @@ def norm_dict(clist, tol):
             cdict[c] = inc                       # use this as the normalized value
             
         last_c = c                               # move to the next coordinate and continue the normalization
-
+    
+    print 'cdict', cdict    
     return (inc, cdict)                          # return the counter value as well as the normalized values
 
 def check_for_overlap(layout):
@@ -364,7 +374,7 @@ def check_for_overlap(layout):
             if not(obj1 is obj2):
                 if isinstance(obj1, LayoutLine)and \
                    isinstance(obj2, LayoutLine):
-                    # exception for overlap check: if a line is a bondwire.
+                    # exception for overlap check: if a line is a bondwire. Note: path_id must be edited in inkscape xml file so that overlapping bondwires can be allowed.
                     if ('pow_bw' not in obj1.path_id) and ('sig_bw' not in obj1.path_id) and \
                        ('pow_bw' not in obj2.path_id) and ('sig_bw' not in obj2.path_id):
                         check_line_overlap(obj1, obj2)

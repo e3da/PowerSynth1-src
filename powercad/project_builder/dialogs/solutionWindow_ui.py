@@ -10,6 +10,7 @@
 from PySide import QtCore, QtGui
 
 class Ui_layout_form(object):
+    
     def setupUi(self, layout_form):
         layout_form.setObjectName("layout_form")
         layout_form.resize(1056, 904)
