@@ -444,6 +444,23 @@ def harvest_data_boundary_linear_approximation(height, thickness, width, length,
             args = [ipy64, FilePath]
             p = subprocess.Popen(args, shell=True, stdout=subprocess.PIPE)
             stdout, stderr = p.communicate()
-
 if __name__ == '__main__':
-    print 'test'
+    D=2
+    h1=0.3
+    h2=0
+    r=0.025/2
+    f=100000
+    l1=float(2*7)/8
+    angle=(h1+h2)/l1
+    angle=math.atan(angle)
+    length=l1/math.cos(angle)+float(D)/8+h1
+    print length
+    print wire_resistance(f, D, r)
+
+    print wire_inductance(D,r)
+
+
+
+
+
+

@@ -46,7 +46,7 @@ from powercad.util import Rect, complex_rot_vec, get_overlap_interval, distance
 from powercad.sym_layout.svg import load_svg, normalize_layout, check_for_overlap,load_script
 from powercad.sym_layout.svg import LayoutLine, LayoutPoint
 from powercad.design.module_data import gen_test_module_data
-from powercad.design.library_structures import Lead, BondWire
+from powercad.design.library_structures import Lead, BondWire,Device
 from powercad.design.project_structures import DeviceInstance
 from powercad.opt.optimizer import NSGAII_Optimizer, DesignVar
 from powercad.parasitics.analysis import parasitic_analysis
@@ -2249,7 +2249,7 @@ class SymbolicLayout(object):
         wire_wire_dict = {}; ww_sum = 0
         supertrace_conn = {}; supertrace_sum = 0
         long_conn = {}; long_sum = 0
-        
+
         # Trace data
         thickness = self.module.substrate.substrate_tech.metal_thickness
         sub_thick = self.module.substrate.substrate_tech.isolation_thickness
@@ -2733,7 +2733,8 @@ class SymbolicLayout(object):
         inv_ind = 0.0
         inv_res = 0.0
         for pt1, pt2 in zip(bw.start_pts, bw.end_pts):
-            length = distance(pt1, pt2)
+            distance = distance(pt1, pt2)
+            length =
             wire_ind = wire_inductance(length, wire_radius)/num_wires
             wire_res = wire_resistance(trace_data[4], length, wire_radius, resist)/num_wires
             inv_res += 1.0/wire_res
