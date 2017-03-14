@@ -36,7 +36,7 @@ class SolutionWindow(QtGui.QWidget):
         self.ui.btn_export_solidworks.pressed.connect(self.export_solidworks)
         self.ui.btn_export_spice_parasitics.pressed.connect(self.export_spice_parasitics)        
         self.ui.btn_export_spice_thermal.pressed.connect(self.export_spice_thermal)
-        self.ui.btn_run_succesive_approxomation.pressed.connect(self.Run_Sucessive_approximation)#sxm; new button function added based on self.export_spice_parasitics
+        #self.ui.btn_run_succesive_approxomation.pressed.connect(self.Run_Sucessive_approximation)#sxm; new button function added based on self.export_spice_parasitics
         
         self.solution = solution
         self.sym_layout = sym_layout

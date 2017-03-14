@@ -311,7 +311,7 @@ class SymbolicLayout(object):
         
         # trace_trace_connections is a unique set of all regular trace connections in a layout
         self.trace_trace_connections = None # List of tuples (trace1, trace2, conn_type) conn_type: 1-ortho, 2-parallel
-#        self.trace_super_connections = None
+        # self.trace_super_connections = None
         self.boundary_connections = None # Trace to Trace connections made at the boundary of a supertrace
         
         self.symmetries = []
@@ -407,7 +407,7 @@ class SymbolicLayout(object):
     def form_design_problem(self, module, temp_dir=settings.TEMP_DIR): 
         """ Formulate and check the design problem before optimization.
         Keyword Arguments:
-        module: A powercad.sym_layout.module_data.ModuleData object
+        module: A powercad.sym_layout.module_data.ModuleData object 
         temp_dir: A path to a temp. dir. for doing thermal characterizations (must be absolute)
         """
         #pause(True)  # add to graph
@@ -475,7 +475,7 @@ class SymbolicLayout(object):
         self.fixed_constraints = []                                 # a list to sort out objects with fixed constraints
         self.tol_constraints = []                                   # a list to sort out objects with tolerance constraints
         
-        for sym in self.all_sym:
+        for sym in self.all_sym: #sym is a SymLine or SymPoint object (as opposed to LayoutLine/LayoutPoint object)
             ele = sym.element                                       # take the element object from symbolic object
             if isinstance(ele, LayoutLine) and (not sym.wire):      # distinguish between different SymLine object which include bondwire and traces
                 trace_line = copy(sym.element)                      # copy the LayoutLine element
@@ -528,7 +528,7 @@ class SymbolicLayout(object):
                 if supertrace1 is not supertrace2:
                     self._supertrace_connection(supertrace1, supertrace2)
                     
-        self._prune_trace_trace_connections()
+        self._prune_trace_trace_connections() # remove supertraces from trace-trace connections list
         
         # Id normal trace connections at supertrace boundaries
         self._id_supertrace_boundary_connections()
@@ -2220,7 +2220,7 @@ class SymbolicLayout(object):
     '''-----------------------------------------------------------------------------------------------------------------------------------------------------'''  
     def _thermal_analysis(self, measure):
         # RECT_FLUX_MODEL
-        temps = perform_thermal_analysis(self, TFSM_MODEL)#<--TFSM_MODEL
+        temps = perform_thermal_analysis(self, TFSM_MODEL)#<--RECT_FLUX_MODEL
         if isinstance(measure,int):
             return temps
         else:
@@ -2239,8 +2239,12 @@ class SymbolicLayout(object):
         # To do:
         # 1. Implement bondwire to spine connection parasitic eval
         # 2. Implement long contact point to spine connection eval
+
+        # Trace graph res ind cap and points for post model run
         self.trace_info = []  # used to save all width and length for evaluation
         self.trace_nodes = []  # all nodes that will be used to connect traces to lumped_graph
+
+        # Initialize nx.graph structure to store trace graph
         lumped_graph = nx.Graph()
         vert_count = 0
         conn_dict = {}; conn_sum = 0
@@ -2256,7 +2260,10 @@ class SymbolicLayout(object):
         sub_epsil = self.module.substrate.substrate_tech.isolation_properties.rel_permit
         resist = self.module.substrate.substrate_tech.metal_properties.electrical_res
         freq = self.module.frequency
+
+        # All graph value will be 1 prior to computation
         ind,res,cap=[1,1,1] # initialize parasitic values to build edges
+
         # Handle Supertraces first
         for st in self.all_super_traces:
             trace = st[0] # Only grab the vertical element (represents both h and v)
@@ -2732,10 +2739,12 @@ class SymbolicLayout(object):
         resist = bw.tech.properties.electrical_res
         inv_ind = 0.0
         inv_res = 0.0
-    
+        b = bw.tech.b
+        a = bw.tech.a
         for pt1, pt2 in zip(bw.start_pts, bw.end_pts):
             D = distance(pt1, pt2)
-
+            l1=D- b
+            length=a+b+l1/math.cos(math.atan(2*a/l1))
             wire_ind = wire_inductance(length, wire_radius)/num_wires
             wire_res = wire_resistance(trace_data[4], length, wire_radius, resist)/num_wires
             inv_res += 1.0/wire_res

@@ -1,41 +1,56 @@
 '''
 Created on Jul 11, 2013
 
-@author: apsimms (edited by jhmain)
+@author: Andrew Simms, Peter N. Tucker, Jonathan Main
+
+PURPOSE:
+ - This module is used in PowerSynth to allow the user to start a new project from a PSPICE circuit netlist
+ - This module is used to parse a PSPICE netlist file and store the circuit information in a Python nested list structure
+ - This module is called from Netlist_SVG_Converter
+
+INPUTS:
+ - Netlist file (.net or .txt)
+ 
+OUTPUTS:
+ - data (a nested list of components from the netlist with their connections and values)
+
+NOTES:
+ - This module was previously named getnetlist.py (renamed to get_netlist.py for naming consistency with other files)
+ 
 '''
-# - Renamed get_netlist for naming consistency with other files (previously getnetlist)
 
-
-class Netdata(): # Defines components that were used in this class
+class Netdata():    # Stores netlist data in nested list structures
     
     def __init__(self):
-        self.str = ''
         self.data = []
-        self.comp = []
+        self.str = ''
         self.word = ''
+        self.comp = []
         self.complist = ['X_','M_','D_','R_','L_','C_','V_']
         self.components = ['Thyristors','Mosfets','Diodes','Resistors','Inductors','Capacitors','Voltage Source']
-        self.index = 0
     
-    def netlistconverter(self,netlist_file): # Opens netlist file and reads line by line to determine the components of the circuit
+    
+    def read_netlist(self,netlist_file):    # Opens netlist file and reads line by line to determine the components of the circuit
         netfile = open(str(netlist_file))
         infile = netfile.readline()
         self.str = ''.join(infile)
         while infile:
-            self.data = self.findcomponent()
+            self.data = self.find_components()
             infile = netfile.readline()
             self.str = ''.join(infile)
         netfile.close()
         
-    def findcomponent(self): # Finds all components from a netlist and records all necessary information on a list (data)
+        
+    def find_components(self):    # Finds all components from a netlist and records all necessary information on a list (data)
         for num in range(len(self.complist)):
             if self.str.find(self.complist[num]) is not -1:
                 self.comp = []
-                self.getcomp()
+                self.get_component_info()
                 self.data.append(self.comp)
         return self.data
     
-    def getcomp(self): # Gets the information for one component
+    
+    def get_component_info(self):  # Gets the information for one component
         for num2 in range(len(self.str)-1):
             if self.str[num2] is not ' ':
                 self.word += self.str[num2]
@@ -48,16 +63,21 @@ class Netdata(): # Defines components that were used in this class
             self.comp.append(self.word)
             self.word = ''
 
-    def getdata(self):
+
+    def get_data(self):
         return self.data
         
-    def getcomplist(self):
+        
+    def get_complist(self):
         return self.complist
         
-    def getcomponents(self):
+        
+    def get_components(self):
         return self.components
+    
     
     def display(self):  # Displays the data after the operation
         for i in range(len(self.data)):
             print self.data[i]
             print '\n'
+

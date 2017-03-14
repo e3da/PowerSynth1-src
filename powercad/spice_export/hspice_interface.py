@@ -1,6 +1,15 @@
 '''
 @author: Peter N. Tucker
+
+PURPOSE:
+ - This module is used to test a netlist generated for export to HSPICE
+
+This module has effectively been replaced by write_full_thermal_circuit in thermal_netlist_graph.py
+However it might be useful to reference for future work
+Added documentation comments and spacing for better readability - jhmain 7-1-16
+
 '''
+
 import os
 import pickle
 import matplotlib.pyplot as plt
@@ -21,10 +30,10 @@ def write_SPICE_netlist(directory, simulation, *modules):
     Returns:
         SPICE file path
     """
-    
     # prepare netlist file
     full_path = os.path.join(directory, 'SPICE_netlist.out')
     spice_file = open(full_path, 'w')
+    
     # write netlist title
     spice_file.write('{}\n'.format(simulation.name))
     
@@ -68,6 +77,7 @@ def run_hspice(self):
     return self.hspice_output
 
 def draw_HSPICE_output(self):
+    
     self.hspice_output[0] = 'Run One'
 
     fig = figure()

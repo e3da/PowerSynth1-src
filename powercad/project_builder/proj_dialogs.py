@@ -332,6 +332,7 @@ class NewProjectDialog(QtGui.QDialog):
         self.ui.groupBox_advnetlist.setEnabled(False)
         self.ui.txt_dir.setEnabled(False)
         
+        # Check user input as it is entered
         self.ui.txt_name.textChanged.connect(self.check)
         self.ui.txt_dir.textChanged.connect(self.check)
         self.ui.txt_symbnet_address.textChanged.connect(self.check)
@@ -350,16 +351,20 @@ class NewProjectDialog(QtGui.QDialog):
     def check(self):
         # Check for valid netlist details
         valid_netlist_details = False
-        if self.filetype == 'netlist' and self.ui.txt_symbnet_address.text() != '':
-            valid_netlist_details = self.check_netlist_details()
+        if self.filetype == 'netlist' and self.ui.txt_symbnet_address.text() != '': # if netlist filetype is chosen and the "select file" text area is not empty, 
+            valid_netlist_details = self.check_netlist_details() # check netlist details entered.
         
         # Enable/Disable 'Create Project' button
+        # Disable if either of the three text areas is empty: Project Name, Project Directory, Select file
         if (len(self.ui.txt_name.text()) == 0) or (len(self.ui.txt_dir.text()) == 0) or (len(self.ui.txt_symbnet_address.text()) == 0):
             self.ui.btn_create.setEnabled(False)
+        # Disable if either of the three node names are not provided when filetype has been chosen as netlist
         elif self.filetype == 'netlist' and ((len(self.ui.txt_positive_source.text()) == 0) or (len(self.ui.txt_negative_source.text()) == 0) or (len(self.ui.txt_output.text()) == 0)):
             self.ui.btn_create.setEnabled(False)
+        # Disable if netlist details are not valid (as checked by the check_netlist_details() called above, when netlist has been chosen as the filetype
         elif self.filetype == 'netlist' and not valid_netlist_details:
             self.ui.btn_create.setEnabled(False)
+        # Enable if none of the above is true, i.e. no issues are detected with input data.
         else:
             self.ui.btn_create.setEnabled(True)
     
@@ -369,12 +374,12 @@ class NewProjectDialog(QtGui.QDialog):
         invalid_neg_src = True
         invalid_output_node = True
         
-        # Check if each netlist detail name exists in the netlist file
-        if self.ui.txt_positive_source.text() in open(self.ui.txt_symbnet_address.text()).read():
+        # Check if positive src, negative src, and output node names exist in the netlist file. If yes, mark invalid flag as false. If not, keep invalid flag as true. 
+        if self.ui.txt_positive_source.text() in open(self.ui.txt_symbnet_address.text()).read(): # check if the positive source node is included in the netlist file.
             invalid_pos_src = False
-        if self.ui.txt_negative_source.text() in open(self.ui.txt_symbnet_address.text()).read():
+        if self.ui.txt_negative_source.text() in open(self.ui.txt_symbnet_address.text()).read(): # check if the negative source node is included in the netlist file.
             invalid_neg_src = False
-        if self.ui.txt_output.text() in open(self.ui.txt_symbnet_address.text()).read():
+        if self.ui.txt_output.text() in open(self.ui.txt_symbnet_address.text()).read(): # check if the output node is included in the netlist file.
             invalid_output_node = False
         
         if invalid_pos_src:
@@ -384,6 +389,7 @@ class NewProjectDialog(QtGui.QDialog):
             self.ui.err_pos_src.setText('Source name may only be used once')
         else:
             self.ui.err_pos_src.setText(' ')
+            
         if invalid_neg_src:
             self.ui.err_neg_src.setText('Source not found in netlist')
         elif self.ui.txt_negative_source.text() != '' and (self.ui.txt_negative_source.text() == self.ui.txt_positive_source.text() 
@@ -391,6 +397,7 @@ class NewProjectDialog(QtGui.QDialog):
             self.ui.err_neg_src.setText('Source name may only be used once')
         else:
             self.ui.err_neg_src.setText(' ') 
+            
         if invalid_output_node:
             self.ui.err_output_node.setText('Node not found in netlist')
         elif self.ui.txt_output.text() != '' and (self.ui.txt_output.text() == self.ui.txt_positive_source.text() 
@@ -409,22 +416,22 @@ class NewProjectDialog(QtGui.QDialog):
             self.ui.txt_dir.setText(directory)
     
     def select_filetype(self):
-        self.ui.txt_symbnet_address.clear()
-        if self.ui.dropdown_filetype.currentIndex() > 0:
-            self.ui.btn_symbnetfile.setEnabled(True)
-            if self.ui.dropdown_filetype.currentIndex() == 1:
-                self.filetype = 'svg'
-                self.ui.groupBox_advnetlist.setEnabled(False)
-            elif self.ui.dropdown_filetype.currentIndex() == 2:
-                self.filetype = 'netlist'
-                self.ui.groupBox_advnetlist.setEnabled(True)
+        self.ui.txt_symbnet_address.clear() 					# Clear "Open file" text area.
+        if self.ui.dropdown_filetype.currentIndex() > 0: 		# If something other than the default is selected from the filetype dropdown menu, 
+            self.ui.btn_symbnetfile.setEnabled(True) 			# Enable the "Open file" button.
+            if self.ui.dropdown_filetype.currentIndex() == 1: 	# If filetype has been selected as 'svg',
+                self.filetype = 'svg' 							# set filetype to "svg", and 
+                self.ui.groupBox_advnetlist.setEnabled(False) 	# disable the "Netlist Details" section.
+            elif self.ui.dropdown_filetype.currentIndex() == 2: # If filetype has been selected as 'netlist',
+                self.filetype = 'netlist' 						# set filetype to "netlist", and 
+                self.ui.groupBox_advnetlist.setEnabled(True) 	# enable the "Netlist Details" section.
             elif self.ui.dropdown_filetype.currentIndex() == 3: 
                 self.filetype = 'script'   
                 self.ui.groupBox_advnetlist.setEnabled(False)
-        else:
-            self.filetype = None
-            self.ui.btn_symbnetfile.setEnabled(False)
-            self.ui.groupBox_advnetlist.setEnabled(False) 
+        else: 													# If nothing other than the default has been selected from the filetype dropdown menu,
+            self.filetype = None 								# set filetype to "None",
+            self.ui.btn_symbnetfile.setEnabled(False) 			# disable the "Open File" button, and 
+            self.ui.groupBox_advnetlist.setEnabled(False)  		# disable the "Netlist Details" section.
         
     def open_symbnet_file(self):
         if self.filetype == 'svg' or self.filetype=='script':
@@ -440,6 +447,7 @@ class NewProjectDialog(QtGui.QDialog):
                 
         elif self.filetype == 'netlist':
             symbnet_file = QFileDialog.getOpenFileName(self, "Select Netlist File", self.ui.txt_symbnet_address.text(), "Netlist Files (*.net *.txt)")
+            print "symbnet file:", symbnet_file
             file_name, file_extension = os.path.splitext(symbnet_file[0])
             if file_extension == '.txt' or file_extension == '.net':
                 self.ui.txt_symbnet_address.setText(os.path.abspath(symbnet_file[0]))
@@ -455,7 +463,12 @@ class NewProjectDialog(QtGui.QDialog):
                                          vn=str(self.ui.txt_negative_source.text()), # the negative source node mentioned by the user is converted to string type and saved in variable vn
                                          output_node=str(self.ui.txt_output.text())) # the output node mentioned by the user is converted to string type and saved in variable output_node 
         
-        return os.path.abspath(symbnet_file[0]) # sxm - return the converted file  
+        NetlistConverter = Netlist_SVG_converter.Converter(self.ui.txt_symbnet_address.text(), netlist_file_name)
+        symbnet_file = NetlistConverter.convert(vp=str(self.ui.txt_positive_source.text()), 
+                                         vn=str(self.ui.txt_negative_source.text()), 
+                                         output_node=str(self.ui.txt_output.text()))
+        
+        return os.path.abspath(symbnet_file[0]) # Shilpi - return the converted file  
 
     def create(self):
         # Save most recent entries
@@ -498,7 +511,7 @@ class OpenProjectDialog(QtGui.QDialog):
         self.ui.btn_selectFile.pressed.connect(self.open_dir)
         self.ui.buttonBox.accepted.connect(self.load_project)
             
-    def open_dir(self):
+    def open_dir(self): # responds to button click by opening a file browser where the project directory can be selected
         try:
             last_entries = pickle.load(open(LAST_ENTRIES_PATH,"rb"))
             prev_folder = last_entries[0]
@@ -509,7 +522,7 @@ class OpenProjectDialog(QtGui.QDialog):
         self.parent.layout_script_dir=os.path.dirname(self.project_file[0])    
         
      
-    def load_project(self):
+    def load_project(self): # loads the project selected into the main view
         try:
             self.parent.project = pickle.load(open(self.project_file[0],'rb'))
             
@@ -527,15 +540,19 @@ class OpenProjectDialog(QtGui.QDialog):
             QtGui.QMessageBox.about(self,"Project Load Error","Error loading project -- Contact developer.")
             self.reject()
             print traceback.format_exc()
+
 class SolidworkVersionCheckDialog(QtGui.QDialog):       
+
     def __init__(self,parent):
         QtGui.QDialog.__init__(self, parent)
         self.ui = Ui_checkversion_dialog()
         self.ui.setupUi(self)
         self.parent = parent 
         self.ui.buttonBox.accepted.connect(self.version_output)
+
     def version_output(self):
         return self.ui.SolidworkVersion.text()    
+
 class EditTechLibPathDialog(QtGui.QDialog):
     """Edit Tech. Lib. Path Dialog"""
     def __init__(self, parent):
