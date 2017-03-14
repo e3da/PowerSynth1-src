@@ -2732,9 +2732,10 @@ class SymbolicLayout(object):
         resist = bw.tech.properties.electrical_res
         inv_ind = 0.0
         inv_res = 0.0
+    
         for pt1, pt2 in zip(bw.start_pts, bw.end_pts):
-            distance = distance(pt1, pt2)
-            length =
+            D = distance(pt1, pt2)
+
             wire_ind = wire_inductance(length, wire_radius)/num_wires
             wire_res = wire_resistance(trace_data[4], length, wire_radius, resist)/num_wires
             inv_res += 1.0/wire_res
