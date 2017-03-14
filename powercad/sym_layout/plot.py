@@ -3,7 +3,7 @@ Created on Nov 6, 2012
 
 @author: shook
 
-sxm - This function is only used in svg.py's main().
+# test commit.
 '''
 
 import numpy as np
