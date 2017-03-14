@@ -14,7 +14,7 @@ from PySide import QtCore, QtGui
 
 from powercad.sym_layout.symbolic_layout import SymLine, SymPoint
 
-class SymmetryItem(object):
+class SymmetryItem(object): #done
     def __init__(self, SymmUI, row_item, symmetry_list, color_index):
         self.row_item = row_item
         self.table = SymmUI.parent.ui.tbl_symmetry
@@ -29,7 +29,7 @@ class SymmetryItem(object):
         self.remove_button.pressed.connect(self.remove)
         self.table.setCellWidget(self.row_index(),2,self.remove_button)
     
-    def remove(self):
+    def remove(self): #done
         patch_dict = self.SymmUI.parent.patch_dict
         
         # remove constraints from each object
@@ -53,17 +53,18 @@ class SymmetryItem(object):
         self.SymmUI.parent.symb_canvas[self.SymmUI.parent.SYMMETRY_PLOT].draw()
         self.SymmUI.parent.symb_canvas[self.SymmUI.parent.CONSTRAINT_PLOT].draw()
         
-    def row_index(self):
+    def row_index(self): #done
         return self.table.row(self.row_item)
     
-    def get_constraint(self):
+    def get_constraint(self): #done
         for layout_obj in self.symmetry_list:
             if hasattr(layout_obj, 'constraint'):
-                if layout_obj.constraint is not None:
+                if layout_obj.constraint is not None:                    
                     return layout_obj.constraint
         return None
 
-class SymmetryListUI(object):
+class SymmetryListUI(object): #done
+    
     def __init__(self, parent):
         ''' Symmetry Identification Module
         
@@ -83,7 +84,7 @@ class SymmetryListUI(object):
         
         self.symmetry_items = []
         self.used_colors = [] # stores which colors have been used
-        for __ in self.color_wheel:
+        for __ in self.color_wheel: #sxm - why use "__"?
             self.used_colors.append(False)
             
         # connect pick event
@@ -91,6 +92,7 @@ class SymmetryListUI(object):
 
     def _setup_symb_fields(self):
         # set up table that displays added symmetries in Symmetry Selection
+        # sxm - The numbers seem hardcoded. Not sure what they represent.
         self.ui.tbl_symmetry.setColumnCount(3)
         self.ui.tbl_symmetry.horizontalHeader().setResizeMode(QtGui.QHeaderView.ResizeMode.Custom)
         self.ui.tbl_symmetry.setColumnWidth(0,50)
@@ -103,7 +105,7 @@ class SymmetryListUI(object):
         self.ui.tbl_performance.setColumnWidth(3,100)
         self.ui.tbl_performance.setColumnWidth(4,20)
     
-    def load_symmetries(self):
+    def load_symmetries(self): #done
         #self.project.symb_layout.symmetries = []
         
         for symmetry_list in self.project.symb_layout.symmetries:
@@ -112,7 +114,7 @@ class SymmetryListUI(object):
         self.parent.symb_canvas[self.parent.SYMMETRY_PLOT].draw()
         self.parent.symb_canvas[self.parent.CONSTRAINT_PLOT].draw()
 
-    def add_symmetry(self, symmetry_list=None, from_load=False):
+    def add_symmetry(self, symmetry_list=None, from_load=False): #done
         """Add symmetry item to list"""
         patch_dict = self.parent.patch_dict
         row = self.ui.tbl_symmetry.rowCount()
@@ -157,13 +159,14 @@ class SymmetryListUI(object):
         symm_item = SymmetryItem(self, row_item, symmetry_list, color_index)
         self.symmetry_items.append(symm_item)
         
-    def symmetry_pick(self, event):
+    def symmetry_pick(self, event): #done
         """Pick event called when symmetry selection symbolic layout is clicked"""
         patch_dict = self.parent.patch_dict
         
         if len(self.ui.tbl_symmetry.selectionModel().selectedIndexes()) < 1:
             return
-            
+        
+        # save the row number and its corresponding layout parts (symmetries)   
         row_sel = self.ui.tbl_symmetry.selectionModel().selectedIndexes()[0].row()
         symm_item = self.symmetry_items[row_sel]
         selected_elem = patch_dict.get_layout_obj(event.artist)
@@ -174,25 +177,25 @@ class SymmetryListUI(object):
             if selected_elem in symm_list:
                 symm_list.remove(selected_elem)
         
-        # color the object
+        # select a color for the object
         col = self.color_wheel[symm_item.color_index]
         color = col.getRgbF()
         color = (color[0],color[1],color[2],0.5)
+        
         # if the artist is already colored that color
         if event.artist.get_facecolor() == color:
             # set back to default color
             event.artist.set_facecolor(self.parent.default_color)
-            # do same in constraint section
+            # do same in constraint section ("Constraint Creation" page)
             if isinstance(selected_elem, SymLine):
                 patch_dict.get_patch(selected_elem, 2).set_facecolor(self.parent.default_color)
-                patch_dict.get_patch(selected_elem, 2).symmetry = symm_item.symmetry_list
-                
+                patch_dict.get_patch(selected_elem, 2).symmetry = symm_item.symmetry_list                
             # Remove constraint
             selected_elem.constraint = None
         else:
             # color object
             event.artist.set_facecolor(color)
-            # color object in constraint section as well
+            # color object in constraint section ("Constraint Creation' page) as well
             if isinstance(selected_elem, SymLine):
                 patch_dict.get_patch(selected_elem, 2).set_facecolor(color)
                 patch_dict.get_patch(selected_elem, 2).set_alpha(0.25)
@@ -208,4 +211,4 @@ class SymmetryListUI(object):
         self.parent.symb_canvas[self.parent.SYMMETRY_PLOT].draw()
         self.parent.symb_canvas[self.parent.CONSTRAINT_PLOT].draw()
         
-        #print self.project.symb_layout.symmetries
+

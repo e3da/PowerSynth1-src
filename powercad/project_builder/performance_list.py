@@ -35,6 +35,7 @@ class PerformanceItem(object):
         return self.table.row(self.row_item)
         
 class PerformanceListUI(object):
+    
     def __init__(self, parent):
         ''' Performance Identification Module
         
