@@ -310,7 +310,7 @@ class SymbolicLayout(object):
         
         # trace_trace_connections is a unique set of all regular trace connections in a layout
         self.trace_trace_connections = None # List of tuples (trace1, trace2, conn_type) conn_type: 1-ortho, 2-parallel
-#        self.trace_super_connections = None
+        # self.trace_super_connections = None
         self.boundary_connections = None # Trace to Trace connections made at the boundary of a supertrace
         
         self.symmetries = []
@@ -464,7 +464,7 @@ class SymbolicLayout(object):
         self.fixed_constraints = []                                 # a list to sort out objects with fixed constraints
         self.tol_constraints = []                                   # a list to sort out objects with tolerance constraints
         
-        for sym in self.all_sym:
+        for sym in self.all_sym: #sym is a SymLine or SymPoint object (as opposed to LayoutLine/LayoutPoint object)
             ele = sym.element                                       # take the element object from symbolic object
             if isinstance(ele, LayoutLine) and (not sym.wire):      # distinguish between different SymLine object which include bondwire and traces
                 trace_line = copy(sym.element)                      # copy the LayoutLine element
@@ -517,7 +517,7 @@ class SymbolicLayout(object):
                 if supertrace1 is not supertrace2:
                     self._supertrace_connection(supertrace1, supertrace2)
                     
-        self._prune_trace_trace_connections()
+        self._prune_trace_trace_connections() # remove supertraces from trace-trace connections list
         
         # Id normal trace connections at supertrace boundaries
         self._id_supertrace_boundary_connections()

@@ -27,7 +27,7 @@ LOWEST_ASPECT_IND = 1.0
 c = 3.0e8                       # speed of light
 u_0 = 4.0*math.pi*1e-7          # permeability of vaccum;
 e_0 = 8.85e-12                  # permittivity of vaccum;
-save_path = 'C:\Users\qmle\Desktop\SingleFEM'
+# save_path = 'C:\Users\qmle\Desktop\SingleFEM' #sxm- hardcoded path!
 #es_mdl=pickle.load(open(os.path.join(save_path,'res_0.64_0.4_[5,50].mdl'),'rb'))
 
 #--------------------------------------------------------------------------
@@ -113,7 +113,7 @@ def trace_resistance_not_released(f,w,l,t,h,p=1.724e-8):
     res = slope * l + b
     if f != 300000 or p != 1.724e-8:
         res = res * math.sqrt(f * p) / math.sqrt(300e3 * 1.724e-8)
-    return res
+    return res # units: mOhms
 
 #--------------------------------------------------------------------------
 #-----------  inductance  model of traces on ground plane-- ---------------
@@ -175,7 +175,7 @@ def trace_inductance(w, l, t, h):                            # see main for unit
         else:
             Ind = 1e-6
     # returns inductance in nano-Henries
-    return Ind
+    return Ind # units: nH
 
 def trace_mutual(w, l, t, d):                           
     # w: mm (trace width, perpendicular to current flow)
@@ -232,7 +232,7 @@ def trace_capacitance(w, l, t, h, k = 8.8):
     if c <= 0.0:
         c = 1e-6
     
-    return c      
+    return c      # units: pF
 
 #-------------------------------------------------------------
 #----------- self-partial wire-bond inductance----------------
@@ -287,7 +287,7 @@ def wire_resistance(f, l, r, p=1.724e-8):
     if r_w <= 0.0:
         r_w = 1e-6
     
-    return r_w
+    return r_w 	# units: mOhms
 
 
 
