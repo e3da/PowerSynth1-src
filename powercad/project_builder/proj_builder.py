@@ -39,7 +39,7 @@ import matplotlib.pyplot as plt
 
 from powercad.project_builder.symmetry_list import SymmetryListUI
 from powercad.project_builder.performance_list import PerformanceListUI
-from powercad.project_builder.windows.mainWindow_ui1 import Ui_MainWindow
+from powercad.project_builder.windows.mainWindow_ui import Ui_MainWindow
 from powercad.project_builder.windows.sol_window import SolutionWindow
 from powercad.project_builder.proj_dialogs import NewProjectDialog, OpenProjectDialog, EditTechLibPathDialog, DevicePropertiesDialog,GenericDeviceDialog,LayoutEditorDialog
 
@@ -123,7 +123,7 @@ class ProjectBuilder(QtGui.QMainWindow):
         self.ui.action_open_tech_lib_editor.triggered.connect(self.open_tech_lib_editor)
         self.ui.action_edit_tech_path.triggered.connect(self.edit_tech_lib_path)
         self.ui.action_load_symbolic_layout.triggered.connect(self.load_symbolic_layout)
-        self.ui.actionexport_layout_script.triggered.connect(self.export_layout_script) # export layout to script action 
+        self.ui.actionExport_Layout_Script.triggered.connect(self.export_layout_script) # export layout to script action
         self.ui.actionOpen_Layout_Editor.triggered.connect(self.open_layout_editor) # Open script 
         # Disable project interfaces until a project is loaded or created
         self.enable_project_interfaces(False)
@@ -161,7 +161,7 @@ class ProjectBuilder(QtGui.QMainWindow):
         self.ui.actionSave_Project.setEnabled(enable)
         self.ui.action_save_project_as.setEnabled(enable)
         self.ui.action_edit_design_rules.setEnabled(enable)
-        self.ui.actionexport_layout_script.setEnabled(enable)
+        self.ui.actionExport_Layout_Script.setEnabled(enable)
         self.ui.action_open_tech_lib_editor.setEnabled(enable)
         self.ui.action_edit_tech_path.setEnabled(enable)
         self.ui.action_load_symbolic_layout.setEnabled(enable)
