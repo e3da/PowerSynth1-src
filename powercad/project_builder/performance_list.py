@@ -53,7 +53,7 @@ class PerformanceListUI(object):
         self.ui.txt_perform_name.textChanged.connect(self.populate_cmb_elec_therm)
         self.ui.cmb_perform_elecTherm.currentIndexChanged.connect(self.populate_cmb_type)
         self.ui.cmb_perform_type.currentIndexChanged.connect(self.disp_perform_step2)
-        
+        self.ui.cmb_thermal_model.currentIndexChanged.connect(self.disp_perform_step2)
         self.parent.symb_canvas[self.parent.MEASURES_PLOT].mpl_connect('pick_event', self.performance_pick)
 
     def populate_cmb_elec_therm(self):
@@ -84,17 +84,18 @@ class PerformanceListUI(object):
             self.ui.lbl_perform_step2.setEnabled(True)
             if self.ui.cmb_perform_elecTherm.currentText() == "Electrical":
                 if perf_text == "Resistance" or perf_text == "Inductance":
-                    self.ui.lbl_perform_step2.setText("Step 2:  Select two devices/leads on the right to define path.")
+                    self.ui.lbl_perform_step3.setText("Step 3:Select two devices/leads on the right to define path.")
                 elif perf_text == "Capacitance":
-                    self.ui.lbl_perform_step2.setText("Step 2:  Select one or more traces (lines) on right for capacitance measurement.")
+                    self.ui.lbl_perform_step3.setText("Step 3:Select one or more traces (lines) on right for capacitance measurement.")
             elif self.ui.cmb_perform_elecTherm.currentText() == "Thermal":
-                self.ui.lbl_perform_step2.setText("Step 2:  Select device(s) on the right to include in measurements.")
+                self.ui.lbl_perform_step3.setText("Step 3:Select device(s) on the right to include in measurements.")
         else:
             # clear steps 2 and 3
             self.ui.lbl_perform_step2.setEnabled(False)
             self.ui.lbl_perform_step3.setEnabled(False)
+            self.ui.lbl_perform_step4.setEnabled(False)
             self.ui.btn_perform_addPerformance.setEnabled(False)
-            self.ui.lbl_perform_step2.setText("Step 2:  Select Devices/Leads.")
+            self.ui.lbl_perform_step3.setText("Step 3:  Select Devices/Leads.")
             # uncolor everything
             for device in self.perform_devices:
                 self.parent.patch_dict.get_patch(device, 3).set_facecolor(self.parent.default_color)
@@ -244,7 +245,7 @@ class PerformanceListUI(object):
         # add to performance measure list in symbolic layout
         self.parent.project.symb_layout.perf_measures.append(performance_measure)
         # clean out gui list
-        #print len(self.perf_items)
+        # print len(self.perf_items)
      
         # clear everything
         self.ui.txt_perform_name.setText('')
