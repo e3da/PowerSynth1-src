@@ -368,7 +368,7 @@ class SymbolicLayout(object):
         # Testing
         self.trace_info = [] # used to save all width and length for evaluation
         self.trace_nodes = [] # all nodes that will be used to connect traces to lumped_graph
-        self.mdl_dir = 'D:\Testing\Py_Q3D_test\All rs models'
+        self.mdl_dir = '../../../mdl_test'
         self.LAC_mdl=load_mdl(self.mdl_dir,'LAC_mesh_100_krige.rsmdl')
         self.RAC_mdl = load_mdl(self.mdl_dir, 'RAC_mesh_100_krige.rsmdl')
         self.C_mdl = load_mdl(self.mdl_dir,'C_mesh_100_krige.rsmdl')
