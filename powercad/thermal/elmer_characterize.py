@@ -16,7 +16,7 @@ from powercad.export.elmer import write_module_elmer_sif, elmer_solve, get_nodes
 from powercad.thermal.characterization import characterize_dist
 from powercad.thermal.fast_thermal import DieThermalFeatures, SublayerThermalFeatures
 import powercad.settings as settings
-
+from powercad.q3d_inprogress.Error_messages import Notifier
 MIN_LAYER_THICKNESS = 0.01 # minimum layer thickness in mm
 
 class CachedCharacterization(object):
@@ -97,7 +97,6 @@ def characterize_devices(sym_layout, temp_dir=settings.TEMP_DIR, conv_tol=1e-6):
         
         dev_density = float(dev.device_tech.properties.density)
         dev_cond = float(dev.device_tech.properties.thermal_cond)
-        
         bp_coeff = float(sym_layout.module.baseplate.eff_conv_coeff)
         
         materials = [(bp_density, bp_cond), (solder_density, solder_cond),

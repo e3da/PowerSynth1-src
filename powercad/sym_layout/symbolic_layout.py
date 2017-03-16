@@ -4,26 +4,24 @@ Created on Jun 27, 2012
 @author: bxs003
 '''
 
-# To Do:
-# - Support devices/leads on supertraces
-# - Support Supertrace Supertrace contact
-# - Support Bondwires from device to supertrace
-# - Devices need to be constrained to the correct topological space
-# - Fixed Lead positions
-# - Check device types have proper amount of connections (transitor->signal,power) (diode->power)
-# - Bug: If two horz. traces are abutted, and two vert. traces are above and below,
-#       the vertical piece on the bottom has some strange issues
+#ToDo:- Support devices/leads on supertraces - Support Supertrace Supertrace contact
+#ToDo - Support Bondwires from device to supertrace
+#ToDo - Devices need to be constrained to the correct topological space
+#ToDo - Fixed Lead positions
+#ToDo - Check device types have proper amount of connections (transitor->signal,power) (diode->power)
+#ToDo - Bug: If two horz. traces are abutted, and two vert. traces are above and below,
+#Todo       the vertical piece on the bottom has some strange issues
 
-# Supertrace future work:
-# - 3 options for devices on supertrace:
-#     *1. 2DOF; 2. Vert. Constrained; 3. Horz. Constrained
-#     *Default to Vert. Constrained
-# - Bondwire interaction:
-#     *if bondwire is horizontal (treat supertrace as vertical)
-#     *if bondwire is vertical (treat st as horiz.)
-# - Need to handle supertrace connecting to supertrace
-#     * this will involve writing/changing code in both layout generation and parasitic extraction
-
+#Todo Supertrace future work:
+#Todo -3 options for devices on supertrace:
+#Todo *1. 2DOF; 2. Vert. Constrained; 3. Horz. Constrained
+#Todo *Default to Vert. Constrained
+#Todo - Bondwire interaction:
+#Todo *if bondwire is horizontal (treat supertrace as vertical)
+#Todo *if bondwire is vertical (treat st as horiz.)
+#Todo - Need to handle supertrace connecting to supertrace
+#Todo*this will involve writing/changing code in both layout generation and parasitic extraction
+#Todo
 # Future work notes:
 # Work the concept of supertraces into the program better (more elegantly)
 # Remove the use of dictionaries in the design variable formulation process

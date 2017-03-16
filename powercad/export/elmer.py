@@ -246,11 +246,11 @@ if __name__ == '__main__':
     mesh_name = 'thermal_char'
     data_name = 'data'
     sif_name = 'thermal_char.sif'
-    directory = r"C:\Users\bxs003\Dropbox\PMLST\code\workspace\PowerCAD\export_data\temp"
+    directory = r"C:\Users\qmle\Desktop\Testing\ElmerSif"
     
     materials = [(5000.0, 100.0), (6000.0, 200.0),
                  (7000.0, 300.0), (8000.0, 400.0),
-                 (9000.0, 500.0), (10e3, 600.0), (11e3, 600.0)]
+                 (9000.0, 500.0), (10e3, 600.0), (11e3, 3.69)]
     
     write_module_elmer_sif(directory, sif_name, data_name, mesh_name, materials, 30.0, 300.0, 100.0, (4.8, 2.4), 1e-7)
     elmer_solve(directory, sif_name, mesh_name)
