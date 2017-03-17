@@ -369,7 +369,7 @@ class SymbolicLayout(object):
         self.trace_info = [] # used to save all width and length for evaluation
         self.trace_nodes = [] # all nodes that will be used to connect traces to lumped_graph
         self.mdl_dir = 'D:\Testing\Py_Q3D_test\All rs models'
-        self.mdl_type='MS'
+        self.mdl_type={'E':[],'T':[]}
         self.LAC_mdl=load_mdl(self.mdl_dir,'LAC_mesh_100_krige.rsmdl')
         self.RAC_mdl = load_mdl(self.mdl_dir, 'RAC_mesh_100_krige.rsmdl')
         self.C_mdl = load_mdl(self.mdl_dir,'C_mesh_100_krige.rsmdl')
@@ -2003,9 +2003,9 @@ class SymbolicLayout(object):
         # When the project is saved, must save the seed also..... so that we can regenerate it
         for pm in self.perf_measures:
             if isinstance(pm, ElectricalMeasure):
-                self.mdl_type=pm.mdl
-                print 'mdl_type',self.mdl_type
-             
+                self.mdl_type['E'].append(pm.mdl)
+        self.mdl_type['E']=list(set(self.mdl_type['E']))
+        print 'mdl_type', self.mdl_type
         print 'seed:',iseed
 #        print 'num gen:',inum_gen
 #        print 'mu:',mu
@@ -2763,27 +2763,32 @@ class SymbolicLayout(object):
         w_all=[]
         l_all=[]
         t_num=len(self.trace_info) # number of traces
-        if self.mdl_type=='RS':
-            for w,l in self.trace_info:
-                w_all.append(w)
-                l_all.append(l)
-            ind1 = trace_ind_krige(trace_data[4],w_all, l_all,self.LAC_mdl).tolist()
-            res1 = trace_res_krige(trace_data[4], w_all, l_all,self.RAC_mdl).tolist()
-            print res1
-            cap1 = trace_cap_krige(w_all, l_all, self.C_mdl).tolist()
-            for i in range(t_num):
-                nodes=self.trace_nodes[i]
-                lumped_graph[nodes[0]][nodes[1]]['ind']=1/ind1[i]
-                lumped_graph[nodes[0]][nodes[1]]['res']=1/res1[i]
-                lumped_graph[nodes[0]][nodes[1]]['cap']=1/cap1[i]
-        elif self.mdl_type=='MS':
-            for i in range(t_num):
-                nodes = self.trace_nodes[i]
-                [w, l] = self.trace_info[i]
-                l,r,c = self._eval_parasitic_models(w, l, trace_data)
-                lumped_graph[nodes[0]][nodes[1]]['ind'] = 1 / l
-                lumped_graph[nodes[0]][nodes[1]]['res'] = 1 / r
-                lumped_graph[nodes[0]][nodes[1]]['cap'] = 1 / c
+        freq=trace_data[4]
+        print 'f=',freq
+        for mdl_type in self.mdl_type['E']:
+            if mdl_type=='RS':
+                #ToDO: Update lumped graph n times and duplicate them for different type of model choices if multiple types were chosen
+                for w,l in self.trace_info:
+                    w_all.append(w)
+                    l_all.append(l)
+
+                ind1 = trace_ind_krige(trace_data[4],w_all, l_all,self.LAC_mdl).tolist()
+                res1 = trace_res_krige(trace_data[4], w_all, l_all,self.RAC_mdl).tolist()
+                print res1
+                cap1 = trace_cap_krige(w_all, l_all, self.C_mdl).tolist()
+                for i in range(t_num):
+                    nodes=self.trace_nodes[i]
+                    lumped_graph[nodes[0]][nodes[1]]['ind']=1/ind1[i]
+                    lumped_graph[nodes[0]][nodes[1]]['res']=1/res1[i]
+                    lumped_graph[nodes[0]][nodes[1]]['cap']=1/cap1[i]
+            elif mdl_type=='MS':
+                for i in range(t_num):
+                    nodes = self.trace_nodes[i]
+                    [w1, l1] = self.trace_info[i]
+                    l,r,c = self._eval_parasitic_models(w1, l1, trace_data)
+                    lumped_graph[nodes[0]][nodes[1]]['ind'] = 1 / l
+                    lumped_graph[nodes[0]][nodes[1]]['res'] = 1 / r
+                    lumped_graph[nodes[0]][nodes[1]]['cap'] = 1 / c
         self.lumped_graph=lumped_graph
 
     def _collect_trace_parasitic_post_eval(self,width,length,node_l,node_r):
@@ -2794,6 +2799,8 @@ class SymbolicLayout(object):
     def _eval_parasitic_models(self, width, length, trace_data):
         ind = trace_inductance(width, length, trace_data[1], trace_data[2])
         res = trace_resistance(trace_data[4], width, length, trace_data[1], trace_data[2], trace_data[5])
+        if res<0:
+            print "width,length res < 0",width,length
         cap = trace_capacitance(width, length, trace_data[1], trace_data[2], trace_data[6])
         return ind, res, cap
     

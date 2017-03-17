@@ -222,6 +222,7 @@ class PerformanceListUI(object):
                 print "Error: Switching frequency must be greater than zero"
                 return 1
             # create performace measure
+            print model
             if measure == ElectricalMeasure.MEASURE_CAP:
                 performance_measure = ElectricalMeasure(None,None,measure,freq,self.ui.txt_perform_name.text(),self.perform_lines,model)
             else:

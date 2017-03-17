@@ -20,7 +20,7 @@ def trace_resistance(f, w, l, t, h, p=1.724e-8):
     # t: mm (trace thickness)
     # h: mm (height of trace above ground plane)
     # p: Ohm*meter (trace resistivity)
-    
+    f=f*1000
     w = fabs(w)
     l = fabs(l)
     if w > l*LOWEST_ASPECT_RES:
@@ -260,7 +260,7 @@ def wire_resistance(f, l, r, p=1.724e-8):
     # l: mm (length of wires)
     # r: mm (radius of wires)
     # p: Ohm*meter (trace resistivity)
-    
+    f=f*1000
     #l1 = (2 + d/8 + math.sqrt(4 + math.pow((d*7/8),2)))*1e-3
     l1 = l*1e-3
     r1 = r*1e-3
@@ -381,7 +381,5 @@ def wire_resistance(f, l, r, p=1.724e-8):
 #         
 #         
 #         
-# if __name__ == "__main__":
+#if __name__ == "__main__":
 #     unit_test_ind_res()
-    
-    

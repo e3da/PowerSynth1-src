@@ -26,7 +26,9 @@ def trace_resistance(f, w, l, t, h, p=1.724e-8):
     # t: mm (trace thickness)
     # h: mm (height of trace above ground plane)
     # p: Ohm*meter (trace resistivity)
-    
+    if w <= 0.001 or l < 0.001:
+        return 1e-6
+    f = f * 1000
     w = fabs(w)
     l = fabs(l)
     #if w > l*LOWEST_ASPECT_RES:
@@ -44,7 +46,7 @@ def trace_resistance(f, w, l, t, h, p=1.724e-8):
     R0 = math.sqrt(2.0*math.pi*f*u0*p)
     comp1 = (l1*R0)/(2.0*math.pi*math.pi*w1)
     comp2 = math.pi + math.log((4.0*math.pi*w1)/t1)
-    
+
     # resistance calculation:
     r = LR*comp1*comp2*1e3 # unit in mOhms
     
@@ -53,7 +55,7 @@ def trace_resistance(f, w, l, t, h, p=1.724e-8):
     
     if r <= 0.0:
         r = 1e-6
-    
+
     # returns resistance in milli-ohms
     return r
 
@@ -98,11 +100,8 @@ def trace_inductance(w, l, t, h):  # see main for unit test --Quang
     Ind_0 *= 1e9  # unit in nH
 
     # inductance calculation of isolated rectangular bar trace
-    try:
-        Ind_1 = u_0 * l1 / (2.0 * math.pi) * (
-        math.log(2.0 * l1 / (w1 + t1)) + 0.5 + (2.0 / 9.0) * (w1 + t1) / l1)  # Equation 3.4 page 41 in Zihao's thesis
-    except:
-        Ind_1 = 10000
+    Ind_1 = u_0 * l1 / (2.0 * math.pi) * (
+    math.log(2.0 * l1 / (w1 + t1)) + 0.5 + (2.0 / 9.0) * (w1 + t1) / l1)  # Equation 3.4 page 41 in Zihao's thesis
     Ind_1 *= 1e9  # unit in nH
 
     # averaged model for inductance calculation:
