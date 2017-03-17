@@ -7,8 +7,8 @@ Created on Jul 23, 2012
 import math
 from math import fabs
 
-LOWEST_ASPECT_RES = 0.5
-LOWEST_ASPECT_IND = 0.5
+LOWEST_ASPECT_RES = 1
+LOWEST_ASPECT_IND = 1
 
 #--------------------------------------------------------------------------
 #-----------  resistance model of traces on ground plane ------------------
@@ -36,9 +36,12 @@ def trace_resistance(f, w, l, t, h, p=1.724e-8):
     # resistance part of trace (trace resistance + ground plane resistance): 
     LR = 0.94 + 0.132*(w1/h1) - 0.0062*(w1/h1)*(w1/h1)
     R0 = math.sqrt(2.0*math.pi*f*u0*p)
-    comp1 = (l1*R0)/(2.0*math.pi*math.pi*w1)
-    comp2 = math.pi + math.log((4.0*math.pi*w1)/t1)
-    
+    try:
+        comp1 = (l1*R0)/(2.0*math.pi*math.pi*w1)
+        comp2 = math.pi + math.log((4.0*math.pi*w1)/t1)
+    except:
+        r = 1000
+        return r
     # resistance calculation:
     r = LR*comp1*comp2*1e3 # unit in mOhms
     
@@ -76,7 +79,6 @@ def trace_inductance(w, l, t, h):
     h1 = h*1e-3                     # transfer to unit in m;
     t1 = t*1e-3                     # transfer to unit in m;
     l1 = l*1e-3                     # transfer to unit in m;
-    
     c = 3.0e8                        # speed of light;
     u_r = 1.0                          # relative permeability of the isolation material; hardcoded (sxm)
     u_0 = 4.0*math.pi*1e-7             # permeability of vaccum;
@@ -96,9 +98,12 @@ def trace_inductance(w, l, t, h):
     Ind_0 *= 1e9 # unit in nH
     
     # inductance calculation of isolated rectangular bar trace
-    Ind_1 = u_0*l1/(2.0*math.pi)*(math.log(2.0*l1/(w1 + t1)) + 0.5 + (2.0/9.0)*(w1 +t1)/l1)
-    Ind_1 *= 1e9 # unit in nH
-    
+    try:
+        Ind_1 = u_0*l1/(2.0*math.pi)*(math.log(2.0*l1/(w1 + t1)) + 0.5 + (2.0/9.0)*(w1 +t1)/l1)
+        Ind_1 *= 1e9 # unit in nH
+    except:
+        Ind = 1000
+        return Ind
     # averaged model for inductance calculation:
     Ind = 0.5*(Ind_0 + Ind_1)
 

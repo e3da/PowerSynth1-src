@@ -50,7 +50,7 @@ from powercad.design.library_structures import Lead, BondWire,Device
 from powercad.design.project_structures import DeviceInstance
 from powercad.opt.optimizer import NSGAII_Optimizer, DesignVar
 from powercad.parasitics.analysis import parasitic_analysis
-from powercad.parasitics.models import trace_inductance, trace_resistance, trace_capacitance
+from powercad.parasitics.models_bk import trace_inductance, trace_resistance, trace_capacitance
 #Testing
 from powercad.parasitics.mdl_compare import trace_cap_krige,trace_ind_krige,trace_res_krige,load_mdl
 from powercad.parasitics.models import wire_inductance, wire_resistance
@@ -114,7 +114,7 @@ class ElectricalMeasure(object):
     UNIT_IND = ('nH', 'nanoHenry')
     UNIT_CAP = ('pF', 'picoFarad')
     
-    def __init__(self, pt1, pt2, measure, freq, name, lines=None, mdl='MS'):
+    def __init__(self, pt1, pt2, measure, freq, name, lines=None, mdl='RS'):
         """
         Electrical parasitic measure object
         
@@ -1834,19 +1834,22 @@ class SymbolicLayout(object):
         err_count+= self.drc_single_check(self._component_overlap(), 'Two or more components are overlapping', debug)
         err_count+= self.drc_single_check(self._bondwire_trace_overlap(), 'Bondwires are not contacting trace', debug)
         err_count+= self.drc_single_check(self._bondwire_component_overlap(), 'Bondwires are intersecting other layout components', debug)
-        return err_count    
-
+        print err_count
+        return err_count
     def _trace_min_width(self):
         # Check that all traces are greater than minimum width
         min_width = self.design_rules.min_trace_width
-        
         total_error = 0.0
         for rect in self.trace_rects:
-            if rect.width() < min_width:
-                total_error += min_width - rect.width()
-            if rect.height() < min_width:
-                total_error += min_width - rect.height()
-                
+            if rect.width()!= 0.0 and rect.height() != 0.0:
+                if rect.width() < min_width:
+                    total_error += min_width - rect.width()
+                if rect.height() < min_width:
+                    total_error += min_width - rect.height()
+            else:
+                total_error=1000000
+                print 'Special case, width or length is zero'
+                return total_error
         return total_error
     
     def _lead_trace_overlap(self):
@@ -2001,6 +2004,7 @@ class SymbolicLayout(object):
         for pm in self.perf_measures:
             if isinstance(pm, ElectricalMeasure):
                 self.mdl_type=pm.mdl
+                print 'mdl_type',self.mdl_type
              
         print 'seed:',iseed
 #        print 'num gen:',inum_gen
@@ -2765,6 +2769,7 @@ class SymbolicLayout(object):
                 l_all.append(l)
             ind1 = trace_ind_krige(trace_data[4],w_all, l_all,self.LAC_mdl).tolist()
             res1 = trace_res_krige(trace_data[4], w_all, l_all,self.RAC_mdl).tolist()
+            print res1
             cap1 = trace_cap_krige(w_all, l_all, self.C_mdl).tolist()
             for i in range(t_num):
                 nodes=self.trace_nodes[i]
@@ -2775,7 +2780,7 @@ class SymbolicLayout(object):
             for i in range(t_num):
                 nodes = self.trace_nodes[i]
                 [w, l] = self.trace_info[i]
-                r,l,c=self._eval_parasitic_models(self,w,l,trace_data)
+                l,r,c = self._eval_parasitic_models(w, l, trace_data)
                 lumped_graph[nodes[0]][nodes[1]]['ind'] = 1 / l
                 lumped_graph[nodes[0]][nodes[1]]['res'] = 1 / r
                 lumped_graph[nodes[0]][nodes[1]]['cap'] = 1 / c

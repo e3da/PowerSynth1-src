@@ -161,7 +161,6 @@ def trace_res_krige(f,w,l,mdl):
     op_freq=mdl.op_point
     r=model.execute('points',[w],[l])
     r=np.ma.asarray(r[0])
-
     return r*m.sqrt(f/op_freq)
 
 def trace_ind_krige(f,w,l,mdl):
@@ -182,7 +181,7 @@ def trace_cap_krige(w,l,mdl):
     return c
 
 if __name__ == '__main__':
-    mdl_dir='C:\Users\qmle\Desktop\Testing\Py_Q3D_test\All rs models'
+    mdl_dir='D:\Testing\Py_Q3D_test\All rs models'
     mdl1=load_mdl(mdl_dir,'RAC_mesh_100_krige.rsmdl')
     DOE=mdl1.DOE
     Q3D_R=mdl1.input[0]
@@ -202,8 +201,8 @@ if __name__ == '__main__':
 
     for i in range(10):
         for j in range (10):
-            w.append(i)
-            l.append(j)
+            w.append(float(i))
+            l.append(float(j))
     time1 = time.time()
     a = trace_res_krige(20, w, l, mdl1)
     b = trace_ind_krige(20,w,l,mdl2)
@@ -216,6 +215,7 @@ if __name__ == '__main__':
         n=trace_resistance(20000, 10, 20, 0.2, 0.5)*1000
 
     print 'Microstrip time', time.time()
+    print trace_resistance(20000, 1, 20, 0.2, 0.5)*1000
     # Compare Q3D resistance with microstrip 
     '''
     # plot Q3D vs Microstrip resistance

@@ -227,6 +227,7 @@ class ProjectBuilder(QtGui.QMainWindow):
             self.enable_project_interfaces(True)
             # draws all symbolic layouts
             self.load_layout_plots()
+
     
     
     def open_project(self):

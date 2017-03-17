@@ -414,7 +414,7 @@ class NewProjectDialog(QtGui.QDialog):
         directory = str(QFileDialog.getExistingDirectory(self, "Select Project Directory", str(self.project_path)))
         if os.path.isdir(directory):
             self.ui.txt_dir.setText(directory)
-    
+        self.parent.layout_script_dir=directory
     def select_filetype(self):
         self.ui.txt_symbnet_address.clear() 					# Clear "Open file" text area.
         if self.ui.dropdown_filetype.currentIndex() > 0: 		# If something other than the default is selected from the filetype dropdown menu, 
