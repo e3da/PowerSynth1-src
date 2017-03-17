@@ -4,24 +4,26 @@ Created on Jun 27, 2012
 @author: bxs003
 '''
 
-#ToDo:- Support devices/leads on supertraces - Support Supertrace Supertrace contact
-#ToDo - Support Bondwires from device to supertrace
-#ToDo - Devices need to be constrained to the correct topological space
-#ToDo - Fixed Lead positions
-#ToDo - Check device types have proper amount of connections (transitor->signal,power) (diode->power)
-#ToDo - Bug: If two horz. traces are abutted, and two vert. traces are above and below,
-#Todo       the vertical piece on the bottom has some strange issues
+# To Do:
+# - Support devices/leads on supertraces
+# - Support Supertrace Supertrace contact
+# - Support Bondwires from device to supertrace
+# - Devices need to be constrained to the correct topological space
+# - Fixed Lead positions
+# - Check device types have proper amount of connections (transitor->signal,power) (diode->power)
+# - Bug: If two horz. traces are abutted, and two vert. traces are above and below,
+#       the vertical piece on the bottom has some strange issues
 
-#Todo Supertrace future work:
-#Todo -3 options for devices on supertrace:
-#Todo *1. 2DOF; 2. Vert. Constrained; 3. Horz. Constrained
-#Todo *Default to Vert. Constrained
-#Todo - Bondwire interaction:
-#Todo *if bondwire is horizontal (treat supertrace as vertical)
-#Todo *if bondwire is vertical (treat st as horiz.)
-#Todo - Need to handle supertrace connecting to supertrace
-#Todo*this will involve writing/changing code in both layout generation and parasitic extraction
-#Todo
+# Supertrace future work:
+# - 3 options for devices on supertrace:
+#     *1. 2DOF; 2. Vert. Constrained; 3. Horz. Constrained
+#     *Default to Vert. Constrained
+# - Bondwire interaction:
+#     *if bondwire is horizontal (treat supertrace as vertical)
+#     *if bondwire is vertical (treat st as horiz.)
+# - Need to handle supertrace connecting to supertrace
+#     * this will involve writing/changing code in both layout generation and parasitic extraction
+
 # Future work notes:
 # Work the concept of supertraces into the program better (more elegantly)
 # Remove the use of dictionaries in the design variable formulation process
@@ -103,7 +105,6 @@ class ThermalMeasure(object):
         self.name = name
         self.units = self.UNIT[0]
 
-
 class ElectricalMeasure(object):
     MEASURE_RES = 1
     MEASURE_IND = 2
@@ -113,7 +114,7 @@ class ElectricalMeasure(object):
     UNIT_IND = ('nH', 'nanoHenry')
     UNIT_CAP = ('pF', 'picoFarad')
     
-    def __init__(self, pt1, pt2, measure, freq, name, lines=None):
+    def __init__(self, pt1, pt2, measure, freq, name, lines=None, mdl='MS'):
         """
         Electrical parasitic measure object
         
@@ -126,13 +127,14 @@ class ElectricalMeasure(object):
             MEASURE_IND -> measure inductance
             MEASURE_CAP -> measure substrate capacitance of selected traces
         name -- user given name to performance measure
+        mdl -- electrical model selection
         """
         self.pt1 = pt1
         self.pt2 = pt2
         self.lines = lines
         self.measure = measure
         self.name = name
-        
+        self.mdl=mdl
         if measure == self.MEASURE_RES:
             self.units = self.UNIT_RES[0]
         elif measure == self.MEASURE_IND:
@@ -366,7 +368,8 @@ class SymbolicLayout(object):
         # Testing
         self.trace_info = [] # used to save all width and length for evaluation
         self.trace_nodes = [] # all nodes that will be used to connect traces to lumped_graph
-        self.mdl_dir = '../../../mdl_test'
+        self.mdl_dir = 'D:\Testing\Py_Q3D_test\All rs models'
+        self.mdl_type='MS'
         self.LAC_mdl=load_mdl(self.mdl_dir,'LAC_mesh_100_krige.rsmdl')
         self.RAC_mdl = load_mdl(self.mdl_dir, 'RAC_mesh_100_krige.rsmdl')
         self.C_mdl = load_mdl(self.mdl_dir,'C_mesh_100_krige.rsmdl')
@@ -1995,7 +1998,9 @@ class SymbolicLayout(object):
         self.opt_progress_fn = progress_fn
         self._map_design_vars()
         # When the project is saved, must save the seed also..... so that we can regenerate it
-        
+        for pm in self.perf_measures:
+            if isinstance(pm, ElectricalMeasure):
+                self.mdl_type=pm.mdl
              
         print 'seed:',iseed
 #        print 'num gen:',inum_gen
@@ -2754,18 +2759,26 @@ class SymbolicLayout(object):
         w_all=[]
         l_all=[]
         t_num=len(self.trace_info) # number of traces
-        for w,l in self.trace_info:
-            w_all.append(w)
-            l_all.append(l)
-        ind1 = trace_ind_krige(trace_data[4],w_all, l_all,self.LAC_mdl).tolist()
-        res1 = trace_res_krige(trace_data[4], w_all, l_all,self.RAC_mdl).tolist()
-        cap1 = trace_cap_krige(w_all, l_all, self.C_mdl).tolist()
-        for i in range(t_num):
-            nodes=self.trace_nodes[i]
-            [w,l]=self.trace_info[i]
-            lumped_graph[nodes[0]][nodes[1]]['ind']=1/ind1[i]
-            lumped_graph[nodes[0]][nodes[1]]['res']=1/res1[i]
-            lumped_graph[nodes[0]][nodes[1]]['cap']=1/cap1[i]
+        if self.mdl_type=='RS':
+            for w,l in self.trace_info:
+                w_all.append(w)
+                l_all.append(l)
+            ind1 = trace_ind_krige(trace_data[4],w_all, l_all,self.LAC_mdl).tolist()
+            res1 = trace_res_krige(trace_data[4], w_all, l_all,self.RAC_mdl).tolist()
+            cap1 = trace_cap_krige(w_all, l_all, self.C_mdl).tolist()
+            for i in range(t_num):
+                nodes=self.trace_nodes[i]
+                lumped_graph[nodes[0]][nodes[1]]['ind']=1/ind1[i]
+                lumped_graph[nodes[0]][nodes[1]]['res']=1/res1[i]
+                lumped_graph[nodes[0]][nodes[1]]['cap']=1/cap1[i]
+        elif self.mdl_type=='MS':
+            for i in range(t_num):
+                nodes = self.trace_nodes[i]
+                [w, l] = self.trace_info[i]
+                r,l,c=self._eval_parasitic_models(self,w,l,trace_data)
+                lumped_graph[nodes[0]][nodes[1]]['ind'] = 1 / l
+                lumped_graph[nodes[0]][nodes[1]]['res'] = 1 / r
+                lumped_graph[nodes[0]][nodes[1]]['cap'] = 1 / c
         self.lumped_graph=lumped_graph
 
     def _collect_trace_parasitic_post_eval(self,width,length,node_l,node_r):
