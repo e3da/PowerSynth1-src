@@ -7,8 +7,8 @@ Created on Jul 23, 2012
 import math
 from math import fabs
 
-LOWEST_ASPECT_RES = 1
-LOWEST_ASPECT_IND = 1
+LOWEST_ASPECT_RES = 0.5
+LOWEST_ASPECT_IND = 0.5
 
 #--------------------------------------------------------------------------
 #-----------  resistance model of traces on ground plane ------------------

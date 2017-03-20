@@ -203,6 +203,7 @@ class PerformanceListUI(object):
                 model='MS'
             elif self.ui.cmb_elec_model.currentText()=="Response Surface":
                 model='RS'
+            # get measure typr
             if self.ui.cmb_perform_type.currentText() == "Resistance":
                 measure = ElectricalMeasure.MEASURE_RES
             elif self.ui.cmb_perform_type.currentText() == "Capacitance":
@@ -226,7 +227,7 @@ class PerformanceListUI(object):
             if measure == ElectricalMeasure.MEASURE_CAP:
                 performance_measure = ElectricalMeasure(None,None,measure,freq,self.ui.txt_perform_name.text(),self.perform_lines,model)
             else:
-                performance_measure = ElectricalMeasure(self.perform_devices[0],self.perform_devices[1],measure,freq,self.ui.txt_perform_name.text(),model)
+                performance_measure = ElectricalMeasure(self.perform_devices[0],self.perform_devices[1],measure,freq,self.ui.txt_perform_name.text(),None,model)
         elif self.ui.cmb_perform_elecTherm.currentText() == "Thermal":
             # get type
             if self.ui.cmb_perform_type.currentText() == "Max":

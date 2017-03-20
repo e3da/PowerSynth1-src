@@ -50,10 +50,9 @@ from powercad.design.library_structures import Lead, BondWire,Device
 from powercad.design.project_structures import DeviceInstance
 from powercad.opt.optimizer import NSGAII_Optimizer, DesignVar
 from powercad.parasitics.analysis import parasitic_analysis
-from powercad.parasitics.models_bk import trace_inductance, trace_resistance, trace_capacitance
+from powercad.parasitics.models_bk import trace_inductance, trace_resistance, trace_capacitance,wire_inductance, wire_resistance
 #Testing
 from powercad.parasitics.mdl_compare import trace_cap_krige,trace_ind_krige,trace_res_krige,load_mdl
-from powercad.parasitics.models import wire_inductance, wire_resistance
 from powercad.thermal.analysis import perform_thermal_analysis, TFSM_MODEL, RECT_FLUX_MODEL
 from powercad.sol_browser.solution_lib import SolutionLibrary
 from powercad.thermal.elmer_characterize import characterize_devices
@@ -113,8 +112,8 @@ class ElectricalMeasure(object):
     UNIT_RES = ('mOhm', 'milliOhm')
     UNIT_IND = ('nH', 'nanoHenry')
     UNIT_CAP = ('pF', 'picoFarad')
-    
-    def __init__(self, pt1, pt2, measure, freq, name, lines=None, mdl='RS'):
+
+    def __init__(self, pt1, pt2, measure, freq, name, lines, mdl):
         """
         Electrical parasitic measure object
         
@@ -307,7 +306,7 @@ class SymbolicLayout(object):
         self.symbol_graph = None # NetworkX graph of layout topology (built at form_design_problem)
         self.trace_graph = None # NetworkX graph of trace connections
         self.trace_graph_components = None
-        self.lumped_graph = None # Lumped element graph of extracted layout
+        self.lumped_graph = [] # Lumped element graphs of extracted layout
         
         # trace_trace_connections is a unique set of all regular trace connections in a layout
         self.trace_trace_connections = None # List of tuples (trace1, trace2, conn_type) conn_type: 1-ortho, 2-parallel
@@ -1834,7 +1833,6 @@ class SymbolicLayout(object):
         err_count+= self.drc_single_check(self._component_overlap(), 'Two or more components are overlapping', debug)
         err_count+= self.drc_single_check(self._bondwire_trace_overlap(), 'Bondwires are not contacting trace', debug)
         err_count+= self.drc_single_check(self._bondwire_component_overlap(), 'Bondwires are intersecting other layout components', debug)
-        print err_count
         return err_count
     def _trace_min_width(self):
         # Check that all traces are greater than minimum width
@@ -1846,10 +1844,6 @@ class SymbolicLayout(object):
                     total_error += min_width - rect.width()
                 if rect.height() < min_width:
                     total_error += min_width - rect.height()
-            else:
-                total_error=1000000
-                print 'Special case, width or length is zero'
-                return total_error
         return total_error
     
     def _lead_trace_overlap(self):
@@ -2003,8 +1997,10 @@ class SymbolicLayout(object):
         # When the project is saved, must save the seed also..... so that we can regenerate it
         for pm in self.perf_measures:
             if isinstance(pm, ElectricalMeasure):
+                ctypes.windll.user32.MessageBoxA(0, pm.mdl, 'Model', 1)
                 self.mdl_type['E'].append(pm.mdl)
         self.mdl_type['E']=list(set(self.mdl_type['E']))
+        self.lumped_graph=[nx.Graph() for i in range(len(self.mdl_type['E']))]
         print 'mdl_type', self.mdl_type
         print 'seed:',iseed
 #        print 'num gen:',inum_gen
@@ -2150,14 +2146,13 @@ class SymbolicLayout(object):
                 ret.append(drc_val+10000)
             return ret         
         else:                 
-            print ' new solution is found *******'    #convergence case 
+            print ' new solution is found *******'    # convergence case
             parasitic_time = 0.0
             start_time = time.time()
             self._build_lumped_graph()
-
-            parasitic_time += time.time() - start_time;            
             for measure in self.perf_measures:
                 if isinstance(measure, ElectricalMeasure):
+                    type = measure.mdl
                     start_time = time.time()
                     type_dict = {ElectricalMeasure.MEASURE_RES: 'res',
                                  ElectricalMeasure.MEASURE_IND: 'ind',
@@ -2169,8 +2164,9 @@ class SymbolicLayout(object):
                         # Measure res. or ind. from src node to sink node
                         src = measure.pt1.lumped_node
                         sink = measure.pt2.lumped_node
+                        id = self.mdl_type['E'].index(type)
                         try:
-                            val = parasitic_analysis(self.lumped_graph, src, sink, measure_type)
+                            val = parasitic_analysis(self.lumped_graph[id], src, sink, measure_type)
                         except LinAlgError:
                             val = 1e6
                                 
@@ -2760,37 +2756,41 @@ class SymbolicLayout(object):
         return 1.0/inv_ind, 1.0/inv_res, 1e-3
 
     def _build_lumped_edges(self,trace_data,lumped_graph):
+        '''
+        :param trace_data:
+        :param lumped_graph:
+        :return:
+        '''
         w_all=[]
         l_all=[]
         t_num=len(self.trace_info) # number of traces
         freq=trace_data[4]
-        print 'f=',freq
-        for mdl_type in self.mdl_type['E']:
-            if mdl_type=='RS':
-                #ToDO: Update lumped graph n times and duplicate them for different type of model choices if multiple types were chosen
+        for j in range(len(self.mdl_type['E'])):
+            if self.mdl_type['E'][j]=='RS':
                 for w,l in self.trace_info:
                     w_all.append(w)
                     l_all.append(l)
-
                 ind1 = trace_ind_krige(trace_data[4],w_all, l_all,self.LAC_mdl).tolist()
                 res1 = trace_res_krige(trace_data[4], w_all, l_all,self.RAC_mdl).tolist()
-                print res1
                 cap1 = trace_cap_krige(w_all, l_all, self.C_mdl).tolist()
                 for i in range(t_num):
                     nodes=self.trace_nodes[i]
                     lumped_graph[nodes[0]][nodes[1]]['ind']=1/ind1[i]
                     lumped_graph[nodes[0]][nodes[1]]['res']=1/res1[i]
                     lumped_graph[nodes[0]][nodes[1]]['cap']=1/cap1[i]
-            elif mdl_type=='MS':
+                self.lumped_graph[j]=lumped_graph.copy()
+            elif self.mdl_type['E'][j]=='MS':
                 for i in range(t_num):
                     nodes = self.trace_nodes[i]
                     [w1, l1] = self.trace_info[i]
-                    l,r,c = self._eval_parasitic_models(w1, l1, trace_data)
+                    if l1 <=0.01:
+                        l,r,c = [1e-6, 1e-6, 1e-3]
+                    else:
+                        l,r,c = self._eval_parasitic_models(w1, l1, trace_data)
                     lumped_graph[nodes[0]][nodes[1]]['ind'] = 1 / l
                     lumped_graph[nodes[0]][nodes[1]]['res'] = 1 / r
                     lumped_graph[nodes[0]][nodes[1]]['cap'] = 1 / c
-        self.lumped_graph=lumped_graph
-
+                self.lumped_graph[j]=lumped_graph.copy()
     def _collect_trace_parasitic_post_eval(self,width,length,node_l,node_r):
         self.trace_info.append([width,length])
         nodes=[node_l, node_r]
@@ -2799,8 +2799,6 @@ class SymbolicLayout(object):
     def _eval_parasitic_models(self, width, length, trace_data):
         ind = trace_inductance(width, length, trace_data[1], trace_data[2])
         res = trace_resistance(trace_data[4], width, length, trace_data[1], trace_data[2], trace_data[5])
-        if res<0:
-            print "width,length res < 0",width,length
         cap = trace_capacitance(width, length, trace_data[1], trace_data[2], trace_data[6])
         return ind, res, cap
     

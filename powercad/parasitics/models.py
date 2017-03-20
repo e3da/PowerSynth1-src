@@ -40,6 +40,7 @@ def trace_resistance(f, w, l, t, h, p=1.724e-8):             # see main for unit
     # t: mm (trace thickness)
     # h: mm (height of trace above ground plane)
     # p: Ohm*meter (trace resistivity)
+    f=f*1000
     w = fabs(w)
     l = fabs(l)
     if w > l*LOWEST_ASPECT_RES:

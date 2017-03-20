@@ -160,6 +160,7 @@ def trace_res_krige(f,w,l,mdl):
     op_freq=mdl.op_point
     r=model.execute('points',[w],[l])
     r=np.ma.asarray(r[0])
+    r=r/1000
     return r*m.sqrt(f/op_freq)
 
 def trace_ind_krige(f,w,l,mdl):
