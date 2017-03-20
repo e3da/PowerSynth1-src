@@ -57,7 +57,7 @@ from powercad.design.project_structures import *
 from powercad.util import Rect
 from powercad.sym_layout.svg import LayoutLine, LayoutPoint
 from powercad.settings import *
-
+from powercad.save_and_load import save_file, load_file
 class ProjectBuilder(QtGui.QMainWindow):
     
     # Relative paths -> use forward slashes for platform independence
@@ -486,7 +486,7 @@ class ProjectBuilder(QtGui.QMainWindow):
             dims = (float(self.ui.txt_baseWidth.text()),float(self.ui.txt_baseLength.text()),float(self.ui.txt_baseThickness.text()))
             eff_conv_coeff = float(self.ui.txt_baseConvection.text())
             tech_path = os.path.join(self.project.tech_lib_dir, "Baseplates", self.ui.cmb_baseMaterial.currentText())
-            tech_lib_obj = pickle.load(open(tech_path,"rb"))
+            tech_lib_obj = load_file(tech_path)
             self.project.module_data.baseplate = BaseplateInstance(dims,eff_conv_coeff,tech_lib_obj)
         except:
             self.ui.lbl_err_baseMaterial.setText("Error")
@@ -530,7 +530,7 @@ class ProjectBuilder(QtGui.QMainWindow):
                 
             ledge_width = float(self.ui.txt_subLedge.text())
             tech_path = os.path.join(self.project.tech_lib_dir, "Substrates", self.ui.cmb_subMaterial.currentText())
-            tech_lib_obj = pickle.load(open(tech_path,"rb"))
+            tech_lib_obj = load_file(tech_path)
             self.project.module_data.substrate = SubstrateInstance(dims,ledge_width,tech_lib_obj)
         except:
             self.ui.lbl_err_subMaterial.setText("Error")
@@ -558,7 +558,7 @@ class ProjectBuilder(QtGui.QMainWindow):
         try:
             thickness = float(self.ui.txt_subAttchThickness.text())
             tech_path = os.path.join(self.project.tech_lib_dir, "Substrate_Attaches", self.ui.cmb_subAttchMaterial.currentText())
-            tech_lib_obj = pickle.load(open(tech_path,"rb"))
+            tech_lib_obj = load_file(tech_path)
             self.project.module_data.substrate_attach = SubstrateAttachInstance(thickness,tech_lib_obj)
         except:
             self.ui.lbl_err_subAttchMaterial.setText("Error")
@@ -762,11 +762,11 @@ class ProjectBuilder(QtGui.QMainWindow):
             # link to tech_lib obj
             try:
                 categ = self.categ_list_model.fileName(self.ui.lst_categories.selectedIndexes()[0])
-                tech_obj = pickle.load(open(self.device_list_model.rootPath() + '/' + item.model().data(item),"rb"))
+                tech_obj = load_file(self.device_list_model.rootPath() + '/' + item.model().data(item))
                 if categ == 'Device':
                     item2 = self.ui.lst_devices_att.selectionModel().selectedIndexes()[0]
                     # Load attach tech lib object
-                    attch_tech_obj = pickle.load(open(self.attach_list_model.rootPath() + '/' + item2.model().data(item2),"rb"))
+                    attch_tech_obj = load_file(self.attach_list_model.rootPath() + '/' + item2.model().data(item2))
                     attch_thick = float(self.ui.txt_devAttchThickness.text())
                     thermal_model_choice=1
                     if thermal_model_choice==1:
@@ -1338,7 +1338,7 @@ class ProjectBuilder(QtGui.QMainWindow):
                     shutil.copy(os.path.join(save_path, "project.p"), os.path.join(save_path, "project.p.temp"))
                 # Attempt to pickle the project
                 self.project.symb_layout.prepare_for_pickle() # prepare the symbolic layout object for pickling
-                pickle.dump(self.project,open(os.path.join(save_path, "project.p"),"wb"))
+                save_file(self.project,os.path.join(save_path, "project.p"))
                 QtGui.QMessageBox.about(self,"Project Saved","Project Saved")
             except:
                 # Replace the original copy
@@ -1373,7 +1373,7 @@ class ProjectBuilder(QtGui.QMainWindow):
                 
                 # Attempt to pickle the project
                 self.project.symb_layout.prepare_for_pickle() # prepare the symbolic layout object for pickling
-                pickle.dump(self.project,open(os.path.join(save_path, "project.p"),"wb"))
+                save_file(self.project,os.path.join(save_path, "project.p"))
                 QtGui.QMessageBox.about(self,"Project Saved","Project Saved")
             except:
                 # Replace the original copy
