@@ -18,7 +18,8 @@ if POWERSYNTH_RELEASE:  # For packaged versions
 else:   # For debugging and running PowerSynth from Eclipse
     DEFAULT_TECH_LIB_DIR = os.path.abspath("../../../tech_lib")
     LAST_ENTRIES_PATH = os.path.abspath("../../../export_data/app_data/last_entries.p")
-    GMSH_BIN_PATH = "C:\gmsh-2.16.0-Windows64\gmsh-2.16.0-Windows"
+    #GMSH_BIN_PATH = "C:\gmsh-2.16.0-Windows64\gmsh-2.16.0-Windows"
+    GMSH_BIN_PATH = "C:\gmsh-2.7.0"
     ELMER_BIN_PATH = os.path.abspath("C:/Program Files (x86)/Elmer 8.2-Release/bin")     # Default Elmer 8.2 installation directory
     TEMP_DIR = os.path.abspath(r"../../../export_data/temp")
     CACHED_CHAR_PATH = os.path.abspath("../../../export_data/cached_thermal") # sxm063

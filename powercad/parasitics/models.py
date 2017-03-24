@@ -447,4 +447,5 @@ def harvest_data_boundary_linear_approximation(height, thickness, width, length,
             stdout, stderr = p.communicate()
 
 if __name__ == '__main__':
-    print 'test'
+    print trace_mutual1(9,4)
+    print trace_mutual(9,9,0.2,4)

@@ -50,7 +50,7 @@ from powercad.design.library_structures import Lead, BondWire,Device
 from powercad.design.project_structures import DeviceInstance
 from powercad.opt.optimizer import NSGAII_Optimizer, DesignVar
 from powercad.parasitics.analysis import parasitic_analysis
-from powercad.parasitics.models_bk import trace_inductance, trace_resistance, trace_capacitance,wire_inductance, wire_resistance
+from powercad.parasitics.models_bk import trace_inductance, trace_resistance, trace_capacitance,wire_inductance, wire_resistance,wire_partial_mutual_ind
 #Testing
 from powercad.parasitics.mdl_compare import trace_cap_krige,trace_ind_krige,trace_res_krige,load_mdl
 from powercad.thermal.analysis import perform_thermal_analysis, TFSM_MODEL, RECT_FLUX_MODEL
@@ -367,10 +367,10 @@ class SymbolicLayout(object):
         # Testing
         self.trace_info = [] # used to save all width and length for evaluation
         self.trace_nodes = [] # all nodes that will be used to connect traces to lumped_graph
-        self.mdl_dir = 'D:\Testing\Py_Q3D_test\All rs models'
+        self.mdl_dir = 'C:\Users\qmle\Desktop\Testing\Py_Q3D_test\All rs models'
         self.mdl_type={'E':[],'T':[]}
-        self.LAC_mdl=load_mdl(self.mdl_dir,'LAC_mesh_100_krige.rsmdl')
-        self.RAC_mdl = load_mdl(self.mdl_dir, 'RAC_mesh_100_krige.rsmdl')
+        self.LAC_mdl=load_mdl(self.mdl_dir,'LAC[4x4].rsmdl')
+        self.RAC_mdl = load_mdl(self.mdl_dir, 'RAC[4x4].rsmdl')
         self.C_mdl = load_mdl(self.mdl_dir,'C_mesh_100_krige.rsmdl')
 
     '''-----------------------------------------------------------------------------------------------------------------------------------------------------'''        
@@ -2468,7 +2468,6 @@ class SymbolicLayout(object):
                             node, i, j, side = info
                             pt = lumped_graph.node[node]['point']
                             POI.append((LONG_POI, superconn[0], pt, node, i, j, side))
-                
                 # Sort the POI
                 if trace.element.vertical:
                     POI.sort(key=lambda pt: pt[2][1])
@@ -2487,13 +2486,13 @@ class SymbolicLayout(object):
                         for bw in pt[1].sym_bondwires:
                             if frozenset([bw, pt[1]]) in wire_dev_dict:
                                 bw_node = wire_dev_dict[frozenset([bw, pt[1]])]
-                                ind, res, cap = self._bondwire_eval(bw_node, node, trace_data, bw,1)
+                                ind1, res1, cap1 = self._bondwire_eval(bw_node, node, trace_data, bw,1)
                                 if bw.tech.wire_type == BondWire.POWER:
                                     bw_type = 'bw power'
                                 elif bw.tech.wire_type == BondWire.SIGNAL:
                                     bw_type = 'bw signal'
                                     
-                                lumped_graph.add_edge(bw_node, node, {'ind': 1.0/ind, 'res':1.0/res, 'cap':1.0/cap,
+                                lumped_graph.add_edge(bw_node, node, {'ind': 1.0/ind1, 'res':1.0/res1, 'cap':1.0/cap1,
                                                                       'type':bw_type, 'obj':bw})
                                 bw_sum -= 1
                             else:
@@ -2556,12 +2555,12 @@ class SymbolicLayout(object):
                         # Check for device to bondwire connection
                         if frozenset([wire, wire.device]) in wire_dev_dict:
                             dev_node = wire_dev_dict[frozenset([wire, wire.device])]
-                            ind, res, cap = self._bondwire_eval(bw_node, dev_node, trace_data, wire,num_wires)
+                            ind1, res1, cap1 = self._bondwire_eval(bw_node, dev_node, trace_data, wire,num_wires)
                             if bw.tech.wire_type == BondWire.POWER:
                                 bw_type = 'bw power'
                             elif bw.tech.wire_type == BondWire.SIGNAL:
                                 bw_type = 'bw signal'
-                            lumped_graph.add_edge(bw_node, dev_node, {'ind': 1.0/ind, 'res':1.0/res, 'cap':1.0/cap,
+                            lumped_graph.add_edge(bw_node, dev_node, {'ind': 1.0/ind1, 'res':1.0/res1, 'cap':1.0/cap1,
                                                                       'type':bw_type, 'obj':bw})
                             bw_sum -= 1
                         else: # Add to connection dict and add edge in device POI
@@ -2588,12 +2587,12 @@ class SymbolicLayout(object):
                         if frozenset([wire]) in wire_wire_dict:
                             # Found the partner node
                             bw_node2 = wire_wire_dict[frozenset([wire])]
-                            ind, res, cap = self._bondwire_eval(bw_node, bw_node2, trace_data, wire,num_wires)
+                            ind1, res1, cap1 = self._bondwire_eval(bw_node, bw_node2, trace_data, wire,num_wires)
                             if bw.tech.wire_type == BondWire.POWER:
                                 bw_type = 'bw power'
                             elif bw.tech.wire_type == BondWire.SIGNAL:
                                 bw_type = 'bw signal'
-                            lumped_graph.add_edge(bw_node, bw_node2, {'ind': 1.0/ind, 'res':1.0/res, 'cap':1.0/cap,
+                            lumped_graph.add_edge(bw_node, bw_node2, {'ind': 1.0/ind1, 'res':1.0/res1, 'cap':1.0/cap1,
                                                                       'type':bw_type, 'obj':bw})
                             bw_sum -= 1
                         else: # Add to connection dict
@@ -2709,6 +2708,7 @@ class SymbolicLayout(object):
                                'type': 'trace', 'width': width, 'length': length})
         self._collect_trace_parasitic_post_eval(width, length, n1, n2)
         return lumped_graph
+
     def _lead_trace_path_eval(self, n1, n2,trace_data,lead,lumped_graph):
         pt1 = trace_data[3].node[n1]['point']
         pt2 = trace_data[3].node[n2]['point']
@@ -2724,13 +2724,14 @@ class SymbolicLayout(object):
         self._collect_trace_parasitic_post_eval(width, length, n1, n2)
         return lumped_graph
 
+
     def _bondwire_to_spine_eval(self, n1, n2, trace_data, num_wires, wire_eff_diam, lumped_graph):
         trace, thickness, sub_thick, lumped_graph, freq, resist, sub_epsil = trace_data
         pt1 = lumped_graph.node[n1]['point']
         pt2 = lumped_graph.node[n2]['point']
         path_length = distance(pt1, pt2)
 
-        width = num_wires * wire_eff_diam
+        width = num_wires * wire_eff_diam*2
         lumped_graph.add_edge(n1, n2,
                               {'ind': 1.0 / 1, 'res': 1.0 / 1, 'cap': 1.0 / 1,
                                'type': 'trace', 'width': width, 'length': path_length})
@@ -2738,22 +2739,39 @@ class SymbolicLayout(object):
         return lumped_graph
 
     def _bondwire_eval(self, n1, n2, trace_data, bw,num_wires):
+        # Partial Inductance:
         wire_radius = 0.5*bw.tech.eff_diameter()
         resist = bw.tech.properties.electrical_res
         inv_ind = 0.0
         inv_res = 0.0
         b = bw.tech.b
         a = bw.tech.a
+
         for pt1, pt2 in zip(bw.start_pts, bw.end_pts):
             D = distance(pt1, pt2)
-            l1=D- b
+            l1=D-D/8
             length=a+b+l1/math.cos(math.atan(2*a/l1))
-            wire_ind = wire_inductance(length, wire_radius)/num_wires
-            wire_res = wire_resistance(trace_data[4], length, wire_radius, resist)/num_wires
+            wire_ind = wire_inductance(length, wire_radius)
+            wire_res = wire_resistance(trace_data[4], length, wire_radius, resist)
             inv_res += 1.0/wire_res
+            #print 'wire inductance', wire_ind
+            # Compute wires mutual inductance
+            if num_wires!=1:
+                M=0
+                for pt3,pt4 in zip(bw.start_pts, bw.end_pts):
+                    if pt3!=pt1 and pt4!=pt2: # if its not the same wire
+                        d=max(abs(pt3[0]-pt1[0]),abs(pt4[0]-pt2[0]),pt3[1]-pt1[1]),abs(pt4[1]-pt2[1]) # wire diestance
+                        d= max(d)
+                        #print 'distance'
+                        if d!=0:
+                            M += wire_partial_mutual_ind(length, wire_radius, d)
+                            #print 'Mutual inductance', M
+                            wire_ind+=M
+            print 'total ind',wire_ind
             inv_ind += 1.0/wire_ind
-            
+
         return 1.0/inv_ind, 1.0/inv_res, 1e-3
+        #return 1e-6, 1e-6, 1e-3
 
     def _build_lumped_edges(self,trace_data,lumped_graph):
         '''
@@ -2791,6 +2809,7 @@ class SymbolicLayout(object):
                     lumped_graph[nodes[0]][nodes[1]]['res'] = 1 / r
                     lumped_graph[nodes[0]][nodes[1]]['cap'] = 1 / c
                 self.lumped_graph[j]=lumped_graph.copy()
+
     def _collect_trace_parasitic_post_eval(self,width,length,node_l,node_r):
         self.trace_info.append([width,length])
         nodes=[node_l, node_r]

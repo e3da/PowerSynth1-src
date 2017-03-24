@@ -90,6 +90,27 @@ oModule.InsertSetup("Matrix",
             "SolutionOrder:="    , "Normal"
         ],
         [
+			"NAME:DC",
+			"SolveResOnly:="	, False,
+			[
+				"NAME:Cond",
+				"MaxPass:="		, {2},
+				"MinPass:="		, {3},
+				"MinConvPass:="		, {4},
+				"PerError:="		, {5},
+				"PerRefine:="		, {6}
+			],
+			[
+				"NAME:Mult",
+				"MaxPass:="		, 1,
+				"MinPass:="		, 1,
+				"MinConvPass:="		, 1,
+				"PerError:="		, 1,
+				"PerRefine:="		, 30
+			],
+			"Solution Order:="	, "Normal"
+		],
+        [
             "NAME:AC",
             "MaxPass:="        , {2},
             "MinPass:="        , {3},
@@ -97,6 +118,7 @@ oModule.InsertSetup("Matrix",
             "PerError:="        , {5},    # default 1
             "PerRefine:="        , {6}    # default 30
         ]
+
     ])
 
 '''

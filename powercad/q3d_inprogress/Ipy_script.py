@@ -116,7 +116,7 @@ class Q3D_ipy_script:
             # sink ID: Name of sink
             add_net=Source_sink_parent.format(parent_net)
             self.script+=Source_Sink.format(sourceID,face1,sinkID,face2,add_net)
-    def analysis_setup(self,freq='100k',solve_field='False',max_pass=10,min_pass=10,min_conv=1,per_err=1,mesh_refine=30):
+    def analysis_setup(self,freq='100k',solve_field='False',max_pass=10,min_pass=1,min_conv=1,per_err=1,mesh_refine=30):
         # set up RLC parasitic analysis with/without field extracted.
             # freq: a string value denote frequency of the setup suffixes: k,M,G....
             # solve_field: a boolean value if True, fields can be exported at the end of the analysis

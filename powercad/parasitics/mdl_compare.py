@@ -6,6 +6,7 @@ from math import fabs
 import os
 import numpy as np
 import time
+from powercad.save_and_load import save_file, load_file
 import matplotlib.pyplot as plt
 from matplotlib import cm
 from mpl_toolkits.mplot3d import Axes3D
@@ -18,7 +19,9 @@ c = 3.0e8                       # speed of light
 u_0 = 4.0*math.pi*1e-7          # permeability of vaccum;
 e_0 = 8.85e-12                  # permittivity of vaccum;
 
-#-------------------------------------------Zihao's model--------------------------------------------------------------#
+
+# -----------  resistance model of traces on ground plane ------------------
+# --------------------------------------------------------------------------
 def trace_resistance(f, w, l, t, h, p=1.724e-8):
     # f: Hz (AC frequency)
     # w: mm (trace width, perpendicular to current flow)
@@ -26,33 +29,30 @@ def trace_resistance(f, w, l, t, h, p=1.724e-8):
     # t: mm (trace thickness)
     # h: mm (height of trace above ground plane)
     # p: Ohm*meter (trace resistivity)
-    if w <= 0.001 or l < 0.001:
-        return 1e-6
-    f = f * 1000
+    #f = f * 1000
     w = fabs(w)
     l = fabs(l)
-    #if w > l*LOWEST_ASPECT_RES:
-    #    w = l*LOWEST_ASPECT_RES
-    
-    u0 = 1.257e-6               # permeability of vaccum;
-               
-    t1 = t*1e-3                 # transfer to unit in m;
-    w1 = w*1e-3                 # transfer to unit in m;
-    h1 = h*1e-3                 # transfer to unit in m;
-    l1 = l*1e-3                 # transfer to unit in m;
-    
-    # resistance part of trace (trace resistance + ground plane resistance): 
-    LR = 0.94 + 0.132*(w1/h1) - 0.0062*(w1/h1)*(w1/h1)
-    R0 = math.sqrt(2.0*math.pi*f*u0*p)
-    comp1 = (l1*R0)/(2.0*math.pi*math.pi*w1)
-    comp2 = math.pi + math.log((4.0*math.pi*w1)/t1)
+    #if w > l * LOWEST_ASPECT_RES:
+    #    w = l * LOWEST_ASPECT_RES
 
+    u0 = 1.257e-6  # permeability of vaccum;
+
+    t1 = t * 1e-3  # transfer to unit in m;
+    w1 = w * 1e-3  # transfer to unit in m;
+    h1 = h * 1e-3  # transfer to unit in m;
+    l1 = l * 1e-3  # transfer to unit in m;
+
+    # resistance part of trace (trace resistance + ground plane resistance):
+    LR = 0.94 + 0.132 * (w1 / h1) - 0.0062 * (w1 / h1) * (w1 / h1)
+    R0 = math.sqrt(2.0 * math.pi * f * u0 * p)
+    comp1 = (l1 * R0) / (2.0 * math.pi * math.pi * w1)
+    comp2 = math.pi + math.log((4.0 * math.pi * w1) / t1)
     # resistance calculation:
-    r = LR*comp1*comp2*1e3 # unit in mOhms
-    
+    r = LR * comp1 * comp2 * 1e3  # unit in mOhms
+
     # Zihao's old code (this may be wrong, not sure) -Brett
     # r = LR*(1/math.pi + 1/math.pow(math.pi, 2)*math.log(4*math.pi*w1/t1))*math.sqrt(math.pi*u0*f*p)/(math.sqrt(2)*w1)*l1*1e3 # unit in mOhms
-    
+
     if r <= 0.0:
         r = 1e-6
 
@@ -60,7 +60,7 @@ def trace_resistance(f, w, l, t, h, p=1.724e-8):
     return r
 
 
-def trace_inductance(w, l, t, h):  # see main for unit test --Quang
+def trace_inductance(w, l, t, h):
     # Corrected by Brett Shook 2/26/2013
     # w: mm (trace width, perpendicular to current flow)
     # l: mm (trace length, parallel to current flow)
@@ -82,9 +82,11 @@ def trace_inductance(w, l, t, h):  # see main for unit test --Quang
     h1 = h * 1e-3  # transfer to unit in m;
     t1 = t * 1e-3  # transfer to unit in m;
     l1 = l * 1e-3  # transfer to unit in m;
-
-    u_r = 1.0  # relative permeability of the isolation material
-    e_r = 8.8  # relative permittivity of the isolation material;    <----------------   Why ??????? no inputs
+    c = 3.0e8  # speed of light;
+    u_r = 1.0  # relative permeability of the isolation material; hardcoded (sxm)
+    u_0 = 4.0 * math.pi * 1e-7  # permeability of vaccum;
+    e_r = 8.8  # relative permittivity of the isolation material; # hardcoded (sxm)
+    e_0 = 8.85 * 1e-12  # permittivity of vaccum;
 
     # effective dielectric permittivity and effective width:
     w_e = w1 + 0.398 * t1 * (1.0 + math.log(2.0 * h1 / t1))
@@ -96,14 +98,16 @@ def trace_inductance(w, l, t, h):  # see main for unit test --Quang
     z0 = math.sqrt(e_0 * u_0 / e_eff) * (1 / C_a)
 
     # inductance calculation of microstrip:
-    Ind_0 = l1 * z0 * math.sqrt(u_r * e_eff) / c  # Equation 3.9 page 42 Zihao's thesis
+    Ind_0 = l1 * z0 * math.sqrt(u_r * e_eff) / c
     Ind_0 *= 1e9  # unit in nH
 
     # inductance calculation of isolated rectangular bar trace
-    Ind_1 = u_0 * l1 / (2.0 * math.pi) * (
-    math.log(2.0 * l1 / (w1 + t1)) + 0.5 + (2.0 / 9.0) * (w1 + t1) / l1)  # Equation 3.4 page 41 in Zihao's thesis
-    Ind_1 *= 1e9  # unit in nH
-
+    try:
+        Ind_1 = u_0 * l1 / (2.0 * math.pi) * (math.log(2.0 * l1 / (w1 + t1)) + 0.5 + (2.0 / 9.0) * (w1 + t1) / l1)
+        Ind_1 *= 1e9  # unit in nH
+    except:
+        Ind = 1000
+        return Ind
     # averaged model for inductance calculation:
     Ind = 0.5 * (Ind_0 + Ind_1)
 
@@ -114,9 +118,9 @@ def trace_inductance(w, l, t, h):  # see main for unit test --Quang
             Ind = Ind_1
         else:
             Ind = 1e-6
+
     # returns inductance in nano-Henries
     return Ind
-
 
 def trace_capacitance(w, l, t, h, k=8.8):
     # w: mm (trace width, perpendicular to current flow)
@@ -149,8 +153,9 @@ def trace_capacitance(w, l, t, h, k=8.8):
         c = 1e-6
 
     return c
+
 def load_mdl(dir,mdl_name):
-    mdl=pickle.load(open(os.path.join(dir,mdl_name),"rb"))
+    mdl=load_file(os.path.join(dir,mdl_name))
     print "model loaded"
     return mdl
 
@@ -161,6 +166,7 @@ def trace_res_krige(f,w,l,mdl):
     r=model.execute('points',[w],[l])
     r=np.ma.asarray(r[0])
     r=r/1000
+    print op_freq
     return r*m.sqrt(f/op_freq)
 
 def trace_ind_krige(f,w,l,mdl):
@@ -182,20 +188,21 @@ def trace_cap_krige(w,l,mdl):
 
 if __name__ == '__main__':
     mdl_dir='D:\Testing\Py_Q3D_test\All rs models'
+    mdl_dir='C:\Users\qmle\Desktop\Testing\Py_Q3D_test\All rs models'
     mdl1=load_mdl(mdl_dir,'RAC_mesh_100_krige.rsmdl')
     DOE=mdl1.DOE
     Q3D_R=mdl1.input[0]
     print mdl1.unit.to_string()
     print Q3D_R # uOhm
-    mdl2 = load_mdl(mdl_dir, 'Mdl2.rsmdl')
-    Q3D_L=mdl2.input[0]
+    #mdl2 = load_mdl(mdl_dir, 'Mdl2.rsmdl')
+    #Q3D_L=mdl2.input[0]
     mdl2=load_mdl(mdl_dir, 'LAC_mesh_100_krige.rsmdl')
     print mdl2.op_point
-    print Q3D_L # nH
+    #print Q3D_L # nH
     mdl3=load_mdl(mdl_dir,'C_mesh_100_krige.rsmdl')
     Q3D_C=mdl3.input[0]
     print Q3D_C # pF
-
+    print 'here resistance', trace_res_krige(110,7.5,7.5,mdl1)
     w=[]
     l=[]
 
@@ -216,8 +223,7 @@ if __name__ == '__main__':
 
     print 'Microstrip time', time.time()
     print trace_resistance(20000, 1, 20, 0.2, 0.5)*1000
-    # Compare Q3D resistance with microstrip 
-    '''
+    # Compare Q3D resistance with microstrip
     # plot Q3D vs Microstrip resistance
     fig1 = plt.figure(0)
     ax = fig1.gca(projection='3d')
@@ -254,7 +260,8 @@ if __name__ == '__main__':
     X1,Y1=np.meshgrid(X_2,Y_2)
     for i in range(10):
         for j in range(10):
-            Z1[i,j]=trace_inductance(X_2[j], X_2[i], 0.2, 0.5)
+            print X_2[j]
+            Z1[i,j] = trace_inductance(X_2[j], X_2[i], 0.2, 0.5)
     surf2 = ax.plot_surface(X1, Y1, Z1, cmap=cm.coolwarm,linewidth=0, antialiased=False)
     ax.scatter(DOE[:,0], DOE[:,1], Q3D_L, c='r',s=10)
     ax.set_xlabel('Width (mm)')
@@ -305,7 +312,7 @@ if __name__ == '__main__':
     X1,Y1=np.meshgrid(X_2,Y_2)
     for i in range(10):
         for j in range(10):
-            Z1[i,j]=trace_res_krige(110,X_2[j], X_2[i], mdl_dir, 'RAC_mesh_100_krige.rsmdl')
+            Z1[i,j]=trace_res_krige(110,X_2[j], X_2[i], mdl1)*1000
     surf1 = ax.plot_surface(X1, Y1, Z1, cmap=cm.coolwarm,linewidth=0, antialiased=False)
     ax.scatter(DOE[:,0], DOE[:,1], Q3D_R, c='r',s=10)
     ax.set_xlabel('Width (mm)')
@@ -325,7 +332,7 @@ if __name__ == '__main__':
     X1,Y1=np.meshgrid(X_2,Y_2)
     for i in range(10):
         for j in range(10):
-            Z1[i,j]=trace_ind_krige(110,X_2[j], X_2[i], mdl_dir, 'LAC_mesh_100_krige.rsmdl')
+            Z1[i,j]=trace_ind_krige(110,X_2[j], X_2[i], mdl2)
     surf2 = ax.plot_surface(X1, Y1, Z1, cmap=cm.jet,linewidth=0, antialiased=False)
     ax.set_zlim(0, 1.01)
     #ax.scatter(DOE[:,0], DOE[:,1], Q3D_L, c='r',s=10)
@@ -346,8 +353,9 @@ if __name__ == '__main__':
     X1,Y1=np.meshgrid(X_2,Y_2)
     for i in range(10):
         for j in range(10):
-            Z1[i,j]=trace_cap_kridge(X_2[j], X_2[i], mdl_dir, 'C_mesh_100_krige.rsmdl')
-    surf3 = ax.plot_surface(X1, Y1, Z1, cmap=cm.coolwarm,linewidth=0, antialiased=False)
+            Z1[i,j]=trace_cap_krige(X_2[j], X_2[i], mdl3)
+    #surf3 = ax.plot_surface(X1, Y1, Z1, cmap=cm.coolwarm,linewidth=0, antialiased=False)
+    ax.scatter(X_2.tolist(), Y_2.tolist(), Z1,c='b',s='10')
     ax.scatter(DOE[:,0], DOE[:,1], Q3D_C, c='r',s=10)
     ax.set_xlabel('Width (mm)')
     ax.set_ylabel('Length (mm)')
@@ -362,5 +370,3 @@ if __name__ == '__main__':
     
     plt.show()
 
-   '''
-    

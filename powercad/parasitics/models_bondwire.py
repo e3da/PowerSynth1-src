@@ -459,8 +459,18 @@ if __name__ == '__main__':
 
     print wire_inductance(D,r)
 
-
-
+    # Test mutual inductance model:
+    wires=4
+    dmin=0.75
+    Mtot=0
+    for w in range(wires):
+        for i in range(w,wires,1):
+            if w!=i:
+                print 'w,i: ',w,i
+                d=abs(w-i)*dmin
+                M=wire_partial_mutual_ind(length,r,d)
+                Mtot+=M
+    print Mtot*2
 
 
 

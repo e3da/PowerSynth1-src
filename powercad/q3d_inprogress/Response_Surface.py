@@ -63,18 +63,26 @@ class RS_model:
         self.opt_cond={} # This is a dictionary for all operating conditions: this includes frequency, temperature, and so on...
         self.op_point=None # This is the selected operating point of the model. This can be used to predict  
         self.mode='single' # assume there is no sweeping condition at the beginning
+
     def set_data_bound(self,bounds):
-        '''Set up a list of data bound for each parameter 
         '''
+        Set up a list of data bound for each parameter
+        :param bounds: [[min1,max1],[min2,max2]...,[minn,maxn]] -> all boundaries of parameter inputs
+        :return: Update the self.data_bound list
+        '''
+
         if len(self.params)!=len(bounds):
             print InputError("MISMATCH in bounds, number of parameter's names are different from boundary inputs")
         else:
             self.data_bound=bounds
     
     def set_unit(self,p,s):
-        '''Set a unit see Unit class
-            p: prefix
-            s: suffix'''
+        '''
+        Set a unit see Unit class
+        :param p: prefix
+        :param s: suffix
+        :return: Set self.unit object
+        '''
         self.unit=Unit(p,s)
         
     def set_sweep_unit(self,p,s):
@@ -296,7 +304,7 @@ class RS_model:
             self.DOE[row]=doe_row
             not_ready=True
             
-    def build_RS_mdl(self,mode='Krigging'):
+    def build_RS_mdl(self,mode='Krigging',func=None):
         '''
         Build all RS_mdl based on user specified inputs and outputs.
         Supported:
@@ -374,30 +382,38 @@ class RS_model:
                         best_score[i]=score
                 self.model[i] = KernelRidge(alpha=0.001, kernel=best_kernel[i])
                 self.model[i].fit(self.DOE,self.input[i])
-            
-            
+
         elif mode=='Krigging':
             variogram=['linear','power','gaussian','spherical','exponential']
             best_score=[1000 for i in range(len(self.input))]    
             best_variogram=['' for i in range(len(self.input))]
             self.model=[None for i in range(len(self.input))]
+            data = self.DOE
             for i in range(len(self.input)):
-                for v in variogram:
-                    data=self.DOE
-                    OK=ok(data[:, 0], data[:, 1], self.input[i], variogram_model=v,
+                if func== None:
+                    for v in variogram:
+
+                        OK=ok(data[:, 0], data[:, 1], self.input[i], variogram_model=v,
+                             verbose=False, enable_plotting=False)
+                        test=OK.execute('points', data[:, 0], data[:, 1])
+                        test= np.ma.asarray(test[0])
+                        delta=test-self.input[i]
+                        score=np.sqrt(np.mean(delta**2))
+                        if score<best_score[i]:
+                            best_variogram[i]=v
+                            best_score[i]=score
+
+                    print best_variogram[i]
+                    OK=ok(data[:, 0], data[:, 1], self.input[i], variogram_model=best_variogram[i],
                          verbose=False, enable_plotting=False)
-                    test=OK.execute('points', data[:, 0], data[:, 1])
-                    test= np.ma.asarray(test[0])
-                    delta=test-self.input[i]  
-                    score=np.sqrt(np.mean(delta**2))
-                    if score<best_score[i]:
-                        best_variogram[i]=v
-                        best_score[i]=score  
-                print best_variogram[i]       
-                OK=ok(data[:, 0], data[:, 1], self.input[i], variogram_model=best_variogram[i],
-                         verbose=False, enable_plotting=False)   
-                print 'score: ', best_score[i], 'best_v: ', best_variogram[i]      
-                self.model[i]=OK
+                    print 'score: ', best_score[i], 'best_v: ', best_variogram[i]
+
+                else:
+                    best_variogram[i]=func
+                    OK = ok(data[:, 0], data[:, 1], self.input[i], variogram_model=best_variogram[i],
+                    verbose=False, enable_plotting=False)
+                self.model[i] = OK
+
         elif mode=='Inter2D':
             method=['cubic','quintic']
             best_method = 'linear'
