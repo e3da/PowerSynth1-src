@@ -25,7 +25,7 @@ class DesignRuleCheck():
         '''
         Jonathan: Returns False if any DRC errors are found; only returns True if no DRC errors found
         '''
-        self.err_count = count_drc_errors(self)
+        self.err_count = self.count_drc_errors(self)
         if self.err_count > 0.0:
             print "DRC ERRORS: " + str(self.err_count) + " DRC errors found."
             return False
