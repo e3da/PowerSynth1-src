@@ -10,7 +10,10 @@ INPUT:
  - SymbolicLayout object
 
 '''
-#from powercad.sym_layout.symbolic_layout import *
+
+from powercad.design.library_structures import BondWire
+from powercad.design.project_structures import DeviceInstance
+from powercad.util import distance
 
 class DesignRuleCheck():
     
@@ -121,7 +124,7 @@ class DesignRuleCheck():
                     traces.append(line.trace_rect) 
                 
             lead_rect = lead.footprint_rect.deepCopy()
-            #lead_rect.change_size(self.design_rules.min_die_trace_dist)
+            #lead_rect.change_size(self.symb_layout.design_rules.min_die_trace_dist)
             lead_area = lead_rect.area()
             area_sum = 0.0
             for rect in traces:
@@ -141,7 +144,7 @@ class DesignRuleCheck():
         for device in self.symb_layout.devices:
             # only check against the parent line
             dev_rect = device.footprint_rect.deepCopy()
-            dev_rect.change_size(self.design_rules.min_die_trace_dist)
+            dev_rect.change_size(self.symb_layout.design_rules.min_die_trace_dist)
             inter = device.parent_line.trace_rect.intersection(dev_rect)
             if inter is not None:
                 total_error += dev_rect.area() - inter.area()
@@ -159,7 +162,7 @@ class DesignRuleCheck():
                         if isinstance(pt1.tech, DeviceInstance) and isinstance(pt2.tech, DeviceInstance):
                             rect1 = pt1.footprint_rect.deepCopy()
                             rect2 = pt2.footprint_rect
-                            rect1.change_size(self.design_rules.min_die_die_dist)
+                            rect1.change_size(self.symb_layout.design_rules.min_die_die_dist)
                         else:
                             rect1 = pt1.footprint_rect
                             rect2 = pt2.footprint_rect
@@ -175,9 +178,9 @@ class DesignRuleCheck():
         total_error = 0.0
         for bw in self.symb_layout.bondwires:
             if bw.tech.wire_type == BondWire.POWER:
-                trace_inset = self.design_rules.power_wire_trace_dist
+                trace_inset = self.symb_layout.design_rules.power_wire_trace_dist
             elif bw.tech.wire_type == BondWire.SIGNAL:
-                trace_inset = self.design_rules.signal_wire_trace_dist
+                trace_inset = self.symb_layout.design_rules.signal_wire_trace_dist
                 
             if (bw.land_pt is None) and (bw.land_pt2 is None):
                 # bondwires were not even able to be placed
@@ -212,13 +215,13 @@ class DesignRuleCheck():
         total_error = 0.0
         for bw in self.symb_layout.bondwires:
             if bw.tech.wire_type == BondWire.POWER:
-                trace_inset = self.design_rules.power_wire_component_dist
+                trace_inset = self.symb_layout.design_rules.power_wire_component_dist
             elif bw.tech.wire_type == BondWire.SIGNAL:
-                trace_inset = self.design_rules.signal_wire_component_dist
+                trace_inset = self.symb_layout.design_rules.signal_wire_component_dist
                 
             if (bw.land_pt is not None) and (bw.land_pt2 is None):
                 # bondwire connects device to trace
-                for pt in self.points:
+                for pt in self.symb_layout.points:
                     if pt is not bw.dev_pt:
                         # check for intersection
                         for bwpt in bw.end_pts:
@@ -232,7 +235,7 @@ class DesignRuleCheck():
                                     total_error += float('Inf')
             else:
                 # bondwire connects trace to trace
-                for pt in self.points:
+                for pt in self.symb_layout.pointspoints:
                     # check for intersection between all components
                     for bwpt in bw.start_pts+bw.end_pts:
                         rect = pt.footprint_rect.deepCopy()
