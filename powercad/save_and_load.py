@@ -1,7 +1,7 @@
 import pickle
 
 
-def save_file(file,object):
+def save_file(object,file):
     '''
     This function will save file in binary '*b' format
     :param file: directory and file name e.g (C:/test.txt)
