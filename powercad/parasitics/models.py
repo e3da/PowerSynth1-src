@@ -101,20 +101,6 @@ def trace_resistance_svr(f,w,l,t,h,p=1.724e-8):       # Quang's model SVR ,KR ba
 def res_bound(w,a,b,c):
     return a/w**b+c
 
-
-def trace_resistance_not_released(f,w,l,t,h,p=1.724e-8):
-    [a1, b1, c1] = res_mdl[0]
-    [a2, b2, c2] = res_mdl[1]
-    lrange=res_mdl[2]
-    p_l = res_bound(w, a1, b1, c1)
-    p_h = res_bound(w, a2, b2, c2)
-    slope = (p_h - p_l) / (lrange[1] - lrange[0])
-    b = p_h - slope * lrange[1]
-    res = slope * l + b
-    if f != 300000 or p != 1.724e-8:
-        res = res * math.sqrt(f * p) / math.sqrt(300e3 * 1.724e-8)
-    return res # units: mOhms
-
 #--------------------------------------------------------------------------
 #-----------  inductance  model of traces on ground plane-- ---------------
 #--------------------------------------------------------------------------
