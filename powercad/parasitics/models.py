@@ -16,8 +16,8 @@ import subprocess
 import numpy as np
 import csv
 import pickle
-from pyDOE import *
-from sklearn.svm import SVR
+#from pyDOE import *
+#from sklearn.svm import SVR
 from powercad.Q3D_automate.Parasistic_Zihao_test import Generate_Zihao_Thesis_Q3D_Analysis_Resistance_and_Inductance
 
 LOWEST_ASPECT_RES = 1.0         # I changed it back to 1.0 Quang as stated in Brett's thesis
