@@ -12,7 +12,7 @@ from PySide.QtGui import QMessageBox
 
 from powercad.tech_lib.test_techlib import make_sub_dir
 from powercad.design.library_structures import *
-
+from powercad.save_and_load import *
 class SubAttachPage(object):
     def __init__(self, parent):
         # Substrate attach root directory
@@ -84,7 +84,7 @@ class SubAttachPage(object):
                                                        float(self.ui.SubAttachDensityInput.text()), None, None, None) 
             
             make_sub_dir(self.sub_dir)
-            pickle.dump(sub_attach,open(os.path.join(self.sub_dir, sub_attach.properties.name+".p"), "wb"))
+            save_file(sub_attach,os.path.join(self.sub_dir, sub_attach.properties.name+".p"))
             self.load_page()
         else:
             print "Error Creating Substrate Attach"
@@ -92,7 +92,7 @@ class SubAttachPage(object):
     def load(self):
         if self.ui.SubAttachList.currentIndex() > 0:
             filename = os.path.join(self.sub_dir, self.ui.SubAttachList.currentText())
-            self.current_subattach = pickle.load(open(filename, "rb"))
+            self.current_subattach = load_file(filename)
             
             self.ui.SubAttachNameInput.setText(str(self.current_subattach.properties.name))
             self.ui.SubAttachThermalCondInput.setText(str(self.current_subattach.properties.thermal_cond))
