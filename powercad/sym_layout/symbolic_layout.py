@@ -1922,10 +1922,11 @@ class SymbolicLayout(object):
         self.generate_layout()
         ret = []   
         drc = DesignRuleCheck(self)
-        if not drc.passes_drc(False):   # Non-convergence case
+        drc_count = drc.count_drc_errors(False)
+        if drc_count > 0:   # Non-convergence case
             #Brett's method
             for i in xrange(len(self.perf_measures)):
-                ret.append(drc_val+10000)
+                ret.append(drc_count+10000)
             print "ret:" + str(ret)
             return ret     
         else:                 
