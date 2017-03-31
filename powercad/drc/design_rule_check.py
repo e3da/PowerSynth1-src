@@ -30,7 +30,8 @@ class DesignRuleCheck():
         '''
         self.err_count = self.count_drc_errors(self)
         if self.err_count > 0.0:
-            print "DRC ERRORS: " + str(self.err_count) + " DRC errors found."
+            print str(self.err_count) + " DRC errors found."
+            print "ERROR REPORT: " + str(self.err_report)
             return False
         else:
             print "No DRC errors found."
