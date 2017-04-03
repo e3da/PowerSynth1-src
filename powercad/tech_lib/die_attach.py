@@ -12,7 +12,7 @@ from PySide.QtGui import QMessageBox
 
 from powercad.tech_lib.test_techlib import make_sub_dir
 from powercad.design.library_structures import *
-
+from powercad.save_and_load import *
 class DieAttachPage(object):
     def __init__(self, parent):
         # Die attach root directory
@@ -84,7 +84,7 @@ class DieAttachPage(object):
                                                     float(self.ui.DieAttDensityInput.text()), None, None, None)
             
             make_sub_dir(self.sub_dir)
-            pickle.dump(dattach,open(os.path.join(self.sub_dir, dattach.properties.name+".p"), "wb"))
+            save_file(dattach,os.path.join(self.sub_dir, dattach.properties.name+".p"))
             self.load_page()
         else:
             print "Error Creating Die Attach"
@@ -92,7 +92,7 @@ class DieAttachPage(object):
     def load(self):
         if self.ui.DieAttachList.currentIndex()>0:
             filename = os.path.join(self.sub_dir, self.ui.DieAttachList.currentText())
-            self.current_dattach = pickle.load(open(filename, "rb"))
+            self.current_dattach = load_file(filename)
             
             self.ui.DieAttNameInput.setText(str(self.current_dattach.properties.name))
             self.ui.DieAttThermalCondInput.setText(str(self.current_dattach.properties.thermal_cond))
