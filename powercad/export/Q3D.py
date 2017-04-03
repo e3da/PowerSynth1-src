@@ -86,6 +86,7 @@ def output_q3d_vbscript(md, filename):
         name = "lead" + str(index+1)
         if lead.lead_tech.lead_type == Lead.BUSBAR:
             name2 = "lead_" +str(index+1)
+            print lead.lead_tech.dimensions
             (LeadWidth, LeadLength, LeadThick, LeadHeight) = lead.lead_tech.dimensions
             # the cases find the orientation of the lead. This makes the top part of the lead build in the right direction,
             # into the rectangle it is placed on

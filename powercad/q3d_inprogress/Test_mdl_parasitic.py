@@ -13,7 +13,7 @@ if __name__ == '__main__':
     E2.set_size(48, 48, 0.2) # Metal1 
     E2.set_name('Metal1')
     #-----------------------
-    E3.set_size(50, 50, 0.5)
+    E3.set_size(50, 50, 0.68)
     E3.set_name('Substrate') # Substrate// Dielectric
     E3.set_material('Al_N')
     #-----------------------
@@ -24,23 +24,22 @@ if __name__ == '__main__':
     T1=Topology()
     T1.add_Rect_Box([E1,E2,E3,E4])
     T1.define_trace(4)  # Select trace layer 
-    script1=Q3D_ipy_script('16.2','C://Users//qmle//Desktop//Testing//Py_Q3D_test//New_RS_included_DCRL','New_RS_included_DCRL','C://Users//qmle//Desktop//Testing//Py_Q3D_test//New_RS_included_DCRL')  # Initialize Script Object
+    script1=Q3D_ipy_script('16.2','C://Users//qmle//Desktop//Testing//Py_Q3D_test//Validation','Validation','C://Users//qmle//Desktop//Testing//Py_Q3D_test//Validation')  # Initialize Script Object
     script1.add_script(T1.get_all_Elayers())                                                                                            # Add Topology structure to script  
     script1.set_params('Width', 9, 'XSize',E4,1)               # Set up parameters          
     script1.set_params('Length', 9, 'YSize',E4,1)              # Set up parameters 
     script1.set_params('W_bp', 50, 'XSize',E1,1)               # Set up parameters
     script1.set_params('L_bp', 50, 'YSize',E1,1)               # Set up parameters
-    
-    script1.identify_net('signal', 'Metal2', 'SignalNet1')     # Create net objects 
+    script1.identify_net('signal', 'Metal2', 'SignalNet1')     # Create net objects
     script1.select_source_sink('Source1',E4.get_face(2),'Sink1', E4.get_face(4),'SignalNet1') # Select Source Sink to faces
     script1.analysis_setup()                                   # Set up an analysis, in this case set as default    
     script1.add_freq_sweep('10k', '500k', '1k')                 # Set up frequency sweep on analysis
     
     mdl1=RS_model(['W','L'],const=['H','T'])
-    mdl1.set_dir('C://Users//qmle//Desktop//Testing//Py_Q3D_test//New_RS_included_DCRL')
+    mdl1.set_dir('C://Users//qmle//Desktop//Testing//Py_Q3D_test//Validation')
     mdl1.set_data_bound([[1.2,20],[1.2,20]])
     #mdl1.set_data_bound([[1.2,30],[1.2,30]])
-    mdl1.set_name('New_RS_included_DCRL')
+    mdl1.set_name('Validation')
     script1.create_report('Freq', 'ACR','SignalNet1', 'Source1','Sweep1',1)      # Create report
     script1.update_report('Freq','ACL', 'SignalNet1', 'Source1','Sweep1',1)
     script1.update_report('Freq','C','SignalNet1','','Sweep1',1)
@@ -54,18 +53,19 @@ if __name__ == '__main__':
         script1.change_properties('Width',w, 1)
         script1.change_properties('Length',l, 1)
         script1.analyze_all()                                                                         # Run analysis
-        script1.export_report('Data Table 1', 'C://Users//qmle//Desktop//Testing//Py_Q3D_test//New_RS_included_DCRL//',name)  # Export report to csv files
+        script1.export_report('Data Table 1', 'C://Users//qmle//Desktop//Testing//Py_Q3D_test//Validation//',name)  # Export report to csv files
     script1.make()   
     #script1.build('C://Users//qmle//Desktop//Testing//Py_Q3D_test//IronPython//ipy64.exe')
-    mdl1.set_unit('n','H')
+    mdl1.set_unit('m','Ohm ')
     mdl1.set_sweep_unit('k', 'Hz')
-    mdl1.read_file('csv', 'sweep', 90,('Hz','H'))
+    mdl1.read_file('csv', 'single', 90,('Hz','Ohm'))
     
     mdl1.build_RS_mdl('Krigging','exponential')
     #mdl1.plot_input('FEM with Q3D for Inductance')
+    #mdl1.export_RAW_data("C:\Users\qmle\Desktop\Testing\Py_Q3D_test\Validation\RAW data")
     mdl1.plot_random('Krigging')
     #mdl1.plot_sweep(15)
     mdl1.save_model()
-    
+
     #script1.build('C://Users//qmle//workspace//Python_Q3d_model//IronPython//ipy64.exe')  # Use Ipy64.exe to run simulation
     

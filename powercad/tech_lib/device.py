@@ -13,7 +13,7 @@ from PySide.QtGui import QFileDialog
 
 from powercad.tech_lib.test_techlib import make_sub_dir
 from powercad.design.library_structures import *
-
+from powercad.save_and_load import *
 class DevicePage(object):
     # Device type enum
     TRANSISTOR = 0
@@ -175,7 +175,7 @@ class DevicePage(object):
             self.save_position()
             dev.wire_landings = self.save_position()
             dev.power_side = self.find_device_power_side(dev)
-            pickle.dump(dev,open(os.path.join(self.sub_dir, dev.name+".p"), "wb"))
+            save_file(dev,os.path.join(self.sub_dir, dev.name+".p"))
             self.load_page()
         else:
             print "Error Creating Device"
@@ -199,7 +199,7 @@ class DevicePage(object):
     def load_device(self):
         if self.ui.DeviceList.currentIndex() > 0:
             filename = os.path.join(self.sub_dir, self.ui.DeviceList.currentText())
-            self.current_device = pickle.load(open(filename, "rb"))
+            self.current_device = load_file(filename)
             self.ui.DeviceNameInput.setText(str(self.current_device.name))
             self.ui.DeviceLengthInput.setText(str(self.current_device.dimensions[0]))
             self.ui.DeviceWidthInput.setText(str(self.current_device.dimensions[1]))

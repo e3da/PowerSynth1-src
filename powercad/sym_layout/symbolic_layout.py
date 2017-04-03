@@ -59,7 +59,7 @@ from powercad.thermal.elmer_characterize import characterize_devices
 import powercad.settings as settings
 from PySide import QtCore, QtGui
 import ctypes
-
+from powercad.save_and_load import save_file,load_file
 #Used in Pycharm only
 
 
@@ -87,7 +87,7 @@ class ThermalMeasure(object):
     
     UNIT = ('K', 'Kelvin')
     
-    def __init__(self, stat_fn, devices, name):
+    def __init__(self, stat_fn, devices, name,mdl):
         """
         Thermal performance measure object
         
@@ -103,6 +103,7 @@ class ThermalMeasure(object):
         self.devices = devices
         self.name = name
         self.units = self.UNIT[0]
+        self.mdl=mdl
 
 class ElectricalMeasure(object):
     MEASURE_RES = 1
@@ -373,7 +374,7 @@ class SymbolicLayout(object):
         self.RAC_mdl = load_mdl(self.mdl_dir, 'RAC[4x4].rsmdl')
         self.C_mdl = load_mdl(self.mdl_dir,'C_mesh_100_krige.rsmdl')
 
-    '''-----------------------------------------------------------------------------------------------------------------------------------------------------'''        
+    '''-----------------------------------------------------------------------------------------------------------------------------------------------------'''
     def add_constraints(self):
         ''' Adds a contraints field to any layout object which lacks it. '''
         for sym in self.all_sym:
@@ -1995,9 +1996,10 @@ class SymbolicLayout(object):
         self.opt_progress_fn = progress_fn
         self._map_design_vars()
         # When the project is saved, must save the seed also..... so that we can regenerate it
+        engine_on = False
         for pm in self.perf_measures:
             if isinstance(pm, ElectricalMeasure):
-                ctypes.windll.user32.MessageBoxA(0, pm.mdl, 'Model', 1)
+                #ctypes.windll.user32.MessageBoxA(0, pm.mdl, 'Model', 1)
                 self.mdl_type['E'].append(pm.mdl)
         self.mdl_type['E']=list(set(self.mdl_type['E']))
         self.lumped_graph=[nx.Graph() for i in range(len(self.mdl_type['E']))]
@@ -2153,7 +2155,7 @@ class SymbolicLayout(object):
             for measure in self.perf_measures:
                 if isinstance(measure, ElectricalMeasure):
                     type = measure.mdl
-                    start_time = time.time()
+
                     type_dict = {ElectricalMeasure.MEASURE_RES: 'res',
                                  ElectricalMeasure.MEASURE_IND: 'ind',
                                  ElectricalMeasure.MEASURE_CAP: 'cap'}
@@ -2167,14 +2169,23 @@ class SymbolicLayout(object):
                         id = self.mdl_type['E'].index(type)
                         try:
                             val = parasitic_analysis(self.lumped_graph[id], src, sink, measure_type)
+                            parasitic_time = time.time() - start_time
                         except LinAlgError:
                             val = 1e6
                                 
     #                    print measure_type, val
                     ret.append(val)
-                    parasitic_time += time.time() - start_time;
+
+
                 elif isinstance(measure, ThermalMeasure):
-                    val = self._thermal_analysis(measure)
+                    type = measure.mdl
+                    if type == 'TFSM_MODEL':
+                        type_id=1
+                    elif type == 'RECT_FLUX_MODEL':
+                        type_id=2
+                    elif type == 'Matlab':
+                        type_id=3
+                    val = self._thermal_analysis(measure,type_id)
                     ret.append(val)
         
         # Update progress bar and eval count
@@ -2221,9 +2232,9 @@ class SymbolicLayout(object):
                     total_cap += trace_capacitance(trace.width(), trace.height(), metal_t, iso_t, epsil)
         return total_cap
     '''-----------------------------------------------------------------------------------------------------------------------------------------------------'''  
-    def _thermal_analysis(self, measure):
+    def _thermal_analysis(self, measure,type):
         # RECT_FLUX_MODEL
-        temps = perform_thermal_analysis(self, TFSM_MODEL)#<--RECT_FLUX_MODEL
+        temps = perform_thermal_analysis(self, type)#<--RECT_FLUX_MODEL
         if isinstance(measure,int):
             return temps
         else:
@@ -2766,8 +2777,7 @@ class SymbolicLayout(object):
                         if d!=0:
                             M += wire_partial_mutual_ind(length, wire_radius, d)
                             #print 'Mutual inductance', M
-                            wire_ind+=M
-            print 'total ind',wire_ind
+                            wire_ind=(wire_ind+M)/2
             inv_ind += 1.0/wire_ind
 
         return 1.0/inv_ind, 1.0/inv_res, 1e-3
@@ -2783,6 +2793,7 @@ class SymbolicLayout(object):
         l_all=[]
         t_num=len(self.trace_info) # number of traces
         freq=trace_data[4]
+        Stime= time.time()
         for j in range(len(self.mdl_type['E'])):
             if self.mdl_type['E'][j]=='RS':
                 for w,l in self.trace_info:

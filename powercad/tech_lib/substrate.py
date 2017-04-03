@@ -12,7 +12,7 @@ from PySide.QtGui import QMessageBox
 
 from powercad.tech_lib.test_techlib import make_sub_dir
 from powercad.design.library_structures import *
-
+from powercad.save_and_load import *
 class SubstratePage(object):
     def __init__(self, parent):
         #Substrate root directory
@@ -118,7 +118,7 @@ class SubstratePage(object):
             sub.metal_thickness = float(self.ui.SubMetalThicknessInput.text())
             
             make_sub_dir(self.sub_dir)
-            pickle.dump(sub,open(os.path.join(self.sub_dir, sub.name+".p"), "wb"))
+            save_file(sub,os.path.join(self.sub_dir, sub.name+".p"))
             self.load_page()
         else:
             print "Error Creating Substrate"
@@ -126,7 +126,7 @@ class SubstratePage(object):
     def load(self):
         if self.ui.SubstrateList.currentIndex() > 0:
             filename = os.path.join(self.sub_dir, self.ui.SubstrateList.currentText())
-            self.current_substrate = pickle.load(open(filename, "rb"))
+            self.current_substrate = load_file(filename)
             
             self.ui.SubstrateNameInput.setText(str(self.current_substrate.name))
             self.ui.SubIsolationThermalCondInput.setText(str(self.current_substrate.isolation_properties.thermal_cond))

@@ -27,7 +27,15 @@ class PerformanceItem(object):
         return btn_del
     
     def remove(self):
+        '''
+        Remove an Item from list
+        '''
+        #pm_type=self.measure.mdl
+
+
         self.measures.remove(self.measure)
+
+
         self.table.removeRow(self.row_index())
         self.PerfUI.perf_items.remove(self)
         
@@ -55,6 +63,22 @@ class PerformanceListUI(object):
         self.ui.cmb_perform_type.currentIndexChanged.connect(self.disp_perform_step2)
         self.ui.cmb_thermal_model.currentIndexChanged.connect(self.disp_perform_step3)
         self.parent.symb_canvas[self.parent.MEASURES_PLOT].mpl_connect('pick_event', self.performance_pick)
+
+    def electrical_model_options(self):
+        if self.ui.cmb_elec_model.currentText()=='Matlab':
+            Matlab_dialog=MatlabInterfaceDialog(self.parent)
+            if (Matlab_dialog.exec_()):
+
+
+                print "successfully open new dialog"
+
+    def thermal_model_options(self):
+        if self.ui.cmb_thermal_model.currentText()=='Matlab':
+            Matlab_dialog=MatlabInterfaceDialog(self.parent)
+            Matlab_dialog.set_matlab_script(Thermal_Module.format(""))
+            Matlab_dialog.open_instruction("Instruction for Thermal Model goes here")
+            if (Matlab_dialog.exec_()):
+                print "successfully open new dialog"
 
     def populate_cmb_elec_therm(self):
         if self.ui.txt_perform_name.text() == '':
@@ -108,9 +132,11 @@ class PerformanceListUI(object):
             self.parent.symb_canvas[3].draw()
             # de-select all devices
             self.perform_devices = []
+
     def disp_perform_step3(self):
         elec_txt=self.ui.cmb_perform_type.currentText()
         elec_txt = self.ui.cmb_perform_type.currentText()
+
     def performance_pick(self, event):
         """Pick event called when performance identification symbolic layout is clicked"""
         if self.ui.lbl_sel_electrical_model.isEnabled():
@@ -230,6 +256,12 @@ class PerformanceListUI(object):
                 performance_measure = ElectricalMeasure(self.perform_devices[0],self.perform_devices[1],measure,freq,self.ui.txt_perform_name.text(),None,model)
         elif self.ui.cmb_perform_elecTherm.currentText() == "Thermal":
             # get type
+            # get type
+            if self.ui.cmb_thermal_model.currentText() == "Fast Thermal (FEM)":
+                model = 'TFSM_MODEL'
+            elif self.ui.cmb_thermal_model.currentText() == "Rectangle Flux":
+                model = 'RECT_FLUX_MODEL'
+
             if self.ui.cmb_perform_type.currentText() == "Max":
                 stat_fn = ThermalMeasure.FIND_MAX
             elif self.ui.cmb_perform_type.currentText() == "Average":
@@ -240,7 +272,7 @@ class PerformanceListUI(object):
                 print "Error"
                 return 1
             # create performace measure
-            performance_measure = ThermalMeasure(stat_fn,self.perform_devices,self.ui.txt_perform_name.text()) 
+            performance_measure = ThermalMeasure(stat_fn,self.perform_devices,self.ui.txt_perform_name.text(),model)
         
         performance_measure.disp = (self.ui.cmb_perform_elecTherm.currentText(),self.ui.cmb_perform_type.currentText())
             

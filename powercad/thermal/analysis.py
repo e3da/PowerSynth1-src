@@ -14,7 +14,7 @@ from powercad.electro_thermal.ElectroThermal_toolbox import *
 TFSM_MODEL = 1
 RECT_FLUX_MODEL = 2
 Successive_approximation_model=3
-
+MATLAB=4
 
 def perform_thermal_analysis(sym_layout, model=1):
     ret = None

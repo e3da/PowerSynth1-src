@@ -8,6 +8,7 @@ import numpy as np
 import time
 from powercad.save_and_load import save_file, load_file
 import matplotlib.pyplot as plt
+import csv
 from matplotlib import cm
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.ticker import LinearLocator, FormatStrFormatter
@@ -160,12 +161,12 @@ def load_mdl(dir,mdl_name):
     return mdl
 
 def trace_res_krige(f,w,l,mdl):
-    #unit is uOhm
+    #unit is mOhm
     model = mdl.model[0]
     op_freq=mdl.op_point
     r=model.execute('points',[w],[l])
     r=np.ma.asarray(r[0])
-    r=r/1000
+    #r=r/1000
     print op_freq
     return r*m.sqrt(f/op_freq)
 
@@ -189,23 +190,70 @@ def trace_cap_krige(w,l,mdl):
 if __name__ == '__main__':
     mdl_dir='D:\Testing\Py_Q3D_test\All rs models'
     mdl_dir='C:\Users\qmle\Desktop\Testing\Py_Q3D_test\All rs models'
-    mdl1=load_mdl(mdl_dir,'RAC_mesh_100_krige.rsmdl')
+    mdl1=load_mdl(mdl_dir,'RS_excludeDC.rsmdl')
     DOE=mdl1.DOE
     Q3D_R=mdl1.input[0]
     print mdl1.unit.to_string()
     print Q3D_R # uOhm
-    #mdl2 = load_mdl(mdl_dir, 'Mdl2.rsmdl')
-    #Q3D_L=mdl2.input[0]
+    mdl2 = load_mdl(mdl_dir, 'Mdl2.rsmdl')
+    Q3D_L=mdl2.input[0]
     mdl2=load_mdl(mdl_dir, 'LAC_mesh_100_krige.rsmdl')
     print mdl2.op_point
     #print Q3D_L # nH
     mdl3=load_mdl(mdl_dir,'C_mesh_100_krige.rsmdl')
     Q3D_C=mdl3.input[0]
+    '''
     print Q3D_C # pF
     print 'here resistance', trace_res_krige(110,7.5,7.5,mdl1)
-    w=[]
-    l=[]
 
+    '''
+    #Test Corner Cases Overestimation
+    '''
+    fig1 = plt.figure(1)
+    ax = fig1.gca(projection='3d')
+    Z=np.zeros((5,5))
+    ZL=np.zeros((5,5))
+    w1=np.linspace(1.2,10,5)
+    w2=np.linspace(1.2,10,5)
+    X,Y=np.meshgrid(w1,w2)
+
+    for i in range(5):
+        for j in range(5):
+            #Z[i,j]=trace_res_krige(100,w2[j],w1[i]/2+10,mdl1)+trace_res_krige(100,w1[i],10+w2[j]/2,mdl1)
+            ZL[i,j]=trace_ind_krige(100,w2[j],w1[i]/2+10,mdl2)+trace_ind_krige(100,w1[i],w2[j]/2+10,mdl2)
+    surf1 = ax.plot_surface(X, Y, ZL)
+    #ax.scatter(X,Y,Z,c='b',s=10)
+    Z2 = []
+    with open('C:\Users\qmle\Desktop\Testing\Comparison\Weekly_3_28\Corner.csv','rb') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            Z2.append(float(row['ACR'])*1000)
+
+
+    #ax.scatter(X, Y, Z2,c='r',s=10)
+    ax.set_xlabel('W1 (mm)')
+    ax.set_ylabel('W2 (mm)')
+    ax.set_zlabel('Resistance (mOhm)')
+    plt.show()
+    fig2 = plt.figure(2)
+    ax = fig2.gca(projection='3d')
+    surf1 = ax.plot_surface(X, Y, ZL)
+    ax.set_xlabel('W1 (mm)')
+    ax.set_ylabel('W2 (mm)')
+    ax.set_zlabel('Inductance (nH)')
+    plt.show()
+    with open('C:\Users\qmle\Desktop\Testing\Comparison\RAC_BEST CASE\PowerSynth.csv', 'wb') as csvfile:
+        fieldnames = ['W1', 'W2','Resistance']
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        out=[]
+        for i in range(10):
+            for j in range(10):
+                out.append({'W1':w1[i],'W2':w2[j],'Resistance':Z[i,j]})
+        writer.writerows(out)
+    '''
+    w = []
+    l = []
     for i in range(10):
         for j in range (10):
             w.append(float(i))
@@ -369,4 +417,3 @@ if __name__ == '__main__':
     fig6.suptitle('Q3D vs Response Surface', fontsize=20)
     
     plt.show()
-

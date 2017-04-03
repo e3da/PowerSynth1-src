@@ -79,9 +79,24 @@ oModule.InsertSetup("Matrix",
         "AdaptiveFreq:="    , "{0}Hz",   # default 100 kHz
         "SaveFields:="        , {1},      # default to be False 
         "Enabled:="        , True,
+
+
         [
+            "NAME:AC",
+            "MaxPass:="        , {2},
+            "MinPass:="        , {3},
+            "MinConvPass:="        , {4}, # default 1
+            "PerError:="        , {5},    # default 1
+            "PerRefine:="        , {6}    # default 30
+        ]
+
+    ])
+
+'''
+'''
+[
             "NAME:Cap",
-            "MaxPass:="        , {2},     # default 15 
+            "MaxPass:="        , {2},     # default 15
             "MinPass:="        , {3},     # default 15
             "MinConvPass:="        , {4}, # default 1
             "PerError:="        , {5},    # default 1
@@ -89,7 +104,9 @@ oModule.InsertSetup("Matrix",
             "AutoIncreaseSolutionOrder:=", True,
             "SolutionOrder:="    , "Normal"
         ],
-        [
+'''
+'''
+[
 			"NAME:DC",
 			"SolveResOnly:="	, False,
 			[
@@ -110,17 +127,6 @@ oModule.InsertSetup("Matrix",
 			],
 			"Solution Order:="	, "Normal"
 		],
-        [
-            "NAME:AC",
-            "MaxPass:="        , {2},
-            "MinPass:="        , {3},
-            "MinConvPass:="        , {4}, # default 1
-            "PerError:="        , {5},    # default 1
-            "PerRefine:="        , {6}    # default 30
-        ]
-
-    ])
-
 '''
 Insert_Freq_sweep=''' 
 # Linear sweep on frequency range

@@ -33,7 +33,8 @@ from powercad.q3d_inprogress.Unit import Unit
 from matplotlib import lines
 # Abstract Data
 from powercad.q3d_inprogress.Abstract_Data import Stack
-
+import csv
+from powercad.parasitics.mdl_compare import trace_inductance
 import matplotlib.pyplot as plt
 from pykrige.core import variogram_function_error
 class RS_model:
@@ -444,7 +445,7 @@ class RS_model:
             ax = plt.figure(i).gca(projection='3d') 
             temp=self.DOE
             ax.scatter(self.DOE[:,0], self.DOE[:,1], self.input[i], c='b',s=10)
-            self.create_uniform_DOE([50,50],True)     
+            self.create_uniform_DOE([10,10],True)
             if mode=='SVR' or mode=='KRR': 
                 ax.scatter(self.DOE[:,0], self.DOE[:,1], self.model[i].predict(self.DOE), c='r',s=10)
             elif mode=='Krigging':
@@ -452,8 +453,8 @@ class RS_model:
                 for row in self.DOE:
                     data= self.model[i].execute('points', row[0],row[1])
                     data=np.ma.asarray(data[0])
-                    z.append(data[0]) 
-                print z    
+                    z.append(data[0])
+                print z
                 ax.scatter(self.DOE[:,0], self.DOE[:,1], z, c='r',s=10)
             elif mode=='Inter2D':
                 f=self.model[i]
@@ -468,7 +469,9 @@ class RS_model:
             ax.set_ylabel('Length (mm)')
             ax.set_zlabel('Inductance (nH)')
             self.DOE=temp
-        plt.show()     
+        plt.show()
+
+
     def plot_sweep(self,doe_row):
         n_params=len(self.input)
         params=[]
@@ -510,6 +513,42 @@ class RS_model:
         plt.show(3) 
         self.DOE=temp
 
+    def export_RAW_data(self,dir):
+        # Single data only
+        # export RAW RS:
+        dir1=os.path.join(dir,'RS.csv')
+        with open(dir1, 'wb') as csvfile:
+            fieldnames = ['Width', 'Length', 'Inductance(nH)']
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer.writeheader()
+            z=[]
+            for row in self.DOE:
+                data = self.model[0].execute('points', row[0], row[1])
+                data = np.ma.asarray(data[0])
+                z.append({'Width':row[0],'Length':row[1],'Inductance(nH)':data[0]})
+            writer.writerows(z)
+        # export RAW Q3D
+        dir2 = os.path.join(dir, 'Q3D.csv')
+        with open(dir2, 'wb') as csvfile:
+            fieldnames = ['Width', 'Length', 'Inductance(nH)']
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer.writeheader()
+            z = []
+            for i in range(len(self.DOE)):
+                data={'Width':self.DOE[i,0],'Length':self.DOE[i,1],'Inductance(nH)':self.input[0][i]}
+                z.append(data)
+            writer.writerows(z)
+        # export RAW MicroStrip
+        dir3 = os.path.join(dir, 'MS.csv')
+        with open(dir3, 'wb') as csvfile:
+            fieldnames = ['Width', 'Length', 'Inductance(nH)']
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer.writeheader()
+            z = []
+            for row in self.DOE:
+                data={'Width':row[0],'Length':row[1], 'Inductance(nH)':trace_inductance(row[0],row[1],0.2,0.5)}
+                z.append(data)
+            writer.writerows(z)
 
 if __name__=="__main__":
     mdl1=RS_model(['width','length'],const=['height','thickness'])

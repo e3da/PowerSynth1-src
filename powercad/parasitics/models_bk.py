@@ -36,11 +36,11 @@ def trace_resistance(f, w, l, t, h, p=1.724e-8):
     # resistance part of trace (trace resistance + ground plane resistance): 
     LR = 0.94 + 0.132*(w1/h1) - 0.0062*(w1/h1)*(w1/h1)
     R0 = math.sqrt(2.0*math.pi*f*u0*p)
-    Rg = (w1 / h1) / ((w1 / h1) + 5.8 + 0.03 * (h1 / w1)) * R0 / w1  # in Zihao thesis page 52 he said we can ignore rground... but I think it doesnt take too much time to compute this -- Quang
+    #Rg = (w1 / h1) / ((w1 / h1) + 5.8 + 0.03 * (h1 / w1)) * R0 / w1  # in Zihao thesis page 52 he said we can ignore rground... but I think it doesnt take too much time to compute this -- Quang
     comp1 = (l1*R0)/(2.0*math.pi*math.pi*w1)
     comp2 = math.pi + math.log((4.0*math.pi*w1)/t1)
     # resistance calculation:
-    r = LR*comp1*comp2*1e3 +Rg # unit in mOhms
+    r = LR*comp1*comp2*1e3 #+#Rg # unit in mOhms
     
     # Zihao's old code (this may be wrong, not sure) -Brett
     # r = LR*(1/math.pi + 1/math.pow(math.pi, 2)*math.log(4*math.pi*w1/t1))*math.sqrt(math.pi*u0*f*p)/(math.sqrt(2)*w1)*l1*1e3 # unit in mOhms
