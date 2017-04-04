@@ -414,7 +414,8 @@ class NewProjectDialog(QtGui.QDialog):
         directory = str(QFileDialog.getExistingDirectory(self, "Select Project Directory", str(self.project_path)))
         if os.path.isdir(directory):
             self.ui.txt_dir.setText(directory)
-    
+        self.parent.layout_script_dir = directory
+
     def select_filetype(self):
         self.ui.txt_symbnet_address.clear() 					# Clear "Open file" text area.
         if self.ui.dropdown_filetype.currentIndex() > 0: 		# If something other than the default is selected from the filetype dropdown menu, 
@@ -519,9 +520,9 @@ class OpenProjectDialog(QtGui.QDialog):
             prev_folder = 'C://'    
         self.project_file = QFileDialog.getOpenFileName(self, "Select Project File",prev_folder,"Project Files (*.p)")
         self.ui.txt_projectLocation.setText(self.project_file[0])
-        self.parent.layout_script_dir=os.path.dirname(self.project_file[0])    
-        
-     
+        self.parent.layout_script_dir=os.path.dirname(self.project_file[0])
+
+
     def load_project(self): # loads the project selected into the main view
         try:
             self.parent.project = pickle.load(open(self.project_file[0],'rb'))

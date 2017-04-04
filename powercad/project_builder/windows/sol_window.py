@@ -47,7 +47,7 @@ class SolutionWindow(QtGui.QWidget):
         for objective in solution.params:
             self.tbl_item = QtGui.QTableWidgetItem(objective[0])
             self.ui.tbl_info.setItem(self.i,0,self.tbl_item)
-            self.tbl_item = QtGui.QTableWidgetItem(str(round(objective[1],4)))
+            self.tbl_item = QtGui.QTableWidgetItem(objective[1]) #TODO sxm: check datatype (float) here, remove str; original: self.tbl_item = QtGui.QTableWidgetItem(str(round(objective[1],4)))
             self.ui.tbl_info.setItem(self.i,2,self.tbl_item)
             self.tbl_item = QtGui.QTableWidgetItem(objective[2])
             self.ui.tbl_info.setItem(self.i,1,self.tbl_item)

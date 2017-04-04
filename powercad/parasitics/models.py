@@ -17,7 +17,7 @@ import numpy as np
 import csv
 import pickle
 from pyDOE import *
-from sklearn.svm import SVR
+#from sklearn.svm import SVR
 from powercad.Q3D_automate.Parasistic_Zihao_test import Generate_Zihao_Thesis_Q3D_Analysis_Resistance_and_Inductance
 
 LOWEST_ASPECT_RES = 1.0         # I changed it back to 1.0 Quang as stated in Brett's thesis
@@ -25,8 +25,8 @@ LOWEST_ASPECT_IND = 1.0
 
 # Constants:
 c = 3.0e8                       # speed of light
-u_0 = 4.0*math.pi*1e-7          # permeability of vaccum;
-e_0 = 8.85e-12                  # permittivity of vaccum;
+u_0 = 4.0*math.pi*1e-7          # permeability of vacuum;
+e_0 = 8.85e-12                  # permittivity of vacuum;
 # save_path = 'C:\Users\qmle\Desktop\SingleFEM' #sxm- hardcoded path!
 #es_mdl=pickle.load(open(os.path.join(save_path,'res_0.64_0.4_[5,50].mdl'),'rb'))
 

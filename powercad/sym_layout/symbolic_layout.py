@@ -273,6 +273,7 @@ class SymPoint(object):
             return 'Lead'
 
 
+
 '''------------------------------------------------------------------------------------------------------------------'''
 
 
@@ -301,6 +302,7 @@ class SymbolicLayout(object):
         self.trace_ylen = None
         self.vg_matrix = None
         self.trace_rects = None # All trace rectangles in a layout
+        # self.corners = [] # List of coordinates ((x,y) tuples) on the layout that mark corners to be filleted (sxm)
         
         self.symbol_graph = None # NetworkX graph of layout topology (built at form_design_problem)
         self.trace_graph = None # NetworkX graph of trace connections
@@ -1110,7 +1112,7 @@ class SymbolicLayout(object):
                                              self.removed_vert_dv_index, self.v_design_values, self.sub_dim[1], False)
         
         self._fix_supertrace_overlaps()
-        self._replace_intersections()
+        self._replace_intersections() # replace intersecting traces (supertraces) with a rectangle
         self._build_trace_rect_list()
         self._place_devices()
         self._place_leads()
@@ -2876,7 +2878,7 @@ def make_test_setup():
     test_file = os.path.abspath('../../../sym_layouts/rd100.svg')
     
     sym_layout = SymbolicLayout()
-    sym_layout.load_layout(test_file)
+    sym_layout.load_layout(test_file, 'svg')
     symbols = sym_layout.all_sym
     
     dev = DeviceInstance(0.08, 10.0, get_device(), get_dieattach())

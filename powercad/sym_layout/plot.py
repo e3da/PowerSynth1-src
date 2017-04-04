@@ -12,8 +12,15 @@ from matplotlib.patches import Rectangle, PathPatch, Circle
 from matplotlib.path import Path
 
 from powercad.sym_layout.svg import LayoutLine, LayoutPoint, find_layout_bounds
+#from powercad.sym_layout.symbolic_layout import Corner
+
 from powercad.util import Rect
 from _sqlite3 import Row
+
+# class Corner(object): # sxm - marks corners that need to be filleted.
+#     def __init__(self, x, y):
+#         self.x = x
+#         self.y = y
 
 # sxm - This function is only used in svg.py's main().
 def plot_svg_objs(layout):
@@ -38,7 +45,20 @@ def plot_svg_objs(layout):
     ax.axis([bounds.left, bounds.right, bounds.bottom, bounds.top])
     plt.show()
     print "plot_svg_objs() completed."
-    
+
+def _search_corner(list, trace_rect1, trace_rect2):
+    '''
+    This function returns True if list contains a tuple with trace_rect1 and trace_rect2 at its [1] and [2] indices
+    :param list: list of tuples containing (Sl.no., rectangle bounds, rectangle bounds for another rectangle)
+    :param trace_rect1: rectangle bounds (top, bottom, left, right) for a rectangle
+    :param trace_rect2: rectangle bounds (top, bottom, left, right) for another trace
+    :return:
+    '''
+    for i in list:
+        if ((i[1] == trace_rect1) & (i[2] == trace_rect2)):
+            return True
+    return False
+
 def plot_layout(sym_layout,ax = plt.subplot('111', adjustable='box', aspect=1.0), new_window=True, plot_row_col=False):
     print "plot_layout() started."
     hlist = sym_layout.h_rowcol_list
@@ -53,11 +73,152 @@ def plot_layout(sym_layout,ax = plt.subplot('111', adjustable='box', aspect=1.0)
     sub_rect.translate(-ledge, -ledge)
     r = Rectangle((sub_rect.left, sub_rect.bottom), sub_rect.width(), sub_rect.height(), facecolor='#E6E6E6', edgecolor='#616161')
     ax.add_patch(r)
-    
+
+    # ---- sxm start test block - Mark corner ----------
+    # print "plot.py > plot_layout(sym_layout) > sym_layout.all_trace_lines > trace_rect.top:"
+    # for i in sym_layout.all_trace_lines:
+    #     print i.trace_rect.top
+
+    # r = Rectangle((2, 20), 1, 1, facecolor='#E6E6E6', edgecolor='#f44259')
+    # ax.add_patch(r)
+    # r = Rectangle((3, 21), 1, 1, facecolor='#E6E6E6', edgecolor='#f44259')
+    # ax.add_patch(r)
+
+    # all_cornered_traces_list = [] # create an empty list of traces where each item is a tuple (top, bottom, left, right) defining a rectangle for that trace on the layout
+    # trace_id = 0
+    # for i in sym_layout.all_trace_lines:
+    #     trace_rectangle = (i.trace_rect.top, i.trace_rect.bottom, i.trace_rect.left, i.trace_rect.right)
+    #     trace = (trace_id, trace_rectangle)
+    #     all_cornered_traces_list.append(trace)
+    #     trace_id += 1
+    #     # if i.trace_connections is not None:
+    #     #     connecting_traces = i.trace_connections
+    #
+    # print "local all_cornered_traces_list: \n", all_cornered_traces_list
+
+    cornered_traces = [] # create an empty list of traces meeting at a corner
+    corner_id = 0
+    for i in sym_layout.all_trace_lines:
+        if len(i.trace_connections) > 0:
+            trace_rectangle = (i.trace_rect.top, i.trace_rect.bottom, i.trace_rect.left, i.trace_rect.right) # copy the trace rectangle's dimensions
+            for j in i.trace_connections:
+                connecting_trace_rectangle = (j.trace_rect.top, j.trace_rect.bottom, j.trace_rect.left, j.trace_rect.right) # copy the dimensions of the connecting trace rectangle
+                # append only if the pair doesn't already exist
+                if _search_corner(cornered_traces, connecting_trace_rectangle, trace_rectangle):
+                    continue
+                else:
+                    temp = (corner_id, trace_rectangle, connecting_trace_rectangle)
+                    cornered_traces.append(temp)
+                    corner_id += 1
+    corners = []
+    FIRST = 1 # first box
+    SECOND = 2 # second box
+    TOP = 0 # top of rectangle
+    BOTTOM = 1 # bottom of rectangle
+    LEFT = 2 # left of rectangle
+    RIGHT = 3 # right of rectangle
+    print "cornered traces list:"
+    for i in cornered_traces: # conditions designed to find duplicates. Expect duplicated results.
+        print i
+        temp_x = None
+        temp_y = None
+        if i[FIRST][TOP] == i[SECOND][BOTTOM]: # common y
+            temp_y = i[FIRST][TOP]
+        elif i[FIRST][BOTTOM] == i[SECOND][TOP]: # common y
+            temp_y = i[FIRST][BOTTOM]
+        if i[FIRST][LEFT] == i[SECOND][RIGHT]: # common x
+            temp_x = i[FIRST][LEFT]
+        elif i[FIRST][RIGHT] == i[SECOND][LEFT]: # common x
+            temp_x = i[FIRST][RIGHT]
+        if temp_x is None: # Find x-coordinate of the corner
+            if i[FIRST][LEFT] == i[SECOND][LEFT]: # if left side is common, select right side of the lower width box as the corner-x.
+                if i[FIRST][RIGHT] < i[SECOND][RIGHT]:
+                    temp_x = i[FIRST][RIGHT]
+                else:
+                    temp_x = i[SECOND][RIGHT]
+            elif i[FIRST][RIGHT] == i[SECOND][RIGHT]: # if right side is common, select left side of the lower width box as the corner-x.
+                if i[FIRST][LEFT] > i[SECOND][LEFT]:
+                    temp_x = i[FIRST][LEFT]
+                else:
+                    temp_x = i[SECOND][LEFT]
+            # print "(temp_x, temp_y): ", temp_x, temp_y
+        if temp_y is None: # Find y-coordinate of the corner
+            if i[FIRST][TOP] == i[SECOND][TOP]:  # if top side is common, select bottom side of the lower height box as the corner-y.
+                if i[FIRST][BOTTOM] > i[SECOND][BOTTOM]:
+                    temp_y = i[FIRST][BOTTOM]
+                else:
+                    temp_y = i[SECOND][BOTTOM]
+            elif i[FIRST][BOTTOM] == i[SECOND][BOTTOM]: # if bottom side is common, select top side of the lower height box as the corner-y.
+                if i[FIRST][TOP] < i[SECOND][TOP]:
+                    temp_y = i[FIRST][TOP]
+                else:
+                    temp_y = i[SECOND][TOP]
+        if ((temp_x is not None) & (temp_y is not None)):
+            corners.append((temp_x, temp_y))
+            # print "(temp_x, temp_y): ", temp_x, temp_y
+        # temp_corner = (temp_x, temp_y)
+        if temp_x is None and temp_y is not None: # if temp_x is still None (but temp_y has been found), this is a T-junction.
+            if ((i[FIRST][LEFT] > i[SECOND][LEFT]) & (i[FIRST][LEFT] < i[SECOND][RIGHT])):
+                temp_x = i[FIRST][LEFT]
+                corners.append((temp_x, temp_y))
+                if ((i[FIRST][RIGHT] > i[SECOND][LEFT]) & (i[FIRST][RIGHT] < i[SECOND][RIGHT])):
+                    temp_x = i[FIRST][RIGHT]
+                    corners.append((temp_x, temp_y))
+            elif ((i[SECOND][LEFT] > i[FIRST][LEFT]) & (i[SECOND][LEFT] < i[FIRST][RIGHT])):
+                temp_x = i[SECOND][LEFT]
+                corners.append((temp_x, temp_y))
+                if ((i[SECOND][RIGHT] > i[FIRST][LEFT]) & (i[SECOND][RIGHT] < i[FIRST][RIGHT])):
+                    temp_x = i[SECOND][RIGHT]
+                    corners.append((temp_x, temp_y))
+        if temp_y is None and temp_x is not None: # if temp_y is still None (but temp_x has been found), this is a sideways T-junction.
+            if ((i[FIRST][TOP] > i[SECOND][BOTTOM]) & (i[FIRST][TOP] < i[SECOND][TOP])):
+                temp_y = i[FIRST][TOP]
+                corners.append((temp_x, temp_y))
+                if ((i[FIRST][BOTTOM] > i[SECOND][BOTTOM]) & (i[FIRST][BOTTOM] < i[SECOND][TOP])):
+                    temp_y = i[FIRST][BOTTOM]
+                    corners.append((temp_x, temp_y))
+            elif ((i[SECOND][TOP] > i[FIRST][BOTTOM]) & (i[SECOND][TOP] < i[FIRST][TOP])):
+                temp_y = i[SECOND][TOP]
+                corners.append((temp_x, temp_y))
+                if ((i[SECOND][BOTTOM] > i[FIRST][BOTTOM]) & (i[SECOND][BOTTOM] < i[FIRST][TOP])):
+                    temp_y = i[SECOND][BOTTOM]
+                    corners.append((temp_x, temp_y))
+    print "Corners: "
+    for i in corners:
+        print i
+        r = Rectangle((i[0]-0.5, i[1]-0.5), 1, 1, facecolor='#E6E6E6', edgecolor='#f44259')
+        ax.add_patch(r)
+
+
+
+
+
+
+
+
+
+    # for i in all_traces_list: # for each rectangle
+    #     for j in all_traces_list:  # for each other rectangle
+    #         if j == i:
+    #             continue
+    #         else:
+    #             for k in i:  # for each edge of the first rectangle
+    #                 for l in j:  # for each edge in the other rectangle
+    #                     print "(i, j, k, l): ", (i, j, k, l)
+
+
+
+    # print "sym_layout.corners: ", sym_layout.corners
+    # for i in sym_layout.corners:
+    #     r = Rectangle(i, 1, 1, facecolor='#E6E6E6', edgecolor='#f44259')
+    #     ax.add_patch(r)
+
+    # ------ sxm end test block (Mark corner) ------------
+
     # Setup viewing bounds
     ax.set_xlim(sub_rect.left-1.0, sub_rect.right+1.0)
     ax.set_ylim(sub_rect.bottom-1.0, sub_rect.top+1.0)
-    ax.set_axis_off()
+    ax.set_axis_on() #sxm: originally ax.set_axis_off()
     
     for sym in traces:
         plot = True
@@ -69,7 +230,25 @@ def plot_layout(sym_layout,ax = plt.subplot('111', adjustable='box', aspect=1.0)
             rect = sym.trace_rect
             r = Rectangle((rect.left, rect.bottom), rect.width(), rect.height(), alpha=0.5, facecolor=color, edgecolor='None')
             ax.add_patch(r)
-            
+
+    #sxm - add corner markers
+    # c1 = Corner(7,10)
+    # sym_layout.corners.append(c1)
+    # c2 = Corner(6,21)
+    # sym_layout.corners.append(c2)
+    # for corner in sym_layout.corners:
+    #     r = Rect(corner.y+0.5, corner.y-0.5, corner.x-0.5, corner.x+0.5) # populate corners in SymbolicLayout class
+    #     ax.add_patch(r)
+
+    #sxm - test2 - add corner markers as tuple coordinates instead of Corner objects
+    # c1 = (7,10)
+    # sym_layout.corners.append(c1)
+    # c2 = (6,21)
+    # sym_layout.corners.append(c2)
+    # for corner in sym_layout.corners:
+    #     r = Rect(corner[1]+0.5, corner[1]-0.5, corner[0]-0.5, corner[0]+0.5) # populate corners in SymbolicLayout class
+    #     ax.add_patch(r)
+
     for lead in sym_layout.leads:
         rect = lead.footprint_rect
         r = Rectangle((rect.left, rect.bottom), rect.width(), rect.height(), alpha=0.5, facecolor='#4DFF64', edgecolor=color)
