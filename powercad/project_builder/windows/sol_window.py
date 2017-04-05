@@ -74,7 +74,7 @@ class SolutionWindow(QtGui.QWidget):
         if drc.passes_drc(False):
             QtGui.QMessageBox.about(None, "Design Rule Check", "DRC complete. No DRC errors were found.")
         else:
-            QtGui.QMessageBox.warning(None, "Design Rule Check", " DRC errors found! Check log/console.")
+            QtGui.QMessageBox.warning(None, "Design Rule Check", "DRC errors found! Check log/console.")
         
     def export_q3d(self):
         fn = QtGui.QFileDialog.getSaveFileName(self, options=QtGui.QFileDialog.ShowDirsOnly)
