@@ -292,6 +292,7 @@ class ProjectBuilder(QtGui.QMainWindow):
         f = open(path, 'w')                                  # open text file
         self.layout_script="\n".join(lines)                  
         f.write(self.layout_script)                          # write text to text file
+        QtGui.QMessageBox.about(self, "Layout Script Saved", "Layoyt Script Saved")
     def open_layout_editor(self):
         # qmle 1-11-2016
         # This will open a LayoutEditor Window, which allow user to change the symbolic layout in real time
@@ -1340,6 +1341,8 @@ class ProjectBuilder(QtGui.QMainWindow):
                 self.project.symb_layout.prepare_for_pickle() # prepare the symbolic layout object for pickling
                 save_file(self.project,os.path.join(save_path, "project.p"))
                 QtGui.QMessageBox.about(self,"Project Saved","Project Saved")
+                self.project.directory = save_path
+                self.layout_script_dir=save_path
             except:
                 # Replace the original copy
                 if os.path.exists(os.path.join(save_path, "project.p.temp")):
@@ -1375,6 +1378,8 @@ class ProjectBuilder(QtGui.QMainWindow):
                 self.project.symb_layout.prepare_for_pickle() # prepare the symbolic layout object for pickling
                 save_file(self.project,os.path.join(save_path, "project.p"))
                 QtGui.QMessageBox.about(self,"Project Saved","Project Saved")
+                self.project.directory=save_path
+                self.layout_script_dir = save_path
             except:
                 # Replace the original copy
                 if os.path.exists(os.path.join(save_path, "project.p.temp")):

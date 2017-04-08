@@ -91,7 +91,6 @@ class NSGAII_Optimizer(object):
         ind = []
         for dv in self.design_vars:
             ind.append(random.uniform(dv.init_values[0], dv.init_values[1]))
-            print dv.init_values[0],dv.init_values[1]
         return Individual(ind)
         
     def run(self):

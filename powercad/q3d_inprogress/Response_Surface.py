@@ -160,7 +160,7 @@ class RS_model:
                 all_sweep=[] 
                 keys=reader.fieldnames   # export all keys from the csv file
                 key_id, sweep_id,id =[0 for i in range(3)]
-                
+                print sweep_id
                 for k in keys: 
                     if units[1] in k:
                         key_id=id
@@ -178,6 +178,7 @@ class RS_model:
                     all_rows.append(float(rows[col_key]))
                     all_sweep.append(float(rows[sweep_key]))
                     r1=self.unit.convert(col_pre)  # data ratio
+                    print r1
                     r2=self.sweep_unit.convert(sweep_pre) # sweep ratio
                 if mode=='single':   # Data collector will start at second row assume we only have 2 rows 
                     data=all_rows[row]

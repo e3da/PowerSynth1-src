@@ -45,7 +45,12 @@ def plot_layout(sym_layout,ax = plt.subplot('111', adjustable='box', aspect=1.0)
     vlist = sym_layout.v_rowcol_list
     traces = sym_layout.all_trace_lines
     sub_dim = sym_layout.sub_dim
-    
+    '''
+    print "H_LIST", hlist
+    print "V_LIST", vlist
+    print "Traces", traces
+    print "sub_dim",sub_dim
+    '''
     # Plot substrate boundary first
     sub_w, sub_l = sym_layout.module.substrate.dimensions
     ledge = sym_layout.module.substrate.ledge_width
@@ -78,28 +83,28 @@ def plot_layout(sym_layout,ax = plt.subplot('111', adjustable='box', aspect=1.0)
         ax.add_patch(patch)
     x_pos=[]
     y_pos=[]    
-    
-    for dev in sym_layout.devices:     # collect position data
-        dev_center=dev.center_position
-        x_pos.append(dev_center[0])
-        y_pos.append(dev_center[1]) 
-    x_num=x_pos.count(x_pos[0])
-    y_num=y_pos.count(y_pos[0])
-     
-    '''
-    for row in np.arange(1,x_num,1):
-        print row
-        print enumerate(x_pos)
-    '''
-    for dev in sym_layout.devices:
-        #die_label='die%s'%(sym_layout.devices[die_count].dv_index)
-        rect = dev.footprint_rect
-        r = Rectangle((rect.left, rect.bottom), rect.width(), rect.height(), alpha=0.5, facecolor='#2A3569', edgecolor=color)
-        ax.add_patch(r)
-        patch = Circle(dev.center_position, radius=0.1)
-        ax.add_patch(patch)
-        #ax.text(rect.left, rect.bottom,die_label)
-        #die_count+=1
+    if len(sym_layout.devices)!=0:
+        for dev in sym_layout.devices:     # collect position data
+            dev_center=dev.center_position
+            x_pos.append(dev_center[0])
+            y_pos.append(dev_center[1])
+        x_num=x_pos.count(x_pos[0])
+        y_num=y_pos.count(y_pos[0])
+
+        '''
+        for row in np.arange(1,x_num,1):
+            print row
+            print enumerate(x_pos)
+        '''
+        for dev in sym_layout.devices:
+            #die_label='die%s'%(sym_layout.devices[die_count].dv_index)
+            rect = dev.footprint_rect
+            r = Rectangle((rect.left, rect.bottom), rect.width(), rect.height(), alpha=0.5, facecolor='#2A3569', edgecolor=color)
+            ax.add_patch(r)
+            patch = Circle(dev.center_position, radius=0.1)
+            ax.add_patch(patch)
+            #ax.text(rect.left, rect.bottom,die_label)
+            #die_count+=1
     for wire in sym_layout.bondwires:
         for pt_index in xrange(len(wire.start_pts)):
             pt1 = wire.start_pts[pt_index]

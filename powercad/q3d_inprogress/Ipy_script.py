@@ -116,7 +116,7 @@ class Q3D_ipy_script:
             # sink ID: Name of sink
             add_net=Source_sink_parent.format(parent_net)
             self.script+=Source_Sink.format(sourceID,face1,sinkID,face2,add_net)
-    def analysis_setup(self,freq='100k',solve_field='False',max_pass=10,min_pass=1,min_conv=1,per_err=1,mesh_refine=30):
+    def analysis_setup(self,freq='100k',solve_field='False',max_pass=10,min_pass=10,min_conv=1,per_err=0.5,mesh_refine=30):
         # set up RLC parasitic analysis with/without field extracted.
             # freq: a string value denote frequency of the setup suffixes: k,M,G....
             # solve_field: a boolean value if True, fields can be exported at the end of the analysis
@@ -215,6 +215,7 @@ class Q3d_params:
 
 #-----------------------------------------
 if __name__ == '__main__':
+    '''
     script1=Q3D_ipy_script('16.2','C:\Users\qmle\Desktop\Testing\Py_Q3D_test','test2','C:\Users\qmle\Desktop\Testing\Py_Q3D_test')
     Box1=Q3d_N_Gon_Box(20,20,0,8,1,20,'Box1')
     Box2=Q3d_N_Gon_Box(20,20,1,5,1,15,'Box2')
@@ -224,3 +225,24 @@ if __name__ == '__main__':
     script1.add_script(Box2.get_script())
     script1.make()
     script1.build('C:\Users\qmle\workspace\Python_Q3d_model\IronPython\ipy64.exe')
+    '''
+    script1 = Q3D_ipy_script('16.2', 'C:/Users/qmle/Desktop/Testing/Py_Q3D_test', 'test2',
+                             'C:/Users/qmle/Desktop/Testing/Py_Q3D_test')
+    Box1 = Q3d_box(0, 0, 0, 50, 60, 1, 'Box1')  # Define a box in Q3d with position + width, length ,thickness
+    Box2 = Q3d_box(0, 0, 1, 50, 60, 1, 'Box2')  # Define box2 on top of box 1
+    Box3 = Q3d_box(0, 0, 2, 50, 60, 1, 'Box3')  # Define box2 on top of box 1
+    Box4 = Q3d_box(0, 0, 3, 50, 60, 1, 'Box4')  # Define box2 on top of box 1
+    Box5 = Q3d_box(0, 0, 4, 50, 60, 1, 'Box5')  # Define box2 on top of box 1
+    Box1.make()
+    Box2.make()
+    Box3.make()
+    Box4.make()
+    Box5.make()
+
+    script1.add_script(Box1.get_script())  # Add box to Q3d project
+    script1.add_script(Box2.get_script())  # Add box to Q3d project
+    script1.add_script(Box3.get_script())  # Add box to Q3d project
+    script1.add_script(Box4.get_script())  # Add box to Q3d project
+    script1.add_script(Box5.get_script())  # Add box to Q3d project
+    script1.make()  # Generate the script
+    script1.build('C:/Users/qmle/workspace/Python_Q3d_model/IronPython/ipy64.exe')

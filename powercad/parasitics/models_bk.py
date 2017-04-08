@@ -23,9 +23,10 @@ def trace_resistance(f, w, l, t, h, p=1.724e-8):
     f=f*1000
     w = fabs(w)
     l = fabs(l)
+    '''
     if w > l*LOWEST_ASPECT_RES:
         w = l*LOWEST_ASPECT_RES
-
+    '''
     u0 = 1.257e-6               # permeability of vaccum;
                
     t1 = t*1e-3                 # transfer to unit in m;
@@ -68,10 +69,10 @@ def trace_inductance(w, l, t, h):
     # and return a larger worst case value.
     w = fabs(w)
     l = fabs(l)
-    
+    '''
     if w > l*LOWEST_ASPECT_IND:
         w = l*LOWEST_ASPECT_IND
-    
+    '''
     w1 = w*1e-3                     # transfer to unit in m;
     h1 = h*1e-3                     # transfer to unit in m;
     t1 = t*1e-3                     # transfer to unit in m;

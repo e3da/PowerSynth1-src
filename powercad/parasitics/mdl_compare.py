@@ -157,17 +157,15 @@ def trace_capacitance(w, l, t, h, k=8.8):
 
 def load_mdl(dir,mdl_name):
     mdl=load_file(os.path.join(dir,mdl_name))
-    print "model loaded"
     return mdl
 
 def trace_res_krige(f,w,l,mdl):
+    print 'length',l
     #unit is mOhm
     model = mdl.model[0]
     op_freq=mdl.op_point
     r=model.execute('points',[w],[l])
     r=np.ma.asarray(r[0])
-    #r=r/1000
-    print op_freq
     return r*m.sqrt(f/op_freq)
 
 def trace_ind_krige(f,w,l,mdl):
@@ -190,14 +188,14 @@ def trace_cap_krige(w,l,mdl):
 if __name__ == '__main__':
     mdl_dir='D:\Testing\Py_Q3D_test\All rs models'
     mdl_dir='C:\Users\qmle\Desktop\Testing\Py_Q3D_test\All rs models'
-    mdl1=load_mdl(mdl_dir,'RS_excludeDC.rsmdl')
+    mdl1=load_mdl(mdl_dir,'RAC[4x4].rsmdl')
     DOE=mdl1.DOE
     Q3D_R=mdl1.input[0]
     print mdl1.unit.to_string()
     print Q3D_R # uOhm
     mdl2 = load_mdl(mdl_dir, 'Mdl2.rsmdl')
     Q3D_L=mdl2.input[0]
-    mdl2=load_mdl(mdl_dir, 'LAC_mesh_100_krige.rsmdl')
+    mdl2=load_mdl(mdl_dir, 'Validation_10_10_LAC_accurate.rsmdl')
     print mdl2.op_point
     #print Q3D_L # nH
     mdl3=load_mdl(mdl_dir,'C_mesh_100_krige.rsmdl')
@@ -208,7 +206,23 @@ if __name__ == '__main__':
 
     '''
     #Test Corner Cases Overestimation
-    '''
+    fig1 = plt.figure(1)
+    L=[]
+    W=np.linspace(1,10,10)
+    l=10
+    for w in W:
+        L.append(2*trace_ind_krige(100,w,l+w/2,mdl2))
+    plt.plot(W,L)
+    plt.show()
+    with open('C:/Users\qmle\Desktop\POETS\Corner_Cases\corner_case_PS.csv', 'wb') as csvfile:
+        fieldnames = ['W', 'Inductance']
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        out=[]
+        for i in range(len(L)):
+            out.append({'W':W[i],'Inductance':L[i][0]})
+        writer.writerows(out)
+'''
     fig1 = plt.figure(1)
     ax = fig1.gca(projection='3d')
     Z=np.zeros((5,5))
@@ -219,9 +233,9 @@ if __name__ == '__main__':
 
     for i in range(5):
         for j in range(5):
-            #Z[i,j]=trace_res_krige(100,w2[j],w1[i]/2+10,mdl1)+trace_res_krige(100,w1[i],10+w2[j]/2,mdl1)
+            Z[i,j]=trace_res_krige(100,w2[j],w1[i]/2+10,mdl1)+trace_res_krige(100,w1[i],10+w2[j]/2,mdl1)
             ZL[i,j]=trace_ind_krige(100,w2[j],w1[i]/2+10,mdl2)+trace_ind_krige(100,w1[i],w2[j]/2+10,mdl2)
-    surf1 = ax.plot_surface(X, Y, ZL)
+    surf1 = ax.plot_surface(X, Y, Z)
     #ax.scatter(X,Y,Z,c='b',s=10)
     Z2 = []
     with open('C:\Users\qmle\Desktop\Testing\Comparison\Weekly_3_28\Corner.csv','rb') as csvfile:
@@ -229,8 +243,7 @@ if __name__ == '__main__':
         for row in reader:
             Z2.append(float(row['ACR'])*1000)
 
-
-    #ax.scatter(X, Y, Z2,c='r',s=10)
+    ax.scatter(X, Y, Z2,c='r',s=10)
     ax.set_xlabel('W1 (mm)')
     ax.set_ylabel('W2 (mm)')
     ax.set_zlabel('Resistance (mOhm)')
@@ -251,169 +264,9 @@ if __name__ == '__main__':
             for j in range(10):
                 out.append({'W1':w1[i],'W2':w2[j],'Resistance':Z[i,j]})
         writer.writerows(out)
-    '''
-    w = []
-    l = []
-    for i in range(10):
-        for j in range (10):
-            w.append(float(i))
-            l.append(float(j))
-    time1 = time.time()
-    a = trace_res_krige(20, w, l, mdl1)
-    b = trace_ind_krige(20,w,l,mdl2)
-    c = trace_cap_krige(w,l,mdl3)
-    time2=time.time()
-    print 'Krigging time',time2-time1
-    time2=time.time()
-    print time2
-    for i in range(100):
-        n=trace_resistance(20000, 10, 20, 0.2, 0.5)*1000
-
-    print 'Microstrip time', time.time()
-    print trace_resistance(20000, 1, 20, 0.2, 0.5)*1000
-    # Compare Q3D resistance with microstrip
-    # plot Q3D vs Microstrip resistance
-    fig1 = plt.figure(0)
-    ax = fig1.gca(projection='3d')
-    X_1=np.linspace(1.2,20,10)
-    Y_1=np.linspace(1.2,20,10)
-    X,Y=np.meshgrid(X_1,Y_1)
-    Z=np.zeros((10,10))
-    
-    Z1=np.zeros((10,10))
-    X_2=np.linspace(1.2,20,10)
-    Y_2=np.linspace(1.2,20,10)
-    X1,Y1=np.meshgrid(X_2,Y_2)
-    for i in range(10):
-        for j in range(10):
-            Z1[i,j]=trace_resistance(110000, X_2[j], X_2[i], 0.2, 0.5)*1000
-    surf1 = ax.plot_surface(X1, Y1, Z1, cmap=cm.coolwarm,linewidth=0, antialiased=False)
-    ax.scatter(DOE[:,0], DOE[:,1], Q3D_R, c='r',s=10)
-    ax.set_xlabel('Width (mm)')
-    ax.set_ylabel('Length (mm)')
-    ax.set_zlabel('Resistance (uOhm)')
-    
-    # plot Q3D vs Microstrip inductance
-    
-    fig2 = plt.figure(1)
-    ax = fig2.gca(projection='3d')
-    X_1=np.linspace(1.2,20,10)
-    Y_1=np.linspace(1.2,20,10)
-    X,Y=np.meshgrid(X_1,Y_1)
-    Z=np.zeros((10,10))
-    
-    Z1=np.zeros((10,10))
-    X_2=np.linspace(1.2,20,10)
-    Y_2=np.linspace(1.2,20,10)
-    X1,Y1=np.meshgrid(X_2,Y_2)
-    for i in range(10):
-        for j in range(10):
-            print X_2[j]
-            Z1[i,j] = trace_inductance(X_2[j], X_2[i], 0.2, 0.5)
-    surf2 = ax.plot_surface(X1, Y1, Z1, cmap=cm.coolwarm,linewidth=0, antialiased=False)
-    ax.scatter(DOE[:,0], DOE[:,1], Q3D_L, c='r',s=10)
-    ax.set_xlabel('Width (mm)')
-    ax.set_ylabel('Length (mm)')
-    ax.set_zlabel('Inductance (nH)')
-    
-    # plot Q3D vs Microstrip Capacitance
-    
-    fig3 = plt.figure(2)
-    ax = fig3.gca(projection='3d')
-    X_1=np.linspace(1.2,20,10)
-    Y_1=np.linspace(1.2,20,10)
-    X,Y=np.meshgrid(X_1,Y_1)
-    Z=np.zeros((10,10))
-    
-    Z1=np.zeros((10,10))
-    X_2=np.linspace(1.2,20,10)
-    Y_2=np.linspace(1.2,20,10)
-    X1,Y1=np.meshgrid(X_2,Y_2)
-    for i in range(10):
-        for j in range(10):
-            Z1[i,j]=trace_capacitance(X_2[j], X_2[i], 0.2, 0.5)
-    surf2 = ax.plot_surface(X1, Y1, Z1, cmap=cm.coolwarm,linewidth=0, antialiased=False)
-    ax.scatter(DOE[:,0], DOE[:,1], Q3D_C, c='r',s=10)
-    ax.set_xlabel('Width (mm)')
-    ax.set_ylabel('Length (mm)')
-    ax.set_zlabel('Capacitance (pH)')
-    
-    scatter1_proxy = lines.Line2D([0], [0], linestyle='none', c='r', marker='o')
-    scatter2_proxy = lines.Line2D([0], [0], linestyle='none', c='b', marker='o')
-    ax.legend([scatter1_proxy, scatter2_proxy], ['Q3D', 'Microstrip'], numpoints=1)
-    fig1.suptitle('Q3D vs Microstrip Resistance', fontsize=20)
-    fig2.suptitle('Q3D vs Microstrip Inductance', fontsize=20)
-    fig3.suptitle('Q3D vs Microstrip Capacitance', fontsize=20)
-    plt.show()
-    
-    # plot Q3D vs RS resistance
-    fig4 = plt.figure(3)
-    ax = fig4.gca(projection='3d')
-    X_1=np.linspace(1.2,20,10)
-    Y_1=np.linspace(1.2,20,10)
-    X,Y=np.meshgrid(X_1,Y_1)
-    Z=np.zeros((10,10))
-    
-    Z1=np.zeros((10,10))
-    X_2=np.linspace(1.2,20,10)
-    Y_2=np.linspace(1.2,20,10)
-    X1,Y1=np.meshgrid(X_2,Y_2)
-    for i in range(10):
-        for j in range(10):
-            Z1[i,j]=trace_res_krige(110,X_2[j], X_2[i], mdl1)*1000
-    surf1 = ax.plot_surface(X1, Y1, Z1, cmap=cm.coolwarm,linewidth=0, antialiased=False)
-    ax.scatter(DOE[:,0], DOE[:,1], Q3D_R, c='r',s=10)
-    ax.set_xlabel('Width (mm)')
-    ax.set_ylabel('Length (mm)')
-    ax.set_zlabel('Resistance (uOhm)')
-    
-    fig5 = plt.figure(4)
-    ax = fig5.gca(projection='3d')
-    X_1=np.linspace(1.2,20,10)
-    Y_1=np.linspace(1.2,20,10)
-    X,Y=np.meshgrid(X_1,Y_1)
-    Z=np.zeros((10,10))
-    
-    Z1=np.zeros((10,10))
-    X_2=np.linspace(1.2,20,10)
-    Y_2=np.linspace(1.2,20,10)
-    X1,Y1=np.meshgrid(X_2,Y_2)
-    for i in range(10):
-        for j in range(10):
-            Z1[i,j]=trace_ind_krige(110,X_2[j], X_2[i], mdl2)
-    surf2 = ax.plot_surface(X1, Y1, Z1, cmap=cm.jet,linewidth=0, antialiased=False)
-    ax.set_zlim(0, 1.01)
-    #ax.scatter(DOE[:,0], DOE[:,1], Q3D_L, c='r',s=10)
-    ax.set_xlabel('Width (mm)')
-    ax.set_ylabel('Length (mm)')
-    ax.set_zlabel('Inductance (nH)')
-    
-    fig6 = plt.figure(5)
-    ax = fig6.gca(projection='3d')
-    X_1=np.linspace(1.2,20,10)
-    Y_1=np.linspace(1.2,20,10)
-    X,Y=np.meshgrid(X_1,Y_1)
-    Z=np.zeros((10,10))
-    
-    Z1=np.zeros((10,10))
-    X_2=np.linspace(1.2,20,10)
-    Y_2=np.linspace(1.2,20,10)
-    X1,Y1=np.meshgrid(X_2,Y_2)
-    for i in range(10):
-        for j in range(10):
-            Z1[i,j]=trace_cap_krige(X_2[j], X_2[i], mdl3)
-    #surf3 = ax.plot_surface(X1, Y1, Z1, cmap=cm.coolwarm,linewidth=0, antialiased=False)
-    ax.scatter(X_2.tolist(), Y_2.tolist(), Z1,c='b',s='10')
-    ax.scatter(DOE[:,0], DOE[:,1], Q3D_C, c='r',s=10)
-    ax.set_xlabel('Width (mm)')
-    ax.set_ylabel('Length (mm)')
-    ax.set_zlabel('Capacitance (pF)')
-    scatter1_proxy = lines.Line2D([0], [0], linestyle='none', c='r', marker='o')
-    scatter2_proxy = lines.Line2D([0], [0], linestyle='none', c='b', marker='o')
-    ax.legend([scatter1_proxy, scatter2_proxy], ['Q3D', 'Response Surface'], numpoints=1)
-    
-    fig4.suptitle('Q3D vs Response Surface', fontsize=20)
-    fig5.suptitle('Q3D vs Response Surface', fontsize=20)
-    fig6.suptitle('Q3D vs Response Surface', fontsize=20)
-    
-    plt.show()
+'''
+'''
+    x=[7.85, 6.196498239728797, 6.196498239728797, 2.211162556616547, 10.0, 7.85, 10.0, 10.0, 10.0, 3.821071579100021, 3.821071579100021, 0.2, 8.751288903373872, 0.2, 8.751288903373872, 6.627639517526106, 6.627639517526106, 10.0, 2.211162556616547, 10.0]
+    y=[2.0982491198643984, 7.486180241236948, 8.889464210449987, 4.0, 23.77618336577696, 4.0, 17.0, 5.0, 17.0, 3.0982491198643984, 4.027318394494245, 4.175644451686935, 9.874432485641357, 4.175644451686939, 0.0, 3.0982491198643984, 4.027318394494245, 5.0, 4.0, 23.77618336577696]
+    trace_res_krige(100,x,y,mdl1)
+'''

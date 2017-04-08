@@ -178,8 +178,10 @@ def tfsm_analysis(sym_layout):
     tg.all_traces = all_traces
     tg.trace_islands = islands
     tg.sublayer_features=sym_layout.module.sublayers_thermal
-    
-    return solve_TFSM(tg, 1.0)    
+
+    res= solve_TFSM(tg, 1.0)
+    print res
+    return res
 if __name__ == '__main__':
     from powercad.sym_layout.symbolic_layout import build_test_layout
     sym_layout = build_test_layout()

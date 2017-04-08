@@ -41,15 +41,13 @@ def load_script(sript_path):
     #    To specify a point ID p pos
     # The script is written in text form or specified by .psc (powersynth script code) 
     layout=[]    # layout is a set of LayoutLines and LayoutPoints
-    print sript_path
     with open(sript_path, 'rb') as f: # open the directory of script code
-        print f
         objs=[]                      # specified a list of objs (lines and points)
         for line in f:               # read every line of the script 
             if line[0]=='#' or line[0]=='': # check for comments or blank lines
                 x=1                         # do nothing if so
             else:                           # in case a line contains layout information
-                path_id=line[0:3]           # load path_id
+                path_id=line[0:4]           # load path_id
                 type=line[5]                # check for layout type (line: l vs point: p)
                 if type =='l':              # in case it is a line
                     line_str=line[7:len(line)] # read the layout information
@@ -79,7 +77,6 @@ def load_script(sript_path):
     if len(objs) > 0:                               # If there are objs in layout list
             for t in objs:
                 layout.append(t)                    # append obj to layout
-    print layout
     return layout                                   # return layout
               
                 
@@ -110,7 +107,6 @@ def load_svg(svg_path):
             ele_paths = group.getElementsByTagName("path")
             for path in ele_paths:
                 path_trans_dict[path].append(trans_tuple)
-    print "path_trans_dict[]", path_trans_dict #sxm
     
     # start building layout
     layout = []
@@ -364,8 +360,7 @@ def norm_dict(clist, tol):
             cdict[c] = inc                       # use this as the normalized value
             
         last_c = c                               # move to the next coordinate and continue the normalization
-    
-    print 'cdict', cdict    
+
     return (inc, cdict)                          # return the counter value as well as the normalized values
 
 def check_for_overlap(layout):

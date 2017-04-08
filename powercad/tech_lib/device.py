@@ -264,7 +264,7 @@ class DevicePage(object):
         
         """Save all the inputs"""    
         if not error:
-            self.wire_landings.append(self.get_point_data())
+            self.wire_landings=self.get_point_data()
             self.ui.PositionList.clear()
             for landing in self.wire_landings:
                 if landing.bond_type == 1:
@@ -335,11 +335,12 @@ class DevicePage(object):
         mb.addButton('No', QMessageBox.RejectRole)
         mb.setText("Do you really want to delete the bond wire landing position?")
         ret = mb.exec_()
-        
+
         if ret == 0: #AcceptRole, file to be removed      
             if self.ui.PositionList.currentIndex()>=0:
-                self.ui.PositionList.removeItem(self.ui.PositionList.currentIndex())
-        
+                id=self.ui.PositionList.currentIndex()
+                self.ui.PositionList.removeItem(id)
+                self.wire_landings.remove(self.wire_landings[id])
             elif self.ui.PositionList.currentIndex()<0:
                 mb = QMessageBox()
                 mb.addButton('OK', QMessageBox.AcceptRole)
