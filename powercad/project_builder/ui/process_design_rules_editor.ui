@@ -101,6 +101,13 @@
      </property>
     </widget>
    </item>
+   <item row="8" column="0">
+    <widget class="QPushButton" name="btn_import_design_rules">
+     <property name="text">
+      <string>Import from CSV File</string>
+     </property>
+    </widget>
+   </item>
   </layout>
  </widget>
  <resources/>
