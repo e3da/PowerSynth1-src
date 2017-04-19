@@ -3,12 +3,18 @@ Created on Oct 7, 2013
 
 @author: bxs003
 '''
+import os
 import traceback
 
+import csv
+
 from PySide import QtCore, QtGui
+from PySide.QtGui import QFileDialog, QStandardItemModel,QStandardItem, QMessageBox,QFont
 
 from powercad.design.project_structures import ProcessDesignRules
 from powercad.project_builder.dialogs.process_design_rules_editor_ui import Ui_design_rule_dialog
+from powercad.settings import LAST_ENTRIES_PATH, DEFAULT_TECH_LIB_DIR
+from powercad.save_and_load import save_file, load_file
 
 class ProcessDesignRulesEditor(QtGui.QDialog):
     """Process Design Rules Dialog Editor"""
@@ -18,7 +24,8 @@ class ProcessDesignRulesEditor(QtGui.QDialog):
         self.ui.setupUi(self)
         self.parent = parent # parent is ProjectBuilder object
         
-        self.ui.dialog_button_box.accepted.connect(self.set_new_rules)
+        self.ui.btn_import_design_rules.pressed.connect(self.import_design_rules)
+        self.ui.dialog_button_box.accepted.connect(self.set_new_rules_close_window)
         self.ui.dialog_button_box.rejected.connect(self.reject)
         
         self.fields = [self.ui.min_trace_trace_width, self.ui.min_trace_width,
@@ -45,8 +52,53 @@ class ProcessDesignRulesEditor(QtGui.QDialog):
         for key, value in self.field_dict.iteritems():
             rule_val = getattr(self.parent.project.module_data.design_rules, value)
             key.setText(str(rule_val))
+            
+    def import_design_rules(self):
+        try:
+            last_entries = load_file(LAST_ENTRIES_PATH)
+            prev_folder = last_entries[0]
+        except:
+            prev_folder = 'C://'
+        # Open and parse a design rules CSV file
+        design_rules_csv_file = QFileDialog.getOpenFileName(self, "Select Design Rules File", prev_folder, "CSV Files (*.csv)")
+        csv_infile = open(os.path.abspath(design_rules_csv_file[0]))
+        design_rules_list = self.get_design_rules_from_csv(csv_infile)
+        csv_infile.close()
         
-    def set_new_rules(self):
+        # Fill fields and set new rules
+        for key, value in self.field_dict.iteritems():
+            for rule in design_rules_list:
+                rule_name = rule[0]
+                rule_val = rule[1]
+                if rule_name == value:
+                    key.setText(str(rule_val))
+                    
+        self.set_new_rules_keep_window_open()
+        
+    def get_design_rules_from_csv(self, csv_file):
+        rules_list = []
+        # Read from the CSV file and append rules to rules_list
+        # Each rule added to rules_list as ['rule_name', 'value']
+        rule_reader = csv.reader(csv_file)
+        for row in rule_reader:
+            if row[0] == 'R':
+                rules_list.append([row[1], row[3]])
+        
+        return rules_list
+
+    def set_new_rules_keep_window_open(self):
+        # Sets new process design rules and keeps process design rules editor window open on finish
+        fields_pass, field_input = self.check_fields()
+        if fields_pass:
+            # set data into the process design rules object
+            for i in xrange(len(self.fields)):
+                field_obj = self.fields[i]
+                field_val = field_input[i]
+                field_name = self.field_dict[field_obj]
+                setattr(self.parent.project.module_data.design_rules, field_name, field_val)
+        
+    def set_new_rules_close_window(self):
+        # Sets new process design rules and closes process design rules editor window on finish
         fields_pass, field_input = self.check_fields()
         if fields_pass:
             # set data into the process design rules object
