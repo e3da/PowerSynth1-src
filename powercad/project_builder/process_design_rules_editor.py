@@ -25,7 +25,7 @@ class ProcessDesignRulesEditor(QtGui.QDialog):
         self.parent = parent # parent is ProjectBuilder object
         
         self.ui.btn_import_design_rules.pressed.connect(self.import_design_rules)
-        self.ui.dialog_button_box.accepted.connect(self.set_new_rules_close_window)
+        self.ui.dialog_button_box.accepted.connect(self.set_new_rules)
         self.ui.dialog_button_box.rejected.connect(self.reject)
         
         self.fields = [self.ui.min_trace_trace_width, self.ui.min_trace_width,
@@ -65,7 +65,7 @@ class ProcessDesignRulesEditor(QtGui.QDialog):
         design_rules_list = self.get_design_rules_from_csv(csv_infile)
         csv_infile.close()
         
-        # Fill fields and set new rules
+        # Fill UI fields
         for key, value in self.field_dict.iteritems():
             for rule in design_rules_list:
                 rule_name = rule[0]
@@ -73,7 +73,6 @@ class ProcessDesignRulesEditor(QtGui.QDialog):
                 if rule_name == value:
                     key.setText(str(rule_val))
                     
-        self.set_new_rules_keep_window_open()
         
     def get_design_rules_from_csv(self, csv_file):
         rules_list = []
@@ -86,18 +85,8 @@ class ProcessDesignRulesEditor(QtGui.QDialog):
         
         return rules_list
 
-    def set_new_rules_keep_window_open(self):
-        # Sets new process design rules and keeps process design rules editor window open on finish
-        fields_pass, field_input = self.check_fields()
-        if fields_pass:
-            # set data into the process design rules object
-            for i in xrange(len(self.fields)):
-                field_obj = self.fields[i]
-                field_val = field_input[i]
-                field_name = self.field_dict[field_obj]
-                setattr(self.parent.project.module_data.design_rules, field_name, field_val)
         
-    def set_new_rules_close_window(self):
+    def set_new_rules(self):
         # Sets new process design rules and closes process design rules editor window on finish
         fields_pass, field_input = self.check_fields()
         if fields_pass:
