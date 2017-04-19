@@ -20,6 +20,7 @@ import pickle
 import shutil
 import traceback
 import time
+import csv
 
 from PySide import QtCore, QtGui
 from PySide.QtGui import QFileDialog, QMessageBox, QTreeWidgetItem
@@ -106,6 +107,9 @@ class ProjectBuilder(QtGui.QMainWindow):
         self.ui.tbl_projDevices.cellPressed.connect(self.component_pressed)
         self.ui.btn_modify_component.pressed.connect(self.modify_component)
         self.ui.btn_removeDevice.pressed.connect(self.remove_component)
+        
+        # Module stack page
+        # connect import layout stack button to function here
         
         # Constraints page
         self.ui.txt_minWidth.textEdited.connect(self.constraint_min_edit)
@@ -431,6 +435,40 @@ class ProjectBuilder(QtGui.QMainWindow):
 
 # ------------------------------------------------------------------------------------------        
 # ------ Module Stack ----------------------------------------------------------------------
+
+    def import_layer_stack(self):
+        try:
+            last_entries = load_file(LAST_ENTRIES_PATH)
+            prev_folder = last_entries[0]
+        except:
+            prev_folder = 'C://'
+        # Open and parse a design rules CSV file
+        layer_stack_csv_file = QFileDialog.getOpenFileName(self, "Select Layer Stack File", prev_folder, "CSV Files (*.csv)")
+        csv_infile = open(os.path.abspath(layer_stack_csv_file[0]))
+        layer_list = self.get_layers_from_csv(csv_infile)
+        csv_infile.close()
+        
+        # Check that layer stack fits PowerSynth's module structure
+        if self.check_layer_stack_compatability(layer_list):
+            # Fill UI fields from layer list
+            break
+        else:
+            # Notify the user
+            break
+        
+    def get_layers_from_csv(self, csv_file):
+        layer_list = []
+        # Read from the CSV file and append layers to layer_list
+        layer_reader = csv.reader(csv_file)
+        for row in layer_reader:
+            if row[0][0] != '#':
+                layer_list.append(row)
+        return layer_list
+    
+    def check_layer_stack_compatibility(self, layer_list):
+        # Check if layer stack contained in layer_list is compatible with PowerSynth
+        # Must be B-M-D-M-C (component layer not really implemented yet)
+        return True
 
     def fill_material_cmbBoxes(self):
         """Fill combo boxes in module stack with materials from Tech Library"""
