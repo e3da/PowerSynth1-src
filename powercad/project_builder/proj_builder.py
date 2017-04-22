@@ -20,7 +20,6 @@ import pickle
 import shutil
 import traceback
 import time
-import csv
 
 from PySide import QtCore, QtGui
 from PySide.QtGui import QFileDialog, QMessageBox, QTreeWidgetItem
@@ -40,14 +39,14 @@ import matplotlib.pyplot as plt
 
 from powercad.project_builder.symmetry_list import SymmetryListUI
 from powercad.project_builder.performance_list import PerformanceListUI
-from powercad.project_builder.windows.mainWindow_ui1 import Ui_MainWindow
+from powercad.project_builder.windows.mainWindow_ui3 import Ui_MainWindow
 from powercad.project_builder.windows.sol_window import SolutionWindow
 from powercad.project_builder.proj_dialogs import NewProjectDialog, OpenProjectDialog, EditTechLibPathDialog, DevicePropertiesDialog,GenericDeviceDialog,LayoutEditorDialog
-
 
 from powercad.project_builder.process_design_rules_editor import ProcessDesignRulesEditor
 from powercad.tech_lib.tech_lib_wiz import TechLibWizDialog
 
+from powercad.layer_stack.layer_stack_import import LayerStackImport
 
 from powercad.sym_layout.symbolic_layout import SymLine, SymPoint, ThermalMeasure, ElectricalMeasure
 from powercad.sym_layout.symbolic_layout import FormulationError
@@ -59,6 +58,8 @@ from powercad.util import Rect
 from powercad.sym_layout.svg import LayoutLine, LayoutPoint
 from powercad.settings import *
 from powercad.save_and_load import save_file, load_file
+
+
 class ProjectBuilder(QtGui.QMainWindow):
     
     # Relative paths -> use forward slashes for platform independence
@@ -109,7 +110,7 @@ class ProjectBuilder(QtGui.QMainWindow):
         self.ui.btn_removeDevice.pressed.connect(self.remove_component)
         
         # Module stack page
-        # connect import layout stack button to function here
+        self.ui.btn_import_layer_stack.pressed.connect(self.import_layer_stack)
         
         # Constraints page
         self.ui.txt_minWidth.textEdited.connect(self.constraint_min_edit)
@@ -436,39 +437,25 @@ class ProjectBuilder(QtGui.QMainWindow):
 # ------------------------------------------------------------------------------------------        
 # ------ Module Stack ----------------------------------------------------------------------
 
-    def import_layer_stack(self):
+    def import_layer_stack(self):   # Import layer stack from CSV file
         try:
             last_entries = load_file(LAST_ENTRIES_PATH)
             prev_folder = last_entries[0]
         except:
             prev_folder = 'C://'
-        # Open and parse a design rules CSV file
+        # Open a layer stack CSV file and extract the layer stack data from it
         layer_stack_csv_file = QFileDialog.getOpenFileName(self, "Select Layer Stack File", prev_folder, "CSV Files (*.csv)")
-        csv_infile = open(os.path.abspath(layer_stack_csv_file[0]))
-        layer_list = self.get_layers_from_csv(csv_infile)
-        csv_infile.close()
+        layer_stack_import = LayerStackImport(layer_stack_csv_file)
+        layer_stack_import.import_csv()
         
-        # Check that layer stack fits PowerSynth's module structure
-        if self.check_layer_stack_compatability(layer_list):
-            # Fill UI fields from layer list
-            break
+        if layer_stack_import.compatible:
+            # Fill UI fields from layer stack list
+            print 'Layer stack compatible'
+            print 'Fill UI fields from layer list here'
         else:
             # Notify the user
-            break
+            print 'Layer stack not compatible!'
         
-    def get_layers_from_csv(self, csv_file):
-        layer_list = []
-        # Read from the CSV file and append layers to layer_list
-        layer_reader = csv.reader(csv_file)
-        for row in layer_reader:
-            if row[0][0] != '#':
-                layer_list.append(row)
-        return layer_list
-    
-    def check_layer_stack_compatibility(self, layer_list):
-        # Check if layer stack contained in layer_list is compatible with PowerSynth
-        # Must be B-M-D-M-C (component layer not really implemented yet)
-        return True
 
     def fill_material_cmbBoxes(self):
         """Fill combo boxes in module stack with materials from Tech Library"""
