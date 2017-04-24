@@ -444,17 +444,41 @@ class ProjectBuilder(QtGui.QMainWindow):
         except:
             prev_folder = 'C://'
         # Open a layer stack CSV file and extract the layer stack data from it
-        layer_stack_csv_file = QFileDialog.getOpenFileName(self, "Select Layer Stack File", prev_folder, "CSV Files (*.csv)")
-        layer_stack_import = LayerStackImport(layer_stack_csv_file)
-        layer_stack_import.import_csv()
+        try:
+            layer_stack_csv_file = QFileDialog.getOpenFileName(self, "Select Layer Stack File", prev_folder, "CSV Files (*.csv)")
+            layer_stack_import = LayerStackImport(layer_stack_csv_file)
+            layer_stack_import.import_csv()
+        except:
+            QtGui.QMessageBox.warning(self, "Layer Stack Import Failed", "ERROR: Could not import layer stack from CSV.")
         
         if layer_stack_import.compatible:
-            # Fill UI fields from layer stack list
-            print 'Layer stack compatible'
-            print 'Fill UI fields from layer list here'
+            # Layer stack compatible - fill module stack UI fields with imported values
+            self.ui.txt_baseWidth.setText(str(layer_stack_import.baseplate.dimensions[0]))
+            self.ui.txt_baseLength.setText(str(layer_stack_import.baseplate.dimensions[1]))
+            self.ui.txt_baseThickness.setText(str(layer_stack_import.baseplate.dimensions[2]))
+            self.ui.txt_baseConvection.setText(str(layer_stack_import.baseplate.eff_conv_coeff))
+            self.ui.txt_subAttchThickness.setText(str(layer_stack_import.substrate_attach.thickness))
+            self.ui.txt_subWidth.setText(str(layer_stack_import.substrate.dimensions[0]))
+            self.ui.txt_subLength.setText(str(layer_stack_import.substrate.dimensions[1]))
+            self.ui.txt_subLedge.setText(str(layer_stack_import.substrate.ledge_width))
+            
+            # Notify user of import success and any warnings
+            if layer_stack_import.warnings == []:
+                QtGui.QMessageBox.about(self, "Layer Stack Imported", "Layer Stack import successful (No warnings).")
+            else:
+                if len(layer_stack_import.warnings) == 1:
+                    QtGui.QMessageBox.about(self, "Layer Stack Imported", "Layer Stack import successful with " + str(len(layer_stack_import.warnings)) + ' warning.')
+                    QtGui.QMessageBox.warning(self, "Layer Stack Import Warning", "WARNING: " + layer_stack_import.warnings[0])
+                else:
+                    QtGui.QMessageBox.about(self, "Layer Stack Imported", "Layer Stack import successful with " + str(len(layer_stack_import.warnings)) + ' warnings.')
+                    warnings_msg = ""
+                    for warning in layer_stack_import.warnings:
+                        warnings_msg += ("WARNING: " + warning + "\n")
+                    QtGui.QMessageBox.warning(self, "Layer Stack Import Warnings", warnings_msg)
+                    
         else:
-            # Notify the user
-            print 'Layer stack not compatible!'
+            # Layer stack not compatible - notify the user of import failure
+            QtGui.QMessageBox.warning(self, "Layer Stack Import Failed", "ERROR: " + layer_stack_import.error_msg)
         
 
     def fill_material_cmbBoxes(self):

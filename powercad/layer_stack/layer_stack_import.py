@@ -95,7 +95,7 @@ class LayerStackImport:
                     eff_conv_coeff = int(layer[7])
                 except:
                     self.compatible = False
-                    self.error_msg = 'Expected values not found in baseplate layer ' + name + '. Baseplate must contain the following fields: layer type, num, name, pos, width, length, thickness, eff_conv_coeff.'
+                    self.error_msg = 'Could not find all values in baseplate layer ' + name + '. Baseplate must contain the following fields: layer type, num, name, pos, width, length, thickness, eff_conv_coeff.'
                     break
                 self.baseplate = BaseplateInstance((width, length, thick), eff_conv_coeff, None)
                 print 'Found baseplate ' + str(width) + ', ' + str(length) + ', ' + str(thick) + ', ' + str(eff_conv_coeff)
@@ -106,7 +106,7 @@ class LayerStackImport:
                     thick = float(layer[4])
                 except:
                     self.compatible = False
-                    self.error_msg = 'Expected values not found in substrate attach layer ' + name + '. Substrate attach must contain the following fields: layer type, num, name, pos, thickness.'
+                    self.error_msg = 'Could not find all values in substrate attach layer ' + name + '. Substrate attach must contain the following fields: layer type, num, name, pos, thickness.'
                     break
                 self.substrate_attach = SubstrateAttachInstance(thick, None)
                 print 'Found substrate attach ' + str(thick)
@@ -118,14 +118,15 @@ class LayerStackImport:
                     length = float(layer[5])
                 except:
                     self.compatible = False
-                    self.error_msg = 'Expected values not found in metal/dielectric layer ' + name + '. Metal/dielectric must contain the following fields: layer type, num, name, pos, width, length.'
+                    self.error_msg = 'Could not find all values in metal/dielectric layer ' + name + '. Metal/dielectric must contain the following fields: layer type, num, name, pos, width, length.'
                     break
                 
                 if self.substrate == None:
                     self.substrate = SubstrateInstance((width, length), 2, None)
-                    self.warnings.append('Substrate property ledge_width has initialized to a default value of 2. This value can be changed from the module stack section in the main window.')
+                    self.warnings.append('Substrate ledge width has initialized to a default value of 2. This value can be changed from the module stack section in the main window.')
                     print 'Found substrate ' + str(width) + ', ' + str(length) + ', ' + str(2)  
                 else:
+                    # Handle other layers that make up substrate - substrate layers must have same length and same width.
                     if width != self.substrate.dimensions[0]:
                         self.compatible = False
                         self.error_msg = 'Unexpected value for width found in metal/dielectric layer ' + name + '. Substrate layers (metal/dielectric) must have same length.'
