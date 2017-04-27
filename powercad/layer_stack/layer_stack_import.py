@@ -42,7 +42,11 @@ class LayerStackImport:
         infile.close()
     
     
-    def check_layer_stack_compatibility(self):  # Check if layer stack contained in layer_list is compatible with PowerSynth     
+    def check_layer_stack_compatibility(self):  # Check if layer stack contained in layer_list is compatible with PowerSynth   
+        substrate_width = None
+        substrate_length = None
+        ledge_width = None
+          
         for layer in self.layer_list:
             print '----- layer: ' + str(layer)
             
@@ -57,7 +61,7 @@ class LayerStackImport:
                 break
             
             # Check layer positions 
-            # Must be in order B-SA-M-D-M-C (note that component layer is not implemented in PowerSynth yet)
+            # Must be in order B-SA-M-D-I-C (note that component layer is not implemented in PowerSynth yet)
             if pos == 1 and layer_type != 'B:':    # Layer 1: baseplate
                 self.compatible = False
                 self.error_msg = 'Layer ' + name + ' in position ' + str(pos) + ' defined as unexpected type ' + layer_type + ' in file. The layer in this position must be type baseplate B: (baseplate).'
@@ -74,13 +78,13 @@ class LayerStackImport:
                 self.compatible = False
                 self.error_msg = 'Layer ' + name + ' in position ' + str(pos) + ' defined as unexpected type ' + layer_type + ' in file. The layer in this position must be type D: (dielectric).'
                 break
-            elif pos == 5 and layer_type != 'M:':     # Layer 5: metal
+            elif pos == 5 and layer_type != 'I:':     # Layer 5: interconnect
                 self.compatible = False
-                self.error_msg = 'Layer ' + name + ' in position ' + str(pos) + ' defined as unexpected type ' + layer_type + ' in file. The layer in this position must be type M: (metal).'
+                self.error_msg = 'Layer ' + name + ' in position ' + str(pos) + ' defined as unexpected type ' + layer_type + ' in file. The layer in this position must be type I: (interconnect).'
                 break
             elif pos == 6 and layer_type != 'C:':  # Layer 6: components
                 self.compatible = False
-                self.error_msg = 'Layer ' + name + ' in position ' + str(pos) + ' defined as unexpected type ' + layer_type + ' in file. The layer in this position must be type C: (components).'
+                self.error_msg = 'Layer ' + name + ' in position ' + str(pos) + ' defined as unexpected type ' + layer_type + ' in file. The layer in this positison must be type C: (components).'
                 break
             elif pos < self.pos_min or pos > self.pos_max:
                 self.compatible = False
@@ -95,7 +99,7 @@ class LayerStackImport:
                     eff_conv_coeff = int(layer[7])
                 except:
                     self.compatible = False
-                    self.error_msg = 'Could not find all values in baseplate layer ' + name + '. Baseplate must contain the following fields: layer type, num, name, pos, width, length, thickness, eff_conv_coeff.'
+                    self.error_msg = 'Could not find all values in baseplate layer ' + name + '. Baseplate must contain the following fields: layer type, num, name, pos, width, length, thickness, effective convection coefficient.'
                     break
                 self.baseplate = BaseplateInstance((width, length, thick), eff_conv_coeff, None)
                 print 'Found baseplate ' + str(width) + ', ' + str(length) + ', ' + str(thick) + ', ' + str(eff_conv_coeff)
@@ -121,23 +125,39 @@ class LayerStackImport:
                     self.error_msg = 'Could not find all values in metal/dielectric layer ' + name + '. Metal/dielectric must contain the following fields: layer type, num, name, pos, width, length.'
                     break
                 
-                if self.substrate == None:
-                    self.substrate = SubstrateInstance((width, length), 2, None)
-                    self.warnings.append('Substrate ledge width has initialized to a default value of 2. This value can be changed from the module stack section in the main window.')
-                    print 'Found substrate ' + str(width) + ', ' + str(length) + ', ' + str(2)  
-                else:
-                    # Handle other layers that make up substrate - substrate layers must have same length and same width.
-                    if width != self.substrate.dimensions[0]:
-                        self.compatible = False
-                        self.error_msg = 'Unexpected value for width found in metal/dielectric layer ' + name + '. Substrate layers (metal/dielectric) must have same length.'
-                        break
-                    elif length != self.substrate.dimensions[1]:
-                        self.compatible = False
-                        self.error_msg = 'Unexpected value for width found in metal/dielectric layer ' + name + '. Substrate layers (metal/dielectric) must have same length.'
-                        break 
-                    else:
-                        print 'Found metal/dielectric layer matching existing substrate layer'  
-                        # TODO - check for excess substrate layers
+                if substrate_width == None:
+                    substrate_width = width
+                elif width != substrate_width:
+                    self.compatible = False
+                    self.error_msg = 'Unexpected value for width found in metal/dielectric layer ' + name + '. Substrate layers (metal/dielectric) must have same width.'
+                    break
+                    
+                if substrate_length == None:
+                    substrate_length = length
+                elif length != substrate_length:
+                    self.compatible = False
+                    self.error_msg = 'Unexpected value for length found in metal/dielectric layer ' + name + '. Substrate layers (metal/dielectric) must have same length.'
+                    break
+                print 'Found metal/dielectric ' + str(width) + ', ' + str(length)
+                
+            elif layer_type == 'I:':
+                try:
+                    ledge_width = float(layer[4])
+                except:
+                    self.compatible = False
+                    self.error_msg = 'Could not find all values in interconnect layer ' + name + '. Interconnect layers must contain the following fields: layer type, num, name, pos, ledge width.'
+                    break
+                print 'Found interconnect ' + str(ledge_width)
+                
+                
+        try:
+            self.substrate = SubstrateInstance((substrate_width, substrate_length), ledge_width, None)        
+        except:
+            self.compatible = False
+            self.error_msg = 'Could not find substrate layers.'
+        print 'Found substrate ' + str(width) + ', ' + str(length) + ', ' + str(ledge_width)  
+                    
+        # TODO - check for excess substrate layers
                 
         if self.warnings != []:
             for warning in self.warnings:
