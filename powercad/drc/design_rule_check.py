@@ -28,6 +28,16 @@ class DesignRuleCheck():
         '''
         Jonathan: Returns False if any DRC errors are found; only returns True if no DRC errors found
         '''
+        print "----- Running exhaustive DRC -----"
+        print "Using design rules: "
+        print "Min trace trace width = " + str(self.symb_layout.design_rules.min_trace_trace_width)
+        print "Min trace width = " + str(self.symb_layout.design_rules.min_trace_width)
+        print "Min die die dist = " + str(self.symb_layout.design_rules.min_die_die_dist)
+        print "Min die trace dist = " + str(self.symb_layout.design_rules.min_die_trace_dist)
+        print "Power bondwire to trace dist = " + str(self.symb_layout.design_rules.power_wire_trace_dist)
+        print "Signal bondwire to trace dist = " + str(self.symb_layout.design_rules.signal_wire_trace_dist)
+        print "Power bondwire to comp dist = " + str(self.symb_layout.design_rules.power_wire_component_dist)
+        print "Power bondwire to comp dist = " + str(self.symb_layout.design_rules.signal_wire_component_dist)
         self.err_count = self.count_drc_errors(self)
         if self.err_count > 0.0:
             print str(self.err_count) + " DRC errors found."

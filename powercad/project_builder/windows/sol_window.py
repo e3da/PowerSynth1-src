@@ -69,7 +69,6 @@ class SolutionWindow(QtGui.QWidget):
         canvas.draw()
         
     def run_drc(self):
-        print "Running DRC function" 
         drc = DesignRuleCheck(self.sym_layout)
         if drc.passes_drc(False):
             QtGui.QMessageBox.about(None, "Design Rule Check", "DRC complete. No DRC errors were found.")
