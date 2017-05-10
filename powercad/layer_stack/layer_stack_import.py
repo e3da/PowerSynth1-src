@@ -2,6 +2,13 @@
 Created on Apr 22, 2017
 
 @author: jhmain
+
+PURPOSE:
+ - This module is used to import a layer stack from a CSV file
+ 
+INPUT: 
+ - Layer stack CSV file
+ 
 '''
 
 import os
@@ -23,11 +30,27 @@ class LayerStackImport:
         self.warnings = []
         self.error_msg = None
         
+        self.baseplate_abbrev = 'B:'
+        self.substrate_attach_abbrev = 'SA:'
+        self.metal_abbrev = 'M:'
+        self.dielectric_abbrev = 'D:'
+        self.interconnect_abbrev = 'I:'
+        self.component_abbrev = 'C:'
+        
+        self.layer_type_abbrev_dict = {}
+        self.layer_type_abbrev_dict[self.baseplate_abbrev] = 'baseplate'
+        self.layer_type_abbrev_dict[self.substrate_attach_abbrev] = 'substrate_attach'
+        self.layer_type_abbrev_dict[self.metal_abbrev] = 'metal'
+        self.layer_type_abbrev_dict[self.dielectric_abbrev] = 'dielectric'
+        self.layer_type_abbrev_dict[self.interconnect_abbrev] = 'interconnect'
+        self.layer_type_abbrev_dict[self.component_abbrev] = 'component'
+        
+        self.compatible_layer_order = ['[ignore]', 'baseplate', 'substrate_attach', 'metal', 'dielectric', 'interconnect', 'component']
         self.pos_min = 1
-        self.pos_max = 6
+        self.pos_max = len(self.compatible_layer_order) - 1
         
         
-    def import_csv(self):   # Top level function to import layer stack from a CSV File
+    def import_csv(self):   # Top level function
         self.read_from_csv()
         self.check_layer_stack_compatibility()
         
@@ -42,13 +65,13 @@ class LayerStackImport:
         infile.close()
     
     
-    def check_layer_stack_compatibility(self):  # Check if layer stack contained in layer_list is compatible with PowerSynth   
+    def check_layer_stack_compatibility(self):  # Check if layer stack in list form is compatible with PowerSynth   
         substrate_width = None
         substrate_length = None
         ledge_width = None
           
         for layer in self.layer_list:
-            print '----- layer: ' + str(layer)
+            print '--- Checking layer: ' + str(layer)
             
             try:
                 layer_type = layer[0]
@@ -60,38 +83,26 @@ class LayerStackImport:
                 self.error_msg = 'Unexpected layer format. A layer row must begin with the following entries: layer type, num, name, pos'
                 break
             
-            # Check layer positions 
-            # Must be in order B-SA-M-D-I-C (note that component layer is not implemented in PowerSynth yet)
-            if pos == 1 and layer_type != 'B:':    # Layer 1: baseplate
+            # Check for valid layer type and position
+            if layer_type not in self.layer_type_abbrev_dict.keys():
                 self.compatible = False
-                self.error_msg = 'Layer ' + name + ' in position ' + str(pos) + ' defined as unexpected type ' + layer_type + ' in file. The layer in this position must be type baseplate B: (baseplate).'
-                break
-            elif pos == 2 and layer_type != 'SA:':     # Layer 2: substrate attach
-                self.compatible = False
-                self.error_msg = 'Layer ' + name + ' in position ' + str(pos) + ' defined as unexpected type ' + layer_type + ' in file. The layer in this position must be type SA: (substrate attach).'
-                break
-            elif pos == 3 and layer_type != 'M:':   # Layers 3: metal
-                self.compatible = False
-                self.error_msg = 'Layer ' + name + ' in position ' + str(pos) + ' defined as unexpected type ' + layer_type + ' in file. The layer in this position must be type M: (metal).'
-                break
-            elif pos == 4 and layer_type != 'D:':  # Layer 4: dielectric
-                self.compatible = False
-                self.error_msg = 'Layer ' + name + ' in position ' + str(pos) + ' defined as unexpected type ' + layer_type + ' in file. The layer in this position must be type D: (dielectric).'
-                break
-            elif pos == 5 and layer_type != 'I:':     # Layer 5: interconnect
-                self.compatible = False
-                self.error_msg = 'Layer ' + name + ' in position ' + str(pos) + ' defined as unexpected type ' + layer_type + ' in file. The layer in this position must be type I: (interconnect).'
-                break
-            elif pos == 6 and layer_type != 'C:':  # Layer 6: components
-                self.compatible = False
-                self.error_msg = 'Layer ' + name + ' in position ' + str(pos) + ' defined as unexpected type ' + layer_type + ' in file. The layer in this positison must be type C: (components).'
+                self.error_msg = 'Unrecognized layer type ' + layer_type
                 break
             elif pos < self.pos_min or pos > self.pos_max:
                 self.compatible = False
                 self.error_msg = 'Layer ' + name + ' in out-of-range position ' + str(pos) + '. Layer positions must be in the range ' + str(self.pos_min) + ' to ' + str(self.pos_max) + '.'
-                
+                break
+            
+            # Check for valid layer order
+            if self.layer_type_abbrev_dict[layer_type] != self.compatible_layer_order[pos]:
+                expected_layer_type = self.compatible_layer_order[pos]
+                expected_layer_type_abbrev = self.layer_type_abbreviations_dict[expected_layer_type]
+                self.compatible = False
+                self.error_msg = 'Layer ' + name + ' in position ' + str(pos) + ' defined as unexpected type ' + layer_type + ' in file. The layer in this position must be type ' + expected_layer_type_abbrev + '(' + expected_layer_type + ')'
+                break
+               
             # Find baseplate
-            if layer_type == 'B:':
+            if layer_type == self.baseplate_abbrev:
                 try:
                     width = float(layer[4])
                     length = float(layer[5])
@@ -105,7 +116,7 @@ class LayerStackImport:
                 print 'Found baseplate ' + str(width) + ', ' + str(length) + ', ' + str(thick) + ', ' + str(eff_conv_coeff)
                 
             # Find substrate attach
-            if layer_type == 'SA:':
+            if layer_type == self.substrate_attach_abbrev:
                 try:
                     thick = float(layer[4])
                 except:
@@ -116,7 +127,7 @@ class LayerStackImport:
                 print 'Found substrate attach ' + str(thick)
                     
             # Find substrate 
-            if layer_type == 'M:' or layer_type == 'D:':
+            if layer_type == self.metal_abbrev or layer_type == self.dielectric_abbrev:
                 try:
                     width = float(layer[4])
                     length = float(layer[5])
@@ -140,7 +151,7 @@ class LayerStackImport:
                     break
                 print 'Found metal/dielectric ' + str(width) + ', ' + str(length)
                 
-            elif layer_type == 'I:':
+            elif layer_type == self.interconnect_abbrev:
                 try:
                     ledge_width = float(layer[4])
                 except:
@@ -170,11 +181,12 @@ class LayerStackImport:
 # Module test
 if __name__ == '__main__':
     
-    layer_list_test = [['B:', '1', 'B1', '1', '100', '80', '8', '120'], ['SA:', '2', 'SA1', '2', '0.1', '', '', ''], ['M:', '3', 'M1', '3', '90', '70', '', ''], ['D:', '4', 'D1', '4', '90', '70', '', ''], ['M:', '5', 'M2', '5', '90', '70', '', ''], ['C:', '6', 'C1', '6', '', '', '', '']]
+    layer_list_test = [['B:', '1', 'B1', '1', '100', '80', '8', '120'], ['SA:', '2', 'SA1', '2', '0.1', '', '', ''], ['M:', '3', 'M1', '3', '90', '70', '', ''], ['D:', '4', 'D1', '4', '90', '70', '', ''], ['I:', '5', 'M2', '5', '2', '', ''], ['C:', '6', 'C1', '6', '', '', '', '']]
     #layer_list_test.append(['M:', '7', 'M3', '7', '100', '100'])
     #layer_list_test.append(['M:', '8', 'M4', '0', '100', '100'])
     
     test = LayerStackImport(None)
+    #print 'compatible layer order' + str(test.compatible_layer_order)
     test.layer_list = layer_list_test
     test.check_layer_stack_compatibility()
     print 'compatible: ' + str(test.compatible)
