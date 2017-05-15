@@ -4,8 +4,10 @@ Created on Sep 5, 2012
 @author: bxs003
 '''
 
-import powercad.util as util
 import math
+
+import powercad.general.util as util
+
 
 class Particle:
     def __init__(self, design):

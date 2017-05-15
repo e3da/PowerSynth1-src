@@ -14,7 +14,7 @@ import networkx as nx
 from matplotlib.patches import Rectangle
 import matplotlib.pyplot as plt
 import time
-from powercad.util import Rect, SolveVolume
+from powercad.general.util import Rect, SolveVolume
 
 
 #quang:

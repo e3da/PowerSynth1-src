@@ -7,7 +7,7 @@ Created on Sep 27, 2012
 from math import sqrt, pi
 from copy import copy
 
-from powercad.util import translate_pt
+from powercad.general.util import translate_pt
 from powercad.sym_layout.symbolic_layout import build_test_layout
 from powercad.design.solution_structures import DeviceSolution, LeadSolution, BondwireSolution
 

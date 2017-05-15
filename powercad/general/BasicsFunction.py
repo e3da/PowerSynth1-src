@@ -15,7 +15,8 @@ def list_mult(list):
     res=1
     for i in list:
         res*=i
-    return res        
+    return res
+
 def recurs_for_loops(y,number,f,params):
     # do a job y*number times
         # f: any function

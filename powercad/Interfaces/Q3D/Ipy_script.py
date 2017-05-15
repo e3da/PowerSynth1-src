@@ -1,14 +1,13 @@
 
 # Used Module
-import os
-import sys
-import subprocess
-import getpass
 import datetime
-from powercad.q3d_inprogress.Q3d_ipy_raw_script import *
-# Test Module
-from powercad.q3d_inprogress.Q3DGeometry import Q3d_box
-from powercad.q3d_inprogress.Q3DGeometry import Q3d_N_Gon_Box
+import getpass
+import subprocess
+
+from powercad.response_surface.Q3DGeometry import Q3d_box
+
+from powercad.Interfaces.Q3D.Q3d_ipy_raw_script import *
+
 
 class Q3D_ipy_script:
     # This class will generate an Ironpython script from PowerSynth, which then control simulations in ANSYS q3d

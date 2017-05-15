@@ -12,7 +12,7 @@ from matplotlib.patches import Rectangle, PathPatch, Circle
 from matplotlib.path import Path
 
 from powercad.sym_layout.svg import LayoutLine, LayoutPoint, find_layout_bounds
-from powercad.util import Rect
+from powercad.general.util import Rect
 from _sqlite3 import Row
 
 # sxm - This function is only used in svg.py's main().

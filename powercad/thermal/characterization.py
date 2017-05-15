@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from powercad.thermal.fast_thermal import ContourRect, DieThermalFeatures
-from powercad.util import Rect
+from powercad.general.util import Rect
 
 def load_data(filename, flip_values=False):
     with open(filename) as f:

@@ -1,14 +1,11 @@
-from powercad.q3d_inprogress.Ipy_script import Q3D_ipy_script   
-from powercad.q3d_inprogress.Electrical import Rect_Box
-from powercad.q3d_inprogress.BasicsFunction import *         # group of BasicFunction that can be used for any classes 
-from pyDOE import *                  # 
-import pickle                        # saving and loading method
-import os                            # operating system module 
-from sklearn.svm import SVR
-from sklearn.kernel_ridge import KernelRidge
-from scipy.optimize import curve_fit
-import numpy
 import copy
+
+from powercad.response_surface.Ipy_script import Q3D_ipy_script
+
+from powercad.Interfaces.Q3D.Electrical import Rect_Box
+from powercad.general.BasicsFunction import *         # group of BasicFunction that can be used for any classes
+
+
 class Topology:
     
     def __init__(self):

@@ -1,8 +1,9 @@
-from powercad.q3d_inprogress.Response_Surface import RS_model
-from powercad.q3d_inprogress.Topology import Topology
-from powercad.q3d_inprogress.Ipy_script import Q3D_ipy_script
-from powercad.q3d_inprogress.Electrical import Rect_Box
-import copy
+from powercad.response_surface.Ipy_script import Q3D_ipy_script
+
+from powercad.Interfaces.Q3D.Electrical import Rect_Box
+from powercad.response_surface.Response_Surface import RS_model
+from powercad.response_surface.Topology import Topology
+
 if __name__ == '__main__':
     '''First we set up layer stack with material properties '''
     E1,E2,E3,E4=(Rect_Box() for i in range(4))

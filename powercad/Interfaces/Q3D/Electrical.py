@@ -1,7 +1,6 @@
-from powercad.q3d_inprogress.Q3DGeometry import Q3d_box, Q3d_N_Gon_Box
+from powercad.Interfaces.Q3D.Q3DGeometry import Q3d_box
 
-        
-          
+
 class Rect_Box(Q3d_box):
     '''This class will be used to define an Electrical Rectangle Layer in PowerSynth
     '''

@@ -6,7 +6,7 @@ Created on Dec 23, 2012
 
 import xml.dom.minidom as xml
 import ctypes
-from powercad.util import Rect
+from powercad.general.util import Rect
 from matplotlib.pyplot import plot
 
 class LayoutError(Exception):

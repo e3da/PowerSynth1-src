@@ -33,33 +33,30 @@ Created on Jun 27, 2012
 import math
 import time
 from copy import copy, deepcopy
-import random
 import pickle
-import inspect
-import os
 
 import networkx as nx
 import numpy as np
 from numpy.linalg.linalg import LinAlgError
 
-from powercad.util import Rect, complex_rot_vec, get_overlap_interval, distance
+from powercad.general.util import Rect, complex_rot_vec, get_overlap_interval, distance
 from powercad.sym_layout.svg import load_svg, normalize_layout, check_for_overlap,load_script
 from powercad.sym_layout.svg import LayoutLine, LayoutPoint
 from powercad.design.module_data import gen_test_module_data
-from powercad.design.library_structures import Lead, BondWire,Device
+from powercad.design.library_structures import Lead, BondWire
 from powercad.design.project_structures import DeviceInstance
 from powercad.opt.optimizer import NSGAII_Optimizer, DesignVar
 from powercad.parasitics.analysis import parasitic_analysis
 from powercad.parasitics.models_bk import trace_inductance, trace_resistance, trace_capacitance,wire_inductance, wire_resistance,wire_partial_mutual_ind
 #Testing
 from powercad.parasitics.mdl_compare import trace_cap_krige,trace_ind_krige,trace_res_krige,load_mdl
-from powercad.thermal.analysis import perform_thermal_analysis, TFSM_MODEL, RECT_FLUX_MODEL
+from powercad.thermal.analysis import perform_thermal_analysis
 from powercad.sol_browser.solution_lib import SolutionLibrary
 from powercad.thermal.elmer_characterize import characterize_devices
 import powercad.settings as settings
-from PySide import QtCore, QtGui
 import ctypes
-from powercad.save_and_load import save_file,load_file
+
+
 #Used in Pycharm only
 
 
@@ -3020,7 +3017,6 @@ def make_test_setup():
     from powercad.design.module_design import ModuleDesign
     from powercad.tech_lib.test_techlib import get_device, get_dieattach
     from powercad.export.Q3D import output_q3d_vbscript
-    from matplotlib.figure import Figure
     from powercad.sym_layout.plot import plot_layout
     temp_dir = os.path.abspath(settings.TEMP_DIR)
     test_file = os.path.abspath('C:/Users/qmle/Desktop/POETS/Final/T1/layout.psc')
@@ -3076,10 +3072,7 @@ def make_test_setup_with_sweep():
     import os
     from powercad.tech_lib.test_techlib import get_power_lead, get_signal_lead
     from powercad.tech_lib.test_techlib import get_power_bondwire, get_signal_bondwire
-    from powercad.design.module_design import ModuleDesign
     from powercad.tech_lib.test_techlib import get_device, get_dieattach
-    from powercad.export.Q3D import output_q3d_vbscript
-    import matplotlib.pyplot as plt
     temp_dir = os.path.abspath(settings.TEMP_DIR)
     test_file = os.path.abspath('C:/Users/qmle/Desktop/Testing/Hardware_Validation_1/HWV2/HWV2/layout.psc')
     w_corner = [10, 10]

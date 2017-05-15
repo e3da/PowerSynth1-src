@@ -5,38 +5,21 @@ Created on Feb 16, 2017
 '''
 # This is mainly for creating parasitic surrogate models
 
-import os                            # operating system handling
-import pickle                        # saving and loading method
-import cmd
-import csv
 # Mathematics tools
-from pyDOE import *                  
-from sklearn.svm import SVR
-from sklearn.kernel_ridge import KernelRidge
-from scipy.optimize import curve_fit
-from scipy.interpolate import *
-from inspect import *
-from itertools import product
-from pykrige.ok import OrdinaryKriging as ok
-from RS_build_function import *
-
-import numpy as np
-# Data view
-import matplotlib.pyplot as plt
-from matplotlib import lines
-from mpl_toolkits.mplot3d import Axes3D
-# Software interface
-from powercad.q3d_inprogress.Topology import *
-from powercad.q3d_inprogress.Error_messages import InputError,Notifier
-from powercad.q3d_inprogress.Ipy_script import Q3D_ipy_script
-from powercad.q3d_inprogress.Unit import Unit
-from matplotlib import lines
-# Abstract Data
-from powercad.q3d_inprogress.Abstract_Data import Stack
 import csv
-from powercad.parasitics.mdl_compare import trace_inductance
+
 import matplotlib.pyplot as plt
-from pykrige.core import variogram_function_error
+from matplotlib import lines
+from pykrige.ok import OrdinaryKriging as ok
+from scipy.interpolate import *
+from RS_build_function import *
+from powercad.general.Abstract_Data import Stack
+from powercad.general.Error_messages import InputError,Notifier
+from powercad.general.Unit import Unit
+from powercad.parasitics.mdl_compare import trace_inductance
+from powercad.response_surface.Topology import *
+
+
 class RS_model:
     '''Surrogate/Response Surface model 
     '''
@@ -252,11 +235,13 @@ class RS_model:
                             self.DOE[i,j]=abs(chk)*(max_i-midpoint)+midpoint
             #for i in xrange(cols):          # Sweep through all data parameters
             #    self.DOE[:, i] = self.DOE[:, i] * (max(self.data_bound[i]) - min(self.data_bound[i])) + min(self.data_bound[i])  # scaling the percentage value to real value
+
     def add_DOE(self,data):
         '''Allow updating DOE list, by adding customized data points'''
         new_DOE=self.DOE.tolist()
         new_DOE.append(data)
-        self.DOE=np.asarray(new_DOE)        
+        self.DOE=np.asarray(new_DOE)
+
     def create_uniform_DOE(self,num_data=[],lin_ops=True):
         '''
         Create a uniform linear space design of experiment. (note: this is not a uniform random)

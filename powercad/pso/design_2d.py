@@ -4,7 +4,9 @@ Created on Sep 6, 2012
 @author: bxs003
 '''
 from math import fabs, sin, pow
-import powercad.util as util
+
+import powercad.general.util as util
+
 
 class Design2DConfig:
     def __init__(self):

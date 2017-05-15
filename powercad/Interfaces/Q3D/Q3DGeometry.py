@@ -1,6 +1,8 @@
 import math
-from powercad.q3d_inprogress.Q3d_ipy_raw_script import *   
-     
+
+from powercad.Interfaces.Q3D.Q3d_ipy_raw_script import *
+
+
 class Q3d_N_Gon_Box:
     # This will create an n sides Polyhedron box in Q3D ( on , or parallel to XY plane). The box will be drawn from its center...
         

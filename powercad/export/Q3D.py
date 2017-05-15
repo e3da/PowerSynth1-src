@@ -9,7 +9,7 @@ import numpy as np
 
 from powercad.design.library_structures import BondWire, Lead
 from powercad.design.module_design import ModuleDesign
-from powercad.util import Rect
+from powercad.general.util import Rect
 
 def output_q3d_vbscript(md, filename):
     """

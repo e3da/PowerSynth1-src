@@ -54,7 +54,7 @@ from powercad.design.library_structures import BondWire, Device, Lead
 from powercad.sol_browser.solution_lib import SolutionLibrary
 from powercad.sol_browser.graph_app import GrapheneWindow
 from powercad.design.project_structures import *
-from powercad.util import Rect
+from powercad.general.util import Rect
 from powercad.sym_layout.svg import LayoutLine, LayoutPoint
 from powercad.settings import *
 from powercad.save_and_load import save_file, load_file
