@@ -170,6 +170,8 @@ def trace_res_krige(f,w,l,mdl):
 
 def trace_ind_krige(f,w,l,mdl):
     # unit is nH
+    print 'width', w
+    print 'length', l
     n_params=len(mdl.input)
     params=[]
     for i in range(n_params):

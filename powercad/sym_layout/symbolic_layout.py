@@ -2720,7 +2720,7 @@ class SymbolicLayout(object):
             length = math.fabs(pt2[1] - pt1[1])
             print "ortho", width, length
         lumped_graph.add_edge(n1, n2,
-                              {'ind': 1.0 / 1, 'res': 1.0 / 1, 'cap': 1.0 / 1,
+                              {'ind': 1.0 / 1e-6, 'res': 1.0 / 1e-6, 'cap': 1.0 / 1e-6,
                                'type': 'trace', 'width': width, 'length': length})
         self._collect_trace_parasitic_post_eval(width, length, n1, n2)
         return lumped_graph
@@ -2738,7 +2738,7 @@ class SymbolicLayout(object):
         lumped_graph.add_edge(n1, n2,
                               {'ind': 1.0 / 1e-6, 'res': 1 / 1e-6, 'cap': 1.0 / 1e-3,
                                'type': 'trace', 'width': width, 'length': length})
-        #self._collect_trace_parasitic_post_eval(width, length, n1, n2)
+        self._collect_trace_parasitic_post_eval(width, length, n1, n2)
         return lumped_graph
 
 
@@ -2963,9 +2963,9 @@ def add_test_measures(sym_layout):
     for sym in sym_layout.all_sym:
         devices.append(sym)
             
-    #m5 = ThermalMeasure(ThermalMeasure.FIND_MAX, devices, "Max Temp.",'TFSM_MODEL')
-    #sym_layout.perf_measures.append(m5)
-    #print "perf", sym_layout.perf_measures
+    m5 = ThermalMeasure(ThermalMeasure.FIND_MAX, devices, "Max Temp.",'TFSM_MODEL')
+    sym_layout.perf_measures.append(m5)
+    print "perf", sym_layout.perf_measures
 
 def setup_model(symlayout):
     for pm in symlayout.perf_measures:
@@ -3021,7 +3021,6 @@ def make_test_setup():
     from powercad.tech_lib.test_techlib import get_device, get_dieattach
     from powercad.export.Q3D import output_q3d_vbscript
     from matplotlib.figure import Figure
-    from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
     from powercad.sym_layout.plot import plot_layout
     temp_dir = os.path.abspath(settings.TEMP_DIR)
     test_file = os.path.abspath('C:/Users/qmle/Desktop/POETS/Final/T1/layout.psc')
@@ -3029,7 +3028,7 @@ def make_test_setup():
     sym_layout = SymbolicLayout()
     sym_layout.load_layout(test_file,'script')
     symbols = sym_layout.all_sym
-    dev = DeviceInstance(0.08, 10, get_device(), get_dieattach())
+    dev = DeviceInstance(0.1, 10.68, get_device(), get_dieattach())
     pow_lead = get_power_lead()
     sig_lead = get_signal_lead()
     power_bw = get_power_bondwire()
@@ -3046,7 +3045,7 @@ def make_test_setup():
     sym_layout.set_RS_model()
     sym_layout._map_design_vars()
     setup_model(sym_layout)
-    individual=[10.81242585041992, 9.166102790830909, 10, 7, 2.0, 2.0, 8.0, 5, 0.5, 0.0010269692001489696]
+    individual=[10.81242585041992, 9.166102790830909, 4, 8, 2.0, 2.0, 10, 4, 0.8, 0.8]
     print 'individual', individual
     print "opt_to_sym_index" ,sym_layout.opt_to_sym_index
     sym_layout.rev_map_design_vars(individual)
@@ -3054,19 +3053,14 @@ def make_test_setup():
     sym_layout._build_lumped_graph()
     ret=one_measure(sym_layout)
     md=ModuleDesign(sym_layout)
-    fig = Figure()
-    canvas = FigureCanvas(fig)
-    ax = fig.add_subplot(111, aspect=1.0)
-    plot_layout(sym_layout, ax, new_window=False)
-    canvas.draw()
     output_q3d_vbscript(md, 'C:/Users/qmle/Desktop/POETS/Run/Test.vbs')
     w_corner=[10,12,10,5]
     l_corner=[6,5,2.5,5]
     ind_corner=trace_ind_krige(100,w_corner,l_corner,sym_layout.LAC_mdl)
     res_corner = trace_res_krige(100, w_corner, l_corner, sym_layout.RAC_mdl)
-    print 'corner',sum(ind_corner),sum(res_corner)
-    print "LAC_RS", ret[0]#-sum(ind_corner)
-    print "RAC_RS", ret[1]#-sum(res_corner)
+    #print 'corner',sum(ind_corner),sum(res_corner)
+    #print "LAC_RS", ret[0]#-sum(ind_corner)
+    #print "RAC_RS", ret[1]#-sum(res_corner)
     ind_ms_corner=0
     res_ms_corner = 0
     ind_bw_spline=0
@@ -3075,9 +3069,8 @@ def make_test_setup():
         ind_ms_corner += trace_inductance(w,l,0.2,0.64)
         res_ms_corner += trace_resistance(100,w,l,0.2,0.64)
 
-    print ind_ms_corner,res_ms_corner
-    print "LAC_MS", ret[2]#- ind_ms_corner
-    print "RAC_MS", ret[3]#- res_ms_corner
+    #print "LAC_MS", ret[2]#- ind_ms_corner
+    #print "RAC_MS", ret[3]#- res_ms_corner
     print "MAX TEMP", ret[4]
 def make_test_setup_with_sweep():
     import os
@@ -3184,8 +3177,8 @@ def test_pickle_symbolic_layout():
 def corner_overestimate(f,w,l):
     sym_layout = SymbolicLayout()
     sym_layout.set_RS_model()
-    w_corner=[5,10]
-    l_corner=[15,15]
+    w_corner=[7.19,7.02]
+    l_corner=[0.5+w_corner[1]/2,0.5+w_corner[0]/2]
 
     ind_corner = trace_ind_krige(f, w_corner, l_corner, sym_layout.LAC_mdl)
     res_corner = trace_res_krige(f,w_corner,l_corner,sym_layout.RAC_mdl)
