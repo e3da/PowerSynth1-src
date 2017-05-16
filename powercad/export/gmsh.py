@@ -7,7 +7,7 @@ Created on Apr 9, 2013
 import os
 import subprocess
 
-from powercad.settings import GMSH_BIN_PATH, TEMP_DIR
+from powercad.general.settings import GMSH_BIN_PATH, TEMP_DIR
 
 gmsh_script_top = """
 Function BoxSurfaces

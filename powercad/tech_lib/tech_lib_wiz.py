@@ -21,7 +21,7 @@ from powercad.tech_lib.bondwire import BondwirePage
 from powercad.tech_lib.substrate import SubstratePage
 from powercad.tech_lib.substrate_attach import SubAttachPage
 from powercad.tech_lib.baseplate import BaseplatePage
-import powercad.settings as settings
+import powercad.general.settings as settings
 
 class TechLibWizDialog(QtGui.QWizard):
     

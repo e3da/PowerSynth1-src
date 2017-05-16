@@ -6,7 +6,7 @@ import subprocess
 
 from powercad.response_surface.Q3DGeometry import Q3d_box
 
-from powercad.Interfaces.Q3D.Q3d_ipy_raw_script import *
+from powercad.interfaces.Q3D.Q3d_ipy_raw_script import *
 
 
 class Q3D_ipy_script:

@@ -56,8 +56,8 @@ from powercad.sol_browser.graph_app import GrapheneWindow
 from powercad.design.project_structures import *
 from powercad.general.util import Rect
 from powercad.sym_layout.svg import LayoutLine, LayoutPoint
-from powercad.settings import *
-from powercad.save_and_load import save_file, load_file
+from powercad.general.settings import *
+from powercad.general.save_and_load import save_file, load_file
 class ProjectBuilder(QtGui.QMainWindow):
     
     # Relative paths -> use forward slashes for platform independence

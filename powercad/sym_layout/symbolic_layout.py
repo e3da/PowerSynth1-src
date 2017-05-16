@@ -53,7 +53,7 @@ from powercad.parasitics.mdl_compare import trace_cap_krige,trace_ind_krige,trac
 from powercad.thermal.analysis import perform_thermal_analysis
 from powercad.sol_browser.solution_lib import SolutionLibrary
 from powercad.thermal.elmer_characterize import characterize_devices
-import powercad.settings as settings
+import powercad.general.settings as settings
 import ctypes
 
 

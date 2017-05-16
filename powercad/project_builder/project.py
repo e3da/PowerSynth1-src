@@ -7,7 +7,7 @@ Created on Oct 10, 2012
 from powercad.tech_lib.test_techlib import *
 from powercad.design.project_structures import *
 from powercad.design.module_data import ModuleData
-from powercad.settings import DEFAULT_TECH_LIB_DIR
+from powercad.general.settings import DEFAULT_TECH_LIB_DIR
 
 class Project:
     def __init__(self, name, directory, tech_lib_dir = DEFAULT_TECH_LIB_DIR, symb_layout=None):

@@ -11,7 +11,7 @@ import shutil
 
 from numpy import min, max, array, average
 
-import powercad.settings as settings
+import powercad.general.settings as settings
 from powercad.export.elmer import write_module_elmer_sif, elmer_solve, get_nodes_near_z_value
 from powercad.export.gmsh import create_box_stack_mesh
 from powercad.thermal.characterization import characterize_dist

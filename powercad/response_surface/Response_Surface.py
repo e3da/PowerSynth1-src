@@ -18,7 +18,8 @@ from powercad.general.Error_messages import InputError,Notifier
 from powercad.general.Unit import Unit
 from powercad.parasitics.mdl_compare import trace_inductance
 from powercad.response_surface.Topology import *
-
+import pickle
+import os
 
 class RS_model:
     '''Surrogate/Response Surface model 

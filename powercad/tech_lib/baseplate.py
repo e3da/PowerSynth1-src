@@ -12,7 +12,7 @@ from PySide.QtGui import QMessageBox
 
 from powercad.tech_lib.test_techlib import make_sub_dir
 from powercad.design.library_structures import Baseplate, MaterialProperties
-from powercad.save_and_load import *
+from powercad.general.save_and_load import *
 class BaseplatePage(object):
     def __init__(self, parent):
         #Baseplate root directory

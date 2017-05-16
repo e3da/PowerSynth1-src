@@ -2,7 +2,7 @@ import copy
 
 from powercad.response_surface.Ipy_script import Q3D_ipy_script
 
-from powercad.Interfaces.Q3D.Electrical import Rect_Box
+from powercad.interfaces.Q3D.Electrical import Rect_Box
 from powercad.general.BasicsFunction import *         # group of BasicFunction that can be used for any classes
 
 

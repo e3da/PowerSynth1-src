@@ -1,6 +1,6 @@
-from powercad.response_surface.Ipy_script import Q3D_ipy_script
+from powercad.interfaces.Q3D.Ipy_script import Q3D_ipy_script
 
-from powercad.Interfaces.Q3D.Electrical import Rect_Box
+from powercad.interfaces.Q3D.Electrical import Rect_Box
 from powercad.response_surface.Response_Surface import RS_model
 from powercad.response_surface.Topology import Topology
 

@@ -1,6 +1,6 @@
 import math
 
-from powercad.Interfaces.Q3D.Q3d_ipy_raw_script import *
+from powercad.interfaces.Q3D.Q3d_ipy_raw_script import *
 
 
 class Q3d_N_Gon_Box:

@@ -24,11 +24,11 @@ from powercad.project_builder.dialogs.genericDeviceDialog_ui import Ui_generic_d
 from powercad.project_builder.dialogs.layoutEditor_ui import Ui_layouteditorDialog
 from powercad.project_builder.project import Project
 from powercad.sym_layout.symbolic_layout import SymbolicLayout
-from powercad.settings import LAST_ENTRIES_PATH, DEFAULT_TECH_LIB_DIR
+from powercad.general.settings import LAST_ENTRIES_PATH, DEFAULT_TECH_LIB_DIR
 from powercad.spice_import import Netlist_SVG_converter
 
 from powercad.electro_thermal.ElectroThermal_toolbox import rdson_fit_transistor, list2float, csv_load_file,Vth_fit,fCRSS_fit
-from powercad.save_and_load import save_file, load_file
+from powercad.general.save_and_load import save_file, load_file
 # CLASSES FOR DIALOG USAGE
 class GenericDeviceDialog(QtGui.QDialog):   
     # Author: quang le
@@ -512,11 +512,10 @@ class OpenProjectDialog(QtGui.QDialog):
         self.ui.buttonBox.accepted.connect(self.load_project)
             
     def open_dir(self): # responds to button click by opening a file browser where the project directory can be selected
-        try:
-            last_entries = load_file(LAST_ENTRIES_PATH)
-            prev_folder = last_entries[0]
-        except:
-            prev_folder = 'C://'    
+        last_entries = load_file(LAST_ENTRIES_PATH)
+        prev_folder = last_entries[0]
+        if not os.path.exists(prev_folder):  # check if the last entry file store a correct path
+            prev_folder = 'C://'
         self.project_file = QFileDialog.getOpenFileName(self, "Select Project File",prev_folder,"Project Files (*.p)")
         self.ui.txt_projectLocation.setText(self.project_file[0])
         self.parent.layout_script_dir=os.path.dirname(self.project_file[0])    

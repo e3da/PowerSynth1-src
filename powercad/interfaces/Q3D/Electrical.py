@@ -1,4 +1,4 @@
-from powercad.Interfaces.Q3D.Q3DGeometry import Q3d_box
+from powercad.interfaces.Q3D.Q3DGeometry import Q3d_box
 
 
 class Rect_Box(Q3d_box):
