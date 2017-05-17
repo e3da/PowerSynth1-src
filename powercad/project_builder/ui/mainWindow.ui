@@ -295,19 +295,6 @@ p, li { white-space: pre-wrap; }
           </layout>
          </widget>
         </item>
-        <item row="2" column="1">
-         <spacer name="verticalSpacer_17">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>273</width>
-            <height>276</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
         <item row="0" column="1">
          <spacer name="verticalSpacer_16">
           <property name="orientation">
@@ -317,6 +304,19 @@ p, li { white-space: pre-wrap; }
            <size>
             <width>273</width>
             <height>277</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item row="2" column="1">
+         <spacer name="verticalSpacer_17">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>273</width>
+            <height>276</height>
            </size>
           </property>
          </spacer>
@@ -656,7 +656,7 @@ p, li { white-space: pre-wrap; }
       </property>
      </widget>
     </item>
-    <item row="1" column="0" rowspan="4">
+    <item row="1" column="0" rowspan="4" colspan="2">
      <widget class="QToolBox" name="navigation">
       <property name="enabled">
        <bool>true</bool>
@@ -801,9 +801,9 @@ p, li { white-space: pre-wrap; }
        <property name="geometry">
         <rect>
          <x>0</x>
-         <y>0</y>
-         <width>376</width>
-         <height>599</height>
+         <y>-28</y>
+         <width>359</width>
+         <height>627</height>
         </rect>
        </property>
        <attribute name="label">
@@ -1295,25 +1295,91 @@ p, li { white-space: pre-wrap; }
            <string>Substrate Properties</string>
           </property>
           <layout class="QGridLayout" name="gridLayout_10">
-           <item row="0" column="0">
-            <widget class="QLabel" name="label_12">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
+           <item row="4" column="1">
+            <widget class="QLineEdit" name="txt_subLedge">
+             <property name="maximumSize">
+              <size>
+               <width>50</width>
+               <height>16777215</height>
+              </size>
              </property>
+             <property name="styleSheet">
+              <string notr="true">background-color: rgb(255, 255, 255);</string>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="0">
+            <widget class="QLabel" name="label_14">
              <property name="layoutDirection">
               <enum>Qt::LeftToRight</enum>
              </property>
              <property name="text">
-              <string>Material</string>
+              <string>Length</string>
              </property>
              <property name="alignment">
               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
              </property>
              <property name="buddy">
-              <cstring>cmb_subMaterial</cstring>
+              <cstring>txt_subLength</cstring>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="3">
+            <widget class="QLabel" name="lbl_err_subLength">
+             <property name="minimumSize">
+              <size>
+               <width>50</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="3">
+            <widget class="QLabel" name="lbl_err_subLedge">
+             <property name="minimumSize">
+              <size>
+               <width>50</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="2">
+            <widget class="QLabel" name="label_17">
+             <property name="text">
+              <string>mm</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <widget class="QLineEdit" name="txt_subLength">
+             <property name="maximumSize">
+              <size>
+               <width>50</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">background-color: rgb(255, 255, 255);</string>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="2">
+            <widget class="QLabel" name="label_16">
+             <property name="text">
+              <string>mm</string>
              </property>
             </widget>
            </item>
@@ -1427,19 +1493,36 @@ p, li { white-space: pre-wrap; }
              </property>
             </widget>
            </item>
-           <item row="1" column="0">
-            <widget class="QLabel" name="label_13">
-             <property name="layoutDirection">
-              <enum>Qt::LeftToRight</enum>
+           <item row="4" column="2">
+            <widget class="QLabel" name="label_18">
+             <property name="text">
+              <string>mm</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="3">
+            <widget class="QLabel" name="lbl_err_subMaterial">
+             <property name="minimumSize">
+              <size>
+               <width>50</width>
+               <height>0</height>
+              </size>
              </property>
              <property name="text">
-              <string>Width</string>
+              <string/>
              </property>
-             <property name="alignment">
-              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </widget>
+           </item>
+           <item row="1" column="3">
+            <widget class="QLabel" name="lbl_err_subWidth">
+             <property name="minimumSize">
+              <size>
+               <width>50</width>
+               <height>0</height>
+              </size>
              </property>
-             <property name="buddy">
-              <cstring>txt_subWidth</cstring>
+             <property name="text">
+              <string/>
              </property>
             </widget>
            </item>
@@ -1459,53 +1542,7 @@ p, li { white-space: pre-wrap; }
              </property>
             </widget>
            </item>
-           <item row="1" column="2">
-            <widget class="QLabel" name="label_16">
-             <property name="text">
-              <string>mm</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="0">
-            <widget class="QLabel" name="label_14">
-             <property name="layoutDirection">
-              <enum>Qt::LeftToRight</enum>
-             </property>
-             <property name="text">
-              <string>Length</string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-             </property>
-             <property name="buddy">
-              <cstring>txt_subLength</cstring>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="1">
-            <widget class="QLineEdit" name="txt_subLength">
-             <property name="maximumSize">
-              <size>
-               <width>50</width>
-               <height>16777215</height>
-              </size>
-             </property>
-             <property name="styleSheet">
-              <string notr="true">background-color: rgb(255, 255, 255);</string>
-             </property>
-             <property name="text">
-              <string/>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="2">
-            <widget class="QLabel" name="label_17">
-             <property name="text">
-              <string>mm</string>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="0">
+           <item row="4" column="0">
             <widget class="QLabel" name="label_15">
              <property name="layoutDirection">
               <enum>Qt::LeftToRight</enum>
@@ -1521,82 +1558,52 @@ p, li { white-space: pre-wrap; }
              </property>
             </widget>
            </item>
-           <item row="3" column="1">
-            <widget class="QLineEdit" name="txt_subLedge">
-             <property name="maximumSize">
-              <size>
-               <width>50</width>
-               <height>16777215</height>
-              </size>
-             </property>
-             <property name="styleSheet">
-              <string notr="true">background-color: rgb(255, 255, 255);</string>
+           <item row="1" column="0">
+            <widget class="QLabel" name="label_13">
+             <property name="layoutDirection">
+              <enum>Qt::LeftToRight</enum>
              </property>
              <property name="text">
-              <string/>
+              <string>Width</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+             </property>
+             <property name="buddy">
+              <cstring>txt_subWidth</cstring>
              </property>
             </widget>
            </item>
-           <item row="3" column="2">
-            <widget class="QLabel" name="label_18">
-             <property name="text">
-              <string>mm</string>
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_12">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
              </property>
-            </widget>
-           </item>
-           <item row="1" column="3">
-            <widget class="QLabel" name="lbl_err_subWidth">
-             <property name="minimumSize">
-              <size>
-               <width>50</width>
-               <height>0</height>
-              </size>
+             <property name="layoutDirection">
+              <enum>Qt::LeftToRight</enum>
              </property>
              <property name="text">
-              <string/>
+              <string>Material</string>
              </property>
-            </widget>
-           </item>
-           <item row="0" column="3">
-            <widget class="QLabel" name="lbl_err_subMaterial">
-             <property name="minimumSize">
-              <size>
-               <width>50</width>
-               <height>0</height>
-              </size>
+             <property name="alignment">
+              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
              </property>
-             <property name="text">
-              <string/>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="3">
-            <widget class="QLabel" name="lbl_err_subLength">
-             <property name="minimumSize">
-              <size>
-               <width>50</width>
-               <height>0</height>
-              </size>
-             </property>
-             <property name="text">
-              <string/>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="3">
-            <widget class="QLabel" name="lbl_err_subLedge">
-             <property name="minimumSize">
-              <size>
-               <width>50</width>
-               <height>0</height>
-              </size>
-             </property>
-             <property name="text">
-              <string/>
+             <property name="buddy">
+              <cstring>cmb_subMaterial</cstring>
              </property>
             </widget>
            </item>
           </layout>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="btn_openRSwizard">
+          <property name="text">
+           <string>Generate/Select Response Surface Model (optional)</string>
+          </property>
          </widget>
         </item>
         <item>
@@ -1760,7 +1767,7 @@ p, li { white-space: pre-wrap; }
        <property name="geometry">
         <rect>
          <x>0</x>
-         <y>0</y>
+         <y>-207</y>
          <width>359</width>
          <height>806</height>
         </rect>
