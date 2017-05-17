@@ -795,7 +795,7 @@ p, li { white-space: pre-wrap; }
        <number>2</number>
       </property>
       <property name="currentIndex">
-       <number>4</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="page_12">
        <property name="geometry">
@@ -1762,7 +1762,7 @@ p, li { white-space: pre-wrap; }
          <x>0</x>
          <y>0</y>
          <width>359</width>
-         <height>819</height>
+         <height>806</height>
         </rect>
        </property>
        <attribute name="label">
@@ -4219,7 +4219,7 @@ p, li { white-space: pre-wrap; }
     <addaction name="actionOpen_Project"/>
     <addaction name="action_edit_design_rules"/>
     <addaction name="action_load_symbolic_layout"/>
-    <addaction name="actionExport_Layout_Sript"/>
+    <addaction name="actionexport_layout_script"/>
     <addaction name="actionOpen_Layout_Editor"/>
    </widget>
    <widget class="QMenu" name="menuLibraries">
@@ -4287,7 +4287,7 @@ p, li { white-space: pre-wrap; }
     <string>Edit Tech. Lib. Path</string>
    </property>
   </action>
-  <action name="actionExport_Layout_Sript">
+  <action name="actionexport_layout_script">
    <property name="text">
     <string>Export Layout Sript</string>
    </property>
