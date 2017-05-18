@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'solutionWindow.ui'
 #
-# Created: Mon Apr 11 13:01:21 2016
+# Created: Thu Mar 30 20:56:47 2017
 #      by: pyside-uic 0.2.15 running on PySide 1.2.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -10,7 +10,6 @@
 from PySide import QtCore, QtGui
 
 class Ui_layout_form(object):
-    
     def setupUi(self, layout_form):
         layout_form.setObjectName("layout_form")
         layout_form.resize(1056, 904)
@@ -68,9 +67,9 @@ class Ui_layout_form(object):
         self.tbl_info.horizontalHeader().setSortIndicatorShown(False)
         self.tbl_info.verticalHeader().setVisible(False)
         self.gridLayout.addWidget(self.tbl_info, 0, 1, 1, 1)
-        #self.btn_run_succesive_approxomation = QtGui.QPushButton(layout_form)
-        #self.btn_run_succesive_approxomation.setObjectName("btn_run_succesive_approxomation")
-        #self.gridLayout.addWidget(self.btn_run_succesive_approxomation, 8, 1, 1, 1)
+        self.btn_export_spice_reduced_parasitics = QtGui.QPushButton(layout_form)
+        self.btn_export_spice_reduced_parasitics.setObjectName("btn_export_spice_reduced_parasitics")
+        self.gridLayout.addWidget(self.btn_export_spice_reduced_parasitics, 8, 1, 1, 1)
         self.line = QtGui.QFrame(layout_form)
         self.line.setFrameShape(QtGui.QFrame.VLine)
         self.line.setFrameShadow(QtGui.QFrame.Sunken)
@@ -90,15 +89,19 @@ class Ui_layout_form(object):
         self.btn_export_q3d.setMaximumSize(QtCore.QSize(300, 16777215))
         self.btn_export_q3d.setObjectName("btn_export_q3d")
         self.gridLayout.addWidget(self.btn_export_q3d, 4, 1, 1, 1)
+        self.btn_run_drc = QtGui.QPushButton(layout_form)
+        self.btn_run_drc.setObjectName("btn_run_drc")
+        self.gridLayout.addWidget(self.btn_run_drc, 3, 1, 1, 1)
 
         self.retranslateUi(layout_form)
         QtCore.QMetaObject.connectSlotsByName(layout_form)
 
     def retranslateUi(self, layout_form):
         layout_form.setWindowTitle(QtGui.QApplication.translate("layout_form", "Form", None, QtGui.QApplication.UnicodeUTF8))
-        #self.btn_run_succesive_approxomation.setText(QtGui.QApplication.translate("layout_form", "Run Succesive Approximation", None, QtGui.QApplication.UnicodeUTF8))
+        self.btn_export_spice_reduced_parasitics.setText(QtGui.QApplication.translate("layout_form", "Export SPICE Electrical Reduced Parasitics Netlist", None, QtGui.QApplication.UnicodeUTF8))
         self.btn_export_spice_parasitics.setText(QtGui.QApplication.translate("layout_form", "Export SPICE Electrical Parasitics Netlist", None, QtGui.QApplication.UnicodeUTF8))
         self.btn_export_spice_thermal.setText(QtGui.QApplication.translate("layout_form", "Export SPICE Thermal Netlist", None, QtGui.QApplication.UnicodeUTF8))
         self.btn_export_solidworks.setText(QtGui.QApplication.translate("layout_form", "Export Solution to SolidWorks", None, QtGui.QApplication.UnicodeUTF8))
         self.btn_export_q3d.setText(QtGui.QApplication.translate("layout_form", "Export Solution to Q3D", None, QtGui.QApplication.UnicodeUTF8))
+        self.btn_run_drc.setText(QtGui.QApplication.translate("layout_form", "Run DRC", None, QtGui.QApplication.UnicodeUTF8))
 

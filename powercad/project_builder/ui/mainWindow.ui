@@ -4210,6 +4210,7 @@ p, li { white-space: pre-wrap; }
     <property name="title">
      <string>Settings</string>
     </property>
+    <addaction name="actionInterface_Setup"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -4236,9 +4237,16 @@ p, li { white-space: pre-wrap; }
     <addaction name="action_open_tech_lib_editor"/>
     <addaction name="action_edit_tech_path"/>
    </widget>
+   <widget class="QMenu" name="menuModel">
+    <property name="title">
+     <string>Model</string>
+    </property>
+    <addaction name="actionResponse_Surface_Setup"/>
+   </widget>
    <addaction name="menuProject"/>
    <addaction name="menuLibraries"/>
    <addaction name="menuSettings"/>
+   <addaction name="menuModel"/>
    <addaction name="menuHelp"/>
   </widget>
   <action name="actionNew_Project">
@@ -4307,6 +4315,16 @@ p, li { white-space: pre-wrap; }
   <action name="actionExport_Layout_Script">
    <property name="text">
     <string>Export Layout Script</string>
+   </property>
+  </action>
+  <action name="actionResponse_Surface_Setup">
+   <property name="text">
+    <string>Response Surface Setup</string>
+   </property>
+  </action>
+  <action name="actionInterface_Setup">
+   <property name="text">
+    <string>Interface Setup</string>
    </property>
   </action>
  </widget>

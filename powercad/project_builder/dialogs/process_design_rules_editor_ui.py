@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'C:\Users\bxs003\Dropbox\PMLST\code\workspace\PowerCAD\src\powercad\project_builder\ui\process_design_rules_editor.ui'
+# Form implementation generated from reading ui file 'process_design_rules_editor.ui'
 #
-# Created: Tue Oct 22 12:36:18 2013
-#      by: pyside-uic 0.2.14 running on PySide 1.1.1
+# Created: Tue Apr 18 14:24:35 2017
+#      by: pyside-uic 0.2.15 running on PySide 1.2.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -67,6 +67,9 @@ class Ui_design_rule_dialog(object):
         self.dialog_button_box.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
         self.dialog_button_box.setObjectName("dialog_button_box")
         self.formLayout.setWidget(8, QtGui.QFormLayout.FieldRole, self.dialog_button_box)
+        self.btn_import_design_rules = QtGui.QPushButton(design_rule_dialog)
+        self.btn_import_design_rules.setObjectName("btn_import_design_rules")
+        self.formLayout.setWidget(8, QtGui.QFormLayout.LabelRole, self.btn_import_design_rules)
 
         self.retranslateUi(design_rule_dialog)
         QtCore.QMetaObject.connectSlotsByName(design_rule_dialog)
@@ -81,4 +84,5 @@ class Ui_design_rule_dialog(object):
         self.label_6.setText(QtGui.QApplication.translate("design_rule_dialog", "Signal bondwire to trace distance", None, QtGui.QApplication.UnicodeUTF8))
         self.label_7.setText(QtGui.QApplication.translate("design_rule_dialog", "Power bondwire to component distance", None, QtGui.QApplication.UnicodeUTF8))
         self.label_8.setText(QtGui.QApplication.translate("design_rule_dialog", "Signal bondwire to component distance", None, QtGui.QApplication.UnicodeUTF8))
+        self.btn_import_design_rules.setText(QtGui.QApplication.translate("design_rule_dialog", "Import from CSV File", None, QtGui.QApplication.UnicodeUTF8))
 

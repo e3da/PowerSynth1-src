@@ -47,6 +47,7 @@ from powercad.project_builder.proj_dialogs import NewProjectDialog, OpenProjectD
 from powercad.project_builder.process_design_rules_editor import ProcessDesignRulesEditor
 from powercad.tech_lib.tech_lib_wiz import TechLibWizDialog
 
+from powercad.layer_stack.layer_stack_import import LayerStackImport
 
 from powercad.sym_layout.symbolic_layout import SymLine, SymPoint, ThermalMeasure, ElectricalMeasure
 from powercad.sym_layout.symbolic_layout import FormulationError
@@ -107,6 +108,9 @@ class ProjectBuilder(QtGui.QMainWindow):
         self.ui.btn_modify_component.pressed.connect(self.modify_component)
         self.ui.btn_removeDevice.pressed.connect(self.remove_component)
         
+        # Module stack page
+        self.ui.btn_import_layer_stack.pressed.connect(self.import_layer_stack)
+
         # Constraints page
         self.ui.txt_minWidth.textEdited.connect(self.constraint_min_edit)
         self.ui.txt_maxWidth.textEdited.connect(self.constraint_max_edit)
@@ -228,7 +232,7 @@ class ProjectBuilder(QtGui.QMainWindow):
             # draws all symbolic layouts
             self.load_layout_plots()
 
-    
+
     
     def open_project(self):
         """Open project. Display prompt for necessary information"""
@@ -433,6 +437,50 @@ class ProjectBuilder(QtGui.QMainWindow):
 
 # ------------------------------------------------------------------------------------------        
 # ------ Module Stack ----------------------------------------------------------------------
+
+    def import_layer_stack(self):   # Import layer stack from CSV file
+        try:
+            last_entries = load_file(LAST_ENTRIES_PATH)
+            prev_folder = last_entries[0]
+        except:
+            prev_folder = 'C://'
+        # Open a layer stack CSV file and extract the layer stack data from it
+        try:
+            layer_stack_csv_file = QFileDialog.getOpenFileName(self, "Select Layer Stack File", prev_folder, "CSV Files (*.csv)")
+            layer_stack_import = LayerStackImport(layer_stack_csv_file)
+            layer_stack_import.import_csv()
+        except:
+            QtGui.QMessageBox.warning(self, "Layer Stack Import Failed", "ERROR: Could not import layer stack from CSV.")
+
+        if layer_stack_import.compatible:
+            # Layer stack compatible - fill module stack UI fields with imported values
+            self.ui.txt_baseWidth.setText(str(layer_stack_import.baseplate.dimensions[0]))
+            self.ui.txt_baseLength.setText(str(layer_stack_import.baseplate.dimensions[1]))
+            self.ui.txt_baseThickness.setText(str(layer_stack_import.baseplate.dimensions[2]))
+            self.ui.txt_baseConvection.setText(str(layer_stack_import.baseplate.eff_conv_coeff))
+            self.ui.txt_subAttchThickness.setText(str(layer_stack_import.substrate_attach.thickness))
+            self.ui.txt_subWidth.setText(str(layer_stack_import.substrate.dimensions[0]))
+            self.ui.txt_subLength.setText(str(layer_stack_import.substrate.dimensions[1]))
+            self.ui.txt_subLedge.setText(str(layer_stack_import.substrate.ledge_width))
+
+            # Notify user of import success and any warnings
+            if layer_stack_import.warnings == []:
+                QtGui.QMessageBox.about(self, "Layer Stack Imported", "Layer Stack import successful (No warnings).")
+            else:
+                if len(layer_stack_import.warnings) == 1:
+                    QtGui.QMessageBox.about(self, "Layer Stack Imported", "Layer Stack import successful with " + str(len(layer_stack_import.warnings)) + ' warning.')
+                    QtGui.QMessageBox.warning(self, "Layer Stack Import Warning", "WARNING: " + layer_stack_import.warnings[0])
+                else:
+                    QtGui.QMessageBox.about(self, "Layer Stack Imported", "Layer Stack import successful with " + str(len(layer_stack_import.warnings)) + ' warnings.')
+                    warnings_msg = ""
+                    for warning in layer_stack_import.warnings:
+                        warnings_msg += ("WARNING: " + warning + "\n")
+                    QtGui.QMessageBox.warning(self, "Layer Stack Import Warnings", warnings_msg)
+
+        else:
+            # Layer stack not compatible - notify the user of import failure
+            QtGui.QMessageBox.warning(self, "Layer Stack Import Failed", "ERROR: " + layer_stack_import.error_msg)
+
 
     def fill_material_cmbBoxes(self):
         """Fill combo boxes in module stack with materials from Tech Library"""
@@ -1196,7 +1244,7 @@ class ProjectBuilder(QtGui.QMainWindow):
             if self.project.module_data.design_rules is None:
                 QtGui.QMessageBox.warning(self, "Input Error", "Process design rules not configured. Using defaults.")
                 self.project.module_data.design_rules = ProcessDesignRules(1.2, 1.2, 0.2, 0.1, 1.0, 0.2, 0.2, 0.2)
-
+            
             try:
                 self.project.num_gen = int(self.ui.txt_numGenerations.text())
             except:
@@ -1205,7 +1253,7 @@ class ProjectBuilder(QtGui.QMainWindow):
                 self.ui.txt_numGenerations.setText(str(self.project.num_gen))
                 print traceback.print_exc()
             '''QL'''
-            new_seed=int(time.time()) #load a new seed     aaaa
+            new_seed=int(time.time()) #load a new seed
             #fixedseed=1
             #iseed=fixedseed
             iseed=new_seed           
