@@ -1556,8 +1556,8 @@ p, li { white-space: pre-wrap; }
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>282</width>
-         <height>832</height>
+         <width>359</width>
+         <height>806</height>
         </rect>
        </property>
        <attribute name="label">
@@ -2600,8 +2600,8 @@ p, li { white-space: pre-wrap; }
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>125</width>
-         <height>655</height>
+         <width>376</width>
+         <height>599</height>
         </rect>
        </property>
        <attribute name="label">
@@ -2896,8 +2896,8 @@ p, li { white-space: pre-wrap; }
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>215</width>
-         <height>386</height>
+         <width>376</width>
+         <height>599</height>
         </rect>
        </property>
        <attribute name="label">
@@ -3090,8 +3090,8 @@ p, li { white-space: pre-wrap; }
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>354</width>
-         <height>582</height>
+         <width>376</width>
+         <height>599</height>
         </rect>
        </property>
        <attribute name="label">
@@ -3639,8 +3639,8 @@ p, li { white-space: pre-wrap; }
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>271</width>
-         <height>465</height>
+         <width>376</width>
+         <height>599</height>
         </rect>
        </property>
        <attribute name="label">
@@ -4188,7 +4188,7 @@ p, li { white-space: pre-wrap; }
        <string/>
       </property>
       <property name="pixmap">
-       <pixmap>:/logo/PowerSynth_Logo_Temp2.png</pixmap>
+       <pixmap>../../../../images/main_window/PowerSynth_Logo_Temp2.png</pixmap>
       </property>
       <property name="scaledContents">
        <bool>true</bool>
@@ -4372,7 +4372,7 @@ p, li { white-space: pre-wrap; }
   <tabstop>btn_open_sol_browser</tabstop>
  </tabstops>
  <resources>
-  <include location="main_window_images.qrc"/>
+  <include location="../../../../../../../Users/qmle/Desktop/UI Design/main_window_images.qrc"/>
  </resources>
  <connections/>
 </ui>

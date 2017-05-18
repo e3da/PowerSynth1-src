@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'mainWindow.ui'
 #
-# Created: Thu May 18 15:03:17 2017
+# Created: Thu May 18 16:17:37 2017
 #      by: pyside-uic 0.2.15 running on PySide 1.2.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -596,7 +596,7 @@ class Ui_MainWindow(object):
         self.gridLayout_22.addWidget(self.box_system_props, 5, 0, 1, 1)
         self.navigation.addItem(self.page_12, "")
         self.page = QtGui.QWidget()
-        self.page.setGeometry(QtCore.QRect(0, 0, 282, 832))
+        self.page.setGeometry(QtCore.QRect(0, 0, 359, 806))
         self.page.setObjectName("page")
         self.gridLayout_3 = QtGui.QGridLayout(self.page)
         self.gridLayout_3.setObjectName("gridLayout_3")
@@ -947,7 +947,7 @@ class Ui_MainWindow(object):
         self.gridLayout_3.addWidget(self.btn_removeDevice, 12, 2, 1, 1)
         self.navigation.addItem(self.page, "")
         self.page_2 = QtGui.QWidget()
-        self.page_2.setGeometry(QtCore.QRect(0, 0, 125, 655))
+        self.page_2.setGeometry(QtCore.QRect(0, 0, 376, 599))
         self.page_2.setObjectName("page_2")
         self.gridLayout_5 = QtGui.QGridLayout(self.page_2)
         self.gridLayout_5.setObjectName("gridLayout_5")
@@ -1049,7 +1049,7 @@ class Ui_MainWindow(object):
         self.gridLayout_5.addWidget(self.groupBox_3, 0, 0, 1, 2)
         self.navigation.addItem(self.page_2, "")
         self.page_10 = QtGui.QWidget()
-        self.page_10.setGeometry(QtCore.QRect(0, 0, 215, 386))
+        self.page_10.setGeometry(QtCore.QRect(0, 0, 376, 599))
         self.page_10.setObjectName("page_10")
         self.gridLayout_6 = QtGui.QGridLayout(self.page_10)
         self.gridLayout_6.setObjectName("gridLayout_6")
@@ -1114,7 +1114,7 @@ class Ui_MainWindow(object):
         self.gridLayout_6.addWidget(self.btn_remove_constraint, 11, 2, 1, 1)
         self.navigation.addItem(self.page_10, "")
         self.page_3 = QtGui.QWidget()
-        self.page_3.setGeometry(QtCore.QRect(0, 0, 354, 582))
+        self.page_3.setGeometry(QtCore.QRect(0, 0, 376, 599))
         self.page_3.setObjectName("page_3")
         self.gridLayout_7 = QtGui.QGridLayout(self.page_3)
         self.gridLayout_7.setObjectName("gridLayout_7")
@@ -1278,7 +1278,7 @@ class Ui_MainWindow(object):
         self.gridLayout_7.addWidget(self.tbl_performance, 11, 0, 1, 6)
         self.navigation.addItem(self.page_3, "")
         self.page_4 = QtGui.QWidget()
-        self.page_4.setGeometry(QtCore.QRect(0, 0, 271, 465))
+        self.page_4.setGeometry(QtCore.QRect(0, 0, 376, 599))
         self.page_4.setObjectName("page_4")
         self.gridLayout_4 = QtGui.QGridLayout(self.page_4)
         self.gridLayout_4.setObjectName("gridLayout_4")
@@ -1474,7 +1474,7 @@ class Ui_MainWindow(object):
         self.label_4.setPalette(palette)
         self.label_4.setStyleSheet("background-color: qradialgradient(spread:pad, cx:0.5, cy:0.5, radius:0.481, fx:0.653409, fy:0.312, stop:0.698864 rgba(255, 255, 255, 194), stop:1 rgba(255, 255, 255, 0));")
         self.label_4.setText("")
-        self.label_4.setPixmap(QtGui.QPixmap(":/logo/PowerSynth_Logo_Temp2.png"))
+        self.label_4.setPixmap(QtGui.QPixmap("../../../images/main_window/PowerSynth_Logo_Temp2.png"))
         self.label_4.setScaledContents(True)
         self.label_4.setObjectName("label_4")
         self.gridLayout.addWidget(self.label_4, 0, 0, 1, 2)
