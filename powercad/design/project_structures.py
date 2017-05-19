@@ -3,6 +3,27 @@ Created on Nov 16, 2012
 
 @author: bxs003
 '''
+class MetalInstance:
+    def __init__(self,dimensions,properties):
+        """
+                This is a part of Substrate Instance
+                Keyword arguments:
+                dimensions -- tuple (width, length, thickness) of substrate (units in mm)
+        """
+        self.dimensions = dimensions
+        self.properties=properties # information about material name, material resistivity
+
+
+class DielectricInstance:
+    def __init__(self,dimensions,properties):
+        """
+                This is a part of Substrate Instance
+                Keyword arguments:
+                dimensions -- tuple (width, length, thickness) of substrate (units in mm)
+        """
+        self.dimensions = dimensions
+        self.properties=properties # information about material name, material resistivity
+
 
 class SubstrateInstance:
     def __init__(self, dimensions, ledge_width, substrate_tech):
@@ -23,6 +44,13 @@ class SubstrateInstance:
         
         """
         self.dimensions = dimensions
+        m_dimensions=[dim-2*ledge_width for dim in self.dimensions]
+        m_dimensions.append(substrate_tech.metal_thickness)
+        m_properties=substrate_tech.metal_properties
+        self.metallayer=MetalInstance(m_dimensions,m_properties)
+        d_dimensions=dimensions.append(substrate_tech.isolation_thickness)
+        d_properties=substrate_tech.isolation_properties
+        self.dielectriclayer=DielectricInstance(d_dimensions,d_properties)
         self.ledge_width = ledge_width
         self.substrate_tech = substrate_tech
         

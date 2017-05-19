@@ -5,7 +5,7 @@ Created on Sep 6, 2012
 '''
 from math import fabs, sin, pow
 
-import powercad.general.util as util
+import powercad.general.data_struct.util as util
 
 
 class Design2DConfig:

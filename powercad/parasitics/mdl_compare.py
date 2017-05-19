@@ -1,18 +1,14 @@
-import math
-import pickle 
-from pykrige.ok import OrdinaryKriging as ok
-import math as m
-from math import fabs
-import os
-import numpy as np
-import time
-from powercad.general.save_and_load import save_file, load_file
-import matplotlib.pyplot as plt
 import csv
-from matplotlib import cm
-from mpl_toolkits.mplot3d import Axes3D
-from matplotlib.ticker import LinearLocator, FormatStrFormatter
-from matplotlib import lines
+import math
+import math as m
+import os
+from math import fabs
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+from powercad.general.settings.save_and_load import load_file
+
 LOWEST_ASPECT_RES = 1.0         # I changed it back to 1.0 Quang as stated in Brett's thesis
 LOWEST_ASPECT_IND = 1.0
 # Constants:

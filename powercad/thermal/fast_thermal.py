@@ -7,14 +7,12 @@ This update is commented out in the code for now:
     Note: for this project, Csub only need to compute once, need to look at this later. For easy mode now, we compute it every iteration
 '''
 
-import math
-
-import numpy as np
-import networkx as nx
-from matplotlib.patches import Rectangle
-import matplotlib.pyplot as plt
 import time
-from powercad.general.util import Rect, SolveVolume
+
+import networkx as nx
+import numpy as np
+
+from powercad.general.data_struct.util import Rect
 
 
 #quang:
@@ -297,8 +295,8 @@ def find_trace_area(trace_rects):
     
 def test_plot_layout(traces, dies, bounds):
     import matplotlib.pyplot as plt
-    from matplotlib.patches import Rectangle, PathPatch, Circle
-    
+    from matplotlib.patches import Rectangle
+
     ax = plt.subplot('111', adjustable='box', aspect=1.0)
     
     for rect in traces:

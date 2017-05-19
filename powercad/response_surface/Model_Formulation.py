@@ -23,13 +23,14 @@ def form_trace_model(layer_stack_dir,options=None):
     E1.set_size(bp_W, bp_L, bp_t)
     E1.set_name('Baseplate')
     # Substrate
-    sub_W=LS.substrate.
+    sub_W=LS.substrate.dimensions[0]
+    sub_L=LS.substrate.dimensions[1]
     # -----------------------
     # Metal1
-    E2.set_size(48, 48, 0.2)
+    E2.set_size(sub_W, sub_L, 0.2)
     E2.set_name('Metal1')
     # -----------------------
-    E3.set_size(50, 50, 0.5)
+    E3.set_size(sub_W, sub_L, 0.5)
     E3.set_name('Substrate')  # Substrate// Dielectric
     E3.set_material('Al_N')
     # -----------------------

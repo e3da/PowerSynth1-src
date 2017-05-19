@@ -6,14 +6,13 @@ Created on Nov 6, 2012
 sxm - This function is only used in svg.py's main().
 '''
 
-import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle, PathPatch, Circle
 from matplotlib.path import Path
 
+from powercad.general.data_struct.util import Rect
 from powercad.sym_layout.svg import LayoutLine, LayoutPoint, find_layout_bounds
-from powercad.general.util import Rect
-from _sqlite3 import Row
+
 
 # sxm - This function is only used in svg.py's main().
 def plot_svg_objs(layout):

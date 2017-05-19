@@ -5,14 +5,14 @@ Created on Oct 12, 2012
 '''
 # IMPORT METHODS
 import os
-import pickle
 import traceback
-from PySide import QtGui, QtCore
+
+from PySide import QtGui
 from PySide.QtGui import QFileDialog, QStandardItemModel,QStandardItem, QMessageBox,QFont
 
 import powercad.sym_layout.plot as plot
 from powercad.project_builder.dialogs.propertiesDeviceDialog import Ui_device_propeties
-from powercad.export.Q3D import output_q3d_vbscript
+
 plot.plt.matplotlib.use('Qt4Agg')
 plot.plt.matplotlib.rcParams['backend.qt4']='PySide'
 
@@ -24,10 +24,10 @@ from powercad.project_builder.dialogs.genericDeviceDialog_ui import Ui_generic_d
 from powercad.project_builder.dialogs.layoutEditor_ui import Ui_layouteditorDialog
 from powercad.project_builder.project import Project
 from powercad.sym_layout.symbolic_layout import SymbolicLayout
-from powercad.general.settings import LAST_ENTRIES_PATH, DEFAULT_TECH_LIB_DIR
+from powercad.general.settings.settings import LAST_ENTRIES_PATH, DEFAULT_TECH_LIB_DIR
 from powercad.spice_import import Netlist_SVG_converter
 from powercad.electro_thermal.ElectroThermal_toolbox import rdson_fit_transistor, list2float, csv_load_file,Vth_fit,fCRSS_fit
-from powercad.general.save_and_load import save_file, load_file
+from powercad.general.settings.save_and_load import save_file, load_file
 from powercad.project_builder.dialogs.ResponseSurface import Ui_ResponseSurface
 
 # CLASSES FOR DIALOG USAGE

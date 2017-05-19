@@ -4,10 +4,9 @@ Created on Dec 23, 2012
 @author: shook
 '''
 
-import xml.dom.minidom as xml
 import ctypes
-from powercad.general.util import Rect
-from matplotlib.pyplot import plot
+import xml.dom.minidom as xml
+
 
 class LayoutError(Exception):
     def __init__(self, msg):
@@ -394,7 +393,7 @@ def check_pt_overlapt(obj1, obj2):
 
 if __name__ == '__main__':
     import matplotlib
-    from powercad.sym_layout.plot import plot_svg_objs
+
     #from powercad.sym_layout.svg import load_svg, normalize_layout
     layout = load_svg('../../../sym_layouts/simple.svg')
     normalize_layout(layout, 0.001)

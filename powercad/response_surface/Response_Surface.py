@@ -7,19 +7,20 @@ Created on Feb 16, 2017
 
 # Mathematics tools
 import csv
+import os
+import pickle
 
 import matplotlib.pyplot as plt
 from matplotlib import lines
+from powercad.general.Abstract_Data import Stack
 from pykrige.ok import OrdinaryKriging as ok
 from scipy.interpolate import *
+
 from RS_build_function import *
-from powercad.general.Abstract_Data import Stack
-from powercad.general.Error_messages import InputError,Notifier
-from powercad.general.Unit import Unit
+from powercad.general.data_struct.Unit import Unit
+from powercad.general.settings.Error_messages import InputError,Notifier
 from powercad.parasitics.mdl_compare import trace_inductance
-from powercad.response_surface.Layer_Stack import *
-import pickle
-import os
+
 
 class RS_model:
     '''Surrogate/Response Surface model 

@@ -2,7 +2,7 @@
 Created on Apr 22, 2017
 
 @author: jhmain
-
+@author: Qmle add some information on layer thickness
 PURPOSE:
  - This module is used to import a layer stack from a CSV file
  
@@ -127,10 +127,14 @@ class LayerStackImport:
                 print 'Found substrate attach ' + str(thick)
                     
             # Find substrate 
-            if layer_type == self.metal_abbrev or layer_type == self.dielectric_abbrev:
+            if layer_type == self.metal_abbrev or layer_type == self.dielectric_abbrev or layer_type == self.interconnect_abbrev :
                 try:
                     width = float(layer[4])
                     length = float(layer[5])
+                    if layer_type==self.metal_abbrev:
+                        m_thick=float(layer[6])
+                    if layer_type==self.dielectric_abbrev:
+                        d_thick=float(layer[6])
                 except:
                     self.compatible = False
                     self.error_msg = 'Could not find all values in metal/dielectric layer ' + name + '. Metal/dielectric must contain the following fields: layer type, num, name, pos, width, length.'

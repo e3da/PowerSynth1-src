@@ -6,7 +6,7 @@ Created on Sep 5, 2012
 
 import math
 
-import powercad.general.util as util
+import powercad.general.data_struct.util as util
 
 
 class Particle:

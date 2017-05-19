@@ -9,7 +9,7 @@ import subprocess
 
 import numpy as np
 
-from powercad.general.settings import ELMER_BIN_PATH
+from powercad.general.settings.settings import ELMER_BIN_PATH
 
 elmer_sif = """
 CHECK KEYWORDS Warn

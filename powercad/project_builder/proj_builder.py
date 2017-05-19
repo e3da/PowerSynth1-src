@@ -15,51 +15,43 @@ Brett Shook - Added separate Component Selection system 3/21/2014
 #import packaging.specifiers
 '''----------------------------------'''
 import os
-import sys
-import pickle
 import shutil
-import traceback
+import sys
 import time
+import traceback
 
 from PySide import QtCore, QtGui
-from PySide.QtGui import QFileDialog, QMessageBox, QTreeWidgetItem
-from PySide.QtCore import SIGNAL,SLOT
+from PySide.QtGui import QFileDialog
 
 import powercad.sym_layout.plot as plot
-import powercad
-from powercad import export
+
 plot.plt.matplotlib.use('Qt4Agg')
 plot.plt.matplotlib.rcParams['backend.qt4']='PySide'
 
 from matplotlib.patches import Rectangle, Circle
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg as NavigationToolbar
-import matplotlib.pyplot as plt
 
 from powercad.project_builder.symmetry_list import SymmetryListUI
 from powercad.project_builder.performance_list import PerformanceListUI
 from powercad.project_builder.windows.mainWindow import Ui_MainWindow
 from powercad.project_builder.windows.sol_window import SolutionWindow
-from powercad.project_builder.proj_dialogs import NewProjectDialog, OpenProjectDialog, EditTechLibPathDialog, DevicePropertiesDialog,GenericDeviceDialog,LayoutEditorDialog, ResponseSurfaceWizard
+from powercad.project_builder.proj_dialogs import NewProjectDialog, OpenProjectDialog, EditTechLibPathDialog, \
+    GenericDeviceDialog,LayoutEditorDialog, ResponseSurfaceWizard
 
 
-from powercad.project_builder.process_design_rules_editor import ProcessDesignRulesEditor
+from powercad.drc.process_design_rules_editor import ProcessDesignRulesEditor
 from powercad.tech_lib.tech_lib_wiz import TechLibWizDialog
 
 from powercad.layer_stack.layer_stack_import import LayerStackImport
 
-from powercad.sym_layout.symbolic_layout import SymLine, SymPoint, ThermalMeasure, ElectricalMeasure
-from powercad.sym_layout.symbolic_layout import FormulationError
-from powercad.design.library_structures import BondWire, Device, Lead
-from powercad.sol_browser.solution_lib import SolutionLibrary
+from powercad.sym_layout.symbolic_layout import SymLine
+from powercad.design.library_structures import BondWire, Lead
 from powercad.sol_browser.graph_app import GrapheneWindow
 from powercad.design.project_structures import *
-from powercad.general.util import Rect
 from powercad.sym_layout.svg import LayoutLine, LayoutPoint
-from powercad.general.settings import *
-from powercad.general.save_and_load import save_file, load_file
-
+from powercad.general.settings.save_and_load import save_file, load_file
+from powercad.general.settings.settings import *
 class ProjectBuilder(QtGui.QMainWindow):
     
     # Relative paths -> use forward slashes for platform independence

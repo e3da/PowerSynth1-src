@@ -5,15 +5,12 @@ Created on Feb 22, 2013
 '''
 
 import os
-import pickle
 
-from PySide import QtGui
-from PySide.QtGui import QMessageBox
 from PySide.QtGui import QFileDialog
+from PySide.QtGui import QMessageBox
 
-from powercad.tech_lib.test_techlib import make_sub_dir
 from powercad.design.library_structures import *
-from powercad.general.save_and_load import *
+from powercad.general.settings.save_and_load import *
 class DevicePage(object):
     # Device type enum
     TRANSISTOR = 0
