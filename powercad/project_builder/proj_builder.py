@@ -41,7 +41,7 @@ from powercad.project_builder.symmetry_list import SymmetryListUI
 from powercad.project_builder.performance_list import PerformanceListUI
 from powercad.project_builder.windows.mainWindow import Ui_MainWindow
 from powercad.project_builder.windows.sol_window import SolutionWindow
-from powercad.project_builder.proj_dialogs import NewProjectDialog, OpenProjectDialog, EditTechLibPathDialog, DevicePropertiesDialog,GenericDeviceDialog,LayoutEditorDialog
+from powercad.project_builder.proj_dialogs import NewProjectDialog, OpenProjectDialog, EditTechLibPathDialog, DevicePropertiesDialog,GenericDeviceDialog,LayoutEditorDialog, ResponseSurfaceWizard
 
 
 from powercad.project_builder.process_design_rules_editor import ProcessDesignRulesEditor
@@ -129,7 +129,8 @@ class ProjectBuilder(QtGui.QMainWindow):
         self.ui.action_edit_tech_path.triggered.connect(self.edit_tech_lib_path)
         self.ui.action_load_symbolic_layout.triggered.connect(self.load_symbolic_layout)
         self.ui.actionExport_Layout_Script.triggered.connect(self.export_layout_script) # export layout to script action
-        self.ui.actionOpen_Layout_Editor.triggered.connect(self.open_layout_editor) # Open script 
+        self.ui.actionOpen_Layout_Editor.triggered.connect(self.open_layout_editor) # Open script
+        self.ui.actionResponse_Surface_Setup.triggered.connect(self.open_response_surface_wiz)
         # Disable project interfaces until a project is loaded or created
         self.enable_project_interfaces(False)
         # This is the current color wheel.
@@ -234,7 +235,6 @@ class ProjectBuilder(QtGui.QMainWindow):
             self.load_layout_plots()
 
 
-    
     def open_project(self):
         """Open project. Display prompt for necessary information"""
         # bring up open project dialog
@@ -267,7 +267,13 @@ class ProjectBuilder(QtGui.QMainWindow):
             design_rule_dialog.exec_()
         else:
             QtGui.QMessageBox.warning(self, "Project Needed", "A project needs to be loaded into the program first.")
-            
+
+    def open_response_surface_wiz(self):
+        if self.ui.navigation.isEnabled():
+            rs_settings=ResponseSurfaceWizard(self)
+            rs_settings.show() # change this to a dialog
+            print "code me"
+
     def open_tech_lib_editor(self):
         techlib = TechLibWizDialog(self, self.project.tech_lib_dir)
         techlib.show()

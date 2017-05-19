@@ -26,9 +26,10 @@ from powercad.project_builder.project import Project
 from powercad.sym_layout.symbolic_layout import SymbolicLayout
 from powercad.general.settings import LAST_ENTRIES_PATH, DEFAULT_TECH_LIB_DIR
 from powercad.spice_import import Netlist_SVG_converter
-
 from powercad.electro_thermal.ElectroThermal_toolbox import rdson_fit_transistor, list2float, csv_load_file,Vth_fit,fCRSS_fit
 from powercad.general.save_and_load import save_file, load_file
+from powercad.project_builder.dialogs.ResponseSurface import Ui_ResponseSurface
+
 # CLASSES FOR DIALOG USAGE
 class GenericDeviceDialog(QtGui.QDialog):   
     # Author: quang le
@@ -605,6 +606,11 @@ class LayoutEditorDialog(QtGui.QDialog):
         f=open(path,'wb')
         f.write(self.parent.layout_script)
         self.close()
-        
-        
+
+class ResponseSurfaceWizard(QtGui.QTabWidget):
+    def __init__(self,parent):
+        QtGui.QTabWidget.__init__(self, parent)
+        self.ui=Ui_ResponseSurface()
+        self.ui.setupUi(self)
+        self.parent=parent
         

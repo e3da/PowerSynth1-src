@@ -167,11 +167,11 @@ class Ui_ResponseSurface(object):
         self.btn_add_layer_stack = QtGui.QPushButton(self.tab)
         self.btn_add_layer_stack.setGeometry(QtCore.QRect(330, 210, 101, 21))
         self.btn_add_layer_stack.setObjectName("btn_add_layer_stack")
+
         ResponseSurface.addTab(self.tab, "")
         self.tab1 = QtGui.QWidget()
         self.tab1.setObjectName("tab1")
         ResponseSurface.addTab(self.tab1, "")
-
         self.retranslateUi(ResponseSurface)
         ResponseSurface.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(ResponseSurface)
