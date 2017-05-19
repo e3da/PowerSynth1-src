@@ -12,7 +12,7 @@ from PySide.QtGui import QMessageBox
 
 from powercad.tech_lib.test_techlib import make_sub_dir
 from powercad.design.library_structures import Baseplate, MaterialProperties
-
+from powercad.save_and_load import *
 class BaseplatePage(object):
     def __init__(self, parent):
         #Baseplate root directory
@@ -96,7 +96,7 @@ class BaseplatePage(object):
                                                  float(self.ui.BaseplateMuInput.text()))
             
             make_sub_dir(self.sub_dir)
-            pickle.dump(base,open(os.path.join(self.sub_dir, base.properties.name+".p"), "wb"))
+            save_file(base,os.path.join(self.sub_dir, base.properties.name+".p"))
             self.load_page()
         else:
             print "Error Creating Baseplate"
@@ -104,7 +104,7 @@ class BaseplatePage(object):
     def load(self):
         if self.ui.BaseplateList.currentIndex() > 0:
             filename = os.path.join(self.sub_dir, self.ui.BaseplateList.currentText())
-            self.current_baseplate = pickle.load(open(filename, "rb"))
+            self.current_baseplate = load_file(filename)
             
             self.ui.BaseplateNameInput.setText(str(self.current_baseplate.properties.name))
             self.ui.BaseplateThermalCondInput.setText(str(self.current_baseplate.properties.thermal_cond))

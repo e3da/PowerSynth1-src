@@ -226,6 +226,7 @@ class GrapheneWindow(QtGui.QMainWindow):
         self.canvas.draw()
         
     def draw_graph_2D(self):
+        # plot data
         self.axes = self.figure.add_subplot(111)
         #[P_X,P_Y]=self.pareto_frontiter2D(self.x_axis.displayable_data, self.y_axis.displayable_data, MinX=True, MinY=True)
         self.axes.scatter(self.x_axis.displayable_data, self.y_axis.displayable_data, picker=1)

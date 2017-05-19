@@ -12,7 +12,7 @@ from PySide.QtGui import QMessageBox
 
 from powercad.tech_lib.test_techlib import make_sub_dir
 from powercad.design.library_structures import *
-
+from powercad.save_and_load import *
 class LeadPage(object):
     def __init__(self, parent):
         # Lead root directory
@@ -114,7 +114,7 @@ class LeadPage(object):
             lead.properties = MaterialProperties(None, None, None, None, float(self.ui.RhoLeadInput.text()), None, None)
             
             make_sub_dir(self.sub_dir)
-            pickle.dump(lead,open(os.path.join(self.sub_dir, lead.name+".p"), "wb"))
+            save_file(lead,os.path.join(self.sub_dir, lead.name+".p"))
             self.load_page()
         else:
             print "Error Creating Lead"
@@ -122,7 +122,7 @@ class LeadPage(object):
     def load(self):
         if self.ui.LeadList.currentIndex() >0:
             filename = os.path.join(self.sub_dir, self.ui.LeadList.currentText())
-            self.current_lead = pickle.load(open(filename, "rb"))
+            self.current_lead = load_file(filename)
             
             self.ui.LeadNameInput.setText(str(self.current_lead.name))
             self.ui.RhoLeadInput.setText(str(self.current_lead.properties.electrical_res))

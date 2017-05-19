@@ -9,7 +9,7 @@
 
 from PySide import QtCore, QtGui
 
-class Ui_newProjectDialog(object):
+class Ui_newProjectDialog(object): #setup the UI (window size, buttons, fonts, colors, etc)
     def setupUi(self, newProjectDialog):
         newProjectDialog.setObjectName("newProjectDialog")
         newProjectDialog.resize(514, 501)
