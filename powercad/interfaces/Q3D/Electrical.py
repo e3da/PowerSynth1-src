@@ -1,7 +1,7 @@
-from powercad.interfaces.Q3D.Q3DGeometry import Q3d_box
+from powercad.interfaces.Q3D.Q3DGeometry import Q3D_rect_script
 
 
-class Rect_Box(Q3d_box):
+class rect_q3d_box(Q3D_rect_script):
     '''This class will be used to define an Electrical Rectangle Layer in PowerSynth
     '''
     def __init__(self, type='layer'):
@@ -12,7 +12,7 @@ class Rect_Box(Q3d_box):
              1: 'layer': normal layer (not for tracing)
              2: 'trace':
         ''' 
-        Q3d_box.__init__(self)
+        Q3D_rect_script.__init__(self)
         self.type=type
         self.set_pos(0, 0, 0)
     
@@ -71,16 +71,16 @@ class Rect_Box(Q3d_box):
 
              
 if __name__ == '__main__':
-    E1=Rect_Box()
+    E1=rect_q3d_box()
     E1.set_size(50, 50, 0.1)
     E1.set_name('Baseplate')
-    E2=Rect_Box()
+    E2=rect_q3d_box()
     E2.set_size(50, 50, 0.1)
     E2.set_name('Metal1')
-    E3=Rect_Box()
+    E3=rect_q3d_box()
     E3.set_size(50, 50, 0.1)
     E3.set_name('Substrate')
-    E4=Rect_Box()
+    E4=rect_q3d_box()
     E4.set_size(50, 50, 0.1)
     E4.set_name('Metal4')
     E4.set_layer_as_trace()

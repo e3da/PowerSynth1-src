@@ -1,12 +1,12 @@
 from powercad.interfaces.Q3D.Ipy_script import Q3D_ipy_script
 
-from powercad.interfaces.Q3D.Electrical import Rect_Box
+from powercad.interfaces.Q3D.Electrical import rect_q3d_box
 from powercad.response_surface.Response_Surface import RS_model
-from powercad.response_surface.Topology import Topology
+from powercad.response_surface.Layer_Stack import Layer_Stack
 
 if __name__ == '__main__':
     '''First we set up layer stack with material properties '''
-    E1,E2,E3,E4=(Rect_Box() for i in range(4))
+    E1,E2,E3,E4=(rect_q3d_box() for i in range(4))
     #-----------------------
     E1.set_size(50, 50, 5)   # Baseplate
     E1.set_name('Baseplate')
@@ -22,8 +22,8 @@ if __name__ == '__main__':
     E4.set_name('Metal2')    # Metal 2
     #-----------------------
     # Define a topology class
-    T1=Topology()
-    T1.add_Rect_Box([E1,E2,E3,E4])
+    T1=Layer_Stack()
+    T1.add_Layers([E1, E2, E3, E4])
     T1.define_trace(4)  # Select trace layer 
     script1=Q3D_ipy_script('16.2','C://Users//qmle//Desktop//Testing//Py_Q3D_test//Mdl2','Mdl2','C://Users//qmle//Desktop//Testing//Py_Q3D_test//Mdl2')  # Initialize Script Object
     script1.add_script(T1.get_all_Elayers())                                                                                            # Add Topology structure to script  

@@ -51,7 +51,7 @@ class Q3d_N_Gon_Box:
         self.material=material
         
 
-class Q3d_box:
+class Q3D_rect_script:
     # This object will translate a simple boxes in python to q3d. This will draw the Box from its corner (x,y,z)
     # color list: http://www.discoveryplayground.com/computer-programming-for-kids/rgb-colors/
     def __init__(self,x=None,y=None,z=None,dx=None,dy=None,dz=None,obj_id=None):
@@ -119,8 +119,8 @@ class Q3d_box:
    
 
  
-class Geometry(Q3d_box):
+class Geometry(Q3D_rect_script):
     def __init__(self,choice):
         if choice==1:
-            self.geometry=Q3d_box
+            self.geometry=Q3D_rect_script
         

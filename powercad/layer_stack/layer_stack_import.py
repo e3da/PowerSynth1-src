@@ -56,7 +56,7 @@ class LayerStackImport:
         
         
     def read_from_csv(self):    # Get layer stack in list form from the CSV file
-        infile = open(os.path.abspath(self.csv_file[0]))
+        infile = open(os.path.abspath(self.csv_file))
         self.layer_list = []
         layer_reader = csv.reader(infile)
         for row in layer_reader:

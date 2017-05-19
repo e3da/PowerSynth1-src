@@ -2,11 +2,11 @@ import copy
 
 from powercad.response_surface.Ipy_script import Q3D_ipy_script
 
-from powercad.interfaces.Q3D.Electrical import Rect_Box
+from powercad.interfaces.Q3D.Electrical import rect_q3d_box
 from powercad.general.BasicsFunction import *         # group of BasicFunction that can be used for any classes
 
 
-class Topology:
+class Layer_Stack:
     
     def __init__(self):
         # E-Layers can be interfaced with FastHenry or Q3D
@@ -24,16 +24,16 @@ class Topology:
     
     
     
-    def add_Rect_Box(self,Elayer):       # For PowerSynth=Q3d Interface
+    def add_Layers(self, Elayer):       # For PowerSynth=Q3d Interface
         for layer in Elayer:
-            if isinstance(layer, Rect_Box): # check if this is Rect_Box instance
+            if isinstance(layer, rect_q3d_box):      # check if this is Rect_Box instance
                 if self.layer_index!=0:          # if there is at least 1 layer in the topology 
                     layer.faces=add_num_to_list(self.ELayers[self.layer_index-1].faces,28)   # Update the faces index (This let us choose correct face in Q3D) --> [top,bot,xz_close,yz_close,xz_far,yz_far]
                     layer.set_z(self.ELayers[self.layer_index-1].get_z()+self.ELayers[self.layer_index-1].get_thickness())   # Update the height of new layer based on the previous one 
                 
                 self.ELayers.append(copy.deepcopy(layer))      # add this layer to liet 
-                self.layer_index+=1              # increase list layer index
-                layer.set_layer_ID(self.layer_index) # set layer id=newest index
+                self.layer_index+=1                            # increase list layer index
+                layer.set_layer_ID(self.layer_index)           # set layer id=newest index
             
     def define_trace(self,index):
         #index: index of a layer that will be set as trace
@@ -51,9 +51,9 @@ class Topology:
     def define_ground(self,index):
         # select a plane as a ground 
         # optional, if not defined then Q3d set ground at infinity, can only be done after define nets
-        
-        
         print 'Code me tmr'
+
+
     def get_trace_index(self):
         for layers in self.ELayers:
             if layers.type=='trace':
@@ -61,7 +61,7 @@ class Topology:
         print('No Trace Selected')  # set this as a ctype message later  
                        
     def get_all_Elayers(self): # For PowerSynth=Q3d Interface
-        str=''                # a blank string object
+        str=''                 # a blank string object
         for layers in self.ELayers:      # loop through all layers
             layers.make()
             str=str+layers.get_script() # Update the output script 
@@ -78,10 +78,10 @@ class Topology:
              
 if __name__ == '__main__':
     # Set up rectangle layers (initialize its structure)
-    E1=Rect_Box()    
-    E2=Rect_Box()
-    E3=Rect_Box()
-    E4=Rect_Box()
+    E1=rect_q3d_box()
+    E2=rect_q3d_box()
+    E3=rect_q3d_box()
+    E4=rect_q3d_box()
     # Set size, object name
     E1.set_size(50, 50, 5)
     E1.set_name('Baseplate')
@@ -94,8 +94,8 @@ if __name__ == '__main__':
     # Set Materials
     E3.set_material('Al_N')
     # initialize a topology
-    T1=Topology()
-    T1.add_Rect_Box([E1,E2,E3,E4])    
+    T1=Layer_Stack()
+    T1.add_Layers([E1, E2, E3, E4])
     T1.define_trace(4)  # Select trace layer (where the optimization will be done)
     
     print 'here'

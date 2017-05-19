@@ -59,6 +59,7 @@ from powercad.general.util import Rect
 from powercad.sym_layout.svg import LayoutLine, LayoutPoint
 from powercad.general.settings import *
 from powercad.general.save_and_load import save_file, load_file
+
 class ProjectBuilder(QtGui.QMainWindow):
     
     # Relative paths -> use forward slashes for platform independence
@@ -447,6 +448,7 @@ class ProjectBuilder(QtGui.QMainWindow):
         # Open a layer stack CSV file and extract the layer stack data from it
         try:
             layer_stack_csv_file = QFileDialog.getOpenFileName(self, "Select Layer Stack File", prev_folder, "CSV Files (*.csv)")
+            layer_stack_csv_file=layer_stack_csv_file[0]
             layer_stack_import = LayerStackImport(layer_stack_csv_file)
             layer_stack_import.import_csv()
         except:
