@@ -112,7 +112,9 @@ class Material_lib:
                 data['thermal_expansion_coeffcient']=material.expansion_coeff
                 if material.name!=None:
                     writer.writerow(data)
-
+    def add_mat(self):
+        print "add one material to the list"
+        # ToDO: add material to material lib
 
 if __name__ == "__main__":
     ML=Material_lib()
