@@ -14,13 +14,14 @@ import matplotlib.pyplot as plt
 from matplotlib import lines
 from pykrige.ok import OrdinaryKriging as ok
 from scipy.interpolate import *
-
+from scipy.optimize import curve_fit
 from RS_build_function import *
 from powercad.general.data_struct.Unit import Unit
 from powercad.general.settings.Error_messages import InputError,Notifier
 from powercad.parasitics.mdl_compare import trace_inductance
-
-
+from powercad.general.data_struct.Abstract_Data import *
+from powercad.general.data_struct.BasicsFunction import *
+from pyDOE import *
 class RS_model:
     '''Surrogate/Response Surface model 
     '''
@@ -253,12 +254,12 @@ class RS_model:
         mins=[]   # list of all min values
         maxs=[]   # list of all max values
         cur_id=[] # current data id
-        stack=[]            # initialize a stack
+        stack=Stack()           # initialize a stack
         for b in self.data_bound:  # update all min and max value
             mins.append(b[0]) 
             maxs.append(b[1])
             cur_id.append(0)       # initialize a list of all zero id
-            stack.append(0)          # initialize the stack  data
+            stack.push(0)          # initialize the stack  data
         if lin_ops:                # if the user choose this option  
             lnsp_all=[]               # initialize list of all linear space
             for i in range(col_size): # update a list of all linear space object
