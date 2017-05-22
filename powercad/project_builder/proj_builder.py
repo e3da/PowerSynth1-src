@@ -1429,6 +1429,8 @@ if __name__ == "__main__":
 # 
 # - Optimization progress bar (graphic) pauses even though optimization is in progress (as seen on console). This is especially true for large number of generations.
 # 
-# - "Open Solution Browser" button needs to be disabled while solution browser is already open, and vice versa. 
+# - "Open Solution Browser" button needs to be disabled while solution browser is already open, and vice versa.
+
+# test- May 22, 2017
 
         
