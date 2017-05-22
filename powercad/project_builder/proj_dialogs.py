@@ -28,7 +28,7 @@ from powercad.settings import LAST_ENTRIES_PATH, DEFAULT_TECH_LIB_DIR
 from powercad.spice_import import Netlist_SVG_converter
 
 from powercad.electro_thermal.ElectroThermal_toolbox import rdson_fit_transistor, list2float, csv_load_file,Vth_fit,fCRSS_fit
-
+from powercad.save_and_load import save_file, load_file
 # CLASSES FOR DIALOG USAGE
 class GenericDeviceDialog(QtGui.QDialog):   
     # Author: quang le
@@ -116,7 +116,7 @@ class GenericDeviceDialog(QtGui.QDialog):
                 return
         #----------------------------------------------------------------------------------------------------------------------------------------
         # Save the method in *.pmdl file type
-        pickle.dump(self.mdl,open(os.path.join(self.model_dir, name + '.pmdl'),"wb"))
+        save_file(self.mdl,os.path.join(self.model_dir, name + '.pmdl'))
         msg = QMessageBox()
         msg.setIcon(QMessageBox.Information)
         msg.setText("Datasheet information added")
@@ -144,7 +144,7 @@ class GenericDeviceDialog(QtGui.QDialog):
         # Get file_path from selected file
         file_path=os.path.join(self.model_dir,name+'.pmdl')
         if os.path.isfile(file_path):
-            self.mdl=pickle.load(open(file_path,'rb'))
+            self.mdl=load_file(file_path)
             self.Qrr=self.mdl['Qrr']
             self.Ciss=self.mdl['Ciss']
             self.Vpl=self.mdl['Vpl']
@@ -237,7 +237,7 @@ class GenericDeviceDialog(QtGui.QDialog):
         for f in os.listdir(self.dev_dir):
             filename=os.path.join(self.dev_dir,f)
             if os.path.isfile(filename):
-                self.current_device = pickle.load(open(filename, "rb"))
+                self.current_device = load_file(filename)
                 if self.current_device.device_type==1 and choice=='Transistor':
                     item = QStandardItem(f)
                     item.setEditable(False)
@@ -276,7 +276,7 @@ class DevicePropertiesDialog(QtGui.QDialog):
         for f in os.listdir(self.device_path):
             filename=os.path.join(self.device_path,f)
             if os.path.isfile(filename):
-                self.current_device = pickle.load(open(filename, "rb"))
+                self.current_device = load_file(filename)
                 if self.current_device.device_type==1 and self.dev_choice=='Transistor':
                     item = QStandardItem(f)
                     item.setEditable(False)
@@ -475,7 +475,7 @@ class NewProjectDialog(QtGui.QDialog):
         # Save most recent entries
         last_entries = [self.ui.txt_dir.text(),self.ui.txt_symbnet_address.text()]
         print "last_entries:", last_entries
-        pickle.dump(last_entries,open(LAST_ENTRIES_PATH,"wb"))
+        save_file(last_entries,LAST_ENTRIES_PATH)
         print "pickle dumped."
         
         # If netlist, create symbolic layout
@@ -514,7 +514,7 @@ class OpenProjectDialog(QtGui.QDialog):
             
     def open_dir(self): # responds to button click by opening a file browser where the project directory can be selected
         try:
-            last_entries = pickle.load(open(LAST_ENTRIES_PATH,"rb"))
+            last_entries = load_file(LAST_ENTRIES_PATH)
             prev_folder = last_entries[0]
         except:
             prev_folder = 'C://'    
@@ -525,7 +525,7 @@ class OpenProjectDialog(QtGui.QDialog):
 
     def load_project(self): # loads the project selected into the main view
         try:
-            self.parent.project = pickle.load(open(self.project_file[0],'rb'))
+            self.parent.project = load_file(self.project_file[0])
             
             # Add constraints field to any objects which lack it
             self.parent.project.symb_layout.add_constraints()

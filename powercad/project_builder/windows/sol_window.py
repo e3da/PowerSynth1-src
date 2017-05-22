@@ -19,10 +19,13 @@ from powercad.sym_layout.plot import plot_layout
 from powercad.export.Q3D import output_q3d_vbscript
 from powercad.export.solidworks import output_solidworks_vbscript
 from powercad.design.module_design import ModuleDesign
-from powercad.spice_export.netlist_graph import Module_SPICE_netlist_graph,Module_SPICE_netlist_graph_v2, Module_SPICE_lumped_graph
+from powercad.spice_export.netlist_graph import Module_SPICE_netlist_graph, Module_SPICE_netlist_graph_v2, Module_SPICE_lumped_graph
 from powercad.spice_export.thermal_netlist_graph import Module_Full_Thermal_Netlist_Graph
 from powercad.electro_thermal.ElectroThermal_toolbox import ET_analysis
 import numpy as np
+from powercad.drc import *
+from powercad.drc.design_rule_check import DesignRuleCheck
+
 class SolutionWindow(QtGui.QWidget):
     """Solution windows that show up in MDI area"""
     def __init__(self, solution, sym_layout):
@@ -32,6 +35,7 @@ class SolutionWindow(QtGui.QWidget):
         self.ui.setupUi(self)
         self.setWindowTitle(solution.name)
         
+        self.ui.btn_run_drc.pressed.connect(self.run_drc)
         self.ui.btn_export_q3d.pressed.connect(self.export_q3d)
         self.ui.btn_export_solidworks.pressed.connect(self.export_solidworks)
         self.ui.btn_export_spice_parasitics.pressed.connect(self.export_spice_parasitics)        
@@ -63,6 +67,13 @@ class SolutionWindow(QtGui.QWidget):
         ax = fig.add_subplot(111, aspect=1.0)
         plot_layout(sym_layout, ax, new_window=False)
         canvas.draw()
+        
+    def run_drc(self):
+        drc = DesignRuleCheck(self.sym_layout)
+        if drc.passes_drc(False):
+            QtGui.QMessageBox.about(None, "Design Rule Check", "DRC complete. No DRC errors were found.")
+        else:
+            QtGui.QMessageBox.warning(None, "Design Rule Check", "DRC errors found! Check log/console.")
         
     def export_q3d(self):
         fn = QtGui.QFileDialog.getSaveFileName(self, options=QtGui.QFileDialog.ShowDirsOnly)

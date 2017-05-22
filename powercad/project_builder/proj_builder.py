@@ -39,14 +39,14 @@ import matplotlib.pyplot as plt
 
 from powercad.project_builder.symmetry_list import SymmetryListUI
 from powercad.project_builder.performance_list import PerformanceListUI
-from powercad.project_builder.windows.mainWindow_ui1 import Ui_MainWindow
+from powercad.project_builder.windows.mainWindow_ui3 import Ui_MainWindow
 from powercad.project_builder.windows.sol_window import SolutionWindow
 from powercad.project_builder.proj_dialogs import NewProjectDialog, OpenProjectDialog, EditTechLibPathDialog, DevicePropertiesDialog,GenericDeviceDialog,LayoutEditorDialog
-
 
 from powercad.project_builder.process_design_rules_editor import ProcessDesignRulesEditor
 from powercad.tech_lib.tech_lib_wiz import TechLibWizDialog
 
+from powercad.layer_stack.layer_stack_import import LayerStackImport
 
 from powercad.sym_layout.symbolic_layout import SymLine, SymPoint, ThermalMeasure, ElectricalMeasure
 from powercad.sym_layout.symbolic_layout import FormulationError
@@ -57,6 +57,8 @@ from powercad.design.project_structures import *
 from powercad.util import Rect
 from powercad.sym_layout.svg import LayoutLine, LayoutPoint
 from powercad.settings import *
+from powercad.save_and_load import save_file, load_file
+
 
 class ProjectBuilder(QtGui.QMainWindow):
     
@@ -106,6 +108,9 @@ class ProjectBuilder(QtGui.QMainWindow):
         self.ui.tbl_projDevices.cellPressed.connect(self.component_pressed)
         self.ui.btn_modify_component.pressed.connect(self.modify_component)
         self.ui.btn_removeDevice.pressed.connect(self.remove_component)
+        
+        # Module stack page
+        self.ui.btn_import_layer_stack.pressed.connect(self.import_layer_stack)
         
         # Constraints page
         self.ui.txt_minWidth.textEdited.connect(self.constraint_min_edit)
@@ -432,6 +437,50 @@ class ProjectBuilder(QtGui.QMainWindow):
 # ------------------------------------------------------------------------------------------        
 # ------ Module Stack ----------------------------------------------------------------------
 
+    def import_layer_stack(self):   # Import layer stack from CSV file
+        try:
+            last_entries = load_file(LAST_ENTRIES_PATH)
+            prev_folder = last_entries[0]
+        except:
+            prev_folder = 'C://'
+        # Open a layer stack CSV file and extract the layer stack data from it
+        try:
+            layer_stack_csv_file = QFileDialog.getOpenFileName(self, "Select Layer Stack File", prev_folder, "CSV Files (*.csv)")
+            layer_stack_import = LayerStackImport(layer_stack_csv_file)
+            layer_stack_import.import_csv()
+        except:
+            QtGui.QMessageBox.warning(self, "Layer Stack Import Failed", "ERROR: Could not import layer stack from CSV.")
+        
+        if layer_stack_import.compatible:
+            # Layer stack compatible - fill module stack UI fields with imported values
+            self.ui.txt_baseWidth.setText(str(layer_stack_import.baseplate.dimensions[0]))
+            self.ui.txt_baseLength.setText(str(layer_stack_import.baseplate.dimensions[1]))
+            self.ui.txt_baseThickness.setText(str(layer_stack_import.baseplate.dimensions[2]))
+            self.ui.txt_baseConvection.setText(str(layer_stack_import.baseplate.eff_conv_coeff))
+            self.ui.txt_subAttchThickness.setText(str(layer_stack_import.substrate_attach.thickness))
+            self.ui.txt_subWidth.setText(str(layer_stack_import.substrate.dimensions[0]))
+            self.ui.txt_subLength.setText(str(layer_stack_import.substrate.dimensions[1]))
+            self.ui.txt_subLedge.setText(str(layer_stack_import.substrate.ledge_width))
+            
+            # Notify user of import success and any warnings
+            if layer_stack_import.warnings == []:
+                QtGui.QMessageBox.about(self, "Layer Stack Imported", "Layer Stack import successful (No warnings).")
+            else:
+                if len(layer_stack_import.warnings) == 1:
+                    QtGui.QMessageBox.about(self, "Layer Stack Imported", "Layer Stack import successful with " + str(len(layer_stack_import.warnings)) + ' warning.')
+                    QtGui.QMessageBox.warning(self, "Layer Stack Import Warning", "WARNING: " + layer_stack_import.warnings[0])
+                else:
+                    QtGui.QMessageBox.about(self, "Layer Stack Imported", "Layer Stack import successful with " + str(len(layer_stack_import.warnings)) + ' warnings.')
+                    warnings_msg = ""
+                    for warning in layer_stack_import.warnings:
+                        warnings_msg += ("WARNING: " + warning + "\n")
+                    QtGui.QMessageBox.warning(self, "Layer Stack Import Warnings", warnings_msg)
+                    
+        else:
+            # Layer stack not compatible - notify the user of import failure
+            QtGui.QMessageBox.warning(self, "Layer Stack Import Failed", "ERROR: " + layer_stack_import.error_msg)
+        
+
     def fill_material_cmbBoxes(self):
         """Fill combo boxes in module stack with materials from Tech Library"""
         # Add materials to substrate combobox
@@ -485,7 +534,7 @@ class ProjectBuilder(QtGui.QMainWindow):
             dims = (float(self.ui.txt_baseWidth.text()),float(self.ui.txt_baseLength.text()),float(self.ui.txt_baseThickness.text()))
             eff_conv_coeff = float(self.ui.txt_baseConvection.text())
             tech_path = os.path.join(self.project.tech_lib_dir, "Baseplates", self.ui.cmb_baseMaterial.currentText())
-            tech_lib_obj = pickle.load(open(tech_path,"rb"))
+            tech_lib_obj = load_file(tech_path)
             self.project.module_data.baseplate = BaseplateInstance(dims,eff_conv_coeff,tech_lib_obj)
         except:
             self.ui.lbl_err_baseMaterial.setText("Error")
@@ -529,7 +578,7 @@ class ProjectBuilder(QtGui.QMainWindow):
                 
             ledge_width = float(self.ui.txt_subLedge.text())
             tech_path = os.path.join(self.project.tech_lib_dir, "Substrates", self.ui.cmb_subMaterial.currentText())
-            tech_lib_obj = pickle.load(open(tech_path,"rb"))
+            tech_lib_obj = load_file(tech_path)
             self.project.module_data.substrate = SubstrateInstance(dims,ledge_width,tech_lib_obj)
         except:
             self.ui.lbl_err_subMaterial.setText("Error")
@@ -557,7 +606,7 @@ class ProjectBuilder(QtGui.QMainWindow):
         try:
             thickness = float(self.ui.txt_subAttchThickness.text())
             tech_path = os.path.join(self.project.tech_lib_dir, "Substrate_Attaches", self.ui.cmb_subAttchMaterial.currentText())
-            tech_lib_obj = pickle.load(open(tech_path,"rb"))
+            tech_lib_obj = load_file(tech_path)
             self.project.module_data.substrate_attach = SubstrateAttachInstance(thickness,tech_lib_obj)
         except:
             self.ui.lbl_err_subAttchMaterial.setText("Error")
@@ -761,11 +810,11 @@ class ProjectBuilder(QtGui.QMainWindow):
             # link to tech_lib obj
             try:
                 categ = self.categ_list_model.fileName(self.ui.lst_categories.selectedIndexes()[0])
-                tech_obj = pickle.load(open(self.device_list_model.rootPath() + '/' + item.model().data(item),"rb"))
+                tech_obj = load_file(self.device_list_model.rootPath() + '/' + item.model().data(item))
                 if categ == 'Device':
                     item2 = self.ui.lst_devices_att.selectionModel().selectedIndexes()[0]
                     # Load attach tech lib object
-                    attch_tech_obj = pickle.load(open(self.attach_list_model.rootPath() + '/' + item2.model().data(item2),"rb"))
+                    attch_tech_obj = load_file(self.attach_list_model.rootPath() + '/' + item2.model().data(item2))
                     attch_thick = float(self.ui.txt_devAttchThickness.text())
                     thermal_model_choice=1
                     if thermal_model_choice==1:
@@ -1357,7 +1406,7 @@ class ProjectBuilder(QtGui.QMainWindow):
                     shutil.copy(os.path.join(save_path, "project.p"), os.path.join(save_path, "project.p.temp"))
                 # Attempt to pickle the project
                 self.project.symb_layout.prepare_for_pickle() # prepare the symbolic layout object for pickling
-                pickle.dump(self.project,open(os.path.join(save_path, "project.p"),"wb"))
+                save_file(self.project,os.path.join(save_path, "project.p"))
                 QtGui.QMessageBox.about(self,"Project Saved","Project Saved")
             except:
                 # Replace the original copy
@@ -1392,7 +1441,7 @@ class ProjectBuilder(QtGui.QMainWindow):
                 
                 # Attempt to pickle the project
                 self.project.symb_layout.prepare_for_pickle() # prepare the symbolic layout object for pickling
-                pickle.dump(self.project,open(os.path.join(save_path, "project.p"),"wb"))
+                save_file(self.project,os.path.join(save_path, "project.p"))
                 QtGui.QMessageBox.about(self,"Project Saved","Project Saved")
             except:
                 # Replace the original copy

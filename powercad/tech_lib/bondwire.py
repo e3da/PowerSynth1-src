@@ -12,7 +12,7 @@ from PySide.QtGui import QMessageBox
 
 from powercad.tech_lib.test_techlib import make_sub_dir
 from powercad.design.library_structures import *
-
+from powercad.save_and_load import *
 class BondwirePage(object):
     def __init__(self, parent):
         # Bond wire root directory
@@ -114,7 +114,7 @@ class BondwirePage(object):
                                                  float(self.ui.RhoBondwireInput.text()), None, None)
             
             make_sub_dir(self.sub_dir)
-            pickle.dump(wire,open(os.path.join(self.sub_dir, wire.name+".p"), "wb"))
+            save_file(wire, os.path.join(self.sub_dir, wire.name+".p"))
             self.load_page()
         else:
             print "Error Creating Bond Wire"
@@ -122,7 +122,7 @@ class BondwirePage(object):
     def load(self):
         if self.ui.BondwireList.currentIndex()>0:
             filename = os.path.join(self.sub_dir, self.ui.BondwireList.currentText())
-            self.current_bondwire = pickle.load(open(filename, "rb"))
+            self.current_bondwire = load_file(filename)
             
             self.ui.BondwireNameInput.setText(str(self.current_bondwire.name))
             
