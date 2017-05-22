@@ -40,6 +40,7 @@ class MaterialProperties:
         self.young_mdl=young_modulus
         self.poi_rat=poissons_ratios
         self.expansion_coeff=thermal_expansion_coeffcient
+
 class Device:
     TRANSISTOR = 1
     DIODE = 2
@@ -225,7 +226,7 @@ class SubstrateAttach:
         self.properties = properties
 
 class Baseplate:
-    def __init__(self, properties):
+    def __init__(self, properties=None):
         """Describes the geometry and properties of the Baseplate.
         
         Keyword arguments:

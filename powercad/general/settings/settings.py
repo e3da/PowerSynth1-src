@@ -23,7 +23,7 @@ else:   # For debugging and running PowerSynth from Eclipse
     ELMER_BIN_PATH = os.path.abspath("C:/Program Files (x86)/Elmer 8.2-Release/bin")     # Default Elmer 8.2 installation directory
     TEMP_DIR = os.path.abspath(r"../../../export_data/temp")
     CACHED_CHAR_PATH = os.path.abspath("../../../export_data/cached_thermal") # sxm063
-
+    MATERIAL_LIB_PATH='..//..//..//tech_lib//Material_lib//Materials.csv'
 if __name__ == '__main__':  # Module test
     print DEFAULT_TECH_LIB_DIR
     print LAST_ENTRIES_PATH

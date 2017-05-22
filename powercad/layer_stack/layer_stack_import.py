@@ -2,7 +2,7 @@
 Created on Apr 22, 2017
 
 @author: jhmain
-@author: Qmle add some information on layer thickness
+@author: Qmle add some information on layer thickness and material properties, exclude all system properties
 PURPOSE:
  - This module is used to import a layer stack from a CSV file
  
@@ -16,12 +16,17 @@ import csv
 
 from powercad.design.project_structures import BaseplateInstance, SubstrateAttachInstance, SubstrateInstance
 from powercad.design.library_structures import *
+from powercad.general.material.material import *
+from powercad.general.settings.settings import MATERIAL_LIB_PATH
 class LayerStackImport:
     
     def __init__(self, csv_file):
         self.csv_file = csv_file
         self.layer_list = []
-        
+        # Load Material Lib
+        self.material_lib=Material_lib()
+        self.material_lib.load_csv(MATERIAL_LIB_PATH)
+        # Initialize design stucture
         self.baseplate = None
         self.substrate_attach = None
         self.substrate = None
@@ -70,6 +75,8 @@ class LayerStackImport:
         substrate_length = None
         ledge_width = None
         substrate_tech = Substrate()
+        bp_tech=Baseplate()
+
         for layer in self.layer_list:
             print '--- Checking layer: ' + str(layer)
             
@@ -107,30 +114,31 @@ class LayerStackImport:
                     width = float(layer[4])
                     length = float(layer[5])
                     thick = float(layer[6])
-                    eff_conv_coeff = int(layer[7])
+                    bp_material_id=layer[7]
+                    bp_tech.properties=self.material_lib.get_mat(bp_material_id)
                 except:
                     self.compatible = False
-                    self.error_msg = 'Could not find all values in baseplate layer ' + name + '. Baseplate must contain the following fields: layer type, num, name, pos, width, length, thickness, effective convection coefficient.'
+                    self.error_msg = 'Could not find all values in baseplate layer ' + name + '. Baseplate must contain the following fields: layer type, num, name, pos, width, length, thickness, material id.'
                     break
-                self.baseplate = BaseplateInstance((width, length, thick), eff_conv_coeff, None)
-                print 'Found baseplate ' + str(width) + ', ' + str(length) + ', ' + str(thick) + ', ' + str(eff_conv_coeff)
+                self.baseplate = BaseplateInstance((width, length, thick), None, bp_tech)
+                print 'Found baseplate ' + str(width) + ', ' + str(length) + ', ' + str(thick) + ', ' + str(bp_material_id)
                 
             # Find substrate attach
             if layer_type == self.substrate_attach_abbrev:
                 try:
-                    thick = float(layer[4])
+                    thick = float(layer[6])
+                    sa_material_id=layer[7]
+                    sa_tech=
+                    sa_tech=self.material_lib.get_mat(sa_material_id)
                 except:
                     self.compatible = False
                     self.error_msg = 'Could not find all values in substrate attach layer ' + name + '. Substrate attach must contain the following fields: layer type, num, name, pos, thickness.'
                     break
-                self.substrate_attach = SubstrateAttachInstance(thick, None)
+                self.substrate_attach = SubstrateAttachInstance(thick, sa_tech)
                 print 'Found substrate attach ' + str(thick)
                     
             # Find substrate 
             if layer_type == self.metal_abbrev or layer_type == self.dielectric_abbrev:
-                print substrate_length
-                print substrate_width
-                print ledge_width
                 if layer_type == self.metal_abbrev:
                     print 'layer', layer
                     substrate_tech.metal_thickness = float(layer[6])

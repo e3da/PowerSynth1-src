@@ -81,10 +81,29 @@ class Material_lib:
                 if check == []:
                     self.mat_lib.append(material)
 
+    def load_csv(self,fname=None):
+        '''
+        Load the material list from csv file
+        :param fname:
+        :return:
+        '''
+        if self.mat_lib==[]:
+            print 'loading material from csv'
+        else:
+            self.mat_lib=[]
+            print 'overwrite material list'
+        with open(fname) as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                material=MaterialProperties(name=row['name'],thermal_cond=row['thermal_cond'],spec_heat_cap=row['spec_heat_cap'],density=row['density']
+                                            ,electrical_res=row['electrical_res'],rel_permit=row['rel_permit'],rel_permeab=row['rel_permeab'],id=row['q3d_id'],young_modulus=row['young_modulus']
+                                            ,poissons_ratios=row['poissons_ratios'],thermal_expansion_coeffcient=row['thermal_expansion_coeffcient'])
+                self.mat_lib.append(material)
+            print self.mat_lib
 
     def save_csv(self,fname=None):
         '''
-        Save the material list to csv file
+        Save the material list to csv file, if added material is already existed, it is updated
         :param fname:
         :return:
         '''
@@ -112,11 +131,46 @@ class Material_lib:
                 data['thermal_expansion_coeffcient']=material.expansion_coeff
                 if material.name!=None:
                     writer.writerow(data)
-    def add_mat(self):
-        print "add one material to the list"
-        # ToDO: add material to material lib
+
+    def add_mat(self,material):
+        '''
+        Add new row in material list
+        :return:
+        '''
+        self.mat_lib.append(material)
+        print "add one material to the list:", material.name
+
+    def remove_mat(self,mat_name):
+        '''
+        Remove a material by its name
+        :param mat_name: a string reprent mateial name
+        :return:
+        '''
+        if self.mat_lib!=[]:
+            id=0
+            for material in self.mat_lib:
+                if material.name==mat_name:
+                    self.mat_lib.pop(id)
+                else:
+                    id+=1
+
+    def get_mat(self,mat_name):
+        '''
+        Get a material from lib by its name
+        :param mat_name:
+        :return: material properties object
+        '''
+        if self.mat_lib != []:
+            for material in self.mat_lib:
+                if material.name == mat_name:
+                    return material
 
 if __name__ == "__main__":
     ML=Material_lib()
+    csv_dir='C://Users//Quang//Google Drive//MSCAD PowerSynth Archives//Internal//MDK//Layer Stack Quang//Materials.csv'
     ML.load_q3d('C://Users//Quang//Google Drive//MSCAD PowerSynth Archives//Internal//MDK//Layer Stack Quang//Materials.amat')
-    ML.save_csv('C://Users//Quang//Google Drive//MSCAD PowerSynth Archives//Internal//MDK//Layer Stack Quang//Materials.csv')
+    ML.save_csv(csv_dir)
+    ML.load_csv(csv_dir)
+    new_mat=MaterialProperties(name='Pb_Sn solder',thermal_cond=35.8,spec_heat_cap=130,density=11020,id='Pb_Sn solder')
+    ML.add_mat(new_mat)
+    ML.save_csv(csv_dir)
