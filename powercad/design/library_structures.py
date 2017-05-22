@@ -7,28 +7,39 @@ Created on Nov 16, 2012
 import math
 
 class MaterialProperties:
-    def __init__(self, name, thermal_cond, spec_heat_cap, density, 
-                 electrical_res, rel_permit, rel_permeab):
+    def __init__(self, name=None, thermal_cond=None, spec_heat_cap=None, density=None,
+                 electrical_res=None, rel_permit=None, rel_permeab=None,id=None, young_modulus=None,poissons_ratios=None
+                 ,thermal_expansion_coeffcient=None):
         """Material Property holding object
                 
         Keyword arguments:
         name -- (string) name identification
+        id -- (string) name in Q3D for this material
+        --- Thermal constants
         thermal_cond -- W/(m*K) -- "Thermal Conductivity"
         spec_heat_cap -- J/(kg*K) -- "Specific Heat Capacity"
+        --- Mechanical constants
         density -- kg/m^3 -- "Material Density"
+        young_modulus -- -- "Young Modulus"
+        poissons_ratios -- "Poissons Ratios"
+        thermal_expansion_coeffcient -- -- "Thermal Expansion Coefficient"
+        --- Electrical constants
         electrical_res -- (ohm*m) -- "Electrical Resistivity"
         rel_permit -- (unitless) -- "Relative Permittivity"
         rel_permeab -- (unitless) -- "Relative Permeability"
-        
+
         """
         self.name = name
+        self.id = id
         self.thermal_cond = thermal_cond
         self.spec_heat_cap = spec_heat_cap
         self.density = density
         self.electrical_res = electrical_res
         self.rel_permit = rel_permit
         self.rel_permeab = rel_permeab
-
+        self.young_mdl=young_modulus
+        self.poi_rat=poissons_ratios
+        self.expansion_coeff=thermal_expansion_coeffcient
 class Device:
     TRANSISTOR = 1
     DIODE = 2
@@ -163,7 +174,7 @@ class BondWire:
             return eff_diam
 
 class Substrate:
-    def __init__(self, name, isolation_properties, metal_properties, metal_thickness, isolation_thickness):
+    def __init__(self, name=None, isolation_properties=None, metal_properties=None, metal_thickness=None, isolation_thickness=None):
         
         """Describes the geometry of the traces in a layout.
         

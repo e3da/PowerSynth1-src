@@ -12,7 +12,6 @@ import pickle
 
 import matplotlib.pyplot as plt
 from matplotlib import lines
-from powercad.general.Abstract_Data import Stack
 from pykrige.ok import OrdinaryKriging as ok
 from scipy.interpolate import *
 

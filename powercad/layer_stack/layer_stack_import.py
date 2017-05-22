@@ -15,7 +15,7 @@ import os
 import csv
 
 from powercad.design.project_structures import BaseplateInstance, SubstrateAttachInstance, SubstrateInstance
-
+from powercad.design.library_structures import *
 class LayerStackImport:
     
     def __init__(self, csv_file):
@@ -25,7 +25,7 @@ class LayerStackImport:
         self.baseplate = None
         self.substrate_attach = None
         self.substrate = None
-        
+
         self.compatible = True
         self.warnings = []
         self.error_msg = None
@@ -69,7 +69,7 @@ class LayerStackImport:
         substrate_width = None
         substrate_length = None
         ledge_width = None
-          
+        substrate_tech = Substrate()
         for layer in self.layer_list:
             print '--- Checking layer: ' + str(layer)
             
@@ -127,14 +127,22 @@ class LayerStackImport:
                 print 'Found substrate attach ' + str(thick)
                     
             # Find substrate 
-            if layer_type == self.metal_abbrev or layer_type == self.dielectric_abbrev or layer_type == self.interconnect_abbrev :
+            if layer_type == self.metal_abbrev or layer_type == self.dielectric_abbrev:
+                print substrate_length
+                print substrate_width
+                print ledge_width
+                if layer_type == self.metal_abbrev:
+                    print 'layer', layer
+                    substrate_tech.metal_thickness = float(layer[6])
+                if layer_type == self.dielectric_abbrev:
+                    substrate_tech.isolation_thickness = float(layer[6])
+
                 try:
                     width = float(layer[4])
                     length = float(layer[5])
-                    if layer_type==self.metal_abbrev:
-                        m_thick=float(layer[6])
-                    if layer_type==self.dielectric_abbrev:
-                        d_thick=float(layer[6])
+
+
+
                 except:
                     self.compatible = False
                     self.error_msg = 'Could not find all values in metal/dielectric layer ' + name + '. Metal/dielectric must contain the following fields: layer type, num, name, pos, width, length.'
@@ -158,6 +166,7 @@ class LayerStackImport:
             elif layer_type == self.interconnect_abbrev:
                 try:
                     ledge_width = float(layer[4])
+                    print ledge_width
                 except:
                     self.compatible = False
                     self.error_msg = 'Could not find all values in interconnect layer ' + name + '. Interconnect layers must contain the following fields: layer type, num, name, pos, ledge width.'
@@ -166,7 +175,7 @@ class LayerStackImport:
                 
                 
         try:
-            self.substrate = SubstrateInstance((substrate_width, substrate_length), ledge_width, None)        
+            self.substrate = SubstrateInstance((substrate_width, substrate_length), ledge_width, substrate_tech)
         except:
             self.compatible = False
             self.error_msg = 'Could not find substrate layers.'

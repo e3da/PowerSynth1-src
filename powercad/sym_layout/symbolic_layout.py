@@ -2591,7 +2591,6 @@ class SymbolicLayout(object):
         #return 1e-6, 1e-6, 1e-3
 
     def _build_lumped_edges(self,trace_data,lumped_graph):
-        self.set_RS_model()
         '''
         :param trace_data:
         :param lumped_graph:
@@ -2604,6 +2603,7 @@ class SymbolicLayout(object):
         Stime= time.time()
         for j in range(len(self.mdl_type['E'])):
             if self.mdl_type['E'][j]=='RS':
+                self.set_RS_model()
                 for w,l in self.trace_info:
                     w_all.append(w)
                     l_all.append(l)

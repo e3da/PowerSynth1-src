@@ -1,6 +1,6 @@
 import copy
 
-from powercad.response_surface.Ipy_script import Q3D_ipy_script
+from powercad.interfaces.Q3D.Ipy_script import Q3D_ipy_script
 
 from powercad.general.data_struct.BasicsFunction import *         # group of BasicFunction that can be used for any classes
 from powercad.interfaces.Q3D.Electrical import rect_q3d_box

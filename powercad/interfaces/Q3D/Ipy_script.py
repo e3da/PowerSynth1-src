@@ -4,7 +4,7 @@ import datetime
 import getpass
 import subprocess
 
-from powercad.response_surface.Q3DGeometry import Q3d_box
+from powercad.interfaces.Q3D.Q3DGeometry import Q3D_rect_script
 
 from powercad.interfaces.Q3D.Q3d_ipy_raw_script import *
 

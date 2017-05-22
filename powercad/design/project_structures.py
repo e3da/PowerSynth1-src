@@ -48,7 +48,8 @@ class SubstrateInstance:
         m_dimensions.append(substrate_tech.metal_thickness)
         m_properties=substrate_tech.metal_properties
         self.metallayer=MetalInstance(m_dimensions,m_properties)
-        d_dimensions=dimensions.append(substrate_tech.isolation_thickness)
+        d_dimensions=[dim for dim in self.dimensions]
+        d_dimensions.append(substrate_tech.isolation_thickness)
         d_properties=substrate_tech.isolation_properties
         self.dielectriclayer=DielectricInstance(d_dimensions,d_properties)
         self.ledge_width = ledge_width
