@@ -210,7 +210,7 @@ class Substrate:
         
         
 class SubstrateAttach:
-    def __init__(self, properties):        
+    def __init__(self, properties=None):
         """Describes the geometry of the substrate attaches in a layout.
         
         Keyword arguments:

@@ -73,10 +73,12 @@ class LayerStackImport:
     def check_layer_stack_compatibility(self):  # Check if layer stack in list form is compatible with PowerSynth   
         substrate_width = None
         substrate_length = None
+        metal_width=None
+        metal_length=None
         ledge_width = None
         substrate_tech = Substrate()
         bp_tech=Baseplate()
-
+        sa_tech = SubstrateAttach()
         for layer in self.layer_list:
             print '--- Checking layer: ' + str(layer)
             
@@ -128,8 +130,8 @@ class LayerStackImport:
                 try:
                     thick = float(layer[6])
                     sa_material_id=layer[7]
-                    sa_tech=
-                    sa_tech=self.material_lib.get_mat(sa_material_id)
+
+                    sa_tech.properties=self.material_lib.get_mat(sa_material_id)
                 except:
                     self.compatible = False
                     self.error_msg = 'Could not find all values in substrate attach layer ' + name + '. Substrate attach must contain the following fields: layer type, num, name, pos, thickness.'
@@ -139,49 +141,38 @@ class LayerStackImport:
                     
             # Find substrate 
             if layer_type == self.metal_abbrev or layer_type == self.dielectric_abbrev:
-                if layer_type == self.metal_abbrev:
-                    print 'layer', layer
-                    substrate_tech.metal_thickness = float(layer[6])
-                if layer_type == self.dielectric_abbrev:
-                    substrate_tech.isolation_thickness = float(layer[6])
-
                 try:
-                    width = float(layer[4])
-                    length = float(layer[5])
-
-
-
+                    if layer_type == self.metal_abbrev:
+                        substrate_tech.metal_thickness = float(layer[6])
+                        substrate_tech.metal_properties=self.material_lib.get_mat(layer[7])
+                        metal_width = float(layer[4])
+                        metal_length = float(layer[5])
+                    if layer_type == self.dielectric_abbrev:
+                        substrate_tech.isolation_thickness = float(layer[6])
+                        substrate_tech.isolation_properties = self.material_lib.get_mat(layer[7])
+                        substrate_width = float(layer[4])
+                        substrate_length = float(layer[5])
+                    if substrate_width!=None and metal_width!= None:
+                        if ledge_width==None:
+                            ledge_width=(substrate_width-metal_width)/2
                 except:
                     self.compatible = False
                     self.error_msg = 'Could not find all values in metal/dielectric layer ' + name + '. Metal/dielectric must contain the following fields: layer type, num, name, pos, width, length.'
                     break
                 
-                if substrate_width == None:
-                    substrate_width = width
-                elif width != substrate_width:
-                    self.compatible = False
-                    self.error_msg = 'Unexpected value for width found in metal/dielectric layer ' + name + '. Substrate layers (metal/dielectric) must have same width.'
-                    break
-                    
-                if substrate_length == None:
-                    substrate_length = length
-                elif length != substrate_length:
-                    self.compatible = False
-                    self.error_msg = 'Unexpected value for length found in metal/dielectric layer ' + name + '. Substrate layers (metal/dielectric) must have same length.'
-                    break
+
+
                 print 'Found metal/dielectric ' + str(width) + ', ' + str(length)
                 
-            elif layer_type == self.interconnect_abbrev:
+            elif layer_type == self.interconnect_abbrev :
                 try:
-                    ledge_width = float(layer[4])
-                    print ledge_width
+                    print  ledge_width
                 except:
                     self.compatible = False
                     self.error_msg = 'Could not find all values in interconnect layer ' + name + '. Interconnect layers must contain the following fields: layer type, num, name, pos, ledge width.'
                     break
                 print 'Found interconnect ' + str(ledge_width)
-                
-                
+
         try:
             self.substrate = SubstrateInstance((substrate_width, substrate_length), ledge_width, substrate_tech)
         except:

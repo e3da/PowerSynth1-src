@@ -27,10 +27,10 @@ if __name__ == '__main__':
     T1.define_trace(4)  # Select trace layer 
     script1=Q3D_ipy_script('16.2','C://Users//qmle//Desktop//Testing//Py_Q3D_test//Mdl2','Mdl2','C://Users//qmle//Desktop//Testing//Py_Q3D_test//Mdl2')  # Initialize Script Object
     script1.add_script(T1.get_all_Elayers())                                                                                            # Add Topology structure to script  
-    script1.set_params('Width', 9, 'XSize',E4,1)               # Set up parameters          
-    script1.set_params('Length', 9, 'YSize',E4,1)              # Set up parameters 
-    script1.set_params('W_bp', 50, 'XSize',E1,1)               # Set up parameters
-    script1.set_params('L_bp', 50, 'YSize',E1,1)               # Set up parameters
+    script1.set_params('Width', 9, 'XSize',E4,1)               # Setup parameters
+    script1.set_params('Length', 9, 'YSize',E4,1)              # Setup parameters
+    script1.set_params('W_bp', 50, 'XSize',E1,1)               # Setup parameters
+    script1.set_params('L_bp', 50, 'YSize',E1,1)               # Setup parameters
     script1.identify_net('signal', 'Metal2', 'SignalNet1')     # Create net objects
     script1.select_source_sink('Source1',E4.get_face(2),'Sink1', E4.get_face(4),'SignalNet1') # Select Source Sink to faces
     script1.analysis_setup()                                   # Set up an analysis, in this case set as default    

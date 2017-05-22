@@ -99,7 +99,7 @@ class Material_lib:
                                             ,electrical_res=row['electrical_res'],rel_permit=row['rel_permit'],rel_permeab=row['rel_permeab'],id=row['q3d_id'],young_modulus=row['young_modulus']
                                             ,poissons_ratios=row['poissons_ratios'],thermal_expansion_coeffcient=row['thermal_expansion_coeffcient'])
                 self.mat_lib.append(material)
-            print self.mat_lib
+
 
     def save_csv(self,fname=None):
         '''

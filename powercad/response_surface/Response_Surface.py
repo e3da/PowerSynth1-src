@@ -253,12 +253,12 @@ class RS_model:
         mins=[]   # list of all min values
         maxs=[]   # list of all max values
         cur_id=[] # current data id
-        stack=Stack()              # initialize a stack 
+        stack=[]            # initialize a stack
         for b in self.data_bound:  # update all min and max value
             mins.append(b[0]) 
             maxs.append(b[1])
             cur_id.append(0)       # initialize a list of all zero id
-            stack.push(0)          # initialize the stack  data
+            stack.append(0)          # initialize the stack  data
         if lin_ops:                # if the user choose this option  
             lnsp_all=[]               # initialize list of all linear space
             for i in range(col_size): # update a list of all linear space object

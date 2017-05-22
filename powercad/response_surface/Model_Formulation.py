@@ -16,34 +16,94 @@ def form_trace_model(layer_stack_dir,options=None):
     '''First we set up layer stack with material properties '''
     E1, E2, E3, E4 = (rect_q3d_box() for i in range(4))
     # -----------------------
-    # Baseplate
+    # Baseplate dimensions and material
     bp_W=LS.baseplate.dimensions[0]
     bp_L=LS.baseplate.dimensions[1]
     bp_t=LS.baseplate.dimensions[2]
+    bp_mat=LS.baseplate.baseplate_tech.properties.id
     E1.set_size(bp_W, bp_L, bp_t)
+    print bp_mat
     E1.set_name('Baseplate')
+    E1.set_material(bp_mat)
     # Substrate
-    sub_W=LS.substrate.dimensions[0]
-    sub_L=LS.substrate.dimensions[1]
-    metal_thick=LS.substrate.substrate_tech.metal_thickness
-    iso_thick=LS.substrate.substrate_tech.isolation_thickness
-    met_W=LS.substrate.metallayer.dimensions[0]
-    met_L= LS.substrate.metallayer.dimensions[1]
+    sub_W = LS.substrate.dimensions[0]
+    sub_L = LS.substrate.dimensions[1]
+    metal_thick = LS.substrate.substrate_tech.metal_thickness
+    metal_mat=LS.substrate.substrate_tech.metal_properties.id
+    iso_thick = LS.substrate.substrate_tech.isolation_thickness
+    iso_mat=LS.substrate.substrate_tech.isolation_properties.id
+    met_W = LS.substrate.dimensions[0]-LS.substrate.ledge_width
+    met_L = LS.substrate.dimensions[1]-LS.substrate.ledge_width
     # -----------------------
     # Metal1
     E2.set_size(met_W, met_L, metal_thick)
     E2.set_name('Metal1')
+    E2.set_material(metal_mat)
+    print metal_mat
     # -----------------------
-    E3.set_size(sub_W, sub_L, 0.5)
+    E3.set_size(sub_W, sub_L, iso_thick)
     E3.set_name('Substrate')  # Substrate// Dielectric
-    E3.set_material('Al_N')
+    print iso_mat
+    E3.set_material(iso_mat)
     # -----------------------
     E4.set_size(met_W, met_L, metal_thick)
     E4.set_name('Metal2')  # Metal 2
+    E4.set_material(metal_mat)
 
 
+    T1 = Layer_Stack()
+    T1.add_Layers([E1, E2, E3, E4])
+    T1.define_trace(4)  # Select trace layer
+    script1 = Q3D_ipy_script('16.2', 'C://Users//qmle//Desktop//Testing//Py_Q3D_test//Mdl2', 'Mdl2',
+                             'C://Users//qmle//Desktop//Testing//Py_Q3D_test//Mdl2')  # Initialize Script Object
+    script1.add_script(T1.get_all_Elayers())  # Add Topology structure to script
+    script1.set_params('Width', 9, 'XSize', E4, 1)  # Setup parameters
+    script1.set_params('Length', 9, 'YSize', E4, 1)  # Setup parameters
+    script1.set_params('W_bp', 50, 'XSize', E1, 1)  # Setup parameters
+    script1.set_params('L_bp', 50, 'YSize', E1, 1)  # Setup parameters
+    script1.identify_net('signal', 'Metal2', 'SignalNet1')  # Create net objects
+    script1.select_source_sink('Source1', E4.get_face(2), 'Sink1', E4.get_face(4),
+                               'SignalNet1')  # Select Source Sink to faces
+    script1.analysis_setup()  # Set up an analysis, in this case set as default
+    script1.add_freq_sweep('10k', '500k', '1k')  # Set up frequency sweep on analysis
+
+    mdl1 = RS_model(['W', 'L'], const=['H', 'T'])
+    mdl1.set_dir('C://Users//qmle//Desktop//Testing//Py_Q3D_test//Mdl2')
+    mdl1.set_data_bound([[1.2, 20], [1.2, 20]])
+    mdl1.set_data_bound([[1.2, 30], [1.2, 30]])
+    mdl1.set_name('Mdl2')
+    script1.create_report('Freq', 'ACR', 'SignalNet1', 'Source1', 'Sweep1', 1)  # Create report
+    script1.update_report('Freq', 'ACL', 'SignalNet1', 'Source1', 'Sweep1', 1)
+    script1.update_report('Freq', 'C', 'SignalNet1', '', 'Sweep1', 1)
+    mdl1.create_uniform_DOE([10, 10], True)
+    mdl1.create_DOE(2, 100)
+    #
+    print mdl1.DOE
+    mdl1.generate_fname()
+    for [w, l] in mdl1.DOE.tolist():
+        name = mdl1.mdl_name + '_W_' + str(w) + '_L_' + str(l)
+        # print name
+        script1.change_properties('Width', w, 1)
+        script1.change_properties('Length', l, 1)
+        script1.analyze_all()  # Run analysis
+        script1.export_report('Data Table 1', 'C://Users//qmle//Desktop//Testing//Py_Q3D_test//Mdl2//',
+                              name)  # Export report to csv files
+    script1.make()
+    script1.build('C://Users//qmle//Desktop//Testing//Py_Q3D_test//IronPython//ipy64.exe')
+    mdl1.set_unit('n', 'H')
+    mdl1.set_sweep_unit('k', 'Hz')
+    mdl1.read_file('csv', 'sweep', 90, ('Hz', 'H'))
+
+    mdl1.build_RS_mdl('Krigging')
+    # mdl1.plot_input('FEM with Q3D for Inductance')
+    # mdl1.export_RAW_data("C:\Users\qmle\Desktop\Testing\Py_Q3D_test\Mdl2\RAW data")
+    mdl1.plot_random('Krigging')
+    # mdl1.plot_sweep(15)
+    mdl1.save_model()
+
+    # script1.build('C://Users//qmle//workspace//Python_Q3d_model//IronPython//ipy64.exe')  # Use Ipy64.exe to run simulation
 
 if __name__=="__main__":
-    dir="C://Users//Quang//Google Drive//MSCAD PowerSynth Archives//Internal//MDK//Layer Stack Quang//MDK Layer Stack Template v4.csv"
+    dir="C://Users//qmle//Google Drive//MSCAD PowerSynth Archives//Internal//MDK//Layer Stack Quang//MDK_Review_Quang.csv"
     dir=os.path.abspath(dir)
     form_trace_model(dir)
