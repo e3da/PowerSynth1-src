@@ -4,6 +4,7 @@ This is used by developers only to parse a material libary from Ansys and genera
 from powercad.design.library_structures import MaterialProperties
 import csv
 import re
+from powercad.general.settings.settings import MATERIAL_LIB_PATH
 class Material_lib:
     def __init__(self):
         self.mat_lib=[]
@@ -163,14 +164,15 @@ class Material_lib:
         if self.mat_lib != []:
             for material in self.mat_lib:
                 if material.name == mat_name:
+                    print 'found material',material.name
                     return material
 
 if __name__ == "__main__":
     ML=Material_lib()
-    csv_dir='C://Users//Quang//Google Drive//MSCAD PowerSynth Archives//Internal//MDK//Layer Stack Quang//Materials.csv'
-    ML.load_q3d('C://Users//Quang//Google Drive//MSCAD PowerSynth Archives//Internal//MDK//Layer Stack Quang//Materials.amat')
-    ML.save_csv(csv_dir)
+    csv_dir="..//"+MATERIAL_LIB_PATH
+    #ML.load_q3d('C://Users//Quang//Google Drive//MSCAD PowerSynth Archives//Internal//MDK//Layer Stack Quang//Materials.amat')
+    #ML.save_csv(csv_dir)
     ML.load_csv(csv_dir)
-    new_mat=MaterialProperties(name='Pb_Sn solder',thermal_cond=35.8,spec_heat_cap=130,density=11020,id='Pb_Sn solder')
+    new_mat=MaterialProperties(name='Moly70Cu',thermal_cond=190,spec_heat_cap=385,density=9700,id='Moly70Cu',electrical_res=1.7e-8,rel_permit=1.0)
     ML.add_mat(new_mat)
     ML.save_csv(csv_dir)

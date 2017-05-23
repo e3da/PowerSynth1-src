@@ -130,7 +130,7 @@ class LayerStackImport:
                 try:
                     thick = float(layer[6])
                     sa_material_id=layer[7]
-
+                    print "NAME HERE",sa_material_id
                     sa_tech.properties=self.material_lib.get_mat(sa_material_id)
                 except:
                     self.compatible = False

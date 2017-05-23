@@ -149,7 +149,8 @@ class ProjectBuilder(QtGui.QMainWindow):
         # set up table that displays added devices
         self.ui.tbl_projDevices.setColumnCount(2)
         self.ui.tbl_projDevices.setColumnWidth(0,50)
-        self.ui.tbl_projDevices.horizontalHeader().setStretchLastSection(True)     
+        self.ui.tbl_projDevices.horizontalHeader().setStretchLastSection(True)
+        self.layer_stack_import=None
     def enable_project_interfaces(self, enable):
         # Navigation menu
         self.ui.navigation.setEnabled(enable)
@@ -444,36 +445,53 @@ class ProjectBuilder(QtGui.QMainWindow):
         except:
             prev_folder = 'C://'
         # Open a layer stack CSV file and extract the layer stack data from it
+
         try:
             layer_stack_csv_file = QFileDialog.getOpenFileName(self, "Select Layer Stack File", prev_folder, "CSV Files (*.csv)")
             layer_stack_csv_file=layer_stack_csv_file[0]
-            layer_stack_import = LayerStackImport(layer_stack_csv_file)
-            layer_stack_import.import_csv()
+            self.layer_stack_import = LayerStackImport(layer_stack_csv_file)
+            self.layer_stack_import.import_csv()
         except:
             QtGui.QMessageBox.warning(self, "Layer Stack Import Failed", "ERROR: Could not import layer stack from CSV.")
 
-        if layer_stack_import.compatible:
+        if self.layer_stack_import.compatible:
             # Layer stack compatible - fill module stack UI fields with imported values
-            self.ui.txt_baseWidth.setText(str(layer_stack_import.baseplate.dimensions[0]))
-            self.ui.txt_baseLength.setText(str(layer_stack_import.baseplate.dimensions[1]))
-            self.ui.txt_baseThickness.setText(str(layer_stack_import.baseplate.dimensions[2]))
-            self.ui.txt_baseConvection.setText(str(layer_stack_import.baseplate.eff_conv_coeff))
-            self.ui.txt_subAttchThickness.setText(str(layer_stack_import.substrate_attach.thickness))
-            self.ui.txt_subWidth.setText(str(layer_stack_import.substrate.dimensions[0]))
-            self.ui.txt_subLength.setText(str(layer_stack_import.substrate.dimensions[1]))
-            self.ui.txt_subLedge.setText(str(layer_stack_import.substrate.ledge_width))
-
+            self.ui.txt_baseWidth.setText(str(self.layer_stack_import.baseplate.dimensions[0]))
+            self.ui.txt_baseLength.setText(str(self.layer_stack_import.baseplate.dimensions[1]))
+            self.ui.txt_baseThickness.setText(str(self.layer_stack_import.baseplate.dimensions[2]))
+            #self.ui.txt_baseConvection.setText(str(self.layer_stack_import.baseplate.eff_conv_coeff))
+            self.ui.txt_subAttchThickness.setText(str(self.layer_stack_import.substrate_attach.thickness))
+            self.ui.txt_subWidth.setText(str(self.layer_stack_import.substrate.dimensions[0]))
+            self.ui.txt_subLength.setText(str(self.layer_stack_import.substrate.dimensions[1]))
+            self.ui.txt_subLedge.setText(str(self.layer_stack_import.substrate.ledge_width))
+            self.ui.cmb_baseMaterial.setEditText(self.layer_stack_import.baseplate.baseplate_tech.properties.name)
+            self.ui.cmb_baseMaterial.setEnabled(False)
+            self.ui.cmb_subAttchMaterial.setEditText(self.layer_stack_import.substrate_attach.attach_tech.properties.name)
+            self.ui.cmb_subAttchMaterial.setEnabled(False)
+            sub_name=self.layer_stack_import.substrate.substrate_tech.metal_properties.name+'-'+self.layer_stack_import.substrate.substrate_tech.isolation_properties.name+'-'+self.layer_stack_import.substrate.substrate_tech.metal_properties.name
+            self.ui.cmb_subMaterial.setEditText(sub_name)
+            self.ui.cmb_subMaterial.setEnabled(False)
+            self.ui.cmb_subMaterial.setEnabled(False)
+            self.ui.txt_baseLength.setEnabled(False)
+            self.ui.txt_baseWidth.setEnabled(False)
+            self.ui.txt_baseThickness.setEnabled(False)
+            self.ui.txt_subAttchThickness.setEnabled(False)
+            self.ui.txt_subWidth.setEnabled(False)
+            self.ui.txt_subLength.setEnabled(False)
+            self.ui.txt_subLedge.setEnabled(False)
+            self.project.module_data.substrate=self.layer_stack_import.substrate
+            self.project.module_data.substrate_attach = self.layer_stack_import.substrate_attach
             # Notify user of import success and any warnings
-            if layer_stack_import.warnings == []:
+            if self.layer_stack_import.warnings == []:
                 QtGui.QMessageBox.about(self, "Layer Stack Imported", "Layer Stack import successful (No warnings).")
             else:
-                if len(layer_stack_import.warnings) == 1:
-                    QtGui.QMessageBox.about(self, "Layer Stack Imported", "Layer Stack import successful with " + str(len(layer_stack_import.warnings)) + ' warning.')
-                    QtGui.QMessageBox.warning(self, "Layer Stack Import Warning", "WARNING: " + layer_stack_import.warnings[0])
+                if len(self.layer_stack_import.warnings) == 1:
+                    QtGui.QMessageBox.about(self, "Layer Stack Imported", "Layer Stack import successful with " + str(len(self.layer_stack_import.warnings)) + ' warning.')
+                    QtGui.QMessageBox.warning(self, "Layer Stack Import Warning", "WARNING: " + self.layer_stack_import.warnings[0])
                 else:
-                    QtGui.QMessageBox.about(self, "Layer Stack Imported", "Layer Stack import successful with " + str(len(layer_stack_import.warnings)) + ' warnings.')
+                    QtGui.QMessageBox.about(self, "Layer Stack Imported", "Layer Stack import successful with " + str(len(self.layer_stack_import.warnings)) + ' warnings.')
                     warnings_msg = ""
-                    for warning in layer_stack_import.warnings:
+                    for warning in self.layer_stack_import.warnings:
                         warnings_msg += ("WARNING: " + warning + "\n")
                     QtGui.QMessageBox.warning(self, "Layer Stack Import Warnings", warnings_msg)
 
@@ -641,25 +659,45 @@ class ProjectBuilder(QtGui.QMainWindow):
         else:
             self.ui.lbl_err_ambTemp.setText("")
             self.project.module_data.ambient_temp = float(self.ui.txt_ambTemp.text())
+        print switch_check,temp_check
+        return switch_check or temp_check
 
-        return (switch_check or temp_check)
+    def build_module_stack(self,flag=True):
+        '''
+        Build baseplate, substrate, and substrate attach for module stack and error check user input
+        Quang: This method will check if the inputs of all materials properties in the Module stack are valid
+        :param flag: if flag is false, the baseplate properties are populated by import layer stack function
+        :return:
+        '''
 
-    def build_module_stack(self):
-        """Build baseplate, substrate, and substrate attach for module stack and error check user input"""
-        '''Quang: This method will check if the inputs of all materials properties in the Module stack are valid'''
-        # create module stack and check for errors
-        base_check = self.create_baseplate()
-        sub_check = self.create_substrate()
-        attach_check = self.create_substrate_attach()
-        sys_prop_check = self.create_system_properties()
+        if flag:
+            base_check = self.create_baseplate()
+            sub_check = self.create_substrate()
+            attach_check = self.create_substrate_attach()
+            sys_prop_check = self.create_system_properties()
 
-        if (base_check) or (sub_check) or (attach_check) or (sys_prop_check): #error
+
+        else:
+            print "load from layer stack"
+            base_check = False
+            sub_check=False
+            attach_check=False
+            sys_prop_check=self.create_system_properties()
+
+            try: # Baseplate Import from Layer Stack
+                self.project.module_data.baseplate=self.layer_stack_import.baseplate
+                eff_conv_coeff = float(self.ui.txt_baseConvection.text())  # Take err_conv_coeff from user
+                self.project.module_data.baseplate.eff_conv_coeff = eff_conv_coeff
+            except:
+                base_check=True
+
+        print base_check,sub_check,attach_check,sys_prop_check
+        if (base_check) or (sub_check) or (attach_check) or (sys_prop_check):  # error
             self.ui.navigation.setItemText(0, "Module Stack  *** Error ***")
             return False
         else:
             self.ui.navigation.setItemText(0, "Module Stack")
             return True
-
     def save_moduleStack(self):
         self.project.module_stack_edit = [self.ui.cmb_subMaterial.currentText(),
                                           self.ui.txt_subWidth.text(),
@@ -1231,7 +1269,11 @@ class ProjectBuilder(QtGui.QMainWindow):
                 run_optimization = False
 
         # create module stack
-        if not self.build_module_stack():
+        if self.layer_stack_import!=None:
+            flag=False
+        else:
+            flag=True
+        if not self.build_module_stack(flag):
             QtGui.QMessageBox.warning(self, "Module Stack Error", "One or more settings on the module stack page have an error.")
             run_optimization = False
 

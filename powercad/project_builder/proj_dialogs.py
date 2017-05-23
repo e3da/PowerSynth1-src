@@ -513,8 +513,11 @@ class OpenProjectDialog(QtGui.QDialog):
         self.ui.buttonBox.accepted.connect(self.load_project)
             
     def open_dir(self): # responds to button click by opening a file browser where the project directory can be selected
-        last_entries = load_file(LAST_ENTRIES_PATH)
-        prev_folder = last_entries[0]
+        try:
+            last_entries = load_file(LAST_ENTRIES_PATH)
+            prev_folder = last_entries[0]
+        except:
+            prev_folder = 'C://'
         if not os.path.exists(prev_folder):  # check if the last entry file store a correct path
             prev_folder = 'C://'
         self.project_file = QFileDialog.getOpenFileName(self, "Select Project File",prev_folder,"Project Files (*.p)")
