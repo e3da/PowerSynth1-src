@@ -1,5 +1,5 @@
 '''
-@ Quang Le: This routine is used to connect the layer stack format to formulate the appropriate response surface model
+@ qmle: This routine is used to connect the layer stack format to formulate the appropriate response surface model
 '''
 from powercad.layer_stack.layer_stack_import import *
 import os

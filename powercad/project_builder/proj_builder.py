@@ -37,7 +37,7 @@ from powercad.project_builder.performance_list import PerformanceListUI
 from powercad.project_builder.windows.mainWindow import Ui_MainWindow
 from powercad.project_builder.windows.sol_window import SolutionWindow
 from powercad.project_builder.proj_dialogs import NewProjectDialog, OpenProjectDialog, EditTechLibPathDialog, \
-    GenericDeviceDialog,LayoutEditorDialog, ResponseSurfaceDialog
+    GenericDeviceDialog,LayoutEditorDialog, ResponseSurfaceDialog,ModelSelectionDialog
 
 
 from powercad.drc.process_design_rules_editor import ProcessDesignRulesEditor
@@ -95,7 +95,8 @@ class ProjectBuilder(QtGui.QMainWindow):
         self.ui.btn_open_sol_browser.pressed.connect(self.open_sol_browser)
         self.ui.lst_categories.clicked.connect(self.display_categ_items)
         self.ui.lst_solution.itemDoubleClicked.connect(self.show_sol_doc)
-        
+        self.ui.cmb_elec_model.currentIndexChanged.connect(self.model_selection)
+
         self.ui.btn_previous.pressed.connect(self.previous)
         self.ui.btn_next.pressed.connect(self.next)
         self.ui.tbl_projDevices.cellPressed.connect(self.component_pressed)
@@ -1286,6 +1287,15 @@ class ProjectBuilder(QtGui.QMainWindow):
             self.clear_constraints()
         else:
             print 'Nothing selected.'
+# ------------------------------------------------------------------------------------------
+# ------ Model Selection and Design Variable -----------------------------------------------
+    def model_selection(self):
+        if self.ui.cmb_elec_model.currentText()=="Response Surface":
+            rs_settings = ModelSelectionDialog(self)
+            rs_settings.show()  # change this to a dialog
+        else:
+            return
+        #ToDO Model Selection Here
 
 # ------------------------------------------------------------------------------------------
 # ------ Results ---------------------------------------------------------------------------

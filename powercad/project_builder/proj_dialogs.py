@@ -29,6 +29,7 @@ from powercad.spice_import import Netlist_SVG_converter
 from powercad.electro_thermal.ElectroThermal_toolbox import rdson_fit_transistor, list2float, csv_load_file,Vth_fit,fCRSS_fit
 from powercad.general.settings.save_and_load import save_file, load_file
 from powercad.project_builder.dialogs.ResponseSurface import Ui_ResponseSurface
+from powercad.project_builder.dialogs.ModelSelection import Ui_ModelSelection
 from powercad.layer_stack.layer_stack_import import *
 from powercad.general.settings.Error_messages import *
 from PySide import QtCore, QtGui
@@ -731,7 +732,11 @@ class ResponseSurfaceDialog(QtGui.QDialog):
 
 
 
-
-
+class ModelSelectionDialog(QtGui.QDialog):
+    def __init__(self, parent):
+        QtGui.QDialog.__init__(self, parent)
+        self.ui = Ui_ModelSelection()
+        self.ui.setupUi(self)
+        self.parent = parent
 
 
