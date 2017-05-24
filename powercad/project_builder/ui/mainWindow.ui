@@ -598,7 +598,7 @@ p, li { white-space: pre-wrap; }
         <string>Module Stack</string>
        </attribute>
        <layout class="QGridLayout" name="gridLayout_22">
-        <item row="0" column="0">
+        <item row="0" column="0" colspan="2">
          <widget class="QGroupBox" name="groupBox_5">
           <property name="minimumSize">
            <size>
@@ -632,7 +632,7 @@ p, li { white-space: pre-wrap; }
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'MS Shell Dlg 2'; font-size:10pt; font-weight:600; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;Use the dropdown boxes below to select a material from the technology library for each layer of the module stack.  Import a layer stack CSV file or use the respective input boxes to define the properties of each layer of the stack.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;Use the dropdown boxes below to select a material from the technology library for each layer of the module stack.  Import a layer stack CSV file or use the respective input boxes to define the properties of each layer of the stack. &lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
              </property>
              <property name="wordWrap">
               <bool>true</bool>
@@ -649,7 +649,14 @@ p, li { white-space: pre-wrap; }
           </property>
          </widget>
         </item>
-        <item row="2" column="0">
+        <item row="1" column="1">
+         <widget class="QPushButton" name="btn_refresh_module_stack">
+          <property name="text">
+           <string>Refresh Module Stack</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0" colspan="2">
          <widget class="QGroupBox" name="box_baseplate_props">
           <property name="font">
            <font>
@@ -966,7 +973,7 @@ p, li { white-space: pre-wrap; }
           </layout>
          </widget>
         </item>
-        <item row="3" column="0">
+        <item row="3" column="0" colspan="2">
          <widget class="QGroupBox" name="box_sub_attach_props">
           <property name="font">
            <font>
@@ -1078,7 +1085,7 @@ p, li { white-space: pre-wrap; }
           </layout>
          </widget>
         </item>
-        <item row="4" column="0">
+        <item row="4" column="0" colspan="2">
          <widget class="QGroupBox" name="box_substrate_props">
           <property name="font">
            <font>
@@ -1394,7 +1401,7 @@ p, li { white-space: pre-wrap; }
           </layout>
          </widget>
         </item>
-        <item row="5" column="0">
+        <item row="5" column="0" colspan="2">
          <widget class="QGroupBox" name="box_system_props">
           <property name="font">
            <font>
@@ -4188,7 +4195,7 @@ p, li { white-space: pre-wrap; }
        <string/>
       </property>
       <property name="pixmap">
-       <pixmap>../../../../images/main_window/PowerSynth_Logo_Temp2.png</pixmap>
+       <pixmap>../../../../../../../images/main_window/PowerSynth_Logo_Temp2.png</pixmap>
       </property>
       <property name="scaledContents">
        <bool>true</bool>

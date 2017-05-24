@@ -35,18 +35,18 @@ class Layer_Stack:
                 self.layer_index+=1                            # increase list layer index
                 layer.set_layer_ID(self.layer_index)           # set layer id=newest index
             
-    def define_trace(self,index):
+    def define_trace(self,index,bp_dim):
         #index: index of a layer that will be set as trace
         if self.ELayers[index-1]==None or self.ELayers[index-2]==None:
             raise('Layers not existed, or layers doesnt have dielectric below')
         else:    
             self.ELayers[index-1].set_layer_as_trace()                             # set layer as trace 
-            dilec_width=self.ELayers[index-1].get_width()
-            dilec_length=self.ELayers[index-1].get_length()
-            self.ELayers[index-1].set_width(dilec_width/5)   # set initial trace width based on dielectric (below) width     
-            self.ELayers[index-1].set_length(dilec_length/5) # set initial trace length based on dielectric (below) length
-            self.ELayers[index-1].set_x((dilec_width-self.ELayers[index-1].get_width())/2)   # Move the initial trace to center of dielectric
-            self.ELayers[index-1].set_y((dilec_length-self.ELayers[index-1].get_length())/2) # Move the initial trace to center of dielectric
+            bp_width=bp_dim[0]
+            bp_length=bp_dim[1]
+            self.ELayers[index-1].set_width(bp_width/5)   # set initial trace width based on dielectric (below) width
+            self.ELayers[index-1].set_length(bp_length/5) # set initial trace length based on dielectric (below) length
+            self.ELayers[index-1].set_x((bp_width-self.ELayers[index-1].get_width())/2)   # Move the initial trace to center of dielectric
+            self.ELayers[index-1].set_y((bp_length-self.ELayers[index-1].get_length())/2) # Move the initial trace to center of dielectric
             
     def define_ground(self,index):
         # select a plane as a ground 

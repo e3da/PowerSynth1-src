@@ -267,7 +267,7 @@ oModule.AddTraces("Data Table {4}", "Setup1 : {3}",
 Export_data='''
 # 0: data_name in Q3d, 1: data output path
 oModule = oDesign.GetModule("ReportSetup")
-oModule.ExportToFile("{0}", "{1}{2}.csv") 
+oModule.ExportToFile("{0}", "{1}//{2}.csv")
 '''
 
 New_params='''        
@@ -311,7 +311,7 @@ oDesign.ChangeProperty(
                 "NAME:ChangedProps",
                 [
                     "NAME:{1}",
-                    "Value:="        , "{2}mm"
+                    "Value:="        , "{2} mm"
                 ]
             ]
         ]

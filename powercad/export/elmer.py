@@ -27,7 +27,8 @@ Simulation
   Coordinate Mapping(3) = 1 2 3
 
   Simulation Type = "Steady State"
-  Steady State Max Iterations = 1
+  Steady State Max Iterations = 10
+  Steady State Min Iterations = 5
   Output Intervals = 1
 
   Output File = "{data_name}.dat"
@@ -54,7 +55,7 @@ Solver 1
   Variable Dofs = 1
   Linear System Solver = "Iterative"
   Linear System Iterative Method = "TFQMR"
-  Linear System Max Iterations = 500
+  Linear System Max Iterations = 5000
   Linear System Convergence Tolerance = {conv_tol}
   Linear System Abort Not Converged = True
   Linear System Preconditioning = "ILU0"
@@ -112,6 +113,8 @@ Material {id}
   Density = {density}
   Heat Conductivity = {heat_cond}
 End
+
+
 
 """
 
@@ -252,7 +255,7 @@ if __name__ == '__main__':
                  (7000.0, 300.0), (8000.0, 400.0),
                  (9000.0, 500.0), (10e3, 600.0), (11e3, 3.69)]
     
-    write_module_elmer_sif(directory, sif_name, data_name, mesh_name, materials, 30.0, 300.0, 100.0, (4.8, 2.4), 1e-7)
+    write_module_elmer_sif(directory, sif_name, data_name, mesh_name, materials, 30.0, 300.0, 100.0, (4.8, 2.4), 1e-3)
     elmer_solve(directory, sif_name, mesh_name)
     data_path = os.path.join(directory, mesh_name, data_name+'.ep')
     xs, ys, temp, z_flux = get_nodes_near_z_value(data_path, 5.84e-3, 1e-7)

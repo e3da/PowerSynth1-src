@@ -151,7 +151,7 @@ def trace_capacitance(w, l, t, h, k=8.8):
 
     return c
 
-def load_mdl(dir,mdl_name):
+def load_mdl(dir=None,mdl_name=None,type=None):
     mdl=load_file(os.path.join(dir,mdl_name))
     return mdl
 

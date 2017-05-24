@@ -24,12 +24,16 @@ from powercad.project_builder.dialogs.genericDeviceDialog_ui import Ui_generic_d
 from powercad.project_builder.dialogs.layoutEditor_ui import Ui_layouteditorDialog
 from powercad.project_builder.project import Project
 from powercad.sym_layout.symbolic_layout import SymbolicLayout
-from powercad.general.settings.settings import LAST_ENTRIES_PATH, DEFAULT_TECH_LIB_DIR
+from powercad.general.settings.settings import LAST_ENTRIES_PATH, DEFAULT_TECH_LIB_DIR,EXPORT_DATA_PATH
 from powercad.spice_import import Netlist_SVG_converter
 from powercad.electro_thermal.ElectroThermal_toolbox import rdson_fit_transistor, list2float, csv_load_file,Vth_fit,fCRSS_fit
 from powercad.general.settings.save_and_load import save_file, load_file
 from powercad.project_builder.dialogs.ResponseSurface import Ui_ResponseSurface
-
+from powercad.layer_stack.layer_stack_import import *
+from powercad.general.settings.Error_messages import *
+from PySide import QtCore, QtGui
+from powercad.response_surface.Model_Formulation import form_trace_model
+from powercad.response_surface.Response_Surface import RS_model
 # CLASSES FOR DIALOG USAGE
 class GenericDeviceDialog(QtGui.QDialog):   
     # Author: quang le
@@ -610,10 +614,124 @@ class LayoutEditorDialog(QtGui.QDialog):
         f.write(self.parent.layout_script)
         self.close()
 
-class ResponseSurfaceWizard(QtGui.QTabWidget):
+class ResponseSurfaceDialog(QtGui.QDialog):
     def __init__(self,parent):
-        QtGui.QTabWidget.__init__(self, parent)
+        QtGui.QDialog.__init__(self, parent)
         self.ui=Ui_ResponseSurface()
         self.ui.setupUi(self)
         self.parent=parent
-        
+        self.layer_stack_import=None
+        # Suggested Min Max ranges
+        self.ui.lineEdit_minL.setText('1.2')
+        self.ui.lineEdit_maxL.setText('40')
+        self.ui.lineEdit_minW.setText('1.2')
+        self.ui.lineEdit_maxW.setText('40')
+        self.ui.lineEdit_fmin.setText('100')
+        self.ui.lineEdit_fmax.setText('1000')
+        self.ui.lineEdit_fstep.setText('10')
+        # Initialization, only load layer stack button is enabled
+        # 1 buttons:
+        self.ui.btn_view_layer_stack.setEnabled(False)
+        self.ui.btn_build.setEnabled(False)
+        # 2 text_edit:
+        self.ui.lineEdit_minL.setEnabled(False)
+        self.ui.lineEdit_maxL.setEnabled(False)
+        self.ui.lineEdit_minW.setEnabled(False)
+        self.ui.lineEdit_maxW.setEnabled(False)
+        self.ui.lineEdit_fmin.setEnabled(False)
+        self.ui.lineEdit_fmax.setEnabled(False)
+        self.ui.lineEdit_fstep.setEnabled(False)
+        self.ui.text_edt_model_info.setReadOnly(True)
+        # 3 cmb list
+        self.ui.cmb_DOE.setEnabled(False)
+        self.ui.cmb_sims.setEnabled(False)
+        self.ui.cmb_trace_layer.setVisible(0) # For now only... rework when the layer stack is more Object Oriented
+
+        # 4 connecting signals
+        self.ui.btn_add_layer_stack.pressed.connect(self.importlayerstack)
+        self.ui.btn_build.pressed.connect(self.build)
+        self.ui.list_mdl_lib.clicked.connect(self.show_mdl_info)
+        # populate model files
+        self.model_dir=os.path.join(DEFAULT_TECH_LIB_DIR,'Model','Trace')
+        self.rs_model = QtGui.QFileSystemModel()
+        self.rs_model.setRootPath(self.model_dir)
+        self.rs_model.setFilter(QtCore.QDir.Files)
+        self.ui.list_mdl_lib.setModel(self.rs_model)
+        self.ui.list_mdl_lib.setRootIndex(self.rs_model.setRootPath(self.model_dir))
+        self.wp_dir=os.path.join(EXPORT_DATA_PATH,'workspace','RS')
+
+    def importlayerstack(self):
+        prev_folder='C://'
+        layer_stack_csv_file = QFileDialog.getOpenFileName(self, "Select Layer Stack File", prev_folder,
+                                                           "CSV Files (*.csv)")
+        layer_stack_csv_file = layer_stack_csv_file[0]
+        self.layer_stack_import = LayerStackImport(layer_stack_csv_file)
+        self.layer_stack_import.import_csv()
+        if self.layer_stack_import.compatible:
+            Notifier(msg="Sucessfully Imported Layer Stack File",msg_name="Success!!!")
+            # 1 buttons:
+            self.ui.btn_view_layer_stack.setEnabled(True)
+            self.ui.btn_build.setEnabled(True)
+            # 2 text_edit:
+            self.ui.lineEdit_minL.setEnabled(True)
+            self.ui.lineEdit_maxL.setEnabled(True)
+            self.ui.lineEdit_minW.setEnabled(True)
+            self.ui.lineEdit_maxW.setEnabled(True)
+            self.ui.lineEdit_fmin.setEnabled(True)
+            self.ui.lineEdit_fmax.setEnabled(True)
+            self.ui.lineEdit_fstep.setEnabled(True)
+            # 3 cmb list
+            self.ui.cmb_DOE.setEnabled(True)
+            self.ui.cmb_sims.setEnabled(True)
+            self.ui.cmb_trace_layer.setEnabled(True)
+        else:
+            InputError(msg="Layer Stack format is not compatible")
+
+    def refresh_mdl_list(self):
+        self.rs_model.setRootPath(self.model_dir)
+        self.rs_model.setFilter(QtCore.QDir.Files)
+        self.ui.list_mdl_lib.setModel(self.rs_model)
+        self.ui.list_mdl_lib.setRootIndex(self.rs_model.setRootPath(self.model_dir))
+
+
+    def build(self):
+        # check all input types:
+        minL=self.ui.lineEdit_minL.text()
+        maxL=self.ui.lineEdit_maxL.text()
+        minW=self.ui.lineEdit_minW.text()
+        maxW=self.ui.lineEdit_maxW.text()
+        fmin=self.ui.lineEdit_fmin.text()
+        fmax=self.ui.lineEdit_fmax.text()
+        fstep=self.ui.lineEdit_fstep.text()
+        mdl_name=self.ui.lineEdit_name.text()
+        checknum = minL.isdigit() or maxL.isdigit() or minW.isdigit() or maxW.isdigit() or fmin.isdigit() or fmax.isdigit()\
+                or fstep.isdigit()
+        env_dir="C://Users//qmle//Desktop//Testing//Py_Q3D_test//IronPython//ipy64.exe"
+
+        if not(checknum):
+            InputError(msg="not all inputs for width length and frequency are numeric, double check please")
+            return
+        else:
+            all_num=[minL,maxL,minW,maxW,fmin,fmax,fstep]
+            minL, maxL, minW, maxW, fmin, fmax, fstep=[float(x) for x in all_num]
+
+            form_trace_model(layer_stack=self.layer_stack_import,Width=[minW,maxW],Length=[minL,maxL],
+                             freq=[fmin,fmax,fstep],wdir=self.wp_dir,savedir=self.model_dir,mdl_name=mdl_name
+                             ,ipy64_dir=env_dir)
+
+            self.refresh_mdl_list()
+
+    def show_mdl_info(self):
+
+        selected=str(self.rs_model.fileName(self.ui.list_mdl_lib.currentIndex()))
+        mdl = load_file(os.path.join(self.model_dir,selected))
+        text=mdl.info
+        self.ui.text_edt_model_info.setText(text)
+        self.ui.list_mdl_lib.currentIndex()
+
+
+
+
+
+
+

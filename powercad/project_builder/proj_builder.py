@@ -37,7 +37,7 @@ from powercad.project_builder.performance_list import PerformanceListUI
 from powercad.project_builder.windows.mainWindow import Ui_MainWindow
 from powercad.project_builder.windows.sol_window import SolutionWindow
 from powercad.project_builder.proj_dialogs import NewProjectDialog, OpenProjectDialog, EditTechLibPathDialog, \
-    GenericDeviceDialog,LayoutEditorDialog, ResponseSurfaceWizard
+    GenericDeviceDialog,LayoutEditorDialog, ResponseSurfaceDialog
 
 
 from powercad.drc.process_design_rules_editor import ProcessDesignRulesEditor
@@ -52,6 +52,7 @@ from powercad.design.project_structures import *
 from powercad.sym_layout.svg import LayoutLine, LayoutPoint
 from powercad.general.settings.save_and_load import save_file, load_file
 from powercad.general.settings.settings import *
+from powercad.general.settings.Error_messages import *
 class ProjectBuilder(QtGui.QMainWindow):
     
     # Relative paths -> use forward slashes for platform independence
@@ -100,7 +101,7 @@ class ProjectBuilder(QtGui.QMainWindow):
         self.ui.tbl_projDevices.cellPressed.connect(self.component_pressed)
         self.ui.btn_modify_component.pressed.connect(self.modify_component)
         self.ui.btn_removeDevice.pressed.connect(self.remove_component)
-        
+        self.ui.btn_refresh_module_stack.pressed.connect(self.quit_layer_stack_mode)
         # Module stack page
         self.ui.btn_import_layer_stack.pressed.connect(self.import_layer_stack)
 
@@ -122,7 +123,8 @@ class ProjectBuilder(QtGui.QMainWindow):
         self.ui.action_load_symbolic_layout.triggered.connect(self.load_symbolic_layout)
         self.ui.actionExport_Layout_Script.triggered.connect(self.export_layout_script) # export layout to script action
         self.ui.actionOpen_Layout_Editor.triggered.connect(self.open_layout_editor) # Open script
-        self.ui.actionResponse_Surface_Setup.triggered.connect(self.open_response_surface_wiz)
+        self.ui.actionResponse_Surface_Setup.triggered.connect(self.open_response_surface_dialog)
+
         # Disable project interfaces until a project is loaded or created
         self.enable_project_interfaces(False)
         # This is the current color wheel.
@@ -214,10 +216,12 @@ class ProjectBuilder(QtGui.QMainWindow):
     def new_project(self):
         """Create new project. Display prompt for necessary information"""
         # bring up new project dialog
+
         new_dialog = NewProjectDialog(self)
         if(new_dialog.exec_()):
             # create new project
             self.project = new_dialog.create()
+            self.layout_script_dir = os.getcwd()
             self.export_layout_script()           # Export layout script to project directory
             self.reload_ui()
             # set navigation to first step
@@ -261,9 +265,9 @@ class ProjectBuilder(QtGui.QMainWindow):
         else:
             QtGui.QMessageBox.warning(self, "Project Needed", "A project needs to be loaded into the program first.")
 
-    def open_response_surface_wiz(self):
+    def open_response_surface_dialog(self):
         if self.ui.navigation.isEnabled():
-            rs_settings=ResponseSurfaceWizard(self)
+            rs_settings=ResponseSurfaceDialog(self)
             rs_settings.show() # change this to a dialog
             print "code me"
 
@@ -277,6 +281,7 @@ class ProjectBuilder(QtGui.QMainWindow):
         dev_dialog=GenericDeviceDialog(self,device_path)
         if(dev_dialog.exec_()):
             print 1
+
     def export_layout_script(self):
         # qmle 10-18-2016
         # This method will export the current layout (of the project) to script code
@@ -297,6 +302,7 @@ class ProjectBuilder(QtGui.QMainWindow):
         self.layout_script="\n".join(lines)                  
         f.write(self.layout_script)                          # write text to text file
         QtGui.QMessageBox.about(self, "Layout Script Saved", "Layoyt Script Saved")
+
     def open_layout_editor(self):
         # qmle 1-11-2016
         # This will open a LayoutEditor Window, which allow user to change the symbolic layout in real time
@@ -442,10 +448,11 @@ class ProjectBuilder(QtGui.QMainWindow):
         try:
             last_entries = load_file(LAST_ENTRIES_PATH)
             prev_folder = last_entries[0]
+            if not(os.path.exists(prev_folder)):
+                prev_folder = 'C://'
         except:
             prev_folder = 'C://'
         # Open a layer stack CSV file and extract the layer stack data from it
-
         try:
             layer_stack_csv_file = QFileDialog.getOpenFileName(self, "Select Layer Stack File", prev_folder, "CSV Files (*.csv)")
             layer_stack_csv_file=layer_stack_csv_file[0]
@@ -499,6 +506,32 @@ class ProjectBuilder(QtGui.QMainWindow):
             # Layer stack not compatible - notify the user of import failure
             QtGui.QMessageBox.warning(self, "Layer Stack Import Failed", "ERROR: " + layer_stack_import.error_msg)
 
+    def quit_layer_stack_mode(self):
+        '''
+        This method will quit the import layer stack mode, layer stack object will be cleared, send a warning for user
+        :return:
+        '''
+        self.layer_stack_import=None
+        Notifier(msg="Quit Layer Stack Mode, all UI will be refreshed, to import layer stack again press layer stack button",msg_name="Warning")
+        try:
+            self.load_moduleStack()
+        except:
+            print "new project mode"
+        self.ui.cmb_baseMaterial.setEnabled(True)
+        self.ui.cmb_subAttchMaterial.setEnabled(True)
+        self.ui.cmb_subMaterial.setEnabled(True)
+        self.ui.cmb_subMaterial.setEnabled(True)
+        self.ui.txt_baseLength.setEnabled(True)
+        self.ui.txt_baseWidth.setEnabled(True)
+        self.ui.txt_baseThickness.setEnabled(True)
+        self.ui.txt_subAttchThickness.setEnabled(True)
+        self.ui.txt_subWidth.setEnabled(True)
+        self.ui.txt_subLength.setEnabled(True)
+        self.ui.txt_subLedge.setEnabled(True)
+        text="Please Select a Material..."
+        self.ui.cmb_baseMaterial.setEditText(text)
+        self.ui.cmb_subAttchMaterial.setEditText(text)
+        self.ui.cmb_subMaterial.setEditText(text)
 
     def fill_material_cmbBoxes(self):
         """Fill combo boxes in module stack with materials from Tech Library"""
@@ -823,12 +856,14 @@ class ProjectBuilder(QtGui.QMainWindow):
         except:
             QtGui.QMessageBox.warning(self, error_title, error_msg)
             return True
+
     def get_color_index(self):
         '''Quang: this method get the real color from the bar'''
         selected_row = self.ui.tbl_projDevices.currentRow()
         color= self.ui.tbl_projDevices.item(selected_row,0).background()
         color=color.color()
         return color
+
     def add_to_device_table(self):
         """Add device from lst_devices to tbl_projectDevices"""
         # make sure no errors
@@ -929,6 +964,7 @@ class ProjectBuilder(QtGui.QMainWindow):
                 self.symb_canvas[0].draw()
         except:
             QtGui.QMessageBox.warning(self, 'Error', 'Please Select Component on the Component Selection Tab')
+
     def component_pressed(self):
         """Enable relevant text fields for the selected component and display the previously entered values for that component."""
         selected_row = self.ui.tbl_projDevices.currentRow()

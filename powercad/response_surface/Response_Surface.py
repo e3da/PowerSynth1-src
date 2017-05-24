@@ -50,6 +50,18 @@ class RS_model:
         self.op_point=None # This is the selected operating point of the model. This can be used to predict  
         self.mode='single' # assume there is no sweeping condition at the beginning
 
+        self.info=None  # Layer Stack and Operating Info
+        self.R=None
+        self.L=None
+        self.C=None
+    def set_mdl_info(self,info):
+        '''
+        Set model info on layers and material properties
+        :param info: string
+        :return: update self.info
+        '''
+        self.info=info
+
     def set_data_bound(self,bounds):
         '''
         Set up a list of data bound for each parameter
@@ -128,7 +140,7 @@ class RS_model:
         
         self.obj_name=name
         
-    def read_file(self,file_ext,mode,row,units):
+    def read_file(self,file_ext,mode,row,units,wdir):
         '''
         Read File to PowerSynth, assume the sweeping operating condition is on first column 
             File_ext: file extension e.g 'txt','csv',...
@@ -138,7 +150,7 @@ class RS_model:
          
         if file_ext=='csv':
             for name in self.generic_fnames:
-                filepath=os.path.join(self.directory,name+'.'+file_ext)  
+                filepath=os.path.join(wdir,name+'.'+file_ext)
                 f=open(filepath,'rb')    # open filepath
                 reader= csv.DictReader(f) 
                 all_rows=[]
@@ -162,7 +174,7 @@ class RS_model:
                     sweep_pre=sw_unit.detect_unit(sweep_key)
                     all_rows.append(float(rows[col_key]))
                     all_sweep.append(float(rows[sweep_key]))
-                    r1=self.unit.convert(col_pre)  # data ratio
+                    r1=self.unit.convert(col_pre)  # unit conversion ratio
                     print r1
                     r2=self.sweep_unit.convert(sweep_pre) # sweep ratio
                 if mode=='single':   # Data collector will start at second row assume we only have 2 rows 

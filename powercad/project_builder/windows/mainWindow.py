@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'mainWindow.ui'
 #
-# Created: Thu May 18 16:17:37 2017
+# Created: Tue May 23 12:04:07 2017
 #      by: pyside-uic 0.2.15 running on PySide 1.2.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -242,10 +242,13 @@ class Ui_MainWindow(object):
         self.label_27.setWordWrap(True)
         self.label_27.setObjectName("label_27")
         self.gridLayout_14.addWidget(self.label_27, 0, 0, 1, 1)
-        self.gridLayout_22.addWidget(self.groupBox_5, 0, 0, 1, 1)
+        self.gridLayout_22.addWidget(self.groupBox_5, 0, 0, 1, 2)
         self.btn_import_layer_stack = QtGui.QPushButton(self.page_12)
         self.btn_import_layer_stack.setObjectName("btn_import_layer_stack")
         self.gridLayout_22.addWidget(self.btn_import_layer_stack, 1, 0, 1, 1)
+        self.btn_refresh_module_stack = QtGui.QPushButton(self.page_12)
+        self.btn_refresh_module_stack.setObjectName("btn_refresh_module_stack")
+        self.gridLayout_22.addWidget(self.btn_refresh_module_stack, 1, 1, 1, 1)
         self.box_baseplate_props = QtGui.QGroupBox(self.page_12)
         font = QtGui.QFont()
         font.setWeight(75)
@@ -361,7 +364,7 @@ class Ui_MainWindow(object):
         self.cmb_baseMaterial.setEditable(True)
         self.cmb_baseMaterial.setObjectName("cmb_baseMaterial")
         self.gridLayout_20.addWidget(self.cmb_baseMaterial, 0, 1, 1, 2)
-        self.gridLayout_22.addWidget(self.box_baseplate_props, 2, 0, 1, 1)
+        self.gridLayout_22.addWidget(self.box_baseplate_props, 2, 0, 1, 2)
         self.box_sub_attach_props = QtGui.QGroupBox(self.page_12)
         font = QtGui.QFont()
         font.setWeight(75)
@@ -409,7 +412,7 @@ class Ui_MainWindow(object):
         self.cmb_subAttchMaterial.setEditable(True)
         self.cmb_subAttchMaterial.setObjectName("cmb_subAttchMaterial")
         self.gridLayout_19.addWidget(self.cmb_subAttchMaterial, 0, 1, 1, 2)
-        self.gridLayout_22.addWidget(self.box_sub_attach_props, 3, 0, 1, 1)
+        self.gridLayout_22.addWidget(self.box_sub_attach_props, 3, 0, 1, 2)
         self.box_substrate_props = QtGui.QGroupBox(self.page_12)
         font = QtGui.QFont()
         font.setWeight(75)
@@ -530,7 +533,7 @@ class Ui_MainWindow(object):
         self.label_12.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
         self.label_12.setObjectName("label_12")
         self.gridLayout_10.addWidget(self.label_12, 0, 0, 1, 1)
-        self.gridLayout_22.addWidget(self.box_substrate_props, 4, 0, 1, 1)
+        self.gridLayout_22.addWidget(self.box_substrate_props, 4, 0, 1, 2)
         self.box_system_props = QtGui.QGroupBox(self.page_12)
         font = QtGui.QFont()
         font.setWeight(75)
@@ -593,7 +596,7 @@ class Ui_MainWindow(object):
         self.label_66 = QtGui.QLabel(self.box_system_props)
         self.label_66.setObjectName("label_66")
         self.gridLayout_21.addWidget(self.label_66, 0, 2, 1, 1)
-        self.gridLayout_22.addWidget(self.box_system_props, 5, 0, 1, 1)
+        self.gridLayout_22.addWidget(self.box_system_props, 5, 0, 1, 2)
         self.navigation.addItem(self.page_12, "")
         self.page = QtGui.QWidget()
         self.page.setGeometry(QtCore.QRect(0, 0, 359, 806))
@@ -1474,7 +1477,7 @@ class Ui_MainWindow(object):
         self.label_4.setPalette(palette)
         self.label_4.setStyleSheet("background-color: qradialgradient(spread:pad, cx:0.5, cy:0.5, radius:0.481, fx:0.653409, fy:0.312, stop:0.698864 rgba(255, 255, 255, 194), stop:1 rgba(255, 255, 255, 0));")
         self.label_4.setText("")
-        self.label_4.setPixmap(QtGui.QPixmap("../../../images/main_window/PowerSynth_Logo_Temp2.png"))
+        self.label_4.setPixmap(QtGui.QPixmap("../../../../images/main_window/PowerSynth_Logo_Temp2.png"))
         self.label_4.setScaledContents(True)
         self.label_4.setObjectName("label_4")
         self.gridLayout.addWidget(self.label_4, 0, 0, 1, 2)
@@ -1629,8 +1632,9 @@ class Ui_MainWindow(object):
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
 "p, li { white-space: pre-wrap; }\n"
 "</style></head><body style=\" font-family:\'MS Shell Dlg 2\'; font-size:10pt; font-weight:600; font-style:normal;\">\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:8pt;\">Use the dropdown boxes below to select a material from the technology library for each layer of the module stack.  Import a layer stack CSV file or use the respective input boxes to define the properties of each layer of the stack.</span></p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:8pt;\">Use the dropdown boxes below to select a material from the technology library for each layer of the module stack.  Import a layer stack CSV file or use the respective input boxes to define the properties of each layer of the stack. </span></p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
         self.btn_import_layer_stack.setText(QtGui.QApplication.translate("MainWindow", "Import Layer Stack CSV File", None, QtGui.QApplication.UnicodeUTF8))
+        self.btn_refresh_module_stack.setText(QtGui.QApplication.translate("MainWindow", "Refresh Module Stack", None, QtGui.QApplication.UnicodeUTF8))
         self.box_baseplate_props.setTitle(QtGui.QApplication.translate("MainWindow", "Baseplate Properties", None, QtGui.QApplication.UnicodeUTF8))
         self.label_36.setText(QtGui.QApplication.translate("MainWindow", "Material", None, QtGui.QApplication.UnicodeUTF8))
         self.label_30.setText(QtGui.QApplication.translate("MainWindow", "Width", None, QtGui.QApplication.UnicodeUTF8))

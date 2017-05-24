@@ -27,7 +27,7 @@ class CachedCharacterization(object):
         self.materials = materials
         self.conv_coeff = conv_coeff
 
-def characterize_devices(sym_layout, temp_dir=settings.TEMP_DIR, conv_tol=1e-6):
+def characterize_devices(sym_layout, temp_dir=settings.TEMP_DIR, conv_tol=1e-3):
     """
     Generates device thermal characterizations automatically, or
     checks for cached characterizations.

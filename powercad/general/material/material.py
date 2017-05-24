@@ -96,9 +96,36 @@ class Material_lib:
         with open(fname) as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
-                material=MaterialProperties(name=row['name'],thermal_cond=row['thermal_cond'],spec_heat_cap=row['spec_heat_cap'],density=row['density']
-                                            ,electrical_res=row['electrical_res'],rel_permit=row['rel_permit'],rel_permeab=row['rel_permeab'],id=row['q3d_id'],young_modulus=row['young_modulus']
-                                            ,poissons_ratios=row['poissons_ratios'],thermal_expansion_coeffcient=row['thermal_expansion_coeffcient'])
+                tm_cond=None
+                sh_cap=None
+                dens=None
+                e_res=None
+                pmea=None
+                pmit=None
+                y_mdl=None
+                p_rat=None
+                te_coeff=None
+                if row['thermal_cond']!='':
+                    tm_cond=float(row['thermal_cond'])
+                if row['spec_heat_cap']!='':
+                    sh_cap=float(row['spec_heat_cap'])
+                if row['density']!='':
+                    dens=float(row['density'])
+                if row['electrical_res']!='':
+                    e_res=float(row['electrical_res'])
+                if row['rel_permit']!='':
+                    pmit=float(row['rel_permit'])
+                if row['rel_permeab']!='':
+                    pmea=float(row['rel_permeab'])
+                if row['young_modulus']!='':
+                    y_mdl=float(row['young_modulus'])
+                if row['poissons_ratios']!='':
+                    p_rat=float(row['poissons_ratios'])
+                if row['thermal_expansion_coeffcient']!='':
+                    te_coeff=float(row['thermal_expansion_coeffcient'])
+                material=MaterialProperties(name=row['name'],thermal_cond=tm_cond,spec_heat_cap=sh_cap,density=dens
+                                            ,electrical_res=e_res,rel_permit=pmit,rel_permeab=pmea,id=row['q3d_id'],young_modulus=y_mdl
+                                            ,poissons_ratios=p_rat,thermal_expansion_coeffcient=te_coeff)
                 self.mat_lib.append(material)
 
 
@@ -138,7 +165,15 @@ class Material_lib:
         Add new row in material list
         :return:
         '''
-        self.mat_lib.append(material)
+        if self.mat_lib != []:
+            for mat in self.mat_lib:
+                if material.name == mat.name:  # in case the material existed
+                    mat=material
+                    print "material",mat.name,"updated"
+                else:
+                    self.mat_lib.append(material)
+                    print "new material",material.name,'added to lib'
+
         print "add one material to the list:", material.name
 
     def remove_mat(self,mat_name):

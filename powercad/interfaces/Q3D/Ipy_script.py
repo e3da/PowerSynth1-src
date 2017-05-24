@@ -169,7 +169,7 @@ class Q3D_ipy_script:
         self.script+=Export_data.format(data_name,out_path,out_name)
         
         
-    def set_params(self,name,value,choice,box,design_id):
+    def set_params(self,name=None,value=None,choice=None,box=None,design_id=1):
         # initialize a new parameter name then set it to Q3d_Box 
             # parameter name: in string, this is the name of the new parameter, if name = PropsServers, the user can do math on existing parameters
             # value: the numerical value of this parameter in mm
@@ -197,7 +197,7 @@ class Q3D_ipy_script:
             box.z=name
             Add_params=Set_params_to_pos.format(box.obj_id,box.x,box.y,box.z)         
         self.script += Add_params    
-    def change_properties(self,name,value,design_id):
+    def change_properties(self,name=None,value=None,design_id=1):
         # Change value of existed parameters
             # name: in string, this is the name of the parameter 
             # value: the numerical value of this parameter in mm
