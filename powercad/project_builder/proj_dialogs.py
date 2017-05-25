@@ -24,7 +24,7 @@ from powercad.project_builder.dialogs.genericDeviceDialog_ui import Ui_generic_d
 from powercad.project_builder.dialogs.layoutEditor_ui import Ui_layouteditorDialog
 from powercad.project_builder.project import Project
 from powercad.sym_layout.symbolic_layout import SymbolicLayout
-from powercad.general.settings.settings import LAST_ENTRIES_PATH, DEFAULT_TECH_LIB_DIR,EXPORT_DATA_PATH
+from powercad.general.settings.settings import LAST_ENTRIES_PATH, DEFAULT_TECH_LIB_DIR,EXPORT_DATA_PATH,ANSYS_IPY64
 from powercad.spice_import import Netlist_SVG_converter
 from powercad.electro_thermal.ElectroThermal_toolbox import rdson_fit_transistor, list2float, csv_load_file,Vth_fit,fCRSS_fit
 from powercad.general.settings.save_and_load import save_file, load_file
@@ -709,11 +709,9 @@ class ResponseSurfaceDialog(QtGui.QDialog):
         mdl_name=self.ui.lineEdit_name.text()
         checknum = minL.isdigit() or maxL.isdigit() or minW.isdigit() or maxW.isdigit() or fmin.isdigit() or fmax.isdigit()\
                 or fstep.isdigit()
-        env_dir="C://Users//qmle//Desktop//Testing//Py_Q3D_test//IronPython//ipy64.exe"
+        env_dir=os.path.join(ANSYS_IPY64,'ipy64.exe')
         self.sims=str(self.ui.cmb_sims.currentText())
-
-        print self.sims
-
+        options=[self.sims,self.DOE,False]
         if not(checknum):
             InputError(msg="not all inputs for width length and frequency are numeric, double check please")
             return
@@ -723,14 +721,15 @@ class ResponseSurfaceDialog(QtGui.QDialog):
 
             form_trace_model(layer_stack=self.layer_stack_import,Width=[minW,maxW],Length=[minL,maxL],
                              freq=[fmin,fmax,fstep],wdir=self.wp_dir,savedir=self.model_dir,mdl_name=mdl_name
-                             ,env=env_dir)
+                             ,env=env_dir,options=options)
 
             self.refresh_mdl_list()
+
     def set_up_DOE(self):
-        if self.ui.cmb_DOE.currentText()=="mesh":
+        if self.ui.cmb_DOE.currentText()=="Mesh":
             self.DOE="mesh" # add DOE option later fix for now
             print 'mesh 5 x 5'
-        elif self.ui.cmb_DOE.currentText()=="center composite":
+        elif self.ui.cmb_DOE.currentText()=="Center Composite":
             print "center composite"
             self.DOE = "cc"  # add DOE option later fix for now
 

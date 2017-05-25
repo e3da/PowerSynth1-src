@@ -17,6 +17,7 @@ if POWERSYNTH_RELEASE:  # For packaged versions
     CACHED_CHAR_PATH = os.path.abspath("export_data/cached_thermal") # sxm063
     MATERIAL_LIB_PATH = '..//..//..//tech_lib//Material//Materials.csv'
     EXPORT_DATA_PATH = os.path.abspath("../../../export_data/")
+    ANSYS_IPY64 = "C://Program Files//AnsysEM//AnsysEM18.0//Win64//common//IronPython"
 else:   # For debugging and running PowerSynth from Eclipse
     DEFAULT_TECH_LIB_DIR = os.path.abspath("../../../tech_lib")
     LAST_ENTRIES_PATH = os.path.abspath("../../../export_data/app_data/last_entries.p")
@@ -27,6 +28,7 @@ else:   # For debugging and running PowerSynth from Eclipse
     CACHED_CHAR_PATH = os.path.abspath("../../../export_data/cached_thermal") # sxm063
     MATERIAL_LIB_PATH='..//..//..//tech_lib//Material//Materials.csv'
     EXPORT_DATA_PATH=os.path.abspath("../../../export_data/")
+    ANSYS_IPY64="C://Program Files//AnsysEM//AnsysEM18.0//Win64//common//IronPython"
 if __name__ == '__main__':  # Module test
     print DEFAULT_TECH_LIB_DIR
     print LAST_ENTRIES_PATH

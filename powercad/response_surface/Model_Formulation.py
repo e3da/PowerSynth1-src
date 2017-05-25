@@ -13,7 +13,7 @@ from powercad.general.settings.save_and_load import save_file
 from powercad.general.settings.Error_messages import InputError,Notifier
 
 def form_trace_model(layer_stack,Width=[1.2,40],Length=[1.2,40],freq=[10,100,10],wdir=None,savedir=None,mdl_name=None
-                     ,env=None,options=['Q3d','mesh',False]):
+                     ,env=None,options=['Q3D','mesh',False]):
     '''
     # not generic -- only works with current PowerSynth
     :param layer_stack: Layer Stack format
@@ -92,7 +92,7 @@ def form_trace_model(layer_stack,Width=[1.2,40],Length=[1.2,40],freq=[10,100,10]
     T1.add_Layers([E1, E2, E3, E4])
     T1.define_trace(4,[bp_W,bp_L])  # Select trace layer
     trace_high = E4.get_z()
-    if sim=='Q3d':
+    if sim=='Q3D':
         sim_commands = Q3D_ipy_script('16.2', wdir, mdl_name,wdir)  # Initialize Script Object
         sim_commands.add_script(T1.get_all_elayers())  # Add Topology structure to script
         sim_commands.set_params('Width', 9, 'XSize', E4)  # Setup parameters
