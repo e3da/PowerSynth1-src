@@ -172,8 +172,6 @@ class ProjectBuilder(QtGui.QMainWindow):
         self.ui.tbl_projDevices.setRowCount(0)
         self.ui.tbl_symmetry.clear()
         self.ui.tbl_symmetry.setRowCount(0)
-        self.ui.tbl_performance.clear()
-        self.ui.tbl_performance.setRowCount(0)
         
         
     def reload_ui(self):
@@ -184,21 +182,16 @@ class ProjectBuilder(QtGui.QMainWindow):
         self.ui.txt_numGenerations.setText(str(100)) # default number of generations to 100
         # the color wheel is not that long, so these are used in different sections to just loop back to the beginning once the end is reached
         self.cw1 = 0
-        
         # used for error checking constraints
         self.constraint_error = False
         self.constraint_select = None
-        
         self.fill_material_cmbBoxes() # sxm- initialize dropdown menus of items in module stack
-        
         # Used to store which artist object is bound to which component row
         self.component_row_dict = {}
-        
         self.sol_browser = None
-        
         self.perf_list = PerformanceListUI(self)
         self.symmetry_ui = SymmetryListUI(self)
-        
+
     def change_stacked(self, index):
         """Keep stacked widget current with navigation"""
         # the stacked widget is what shows everything like the symbolic layouts.  Different pages in the stacked widget show different things

@@ -301,8 +301,9 @@ class PerformanceListUI(object):
         for line in self.perform_lines:
             self.parent.patch_dict.get_patch(line, 3).set_facecolor(self.parent.default_color)
         self.parent.symb_canvas[3].draw()
-        
+
     def load_measures(self):
+
         for measure in self.parent.project.symb_layout.perf_measures:
             # add row to table
             row = self.ui.tbl_performance.rowCount()
