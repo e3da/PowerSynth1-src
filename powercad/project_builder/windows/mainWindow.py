@@ -1477,7 +1477,7 @@ class Ui_MainWindow(object):
         self.label_4.setPalette(palette)
         self.label_4.setStyleSheet("background-color: qradialgradient(spread:pad, cx:0.5, cy:0.5, radius:0.481, fx:0.653409, fy:0.312, stop:0.698864 rgba(255, 255, 255, 194), stop:1 rgba(255, 255, 255, 0));")
         self.label_4.setText("")
-        self.label_4.setPixmap(QtGui.QPixmap("../../../../images/main_window/PowerSynth_Logo_Temp2.png"))
+        self.label_4.setPixmap(QtGui.QPixmap("../../../images/main_window/PowerSynth_Logo_Temp2.png"))
         self.label_4.setScaledContents(True)
         self.label_4.setObjectName("label_4")
         self.gridLayout.addWidget(self.label_4, 0, 0, 1, 2)
