@@ -50,10 +50,6 @@ class RS_model:
         self.op_point=None # This is the selected operating point of the model. This can be used to predict  
         self.mode='single' # assume there is no sweeping condition at the beginning
 
-        self.info=None  # Layer Stack and Operating Info
-        self.R=None
-        self.L=None
-        self.C=None
     def set_mdl_info(self,info):
         '''
         Set model info on layers and material properties
@@ -140,14 +136,14 @@ class RS_model:
         
         self.obj_name=name
         
-    def read_file(self,file_ext,mode,row,units,wdir):
+    def read_file(self,file_ext=None,mode=None,row=2,units=None,wdir=None):
         '''
         Read File to PowerSynth, assume the sweeping operating condition is on first column 
             File_ext: file extension e.g 'txt','csv',...
             Mode: single or sweep e.g if mode is sweep the read file will attempt to read all rows of data
             units: the units of each column (for both sweep and data output)  [sweep_unit,key_unit]
         '''   
-         
+        self.input=[]
         if file_ext=='csv':
             for name in self.generic_fnames:
                 filepath=os.path.join(wdir,name+'.'+file_ext)
@@ -305,8 +301,9 @@ class RS_model:
             self.DOE[row]=doe_row
             not_ready=True
             
-    def build_RS_mdl(self,mode='Krigging',func=None):
+    def build_RS_mdl(self,mode='Krigging',func=None,type=None):
         '''
+        type: 'R', 'L', 'C'
         Build all RS_mdl based on user specified inputs and outputs.
         Supported:
         Support Vector Regression (scikit-learn.org -- based on libsvm)
@@ -338,11 +335,9 @@ class RS_model:
             values of the drift(s) at each data point and all grid points. With the 'functional' drift capability, the 
             user may provide callable function(s) of the spatial coordinates that define the drift(s). The package 
             includes a module that contains functions that should be useful in working with ASCII grid files (*.asc).
-        Scipy_interpolate:
 
         '''
-        print self.op_point,' ',self.sweep_unit.to_string()
-        print self.unit.to_string()
+
         if mode=='SVR': # test all possible model and pick the one with highest accuracy
             kernel=['rbf']
             best_score=[0 for i in range(len(self.input))]

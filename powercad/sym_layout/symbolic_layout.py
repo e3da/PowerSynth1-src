@@ -366,10 +366,10 @@ class SymbolicLayout(object):
         self.trace_nodes = [] # all nodes that will be used to connect traces to lumped_graph
         self.mdl_type={'E':[],'T':[]}
 
-    def set_RS_model(self,mdl_dir='C:\Users\qmle\Desktop\Testing\Py_Q3D_test\All rs models'):
-        self.LAC_mdl = load_mdl(mdl_dir, 'Validation_10_10_LAC_accurate.rsmdl')
-        self.RAC_mdl = load_mdl(mdl_dir, 'Validation_10_10_RAC_accurate.rsmdl')
-        self.C_mdl = load_mdl(mdl_dir, 'C_mesh_100_krige.rsmdl')
+    def set_RS_model(self,model):
+        self.LAC_mdl = model['L']
+        self.RAC_mdl = model['R']
+        self.C_mdl = model['C']
     '''-----------------------------------------------------------------------------------------------------------------------------------------------------'''
     def add_constraints(self):
         ''' Adds a contraints field to any layout object which lacks it. '''
@@ -2514,15 +2514,13 @@ class SymbolicLayout(object):
         if main.element.vertical:
             width = conn.trace_rect.height()
             length = math.fabs(pt2[0] - pt1[0])
-            print "ortho",width,length
         else:
             width = conn.trace_rect.width()
             length = math.fabs(pt2[1] - pt1[1])
-            print "ortho", width, length
         lumped_graph.add_edge(n1, n2,
                               {'ind': 1.0 / 1e-6, 'res': 1.0 / 1e-6, 'cap': 1.0 / 1e-6,
                                'type': 'trace', 'width': width, 'length': length})
-        self._collect_trace_parasitic_post_eval(width, length, n1, n2)
+        #self._collect_trace_parasitic_post_eval(width, length, n1, n2) # Source of over estimation, need to look at this again
         return lumped_graph
 
     def _lead_trace_path_eval(self, n1, n2,trace_data,lead,lumped_graph):
@@ -2603,13 +2601,17 @@ class SymbolicLayout(object):
         Stime= time.time()
         for j in range(len(self.mdl_type['E'])):
             if self.mdl_type['E'][j]=='RS':
-                self.set_RS_model()
                 for w,l in self.trace_info:
                     w_all.append(w)
                     l_all.append(l)
                 ind1 = trace_ind_krige(trace_data[4],w_all, l_all,self.LAC_mdl).tolist()
                 res1 = trace_res_krige(trace_data[4], w_all, l_all,self.RAC_mdl).tolist()
-                cap1 = trace_cap_krige(w_all, l_all, self.C_mdl).tolist()
+                if self.C_mdl!=None:
+                    cap1 = trace_cap_krige(w_all, l_all, self.C_mdl).tolist()
+                else:
+                    cap1=[]
+                    for pair in zip(w_all,l_all):
+                        cap1.append(trace_capacitance(pair[0],pair[1], trace_data[1], trace_data[2], trace_data[6]))
                 for i in range(t_num):
                     nodes=self.trace_nodes[i]
                     lumped_graph[nodes[0]][nodes[1]]['ind']=1/ind1[i]

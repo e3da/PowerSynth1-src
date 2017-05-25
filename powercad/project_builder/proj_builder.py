@@ -1292,9 +1292,10 @@ class ProjectBuilder(QtGui.QMainWindow):
     def model_selection(self):
         if self.ui.cmb_elec_model.currentText()=="Response Surface":
             rs_settings = ModelSelectionDialog(self)
-            rs_settings.show()  # change this to a dialog
+            rs_settings.exec_()
+
         else:
-            return
+            return # quit mode
         #ToDO Model Selection Here
 
 # ------------------------------------------------------------------------------------------

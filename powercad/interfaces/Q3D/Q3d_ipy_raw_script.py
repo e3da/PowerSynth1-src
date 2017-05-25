@@ -91,16 +91,16 @@ oModule.InsertSetup("Matrix",
         ]
 
     ])
-
+    {7}
 '''
-'''
+Add_cap_analysis='''
 [
             "NAME:Cap",
-            "MaxPass:="        , {2},     # default 15
-            "MinPass:="        , {3},     # default 15
-            "MinConvPass:="        , {4}, # default 1
-            "PerError:="        , {5},    # default 1
-            "PerRefine:="        , {6},   # default 30
+            "MaxPass:="        , {0},     # default 15
+            "MinPass:="        , {1},     # default 15
+            "MinConvPass:="        , {2}, # default 1
+            "PerError:="        , {3},    # default 1
+            "PerRefine:="        , {4},   # default 30
             "AutoIncreaseSolutionOrder:=", True,
             "SolutionOrder:="    , "Normal"
         ],

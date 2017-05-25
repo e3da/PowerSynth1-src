@@ -115,7 +115,8 @@ class Q3D_ipy_script:
             # sink ID: Name of sink
             add_net=Source_sink_parent.format(parent_net)
             self.script+=Source_Sink.format(sourceID,face1,sinkID,face2,add_net)
-    def analysis_setup(self,freq='100k',solve_field='False',max_pass=10,min_pass=10,min_conv=1,per_err=0.5,mesh_refine=30):
+
+    def analysis_setup(self,freq='100k',solve_field='False',max_pass=10,min_pass=10,min_conv=1,per_err=0.5,mesh_refine=30,add_C=False):
         # set up RLC parasitic analysis with/without field extracted.
             # freq: a string value denote frequency of the setup suffixes: k,M,G....
             # solve_field: a boolean value if True, fields can be exported at the end of the analysis
@@ -124,8 +125,12 @@ class Q3D_ipy_script:
             # min_conv: minimum number of passes to converge
             # per_err:  percent error between 2 passes (if satisfy, it will count up number of successful passes. 
                       # The algorithm will stop if this count == min_conv
-            # mesh_refine: percentage of mesh points will be added after each passes  
-        self.script+=Analysis_Setup.format(freq,solve_field, max_pass, min_pass, min_conv, per_err, mesh_refine)
+            # mesh_refine: percentage of mesh points will be added after each passes
+        if not(add_C):
+            self.script+=Analysis_Setup.format(freq,solve_field, max_pass, min_pass, min_conv, per_err, mesh_refine,'')
+        else:
+            C_option=Add_cap_analysis.format(max_pass, min_pass, min_conv, per_err, mesh_refine)
+            self.script += Analysis_Setup.format(freq, solve_field, max_pass, min_pass, min_conv, per_err, mesh_refine,C_option)
         
     def analyze_all(self):
         # Run analysis

@@ -39,7 +39,7 @@
     </rect>
    </property>
   </widget>
-  <widget class="QListView" name="listView">
+  <widget class="QListView" name="list_mdl_choices">
    <property name="geometry">
     <rect>
      <x>10</x>

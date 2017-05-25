@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ModelSelection.ui'
 #
-# Created: Wed May 24 18:25:05 2017
+# Created: Thu May 25 09:13:19 2017
 #      by: pyside-uic 0.2.15 running on PySide 1.2.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -21,9 +21,9 @@ class Ui_ModelSelection(object):
         self.textEdit = QtGui.QTextEdit(ModelSelection)
         self.textEdit.setGeometry(QtCore.QRect(200, 80, 411, 341))
         self.textEdit.setObjectName("textEdit")
-        self.listView = QtGui.QListView(ModelSelection)
-        self.listView.setGeometry(QtCore.QRect(10, 80, 161, 341))
-        self.listView.setObjectName("listView")
+        self.list_mdl_choices = QtGui.QListView(ModelSelection)
+        self.list_mdl_choices.setGeometry(QtCore.QRect(10, 80, 161, 341))
+        self.list_mdl_choices.setObjectName("list_mdl_choices")
         self.label = QtGui.QLabel(ModelSelection)
         self.label.setGeometry(QtCore.QRect(10, 60, 46, 13))
         font = QtGui.QFont()

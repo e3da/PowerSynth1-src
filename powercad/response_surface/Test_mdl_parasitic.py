@@ -57,10 +57,10 @@ if __name__ == '__main__':
         script1.analyze_all()                                                                         # Run analysis
         script1.export_report('Data Table 1', 'C://Users//qmle//Desktop//Testing//Py_Q3D_test//Mdl2//',name)  # Export report to csv files
     script1.make()   
-    script1.build('C://Users//qmle//Desktop//Testing//Py_Q3D_test//IronPython//ipy64.exe')
-    mdl1.set_unit('n','H')
+    #script1.build('C://Users//qmle//Desktop//Testing//Py_Q3D_test//IronPython//ipy64.exe')
+    mdl1.set_unit('u','Ohm')
     mdl1.set_sweep_unit('k', 'Hz')
-    mdl1.read_file('csv', 'sweep', 90,('Hz','H'))
+    mdl1.read_file('csv', 'single', 90,('Hz','Ohm'))
     
     mdl1.build_RS_mdl('Krigging')
     #mdl1.plot_input('FEM with Q3D for Inductance')

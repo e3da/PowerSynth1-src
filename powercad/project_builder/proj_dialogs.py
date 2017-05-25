@@ -34,7 +34,7 @@ from powercad.layer_stack.layer_stack_import import *
 from powercad.general.settings.Error_messages import *
 from PySide import QtCore, QtGui
 from powercad.response_surface.Model_Formulation import form_trace_model
-from powercad.response_surface.Response_Surface import RS_model
+import sys
 # CLASSES FOR DIALOG USAGE
 class GenericDeviceDialog(QtGui.QDialog):   
     # Author: quang le
@@ -652,6 +652,8 @@ class ResponseSurfaceDialog(QtGui.QDialog):
         self.ui.btn_add_layer_stack.pressed.connect(self.importlayerstack)
         self.ui.btn_build.pressed.connect(self.build)
         self.ui.list_mdl_lib.clicked.connect(self.show_mdl_info)
+        self.ui.cmb_DOE.currentIndexChanged.connect(self.set_up_DOE)
+
         # populate model files
         self.model_dir=os.path.join(DEFAULT_TECH_LIB_DIR,'Model','Trace')
         self.rs_model = QtGui.QFileSystemModel()
@@ -708,6 +710,9 @@ class ResponseSurfaceDialog(QtGui.QDialog):
         checknum = minL.isdigit() or maxL.isdigit() or minW.isdigit() or maxW.isdigit() or fmin.isdigit() or fmax.isdigit()\
                 or fstep.isdigit()
         env_dir="C://Users//qmle//Desktop//Testing//Py_Q3D_test//IronPython//ipy64.exe"
+        self.sims=str(self.ui.cmb_sims.currentText())
+
+        print self.sims
 
         if not(checknum):
             InputError(msg="not all inputs for width length and frequency are numeric, double check please")
@@ -718,15 +723,21 @@ class ResponseSurfaceDialog(QtGui.QDialog):
 
             form_trace_model(layer_stack=self.layer_stack_import,Width=[minW,maxW],Length=[minL,maxL],
                              freq=[fmin,fmax,fstep],wdir=self.wp_dir,savedir=self.model_dir,mdl_name=mdl_name
-                             ,ipy64_dir=env_dir)
+                             ,env=env_dir)
 
             self.refresh_mdl_list()
+    def set_up_DOE(self):
+        if self.ui.cmb_DOE.currentText()=="mesh":
+            self.DOE="mesh" # add DOE option later fix for now
+            print 'mesh 5 x 5'
+        elif self.ui.cmb_DOE.currentText()=="center composite":
+            print "center composite"
+            self.DOE = "cc"  # add DOE option later fix for now
 
     def show_mdl_info(self):
-
         selected=str(self.rs_model.fileName(self.ui.list_mdl_lib.currentIndex()))
         mdl = load_file(os.path.join(self.model_dir,selected))
-        text=mdl.info
+        text=mdl['info']
         self.ui.text_edt_model_info.setText(text)
         self.ui.list_mdl_lib.currentIndex()
 
@@ -738,5 +749,27 @@ class ModelSelectionDialog(QtGui.QDialog):
         self.ui = Ui_ModelSelection()
         self.ui.setupUi(self)
         self.parent = parent
+        # populate model files
+        self.model_dir = os.path.join(DEFAULT_TECH_LIB_DIR, 'Model', 'Trace')
+        self.rs_model = QtGui.QFileSystemModel()
+        self.rs_model.setRootPath(self.model_dir)
+        self.rs_model.setFilter(QtCore.QDir.Files)
+        self.ui.list_mdl_choices.setModel(self.rs_model)
+        self.ui.list_mdl_choices.setRootIndex(self.rs_model.setRootPath(self.model_dir))
+        self.ui.list_mdl_choices.clicked.connect(self.show_mdl_info)
+        self.ui.buttonBox.accepted.connect(self.select_mdl)
 
+    def show_mdl_info(self):
+        selected=str(self.rs_model.fileName(self.ui.list_mdl_choices.currentIndex()))
+        mdl = load_file(os.path.join(self.model_dir,selected))
+        text=mdl['info']
+        self.ui.textEdit.setText(text)
+        self.ui.list_mdl_choices.currentIndex()
 
+    def select_mdl(self):
+        try:
+            self.model=load_file(os.path.join(self.model_dir,self.rs_model.fileName(self.ui.list_mdl_choices.currentIndex())))
+            self.parent.project.symb_layout.set_RS_model(self.model)
+            Notifier(msg="model is set to: "+str(self.rs_model.fileName(self.ui.list_mdl_choices.currentIndex())),msg_name="model selected")
+        except:
+            InputError(msg="Unexpected error:"+str(sys.exc_info()[0]))
