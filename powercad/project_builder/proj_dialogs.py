@@ -622,13 +622,14 @@ class ResponseSurfaceDialog(QtGui.QDialog):
         self.ui.setupUi(self)
         self.parent=parent
         self.layer_stack_import=None
+        self.DOE='mesh'
         # Suggested Min Max ranges
-        self.ui.lineEdit_minL.setText('1.2')
+        self.ui.lineEdit_minL.setText('5')
         self.ui.lineEdit_maxL.setText('40')
-        self.ui.lineEdit_minW.setText('1.2')
+        self.ui.lineEdit_minW.setText('5')
         self.ui.lineEdit_maxW.setText('40')
-        self.ui.lineEdit_fmin.setText('100')
-        self.ui.lineEdit_fmax.setText('1000')
+        self.ui.lineEdit_fmin.setText('10')
+        self.ui.lineEdit_fmax.setText('500')
         self.ui.lineEdit_fstep.setText('10')
         # Initialization, only load layer stack button is enabled
         # 1 buttons:

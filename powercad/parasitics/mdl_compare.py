@@ -156,18 +156,15 @@ def load_mdl(dir=None,mdl_name=None,type=None):
     return mdl
 
 def trace_res_krige(f,w,l,mdl):
-    print 'length',l
-    #unit is mOhm
     model = mdl.model[0]
     op_freq=mdl.op_point
     r=model.execute('points',[w],[l])
     r=np.ma.asarray(r[0])
+    r=r/1000 # report in m ohm
     return r*m.sqrt(f/op_freq)
 
 def trace_ind_krige(f,w,l,mdl):
     # unit is nH
-    print 'width', w
-    print 'length', l
     n_params=len(mdl.input)
     params=[]
     for i in range(n_params):

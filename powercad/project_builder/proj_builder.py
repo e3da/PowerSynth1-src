@@ -154,10 +154,10 @@ class ProjectBuilder(QtGui.QMainWindow):
         self.ui.tbl_projDevices.setColumnWidth(0,50)
         self.ui.tbl_projDevices.horizontalHeader().setStretchLastSection(True)
         self.layer_stack_import=None
+
     def enable_project_interfaces(self, enable):
         # Navigation menu
         self.ui.navigation.setEnabled(enable)
-        
         # Menu bar
         self.ui.action_edit_design_rules.setEnabled(enable)
         self.ui.actionSave_Project.setEnabled(enable)
@@ -167,6 +167,7 @@ class ProjectBuilder(QtGui.QMainWindow):
         self.ui.action_open_tech_lib_editor.setEnabled(enable)
         self.ui.action_edit_tech_path.setEnabled(enable)
         self.ui.action_load_symbolic_layout.setEnabled(enable)
+
     def refresh_ui(self): #Quang: clear all the old project  data when new project is loaded
         self.ui.tbl_projDevices.clear()
         self.ui.tbl_projDevices.setRowCount(0)

@@ -1944,7 +1944,6 @@ class SymbolicLayout(object):
             #Brett's method
             for i in xrange(len(self.perf_measures)):
                 ret.append(drc_count+10000)
-            print "ret:" + str(ret)
             return ret
         else:                 
             print ' new solution is found *******'    # convergence case
@@ -1969,11 +1968,8 @@ class SymbolicLayout(object):
                         id = self.mdl_type['E'].index(type)
                         try:
                             val = parasitic_analysis(self.lumped_graph[id], src, sink, measure_type)
-                            parasitic_time = time.time() - start_time
                         except LinAlgError:
                             val = 1e6
-                                
-    #                    print measure_type, val
                     ret.append(val)
 
 
@@ -2000,7 +1996,6 @@ class SymbolicLayout(object):
                 self.opt_progress_fn(percent_done)
         else:
             print 'Eval. Count:', self.eval_count, ' %', percent_done, ' complete.'
-                
         return ret
     '''-----------------------------------------------------------------------------------------------------------------------------------------------------'''  
     def _measure_capacitance(self, measure):
@@ -2581,7 +2576,6 @@ class SymbolicLayout(object):
                         #print 'distance'
                         if d!=0:
                             M += wire_partial_mutual_ind(length, wire_radius, d)
-                            #print 'Mutual inductance', M
                             wire_ind=(wire_ind+M)
             inv_ind += 1.0/wire_ind
 
