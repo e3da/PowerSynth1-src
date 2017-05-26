@@ -106,8 +106,12 @@ def plot_layout(sym_layout,ax = plt.subplot('111', adjustable='box', aspect=1.0)
     # print "local all_cornered_traces_list: \n", all_cornered_traces_list
 
     cornered_traces = [] # create an empty list of traces meeting at a corner
+    supertraces = []
     # corner_id = 0
     for i in sym_layout.all_trace_lines:
+        print i
+        if i == super: #TODO: sxm check this (find all the traces that are super traces)
+            supertraces.append(i)
         if len(i.trace_connections) > 0:
             trace_rectangle = (i.trace_rect.top, i.trace_rect.bottom, i.trace_rect.left, i.trace_rect.right) # copy the trace rectangle's dimensions
             for j in i.trace_connections:
@@ -117,6 +121,13 @@ def plot_layout(sym_layout,ax = plt.subplot('111', adjustable='box', aspect=1.0)
                 temp2 = (connecting_trace_rectangle, trace_rectangle)
                 if ((temp not in cornered_traces) and (temp2 not in cornered_traces)):
                     cornered_traces.append(temp)
+    print "super traces:s"
+    for i in supertraces:
+        print i # TODO: check this sxm (read out their top bottom left right coordinates)
+        #TODO: compare the supertrace's top/bot/left/right to ALL the traces' T/B/L/R. If adjacency si found, but not in cornered_traces list, then add it to the list.
+        #supertrace_rectangle = (i.trace_rect.top, i.trace_rect.bottom, i.trace_rect.left, i.trace_rect.right)
+        #print supertrace_rectangle
+
 
                 # if _search_corner(cornered_traces, temp, temp2):
                 #     pass
