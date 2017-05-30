@@ -1519,7 +1519,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
         self.stackedWidget.setCurrentIndex(6)
-        self.navigation.setCurrentIndex(4)
+        self.navigation.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
         MainWindow.setTabOrder(self.btn_newProject, self.btn_openProject)
         MainWindow.setTabOrder(self.btn_openProject, self.cmb_baseMaterial)
@@ -1580,6 +1580,7 @@ class Ui_MainWindow(object):
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">Welcome to PowerSynth!</span></p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
         self.btn_previous.setText(QtGui.QApplication.translate("MainWindow", "Previous", None, QtGui.QApplication.UnicodeUTF8))
         self.btn_next.setText(QtGui.QApplication.translate("MainWindow", "Next", None, QtGui.QApplication.UnicodeUTF8))
+        self.label_4.setText(QtGui.QApplication.translate("MainWindow", "<html><head/><body><p><img src=\":/images/images/main_window/PowerSynth_Logo_Temp3.png\"/></p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
         self.groupBox_5.setTitle(QtGui.QApplication.translate("MainWindow", "Instructions", None, QtGui.QApplication.UnicodeUTF8))
         self.label_27.setText(QtGui.QApplication.translate("MainWindow", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
@@ -1711,4 +1712,4 @@ class Ui_MainWindow(object):
         self.actionexport_layout_script.setText(QtGui.QApplication.translate("MainWindow", "Export Layout Script", None, QtGui.QApplication.UnicodeUTF8))
         self.actionOpen_Layout_Editor.setText(QtGui.QApplication.translate("MainWindow", "Open Layout Editor", None, QtGui.QApplication.UnicodeUTF8))
 
-from powercad.project_builder.windows import main_window_images_rc
+import main_window_images_rc

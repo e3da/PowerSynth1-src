@@ -3,13 +3,12 @@ Created on Sep 24, 2012
 
 @author: jmayfiel
 '''
-from math import fabs
 
 import numpy as np
 
-from powercad.design.library_structures import BondWire, Lead
+from powercad.design.library_structures import Lead
 from powercad.design.module_design import ModuleDesign
-from powercad.util import Rect
+
 
 def output_q3d_vbscript(md, filename):
     """
@@ -86,6 +85,7 @@ def output_q3d_vbscript(md, filename):
         name = "lead" + str(index+1)
         if lead.lead_tech.lead_type == Lead.BUSBAR:
             name2 = "lead_" +str(index+1)
+            print lead.lead_tech.dimensions
             (LeadWidth, LeadLength, LeadThick, LeadHeight) = lead.lead_tech.dimensions
             # the cases find the orientation of the lead. This makes the top part of the lead build in the right direction,
             # into the rectangle it is placed on

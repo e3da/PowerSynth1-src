@@ -4,10 +4,9 @@ Created on Dec 23, 2012
 @author: shook
 '''
 
-import xml.dom.minidom as xml
 import ctypes
-from powercad.util import Rect
-from matplotlib.pyplot import plot
+import xml.dom.minidom as xml
+
 
 class LayoutError(Exception):
     def __init__(self, msg):
@@ -41,15 +40,13 @@ def load_script(sript_path):
     #    To specify a point ID p pos
     # The script is written in text form or specified by .psc (powersynth script code) 
     layout=[]    # layout is a set of LayoutLines and LayoutPoints
-    print sript_path
     with open(sript_path, 'rb') as f: # open the directory of script code
-        print f
         objs=[]                      # specified a list of objs (lines and points)
         for line in f:               # read every line of the script 
             if line[0]=='#' or line[0]=='': # check for comments or blank lines
                 x=1                         # do nothing if so
             else:                           # in case a line contains layout information
-                path_id=line[0:3]           # load path_id
+                path_id=line[0:4]           # load path_id
                 type=line[5]                # check for layout type (line: l vs point: p)
                 if type =='l':              # in case it is a line
                     line_str=line[7:len(line)] # read the layout information
@@ -79,7 +76,6 @@ def load_script(sript_path):
     if len(objs) > 0:                               # If there are objs in layout list
             for t in objs:
                 layout.append(t)                    # append obj to layout
-    print layout
     return layout                                   # return layout
               
                 
@@ -110,7 +106,6 @@ def load_svg(svg_path):
             ele_paths = group.getElementsByTagName("path")
             for path in ele_paths:
                 path_trans_dict[path].append(trans_tuple)
-    print "path_trans_dict[]", path_trans_dict #sxm
     
     # start building layout
     layout = []
@@ -192,7 +187,6 @@ def normalize_layout(layout, tol):
     for obj in layout:
         
         if isinstance(obj, LayoutLine): # Read through all objects in SVG again
-            print obj.pt1
             x0 = xdict[obj.pt1[0]]      #
             y0 = ydict[obj.pt1[1]]
             x1 = xdict[obj.pt2[0]]
@@ -257,7 +251,6 @@ def handle_circle(path, trans_list):
                 
                 path_id = get_id(path)
                 pt_obj = LayoutPoint(path_id, cxy)
-                print 'pt_obj ', pt_obj
                 return [pt_obj]
             except KeyError:
                 raise Exception('Failed to retrieve arc\'s center!')
@@ -366,8 +359,7 @@ def norm_dict(clist, tol):
             cdict[c] = inc                       # use this as the normalized value
             
         last_c = c                               # move to the next coordinate and continue the normalization
-    
-    print 'cdict', cdict    
+
     return (inc, cdict)                          # return the counter value as well as the normalized values
 
 def check_for_overlap(layout):
@@ -401,7 +393,7 @@ def check_pt_overlapt(obj1, obj2):
 
 if __name__ == '__main__':
     import matplotlib
-    from powercad.sym_layout.plot import plot_svg_objs
+
     #from powercad.sym_layout.svg import load_svg, normalize_layout
     layout = load_svg('../../../sym_layouts/simple.svg')
     normalize_layout(layout, 0.001)

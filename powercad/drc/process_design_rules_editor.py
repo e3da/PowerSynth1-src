@@ -3,18 +3,18 @@ Created on Oct 7, 2013
 
 @author: bxs003
 '''
+import csv
 import os
 import traceback
 
-import csv
-
-from PySide import QtCore, QtGui
-from PySide.QtGui import QFileDialog, QStandardItemModel,QStandardItem, QMessageBox,QFont
+from PySide import QtGui
+from PySide.QtGui import QFileDialog
 
 from powercad.design.project_structures import ProcessDesignRules
+from powercad.general.settings.settings import LAST_ENTRIES_PATH
+from powercad.general.settings.save_and_load import load_file
 from powercad.project_builder.dialogs.process_design_rules_editor_ui import Ui_design_rule_dialog
-from powercad.settings import LAST_ENTRIES_PATH, DEFAULT_TECH_LIB_DIR
-from powercad.save_and_load import save_file, load_file
+
 
 class ProcessDesignRulesEditor(QtGui.QDialog):
     """Process Design Rules Dialog Editor"""
