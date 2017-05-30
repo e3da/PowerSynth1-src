@@ -5,14 +5,6 @@ Brett Shook - Added separate Performance Measure List system 4/29/2013
 Brett Shook - Added separate Component Selection system 3/21/2014
             - 
 '''
-# add for packaging
-#import six
-
-#import packaging
-
-#import packaging.version
-
-#import packaging.specifiers
 '''----------------------------------'''
 import os
 import sys
