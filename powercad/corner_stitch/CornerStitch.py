@@ -183,3 +183,44 @@ class layer:
         find a channel through empty cells from startCell to endCell, subject to minWidth.  
         """
         return
+
+class constraintGraph:
+    """
+    the graph representation of constraints pertaining to cells and variables, informed by several different 
+    sources
+    """
+
+    def __init__(self, vertices, edges):
+        self.vertexMatrix = int[len(vertices)][len(vertices)]
+        self.edges = edges
+
+    def getNeighbors(self, vertex):
+        """
+        return the edge types and neighbors of the vertex passed in
+        """
+        return
+
+    def getEdgeType(self, v1, v2):
+        """
+        return the edge type from v1 to v2. If negative, then the edge type is from v2 to v1
+        """
+        return
+
+    def reduce(self):
+        """
+        this should call subroutines for simple and complex reduction, to pare the constraint graph down to its 
+        minimum form
+        """
+        return
+
+    def simpleReduce(self):
+        return
+
+    def complexReduce(self):
+        return
+
+    def minSpanTree(self, vertex):
+        """
+        returns a min spanning tree starting from vertex
+        """
+        return
