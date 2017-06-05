@@ -22,6 +22,7 @@ from powercad.design.module_design import ModuleDesign
 from powercad.spice_export.netlist_graph import Module_SPICE_netlist_graph, Module_SPICE_netlist_graph_v2, Module_SPICE_lumped_graph
 from powercad.spice_export.thermal_netlist_graph import Module_Full_Thermal_Netlist_Graph
 from powercad.electro_thermal.ElectroThermal_toolbox import ET_analysis
+from powercad.interfaces.FastHenry.fh_layers import output_fh_script
 import numpy as np
 from powercad.drc import *
 from powercad.drc.design_rule_check import DesignRuleCheck
@@ -85,6 +86,7 @@ class SolutionWindow(QtGui.QWidget):
                 self.sym_layout.gen_solution_layout(self.solution.index)
                 md = ModuleDesign(self.sym_layout)
                 output_q3d_vbscript(md, outname)
+                output_fh_script(md,outname)
                 QtGui.QMessageBox.about(None, "Q3D VB Script", "Export successful.")
             except:
                 QtGui.QMessageBox.warning(None, "Q3D VB Script", "Failed to export vb script! Check log/console.")

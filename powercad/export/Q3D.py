@@ -41,12 +41,12 @@ def output_q3d_vbscript(md, filename):
     
     
     #Given Material properties
-    #BaseMaterial = md.baseplate.material_props.name
-    BaseMaterial = "copper"
-    #MetalMaterial = md.substrate.metal_props.name
-    MetalMaterial = "aluminum"
-    #DielectricMaterial = md.substrate.isolation_props.name
-    DielectricMaterial = "Al_N"
+    BaseMaterial = md.baseplate.baseplate_tech.properties.name
+    #BaseMaterial = "copper"
+    MetalMaterial = md.substrate.substrate_tech.metal_properties.name
+    #MetalMaterial = "aluminum"
+    DielectricMaterial = md.substrate.substrate_tech.isolation_properties.name
+    #DielectricMaterial = "Al_N"
     LeadMaterial = "copper"
     DieMaterial = "copper"
     BwMaterial = "copper"
