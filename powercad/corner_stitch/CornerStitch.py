@@ -5,6 +5,10 @@ Created on June 1, 2017
 '''
 
 import copy
+import matplotlib
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+from matplotlib import pylab
 
 class cell:
     """
@@ -33,6 +37,7 @@ class cornerStitch:
         self.WEST = west #This is the bottom-left pointer to the bottommost cell on the left of this cell
         self.HINT = hint #this is the pointer to the hint tile of where to start looking for location
         self.cell = cell
+
 
     def getHeight(self): #returns the height
         return (self.NORTH.cell.y - self.cell.y)
@@ -91,16 +96,29 @@ class layer:
     layers connecting to one another yet so I'm leaving it unimplemented for now. Layer-level operations involve
     collections of cornerStitches or anything involving coordinates being passed in instead of a cornerStitch
     """
-    def __init__(self, stitchList, northBoundary, eastBoundary):
+    def __init__(self, stitchList, max_x, max_y):
+        """
+        northBoundary and eastBoundary should be integer values, the upper and right edges of the editable rectangle
+        
+        """
         self.stitchList = stitchList
-        self.NORTH_BOUNDARY = northBoundary
-        self.EAST_BOUNDARY = eastBoundary
-        self.SOUTH_BOUNDARY = 0
-        self.WEST_BOUNDARY = 0
+        self.northBoundary = cornerStitch(None, None, None, None, None, cell(0, max_y, "EMPTY"))
+        self.eastBoundary = cornerStitch(None, None, None, None, None, cell(max_x, 0, "EMPTY"))
+        self.southBoundary = cornerStitch(None, None, None, None, None, cell(0, -1000, "EMPTY"))
+        self.westBoundary = cornerStitch(None, None, None, None, None, cell(-1000, 0, "EMPTY"))
 
     def createTile(self, x1, y1, x2, y2):
         return
 
+    def split(self):
+        """
+        """
+        return
+
+    def merge(self):
+        """
+        """
+        return
 
     def lowestCell(self, cellList):
         min = 10000000
@@ -125,7 +143,7 @@ class layer:
         print len(accountedCells)
         return
 
-    def findLayerDimensions(self):
+    def findLayerDimensions(self, boundaries):
         """
         ***possibly depreciated, talk to Dr. Peng***
         this should be called after all solid tiles are declared, to find out the horizontal and vertical dimensions
@@ -134,11 +152,17 @@ class layer:
         rightExtreme = 0
         topExtreme = 0
 
-        for cell in self.stitchList:
-            print dir(cell)
-            if cell.cell.x + cell.getWidth() > rightExtreme:
+        for cell in self.stitchList + boundaries:
+            if cell.EAST is None:
+                if cell.cell.x > rightExtreme:
+                    rightExtreme = cell.cell.x
+            elif cell.cell.x + cell.getWidth() > rightExtreme :
                 rightExtreme = cell.cell.x
-            if cell.cell.y + cell.getHeight() > topExtreme:
+
+            if cell.NORTH is None:
+                 if cell.cell.y > topExtreme:
+                     topExtreme = cell.cell.y
+            elif cell.cell.y + cell.getHeight() > topExtreme :
                 topExtreme = cell.cell.y
 
         return [rightExtreme, topExtreme]
@@ -180,6 +204,15 @@ class layer:
         """
         find the tile that contains the coordinates x, y
         """
+        if y > self.northBoundary.cell.y:
+            return self.northBoundary
+        if y < 0:
+            return self.southBoundary
+        if x > self.eastBoundary.cell.x:
+            return self.eastBoundary
+        if x < 0:
+            return self.westBoundary
+
         cc = self.stitchList[0] #current cell
         while (y < cc.cell.y or y > (cc.cell.y + cc.getHeight())):
             if (y > cc.cell.y + cc.getHeight()):
@@ -230,6 +263,109 @@ class layer:
         """
         return
 
+    def drawLayer(self):
+        """
+        Draw all cells in this layer with stitches pointing to their stitch neighbors
+        TODO:
+         fix the hardcoded epsilon value of .5, this might lead to improper pointers when the differnce between
+         a cell's height and its EAST pointer is less than epsilon. Eventually, we should probably find a way
+         to determine epsilon from the layer, but this should handle 90 percent of cases for now. Also should probably
+         change the dimensions of the object window depending on the layer size.
+        """
+        fig1 = matplotlib.pyplot.figure()
+
+        for cell in stitchList:
+            ax1 = fig1.add_subplot(111, aspect='equal')
+            if not cell.cell.type == "EMPTY":
+                pattern = '\\'
+            else:
+                pattern = ''
+
+            ax1.add_patch(
+                matplotlib.patches.Rectangle(
+                    (cell.cell.x, cell.cell.y),  # (x,y)
+                    cell.getWidth(),  # width
+                    cell.getHeight(),  # height
+                    hatch = pattern,
+                    fill=False
+                )
+            )
+            #NORTH pointer
+            ax1.arrow((cell.cell.x + cell.getWidth() - .5),
+                      (cell.cell.y + cell.getHeight()- .5),
+                      0,
+                      .75,
+                      head_width = .25,
+                      head_length = .25,
+                      fc = 'k',
+                      ec = 'k'
+                    )
+            #EAST pointer
+            ax1.arrow((cell.cell.x + cell.getWidth() - .5),
+                      (cell.cell.y + cell.getHeight()- .5),
+                      .75,
+                      0,
+                      head_width = .25,
+                      head_length = .25,
+                      fc = 'k',
+                      ec = 'k'
+                    )
+            #SOUTH pointer
+            ax1.arrow((cell.cell.x + .5),
+                      (cell.cell.y + .5),
+                      0,
+                      -.5,
+                      head_width = .25,
+                      head_length = .25,
+                      fc = 'k',
+                      ec = 'k'
+                    )
+            #WEST pointer
+            ax1.arrow((cell.cell.x + .5),
+                      (cell.cell.y + .5),
+                      -.5,
+                      0,
+                      head_width = .25,
+                      head_length = .25,
+                      fc = 'k',
+                      ec = 'k'
+                    )
+
+        #eventually need to replace thirty with the actual layer dims.
+        plt.xlim(0, 30)
+        plt.ylim(0, 30)
+        fig1.show()
+        pylab.pause(11000)  # figure out how to do this better
+
+
+    def findNeighor(self, inputCell, direction):
+        """
+        Probably a better way to do this, ask Dr. Peng.
+        Direction should be the first character of a direction, i.e. ('n', 'e', 's', 'w')
+        Returns the cell epsilon to the direction of the relevant corner 
+        """
+        if direction == 'n':
+            return self.findPoint()
+        if direction == 'e':
+            return self.findPoint((inputCell.cell.x + inputCell.getWidth() + .0001), inputCell.cell.y + inputCell.getHeight())
+        if direction == 's':
+            return self.findPoint((inputCell.cell.x + inputCell.getWidth()), inputCell.cell.y + inputCell.getHeight() - .0001)
+        if direction == 'w':
+            return self.findPoint((inputCell.cell.x + inputCell.getWidth() - .0001), inputCell.cell.y + inputCell.getHeight())
+
+
+    def vSplit(self, splitCell, x):
+        newCell = cornerStitch(None, splitCell, None, splitCell.EAST, None, cell(x, splitCell.cell.y, "EMPTY"))
+        self.stitchList.append(newCell)
+
+        newCell.NORTH = self.findPoint((newCell.cell.x + splitCell.getWidth()), newCell.cell.y + splitCell.getHeight() + .0001)
+        newCell.EAST = self.findPoint((newCell.cell.x + splitCell.getWidth() + .0001), newCell.cell.y + splitCell.getHeight())
+        newCell.SOUTH = self.findPoint((newCell.cell.x + splitCell.getWidth()), newCell.cell.y + splitCell.getHeight() - .0001)
+        newCell.WEST = splitCell
+
+        splitCell.EAST = newCell
+        return
+
 class constraintGraph:
     """
     the graph representation of constraints pertaining to cells and variables, informed by several different 
@@ -269,6 +405,7 @@ class constraintGraph:
 
 if __name__ == '__main__':
 
+
     a = cornerStitch(None, None, None, None, None, cell(0, 20, "SOLID"))
     b = cornerStitch(None, None, None, None, None, cell(0, 10, "EMPTY"))
     c = cornerStitch(None, None, None, None, None, cell(0, 0, "SOLID"))
@@ -277,30 +414,30 @@ if __name__ == '__main__':
     f = cornerStitch(None, None, None, None, None, cell(10, 0, "SOLID"))
     g = cornerStitch(None, None, None, None, None, cell(20, 15, "SOLID"))
     h = cornerStitch(None, None, None, None, None, cell(20, 0, "EMPTY"))
-    northBoundary = cornerStitch(None, None, None, None, None, cell(0, 30, "EMPTY"))
-    eastBoundary = cornerStitch(None, None, None, None, None, cell(30, 0, "EMPTY"))
-    southBoundary = cornerStitch(None, None, None, None, None, cell(0, -1000, "EMPTY"))
-    westBoundary = cornerStitch(None, None, None, None, None, cell(-1000, 0, "EMPTY"))
+
+    stitchList = [a,b,c,d,e,f,g,h,]
+    exampleLayer = layer(stitchList, 30, 30)
+
 
     a.EAST = d
     a.SOUTH = b
-    a.NORTH = northBoundary
-    a.WEST = westBoundary
+    a.NORTH = exampleLayer.northBoundary
+    a.WEST = exampleLayer.westBoundary
 
     b.NORTH = a
     b.EAST = e
     b.SOUTH = c
-    b.WEST = westBoundary
+    b.WEST = exampleLayer.westBoundary
 
     c.NORTH = b
     c.EAST = f
-    c.SOUTH = southBoundary
-    c.WEST = westBoundary
+    c.SOUTH = exampleLayer.southBoundary
+    c.WEST = exampleLayer.westBoundary
 
     d.WEST = a
     d.SOUTH = e
     d.EAST = g
-    d.NORTH = northBoundary
+    d.NORTH = exampleLayer.northBoundary
 
     e.NORTH = d
     e.EAST = g
@@ -310,20 +447,22 @@ if __name__ == '__main__':
     f.NORTH = e
     f.EAST = h
     f.WEST = c
-    f.SOUTH = southBoundary
+    f.SOUTH = exampleLayer.southBoundary
 
     g.SOUTH = h
     g.WEST = d
-    g.NORTH = northBoundary
-    g.EAST = eastBoundary
+    g.NORTH = exampleLayer.northBoundary
+    g.EAST = exampleLayer.eastBoundary
 
     h.NORTH = g
     h.WEST = e
-    h.EAST = eastBoundary
-    g.SOUTH = southBoundary
+    h.EAST = exampleLayer.eastBoundary
+    g.SOUTH = exampleLayer.southBoundary
 
-    stitchList = [a,b,c,d,e,f,g,h]
-    layer = layer(stitchList, 30, 30)
 
-    print layer.setEmptyTiles('H')
 
+    exampleLayer.vSplit(b, 5)
+    #print layer.findLayerDimensions([northBoundary, eastBoundary, southBoundary, westBoundary])
+    exampleLayer.drawLayer()
+
+    #print layer.directedAreaEnumeration(5, 25, 15, 15)
