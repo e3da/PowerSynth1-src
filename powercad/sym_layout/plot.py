@@ -395,4 +395,4 @@ def plot_layout(sym_layout,ax = plt.subplot('111', adjustable='box', aspect=1.0)
     print "plot_layout() completed."    
     return ax
 
-# test May 22, 2017
+# test Jun 12, 2017
