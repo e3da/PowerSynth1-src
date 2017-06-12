@@ -491,6 +491,7 @@ class SymbolicLayout(object):
         The connections of the trace objects need to be identified,
         now that bond wires have been identified by the user.
         """
+        print "_find_trace_connections"
         #pause(True)  # add to graph
         self.tmp_conn_dict = {}                                     # temp dict to filter out duplicated connections
         self.trace_trace_connections = []                           # trace to trace connection list
@@ -525,7 +526,10 @@ class SymbolicLayout(object):
         self._id_supertrace_boundary_connections()
         
         
-    def _id_ortho_connections(self, trace1, trace2):
+    def _id_ortho_connections(self, trace1, trace2): #possibly dead code.
+        print "_id_ortho_connections()"
+        print "trace1: ", trace1.trace_rect.top, trace1.trace_rect.bottom, trace1.trace_rect.left, trace1.trace_rect.right
+        print "trace2: ", trace2.trace_rect.top, trace2.trace_rect.bottom, trace2.trace_rect.left, trace2.trace_rect.right
         obj1 = trace1.trace_line # vertical
         obj2 = trace2.trace_line # horizontal
         
@@ -544,7 +548,7 @@ class SymbolicLayout(object):
         # Identify Supertraces
         if obj1.pt1[0] > obj2.pt1[0] and obj1.pt1[0] < obj2.pt2[0] and \
            obj2.pt1[1] > obj1.pt1[1] and obj2.pt1[1] < obj1.pt2[1]:       # in case of T shape (from the pic you drew above this is a super trace
-            if trace1.is_supertrace() or trace2.is_supertrace():          
+            if trace1.is_supertrace() or trace2.is_supertrace():
                 raise LayoutError("Multiple intersection supertraces not supported! check for multiple T shapes on your layout")
             trace1.intersecting_trace = trace2                            #  Set trace 1 intersecting_trace value equal trace 2 > go to SymLine class to read more  
             trace2.intersecting_trace = trace1                            #  Set trace 2 intersecting_trace value equal trace 1 > go to SymLine class to read more

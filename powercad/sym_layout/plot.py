@@ -8,6 +8,7 @@ Created on Nov 6, 2012
 
 import numpy as np
 import matplotlib.pyplot as plt
+import copy
 from matplotlib.patches import Rectangle, PathPatch, Circle
 from matplotlib.path import Path
 
@@ -105,12 +106,53 @@ def plot_layout(sym_layout,ax = plt.subplot('111', adjustable='box', aspect=1.0)
     #
     # print "local all_cornered_traces_list: \n", all_cornered_traces_list
 
+
+    # CHECK IF TWO TRACES ARE ALREADY IN TRACE_CONNECTIONS LIST (RETURN TRUE IF ALREADY IN THE LIST)
+    # def already_existing(t1, t2):
+    #     if (t2 in t1.trace_connections) and (t1 in t2.trace_connections):
+    #         return True
+    #     else:
+    #         return False
+
+
+    # DUPLICATE SYM LAYOUT AND MODIFY SUPERTRACE AS A TRACE
+    # sym_layout2 = copy.deepcopy(sym_layout)
+    # print sym_layout
+    # print sym_layout2
+    # for i in sym_layout2.all_trace_lines:
+    #     i.trace_connections = []
+    # for trace1 in sym_layout2.all_trace_lines:
+    #     for trace2 in sym_layout2.all_trace_lines:
+    #         if trace1 is not trace2:
+    #             if trace1.trace_line.vertical == True and trace2.trace_line.vertical == False:
+    #                 obj1 = trace1.trace_line  #  vertical
+    #                 obj2 = trace2.trace_line  #  horizontal
+    #             elif trace1.trace_line.vertical == False and trace2.trace_line.vertical == True:
+    #                 obj1 = trace2.trace_line #  vertical
+    #                 obj2 = trace1.trace_line #  horizontal
+    #             if obj1.pt1[0] >= obj2.pt1[0] and obj1.pt1[0] <= obj2.pt2[0] and \
+    #                 obj2.pt1[1] >= obj1.pt1[1] and obj2.pt1[1] <= obj1.pt2[1]: # T-junctions, L-junctions, and supertraces
+    #                 if already_existing(trace1, trace2):
+    #                     continue
+    #                 elif trace1.intersecting_trace is not None and trace2.intersecting_trace is not None: # supertrace found
+    #                     if trace1.trace_rect.top-trace1.trace_rect.bottom >= trace2.trace_rect.top-trace2.trace_rect.bottom and \
+    #                         trace1.trace_rect.right-trace1.trace_rect.left >= trace2.trace_rect.right-trace2.trace_rect.left: # trace1 is bigger than trace2
+    #                         sym_layout2.all_trace_lines.remove(trace2) # remove the smaller trace
+    #                     else:
+    #                         sym_layout2.all_trace_lines.remove(trace1) # remove the smaller trace
+    #                 else:
+    #                     trace1.trace_connections.append(trace2)  # Set trace 1 trace_connections value equal trace 2
+    #                     trace2.trace_connections.append(trace1)  # Set trace 2 trace_connections value equal trace 1
+    #
+    # print len(sym_layout.all_trace_lines)
+    # print len(sym_layout2.all_trace_lines)
+
     cornered_traces = [] # create an empty list of traces meeting at a corner
     supertraces = []
     # corner_id = 0
     for i in sym_layout.all_trace_lines:
-        print i
-        if i == super: #TODO: sxm check this (find all the traces that are super traces)
+        print i, i.trace_rect.top, i.trace_rect.bottom, i.trace_rect.left, i.trace_rect.right, i.trace_connections
+        if i.intersecting_trace is not None:
             supertraces.append(i)
         if len(i.trace_connections) > 0:
             trace_rectangle = (i.trace_rect.top, i.trace_rect.bottom, i.trace_rect.left, i.trace_rect.right) # copy the trace rectangle's dimensions
@@ -121,20 +163,41 @@ def plot_layout(sym_layout,ax = plt.subplot('111', adjustable='box', aspect=1.0)
                 temp2 = (connecting_trace_rectangle, trace_rectangle)
                 if ((temp not in cornered_traces) and (temp2 not in cornered_traces)):
                     cornered_traces.append(temp)
-    print "super traces:s"
+
+    # check for cornered traces between a supertrace and a regular trace that may not have been detected before:
     for i in supertraces:
-        print i # TODO: check this sxm (read out their top bottom left right coordinates)
-        #TODO: compare the supertrace's top/bot/left/right to ALL the traces' T/B/L/R. If adjacency si found, but not in cornered_traces list, then add it to the list.
-        #supertrace_rectangle = (i.trace_rect.top, i.trace_rect.bottom, i.trace_rect.left, i.trace_rect.right)
-        #print supertrace_rectangle
+        for j in sym_layout.all_trace_lines:
+            if j.intersecting_trace is not None: # supertrace
+                continue
+            else: # found regular trace
+                if i.trace_rect.top == j.trace_rect.bottom or i.trace_rect.right == j.trace_rect.left or \
+                                i.trace_rect.bottom == j.trace_rect.top or i.trace_rect.left == j.trace_rect.right:
+                    trace_rectangle = (i.trace_rect.top, i.trace_rect.bottom, i.trace_rect.left, i.trace_rect.right)
+                    connecting_trace_rectangle = (j.trace_rect.top, j.trace_rect.bottom, j.trace_rect.left, j.trace_rect.right)
+                    temp = (trace_rectangle, connecting_trace_rectangle)
+                    temp2 = (connecting_trace_rectangle, trace_rectangle)
+                    if ((temp not in cornered_traces) and (temp2 not in cornered_traces)):
+                        cornered_traces.append(temp)
 
 
-                # if _search_corner(cornered_traces, temp, temp2):
-                #     pass
-                #     print "Duplicate found."
-                # else:
-                #     cornered_traces.append(temp)
-                    # corner_id += 1
+    print "super traces"
+    for i in supertraces:
+        print i, i.trace_rect.top, i.trace_rect.bottom, i.trace_rect.left, i.trace_rect.right  # TODO: check this sxm (read out their top bottom left right coordinates)
+        # TODO: compare the supertrace's top/bot/left/right to ALL the traces' T/B/L/R. If adjacency is found, but not in cornered_traces list, then add it to the list.
+        # supertrace_rectangle = (i.trace_rect.top, i.trace_rect.bottom, i.trace_rect.left, i.trace_rect.right)
+        # print supertrace_rectangle
+
+        # if _search_corner(cornered_traces, temp, temp2):
+        #     pass
+        #     print "Duplicate found."
+        # else:
+        #     cornered_traces.append(temp)
+        # corner_id += 1
+
+
+
+
+
     corners = []
     FIRST = 0 # first box
     SECOND = 1 # second box
