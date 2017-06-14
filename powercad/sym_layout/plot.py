@@ -47,28 +47,6 @@ def plot_svg_objs(layout):
     plt.show()
     print "plot_svg_objs() completed."
 
-# def _search_corner(list, temp, temp2):
-#     '''
-#     This function returns True if list contains a tuple with trace_rect1 and trace_rect2 at its [1] and [2] indices
-#     :param list: list of tuples containing (Sl.no., rectangle bounds, rectangle bounds for another rectangle)
-#     :param trace_rect1: rectangle bounds (top, bottom, left, right) for a rectangle
-#     :param trace_rect2: rectangle bounds (top, bottom, left, right) for another trace
-#     :return:
-#     '''
-#
-#     if (list and ((temp in list) or (temp2 in list))):
-#         print "dup found."
-#         return True
-#     else:
-#         return False
-    # if list == []:
-    #     return False
-    # else:
-    #     for i in list:
-    #         if ((i[1] == trace_rect1) and (i[2] == trace_rect2)):
-    #             return True
-    #     return False
-
 def plot_layout(sym_layout,ax = plt.subplot('111', adjustable='box', aspect=1.0), new_window=True, plot_row_col=False):
     print "plot_layout() started."
     hlist = sym_layout.h_rowcol_list
@@ -84,10 +62,102 @@ def plot_layout(sym_layout,ax = plt.subplot('111', adjustable='box', aspect=1.0)
     r = Rectangle((sub_rect.left, sub_rect.bottom), sub_rect.width(), sub_rect.height(), facecolor='#E6E6E6', edgecolor='#616161')
     ax.add_patch(r)
 
+    detect_corners(sym_layout, ax)
+
+    # Setup viewing bounds
+    ax.set_xlim(sub_rect.left - 1.0, sub_rect.right + 1.0)
+    ax.set_ylim(sub_rect.bottom - 1.0, sub_rect.top + 1.0)
+    ax.set_axis_on()  # sxm: originally ax.set_axis_off()
+
+    for sym in traces:
+        plot = True
+        if sym.is_supertrace():
+            plot = sym.has_rect
+
+        if plot:
+            color = '#B6C2CF'
+            rect = sym.trace_rect
+            r = Rectangle((rect.left, rect.bottom), rect.width(), rect.height(), alpha=0.5, facecolor=color,
+                          edgecolor='None')
+            ax.add_patch(r)
+
+    for lead in sym_layout.leads:
+        rect = lead.footprint_rect
+        r = Rectangle((rect.left, rect.bottom), rect.width(), rect.height(), alpha=0.5, facecolor='#4DFF64',
+                      edgecolor=color)
+        ax.add_patch(r)
+        patch = Circle(lead.center_position, radius=0.1)
+        ax.add_patch(patch)
+    x_pos = []
+    y_pos = []
+
+    for dev in sym_layout.devices:  # collect position data
+        dev_center = dev.center_position
+        x_pos.append(dev_center[0])
+        y_pos.append(dev_center[1])
+    x_num = x_pos.count(x_pos[0])
+    y_num = y_pos.count(y_pos[0])
+
+    '''
+    for row in np.arange(1,x_num,1):
+        print row
+        print enumerate(x_pos)
+    '''
+    for dev in sym_layout.devices:
+        # die_label='die%s'%(sym_layout.devices[die_count].dv_index)
+        rect = dev.footprint_rect
+        r = Rectangle((rect.left, rect.bottom), rect.width(), rect.height(), alpha=0.5, facecolor='#2A3569',
+                      edgecolor=color)
+        ax.add_patch(r)
+        patch = Circle(dev.center_position, radius=0.1)
+        ax.add_patch(patch)
+        # ax.text(rect.left, rect.bottom,die_label)
+        # die_count+=1
+    for wire in sym_layout.bondwires:
+        for pt_index in xrange(len(wire.start_pts)):
+            pt1 = wire.start_pts[pt_index]
+            pt2 = wire.end_pts[pt_index]
+            verts = [(pt1), (pt2)]
+            codes = [Path.MOVETO, Path.LINETO]
+            path = Path(verts, codes)
+            col = '#FFFFBA'
+            patch = PathPatch(path, edgecolor=col, lw=2)
+            ax.add_patch(patch)
+
+            #    for col in hlist:
+            #        if col.phantom:
+            #            color = '#0000FF'
+            #        else:
+            #            color = '#000000'
+            #            r = Rectangle((col.left, 0.0), col.right-col.left, sub_dim[1], alpha=1.0, facecolor='None', edgecolor=color)
+            #            ax.add_patch(r)
+            #
+            #    for row in vlist:
+            #        if row.phantom:
+            #            color = '#0000FF'
+            #        else:
+            #            color = '#000000'
+            #            r = Rectangle((0.0, row.left), sub_dim[0], row.right-row.left, alpha=1.0, facecolor='None', edgecolor=color)
+            #            ax.add_patch(r)
+
+    if new_window:
+        plt.show()
+
+    print "plot_layout() completed."
+    return ax
+
+def detect_corners(sym_layout, ax):
+    '''CORNER DETECTION 
+    @author: Shilpi Mukherjee 
+    @date: 14-JUN-2017
+    This function detects 90 degree inner trace corners for a selected solution layout.
+    It marks corners as a red rectangle in the layout preview and saved solution window, 
+    and displays the (x,y) coordinates of each corner in the console.
+    :param sym_layout: Symbolic Layout object
+    :param ax: subplot specifications'''
+
     # ---- sxm start test block - Mark corner ----------
-    # print "plot.py > plot_layout(sym_layout) > sym_layout.all_trace_lines > trace_rect.top:"
-    # for i in sym_layout.all_trace_lines:
-    #     print i.trace_rect.top
+
 
     # all_cornered_traces_list = [] # create an empty list of traces where each item is a tuple (top, bottom, left, right) defining a rectangle for that trace on the layout
     # trace_id = 0
@@ -142,9 +212,14 @@ def plot_layout(sym_layout,ax = plt.subplot('111', adjustable='box', aspect=1.0)
     # print len(sym_layout.all_trace_lines)
     # print len(sym_layout2.all_trace_lines)
 
-    cornered_traces = [] # create an empty list of traces meeting at a corner
+
+    # START WITH EMPTY LISTS FOR STORING CORNERED TRACES AND SUPERTRACES
+    cornered_traces = [] # create an empty list of pairs of traces meeting at a corner
     supertraces = [] # create an empty list of supertraces
     # corner_id = 0
+
+    # ITERATE THROUGH ALL TRACE LINES FINDING TRACE-PAIRS THAT ARE TOUCHING AND ORTHOGONAL, POPULATING CORNERED_TRACES LIST,
+    # SAVING SUPERTRACES SEPARATELY IN THE SUPERTRACES LIST
     for i in sym_layout.all_trace_lines:
         # print i, i.trace_rect.top, i.trace_rect.bottom, i.trace_rect.left, i.trace_rect.right, i.trace_connections
         if i.intersecting_trace is not None: # supertrace found
@@ -159,7 +234,8 @@ def plot_layout(sym_layout,ax = plt.subplot('111', adjustable='box', aspect=1.0)
                 if ((temp not in cornered_traces) and (temp2 not in cornered_traces)):
                     cornered_traces.append(temp)
 
-    # check for cornered traces between a supertrace and a regular trace that may not have been detected before:
+    # ITERATE THROUGH ALL SUPERTRACES AND ALL TRACE LINES FINDING PAIRS BETWEEN A SUPERTRACE AND A REGULAR TRACE
+    # THAT ARE TOUCHING AND ORTHOGONAL, THAT MAY NOT HAVE BEEN DETECTED BEFORE, FURTHER POPULATING CORNERED_TRACES LIST
     for i in supertraces:
         for j in sym_layout.all_trace_lines:
             if j.intersecting_trace is not None: # supertrace
@@ -196,6 +272,8 @@ def plot_layout(sym_layout,ax = plt.subplot('111', adjustable='box', aspect=1.0)
     LEFT = 2 # left of rectangle
     RIGHT = 3 # right of rectangle
     # print "cornered traces list:"
+
+    # FOR EACH ITEM IN CORNERED_TRACES LIST, CHECK WHICH EDGE IS IN COMMON AND SAVE THAT AS ONE OF THE CORNER COORDINATES.
     for i in cornered_traces:
         # print i
         temp_x = None
@@ -212,6 +290,8 @@ def plot_layout(sym_layout,ax = plt.subplot('111', adjustable='box', aspect=1.0)
         if ((temp_x is None) and (temp_y is None)):
             pass
             # print "Invalid corner found."
+
+        # FIND THE OTHER COORDINATE (L-JUNCTION) BY COMPARING EDGE LOCATIONS OF THE PAIR OF TRACES BEING ASSESSED
         elif temp_x is None: # Find x-coordinate of the corner
             if i[FIRST][LEFT] == i[SECOND][LEFT]: # if left side is common, select right side of the lower width box as the corner-x.
                 if i[FIRST][RIGHT] < i[SECOND][RIGHT]:
@@ -237,9 +317,8 @@ def plot_layout(sym_layout,ax = plt.subplot('111', adjustable='box', aspect=1.0)
                     temp_y = i[SECOND][TOP]
         if ((temp_x is not None) and (temp_y is not None)):
             corners.append((temp_x, temp_y))
-            # print "(temp_x, temp_y): ", temp_x, temp_y
-        # temp_corner = (temp_x, temp_y)
-        # FINDING T-JUNCTIONS:
+
+        # FIND THE OTHER COORDINATE (T-JUNCTION) BY COMPARING EDGE LOCATIONS OF THE PAIR OF TRACES BEING ASSESSED
         elif temp_x is None and temp_y is not None: # if temp_x is still None (but temp_y has been found), this is a T-junction.
             if ((i[FIRST][LEFT] > i[SECOND][LEFT]) & (i[FIRST][LEFT] < i[SECOND][RIGHT])):
                 temp_x = i[FIRST][LEFT]
@@ -266,18 +345,13 @@ def plot_layout(sym_layout,ax = plt.subplot('111', adjustable='box', aspect=1.0)
                 if ((i[SECOND][BOTTOM] > i[FIRST][BOTTOM]) & (i[SECOND][BOTTOM] < i[FIRST][TOP])):
                     temp_y = i[SECOND][BOTTOM]
                     corners.append((temp_x, temp_y))
+
+    # OUTPUT THE CORNERS LIST AND MARK THE CORNERS (WITH A RECTANGLE CENTERED AT THE CORNER) ON THE LAYOUT PREVIEW AND SOLUTION WINDOW
     print "Corners: "
     for i in corners:
         print i
         r = Rectangle((i[0]-0.5, i[1]-0.5), 1, 1, facecolor='#E6E6E6', edgecolor='#f44259') # draw a rectangle to mark the corner
         ax.add_patch(r)
-
-
-
-
-
-
-
 
 
     # for i in all_traces_list: # for each rectangle
@@ -298,22 +372,6 @@ def plot_layout(sym_layout,ax = plt.subplot('111', adjustable='box', aspect=1.0)
 
     # ------ sxm end test block (Mark corner) ------------
 
-    # Setup viewing bounds
-    ax.set_xlim(sub_rect.left-1.0, sub_rect.right+1.0)
-    ax.set_ylim(sub_rect.bottom-1.0, sub_rect.top+1.0)
-    ax.set_axis_on() #sxm: originally ax.set_axis_off()
-    
-    for sym in traces:
-        plot = True
-        if sym.is_supertrace():
-            plot = sym.has_rect
-            
-        if plot:
-            color = '#B6C2CF'
-            rect = sym.trace_rect
-            r = Rectangle((rect.left, rect.bottom), rect.width(), rect.height(), alpha=0.5, facecolor=color, edgecolor='None')
-            ax.add_patch(r)
-
     #sxm - add corner markers
     # c1 = Corner(7,10)
     # sym_layout.corners.append(c1)
@@ -332,67 +390,4 @@ def plot_layout(sym_layout,ax = plt.subplot('111', adjustable='box', aspect=1.0)
     #     r = Rect(corner[1]+0.5, corner[1]-0.5, corner[0]-0.5, corner[0]+0.5) # populate corners in SymbolicLayout class
     #     ax.add_patch(r)
 
-    for lead in sym_layout.leads:
-        rect = lead.footprint_rect
-        r = Rectangle((rect.left, rect.bottom), rect.width(), rect.height(), alpha=0.5, facecolor='#4DFF64', edgecolor=color)
-        ax.add_patch(r)
-        patch = Circle(lead.center_position, radius=0.1)
-        ax.add_patch(patch)
-    x_pos=[]
-    y_pos=[]    
-    
-    for dev in sym_layout.devices:     # collect position data
-        dev_center=dev.center_position
-        x_pos.append(dev_center[0])
-        y_pos.append(dev_center[1]) 
-    x_num=x_pos.count(x_pos[0])
-    y_num=y_pos.count(y_pos[0])
-     
-    '''
-    for row in np.arange(1,x_num,1):
-        print row
-        print enumerate(x_pos)
-    '''
-    for dev in sym_layout.devices:
-        #die_label='die%s'%(sym_layout.devices[die_count].dv_index)
-        rect = dev.footprint_rect
-        r = Rectangle((rect.left, rect.bottom), rect.width(), rect.height(), alpha=0.5, facecolor='#2A3569', edgecolor=color)
-        ax.add_patch(r)
-        patch = Circle(dev.center_position, radius=0.1)
-        ax.add_patch(patch)
-        #ax.text(rect.left, rect.bottom,die_label)
-        #die_count+=1
-    for wire in sym_layout.bondwires:
-        for pt_index in xrange(len(wire.start_pts)):
-            pt1 = wire.start_pts[pt_index]
-            pt2 = wire.end_pts[pt_index]
-            verts = [(pt1), (pt2)]
-            codes = [Path.MOVETO, Path.LINETO]
-            path = Path(verts, codes)
-            col = '#FFFFBA'
-            patch = PathPatch(path, edgecolor=col, lw=2)
-            ax.add_patch(patch)
-        
-#    for col in hlist:
-#        if col.phantom:
-#            color = '#0000FF'
-#        else:
-#            color = '#000000'
-#            r = Rectangle((col.left, 0.0), col.right-col.left, sub_dim[1], alpha=1.0, facecolor='None', edgecolor=color)
-#            ax.add_patch(r)
-#            
-#    for row in vlist:
-#        if row.phantom:
-#            color = '#0000FF'
-#        else:
-#            color = '#000000'
-#            r = Rectangle((0.0, row.left), sub_dim[0], row.right-row.left, alpha=1.0, facecolor='None', edgecolor=color)
-#            ax.add_patch(r)
-    
-    if new_window:
-        plt.show()
-    
-    print "plot_layout() completed."    
-    return ax
-
-# test Jun 12, 2017
+# test Jun 14, 2017

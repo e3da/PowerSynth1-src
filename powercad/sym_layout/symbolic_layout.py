@@ -491,7 +491,7 @@ class SymbolicLayout(object):
         The connections of the trace objects need to be identified,
         now that bond wires have been identified by the user.
         """
-        print "_find_trace_connections"
+        # print "_find_trace_connections"
         #pause(True)  # add to graph
         self.tmp_conn_dict = {}                                     # temp dict to filter out duplicated connections
         self.trace_trace_connections = []                           # trace to trace connection list
@@ -527,9 +527,9 @@ class SymbolicLayout(object):
         
         
     def _id_ortho_connections(self, trace1, trace2): #possibly dead code.
-        print "_id_ortho_connections()"
-        print "trace1: ", trace1.trace_rect.top, trace1.trace_rect.bottom, trace1.trace_rect.left, trace1.trace_rect.right
-        print "trace2: ", trace2.trace_rect.top, trace2.trace_rect.bottom, trace2.trace_rect.left, trace2.trace_rect.right
+        # print "_id_ortho_connections()"
+        # print "trace1: ", trace1.trace_rect.top, trace1.trace_rect.bottom, trace1.trace_rect.left, trace1.trace_rect.right
+        # print "trace2: ", trace2.trace_rect.top, trace2.trace_rect.bottom, trace2.trace_rect.left, trace2.trace_rect.right
         obj1 = trace1.trace_line # vertical
         obj2 = trace2.trace_line # horizontal
         
