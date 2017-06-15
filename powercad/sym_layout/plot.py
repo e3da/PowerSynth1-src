@@ -62,7 +62,10 @@ def plot_layout(sym_layout,ax = plt.subplot('111', adjustable='box', aspect=1.0)
     r = Rectangle((sub_rect.left, sub_rect.bottom), sub_rect.width(), sub_rect.height(), facecolor='#E6E6E6', edgecolor='#616161')
     ax.add_patch(r)
 
-    detect_corners(sym_layout, ax)
+    # CORNER DETECTION
+    sym_layout2 = copy.deepcopy(sym_layout) # create a deepcopy of sym_layout so that phantom traces can be removed
+    corners, supertraces = detect_corners_90(sym_layout2, ax) # detect 90 degree inner corners for intersecting traces
+    detect_corners_270(sym_layout2, ax, corners, supertraces) # detect 270 degree outer corners for all traces
 
     # Setup viewing bounds
     ax.set_xlim(sub_rect.left - 1.0, sub_rect.right + 1.0)
@@ -146,7 +149,7 @@ def plot_layout(sym_layout,ax = plt.subplot('111', adjustable='box', aspect=1.0)
     print "plot_layout() completed."
     return ax
 
-def detect_corners(sym_layout, ax):
+def detect_corners_90(sym_layout2, ax):
     '''CORNER DETECTION 
     @author: Shilpi Mukherjee 
     @date: 14-JUN-2017
@@ -220,7 +223,7 @@ def detect_corners(sym_layout, ax):
 
     # ITERATE THROUGH ALL TRACE LINES FINDING TRACE-PAIRS THAT ARE TOUCHING AND ORTHOGONAL, POPULATING CORNERED_TRACES LIST,
     # SAVING SUPERTRACES SEPARATELY IN THE SUPERTRACES LIST
-    for i in sym_layout.all_trace_lines:
+    for i in sym_layout2.all_trace_lines:
         # print i, i.trace_rect.top, i.trace_rect.bottom, i.trace_rect.left, i.trace_rect.right, i.trace_connections
         if i.intersecting_trace is not None: # supertrace found
             supertraces.append(i) # add to supertraces list
@@ -237,7 +240,7 @@ def detect_corners(sym_layout, ax):
     # ITERATE THROUGH ALL SUPERTRACES AND ALL TRACE LINES FINDING PAIRS BETWEEN A SUPERTRACE AND A REGULAR TRACE
     # THAT ARE TOUCHING AND ORTHOGONAL, THAT MAY NOT HAVE BEEN DETECTED BEFORE, FURTHER POPULATING CORNERED_TRACES LIST
     for i in supertraces:
-        for j in sym_layout.all_trace_lines:
+        for j in sym_layout2.all_trace_lines:
             if j.intersecting_trace is not None: # supertrace
                 continue
             else: # found regular trace
@@ -288,7 +291,7 @@ def detect_corners(sym_layout, ax):
             temp_x = i[FIRST][RIGHT]
         # super-condition: if both x and y are blank, it's not a valid corner. if so, do not continue, else continue.
         if ((temp_x is None) and (temp_y is None)):
-            pass
+            continue
             # print "Invalid corner found."
 
         # FIND THE OTHER COORDINATE (L-JUNCTION) BY COMPARING EDGE LOCATIONS OF THE PAIR OF TRACES BEING ASSESSED
@@ -350,9 +353,10 @@ def detect_corners(sym_layout, ax):
     print "Corners: "
     for i in corners:
         print i
-        r = Rectangle((i[0]-0.5, i[1]-0.5), 1, 1, facecolor='#E6E6E6', edgecolor='#f44259') # draw a rectangle to mark the corner
+        r = Rectangle((i[0]-0.5, i[1]-0.5), 1, 1, facecolor='#E6E6E6', edgecolor='#FF3339') # draw a rectangle to mark the corner
         ax.add_patch(r)
 
+    return corners, supertraces
 
     # for i in all_traces_list: # for each rectangle
     #     for j in all_traces_list:  # for each other rectangle
@@ -390,4 +394,77 @@ def detect_corners(sym_layout, ax):
     #     r = Rect(corner[1]+0.5, corner[1]-0.5, corner[0]-0.5, corner[0]+0.5) # populate corners in SymbolicLayout class
     #     ax.add_patch(r)
 
-# test Jun 14, 2017
+def detect_corners_270(sym_layout2, ax, innerCorners, supertraces):
+    '''ADJACENT CORNER DETECTION
+    @author: Shilpi Mukherjee
+    @date: 15-JUN-2017
+    This function detects 270 degree outer trace corners for a selected solution layout.
+    It marks corners as a blue rectangle in the layout preview and saved solution window,
+    and displays the (x,y) coordinates of each corner in the console.
+    :param sym_layout: Symbolic Layout object
+    :param ax: subplot specifications
+    :param innerCorners: list of 90 degree inner corners'''
+
+    # FIRST, FIND AND ISOLATE THE PHANTOM TRACES
+    phantomSupertraces = []
+    print "supertraces (including phantoms):"
+    for i in supertraces:
+        print i.trace_rect.top, i.trace_rect.bottom, i.trace_rect.left, i.trace_rect.right
+    for i in supertraces:
+        for j in supertraces:
+            if i is not j:
+                if j.trace_rect.top <= i.trace_rect.top and j.trace_rect.bottom >= i.trace_rect.bottom and j.trace_rect.left >= i.trace_rect.left and j.trace_rect.right <= i.trace_rect.right:
+                    phantomSupertraces.append(j)
+                    supertraces.remove(j)
+    print "supertraces (excluding phantoms):"
+    for i in supertraces:
+        print i.trace_rect.top, i.trace_rect.bottom, i.trace_rect.left, i.trace_rect.right
+    print "phantoms:"
+    for i in phantomSupertraces:
+        print i.trace_rect.top, i.trace_rect.bottom, i.trace_rect.left, i.trace_rect.right
+
+    # REMOVE THE PHANTOM TRACES FROM ALL_TRACE_LINES
+    print "len(sym_layout2.all_trace_lines) before removing phantoms:", len(sym_layout2.all_trace_lines)
+    for i in phantomSupertraces:
+        sym_layout2.all_trace_lines.remove(i)
+    print "len(sym_layout2.all_trace_lines) after:", len(sym_layout2.all_trace_lines)
+
+    # THEN, FIND AND LIST ALL THE 270 DEGREE CORNERS ON THE LAYOUT
+    corners_270 = []
+    print "Corners_270:"
+    for i in sym_layout2.all_trace_lines:
+        tempCorner1 = (round(i.trace_rect.left,2), round(i.trace_rect.top,2))
+        tempCorner2 = (round(i.trace_rect.right,2), round(i.trace_rect.top,2))
+        tempCorner3 = (round(i.trace_rect.left, 2), round(i.trace_rect.bottom, 2))
+        tempCorner4 = (round(i.trace_rect.right, 2), round(i.trace_rect.bottom, 2))
+        if tempCorner1 not in innerCorners:
+            if tempCorner1 in corners_270:
+                corners_270.remove(tempCorner1)
+            else:
+                corners_270.append(tempCorner1)
+                print tempCorner1
+        if tempCorner2 not in innerCorners:
+            if tempCorner2 in corners_270:
+                corners_270.remove(tempCorner2)
+            else:
+                corners_270.append(tempCorner2)
+                print tempCorner2
+        if tempCorner3 not in innerCorners:
+            if tempCorner3 in corners_270:
+                corners_270.remove(tempCorner3)
+            else:
+                corners_270.append(tempCorner3)
+                print tempCorner3
+        if tempCorner4 not in innerCorners:
+            if tempCorner4 in corners_270:
+                corners_270.remove(tempCorner4)
+            else:
+                corners_270.append(tempCorner4)
+                print tempCorner4
+
+    # MARK THE CORNERS WITH BLUE RECTANGLES
+    for i in corners_270:
+        r = Rectangle((i[0] - 0.5, i[1] - 0.5), 1, 1, facecolor='#E6E6E6', edgecolor='#3339FF')  # draw a rectangle to mark the corner
+        ax.add_patch(r)
+
+# test Jun 15, 2017
