@@ -48,14 +48,15 @@ from powercad.drc.design_rule_check import DesignRuleCheck
 from powercad.general.data_struct.util import Rect, complex_rot_vec, get_overlap_interval, distance
 from powercad.opt.optimizer import NSGAII_Optimizer, DesignVar
 from powercad.parasitics.analysis import parasitic_analysis
-from powercad.parasitics.mdl_compare import trace_cap_krige,trace_ind_krige,trace_res_krige,load_mdl
+from powercad.parasitics.mdl_compare import trace_cap_krige,trace_ind_krige,trace_res_krige,wire_over_plane
 from powercad.parasitics.models_bk import trace_inductance, trace_resistance, trace_capacitance,wire_inductance, wire_resistance,wire_partial_mutual_ind
 from powercad.sol_browser.solution_lib import SolutionLibrary
 from powercad.sym_layout.svg import LayoutLine, LayoutPoint
 from powercad.sym_layout.svg import load_svg, normalize_layout, check_for_overlap,load_script
 from powercad.thermal.analysis import perform_thermal_analysis
 from powercad.thermal.elmer_characterize import characterize_devices
-
+from powercad.general.settings.save_and_load import load_file
+import  time
 
 #Used in Pycharm only
 
@@ -1938,7 +1939,9 @@ class SymbolicLayout(object):
         self.rev_map_design_vars(individual)
         self.generate_layout()
         ret = []
+        stime=time.time()
         drc = DesignRuleCheck(self)
+        print time.time()-stime
         drc_count = drc.count_drc_errors(False)
         if drc_count > 0:   # Non-convergence case
             #Brett's method
@@ -2515,7 +2518,8 @@ class SymbolicLayout(object):
         lumped_graph.add_edge(n1, n2,
                               {'ind': 1.0 / 1e-6, 'res': 1.0 / 1e-6, 'cap': 1.0 / 1e-6,
                                'type': 'trace', 'width': width, 'length': length})
-        #self._collect_trace_parasitic_post_eval(width, length, n1, n2) # Source of over estimation, need to look at this again
+        print width,length
+        self._collect_trace_parasitic_post_eval(width, length, n1, n2) # Source of over estimation, need to look at this again
         return lumped_graph
 
     def _lead_trace_path_eval(self, n1, n2,trace_data,lead,lumped_graph):
@@ -2531,6 +2535,7 @@ class SymbolicLayout(object):
         lumped_graph.add_edge(n1, n2,
                               {'ind': 1.0 / 1e-6, 'res': 1 / 1e-6, 'cap': 1.0 / 1e-3,
                                'type': 'trace', 'width': width, 'length': length})
+        print "lead",width,length
         self._collect_trace_parasitic_post_eval(width, length, n1, n2)
         return lumped_graph
 
@@ -2540,7 +2545,7 @@ class SymbolicLayout(object):
         pt1 = lumped_graph.node[n1]['point']
         pt2 = lumped_graph.node[n2]['point']
         path_length = distance(pt1, pt2)
-        width = num_wires * wire_eff_diam
+        width = num_wires*wire_eff_diam
         lumped_graph.add_edge(n1, n2,
                               {'ind': 1.0 / 1e-6, 'res': 1.0 / 1e-6, 'cap': 1.0 / 1e-3,
                                'type': 'trace', 'width': width, 'length': path_length})
@@ -2559,8 +2564,9 @@ class SymbolicLayout(object):
         for pt1, pt2 in zip(bw.start_pts, bw.end_pts):
             D = distance(pt1, pt2)
             l1=D-D/8
-            length=a+b+l1/math.cos(math.atan(2*a/l1))
+            length=l1/math.cos(math.atan(2*a/l1))+D/8
             wire_ind = wire_inductance(length, wire_radius)
+            wire_ind = wire_over_plane(wire_radius,1.7,length)
             wire_res = wire_resistance(trace_data[4], length, wire_radius, resist)
             inv_res += 1.0/wire_res
             #inv_ind += 1.0/wire_ind
@@ -2837,22 +2843,24 @@ def make_test_setup():
     module = gen_test_module_data(100.0)
     print "symbolic_layout.py > make_test_setup() > temp_dir=", temp_dir
     sym_layout.form_design_problem(module, temp_dir)
-    sym_layout.set_RS_model()
+    mdl = load_file("C://PowerSynth_git//Response_Surface//PowerCAD-full//tech_lib//Model//Trace//last_test.rsmdl")
+    sym_layout.set_RS_model(mdl)
     sym_layout._map_design_vars()
     setup_model(sym_layout)
-    individual=[10.81242585041992, 9.166102790830909, 4, 8, 2.0, 2.0, 10, 4, 0.8, 0.8]
+    individual=[10, 9, 4, 8, 2.0, 2.0, 10, 4, 0.8, 0.0001]
     print 'individual', individual
     print "opt_to_sym_index" ,sym_layout.opt_to_sym_index
     sym_layout.rev_map_design_vars(individual)
     sym_layout.generate_layout()
     sym_layout._build_lumped_graph()
     ret=one_measure(sym_layout)
+    print ret
     md=ModuleDesign(sym_layout)
     output_q3d_vbscript(md, 'C:/Users/qmle/Desktop/POETS/Run/Test.vbs')
     w_corner=[10,12,10,5]
     l_corner=[6,5,2.5,5]
-    ind_corner=trace_ind_krige(100,w_corner,l_corner,sym_layout.LAC_mdl)
-    res_corner = trace_res_krige(100, w_corner, l_corner, sym_layout.RAC_mdl)
+    ind_corner=trace_ind_krige(500,w_corner,l_corner,sym_layout.LAC_mdl)
+    res_corner = trace_res_krige(500, w_corner, l_corner, sym_layout.RAC_mdl)
     #print 'corner',sum(ind_corner),sum(res_corner)
     #print "LAC_RS", ret[0]#-sum(ind_corner)
     #print "RAC_RS", ret[1]#-sum(res_corner)
@@ -2872,7 +2880,7 @@ def make_test_setup_with_sweep():
     from powercad.tech_lib.test_techlib import get_power_lead, get_signal_lead
     from powercad.tech_lib.test_techlib import get_power_bondwire, get_signal_bondwire
     temp_dir = os.path.abspath(settings.TEMP_DIR)
-    test_file = os.path.abspath('C:/Users/qmle/Desktop/Testing/Hardware_Validation_1/HWV2/HWV2/layout.psc')
+    test_file = os.path.abspath('C:/Users/qmle/Desktop/Testing/Hardware_Validation_1/HWV2HWV2/layout.psc')
     w_corner = [10, 10]
     l_corner = [2.5, 6]
     sym_layout = SymbolicLayout()
@@ -2895,7 +2903,7 @@ def make_test_setup_with_sweep():
         sym_layout.set_RS_model()
         sym_layout._map_design_vars()
         setup_model(sym_layout)
-        individual = [18, 4, 4, 8, 8, 2.0, 2.0, 10, 10, 4, 0, 0.6]
+        individual = [18, 4, 4, 8, 8, 2.0, 2.0, 10, 10, 4, 0, 0.2]
         sym_layout.rev_map_design_vars(individual)
         sym_layout.generate_layout()
         drc_val = sym_layout.passes_drc(False)
@@ -2965,18 +2973,30 @@ def test_pickle_symbolic_layout():
         f2.append(sol.fitness.values[1])
     plot(f1, f2, 'o')
     show()
-def corner_overestimate(f,w,l):
-    sym_layout = SymbolicLayout()
-    sym_layout.set_RS_model()
-    w_corner=[7.19,7.02]
-    l_corner=[0.5+w_corner[1]/2,0.5+w_corner[0]/2]
+def corner_overestimate(f,w,l1):
+    # l1 : fixed length
 
-    ind_corner = trace_ind_krige(f, w_corner, l_corner, sym_layout.LAC_mdl)
-    res_corner = trace_res_krige(f,w_corner,l_corner,sym_layout.RAC_mdl)
-    return sum(ind_corner),sum(res_corner)
+    sym_layout = SymbolicLayout()
+    mdl=load_file("C://PowerSynth_git//Response_Surface//PowerCAD-full//tech_lib//Model//Trace//Test_Corner_2.rsmdl")
+    sym_layout.set_RS_model(mdl)
+    w_corner=w
+    l_corner=[l1+float(x)/2 for x in w_corner]
+    ind_corner = 2*trace_ind_krige(f, w_corner, l_corner, sym_layout.LAC_mdl)
+    res_corner = 2*trace_res_krige(f,w_corner,l_corner,sym_layout.RAC_mdl)
+    ind_corner_MS=[]
+    res_corner_MS=[]
+    for w,l in zip(w_corner,l_corner):
+        print w,l
+        ind_corner_MS.append(2*trace_inductance(w,l,0.2,0.64))
+        res_corner_MS.append(2*trace_resistance(f,w,l,0.2,0.64))
+    return ind_corner
 if __name__ == '__main__':
-    make_test_setup()
-    #print corner_overestimate(100,7.02,7.19)
+
+    #make_test_setup()
+    w=[2,3,4,5,6,7,8,9,10]
+    l1=12
+
+    print corner_overestimate(100,w,l1)
 
     #optimization_test(sym_layout)
     #sym_layout = build_test_layout()

@@ -22,10 +22,10 @@ def trace_resistance(f, w, l, t, h, p=1.724e-8):
     # p: Ohm*meter (trace resistivity)
     w = fabs(w)
     l = fabs(l)
-    '''
-    if w > l*LOWEST_ASPECT_RES:
-        w = l*LOWEST_ASPECT_RES
-    '''
+
+    #if w > l*LOWEST_ASPECT_RES:
+    #   w = l*LOWEST_ASPECT_RES
+
     u0 = 1.257e-6               # permeability of vaccum;
                
     t1 = t*1e-3                 # transfer to unit in m;
@@ -68,10 +68,10 @@ def trace_inductance(w, l, t, h):
     # and return a larger worst case value.
     w = fabs(w)
     l = fabs(l)
-    '''
-    if w > l*LOWEST_ASPECT_IND:
-        w = l*LOWEST_ASPECT_IND
-    '''
+
+    #if w > l*LOWEST_ASPECT_IND:
+    #    w = l*LOWEST_ASPECT_IND
+
     w1 = w*1e-3                     # transfer to unit in m;
     h1 = h*1e-3                     # transfer to unit in m;
     t1 = t*1e-3                     # transfer to unit in m;
@@ -248,16 +248,34 @@ def wire_partial_mutual_ind(l, r, d):
         m = 0.00001
 
     return m
-
-#-------------------------------------------------------------
-#----------- single wire-bond resistance----------------------
-#-------------------------------------------------------------
 def wire_resistance(f, l, r, p=1.724e-8):
     # f: Hz (frequency)
     # l: mm (length of wires)
     # r: mm (radius of wires)
     # p: Ohm*meter (trace resistivity)
     f=f*1000
+    l1 = l * 1e-3
+    r1 = r * 1e-3
+
+    u0 = 1.2566e-6  # permeability in the henries per meter;
+    s_d=math.sqrt(p/(math.pi*f*u0))
+    Aeff=s_d*math.pi*2*r
+    r=p*l/Aeff
+    r_w=1000*r
+    r_w=0.9
+    print r_w
+    return r_w
+#-------------------------------------------------------------
+#----------- single wire-bond resistance----------------------
+#-------------------------------------------------------------
+def wire_resistance_wrong(f, l, r, p=1.724e-8):
+    # f: Hz (frequency)
+    # l: mm (length of wires)
+    # r: mm (radius of wires)
+    # p: Ohm*meter (trace resistivity)
+
+    f=f*1000
+    print 'wire f', f
     #l1 = (2 + d/8 + math.sqrt(4 + math.pow((d*7/8),2)))*1e-3
     l1 = l*1e-3
     r1 = r*1e-3
@@ -272,11 +290,12 @@ def wire_resistance(f, l, r, p=1.724e-8):
     
     A_eff = math.pi*(2.0*r1*d1 - d1*d1)*(1.0 + c)
     
-    r_w = 1e3*l1/(A_eff*b) # in mOhms
+    r_w = 1000*l1/(A_eff*b) # in mOhms
     
     if r_w <= 0.0:
         r_w = 1e-6
-    
+    print 'wire_res',r_w
+
     return r_w
 
 #-------------------------------------------------------------

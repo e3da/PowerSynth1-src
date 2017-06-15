@@ -721,8 +721,8 @@ class ResponseSurfaceDialog(QtGui.QDialog):
             minL, maxL, minW, maxW, fmin, fmax, fstep=[float(x) for x in all_num]
 
             form_trace_model(layer_stack=self.layer_stack_import,Width=[minW,maxW],Length=[minL,maxL],
-                             freq=[fmin,fmax,fstep],wdir=self.wp_dir,savedir=self.model_dir,mdl_name=mdl_name
-                             ,env=env_dir,options=options)
+                             freq=[fmin,fmax,fstep],wdir=self.wp_dir,savedir=self.model_dir,mdl_name=mdl_name,
+                             env=env_dir,options=options)
 
             self.refresh_mdl_list()
 

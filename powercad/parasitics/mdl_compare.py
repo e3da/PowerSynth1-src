@@ -155,9 +155,18 @@ def load_mdl(dir=None,mdl_name=None,type=None):
     mdl=load_file(os.path.join(dir,mdl_name))
     return mdl
 
+def wire_over_plane(r,h,l):
+    Ind=0.14*math.log(h/(2*r))*l/304.8
+    Ind=Ind*1000
+    print Ind
+    return Ind
+
 def trace_res_krige(f,w,l,mdl):
     model = mdl.model[0]
     op_freq=mdl.op_point
+    print "ratio", m.sqrt(f/op_freq)
+    print op_freq
+    print f
     r=model.execute('points',[w],[l])
     r=np.ma.asarray(r[0])
     r=r/1000 # report in m ohm

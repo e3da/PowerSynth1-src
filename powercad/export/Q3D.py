@@ -49,7 +49,7 @@ def output_q3d_vbscript(md, filename):
     #DielectricMaterial = "Al_N"
     LeadMaterial = "copper"
     DieMaterial = "copper"
-    BwMaterial = "copper"
+    BwMaterial = "aluminum"
     
     # Z positions
     SolderZPos = md.baseplate.dimensions[2]
@@ -119,7 +119,7 @@ def output_q3d_vbscript(md, filename):
                                               name2, left, top, LeadZPos+LeadThick, LeadThick, LeadWidth, LeadHeight, LeadMaterial)
                 
             output += unite.format(name+" "+name2+" ")
-
+    '''
     # Device(die) Creation
     for index in xrange(len(md.devices)):
         device = md.devices[index]
@@ -137,7 +137,7 @@ def output_q3d_vbscript(md, filename):
         output += create_die.format(AttachName, fp.left, fp.bottom, AttachZPos, fp.width(), fp.height(), AttachThick,
                                     DieName, fp.left, fp.bottom, DieZPos, fp.width(), fp.height(), DieThick, DieMaterial)
         
-        
+    '''
     # Bondwire Creation
     for index in xrange(len(md.bondwires)):
         bw = md.bondwires[index]
@@ -147,11 +147,11 @@ def output_q3d_vbscript(md, filename):
         Distance = np.linalg.norm(BwDir)
         BwXPos += sub_origin_x
         BwYPos += sub_origin_y
-        BwZPos = TraceZPos+TraceZSize+bw.beg_height
+        BwZPos = TraceZPos+TraceZSize
         h1 = bw.height
         h2 = bw.beg_height
         name = "bondwire" + str(index+1)
-        output += create_bondwire.format(name, BwDiam, BwXPos, BwYPos, BwZPos, BwDir[0], BwDir[1], Distance, h1, h2, BwMaterial)
+        output += create_bondwire.format(name, BwDiam, BwXPos, BwYPos, BwZPos, BwDir[0], BwDir[1], Distance, h2, 0, BwMaterial)
     output += apply_netting
     
     # uniting trace, bondwire, and lead. The order is important for Q3D. 

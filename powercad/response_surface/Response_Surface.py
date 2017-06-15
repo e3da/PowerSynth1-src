@@ -136,7 +136,7 @@ class RS_model:
         
         self.obj_name=name
         
-    def read_file(self,file_ext=None,mode=None,row=2,units=None,wdir=None):
+    def read_file(self,file_ext=None,mode=None,row=0,units=None,wdir=None):
         '''
         Read File to PowerSynth, assume the sweeping operating condition is on first column 
             File_ext: file extension e.g 'txt','csv',...
