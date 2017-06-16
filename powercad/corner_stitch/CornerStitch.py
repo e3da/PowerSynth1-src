@@ -105,6 +105,7 @@ class layer:
         self.eastBoundary = cornerStitch(None, None, None, None, None, cell(max_x, 0, "EMPTY"))
         self.southBoundary = cornerStitch(None, None, None, None, None, cell(0, -1000, "EMPTY"))
         self.westBoundary = cornerStitch(None, None, None, None, None, cell(-1000, 0, "EMPTY"))
+        self.boundaries = [self.northBoundary, self.eastBoundary, self.westBoundary, self.southBoundary]
 
     def insert(self, x1, y1, x2, y2, type):
         """
@@ -165,8 +166,20 @@ class layer:
         """
         merge two tiles into one, reassign neighborhood, and return the merged tile in case a reference is needed
         """
+        if(tile1.cell.type != tile2.cell.type):
+            print "Types are not the same"
+            return
+
+        print tile1.getWidth()
+        print tile2.getWidth()
+
+        print tile1.cell.x
+        print tile2.cell.x
+
+        print tile1.SOUTH== g
 
         if tile1.cell.x == tile2.cell.x and (tile1.NORTH == tile2 or tile1.SOUTH == tile2) and tile1.getWidth() == tile2.getWidth():
+            print "insid efirst if"
             basis = tile1 if tile1.cell.y < tile2.cell.y else tile2
             upper = tile1 if tile1.cell.y > tile2.cell.y else tile2
 
@@ -176,19 +189,23 @@ class layer:
 
             #reasign the neighboring tile's directional pointers
             cc = upper.NORTH
-            while cc.cell.x > basis.cell.x: #reset northern neighbors
+            while cc not in self.boundaries and cc.cell.x > basis.cell.x: #reset northern neighbors
                 cc.SOUTH = basis
                 cc = cc.WEST
             cc = upper.EAST
-            while cc.cell.y > basis.cell.y: #reset eastern neighbors
+            while cc.cell.y >= basis.cell.y: #reset eastern neighbors
                 cc.WEST = basis
+                if cc.cell.y == basis.cell.y: break # a gross hack to prevent weird behavior when both cells are along the bottom edge
                 cc = cc.SOUTH
-            cc = upper.WEST
-            while cc.cell.y + cc.getHeight() < basis.cell.y + basis.getHeight(): #reset western nieghbors
+            cc = basis.WEST
+            while cc not in self.boundaries and cc.cell.y + cc.getHeight() <= basis.cell.y + basis.getHeight(): #reset western nieghbors
                 cc.EAST = basis
                 cc = cc.NORTH
 
-            del tile1 if tile1 == upper else tile2
+            if(tile1 == upper):
+                self.stitchList.remove(tile1)
+            else:
+                self.stitchList.remove(tile2)
 
         elif tile1.cell.y == tile2.cell.y and (tile1.EAST == tile2 or tile1.WEST == tile2) and tile1.getHeight() == tile2.getHeight():
             basis = tile1 if tile1.cell.x < tile2.cell.x else tile2
@@ -200,19 +217,23 @@ class layer:
 
             #reasign the neighboring tile's directional pointers
             cc = eastMost.NORTH
-            while cc.cell.x > basis.cell.x: #reset northern neighbors
+            while cc not in self.boundaries and cc.cell.x >= basis.cell.x: #reset northern neighbors
                 cc.SOUTH = basis
                 cc = cc.WEST
             cc = eastMost.EAST
-            while cc.cell.y > basis.cell.y: #reset eastern neighbors
+            while cc.cell.y >= basis.cell.y: #reset eastern neighbors
                 cc.WEST = basis
+                if cc.cell.y == basis.cell.y:break # a gross hack to prevent weird behavior when both cells are along the bottom edge
                 cc = cc.SOUTH
             cc = eastMost.SOUTH
-            while cc.cell.x + cc.getWidth() < basis.cell.x + basis.getWidth(): #reset souther nieghbors
+            while cc not in self.boundaries and cc.cell.x + cc.getWidth() <= basis.cell.x + basis.getWidth(): #reset souther nieghbors
                 cc.NORTH = basis
                 cc = cc.EAST
 
-            del tile1 if tile1 == eastMost else tile2
+            if(tile1 == eastMost):
+                self.stitchList.remove(tile1)
+            else:
+                self.stitchList.remove(tile2)
 
         else:
             return ("Tiles are not alligned")
@@ -574,13 +595,13 @@ class constraintGraph:
 if __name__ == '__main__':
 
     a = cornerStitch(None, None, None, None, None, cell(0, 20, "SOLID"))
-    b = cornerStitch(None, None, None, None, None, cell(0, 10, "EMPTY"))
+    b = cornerStitch(None, None, None, None, None, cell(0, 10, "SOLID"))
     c = cornerStitch(None, None, None, None, None, cell(0, 0, "SOLID"))
-    d = cornerStitch(None, None, None, None, None, cell(10, 20, "EMPTY"))
+    d = cornerStitch(None, None, None, None, None, cell(10, 20, "SOLID"))
     e = cornerStitch(None, None, None, None, None, cell(10, 10, "SOLID"))
     f = cornerStitch(None, None, None, None, None, cell(10, 0, "SOLID"))
     g = cornerStitch(None, None, None, None, None, cell(20, 15, "SOLID"))
-    h = cornerStitch(None, None, None, None, None, cell(20, 0, "EMPTY"))
+    h = cornerStitch(None, None, None, None, None, cell(20, 0, "SOLID"))
 
     stitchList = [a,b,c,d,e,f,g,h]
     exampleLayer = layer(stitchList, 30, 30)
@@ -617,17 +638,16 @@ if __name__ == '__main__':
     f.SOUTH = exampleLayer.southBoundary
 
     g.SOUTH = h
-    g.WEST = d
+    g.WEST = e
     g.NORTH = exampleLayer.northBoundary
     g.EAST = exampleLayer.eastBoundary
 
     h.NORTH = g
     h.WEST = f
     h.EAST = exampleLayer.eastBoundary
-    g.SOUTH = exampleLayer.southBoundary
+    h.SOUTH = exampleLayer.southBoundary
 
-    foo = exampleLayer.hSplit(e, 15)
-    print e.NORTH.cell.x, e.NORTH.cell.y
+    foo = exampleLayer.merge(a, d)
     """
     a = cornerStitch(None, None, None, None, None, cell(0, 0, "EMPTY"))
 
