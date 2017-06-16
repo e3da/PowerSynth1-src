@@ -99,7 +99,6 @@ class layer:
     def __init__(self, stitchList, max_x, max_y):
         """
         northBoundary and eastBoundary should be integer values, the upper and right edges of the editable rectangle
-        
         """
         self.stitchList = stitchList
         self.northBoundary = cornerStitch(None, None, None, None, None, cell(0, max_y, "EMPTY"))
@@ -107,7 +106,58 @@ class layer:
         self.southBoundary = cornerStitch(None, None, None, None, None, cell(0, -1000, "EMPTY"))
         self.westBoundary = cornerStitch(None, None, None, None, None, cell(-1000, 0, "EMPTY"))
 
-    def createTile(self, x1, y1, x2, y2):
+    def insert(self, x1, y1, x2, y2, type):
+        """
+        insert a new solid cell into the rectangle defined by the top left corner(x1, y1) and the bottom right corner
+        (x2, y2) and adds the new cell to the layer's stitchList
+        """
+        if(self.areaSearch(x1, y1, x2, y2)):
+            print "Area has a solid tile in it"
+            return False
+
+        newCell = cell(x1, y2, type) #left and bottom edges
+        newStitch = cornerStitch(None, None, None, None, None, newCell)
+
+        #partition horizontally
+        cc = self.findPoint(x1, y1)
+        if not (cc.cell.y == y1) and not (cc.cell.y + cc.getHeight() == y1): #check to see if the prospective cell lies on an edge
+            print "northsplit"
+            newStitch.NORTH = self.hSplit(cc, y1)
+        else:
+            print "not northsplitting"
+            newStitch.NORTH = self.findPoint(x2 - .0001, y1 + .0001)
+
+        cc = self.findPoint(x2, y2) #second corner, bottom right
+        if not (cc.cell.y == y2) and not (cc.cell.y + cc.getHeight() == y2): #check to see if the prospective cell lies on an edge
+            print "southsplit"
+            newStitch.SOUTH = self.hSplit(cc, y2)
+        else:
+            print "not southsplitting"
+            newStitch.SOUTH = self.findPoint(x1 + .0001, y2 - .0001)
+
+        # partition vertically
+        cc = self.findPoint((newStitch.cell.x - .0001), (newStitch.cell.y + newStitch.getHeight() - .0001))
+        print cc.cell.x, cc.cell.y, "CC cell"
+        print "y2 = ", y2
+        while True : #walking downwards along the left edge
+            if cc.NORTH.cell.y <= y2:
+                break
+            print "insid ewhile"
+            if cc.cell.x + cc.getWidth() <= x1: #If cc (and its right placed solid cell) are to the left of newStitch
+                while cc.cell.x + cc.getWidth() <= x1: #walk rightwards until we find the proper empty cell
+                    cc = cc.EAST
+            elif cc.cell.x < x1 and cc.cell.x + cc.getWidth() > x1: #the current empty cell envelops the h-area of newStitch
+                print "insdie if"
+                newStitch.EAST = self.vSplit(cc, x2) #create the right edge with new empty spaces
+                cc.EAST = newStitch #"fill" the empty space to be filled by assigning neighberhood to newStitch
+                newStitch.WEST = cc
+                cc = cc.SOUTH
+
+
+
+
+        self.stitchList.append(newStitch)
+
         return
 
     def split(self):
@@ -215,26 +265,26 @@ class layer:
 
         cc = self.stitchList[0] #current cell
         while (y < cc.cell.y or y > (cc.cell.y + cc.getHeight())):
-            if (y > cc.cell.y + cc.getHeight()):
+            if (y >= cc.cell.y + cc.getHeight()):
                if(cc.NORTH is not None):
                    cc = cc.NORTH
                else:
                    print("out of bounds 1")
                    return "Failed"
-            elif y < cc.cell.y:
+            elif y <= cc.cell.y:
                 if(cc.SOUTH is not None):
                     cc = cc.SOUTH
                 else:
                     print("out of bounds 2")
                     return "Failed"
         while(x < cc.cell.x or x > (cc.cell.x + cc.getWidth())):
-            if(x < cc.cell.x ):
+            if(x <= cc.cell.x ):
                 if(cc.WEST is not None):
                     cc = cc.WEST
                 else:
                     print("out of bounds 3")
                     return "Failed"
-            if(x > (cc.cell.x + cc.getWidth())):
+            if(x >= (cc.cell.x + cc.getWidth())):
                 if(cc.EAST is not None):
                     cc = cc.EAST
                 else:
@@ -263,6 +313,21 @@ class layer:
         """
         return
 
+    def findNeighor(self, inputCell, direction):
+        """
+        Probably a better way to do this, ask Dr. Peng.
+        Direction should be the first character of a direction, i.e. ('n', 'e', 's', 'w')
+        Returns the cell epsilon to the direction of the relevant corner 
+        """
+        if direction == 'n':
+            return self.findPoint()
+        if direction == 'e':
+            return self.findPoint((inputCell.cell.x + inputCell.getWidth() + .0001), inputCell.cell.y + inputCell.getHeight())
+        if direction == 's':
+            return self.findPoint((inputCell.cell.x + inputCell.getWidth()), inputCell.cell.y + inputCell.getHeight() - .0001)
+        if direction == 'w':
+            return self.findPoint((inputCell.cell.x + inputCell.getWidth() - .0001), inputCell.cell.y + inputCell.getHeight())
+
     def drawLayer(self):
         """
         Draw all cells in this layer with stitches pointing to their stitch neighbors
@@ -275,6 +340,7 @@ class layer:
         fig1 = matplotlib.pyplot.figure()
 
         for cell in stitchList:
+
             ax1 = fig1.add_subplot(111, aspect='equal')
             if not cell.cell.type == "EMPTY":
                 pattern = '\\'
@@ -331,40 +397,37 @@ class layer:
                       ec = 'k'
                     )
 
-        #eventually need to replace thirty with the actual layer dims.
-        plt.xlim(0, 30)
-        plt.ylim(0, 30)
+        plt.xlim(0, self.eastBoundary.cell.x)
+        plt.ylim(0, self.northBoundary.cell.y)
         fig1.show()
         pylab.pause(11000)  # figure out how to do this better
 
-
-    def findNeighor(self, inputCell, direction):
-        """
-        Probably a better way to do this, ask Dr. Peng.
-        Direction should be the first character of a direction, i.e. ('n', 'e', 's', 'w')
-        Returns the cell epsilon to the direction of the relevant corner 
-        """
-        if direction == 'n':
-            return self.findPoint()
-        if direction == 'e':
-            return self.findPoint((inputCell.cell.x + inputCell.getWidth() + .0001), inputCell.cell.y + inputCell.getHeight())
-        if direction == 's':
-            return self.findPoint((inputCell.cell.x + inputCell.getWidth()), inputCell.cell.y + inputCell.getHeight() - .0001)
-        if direction == 'w':
-            return self.findPoint((inputCell.cell.x + inputCell.getWidth() - .0001), inputCell.cell.y + inputCell.getHeight())
-
-
     def vSplit(self, splitCell, x):
-        newCell = cornerStitch(None, splitCell, None, splitCell.EAST, None, cell(x, splitCell.cell.y, "EMPTY"))
+        newCell = cornerStitch(None, None, None, None, None, cell(x, splitCell.cell.y, "EMPTY"))
         self.stitchList.append(newCell)
 
-        newCell.NORTH = self.findPoint((newCell.cell.x + splitCell.getWidth()), newCell.cell.y + splitCell.getHeight() + .0001)
-        newCell.EAST = self.findPoint((newCell.cell.x + splitCell.getWidth() + .0001), newCell.cell.y + splitCell.getHeight())
-        newCell.SOUTH = self.findPoint((newCell.cell.x + splitCell.getWidth()), newCell.cell.y + splitCell.getHeight() - .0001)
+        newCell.NORTH = splitCell.NORTH
+        newCell.EAST = splitCell.EAST
+        newCell.SOUTH = self.findPoint(newCell.cell.x + .0001, newCell.cell.y - .0001)
         newCell.WEST = splitCell
 
         splitCell.EAST = newCell
-        return
+
+        print "vsplit", newCell.cell.x, newCell.cell.y
+        return newCell
+
+    def hSplit(self, splitCell, y):
+        newCell = cornerStitch(None, None, None, None, None, cell(splitCell.cell.x, y, "EMPTY"))
+        self.stitchList.append(newCell)
+
+        newCell.NORTH = splitCell.NORTH
+        newCell.EAST = splitCell.EAST
+        newCell.SOUTH = splitCell
+        newCell.WEST = self.findPoint(newCell.cell.x - .0001, newCell.cell.y + .0001)
+
+        splitCell.NORTH = newCell
+        return newCell
+
 
 class constraintGraph:
     """
@@ -405,8 +468,7 @@ class constraintGraph:
 
 if __name__ == '__main__':
 
-
-    a = cornerStitch(None, None, None, None, None, cell(0, 20, "SOLID"))
+    """a = cornerStitch(None, None, None, None, None, cell(0, 20, "SOLID"))
     b = cornerStitch(None, None, None, None, None, cell(0, 10, "EMPTY"))
     c = cornerStitch(None, None, None, None, None, cell(0, 0, "SOLID"))
     d = cornerStitch(None, None, None, None, None, cell(10, 20, "EMPTY"))
@@ -415,7 +477,7 @@ if __name__ == '__main__':
     g = cornerStitch(None, None, None, None, None, cell(20, 15, "SOLID"))
     h = cornerStitch(None, None, None, None, None, cell(20, 0, "EMPTY"))
 
-    stitchList = [a,b,c,d,e,f,g,h,]
+    stitchList = [a,b,c,d,e,f,g,h]
     exampleLayer = layer(stitchList, 30, 30)
 
 
@@ -459,10 +521,42 @@ if __name__ == '__main__':
     h.EAST = exampleLayer.eastBoundary
     g.SOUTH = exampleLayer.southBoundary
 
+    """
+    a = cornerStitch(None, None, None, None, None, cell(0, 0, "EMPTY"))
+
+    stitchList = [a]
+    exampleLayer = layer(stitchList, 30, 30)
+
+    a.NORTH = exampleLayer.northBoundary
+    a.EAST = exampleLayer.eastBoundary
+    a.SOUTH = exampleLayer.southBoundary
+    a.WEST = exampleLayer.westBoundary
 
 
-    exampleLayer.vSplit(b, 5)
+    exampleLayer.insert(5, 10, 10, 5, "Solid")
+    exampleLayer.insert(16, 11, 21, 6, "Solid")
+    print "******\nchecking directions"
+    for foo in exampleLayer.stitchList:
+        print foo.cell.x, foo.cell.y
+        if foo.NORTH is None:
+            print foo.cell.x, foo.cell.y, "NORTH is None"
+        if foo.EAST is None:
+            print foo.cell.x, foo.cell.y, "EAST is None"
+        if foo.SOUTH is None:
+            print foo.cell.x, foo.cell.y, "SOUTH is None"
+        if foo.WEST is None:
+            print foo.cell.x, foo.cell.y, "WEST is None"
+
+    foo = exampleLayer.findPoint(12, 7.5)
+    print foo.cell.x, foo.cell.y, " = foo"
+    print "foo.EAST = ", foo.EAST.cell.x, foo.EAST.cell.y
+    print foo.getWidth()
+
+
+    #exampleLayer.hSplit(h, 7.5)
     #print layer.findLayerDimensions([northBoundary, eastBoundary, southBoundary, westBoundary])
+    #foo = exampleLayer.areaSearch(2, 10, 3, 20)
+    #print foo
     exampleLayer.drawLayer()
 
     #print layer.directedAreaEnumeration(5, 25, 15, 15)
