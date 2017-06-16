@@ -110,7 +110,7 @@ class layer:
         """
         insert a new solid cell into the rectangle defined by the top left corner(x1, y1) and the bottom right corner
         (x2, y2) and adds the new cell to the layer's stitchList
-        """
+        
         if(self.areaSearch(x1, y1, x2, y2)):
             print "Area has a solid tile in it"
             return False
@@ -152,12 +152,8 @@ class layer:
                 cc.EAST = newStitch #"fill" the empty space to be filled by assigning neighberhood to newStitch
                 newStitch.WEST = cc
                 cc = cc.SOUTH
-
-
-
-
         self.stitchList.append(newStitch)
-
+        """
         return
 
     def split(self):
@@ -165,10 +161,63 @@ class layer:
         """
         return
 
-    def merge(self):
+    def merge(self, tile1, tile2):
         """
+        merge two tiles into one, reassign neighborhood, and return the merged tile in case a reference is needed
         """
-        return
+
+        if tile1.cell.x == tile2.cell.x and (tile1.NORTH == tile2 or tile1.SOUTH == tile2) and tile1.getWidth() == tile2.getWidth():
+            basis = tile1 if tile1.cell.y < tile2.cell.y else tile2
+            upper = tile1 if tile1.cell.y > tile2.cell.y else tile2
+
+            #reassign the newly merged tile's neighbors. We're using the lower of the tiles as the basis tile.
+            basis.NORTH = upper.NORTH
+            basis.EAST = upper.EAST
+
+            #reasign the neighboring tile's directional pointers
+            cc = upper.NORTH
+            while cc.cell.x > basis.cell.x: #reset northern neighbors
+                cc.SOUTH = basis
+                cc = cc.WEST
+            cc = upper.EAST
+            while cc.cell.y > basis.cell.y: #reset eastern neighbors
+                cc.WEST = basis
+                cc = cc.SOUTH
+            cc = upper.WEST
+            while cc.cell.y + cc.getHeight() < basis.cell.y + basis.getHeight(): #reset western nieghbors
+                cc.EAST = basis
+                cc = cc.NORTH
+
+            del tile1 if tile1 == upper else tile2
+
+        elif tile1.cell.y == tile2.cell.y and (tile1.EAST == tile2 or tile1.WEST == tile2) and tile1.getHeight() == tile2.getHeight():
+            basis = tile1 if tile1.cell.x < tile2.cell.x else tile2
+            eastMost = tile1 if tile1.cell.x > tile2.cell.x else tile2 #assign symbolic left and right tiles
+
+            #reassign the newly merged tile's neighbors. We're using the leftMost of the tiles as the basis tile.
+            basis.NORTH = eastMost.NORTH
+            basis.EAST = eastMost.EAST
+
+            #reasign the neighboring tile's directional pointers
+            cc = eastMost.NORTH
+            while cc.cell.x > basis.cell.x: #reset northern neighbors
+                cc.SOUTH = basis
+                cc = cc.WEST
+            cc = eastMost.EAST
+            while cc.cell.y > basis.cell.y: #reset eastern neighbors
+                cc.WEST = basis
+                cc = cc.SOUTH
+            cc = eastMost.SOUTH
+            while cc.cell.x + cc.getWidth() < basis.cell.x + basis.getWidth(): #reset souther nieghbors
+                cc.NORTH = basis
+                cc = cc.EAST
+
+            del tile1 if tile1 == eastMost else tile2
+
+        else:
+            return ("Tiles are not alligned")
+
+        return basis
 
     def lowestCell(self, cellList):
         min = 10000000
@@ -403,29 +452,85 @@ class layer:
         pylab.pause(11000)  # figure out how to do this better
 
     def vSplit(self, splitCell, x):
-        newCell = cornerStitch(None, None, None, None, None, cell(x, splitCell.cell.y, "EMPTY"))
+        newCell = cornerStitch(None, None, None, None, None, cell(x, splitCell.cell.y, splitCell.cell.type))
         self.stitchList.append(newCell)
 
+        #assign newCell neighbors
         newCell.NORTH = splitCell.NORTH
         newCell.EAST = splitCell.EAST
-        newCell.SOUTH = self.findPoint(newCell.cell.x + .0001, newCell.cell.y - .0001)
         newCell.WEST = splitCell
 
+        cc = splitCell.SOUTH #Walk along the bottom edge until you find the cell that encompases x
+        while cc.cell.x + cc.getWidth() < x:
+            cc = cc.EAST
+
+        newCell.SOUTH = cc
+
+        #reassign splitCell N and E
         splitCell.EAST = newCell
+        cc = splitCell.NORTH
+        while cc.cell.x >= splitCell.cell.x + splitCell.getWidth(): # Walk along the top edge until we reach the correct tile
+            cc = cc.WEST
+
+        splitCell.NORTH = cc
+
+        #reassign surrounding cells neighbors
+        cc = newCell.NORTH #reassign the SOUTH pointers for the top edge along the split half
+        while cc.cell.x >= x:
+            cc.SOUTH = newCell
+            cc = cc.WEST
+
+        cc = newCell.EAST #reassign the WEST pointers for the right edge
+        while cc.cell.y >= newCell.cell.y:
+            cc.WEST = newCell
+            cc = cc.SOUTH
+
+        cc = newCell.SOUTH#reassign the SOUTH pointers for the right edge
+        while cc.cell.x + cc.getWidth() <= newCell.cell.x + newCell.getWidth():
+            cc.NORTH = newCell
+            cc = cc.EAST
 
         print "vsplit", newCell.cell.x, newCell.cell.y
         return newCell
 
     def hSplit(self, splitCell, y):
-        newCell = cornerStitch(None, None, None, None, None, cell(splitCell.cell.x, y, "EMPTY"))
+        newCell = cornerStitch(None, None, None, None, None, cell(splitCell.cell.x, y,  splitCell.cell.type))
         self.stitchList.append(newCell)
 
+        #assign new cell directions
         newCell.NORTH = splitCell.NORTH
         newCell.EAST = splitCell.EAST
         newCell.SOUTH = splitCell
-        newCell.WEST = self.findPoint(newCell.cell.x - .0001, newCell.cell.y + .0001)
 
+        cc = splitCell.WEST
+        while cc.cell.y + cc.getHeight() < y: #Walk upwards along the old west
+            cc = cc.NORTH
+        newCell.WEST = cc
+
+        #reassign splitCell N and E
         splitCell.NORTH = newCell
+
+        cc = newCell.EAST
+        while cc.cell.y > newCell.cell.y: #Walk down the right (eastward)edge
+            cc = cc.SOUTH
+        splitCell.EAST = cc
+
+        #reassign the neighboring cells directional poitners
+        cc = newCell.NORTH #reassign the SOUTH pointers for the top edge along the split half
+        while cc.cell.x >= newCell.cell.x:
+            cc.SOUTH = newCell
+            cc = cc.WEST
+
+        cc = newCell.EAST #reassign the WEST pointers for the right edge
+        while cc.cell.y >= newCell.cell.y:
+            cc.WEST = newCell
+            cc = cc.SOUTH
+
+        cc = newCell.WEST#reassign the SOUTH pointers for the right edge
+        while cc.cell.y + cc.getHeight() <= newCell.cell.y + newCell.getHeight():
+            cc.EAST = newCell
+            cc = cc.NORTH
+
         return newCell
 
 
@@ -468,7 +573,7 @@ class constraintGraph:
 
 if __name__ == '__main__':
 
-    """a = cornerStitch(None, None, None, None, None, cell(0, 20, "SOLID"))
+    a = cornerStitch(None, None, None, None, None, cell(0, 20, "SOLID"))
     b = cornerStitch(None, None, None, None, None, cell(0, 10, "EMPTY"))
     c = cornerStitch(None, None, None, None, None, cell(0, 0, "SOLID"))
     d = cornerStitch(None, None, None, None, None, cell(10, 20, "EMPTY"))
@@ -517,10 +622,12 @@ if __name__ == '__main__':
     g.EAST = exampleLayer.eastBoundary
 
     h.NORTH = g
-    h.WEST = e
+    h.WEST = f
     h.EAST = exampleLayer.eastBoundary
     g.SOUTH = exampleLayer.southBoundary
 
+    foo = exampleLayer.hSplit(e, 15)
+    print e.NORTH.cell.x, e.NORTH.cell.y
     """
     a = cornerStitch(None, None, None, None, None, cell(0, 0, "EMPTY"))
 
@@ -551,7 +658,7 @@ if __name__ == '__main__':
     print foo.cell.x, foo.cell.y, " = foo"
     print "foo.EAST = ", foo.EAST.cell.x, foo.EAST.cell.y
     print foo.getWidth()
-
+    """
 
     #exampleLayer.hSplit(h, 7.5)
     #print layer.findLayerDimensions([northBoundary, eastBoundary, southBoundary, westBoundary])
