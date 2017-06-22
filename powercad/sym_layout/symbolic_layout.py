@@ -2816,7 +2816,7 @@ def one_measure(symlayout):
             ret.append(val)
     return ret
 
-def make_test_setup():
+def make_test_setup(f):
     import os
     from powercad.tech_lib.test_techlib import get_power_lead, get_signal_lead
     from powercad.tech_lib.test_techlib import get_power_bondwire, get_signal_bondwire
@@ -2840,16 +2840,17 @@ def make_test_setup():
     make_test_symmetries(sym_layout)
     add_test_measures(sym_layout)
     
-    module = gen_test_module_data(100.0)
+    module = gen_test_module_data(f)
     print "symbolic_layout.py > make_test_setup() > temp_dir=", temp_dir
     sym_layout.form_design_problem(module, temp_dir)
-    mdl = load_file("C://PowerSynth_git//Response_Surface//PowerCAD-full//tech_lib//Model//Trace//last_test.rsmdl")
+    mdl = load_file("C://PowerSynth_git//Response_Surface//PowerCAD-full//tech_lib//Model//Trace//Test_wide_freq_range.rsmdl")
     sym_layout.set_RS_model(mdl)
     sym_layout._map_design_vars()
     setup_model(sym_layout)
-    individual=[10, 9, 4, 8, 2.0, 2.0, 10, 4, 0.8, 0.0001]
-    print 'individual', individual
-    print "opt_to_sym_index" ,sym_layout.opt_to_sym_index
+    individual=[10, 10, 4, 8, 2.0, 2.0, 10, 4, 0.8, 0.0001]
+    #print 'individual', individual
+    #print "opt_to_sym_index" ,sym_layout.opt_to_sym_index
+    #print "opt_dv_list", sym_layout.opt_dv_list
     sym_layout.rev_map_design_vars(individual)
     sym_layout.generate_layout()
     sym_layout._build_lumped_graph()
@@ -2973,11 +2974,11 @@ def test_pickle_symbolic_layout():
         f2.append(sol.fitness.values[1])
     plot(f1, f2, 'o')
     show()
-def corner_overestimate(f,w,l1):
+def corner_overestimate_equal(f,w,l1):
     # l1 : fixed length
 
     sym_layout = SymbolicLayout()
-    mdl=load_file("C://PowerSynth_git//Response_Surface//PowerCAD-full//tech_lib//Model//Trace//Test_Corner_2.rsmdl")
+    mdl=load_file("C://PowerSynth_git//Response_Surface//PowerCAD-full//tech_lib//Model//Trace//Added_DC_test.rsmdl")
     sym_layout.set_RS_model(mdl)
     w_corner=w
     l_corner=[l1+float(x)/2 for x in w_corner]
@@ -2990,14 +2991,25 @@ def corner_overestimate(f,w,l1):
         ind_corner_MS.append(2*trace_inductance(w,l,0.2,0.64))
         res_corner_MS.append(2*trace_resistance(f,w,l,0.2,0.64))
     return ind_corner
+def corner_overestimate(w1,w2,l,f):
+    sym_layout = SymbolicLayout()
+    mdl = load_file("C://PowerSynth_git//Response_Surface//PowerCAD-full//tech_lib//Model//Trace//Test_wide_freq_range.rsmdl")
+    sym_layout.set_RS_model(mdl)
+    w_corner=[w1,w2]
+    l_corner=[l+w2/2,l+w1/2]
+    print l_corner
+    ind_corner=trace_ind_krige(f, w_corner, l_corner, sym_layout.LAC_mdl)
+    return sum(ind_corner)
 if __name__ == '__main__':
+    f = 10.0
+    make_test_setup(f)
+    #w=[2,3,4,5,6,7,8,9,10]
+    #l1=12
 
-    #make_test_setup()
-    w=[2,3,4,5,6,7,8,9,10]
-    l1=12
+    #print corner_overestimate_equal(10.0,w,l1)
 
-    print corner_overestimate(100,w,l1)
-
+    print corner_overestimate(4,4,12,f)
+    print corner_overestimate(10, 4, 12, f)
     #optimization_test(sym_layout)
     #sym_layout = build_test_layout()
     #test_pickle_symbolic_layout()

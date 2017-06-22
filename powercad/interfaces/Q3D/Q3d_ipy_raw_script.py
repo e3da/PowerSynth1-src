@@ -79,7 +79,27 @@ oModule.InsertSetup("Matrix",
         "AdaptiveFreq:="    , "{0}Hz",   # default 100 kHz
         "SaveFields:="        , {1},      # default to be False 
         "Enabled:="        , True,
-
+        [
+			"NAME:DC",
+			"SolveResOnly:="	, False,
+			[
+				"NAME:Cond",
+				"MaxPass:="		, 10,
+				"MinPass:="		, 10,
+				"MinConvPass:="		, 1,
+				"PerError:="		, 1,
+				"PerRefine:="		, 30
+			],
+			[
+				"NAME:Mult",
+				"MaxPass:="		, 1,
+				"MinPass:="		, 1,
+				"MinConvPass:="		, 1,
+				"PerError:="		, 1,
+				"PerRefine:="		, 30
+			],
+			"Solution Order:="	, "Normal"
+		],
 
         [
             "NAME:AC",
