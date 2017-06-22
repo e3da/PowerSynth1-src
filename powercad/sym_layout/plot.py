@@ -9,7 +9,7 @@ Created on Nov 6, 2012
 import numpy as np
 import matplotlib.pyplot as plt
 import copy
-from matplotlib.patches import Rectangle, PathPatch, Circle
+from matplotlib.patches import Rectangle, PathPatch, Circle, Arc
 from matplotlib.path import Path
 
 from powercad.sym_layout.svg import LayoutLine, LayoutPoint, find_layout_bounds
@@ -153,9 +153,11 @@ def detect_corners_90(sym_layout2, ax):
     '''CORNER DETECTION 
     @author: Shilpi Mukherjee 
     @date: 14-JUN-2017
-    This function detects 90 degree inner trace corners for a selected solution layout.
-    It marks corners as a red rectangle in the layout preview and saved solution window, 
-    and displays the (x,y) coordinates of each corner in the console.
+    This function detects inner corners on traces that connect orthogonally for a selected solution layout.
+    It marks the corners with a fillet in the layout preview and saved solution window,
+    and displays (x,y),q for each corner,
+    where (x,y) is the cartesian coordinate of the corner,
+    and q is the quandrant in which the corner is concave.
     :param sym_layout: Symbolic Layout object
     :param ax: subplot specifications'''
 
@@ -229,6 +231,7 @@ def detect_corners_90(sym_layout2, ax):
             supertraces.append(i) # add to supertraces list
         if len(i.trace_connections) > 0: # potential cornered trace-pair found
             trace_rectangle = (round(i.trace_rect.top,2), round(i.trace_rect.bottom,2), round(i.trace_rect.left,2), round(i.trace_rect.right,2)) # copy the trace rectangle's dimensions
+            # trace_rectangle_ID =
             for j in i.trace_connections:
                 connecting_trace_rectangle = (round(j.trace_rect.top,2), round(j.trace_rect.bottom,2), round(j.trace_rect.left,2), round(j.trace_rect.right,2)) # copy the dimensions of the connecting trace rectangle
                 # append only if the pair doesn't already exist in the cornered_traces list
@@ -274,6 +277,8 @@ def detect_corners_90(sym_layout2, ax):
     BOTTOM = 1 # bottom of rectangle
     LEFT = 2 # left of rectangle
     RIGHT = 3 # right of rectangle
+    x = 0
+    y = 1
     # print "cornered traces list:"
 
     # FOR EACH ITEM IN CORNERED_TRACES LIST, CHECK WHICH EDGE IS IN COMMON AND SAVE THAT AS ONE OF THE CORNER COORDINATES.
@@ -281,14 +286,22 @@ def detect_corners_90(sym_layout2, ax):
         # print i
         temp_x = None
         temp_y = None
-        if i[FIRST][TOP] == i[SECOND][BOTTOM]: # common y
+        concavityQuadrant = None
+        # concavityDirection = []
+        if i[FIRST][TOP] == i[SECOND][BOTTOM]: # common y (top of one matching bottom of the other) #0x #quad 1 or 2
             temp_y = i[FIRST][TOP]
-        elif i[FIRST][BOTTOM] == i[SECOND][TOP]: # common y
+            # concavityDirection[0] = 0
+        elif i[FIRST][BOTTOM] == i[SECOND][TOP]: # common y (top of one matching bottom of the other) #1x #quad 3 or 4
             temp_y = i[FIRST][BOTTOM]
-        elif i[FIRST][LEFT] == i[SECOND][RIGHT]: # common x
+            # concavityDirection[0] = 1
+        elif i[FIRST][LEFT] == i[SECOND][RIGHT]: # common x (left of one matching right of the other) #AA #quad 1 or 4
             temp_x = i[FIRST][LEFT]
-        elif i[FIRST][RIGHT] == i[SECOND][LEFT]: # common x
+            # concavityDirection[0] = x
+            # concavityDirection[1] = x
+        elif i[FIRST][RIGHT] == i[SECOND][LEFT]: # common x (left of one matching right of the other) #BB #quad 2 or 3
             temp_x = i[FIRST][RIGHT]
+            # concavityDirection[0] = y
+            # concavityDirection[1] = y
         # super-condition: if both x and y are blank, it's not a valid corner. if so, do not continue, else continue.
         if ((temp_x is None) and (temp_y is None)):
             continue
@@ -299,62 +312,140 @@ def detect_corners_90(sym_layout2, ax):
             if i[FIRST][LEFT] == i[SECOND][LEFT]: # if left side is common, select right side of the lower width box as the corner-x.
                 if i[FIRST][RIGHT] < i[SECOND][RIGHT]:
                     temp_x = i[FIRST][RIGHT]
+                    if temp_y == i[FIRST][BOTTOM]:
+                        concavityQuadrant = 1
+                    elif temp_y == i[SECOND][BOTTOM]:
+                        concavityQuadrant = 4
                 elif i[FIRST][RIGHT] > i[SECOND][RIGHT]: # use explicit condition check here with elif to avoid phantom traces from being counted as valid.
                     temp_x = i[SECOND][RIGHT]
+                    if temp_y == i[SECOND][BOTTOM]:
+                        concavityQuadrant = 1
+                    elif temp_y == i[FIRST][BOTTOM]:
+                        concavityQuadrant = 4
             elif i[FIRST][RIGHT] == i[SECOND][RIGHT]: # if right side is common, select left side of the lower width box as the corner-x.
                 if i[FIRST][LEFT] > i[SECOND][LEFT]:
                     temp_x = i[FIRST][LEFT]
+                    if temp_y == i[FIRST][BOTTOM]:
+                        concavityQuadrant = 2
+                    elif temp_y == i[SECOND][BOTTOM]:
+                        concavityQuadrant = 3
                 elif i[FIRST][LEFT] < i[SECOND][LEFT]: # use explicit condition check here with elif to avoid phantom traces from being counted as valid.
                     temp_x = i[SECOND][LEFT]
+                    if temp_y == i[SECOND][BOTTOM]:
+                        concavityQuadrant = 2
+                    elif temp_y == i[FIRST][BOTTOM]:
+                        concavityQuadrant = 3
             # print "(temp_x, temp_y): ", temp_x, temp_y
         elif temp_y is None: # Find y-coordinate of the corner
             if i[FIRST][TOP] == i[SECOND][TOP]:  # if top side is common, select bottom side of the lower height box as the corner-y.
                 if i[FIRST][BOTTOM] > i[SECOND][BOTTOM]:
                     temp_y = i[FIRST][BOTTOM]
+                    if temp_x == i[FIRST][RIGHT]:
+                        concavityQuadrant = 3
+                    elif temp_x == i[SECOND][RIGHT]:
+                        concavityQuadrant = 4
                 elif i[FIRST][BOTTOM] < i[SECOND][BOTTOM]: # use explicit condition check here with elif to avoid phantom traces from being counted as valid.
                     temp_y = i[SECOND][BOTTOM]
+                    if temp_x == i[SECOND][RIGHT]:
+                        concavityQuadrant = 3
+                    elif temp_x == i[FIRST][RIGHT]:
+                        concavityQuadrant = 4
             elif i[FIRST][BOTTOM] == i[SECOND][BOTTOM]: # if bottom side is common, select top side of the lower height box as the corner-y.
                 if i[FIRST][TOP] < i[SECOND][TOP]:
                     temp_y = i[FIRST][TOP]
+                    if temp_x == i[FIRST][RIGHT]:
+                        concavityQuadrant = 2
+                    elif temp_x == i[SECOND][RIGHT]:
+                        concavityQuadrant = 1
                 elif i[FIRST][TOP] > i[SECOND][TOP]: # use explicit condition check here with elif to avoid phantom traces from being counted as valid.
                     temp_y = i[SECOND][TOP]
+                    if temp_x == i[SECOND][RIGHT]:
+                        concavityQuadrant = 2
+                    elif temp_x == i[FIRST][RIGHT]:
+                        concavityQuadrant = 1
         if ((temp_x is not None) and (temp_y is not None)):
-            corners.append((temp_x, temp_y))
+            corners.append((temp_x, temp_y, concavityQuadrant))
 
         # FIND THE OTHER COORDINATE (T-JUNCTION) BY COMPARING EDGE LOCATIONS OF THE PAIR OF TRACES BEING ASSESSED
         elif temp_x is None and temp_y is not None: # if temp_x is still None (but temp_y has been found), this is a T-junction.
-            if ((i[FIRST][LEFT] > i[SECOND][LEFT]) & (i[FIRST][LEFT] < i[SECOND][RIGHT])):
+            if (((i[FIRST][LEFT] > i[SECOND][LEFT]) & (i[FIRST][LEFT] < i[SECOND][RIGHT]))) & (((i[FIRST][RIGHT] > i[SECOND][LEFT]) & (i[FIRST][RIGHT] < i[SECOND][RIGHT]))):
+                # if ((i[FIRST][RIGHT] > i[SECOND][LEFT]) & (i[FIRST][RIGHT] < i[SECOND][RIGHT])):
                 temp_x = i[FIRST][LEFT]
-                corners.append((temp_x, temp_y))
-                if ((i[FIRST][RIGHT] > i[SECOND][LEFT]) & (i[FIRST][RIGHT] < i[SECOND][RIGHT])):
-                    temp_x = i[FIRST][RIGHT]
-                    corners.append((temp_x, temp_y))
-            elif ((i[SECOND][LEFT] > i[FIRST][LEFT]) & (i[SECOND][LEFT] < i[FIRST][RIGHT])):
+                if temp_y == i[FIRST][BOTTOM]:
+                    concavityQuadrant = 2
+                elif temp_y == i[SECOND][BOTTOM]:
+                    concavityQuadrant = 3
+                corners.append((temp_x, temp_y, concavityQuadrant))
+                temp_x = i[FIRST][RIGHT]
+                if temp_y == i[SECOND][BOTTOM]:
+                    concavityQuadrant = 4
+                elif temp_y == i[FIRST][BOTTOM]:
+                    concavityQuadrant = 1
+                corners.append((temp_x, temp_y, concavityQuadrant))
+            elif (((i[SECOND][LEFT] > i[FIRST][LEFT]) & (i[SECOND][LEFT] < i[FIRST][RIGHT]))) & (((i[SECOND][RIGHT] > i[FIRST][LEFT]) & (i[SECOND][RIGHT] < i[FIRST][RIGHT]))):
+                # if ((i[SECOND][RIGHT] > i[FIRST][LEFT]) & (i[SECOND][RIGHT] < i[FIRST][RIGHT])):
                 temp_x = i[SECOND][LEFT]
-                corners.append((temp_x, temp_y))
-                if ((i[SECOND][RIGHT] > i[FIRST][LEFT]) & (i[SECOND][RIGHT] < i[FIRST][RIGHT])):
-                    temp_x = i[SECOND][RIGHT]
-                    corners.append((temp_x, temp_y))
+                if temp_y == i[SECOND][BOTTOM]:
+                    concavityQuadrant = 2
+                elif temp_y == i[FIRST][BOTTOM]:
+                    concavityQuadrant = 3
+                corners.append((temp_x, temp_y, concavityQuadrant))
+                temp_x = i[SECOND][RIGHT]
+                if temp_y == i[FIRST][BOTTOM]:
+                    concavityQuadrant = 4
+                elif temp_y == i[SECOND][BOTTOM]:
+                    concavityQuadrant = 1
+                corners.append((temp_x, temp_y, concavityQuadrant))
         elif temp_y is None and temp_x is not None: # if temp_y is still None (but temp_x has been found), this is a sideways T-junction.
-            if ((i[FIRST][TOP] > i[SECOND][BOTTOM]) & (i[FIRST][TOP] < i[SECOND][TOP])):
+            if (((i[FIRST][TOP] > i[SECOND][BOTTOM]) & (i[FIRST][TOP] < i[SECOND][TOP]))) & (((i[FIRST][BOTTOM] > i[SECOND][BOTTOM]) & (i[FIRST][BOTTOM] < i[SECOND][TOP]))):
+                # if ((i[FIRST][BOTTOM] > i[SECOND][BOTTOM]) & (i[FIRST][BOTTOM] < i[SECOND][TOP])):
                 temp_y = i[FIRST][TOP]
-                corners.append((temp_x, temp_y))
-                if ((i[FIRST][BOTTOM] > i[SECOND][BOTTOM]) & (i[FIRST][BOTTOM] < i[SECOND][TOP])):
-                    temp_y = i[FIRST][BOTTOM]
-                    corners.append((temp_x, temp_y))
-            elif ((i[SECOND][TOP] > i[FIRST][BOTTOM]) & (i[SECOND][TOP] < i[FIRST][TOP])):
+                if temp_x == i[FIRST][RIGHT]:
+                    concavityQuadrant = 2
+                elif temp_x == i[SECOND][RIGHT]:
+                    concavityQuadrant = 1
+                corners.append((temp_x, temp_y, concavityQuadrant))
+                temp_y = i[FIRST][BOTTOM]
+                if temp_x == i[FIRST][RIGHT]:
+                    concavityQuadrant = 3
+                elif temp_x == i[SECOND][RIGHT]:
+                    concavityQuadrant = 4
+                corners.append((temp_x, temp_y, concavityQuadrant))
+            elif (((i[SECOND][TOP] > i[FIRST][BOTTOM]) & (i[SECOND][TOP] < i[FIRST][TOP]))) & ((i[SECOND][BOTTOM] > i[FIRST][BOTTOM]) & (i[SECOND][BOTTOM] < i[FIRST][TOP])):
+                # temp_y = i[SECOND][TOP]
+                # corners.append((temp_x, temp_y))
+                # if ((i[SECOND][BOTTOM] > i[FIRST][BOTTOM]) & (i[SECOND][BOTTOM] < i[FIRST][TOP])):
                 temp_y = i[SECOND][TOP]
-                corners.append((temp_x, temp_y))
-                if ((i[SECOND][BOTTOM] > i[FIRST][BOTTOM]) & (i[SECOND][BOTTOM] < i[FIRST][TOP])):
-                    temp_y = i[SECOND][BOTTOM]
-                    corners.append((temp_x, temp_y))
+                if temp_x == i[SECOND][RIGHT]:
+                    concavityQuadrant = 2
+                elif temp_x == i[FIRST][RIGHT]:
+                    concavityQuadrant = 1
+                corners.append((temp_x, temp_y, concavityQuadrant))
+                temp_y = i[SECOND][BOTTOM]
+                if temp_x == i[SECOND][RIGHT]:
+                    concavityQuadrant = 3
+                elif temp_x == i[FIRST][RIGHT]:
+                    concavityQuadrant = 4
+                corners.append((temp_x, temp_y, concavityQuadrant))
+
 
     # OUTPUT THE CORNERS LIST AND MARK THE CORNERS (WITH A RECTANGLE CENTERED AT THE CORNER) ON THE LAYOUT PREVIEW AND SOLUTION WINDOW
     print "Corners: "
     for i in corners:
-        print i
+        print (i[0], i[1]), i[2]
         r = Rectangle((i[0]-0.5, i[1]-0.5), 1, 1, facecolor='#E6E6E6', edgecolor='#FF3339') # draw a rectangle to mark the corner
-        ax.add_patch(r)
+        # t = Path({(i[0],i[1]),(i[0]+0.5,i[1]),(i[0],i[1]+0.5)}, None, True)
+        if i[2] == 1:
+            a = Arc((i[0]+1,i[1]+1), 2,2, theta1=180, theta2=270, facecolor='#E6E6E6', edgecolor='black', linewidth=2)
+        if i[2] == 2:
+            a = Arc((i[0]-1,i[1]+1), 2,2, theta1=270, theta2=360, facecolor='#E6E6E6', edgecolor='black', linewidth=2)
+        if i[2] == 3:
+            a = Arc((i[0]-1,i[1]-1), 2,2, theta1=0, theta2=90, facecolor='#E6E6E6', edgecolor='black', linewidth=2)
+        if i[2] == 4:
+            a = Arc((i[0]+1,i[1]-1), 2,2, theta1=90, theta2=180, facecolor='#E6E6E6', edgecolor='black', linewidth=2)
+        #ax.add_patch(r)
+        ax.add_patch(a)
+        # ax.add_patch(t)
 
     return corners, supertraces
 
@@ -395,15 +486,19 @@ def detect_corners_90(sym_layout2, ax):
     #     ax.add_patch(r)
 
 def detect_corners_270(sym_layout2, ax, innerCorners, supertraces):
-    '''ADJACENT CORNER DETECTION
+    '''OUTER CORNER DETECTION
     @author: Shilpi Mukherjee
-    @date: 15-JUN-2017
+    @date: 22-JUN-2017
     This function detects 270 degree outer trace corners for a selected solution layout.
-    It marks corners as a blue rectangle in the layout preview and saved solution window,
-    and displays the (x,y) coordinates of each corner in the console.
-    :param sym_layout: Symbolic Layout object
+    It marks corners with a grey fillet in the layout preview and saved solution window,
+    and displays ((x,y),q,r) of each corner in the console,
+    where (x,y) is the cartesian coordinate of the corner,
+    q is the direction of concavity of the fillet expressed in terms of quadrants (1, 2, 3, or 4), and
+    r is the limit on the size of the fillet (fillet radius) for corners of narrow traces
+    :param sym_layout2: Symbolic Layout object
     :param ax: subplot specifications
-    :param innerCorners: list of 90 degree inner corners'''
+    :param innerCorners: list of 90 degree inner corners
+    :param supertraces: list of supertraces'''
 
     # FIRST, FIND AND ISOLATE THE PHANTOM TRACES
     phantomSupertraces = []
@@ -423,48 +518,66 @@ def detect_corners_270(sym_layout2, ax, innerCorners, supertraces):
     for i in phantomSupertraces:
         print i.trace_rect.top, i.trace_rect.bottom, i.trace_rect.left, i.trace_rect.right
 
-    # REMOVE THE PHANTOM TRACES FROM ALL_TRACE_LINES
+    # REMOVE THE PHANTOM TRACES FROM ALL_TRACE_LINES OF THE DUPLICATE SYM_LAYOUT OBJECT
     print "len(sym_layout2.all_trace_lines) before removing phantoms:", len(sym_layout2.all_trace_lines)
     for i in phantomSupertraces:
         sym_layout2.all_trace_lines.remove(i)
     print "len(sym_layout2.all_trace_lines) after:", len(sym_layout2.all_trace_lines)
 
-    # THEN, FIND AND LIST ALL THE 270 DEGREE CORNERS ON THE LAYOUT
+    # MAKE A COPY OF INNERCORNERS AND STRIP concavityQuadrant INFO OFF OF THE innerCorners2 LIST
+    innerCorners2 = [(i,j) for (i,j,k) in innerCorners]
+
+    # THEN, SEARCH ALL_TRACE_LINES FOR ALL THE 270 DEGREE CORNERS (OUTER CORNERS)
     corners_270 = []
     print "Corners_270:"
     for i in sym_layout2.all_trace_lines:
-        tempCorner1 = (round(i.trace_rect.left,2), round(i.trace_rect.top,2))
-        tempCorner2 = (round(i.trace_rect.right,2), round(i.trace_rect.top,2))
-        tempCorner3 = (round(i.trace_rect.left, 2), round(i.trace_rect.bottom, 2))
-        tempCorner4 = (round(i.trace_rect.right, 2), round(i.trace_rect.bottom, 2))
-        if tempCorner1 not in innerCorners:
-            if tempCorner1 in corners_270:
-                corners_270.remove(tempCorner1)
+        # save out the four corners of each trace
+        arcRadius = round(min((i.trace_rect.top - i.trace_rect.bottom), (i.trace_rect.right - i.trace_rect.left), 2), 2)  # where 2 is the default arc radius
+        tempCorner4 = (round(i.trace_rect.left,2), round(i.trace_rect.top,2), 4, arcRadius)
+        tempCorner3 = (round(i.trace_rect.right,2), round(i.trace_rect.top,2), 3, arcRadius)
+        tempCorner1 = (round(i.trace_rect.left, 2), round(i.trace_rect.bottom, 2), 1, arcRadius)
+        tempCorner2 = (round(i.trace_rect.right, 2), round(i.trace_rect.bottom, 2), 2, arcRadius)
+        if (tempCorner1[0],tempCorner1[1]) not in innerCorners2:
+            if (tempCorner1[0], tempCorner1[1]) in [(i,j) for (i,j,k,l) in corners_270]:
+                index = [(i, j) for (i, j, k, l) in corners_270].index((tempCorner1[0], tempCorner1[1]))
+                corners_270.pop(index)
             else:
                 corners_270.append(tempCorner1)
-                print tempCorner1
-        if tempCorner2 not in innerCorners:
-            if tempCorner2 in corners_270:
-                corners_270.remove(tempCorner2)
+                print ((tempCorner1[0], tempCorner1[1]), tempCorner1[2], tempCorner1[3])
+        if (tempCorner2[0],tempCorner2[1]) not in innerCorners2:
+            if (tempCorner2[0], tempCorner2[1]) in [(i,j) for (i,j,k,l) in corners_270]:
+                index = [(i, j) for (i, j, k, l) in corners_270].index((tempCorner2[0], tempCorner2[1]))
+                corners_270.pop(index)
             else:
                 corners_270.append(tempCorner2)
-                print tempCorner2
-        if tempCorner3 not in innerCorners:
-            if tempCorner3 in corners_270:
-                corners_270.remove(tempCorner3)
+                print ((tempCorner2[0],tempCorner2[1]), tempCorner2[2], tempCorner2[3])
+        if (tempCorner3[0],tempCorner3[1]) not in innerCorners2:
+            if (tempCorner3[0], tempCorner3[1]) in [(i,j) for (i,j,k,l) in corners_270]:
+                index = [(i, j) for (i, j, k, l) in corners_270].index((tempCorner3[0], tempCorner3[1]))
+                corners_270.pop(index)
             else:
                 corners_270.append(tempCorner3)
-                print tempCorner3
-        if tempCorner4 not in innerCorners:
-            if tempCorner4 in corners_270:
-                corners_270.remove(tempCorner4)
+                print ((tempCorner3[0],tempCorner3[1]), tempCorner3[2], tempCorner3[3])
+        if (tempCorner4[0],tempCorner4[1]) not in innerCorners2:
+            if (tempCorner4[0], tempCorner4[1]) in [(i,j) for (i,j,k,l) in corners_270]:
+                index = [(i, j) for (i, j, k, l) in corners_270].index((tempCorner4[0], tempCorner4[1]))
+                corners_270.pop(index)
             else:
                 corners_270.append(tempCorner4)
-                print tempCorner4
+                print ((tempCorner4[0],tempCorner4[1]), tempCorner4[2], tempCorner4[3])
 
-    # MARK THE CORNERS WITH BLUE RECTANGLES
+    # MARK THE OUTER CORNERS WITH FILLETS WITH CUSTOMIZED ORIENTATION AND SIZE
     for i in corners_270:
-        r = Rectangle((i[0] - 0.5, i[1] - 0.5), 1, 1, facecolor='#E6E6E6', edgecolor='#3339FF')  # draw a rectangle to mark the corner
-        ax.add_patch(r)
+        #r = Rectangle((i[0] - 0.5, i[1] - 0.5), 1, 1, facecolor='#E6E6E6', edgecolor='#3339FF')  # draw a rectangle to mark the corner
+        if i[2] == 1:
+            a = Arc((i[0]+i[3]/2,i[1]+i[3]/2), i[3], i[3], theta1=180, theta2=270, facecolor='#E6E6E6', edgecolor='#333333', linewidth=2)
+        if i[2] == 2:
+            a = Arc((i[0]-i[3]/2,i[1]+i[3]/2), i[3], i[3], theta1=270, theta2=360, facecolor='#E6E6E6', edgecolor='#333333', linewidth=2)
+        if i[2] == 3:
+            a = Arc((i[0]-i[3]/2,i[1]-i[3]/2), i[3], i[3], theta1=0, theta2=90, facecolor='#E6E6E6', edgecolor='#333333', linewidth=2)
+        if i[2] == 4:
+            a = Arc((i[0]+i[3]/2,i[1]-i[3]/2), i[3], i[3], theta1=90, theta2=180, facecolor='#E6E6E6', edgecolor='#333333', linewidth=2)
+        #ax.add_patch(r)
+        ax.add_patch(a)
 
-# test Jun 15, 2017
+# test Jun 22, 2017
