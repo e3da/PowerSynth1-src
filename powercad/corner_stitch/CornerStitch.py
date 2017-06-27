@@ -20,6 +20,12 @@ class cell:
         self.y = y
         self.type = type
 
+    def printCell(self, printX = False, printY = False, printType = False):
+        if printX: print "x = ", self.x
+        if printY: print "y = ", self.y
+        if printType: print "type = ", self.type
+        return
+
 
 class cornerStitch:
     """
@@ -37,6 +43,12 @@ class cornerStitch:
         self.WEST = west #This is the bottom-left pointer to the bottommost cell on the left of this cell
         self.HINT = hint #this is the pointer to the hint tile of where to start looking for location
         self.cell = cell
+
+    def printNeighbors(self, printX = False, printY = False, printType = False):
+        if self.NORTH is not None: print "N", self.NORTH.cell.printCell(printX, printY, printType)
+        if self.EAST is not None: print "E", self.EAST.cell.printCell(printX, printY, printType)
+        if self.SOUTH is not None: print "S", self.SOUTH.cell.printCell(printX, printY, printType)
+        if self.WEST is not None: print "W", self.WEST.cell.printCell(printX, printY, printType)
 
 
     def getHeight(self): #returns the height
@@ -151,8 +163,6 @@ class layer:
 
         print tile1.cell.x
         print tile2.cell.x
-
-        print tile1.SOUTH== g
 
         if tile1.cell.x == tile2.cell.x and (tile1.NORTH == tile2 or tile1.SOUTH == tile2) and tile1.getWidth() == tile2.getWidth():
             print "insid efirst if"
@@ -523,11 +533,14 @@ class layer:
         """
         newCell = cornerStitch(None, None, None, None, None, cell(splitCell.cell.x, y,  splitCell.cell.type))
         self.stitchList.append(newCell)
+        print "SPLITCELL.SOUTH = ", splitCell.SOUTH.cell.x, splitCell.SOUTH.cell.y
 
         #assign new cell directions
         newCell.NORTH = splitCell.NORTH
         newCell.EAST = splitCell.EAST
         newCell.SOUTH = splitCell
+
+        print "SPLITCELL.SOUTH = ", splitCell.SOUTH.cell.x, splitCell.SOUTH.cell.y
 
         cc = splitCell.WEST
         if not cc == self.westBoundary:
@@ -535,20 +548,27 @@ class layer:
                 cc = cc.NORTH
         newCell.WEST = cc
 
-        #reassign splitCell N and E
-        splitCell.NORTH = newCell
+        print "SPLITCELL.SOUTH = ", splitCell.SOUTH.cell.x, splitCell.SOUTH.cell.y
 
+        #reassign splitCell N
+        splitCell.NORTH = newCell
+        #reassign splitCell E
         cc = newCell.EAST
         while cc.cell.y > newCell.cell.y: #Walk down the right (eastward)edge
             cc = cc.SOUTH
         splitCell.EAST = cc
 
+        print "SPLITCELL.SOUTH = ", splitCell.SOUTH.cell.x, splitCell.SOUTH.cell.y
+
         #reassign the neighboring cells directional poitners
         cc = newCell.NORTH #reassign the SOUTH pointers for the top edge along the split half
         if not cc == self.northBoundary:
             while cc.cell.x >= newCell.cell.x:
+                print "inside reassign NORTH", cc.cell.x, cc.cell.y
                 cc.SOUTH = newCell
                 cc = cc.WEST
+
+        print "SPLITCELL.SOUTH = ", splitCell.SOUTH.cell.x, splitCell.SOUTH.cell.y
 
         cc = newCell.EAST #reassign the WEST pointers for the right edge
         if not cc == self.eastBoundary:
@@ -556,11 +576,16 @@ class layer:
                 cc.WEST = newCell
                 cc = cc.SOUTH
 
+        print "SPLITCELL.SOUTH = ", splitCell.SOUTH.cell.x, splitCell.SOUTH.cell.y
+
+
         cc = newCell.WEST#reassign the SOUTH pointers for the right edge
         if not cc == self.westBoundary:
             while cc.cell.y + cc.getHeight() <= newCell.cell.y + newCell.getHeight():
                 cc.EAST = newCell
                 cc = cc.NORTH
+
+        print "SPLITCELL.SOUTH = ", splitCell.SOUTH.cell.x, splitCell.SOUTH.cell.y
 
         return newCell
 
@@ -652,8 +677,8 @@ if __name__ == '__main__':
 
     g.NORTH = exampleLayer.northBoundary
     g.EAST = exampleLayer.eastBoundary
-    g.WEST = d
-    g.SOUTH = f
+    g.WEST = f
+    g.SOUTH = d
 
     h.NORTH = k
     h.EAST = f
@@ -676,31 +701,9 @@ if __name__ == '__main__':
     #l.WEST = k
 
     foo = exampleLayer.findPoint(15, 8, exampleLayer.stitchList[0])
-    print "before"
-    print foo.NORTH.cell.x, foo.NORTH.cell.y
-    print foo.EAST.cell.x, foo.EAST.cell.y
-    print foo.SOUTH.cell.x, foo.SOUTH.cell.y
-    print foo.WEST.cell.x, foo.WEST.cell.y
+    print "BEgin test\n\n"
+    foo.printNeighbors(printX=True, printY=True)
 
-    exampleLayer.hSplit(d, 7)
-    foo = exampleLayer.findPoint(15, 8, exampleLayer.stitchList[0])
-    print "TOP"
-    print foo.NORTH.cell.x, foo.NORTH.cell.y
-    print foo.EAST.cell.x, foo.EAST.cell.y
-    print foo.SOUTH.cell.x, foo.SOUTH.cell.y
-    print foo.WEST.cell.x, foo.WEST.cell.y
-    foo = exampleLayer.findPoint(15, 6, exampleLayer.stitchList[0])
-    print "BOTTOM"
-    print foo.NORTH.cell.x, foo.NORTH.cell.y
-    print foo.EAST.cell.x, foo.EAST.cell.y
-    print foo.SOUTH.cell.x, foo.SOUTH.cell.y
-    print foo.WEST.cell.x, foo.WEST.cell.y
-
-    print "d"
-    print d.NORTH.cell.x, d.NORTH.cell.y
-    print d.EAST.cell.x, d.EAST.cell.y
-    print d.SOUTH.cell.x, d.SOUTH.cell.y
-    print d.WEST.cell.x, d.WEST.cell.y
 
     #print layer.findLayerDimensions([northBoundary, eastBoundary, southBoundary, westBoundary])
     #foo = exampleLayer.areaSearch(2, 10, 3, 20)
