@@ -129,25 +129,63 @@ class layer:
         if self.areaSearch(x1, y1, x2, y2): #check to ensure that the area is empty
             return "Area is not empty"
 
-        topLeft = self.findPoint(x1, y1)
-        bottomRight = self.findPoint(x2, y2)
+        topLeft = self.findPoint(x1, y1, self.stitchList[0])
+        bottomRight = self.findPoint(x2, y2, self.stitchList[0])
 
         if y1 != topLeft.cell.y and y1 != topLeft.NORTH.cell.y: #horizontally split the top edge
-            topLeft = self.hSplit(topLeft, y1).SOUTH
+            topLeft = self.hSplit(topLeft, y1).SOUTH #topleft will be the first cell below the split line
         if y2 != bottomRight.cell.y and y2 != bottomRight.NORTH.cell.y:#horizontally split the bottom edge
-            bottomRight = self.hSplit(topLeft, y2)
+            bottomRight = self.hSplit(bottomRight, y2)
 
-        cc = topLeft
-        while cc.cell.y >= y2:
-            print cc.cell.y, "inside while"
-            print cc.SOUTH.cell.y, "south y"
+        cc = self.findPoint(x1, y1, stitchList[0]) #first cell under y1, since hsplit returns the bottom of the two cells
+        print "cc"
+        cc.cell.printCell(True, True)
+
+        while cc.cell.y >= y2: #find all cells that need to be vsplit
             changeList.append(cc)
             cc = cc.SOUTH
+
+        for rect in changeList: #split vertically
+            if not rect.EAST.cell.x == x2: self.vSplit(rect, x2)
+            if not rect.cell.x == x1: self.vSplit(rect, x1)
+
+        changeList = []
+        cc = self.findPoint(x1, y1, self.stitchList[0])
+
+        while cc.cell.y >= y2: #find cells to be merged vertically
+            changeList.append(cc)
+            cc = cc.SOUTH
+            print"inside v alighn align"
+            cc.cell.printCell(True, True)
+
+        while len(changeList) > 1:
+            topCell = changeList.pop(0)
+            lowerCell = changeList.pop(0)
+            mergedCell = self.merge(topCell, lowerCell)
+            changeList.insert(0, mergedCell)
+
+        if len(changeList) > 0:
+            self.rectifyShadow(changeList[0]) #correcting empty cells that might be incorrectly split east of newCell
+
         return changeList
 
-    def split(self):
+    def rectifyShadow(self, caster):
         """
+        this checks the EAST of caster, to see if there are alligned empty cells that could be merged.
+        Primarily called after insert, but for simplicity and OOP's sake, I'm separating this from the other
         """
+        changeList = []
+        cc = caster.EAST
+        while cc.cell.x == caster.EAST.cell.x and (caster.EAST.cell.x + caster.EAST.getWidth() == cc.cell.x + cc.getWidth()):
+            changeList.append(cc)
+            cc = cc.SOUTH
+
+        while len(changeList) > 1:
+            topCell = changeList.pop(0)
+            lowerCell = changeList.pop(0)
+            mergedCell = self.merge(topCell, lowerCell)
+            changeList.insert(0, mergedCell)
+
         return
 
     def merge(self, tile1, tile2):
@@ -157,12 +195,8 @@ class layer:
         if(tile1.cell.type != tile2.cell.type):
             print "Types are not the same"
             return
-
-        print tile1.getWidth()
-        print tile2.getWidth()
-
-        print tile1.cell.x
-        print tile2.cell.x
+        tile1.cell.printCell(True, True)
+        tile2.cell.printCell(True, True)
 
         if tile1.cell.x == tile2.cell.x and (tile1.NORTH == tile2 or tile1.SOUTH == tile2) and tile1.getWidth() == tile2.getWidth():
             print "insid efirst if"
@@ -287,8 +321,8 @@ class layer:
         Find if there are solid tiles in the rectangle defined by two diagonal points
         x1y1 = the upper left corner, x2y2 = bottom right corner (as per the paper's instructions)        
         """
-        cc = self.findPoint(x1, y1) #the tile that contains the first corner point
-        secondCorner = self.findPoint(x2, y2) #the tile that contains the second(top right) corner
+        cc = self.findPoint(x1, y1, self.stitchList[0]) #the tile that contains the first corner point
+        secondCorner = self.findPoint(x2, y2, self.stitchList[0]) #the tile that contains the second(top right) corner
 
         if cc.cell.type == "SOLID":
             return True  # the bottom left corner is in a solid cell
@@ -320,7 +354,6 @@ class layer:
             return self.westBoundary
 
         cc = startCell #current cell
-        print "cc = ", cc.cell.x, cc.cell.y
         while (y < cc.cell.y or y > (cc.cell.y + cc.getHeight())):
             if (y >= cc.cell.y + cc.getHeight()):
                if(cc.NORTH is not None):
@@ -387,7 +420,7 @@ class layer:
         if direction == 'w':
             return self.findPoint((inputCell.cell.x + inputCell.getWidth() - .0001), inputCell.cell.y + inputCell.getHeight())
 
-    def drawLayer(self):
+    def drawLayer(self, truePointer = False):
         """
         Draw all cells in this layer with stitches pointing to their stitch neighbors
         TODO:
@@ -419,9 +452,13 @@ class layer:
             if cell.NORTH == self.northBoundary:
                 dx = 0
                 dy = 0
+            elif truePointer:
+                dx = cell.NORTH.cell.x + (.5 * cell.NORTH.getWidth()) - (cell.cell.x + cell.getWidth())
+                dy = cell.NORTH.cell.y + (.5 * cell.NORTH.getHeight()) - (cell.cell.y + cell.getHeight())
             else:
                 dx =  0
                 dy = .75
+
             ax1.arrow((cell.cell.x + cell.getWidth() - .5),
                       (cell.cell.y + cell.getHeight()- .5),
                       dx,
@@ -435,6 +472,9 @@ class layer:
             if cell.EAST == self.eastBoundary:
                 dx = 0
                 dy = 0
+            elif truePointer:
+                dx = cell.EAST.cell.x + (.5 * cell.EAST.getWidth()) - (cell.cell.x + cell.getWidth())
+                dy = cell.EAST.cell.y + (.5 * cell.EAST.getHeight()) - (cell.cell.y + cell.getHeight())
             else:
                 dx = .75
                 dy = 0
@@ -451,6 +491,9 @@ class layer:
             if cell.SOUTH == self.southBoundary:
                 dx = 0
                 dy = 0
+            elif truePointer:
+                dx = cell.SOUTH.cell.x + (.5 * cell.SOUTH.getWidth()) - (cell.cell.x)
+                dy = cell.SOUTH.cell.y + (.5 * cell.SOUTH.getHeight()) - (cell.cell.y)
             else:
                 dx =  0
                 dy = -.5
@@ -467,6 +510,9 @@ class layer:
             if cell.WEST == self.westBoundary:
                 dx = 0
                 dy = 0
+            elif truePointer:
+                dx = cell.WEST.cell.x + (.5 * cell.WEST.getWidth()) - (cell.cell.x)
+                dy = cell.WEST.cell.y + (.5 * cell.WEST.getHeight()) - (cell.cell.y)
             else:
                 dx =  -.5
                 dy = 0
@@ -495,8 +541,9 @@ class layer:
         newCell.WEST = splitCell
 
         cc = splitCell.SOUTH #Walk along the bottom edge until you find the cell that encompases x
-        while cc.cell.x + cc.getWidth() < x:
-            cc = cc.EAST
+        if cc != self.southBoundary:
+            while cc.cell.x + cc.getWidth() < x:
+                cc = cc.EAST
 
         newCell.SOUTH = cc
 
@@ -515,14 +562,17 @@ class layer:
             cc = cc.WEST
 
         cc = newCell.EAST #reassign the WEST pointers for the right edge
-        while cc.cell.y >= newCell.cell.y:
-            cc.WEST = newCell
-            cc = cc.SOUTH
+        if cc != self.eastBoundary:
+            while cc.cell.y >= newCell.cell.y:
+                cc.WEST = newCell
+                cc = cc.SOUTH
 
-        cc = newCell.SOUTH#reassign the SOUTH pointers for the right edge
-        while cc.cell.x + cc.getWidth() <= newCell.cell.x + newCell.getWidth():
-            cc.NORTH = newCell
-            cc = cc.EAST
+        cc = newCell.SOUTH#reassign the NORTH pointers for the bottom edge
+        if cc != self.southBoundary:
+            ccWidth = cc.getWidth() #I don't know why, but this solves getWidth() throwing an error otherwise
+            while cc != self.southBoundary and (cc.cell.x + ccWidth <= newCell.cell.x + newCell.getWidth()):
+                cc.NORTH = newCell
+                cc = cc.EAST
 
         print "vsplit", newCell.cell.x, newCell.cell.y
         return newCell
@@ -533,22 +583,17 @@ class layer:
         """
         newCell = cornerStitch(None, None, None, None, None, cell(splitCell.cell.x, y,  splitCell.cell.type))
         self.stitchList.append(newCell)
-        print "SPLITCELL.SOUTH = ", splitCell.SOUTH.cell.x, splitCell.SOUTH.cell.y
 
         #assign new cell directions
         newCell.NORTH = splitCell.NORTH
         newCell.EAST = splitCell.EAST
         newCell.SOUTH = splitCell
 
-        print "SPLITCELL.SOUTH = ", splitCell.SOUTH.cell.x, splitCell.SOUTH.cell.y
-
         cc = splitCell.WEST
         if not cc == self.westBoundary:
             while cc.cell.y + cc.getHeight() < y: #Walk upwards along the old west
                 cc = cc.NORTH
         newCell.WEST = cc
-
-        print "SPLITCELL.SOUTH = ", splitCell.SOUTH.cell.x, splitCell.SOUTH.cell.y
 
         #reassign splitCell N
         splitCell.NORTH = newCell
@@ -558,17 +603,12 @@ class layer:
             cc = cc.SOUTH
         splitCell.EAST = cc
 
-        print "SPLITCELL.SOUTH = ", splitCell.SOUTH.cell.x, splitCell.SOUTH.cell.y
-
         #reassign the neighboring cells directional poitners
         cc = newCell.NORTH #reassign the SOUTH pointers for the top edge along the split half
         if not cc == self.northBoundary:
             while cc.cell.x >= newCell.cell.x:
-                print "inside reassign NORTH", cc.cell.x, cc.cell.y
                 cc.SOUTH = newCell
                 cc = cc.WEST
-
-        print "SPLITCELL.SOUTH = ", splitCell.SOUTH.cell.x, splitCell.SOUTH.cell.y
 
         cc = newCell.EAST #reassign the WEST pointers for the right edge
         if not cc == self.eastBoundary:
@@ -576,16 +616,12 @@ class layer:
                 cc.WEST = newCell
                 cc = cc.SOUTH
 
-        print "SPLITCELL.SOUTH = ", splitCell.SOUTH.cell.x, splitCell.SOUTH.cell.y
-
-
         cc = newCell.WEST#reassign the SOUTH pointers for the right edge
         if not cc == self.westBoundary:
-            while cc.cell.y + cc.getHeight() <= newCell.cell.y + newCell.getHeight():
+            cc.cell.printCell(True, True)
+            while cc != self.northBoundary and cc.cell.y + cc.getHeight() <= newCell.cell.y + newCell.getHeight():
                 cc.EAST = newCell
                 cc = cc.NORTH
-
-        print "SPLITCELL.SOUTH = ", splitCell.SOUTH.cell.x, splitCell.SOUTH.cell.y
 
         return newCell
 
@@ -700,14 +736,14 @@ if __name__ == '__main__':
     #l.SOUTH = f
     #l.WEST = k
 
-    foo = exampleLayer.findPoint(15, 8, exampleLayer.stitchList[0])
-    print "BEgin test\n\n"
-    foo.printNeighbors(printX=True, printY=True)
 
-
+    foo = exampleLayer.insert(22, 20, 27, 25, "SOLID")
+    for x in foo:
+        print x
     #print layer.findLayerDimensions([northBoundary, eastBoundary, southBoundary, westBoundary])
     #foo = exampleLayer.areaSearch(2, 10, 3, 20)
     #print foo
-    exampleLayer.drawLayer()
+
+    exampleLayer.drawLayer(truePointer= True)
 
     #print layer.directedAreaEnumeration(5, 25, 15, 15)
