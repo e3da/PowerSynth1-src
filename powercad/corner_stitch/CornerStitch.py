@@ -119,36 +119,42 @@ class layer:
         self.westBoundary = cornerStitch(None, None, None, None, None, cell(-1000, 0, "EMPTY"))
         self.boundaries = [self.northBoundary, self.eastBoundary, self.westBoundary, self.southBoundary]
 
-    def insert(self, x1, y1, x2, y2, type):
+    def hInsert(self, x1, y1, x2, y2, type):
         """
         insert a new solid cell into the rectangle defined by the top left corner(x1, y1) and the bottom right corner
-        (x2, y2) and adds the new cell to the layer's stitchList
+        (x2, y2) and adds the new cell to the layer's stitchList, then corrects empty space horizontally
+        1. hsplit y1, y2
+        2. vsplit x1, x2
+        3. merge cells affected by 2
+        4. rectify shadows outside of the inserted cell
         """
-        changeList = [] #list of empty tiles that contain the area to be affected
+        changeList = [] #list of empty tiles that contain the area to be effected
 
-        if self.areaSearch(x1, y1, x2, y2): #check to ensure that the area is empty
+        if self.hAreaSearch(x1, y1, x2, y2): #check to ensure that the area is empty
             return "Area is not empty"
 
+        #step 1: hsplit y1 and y2
         topLeft = self.findPoint(x1, y1, self.stitchList[0])
         bottomRight = self.findPoint(x2, y2, self.stitchList[0])
 
+        #do not change the order of either the hsplit or vpslit sections, this will break it
         if y1 != topLeft.cell.y and y1 != topLeft.NORTH.cell.y: #horizontally split the top edge
             topLeft = self.hSplit(topLeft, y1).SOUTH #topleft will be the first cell below the split line
         if y2 != bottomRight.cell.y and y2 != bottomRight.NORTH.cell.y:#horizontally split the bottom edge
             bottomRight = self.hSplit(bottomRight, y2)
 
-        cc = self.findPoint(x1, y1, stitchList[0]) #first cell under y1, since hsplit returns the bottom of the two cells
-        print "cc"
-        cc.cell.printCell(True, True)
+        #step 2: vsplit x1 and x2
+        cc = self.findPoint(x1, y1, self.stitchList[0]) #first cell under y1
 
         while cc.cell.y >= y2: #find all cells that need to be vsplit
             changeList.append(cc)
             cc = cc.SOUTH
 
         for rect in changeList: #split vertically
-            if not rect.EAST.cell.x == x2: self.vSplit(rect, x2)
-            if not rect.cell.x == x1: self.vSplit(rect, x1)
+            if not rect.EAST.cell.x == x2: self.vSplit(rect, x2) #do not reorder these lines
+            if not rect.cell.x == x1: self.vSplit(rect, x1)#do not reorder these lines
 
+        #step 3: merge cells affected by 2
         changeList = []
         cc = self.findPoint(x1, y1, self.stitchList[0])
 
@@ -164,26 +170,149 @@ class layer:
             mergedCell = self.merge(topCell, lowerCell)
             changeList.insert(0, mergedCell)
 
+        #step 4: rectify shadows
         if len(changeList) > 0:
-            self.rectifyShadow(changeList[0]) #correcting empty cells that might be incorrectly split east of newCell
+            self.hRectifyShadow(changeList[0]) #correcting empty cells that might be incorrectly split east of newCell
 
         return changeList
 
-    def rectifyShadow(self, caster):
+    def vInsert(self, x1, y1, x2, y2, type):
         """
-        this checks the EAST of caster, to see if there are alligned empty cells that could be merged.
+        insert a new solid cell into the rectangle defined by the top left corner(x1, y1) and the bottom right corner
+        (x2, y2) and adds the new cell to the layer's stitchList, then corrects empty space vertically
+        Four steps:
+        1. vsplit x1, x2
+        2. hsplit y1, y2
+        3. merge cells affected by 2
+        4. rectify shadows outside of the inserted cell
+        """
+        changeList = [] #list of empty tiles that contain the area to be effected
+
+        if self.vAreaSearch(x1, y1, x2, y2): #check to ensure that the area is empty
+            return "Area is not empty"
+
+        #1. vsplit x1, x2
+        topLeft = self.findPoint(x1, y1, self.stitchList[0])
+        bottomRight = self.findPoint(x2, y2, self.stitchList[0])
+
+        #don't change the order of these, it won't work otherwise
+        if x2 != bottomRight.cell.x and x2 != bottomRight.NORTH.cell.x:  # vertically split the bottom edge
+            bottomRight = self.vSplit(bottomRight, x2)
+        if x1 != topLeft.cell.x and x1 != topLeft.EAST.cell.x: #vertically split the top edge
+            topLeft = self.vSplit(topLeft, x1).SOUTH #topleft will be the first cell below the split line
+
+        #2. hsplit y1, y2
+        cc = self.findPoint(x1, y1, self.stitchList[0]) #first cell under y1
+        cc = cc.EAST
+
+        while cc.cell.x < x2: #find all cells that need to be hsplit
+            changeList.append(cc)
+            cc = cc.EAST
+
+        print "changelist = "
+        for foo in changeList:
+            foo.cell.printCell(True, True)
+
+        for rect in changeList: #split horizontally
+            if not rect.cell.y == y1: self.hSplit(rect, y1) #order is vital, again
+            if not rect.NORTH.cell.y == y2: self.hSplit(rect, y2)
+
+        #3. merge cells affected by 2
+        changeList = []
+        cc = self.findPoint(x1, y1, self.stitchList[0])
+        cc = cc.EAST
+
+        while cc.cell.x < x2: #find cells to be merged horizontally
+            changeList.append(cc)
+            cc = cc.EAST
+            print"inside v alighn align"
+            cc.cell.printCell(True, True)
+
+        while len(changeList) > 1:
+            leftCell = changeList.pop(0)
+            rightCell = changeList.pop(0)
+            mergedCell = self.merge(leftCell, rightCell)
+            changeList.insert(0, mergedCell)
+
+        print changeList[0]
+        if len(changeList) > 0:
+            self.vRectifyShadow(changeList[0]) #correcting empty cells that might be incorrectly split east of newCell
+
+        return changeList
+
+    def hRectifyShadow(self, caster):
+        """
+        this checks the EAST and WEST of caster, to see if there are alligned empty cells that could be merged.
         Primarily called after insert, but for simplicity and OOP's sake, I'm separating this from the other
         """
         changeList = []
         cc = caster.EAST
-        while cc.cell.x == caster.EAST.cell.x and (caster.EAST.cell.x + caster.EAST.getWidth() == cc.cell.x + cc.getWidth()):
-            changeList.append(cc)
-            cc = cc.SOUTH
+        if not cc == self.eastBoundary:
+            while (cc != self.southBoundary
+                   and cc.cell.x == caster.EAST.cell.x
+                   and (caster.EAST.cell.x + caster.EAST.getWidth() == cc.cell.x + cc.getWidth())):
+
+                changeList.append(cc)
+                cc = cc.SOUTH
 
         while len(changeList) > 1:
             topCell = changeList.pop(0)
             lowerCell = changeList.pop(0)
             mergedCell = self.merge(topCell, lowerCell)
+            changeList.insert(0, mergedCell)
+
+        changeList = []
+        cc = caster.WEST
+
+        if not cc == self.westBoundary:
+            while (cc != self.northBoundary
+                   and cc.cell.x == caster.WEST.cell.x
+                   and (caster.WEST.cell.x + caster.WEST.getWidth() == cc.cell.x + cc.getWidth())):
+
+                changeList.append(cc)
+                cc = cc.NORTH
+
+        while len(changeList) > 1:
+            topCell = changeList.pop(0)
+            lowerCell = changeList.pop(0)
+            mergedCell = self.merge(topCell, lowerCell)
+            changeList.insert(0, mergedCell)
+
+        return
+
+    def vRectifyShadow(self, caster):
+        """
+        this checks the NORTH and SOUTH of caster, to see if there are alligned empty cells that could be merged.
+        Primarily called after insert, but for simplicity and OOP's sake, I'm separating this from the other
+        """
+        changeList = []
+        cc = caster.NORTH
+        while (cc != self.northBoundary
+               and cc != self.westBoundary
+               and cc.cell.y == caster.NORTH.cell.y
+               and (caster.NORTH.cell.y + caster.NORTH.getHeight() == cc.cell.y + cc.getHeight())):
+            changeList.append(cc)
+            cc = cc.WEST
+
+        while len(changeList) > 1:
+            rightCell = changeList.pop(0)
+            leftCell = changeList.pop(0)
+            mergedCell = self.merge(rightCell, leftCell)
+            changeList.insert(0, mergedCell)
+
+        changeList = []
+        cc = caster.SOUTH
+        while (cc != self.southBoundary
+               and cc!=self.eastBoundary
+               and cc.cell.y == caster.SOUTH.cell.y
+               and (caster.SOUTH.cell.y + caster.SOUTH.getHeight() == cc.cell.y + cc.getHeight())):
+            changeList.append(cc)
+            cc = cc.EAST
+
+        while len(changeList) > 1:
+            rightCell = changeList.pop(0)
+            leftCell = changeList.pop(0)
+            mergedCell = self.merge(rightCell, leftCell)
             changeList.insert(0, mergedCell)
 
         return
@@ -316,10 +445,11 @@ class layer:
         """
         return
 
-    def areaSearch(self, x1, y1, x2, y2):
+    def hAreaSearch(self, x1, y1, x2, y2):
         """
         Find if there are solid tiles in the rectangle defined by two diagonal points
-        x1y1 = the upper left corner, x2y2 = bottom right corner (as per the paper's instructions)        
+        x1y1 = the upper left corner, x2y2 = bottom right corner (as per the paper's instructions)    
+        this is designed with horizontally aligned space assumptions in mind
         """
         cc = self.findPoint(x1, y1, self.stitchList[0]) #the tile that contains the first corner point
         secondCorner = self.findPoint(x2, y2, self.stitchList[0]) #the tile that contains the second(top right) corner
@@ -337,6 +467,31 @@ class layer:
             cc = cc.SOUTH #check the next lowest cell
             while(cc.cell.x + cc.getWidth() < x1): #making sure that the CurrentCell's right edge lays within the area
                 cc = cc.EAST # if it doesn't, traverse the top right stitch to find the next cell of interest
+
+        return False
+
+    def vAreaSearch(self, x1, y1, x2, y2):
+        """
+        Find if there are solid tiles in the rectangle defined by two diagonal points
+        x1y1 = the upper left corner, x2y2 = bottom right corner (as per the paper's instructions)        
+        this is designed with vertically aligned space assumptions in mind
+        """
+        cc = self.findPoint(x1, y1, self.stitchList[0]) #the tile that contains the first corner point
+        secondCorner = self.findPoint(x2, y2, self.stitchList[0]) #the tile that contains the second(top right) corner
+
+        if cc.cell.type == "SOLID":
+            return True  # the bottom left corner is in a solid cell
+        elif cc.cell.y + cc.getHeight() < y1:
+            return True  # the corner cell is empty but touches a solid cell within the search area
+
+        while(cc.EAST.cell.x < x2):
+            if cc.cell.type == "SOLID":
+                return True  # the bottom left corner is in a solid cell
+            elif cc.cell.y + cc.getHeight() < y1:
+                return True  # the corner cell is empty but touches a solid cell within the search area
+            cc = cc.EAST #check the next rightmost cell
+            while (cc.cell.y + cc.getHeight() < y2): #making sure that the CurrentCell's right edge lays within the area
+                cc = cc.NORTH # if it doesn't, traverse the top right stitch to find the next cell of interest
 
         return False
 
@@ -431,7 +586,7 @@ class layer:
         """
         fig1 = matplotlib.pyplot.figure()
 
-        for cell in stitchList:
+        for cell in self.stitchList:
 
             ax1 = fig1.add_subplot(111, aspect='equal')
             if not cell.cell.type == "EMPTY":
@@ -581,6 +736,8 @@ class layer:
         """
         newCell is the top half of the split
         """
+        print "hsplit, y = ", y
+        splitCell.cell.printCell(True, True)
         newCell = cornerStitch(None, None, None, None, None, cell(splitCell.cell.x, y,  splitCell.cell.type))
         self.stitchList.append(newCell)
 
@@ -619,6 +776,7 @@ class layer:
         cc = newCell.WEST#reassign the SOUTH pointers for the right edge
         if not cc == self.westBoundary:
             cc.cell.printCell(True, True)
+            cc.printNeighbors(True, True)
             while cc != self.northBoundary and cc.cell.y + cc.getHeight() <= newCell.cell.y + newCell.getHeight():
                 cc.EAST = newCell
                 cc = cc.NORTH
@@ -677,9 +835,12 @@ if __name__ == '__main__':
     # j = cornerStitch(None, None, None, None, None, cell(0, 17, "EMPTY"))
     k = cornerStitch(None, None, None, None, None, cell(7, 12, "SOLID"))
     #l = cornerStitch(None, None, None, None, None, cell(15, 15, "EMPTY"))
+    emptyPlane = cornerStitch(None, None, None, None, None, cell(0, 0, "EMPTY"))
 
     stitchList = [a,b,c,d,e,f,g,h,i,k]
+    emptyStitchList = [emptyPlane]
     exampleLayer = layer(stitchList, 30, 30)
+    emptyExample = layer(emptyStitchList, 30, 30)
 
     a.NORTH = d
     a.EAST = exampleLayer.eastBoundary
@@ -731,19 +892,21 @@ if __name__ == '__main__':
     k.SOUTH = h
     k.WEST = i
 
-    #l.NORTH = exampleLayer.northBoundary
-    #l.EAST = exampleLayer.eastBoundary
-    #l.SOUTH = f
-    #l.WEST = k
+    emptyPlane.NORTH = emptyExample.northBoundary
+    emptyPlane.EAST = emptyExample.eastBoundary
+    emptyPlane.SOUTH = emptyExample.southBoundary
+    emptyPlane.WEST = emptyExample.westBoundary
 
 
-    foo = exampleLayer.insert(22, 20, 27, 25, "SOLID")
-    for x in foo:
-        print x
+    #exampleLayer.vSplit(g, 25)
+    #foo = exampleLayer.vInsert(22, 20, 27, 15, "SOLID")
+
     #print layer.findLayerDimensions([northBoundary, eastBoundary, southBoundary, westBoundary])
     #foo = exampleLayer.areaSearch(2, 10, 3, 20)
     #print foo
 
-    exampleLayer.drawLayer(truePointer= True)
+    emptyExample.vInsert(5, 20, 15, 15, "SOLID")
+    print emptyExample.vInsert(10, 10, 20, 5, "SOLID")
+    emptyExample.drawLayer(truePointer=True)
 
     #print layer.directedAreaEnumeration(5, 25, 15, 15)
