@@ -9,6 +9,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from matplotlib import pylab
+from sets import Set
 
 class cell:
     """
@@ -161,8 +162,6 @@ class layer:
         while cc.cell.y >= y2: #find cells to be merged vertically
             changeList.append(cc)
             cc = cc.SOUTH
-            print"inside v alighn align"
-            cc.cell.printCell(True, True)
 
         while len(changeList) > 1:
             topCell = changeList.pop(0)
@@ -209,10 +208,6 @@ class layer:
             changeList.append(cc)
             cc = cc.EAST
 
-        print "changelist = "
-        for foo in changeList:
-            foo.cell.printCell(True, True)
-
         for rect in changeList: #split horizontally
             if not rect.cell.y == y1: self.hSplit(rect, y1) #order is vital, again
             if not rect.NORTH.cell.y == y2: self.hSplit(rect, y2)
@@ -221,12 +216,11 @@ class layer:
         changeList = []
         cc = self.findPoint(x1, y1, self.stitchList[0])
         cc = cc.EAST
+        cc = cc.SOUTH
 
         while cc.cell.x < x2: #find cells to be merged horizontally
             changeList.append(cc)
             cc = cc.EAST
-            print"inside v alighn align"
-            cc.cell.printCell(True, True)
 
         while len(changeList) > 1:
             leftCell = changeList.pop(0)
@@ -244,6 +238,12 @@ class layer:
         """
         this checks the EAST and WEST of caster, to see if there are alligned empty cells that could be merged.
         Primarily called after insert, but for simplicity and OOP's sake, I'm separating this from the other
+        **************************
+        
+        REPLACE WITH MODIFIED vRectifyShadow
+        
+        
+        **************************
         """
         changeList = []
         cc = caster.EAST
@@ -285,35 +285,52 @@ class layer:
         this checks the NORTH and SOUTH of caster, to see if there are alligned empty cells that could be merged.
         Primarily called after insert, but for simplicity and OOP's sake, I'm separating this from the other
         """
-        changeList = []
+        changeSet = Set()
         cc = caster.NORTH
+        lastCell = caster.NORTH
+        count = 0
         while (cc != self.northBoundary
                and cc != self.westBoundary
-               and cc.cell.y == caster.NORTH.cell.y
-               and (caster.NORTH.cell.y + caster.NORTH.getHeight() == cc.cell.y + cc.getHeight())):
-            changeList.append(cc)
+               and cc.cell.y == lastCell.cell.y
+               and cc.cell.x >= caster.cell.x):
+            if (lastCell.cell.y + lastCell.getHeight() == cc.cell.y + cc.getHeight() and lastCell.cell.x != cc.cell.x):
+                changeSet.add(cc)
+                changeSet.add(lastCell)
             cc = cc.WEST
+            count += 1
+            if count != 1:
+                lastCell = lastCell.WEST
 
-        while len(changeList) > 1:
-            rightCell = changeList.pop(0)
-            leftCell = changeList.pop(0)
+        while len(changeSet) > 1:
+            rightCell = changeSet.pop()
+            leftCell = changeSet.pop()
             mergedCell = self.merge(rightCell, leftCell)
-            changeList.insert(0, mergedCell)
+            changeSet.add(mergedCell)
 
-        changeList = []
+        changeSet = Set()
         cc = caster.SOUTH
+        lastCell = caster.SOUTH
+        count = 0
         while (cc != self.southBoundary
                and cc!=self.eastBoundary
-               and cc.cell.y == caster.SOUTH.cell.y
-               and (caster.SOUTH.cell.y + caster.SOUTH.getHeight() == cc.cell.y + cc.getHeight())):
-            changeList.append(cc)
-            cc = cc.EAST
+               and cc.cell.y + cc.getHeight() == lastCell.cell.y + lastCell.getHeight()
+               and (cc.cell.x + cc.getWidth() <= caster.cell.x + caster.getWidth())):
+            if (lastCell.cell.y  == cc.cell.y  and lastCell.cell.x != cc.cell.x):
+                changeSet.add(cc)
+                changeSet.add(lastCell)
 
-        while len(changeList) > 1:
-            rightCell = changeList.pop(0)
-            leftCell = changeList.pop(0)
+            cc = cc.EAST
+            count += 1
+            if count != 1:
+                lastCell = lastCell.EAST
+
+        for foo in changeSet:
+            foo.cell.printCell(True, True)
+        while len(changeSet) > 1:
+            rightCell = changeSet.pop()
+            leftCell = changeSet.pop()
             mergedCell = self.merge(rightCell, leftCell)
-            changeList.insert(0, mergedCell)
+            changeSet.add(mergedCell)
 
         return
 
@@ -324,9 +341,20 @@ class layer:
         if(tile1.cell.type != tile2.cell.type):
             print "Types are not the same"
             return
+        """
+        print tile1.EAST == tile2
+        print tile1.WEST == tile2
+        print tile2.EAST == tile1
+        print tile2.WEST == tile1
+        print "1"
         tile1.cell.printCell(True, True)
+        tile1.printNeighbors(True, True)
+        print tile1.getHeight()
+        print "2"
         tile2.cell.printCell(True, True)
-
+        tile2.printNeighbors(True, True)
+        print tile2.getHeight()
+        """
         if tile1.cell.x == tile2.cell.x and (tile1.NORTH == tile2 or tile1.SOUTH == tile2) and tile1.getWidth() == tile2.getWidth():
             print "insid efirst if"
             basis = tile1 if tile1.cell.y < tile2.cell.y else tile2
@@ -383,7 +411,6 @@ class layer:
                 self.stitchList.remove(tile1)
             else:
                 self.stitchList.remove(tile2)
-
         else:
             return ("Tiles are not alligned")
 
@@ -748,7 +775,7 @@ class layer:
 
         cc = splitCell.WEST
         if not cc == self.westBoundary:
-            while cc.cell.y + cc.getHeight() < y: #Walk upwards along the old west
+            while cc.cell.y + cc.getHeight() <= y: #Walk upwards along the old west
                 cc = cc.NORTH
         newCell.WEST = cc
 
@@ -906,7 +933,8 @@ if __name__ == '__main__':
     #print foo
 
     emptyExample.vInsert(5, 20, 15, 15, "SOLID")
-    print emptyExample.vInsert(10, 10, 20, 5, "SOLID")
-    emptyExample.drawLayer(truePointer=True)
+    emptyExample.vInsert(10, 10, 20, 5, "SOLID")
+    emptyExample.vInsert(7, 14, 17, 11, "SOLID")
+    emptyExample.drawLayer(truePointer=False)
 
     #print layer.directedAreaEnumeration(5, 25, 15, 15)
