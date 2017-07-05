@@ -1325,29 +1325,14 @@ class ProjectBuilder(QtGui.QMainWindow):
         # add mdi window for viewing
         sol = self.project.solutions[self.ui.lst_solution.row(item)]
         self.project.symb_layout.gen_solution_layout(sol.index)
-        m = SolutionWindow(sol, self.project.symb_layout)
+        filletFlag = False
+        m = SolutionWindow(sol, self.project.symb_layout, filletFlag)
         self.ui.mdiArea.addSubWindow(m)
         m.show()
-        # print "len(m.sym_layout.all_trace_lines)", len(m.sym_layout.all_trace_lines)
-        # proxy_symb_layout = self.project.symb_layout
-        # proxy_symb_layout.corners = []
-        # coord = (11,22)
-        # proxy_symb_layout.corners.append(coord)
-        # coord2 = (12, 23)
-        # proxy_symb_layout.corners.append(coord2)
-
-        # m2 = SolutionWindow(sol, proxy_symb_layout)
-        # print "len(self.project.symb_layout.all_trace_lines): ", len(self.project.symb_layout.all_trace_lines)
-
-        # self.ui.mdiArea.addSubWindow(m2)
-
-        # m2.show()
-        # print "m.solution.index: ", m.solution.index
-        # print "m.sym_layout: ", m.sym_layout
-        # print "m.sym_layout.all_trace_lines: ", m.sym_layout.all_trace_lines
-        # print "Layout trace rectangles (top, bottom, left, right):"
-        # for obj in m.sym_layout.all_trace_lines:
-        #     print obj.trace_rect.top, obj.trace_rect.bottom, obj.trace_rect.left, obj.trace_rect.right
+        filletFlag = True
+        m2 = SolutionWindow(sol, self.project.symb_layout, filletFlag)
+        self.ui.mdiArea.addSubWindow(m2) # open up another window with filleted layout
+        m2.show()
         
         '''
         # create hspice export netlist (test)

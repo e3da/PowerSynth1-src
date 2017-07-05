@@ -42,7 +42,7 @@ def plot_svg_objs(layout):
     plt.show()
     print "plot_svg_objs() completed."
 
-def plot_layout(sym_layout,ax = plt.subplot('111', adjustable='box', aspect=1.0), new_window=True, plot_row_col=False):
+def plot_layout(sym_layout, filletFlag, ax = plt.subplot('111', adjustable='box', aspect=1.0), new_window=True, plot_row_col=False):
     print "plot_layout() started."
     hlist = sym_layout.h_rowcol_list
     vlist = sym_layout.v_rowcol_list
@@ -58,9 +58,10 @@ def plot_layout(sym_layout,ax = plt.subplot('111', adjustable='box', aspect=1.0)
     ax.add_patch(r)
 
     # Detect corners for filleting
-    sym_layout2 = copy.deepcopy(sym_layout) # create a deepcopy of sym_layout so that phantom traces can be removed
-    fillets, supertraces = detect_corners_90(sym_layout2, ax) # detect 90 degree inner corners for intersecting traces
-    detect_corners_270(sym_layout2, ax, fillets, supertraces) # detect 270 degree outer corners for all traces
+    if filletFlag:
+        sym_layout2 = copy.deepcopy(sym_layout) # create a deepcopy of sym_layout so that phantom traces can be removed
+        fillets, supertraces = detect_corners_90(sym_layout2, ax) # detect 90 degree inner corners for intersecting traces
+        detect_corners_270(sym_layout2, ax, fillets, supertraces) # detect 270 degree outer corners for all traces
 
     # Setup viewing bounds
     ax.set_xlim(sub_rect.left - 1.0, sub_rect.right + 1.0)

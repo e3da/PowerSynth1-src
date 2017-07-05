@@ -393,7 +393,8 @@ class GrapheneWindow(QtGui.QMainWindow):
             # plot layout
             self.preview_figure.clear()
             self.preview_axes = self.preview_figure.add_subplot(1,1,1, aspect=1.0)
-            plot_layout(self.sym_layout, self.preview_axes, new_window=False)
+            filletFlag = False
+            plot_layout(self.sym_layout, filletFlag, self.preview_axes, new_window=False)
             self.preview_canvas.draw()
         
     def save_solution(self):

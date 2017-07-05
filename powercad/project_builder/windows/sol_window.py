@@ -28,7 +28,7 @@ from powercad.drc.design_rule_check import DesignRuleCheck
 
 class SolutionWindow(QtGui.QWidget):
     """Solution windows that show up in MDI area"""
-    def __init__(self, solution, sym_layout):
+    def __init__(self, solution, sym_layout, filletFlag):
         """Set up the solution window"""
         QtGui.QWidget.__init__(self)
         self.ui = Ui_layout_form()
@@ -44,6 +44,7 @@ class SolutionWindow(QtGui.QWidget):
         
         self.solution = solution
         self.sym_layout = sym_layout
+        #self.filletFlag = filletFlag
         
         # display objective data in table widget
         self.ui.tbl_info.setRowCount(len(solution.params))
@@ -65,7 +66,7 @@ class SolutionWindow(QtGui.QWidget):
         self.ui.preview_layout.addWidget(canvas,0,0,1,1)
         
         ax = fig.add_subplot(111, aspect=1.0)
-        plot_layout(sym_layout, ax, new_window=False)
+        plot_layout(sym_layout, filletFlag, ax, new_window=False)
         canvas.draw()
         
     def run_drc(self):
