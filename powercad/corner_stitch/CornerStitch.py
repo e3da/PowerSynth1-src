@@ -460,8 +460,8 @@ class layer(object):
         newCell = cornerStitch(None, None, None, None, None, cell(x, splitCell.cell.y, splitCell.cell.type))
         self.stitchList.append(newCell) #figure out how to fix this and pass in by reference*
 
-        print newCell, self.stitchList[-1]
-        print "****VSPLIT", newCell is self.stitchList[-1]
+        #print newCell, self.stitchList[-1]
+        #print "****VSPLIT", newCell is self.stitchList[-1]
 
         #assign newCell neighbors
         newCell.NORTH = splitCell.NORTH
@@ -470,7 +470,7 @@ class layer(object):
 
         cc = splitCell.SOUTH #Walk along the bottom edge until you find the cell that encompases x
         if cc != self.southBoundary:
-            while cc.cell.x + cc.getWidth() < x:
+            while cc.cell.x + cc.getWidth() <= x:
                 cc = cc.EAST
 
         newCell.SOUTH = cc
@@ -498,8 +498,9 @@ class layer(object):
 
         cc = newCell.SOUTH#reassign the NORTH pointers for the bottom edge
         if cc != self.southBoundary:
+            cc.SOUTH.cell.printCell(True, True)
             ccWidth = cc.getWidth() #I don't know why, but this solves getWidth() throwing an error otherwise
-            while cc != self.southBoundary and (cc.cell.x + ccWidth <= newCell.cell.x + newCell.getWidth()):
+            while cc != self.eastBoundary and (cc.cell.x + ccWidth <= newCell.cell.x + newCell.getWidth()):
                 cc.NORTH = newCell
                 cc = cc.EAST
                 if cc != self.eastBoundary:
@@ -533,7 +534,7 @@ class layer(object):
         splitCell.NORTH = newCell
         #reassign splitCell E
         cc = newCell.EAST
-        while cc.cell.y > newCell.cell.y: #Walk down the right (eastward)edge
+        while cc.cell.y >= newCell.cell.y: #Walk down the right (eastward)edge
             cc = cc.SOUTH
         splitCell.EAST = cc
 
@@ -550,13 +551,32 @@ class layer(object):
                 cc.WEST = newCell
                 cc = cc.SOUTH
 
-        cc = newCell.WEST#reassign the SOUTH pointers for the right edge
+        cc = newCell.WEST#reassign the EAST pointers for the right edge
+
         if not cc == self.westBoundary:
             while cc != self.northBoundary and cc.cell.y + cc.getHeight() <= newCell.cell.y + newCell.getHeight():
                 cc.EAST = newCell
                 cc = cc.NORTH
 
         return newCell
+
+    def orderInput(self, x1, y1, x2, y2):
+        """
+        Takes two input poitns and orders them so that x1, y1 correspond to the top left corner, and x2, y2 
+        correspond to the lower right corner. Called in insert functions to make sure that the input is properly
+        ordered, as out of order coordinates can cause weird behavior.
+        """
+        if x2 < x1:
+            holder = x2
+            x2 = x1
+            x1 = holder
+        if y2 > y1:
+            holder = y2
+            y2 = y1
+            y1 = holder
+
+        return [x1, y1, x2, y2]
+
 
 class vLayer(layer):
     def insert(self, x1, y1, x2, y2, type):
@@ -571,19 +591,11 @@ class vLayer(layer):
         """
         changeList = [] #list of empty tiles that contain the area to be effected
 
-        if x2 < x1:
-            holder = x2
-            x2 = x1
-            x1 = holder
-        if y2 > y1:
-            holder = y2
-            y2 = y1
-            y1 = holder
-
-        print "x1 = ", x1
-        print "x2 = ", x2
-        print "y1 = ", y1
-        print "y2 = ", y2
+        foo = self.orderInput(x1, y1, x2, y2)
+        x1 = foo[0]
+        y1 = foo[1]
+        x2 = foo[2]
+        y2 = foo[3]
 
         if self.areaSearch(x1, y1, x2, y2): #check to ensure that the area is empty
             return "Area is not empty"
@@ -593,44 +605,54 @@ class vLayer(layer):
         bottomRight = self.findPoint(x2, y2, self.stitchList[0])
 
         #don't change the order of these, it won't work otherwise
-        if x2 != bottomRight.cell.x and x2 != bottomRight.NORTH.cell.x:  # vertically split the bottom edge
+        if x2 != bottomRight.cell.x and x2 != bottomRight.EAST.cell.x:  # vertically split the bottom edge
             bottomRight = self.vSplit(bottomRight, x2)
-            print "bottomRight = "
-            bottomRight.cell.printCell(True, True)
         if x1 != topLeft.cell.x and x1 != topLeft.EAST.cell.x: #vertically split the top edge
             topLeft = self.vSplit(topLeft, x1).SOUTH #topleft will be the first cell below the split line
 
-        #while cc.cell.x < x2: #find all cells that need to be hsplit
-        #    changeList.append(cc)
-        #    cc = cc.EAST
-
         #2. hsplit y1, y2
         cc = self.findPoint(x2, y2, self.stitchList[0])
-        foo = cc.cell
         while cc.cell.x >= x1:
-            print "cc = "
-            cc.cell.printCell(True, True)
-            if not cc.cell.y == y2: cc = self.hSplit(cc, y2) #order is vital, again
-            #self.drawLayer(truePointer=True)
-            if not cc.NORTH.cell.y == y1: cc = self.hSplit(foo, y1)
-#            cc = cc.NORTH
-#            cc = cc.WEST
+            changeList.append(cc)
+            cc = cc.WEST
+            while cc.cell.y + cc.getHeight() <= y2:
+                cc = cc.NORTH
 
+        print "before asdf"
+        for foo in changeList:
+            foo.cell.printCell(True, True)
+
+        for rect in changeList:
+            if not rect.NORTH.cell.y == y1: self.hSplit(rect, y1)
+            if not rect.cell.y == y2: self.hSplit(rect, y2) #order is vital, again
 
         #3. merge cells affected by 2
         changeList = []
         cc = self.findPoint(x1, y1, self.stitchList[0])
         cc = cc.EAST
-        cc = cc.SOUTH
+        while cc.cell.y >= y1:
+            cc = cc.SOUTH
+        #print "cc = "
+        #cc.cell.printCell(True, True)
 
         while cc.cell.x < x2: #find cells to be merged horizontally
             changeList.append(cc)
             cc = cc.EAST
 
-        for cell in changeList:
-            cell.cell.printCell(True, True)
-        print "\n\n"
-        
+        print "begin asdf"
+        for asdf in changeList:
+            asdf.cell.printCell(True, True)
+
+        while len(changeList) > 1:
+            topCell = changeList.pop(0)
+            lowerCell = changeList.pop(0)
+            #print "insdie while"
+            #topCell.cell.printCell(True, True)
+            #lowerCell.cell.printCell(True, True)
+            mergedCell = self.merge(topCell, lowerCell)
+            changeList.insert(0, mergedCell)
+        print "outside while"
+       
         while len(changeList) > 1:
             leftCell = changeList.pop(0)
             rightCell = changeList.pop(0)
@@ -640,9 +662,14 @@ class vLayer(layer):
             rightCell.cell.printCell(True, True)
             mergedCell = self.merge(leftCell, rightCell)
             changeList.insert(0, mergedCell)
+     
+        for cell in changeList:
+            print cell
+#            cell.cell.printCell(True, True)
+        print "\n\n"
 
-        print changeList[0]
         if len(changeList) > 0:
+            changeList[0].cell.type = type
             self.rectifyShadow(changeList[0]) #correcting empty cells that might be incorrectly split east of newCell
 
         return changeList
@@ -652,7 +679,59 @@ class vLayer(layer):
         this checks the NORTH and SOUTH of caster, to see if there are alligned empty cells that could be merged.
         Primarily called after insert, but for simplicity and OOP's sake, I'm separating this from the other
         """
-        changeSet = Set()
+        changeSet = []
+
+        cc = caster.NORTH #recitfy north side, walking downwards
+
+        while (cc != self.northBoundary and cc != self.westBoundary and cc.cell.x >= caster.cell.x):
+            changeSet.append(cc)
+            cc = cc.WEST
+
+        i = 0
+        j = 1
+        while j < len(changeSet): #merge all cells with the same width along the northern side
+            topCell = changeSet[i]
+            lowerCell = changeSet[j]
+            mergedCell = self.merge(topCell, lowerCell)
+            if mergedCell == "Tiles are not alligned": #the tiles couldn't merge because they didn't line up
+                i += 1
+                if j < len(changeSet) - 1:
+                    j += 1
+            else:
+                del changeSet[j]
+                changeSet[i] = mergedCell
+                if j < len(changeSet) - 1:
+                    j += 1
+
+        cc = caster.SOUTH#recitfy SOUTH side, walking eastwards
+        changeSet = []
+
+        while (cc != self.southBoundary and cc != self.eastBoundary and cc.cell.x < caster.cell.x + caster.getWidth()):
+            changeSet.append(cc)
+            cc = cc.EAST
+
+        for foo in changeSet:
+            foo.cell.printCell(True, True)
+            print "\n\n"
+
+        i = 0
+        j = 1
+        while j < len(changeSet) and i < len(changeSet): #merge all cells with the same width along the northern side
+            topCell = changeSet[i]
+            lowerCell = changeSet[j]
+            mergedCell = self.merge(topCell, lowerCell)
+            if mergedCell == "Tiles are not alligned": #the tiles couldn't merge because they didn't line up
+                i += 1
+                print "i = ", i
+                if j < len(changeSet) - 1:
+                    j += 1
+            else:
+                del changeSet[j]
+                changeSet[i] = mergedCell
+                if j < len(changeSet) - 1:
+                    j += 1
+
+        """changeSet = Set()
         cc = caster.NORTH
         lastCell = caster.NORTH
         count = 0
@@ -698,7 +777,7 @@ class vLayer(layer):
             leftCell = changeSet.pop()
             mergedCell = self.merge(rightCell, leftCell)
             changeSet.add(mergedCell)
-
+        """
         return
     def areaSearch(self, x1, y1, x2, y2):
         """
@@ -737,14 +816,11 @@ class hLayer(layer):
         """
         changeList = [] #list of empty tiles that contain the area to be effected
 
-        if x2 < x1:
-            holder = x2
-            x2 = x1
-            x1 = holder
-        if y2 > y1:
-            holder = y2
-            y2 = y1
-            y1 = holder
+        foo = self.orderInput(x1, y1, x2, y2)
+        x1 = foo[0]
+        y1 = foo[1]
+        x2 = foo[2]
+        y2 = foo[3]
 
         if self.areaSearch(x1, y1, x2, y2): #check to ensure that the area is empty
             return "Area is not empty"
@@ -765,7 +841,7 @@ class hLayer(layer):
         while cc.cell.y >= y2: #find all cells that need to be vsplit
             changeList.append(cc)
             cc = cc.SOUTH
-            while cc.cell.x + cc.getWidth() <= x2:
+            while cc != self.southBoundary and cc != self.eastBoundary and cc.cell.x + cc.getWidth() <= x2:
                 cc = cc.EAST
 
         for rect in changeList: #split vertically
@@ -949,19 +1025,9 @@ if __name__ == '__main__':
     emptyHPlane.EAST = emptyHExample.eastBoundary
     emptyHPlane.SOUTH = emptyHExample.southBoundary
     emptyHPlane.WEST = emptyHExample.westBoundary
-
-    #emptyVExample.insert(11, 15, 20, 5, "SOLID")
-    #emptyVExample.insert(15, 25, 25, 20, "SOLID")
-    #emptyVExample.insert(5, 17, 27, 16, "SOLID")
-
-    #emptyVExample.insert(15, 20, 20, 15, "SOLID")
-    #emptyVExample.insert(10, 5, 17, 10, "SOLID")
-
-    emptyHExample.insert(10, 10, 13, 5, "SOLID")
-    emptyHExample.insert(20, 13, 25, 8, "SOLID")
-    emptyHExample.insert(15, 20, 17, 3, "SOLID")
-
     """
+
+
     emptyVExample.vSplit(emptyVExample.stitchList[0], 15)
     foo = emptyVExample.findPoint(20, 1, emptyVExample.stitchList[0])
     emptyVExample.vSplit(foo, 20)
@@ -978,12 +1044,20 @@ if __name__ == '__main__':
         print cell
         print cell.getWidth(), " width"
         print cell.getHeight(), "Height "
+    
+    emptyHExample.insert(10, 10, 13, 5, "SOLID")
+    emptyHExample.insert(20, 13, 25, 8, "SOLID")
+    emptyHExample.insert(15, 20, 17, 3, "SOLID")
+
+    emptyVExample.insert(5, 10, 10, 5, "True")
+    emptyVExample.insert(7, 20, 15, 15, "True")
+    emptyVExample.insert(3, 13, 20, 12, "True")
+
     """
-    foo = emptyHExample.findPoint(18.5, 10.5, emptyHExample.stitchList[0])
-    print "*****************************testing directions"
-    emptyHExample.eastSouth(foo).cell.printCell(True, True)
-    emptyHExample.southEast(foo).cell.printCell(True, True)
-    emptyHExample.westNorth(foo).cell.printCell(True, True)
-    emptyHExample.northWest(foo).cell.printCell(True, True)
+
+    emptyHExample.insert(10, 10, 13, 5, "SOLID")
+    emptyHExample.insert(20, 13, 25, 8, "SOLID")
+    emptyHExample.insert(15, 20, 17, 3, "SOLID")
+
     emptyHExample.drawLayer(truePointer=True)
     #print layer.directedAreaEnumeration(5, 25, 15, 15)
