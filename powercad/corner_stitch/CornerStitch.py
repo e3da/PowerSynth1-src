@@ -125,10 +125,14 @@ class layer(object):
     def merge(self, tile1, tile2):
         """
         merge two tiles into one, reassign neighborhood, and return the merged tile in case a reference is needed
+
         """
         if(tile1.cell.type != tile2.cell.type):
             print "Types are not the same"
             return
+
+        if tile1.cell.x == tile2.cell.x and tile1.cell.y == tile2.cell.y:
+            return ("Tiles are not alligned")
 
         if tile1.cell.x == tile2.cell.x and (tile1.NORTH == tile2 or tile1.SOUTH == tile2) and tile1.getWidth() == tile2.getWidth():
             basis = tile1 if tile1.cell.y < tile2.cell.y else tile2
@@ -140,7 +144,7 @@ class layer(object):
 
             #reasign the neighboring tile's directional pointers
             cc = upper.NORTH
-            while cc not in self.boundaries and cc.cell.x > basis.cell.x: #reset northern neighbors
+            while cc not in self.boundaries and cc.cell.x >= basis.cell.x: #reset northern neighbors
                 cc.SOUTH = basis
                 cc = cc.WEST
             cc = upper.EAST
@@ -284,6 +288,32 @@ class layer(object):
         """
         return
 
+    def northWest(self, center):
+        cc = center.WEST
+        while cc.cell.y + cc.getHeight() < center.cell.y + center.getHeight():
+            cc = cc.NORTH
+        return cc
+
+    def westNorth(self, center):
+        cc = center.NORTH
+        while cc.cell.x > center.cell.x + center.getWidth():
+            cc = cc.WEST
+        return cc
+
+    def southEast(self, center):
+        cc = center.EAST
+        while cc.cell.y > center.cell.y:
+            cc = cc.SOUTH
+        return cc
+
+    def eastSouth(self, center):
+        cc = center.SOUTH
+        while cc.cell.x + cc.getWidth() < center.cell.x + center.getWidth():
+            cc = cc.EAST
+        return cc
+
+    #add checking pinter related to location fn
+
     def findChannel(self, startCell, endCell, minWidth):
         """
         find a channel through empty cells from startCell to endCell, subject to minWidth.  
@@ -379,6 +409,13 @@ class layer(object):
             elif truePointer:
                 dx = cell.SOUTH.cell.x + (.5 * cell.SOUTH.getWidth()) - (cell.cell.x + .5)
                 dy = cell.SOUTH.cell.y + (.5 * cell.SOUTH.getHeight()) - (cell.cell.y + .5)
+                cell.cell.printCell(True, True)
+                print cell.SOUTH, cell.SOUTH.cell.x,cell.SOUTH.cell.y, dx, dy
+                print cell.getHeight(), "h"
+                print cell.getWidth(), "w"
+                if cell.SOUTH != self.southBoundary:
+                    print cell.SOUTH.getHeight(), "sh"
+                    print cell.SOUTH.getWidth(), "sw"
             else:
                 dx =  0
                 dy = -.5
@@ -421,7 +458,10 @@ class layer(object):
             print "out of bounds, x = ", x
             return
         newCell = cornerStitch(None, None, None, None, None, cell(x, splitCell.cell.y, splitCell.cell.type))
-        self.stitchList.append(newCell)
+        self.stitchList.append(newCell) #figure out how to fix this and pass in by reference*
+
+        print newCell, self.stitchList[-1]
+        print "****VSPLIT", newCell is self.stitchList[-1]
 
         #assign newCell neighbors
         newCell.NORTH = splitCell.NORTH
@@ -756,62 +796,61 @@ class hLayer(layer):
         """
         this checks the EAST and WEST of caster, to see if there are alligned empty cells that could be merged.
         Primarily called after insert, but for simplicity and OOP's sake, I'm separating this from the other
+        
+        Re-write this to walk along the E and W edges and try to combine neighbors sequentially
         """
-        #print "caster = "
-        #caster.cell.printCell(True, True)
-        #caster.printNeighbors(True, True)
-
-        changeSet = Set()
+        changeSet = []
 
         cc = caster.EAST #recitfy east side, walking downwards
-        lastCell = caster.EAST
-        count = 0
-        while (cc != self.eastBoundary
-               and cc != self.southBoundary
-               and cc.cell.x == lastCell.cell.x
-               and cc.cell.y >= caster.cell.y):
 
-            if(lastCell.cell.x + lastCell.getWidth() == cc.cell.x + cc.getWidth() and lastCell != cc):
-                changeSet.add(cc)
-                changeSet.add(lastCell)
-
+        while (cc != self.eastBoundary and cc != self.southBoundary and cc.cell.y >= caster.cell.y):
+            changeSet.append(cc)
             cc = cc.SOUTH
-            count += 1
-            if count != 1:
-                lastCell = lastCell.SOUTH
 
-        while len(changeSet) > 1: #merge all cells with the same width along the eastern side
-            topCell = changeSet.pop()
-            lowerCell = changeSet.pop()
+        i = 0
+        j = 1
+        while j < len(changeSet): #merge all cells with the same width along the eastern side
+            topCell = changeSet[i]
+            lowerCell = changeSet[j]
             mergedCell = self.merge(topCell, lowerCell)
-            changeSet.add(mergedCell)
+            if mergedCell == "Tiles are not alligned": #the tiles couldn't merge because they didn't line up
+                i += 1
+                if j < len(changeSet) - 1:
+                    j += 1
+            else:
+                del changeSet[j]
+                changeSet[i] = mergedCell
+                if j < len(changeSet) - 1:
+                    j += 1
 
         cc = caster.WEST#recitfy west side, walking upwards
-        lastCell = caster.WEST
-        count = 0
-        while (cc != self.westBoundary
-               and cc != self.northBoundary
-               and cc.cell.x == lastCell.cell.x
-               and cc.cell.x + cc.getWidth() == lastCell.cell.x + lastCell.getWidth()):
+        changeSet = []
 
-            if(lastCell.cell.x + lastCell.getWidth() == cc.cell.x + cc.getWidth() and cc != lastCell):
-                changeSet.add(cc)
-                changeSet.add(lastCell)
-
+        while (cc != self.westBoundary and cc != self.northBoundary and cc.cell.y < caster.cell.y + caster.getHeight()):
+            changeSet.append(cc)
             cc = cc.NORTH
-            count += 1
-            if count != 1:
-                lastCell = lastCell.NORTH
 
-        while len(changeSet) > 1:
-            topCell = changeSet.pop()
-            print topCell
-            lowerCell = changeSet.pop()
-            print lowerCell
+        for foo in changeSet:
+            foo.cell.printCell(True, True)
+
+        i = 0
+        j = 1
+        while j < len(changeSet) and i < len(changeSet): #merge all cells with the same width along the eastern side
+            topCell = changeSet[i]
+            lowerCell = changeSet[j]
             mergedCell = self.merge(topCell, lowerCell)
-            changeSet.add(mergedCell)
-
+            if mergedCell == "Tiles are not alligned": #the tiles couldn't merge because they didn't line up
+                i += 1
+                print "i = ", i
+                if j < len(changeSet) - 1:
+                    j += 1
+            else:
+                del changeSet[j]
+                changeSet[i] = mergedCell
+                if j < len(changeSet) - 1:
+                    j += 1
         return
+
     def areaSearch(self, x1, y1, x2, y2):
         """
         Find if there are solid tiles in the rectangle defined by two diagonal points
@@ -917,9 +956,10 @@ if __name__ == '__main__':
 
     #emptyVExample.insert(15, 20, 20, 15, "SOLID")
     #emptyVExample.insert(10, 5, 17, 10, "SOLID")
-    emptyVExample.insert(10, 10, 13, 5, "SOLID")
-    emptyVExample.insert(20, 13, 25, 8, "SOLID")
-    emptyVExample.insert(15, 20, 17, 3, "SOLID")
+
+    emptyHExample.insert(10, 10, 13, 5, "SOLID")
+    emptyHExample.insert(20, 13, 25, 8, "SOLID")
+    emptyHExample.insert(15, 20, 17, 3, "SOLID")
 
     """
     emptyVExample.vSplit(emptyVExample.stitchList[0], 15)
@@ -931,6 +971,19 @@ if __name__ == '__main__':
     emptyVExample.hSplit(foo, 21)
     foo = emptyExample.findPoint(6, 19)
     print foo
+ 
+
+    for cell in emptyHExample.stitchList:
+        cell.cell.printCell(True, True, True)
+        print cell
+        print cell.getWidth(), " width"
+        print cell.getHeight(), "Height "
     """
-    emptyVExample.drawLayer(truePointer=True)
+    foo = emptyHExample.findPoint(18.5, 10.5, emptyHExample.stitchList[0])
+    print "*****************************testing directions"
+    emptyHExample.eastSouth(foo).cell.printCell(True, True)
+    emptyHExample.southEast(foo).cell.printCell(True, True)
+    emptyHExample.westNorth(foo).cell.printCell(True, True)
+    emptyHExample.northWest(foo).cell.printCell(True, True)
+    emptyHExample.drawLayer(truePointer=True)
     #print layer.directedAreaEnumeration(5, 25, 15, 15)
