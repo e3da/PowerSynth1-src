@@ -11,6 +11,8 @@ import matplotlib.patches as patches
 from matplotlib import pylab
 from sets import Set
 from abc import ABCMeta, abstractmethod
+import networkx as nx
+import numpy as np
 
 class cell:
     """
@@ -312,8 +314,6 @@ class layer(object):
             cc = cc.EAST
         return cc
 
-    #add checking pinter related to location fn
-
     def findChannel(self, startCell, endCell, minWidth):
         """
         find a channel through empty cells from startCell to endCell, subject to minWidth.  
@@ -339,10 +339,7 @@ class layer(object):
         """
         Draw all cells in this layer with stitches pointing to their stitch neighbors
         TODO:
-         fix the hardcoded epsilon value of .5, this might lead to improper pointers when the differnce between
-         a cell's height and its EAST pointer is less than epsilon. Eventually, we should probably find a way
-         to determine epsilon from the layer, but this should handle 90 percent of cases for now. Also should probably
-         change the dimensions of the object window depending on the layer size.
+         Also should probably change the dimensions of the object window depending on the layer size.
         """
         fig1 = matplotlib.pyplot.figure()
 
@@ -577,7 +574,6 @@ class layer(object):
 
         return [x1, y1, x2, y2]
 
-
 class vLayer(layer):
     def insert(self, x1, y1, x2, y2, type):
         """
@@ -618,10 +614,6 @@ class vLayer(layer):
             while cc.cell.y + cc.getHeight() <= y2:
                 cc = cc.NORTH
 
-        print "before asdf"
-        for foo in changeList:
-            foo.cell.printCell(True, True)
-
         for rect in changeList:
             if not rect.NORTH.cell.y == y1: self.hSplit(rect, y1)
             if not rect.cell.y == y2: self.hSplit(rect, y2) #order is vital, again
@@ -639,34 +631,17 @@ class vLayer(layer):
             changeList.append(cc)
             cc = cc.EAST
 
-        print "begin asdf"
-        for asdf in changeList:
-            asdf.cell.printCell(True, True)
-
         while len(changeList) > 1:
             topCell = changeList.pop(0)
             lowerCell = changeList.pop(0)
-            #print "insdie while"
-            #topCell.cell.printCell(True, True)
-            #lowerCell.cell.printCell(True, True)
             mergedCell = self.merge(topCell, lowerCell)
             changeList.insert(0, mergedCell)
-        print "outside while"
-       
+
         while len(changeList) > 1:
             leftCell = changeList.pop(0)
             rightCell = changeList.pop(0)
-            print "leftCell "
-            leftCell.cell.printCell(True, True)
-            print "rightCell"
-            rightCell.cell.printCell(True, True)
             mergedCell = self.merge(leftCell, rightCell)
             changeList.insert(0, mergedCell)
-     
-        for cell in changeList:
-            print cell
-#            cell.cell.printCell(True, True)
-        print "\n\n"
 
         if len(changeList) > 0:
             changeList[0].cell.type = type
@@ -730,55 +705,8 @@ class vLayer(layer):
                 changeSet[i] = mergedCell
                 if j < len(changeSet) - 1:
                     j += 1
-
-        """changeSet = Set()
-        cc = caster.NORTH
-        lastCell = caster.NORTH
-        count = 0
-        while (cc != self.northBoundary
-               and cc != self.westBoundary
-               and cc.cell.y == lastCell.cell.y
-               and cc.cell.x >= caster.cell.x):
-            if (lastCell.cell.y + lastCell.getHeight() == cc.cell.y + cc.getHeight() and lastCell.cell.x != cc.cell.x):
-                changeSet.add(cc)
-                changeSet.add(lastCell)
-            cc = cc.WEST
-            count += 1
-            if count != 1:
-                lastCell = lastCell.WEST
-
-        while len(changeSet) > 1:
-            rightCell = changeSet.pop()
-            leftCell = changeSet.pop()
-            mergedCell = self.merge(rightCell, leftCell)
-            changeSet.add(mergedCell)
-
-        changeSet = Set()
-        cc = caster.SOUTH
-        lastCell = caster.SOUTH
-        count = 0
-        while (cc != self.southBoundary
-               and cc!=self.eastBoundary
-               and cc.cell.y + cc.getHeight() == lastCell.cell.y + lastCell.getHeight()
-               and (cc.cell.x + cc.getWidth() <= caster.cell.x + caster.getWidth())):
-            if (lastCell.cell.y  == cc.cell.y  and lastCell.cell.x != cc.cell.x):
-                changeSet.add(cc)
-                changeSet.add(lastCell)
-
-            cc = cc.EAST
-            count += 1
-            if count != 1:
-                lastCell = lastCell.EAST
-
-        #for foo in changeSet:
-        #    foo.cell.printCell(True, True)
-        while len(changeSet) > 1:
-            rightCell = changeSet.pop()
-            leftCell = changeSet.pop()
-            mergedCell = self.merge(rightCell, leftCell)
-            changeSet.add(mergedCell)
-        """
         return
+
     def areaSearch(self, x1, y1, x2, y2):
         """
         Find if there are solid tiles in the rectangle defined by two diagonal points
@@ -868,6 +796,7 @@ class hLayer(layer):
             self.rectifyShadow(changeList[0]) #correcting empty cells that might be incorrectly split east of newCell
 
         return changeList
+
     def rectifyShadow(self, caster):
         """
         this checks the EAST and WEST of caster, to see if there are alligned empty cells that could be merged.
@@ -959,12 +888,39 @@ class constraintGraph:
     """
 
     def __init__(self, vertices, edges):
+        """
+        create from a given set of edges and vertices
+        vertexMatrix shows the connectivity between the vertices, it is a 2d list n vertices long
+        edges is just a set of edges
+        zeroDimensionList is where, independent of orientation, the list index corresponds to the graph's orientation
+        zero dimension representation. For example, in a very simple horizontally oriented 30 x30 plane,
+        where the only cell has a lower left corner of 5,15 and an upper right corner of 10, 25, zeroDimensionList will 
+        be as follows: [0]:0, [1]:5, [2]:10, [3]:30. Notice that it is arranged in increasing order, and we are only 
+        concerned with the x values, since this is horizontally oriented.
+        """
         self.vertexMatrix = int[len(vertices)][len(vertices)]
         self.edges = edges
+        self.zeroDimensionList = []
+
+    def __init__(self):
+        """
+        Default constructor
+        """
+        self.vertexMatrix = None
+        self.edges = []
+        self.zeroDimensionList = []
 
     def getNeighbors(self, vertex):
         """
         return the edge types and neighbors of the vertex passed in
+        vertexMatrix shows the connectivity between the vertices, it is a 2d list n vertices long
+        edges is just a set of edges
+        zeroDimensionList is where, independent of orientation, the list index corresponds to the graph's orientation
+        zero dimension representation. For example, in a very simple horizontally oriented 30 x30 plane,
+        where the only cell has a lower left corner of 5,15 and an upper right corner of 10, 25, zeroDimensionList will 
+        be as follows: [0]:0, [1]:5, [2]:10, [3]:30. Notice that it is arranged in increasing order, and we are only 
+        concerned with the x values, since this is horizontally oriented.
+
         """
         return
 
@@ -973,6 +929,68 @@ class constraintGraph:
         return the edge type from v1 to v2. If negative, then the edge type is from v2 to v1
         """
         return
+
+    def graphFromLayer(self, layer, orientation):
+        """
+        given a layer and an orientation = 'v' or 'h', construct a constraint graph detailing the dependencies of
+        one dimension point to another
+        """
+        self.dimListFromLayer(layer, orientation)
+        self.matrixFromDimList()
+        self.setEdgesFromLayer(layer, orientation)
+
+    def matrixFromDimList(self):
+        """
+        initializes a N x N matrix of 0's as self's matrix object
+        """
+        n = len(self.zeroDimensionList)
+        self.vertexMatrix = np.zeros((n, n), np.int8)
+
+    def printVM(self):
+        for i in self.vertexMatrix:
+            print i
+        return
+
+    def printZDL(self):
+        index = 0
+        for i in self.zeroDimensionList:
+            print index, ": ", i
+            index += 1
+
+    def setEdgesFromLayer(self, layer, orientation):
+        """
+        given a layer and orientation, set the connectivity matrix of this constraint graph
+        """
+        if orientation == 'v':
+            for rect in layer.stitchList:
+                origin = self.zeroDimensionList.index(rect.cell.y)
+                dest = self.zeroDimensionList.index(rect.NORTH.cell.y)
+                self.vertexMatrix[origin][dest] = rect.getHeight()
+        elif orientation == 'h':
+            for rect in layer.stitchList:
+                origin = self.zeroDimensionList.index(rect.cell.x)
+                dest = self.zeroDimensionList.index(rect.EAST.cell.x)
+                print "origin = ", origin, "dest = ", dest, "val = ", rect.getWidth()
+                self.vertexMatrix[origin][dest] = rect.getWidth()
+
+    def dimListFromLayer(self, layer, orientation):
+        """
+        generate the zeroDimensionList from a layer         
+        """
+        pointSet = Set() #this is a set of zero dimensional line coordinates, (e.g. x0, x1, x2, etc.)
+
+        if orientation == 'v': #if orientation is vertical, add all unique y values for cells
+            for rect in layer.stitchList:
+                pointSet.add(rect.cell.y)
+            pointSet.add(layer.northBoundary.cell.y) # this won't be included in the normal list, so we do it here
+        elif orientation == 'h': #same for horizontal orientation
+            for rect in layer.stitchList:
+                pointSet.add(rect.cell.x)
+            pointSet.add(layer.eastBoundary.cell.x)
+
+        asdf = list(pointSet)
+
+        self.zeroDimensionList =  asdf#setting the list of orientation values to an ordered list
 
     def reduce(self):
         """
@@ -989,30 +1007,35 @@ class constraintGraph:
         """Eliminate redundant vertices"""
         return
 
+    def drawGraph(self):
+        G = nx.DiGraph()
+
+        it = np.nditer(self.vertexMatrix, flags=['multi_index'])
+        while not it.finished:
+            if it[0] != 0:
+                G.add_edges_from([it.multi_index], weight = it[0])
+                print it[0]
+            it.iternext()
+
+        edge_labels = dict([((u, v,), d['weight'])
+                            for u, v, d in G.edges(data=True)])
+
+        edge_colors = ['black' for edge in G.edges()]
+
+        pos = nx.shell_layout(G)
+        nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels)
+        nx.draw_networkx_labels(G, pos)
+        nx.draw(G, pos, node_color='white', node_size=300, edge_color=edge_colors, edge_cmap=plt.cm.Reds)
+        pylab.show()
+
 if __name__ == '__main__':
-
-    a = cornerStitch(None, None, None, None, None, cell(0, 0, "EMPTY"))
-    b = cornerStitch(None, None, None, None, None, cell(0, 5, "EMPTY"))
-    c = cornerStitch(None, None, None, None, None, cell(5, 5, "SOLID"))
-    d = cornerStitch(None, None, None, None, None, cell(10, 5, "EMPTY"))
-    e = cornerStitch(None, None, None, None, None, cell(10, 8, "EMPTY"))
-    f = cornerStitch(None, None, None, None, None, cell(15, 8, "SOLID"))
-    g = cornerStitch(None, None, None, None, None, cell(20, 8, "EMPTY"))
-    h = cornerStitch(None, None, None, None, None, cell(0, 10, "EMPTY"))
-    i = cornerStitch(None, None, None, None, None, cell(0, 12, "EMPTY"))
-    # j = cornerStitch(None, None, None, None, None, cell(0, 17, "EMPTY"))
-    k = cornerStitch(None, None, None, None, None, cell(7, 12, "SOLID"))
-    #l = cornerStitch(None, None, None, None, None, cell(15, 15, "EMPTY"))
-
-    stitchList = [a,b,c,d,e,f,g,h,i,k]
-
     emptyVPlane = cornerStitch(None, None, None, None, None, cell(0, 0, "EMPTY"))
     emptyHPlane = cornerStitch(None, None, None, None, None, cell(0, 0, "EMPTY"))
 
     emptyVStitchList = [emptyVPlane]
     emptyHStitchList = [emptyHPlane]
-    exampleVLayer = vLayer(stitchList, 30, 30)
-    exampleHLayer = hLayer(stitchList, 30, 30)
+    #exampleVLayer = vLayer(stitchList, 30, 30)
+    #exampleHLayer = hLayer(stitchList, 30, 30)
     emptyVExample = vLayer(emptyVStitchList, 30, 30)
     emptyHExample = hLayer(emptyHStitchList, 30, 30)
 
@@ -1025,39 +1048,15 @@ if __name__ == '__main__':
     emptyHPlane.EAST = emptyHExample.eastBoundary
     emptyHPlane.SOUTH = emptyHExample.southBoundary
     emptyHPlane.WEST = emptyHExample.westBoundary
-    """
-
-
-    emptyVExample.vSplit(emptyVExample.stitchList[0], 15)
-    foo = emptyVExample.findPoint(20, 1, emptyVExample.stitchList[0])
-    emptyVExample.vSplit(foo, 20)
-    foo = emptyVExample.findPoint(16, 21, emptyVExample.stitchList[0])
-    emptyVExample.hSplit(foo, 20)
-    foo = emptyVExample.findPoint(16, 21, emptyVExample.stitchList[0])
-    emptyVExample.hSplit(foo, 21)
-    foo = emptyExample.findPoint(6, 19)
-    print foo
- 
-
-    for cell in emptyHExample.stitchList:
-        cell.cell.printCell(True, True, True)
-        print cell
-        print cell.getWidth(), " width"
-        print cell.getHeight(), "Height "
-    
-    emptyHExample.insert(10, 10, 13, 5, "SOLID")
-    emptyHExample.insert(20, 13, 25, 8, "SOLID")
-    emptyHExample.insert(15, 20, 17, 3, "SOLID")
-
-    emptyVExample.insert(5, 10, 10, 5, "True")
-    emptyVExample.insert(7, 20, 15, 15, "True")
-    emptyVExample.insert(3, 13, 20, 12, "True")
-
-    """
 
     emptyHExample.insert(10, 10, 13, 5, "SOLID")
     emptyHExample.insert(20, 13, 25, 8, "SOLID")
     emptyHExample.insert(15, 20, 17, 3, "SOLID")
 
+    cg = constraintGraph()
+    cg.graphFromLayer(emptyHExample, 'h')
+
+    cg.printVM()
+    cg.printZDL()
+    cg.drawGraph()
     emptyHExample.drawLayer(truePointer=True)
-    #print layer.directedAreaEnumeration(5, 25, 15, 15)
