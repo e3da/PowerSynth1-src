@@ -13,6 +13,8 @@ from sets import Set
 from abc import ABCMeta, abstractmethod
 import networkx as nx
 import numpy as np
+from matplotlib.patches import Circle, Wedge
+from matplotlib.collections import PatchCollection
 
 class cell:
     """
@@ -60,6 +62,42 @@ class cornerStitch:
 
     def getWidth(self): #returns the width
         return (self.EAST.cell.x - self.cell.x)
+
+    def northWest(self, center):
+        cc = center.WEST
+        while cc.cell.y + cc.getHeight() < center.cell.y + center.getHeight():
+            cc = cc.NORTH
+        return cc
+
+    def westNorth(self, center):
+        cc = center.NORTH
+        while cc.cell.x > center.cell.x + center.getWidth():
+            cc = cc.WEST
+        return cc
+
+    def southEast(self, center):
+        cc = center.EAST
+        while cc.cell.y > center.cell.y:
+            cc = cc.SOUTH
+        return cc
+
+    def eastSouth(self, center):
+        cc = center.SOUTH
+        while cc.cell.x + cc.getWidth() < center.cell.x + center.getWidth():
+            cc = cc.EAST
+        return cc
+
+    def getNorth(self):
+        return self.NORTH
+
+    def getEast(self):
+        return self.EAST
+
+    def getSouth(self):
+        return self.SOUTH
+
+    def getWest(self):
+        return self.WEST
 
     #returns a list of neighbors
     def findNeighbors(self):
@@ -123,6 +161,7 @@ class layer(object):
         self.southBoundary = cornerStitch(None, None, None, None, None, cell(0, -1000, "EMPTY"))
         self.westBoundary = cornerStitch(None, None, None, None, None, cell(-1000, 0, "EMPTY"))
         self.boundaries = [self.northBoundary, self.eastBoundary, self.westBoundary, self.southBoundary]
+        orientation = ''
 
     def merge(self, tile1, tile2):
         """
@@ -290,30 +329,6 @@ class layer(object):
         """
         return
 
-    def northWest(self, center):
-        cc = center.WEST
-        while cc.cell.y + cc.getHeight() < center.cell.y + center.getHeight():
-            cc = cc.NORTH
-        return cc
-
-    def westNorth(self, center):
-        cc = center.NORTH
-        while cc.cell.x > center.cell.x + center.getWidth():
-            cc = cc.WEST
-        return cc
-
-    def southEast(self, center):
-        cc = center.EAST
-        while cc.cell.y > center.cell.y:
-            cc = cc.SOUTH
-        return cc
-
-    def eastSouth(self, center):
-        cc = center.SOUTH
-        while cc.cell.x + cc.getWidth() < center.cell.x + center.getWidth():
-            cc = cc.EAST
-        return cc
-
     def findChannel(self, startCell, endCell, minWidth):
         """
         find a channel through empty cells from startCell to endCell, subject to minWidth.  
@@ -406,13 +421,6 @@ class layer(object):
             elif truePointer:
                 dx = cell.SOUTH.cell.x + (.5 * cell.SOUTH.getWidth()) - (cell.cell.x + .5)
                 dy = cell.SOUTH.cell.y + (.5 * cell.SOUTH.getHeight()) - (cell.cell.y + .5)
-                cell.cell.printCell(True, True)
-                print cell.SOUTH, cell.SOUTH.cell.x,cell.SOUTH.cell.y, dx, dy
-                print cell.getHeight(), "h"
-                print cell.getWidth(), "w"
-                if cell.SOUTH != self.southBoundary:
-                    print cell.SOUTH.getHeight(), "sh"
-                    print cell.SOUTH.getWidth(), "sw"
             else:
                 dx =  0
                 dy = -.5
@@ -575,6 +583,18 @@ class layer(object):
         return [x1, y1, x2, y2]
 
 class vLayer(layer):
+    def __init__(self, stitchList, max_x, max_y):
+        """
+        northBoundary and eastBoundary should be integer values, the upper and right edges of the editable rectangle
+        """
+        self.stitchList = stitchList
+        self.northBoundary = cornerStitch(None, None, None, None, None, cell(0, max_y, "EMPTY"))
+        self.eastBoundary = cornerStitch(None, None, None, None, None, cell(max_x, 0, "EMPTY"))
+        self.southBoundary = cornerStitch(None, None, None, None, None, cell(0, -1000, "EMPTY"))
+        self.westBoundary = cornerStitch(None, None, None, None, None, cell(-1000, 0, "EMPTY"))
+        self.boundaries = [self.northBoundary, self.eastBoundary, self.westBoundary, self.southBoundary]
+        self.orientation = 'v'
+
     def insert(self, x1, y1, x2, y2, type):
         """
         insert a new solid cell into the rectangle defined by the top left corner(x1, y1) and the bottom right corner
@@ -733,6 +753,18 @@ class vLayer(layer):
         return False
 
 class hLayer(layer):
+    def __init__(self, stitchList, max_x, max_y):
+        """
+        northBoundary and eastBoundary should be integer values, the upper and right edges of the editable rectangle
+        """
+        self.stitchList = stitchList
+        self.northBoundary = cornerStitch(None, None, None, None, None, cell(0, max_y, "EMPTY"))
+        self.eastBoundary = cornerStitch(None, None, None, None, None, cell(max_x, 0, "EMPTY"))
+        self.southBoundary = cornerStitch(None, None, None, None, None, cell(0, -1000, "EMPTY"))
+        self.westBoundary = cornerStitch(None, None, None, None, None, cell(-1000, 0, "EMPTY"))
+        self.boundaries = [self.northBoundary, self.eastBoundary, self.westBoundary, self.southBoundary]
+        self.orientation = 'h'
+
     def insert(self, x1, y1, x2, y2, type):
         """
         insert a new solid cell into the rectangle defined by the top left corner(x1, y1) and the bottom right corner
@@ -930,14 +962,14 @@ class constraintGraph:
         """
         return
 
-    def graphFromLayer(self, layer, orientation):
+    def graphFromLayer(self, layer):
         """
         given a layer and an orientation = 'v' or 'h', construct a constraint graph detailing the dependencies of
         one dimension point to another
         """
-        self.dimListFromLayer(layer, orientation)
+        self.dimListFromLayer(layer)
         self.matrixFromDimList()
-        self.setEdgesFromLayer(layer, orientation)
+        self.setEdgesFromLayer(layer)
 
     def matrixFromDimList(self):
         """
@@ -957,33 +989,33 @@ class constraintGraph:
             print index, ": ", i
             index += 1
 
-    def setEdgesFromLayer(self, layer, orientation):
+    def setEdgesFromLayer(self, layer):
         """
         given a layer and orientation, set the connectivity matrix of this constraint graph
         """
-        if orientation == 'v':
+        if layer.orientation == 'v':
             for rect in layer.stitchList:
                 origin = self.zeroDimensionList.index(rect.cell.y)
-                dest = self.zeroDimensionList.index(rect.NORTH.cell.y)
+                dest = self.zeroDimensionList.index(rect.getNorth().cell.y)
                 self.vertexMatrix[origin][dest] = rect.getHeight()
-        elif orientation == 'h':
+        elif layer.orientation == 'h':
             for rect in layer.stitchList:
                 origin = self.zeroDimensionList.index(rect.cell.x)
-                dest = self.zeroDimensionList.index(rect.EAST.cell.x)
+                dest = self.zeroDimensionList.index(rect.getEast().cell.x)
                 print "origin = ", origin, "dest = ", dest, "val = ", rect.getWidth()
                 self.vertexMatrix[origin][dest] = rect.getWidth()
 
-    def dimListFromLayer(self, layer, orientation):
+    def dimListFromLayer(self, layer):
         """
         generate the zeroDimensionList from a layer         
         """
         pointSet = Set() #this is a set of zero dimensional line coordinates, (e.g. x0, x1, x2, etc.)
 
-        if orientation == 'v': #if orientation is vertical, add all unique y values for cells
+        if layer.orientation == 'v': #if orientation is vertical, add all unique y values for cells
             for rect in layer.stitchList:
                 pointSet.add(rect.cell.y)
             pointSet.add(layer.northBoundary.cell.y) # this won't be included in the normal list, so we do it here
-        elif orientation == 'h': #same for horizontal orientation
+        elif layer.orientation == 'h': #same for horizontal orientation
             for rect in layer.stitchList:
                 pointSet.add(rect.cell.x)
             pointSet.add(layer.eastBoundary.cell.x)
@@ -1028,6 +1060,166 @@ class constraintGraph:
         nx.draw(G, pos, node_color='white', node_size=300, edge_color=edge_colors, edge_cmap=plt.cm.Reds)
         pylab.show()
 
+class CSgraph:
+    """
+    a cornerstitch representation with edges corresponding to constraint graph edges bolded
+    """
+    def __init__(self, CS, CG):
+        self.CS = CS
+        self.CG = CG
+
+    #def drawCGLines(self, figure):
+
+    def drawZeroDimsVertices(self):
+        """
+        derive and return a list of wedges which will represent vertices on the CS drawing
+        """
+        wedgeList = []
+        if self.CS.orientation == 'v':
+            for point in self.CG.zeroDimensionList:
+                wedgeList.append(Wedge((0, point), .5, 0, 360, width = 1))
+        elif self.CS.orientation == 'h':
+            for point in self.CG.zeroDimensionList:
+                wedgeList.append(Wedge((point, 0), .5, 0, 360, width = 1))
+
+        print "wedgeList length = ", len(wedgeList)
+        return wedgeList
+
+    #figure this out later
+    def drawGraphEdges(self):
+        matrixCopy = np.copy(self.CG.vertexMatrix)
+        print matrixCopy[0][1]
+
+        it = np.nditer(self.CG.vertexMatrix, flags=['multi_index'])
+        while not it.finished:
+            if it[0] != 0:
+                G.add_edges_from([it.multi_index], weight = it[0])
+                print it[0]
+            it.iternext()
+
+    def setAxisLabels(self, plt):
+        if self.CS.orientation == 'v':
+            labels = ('Y' + str(i) for i in range(0, len(self.CG.zeroDimensionList)))
+            plt.yticks(self.CG.zeroDimensionList, list(labels))
+        elif self.CS.orientation == 'h':
+            labels = ('X' + str(i) for i in range(0, len(self.CG.zeroDimensionList)))
+            plt.xticks(self.CG.zeroDimensionList, list(labels))
+
+    def drawLayer(self, truePointer = False):
+        """
+        Draw all cells in this layer with stitches pointing to their stitch neighbors
+        TODO:
+         Also should probably change the dimensions of the object window depending on the layer size.
+        """
+        fig1 = matplotlib.pyplot.figure()
+
+        for cell in self.CS.stitchList:
+
+            ax1 = fig1.add_subplot(111, aspect='equal')
+            if not cell.cell.type == "EMPTY":
+                pattern = '\\'
+            else:
+                pattern = ''
+
+            ax1.add_patch(
+                matplotlib.patches.Rectangle(
+                    (cell.cell.x, cell.cell.y),  # (x,y)
+                    cell.getWidth(),  # width
+                    cell.getHeight(),  # height
+                    hatch = pattern,
+                    fill=False
+                )
+            )
+            #NORTH pointer
+            if cell.getNorth() == self.CS.northBoundary:
+                dx = 0
+                dy = 0
+            elif truePointer:
+                dx = cell.getNorth().cell.x + (.5 * cell.getNorth().getWidth()) - (cell.cell.x + cell.getWidth()) + .5
+                dy = cell.getNorth().cell.y + (.5 * cell.getNorth().getHeight()) - (cell.cell.y + cell.getHeight()) + .5
+            else:
+                dx =  0
+                dy = .75
+
+            ax1.arrow((cell.cell.x + cell.getWidth() - .5),
+                      (cell.cell.y + cell.getHeight()- .5),
+                      dx,
+                      dy,
+                      head_width = .25,
+                      head_length = .25,
+                      fc = 'k',
+                      ec = 'k'
+                    )
+            #EAST pointer
+            if cell.getEast() == self.CS.eastBoundary:
+                dx = 0
+                dy = 0
+            elif truePointer:
+                dx = cell.getEast().cell.x + (.5 * cell.getEast().getWidth()) - (cell.cell.x + cell.getWidth()) + .5
+                dy = cell.getEast().cell.y + (.5 * cell.getEast().getHeight()) - (cell.cell.y + cell.getHeight()) + .5
+            else:
+                dx = .75
+                dy = 0
+            ax1.arrow((cell.cell.x + cell.getWidth() - .5),
+                      (cell.cell.y + cell.getHeight()- .5),
+                      dx,
+                      dy,
+                      head_width = .25,
+                      head_length = .25,
+                      fc = 'k',
+                      ec = 'k'
+                    )
+            #SOUTH pointer
+            if cell.getSouth() == self.CS.southBoundary:
+                dx = 0
+                dy = 0
+            elif truePointer:
+                dx = cell.getSouth().cell.x + (.5 * cell.getSouth().getWidth()) - (cell.cell.x + .5)
+                dy = cell.getSouth().cell.y + (.5 * cell.getSouth().getHeight()) - (cell.cell.y + .5)
+            else:
+                dx =  0
+                dy = -.5
+            ax1.arrow((cell.cell.x + .5),
+                      (cell.cell.y + .5),
+                      dx,
+                      dy,
+                      head_width = .25,
+                      head_length = .25,
+                      fc = 'k',
+                      ec = 'k'
+                    )
+            #WEST pointer
+            if cell.getWest() == self.CS.westBoundary:
+                dx = 0
+                dy = 0
+            elif truePointer:
+                dx = cell.getWest().cell.x + (.5 * cell.getWest().getWidth()) - (cell.cell.x + .5)
+                dy = cell.getWest().cell.y + (.5 * cell.getWest().getHeight()) - (cell.cell.y + .5)
+            else:
+                dx =  -.5
+                dy = 0
+            ax1.arrow((cell.cell.x + .5),
+                      (cell.cell.y + .5),
+                      dx,
+                      dy,
+                      head_width = .25,
+                      head_length = .25,
+                      fc = 'k',
+                      ec = 'k'
+                    )
+        p = PatchCollection(self.drawZeroDimsVertices())
+        ax1.add_collection(p)
+
+        #handle relative spacing from orientation to orientation-n (X0-Xn, Y0-Yn). Remove if refactoring to
+        #automatically handle orientation
+        self.setAxisLabels(plt)
+
+        plt.xlim(0, self.CS.eastBoundary.cell.x)
+        plt.ylim(0, self.CS.northBoundary.cell.y)
+        fig1.show()
+        pylab.pause(11000)  # figure out how to do this better
+
+
 if __name__ == '__main__':
     emptyVPlane = cornerStitch(None, None, None, None, None, cell(0, 0, "EMPTY"))
     emptyHPlane = cornerStitch(None, None, None, None, None, cell(0, 0, "EMPTY"))
@@ -1054,9 +1246,13 @@ if __name__ == '__main__':
     emptyHExample.insert(15, 20, 17, 3, "SOLID")
 
     cg = constraintGraph()
-    cg.graphFromLayer(emptyHExample, 'h')
+    cg.graphFromLayer(emptyHExample)
 
     cg.printVM()
     cg.printZDL()
-    cg.drawGraph()
-    emptyHExample.drawLayer(truePointer=True)
+    #cg.drawGraph()
+
+    CGCS = CSgraph(emptyHExample, cg)
+    #CGCS.drawGraphEdges()
+    CGCS.drawLayer()
+    #emptyHExample.drawLayer(truePointer=True)
