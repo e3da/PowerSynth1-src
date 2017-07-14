@@ -19,7 +19,7 @@ from matplotlib.collections import PatchCollection
 class cell:
     """
     This is the basis for a cell, with only internal information being stored. information pertaining to the 
-    structure of a layer or the relative position of a cell is stored in a cornerStitch obj.
+    structure of a cornerStitch or the relative position of a cell is stored in a cornerStitch obj.
     """
     def __init__(self, x, y, type):
         self.x = x
@@ -33,7 +33,7 @@ class cell:
         return
 
 
-class cornerStitch:
+class tile:
     """
     Abstract class of cells, there eventually will be multiple
     implementations of cells with different physical properties
@@ -144,11 +144,11 @@ class cornerStitch:
 
         return neighbors
 
-class layer(object):
+class cornerStitch(object):
     """
-    A layer is a collection of cornerStitches all existing on the same plane. I'm not sure how we're going to handle
-    layers connecting to one another yet so I'm leaving it unimplemented for now. Layer-level operations involve
-    collections of cornerStitches or anything involving coordinates being passed in instead of a cornerStitch
+    A cornerStitch is a collection of tilees all existing on the same plane. I'm not sure how we're going to handle
+    cornerStitchs connecting to one another yet so I'm leaving it unimplemented for now. Layer-level operations involve
+    collections of tilees or anything involving coordinates being passed in instead of a tile
     """
     __metaclass__ = ABCMeta
     def __init__(self, stitchList, max_x, max_y):
@@ -156,10 +156,10 @@ class layer(object):
         northBoundary and eastBoundary should be integer values, the upper and right edges of the editable rectangle
         """
         self.stitchList = stitchList
-        self.northBoundary = cornerStitch(None, None, None, None, None, cell(0, max_y, "EMPTY"))
-        self.eastBoundary = cornerStitch(None, None, None, None, None, cell(max_x, 0, "EMPTY"))
-        self.southBoundary = cornerStitch(None, None, None, None, None, cell(0, -1000, "EMPTY"))
-        self.westBoundary = cornerStitch(None, None, None, None, None, cell(-1000, 0, "EMPTY"))
+        self.northBoundary = tile(None, None, None, None, None, cell(0, max_y, "EMPTY"))
+        self.eastBoundary = tile(None, None, None, None, None, cell(max_x, 0, "EMPTY"))
+        self.southBoundary = tile(None, None, None, None, None, cell(0, -1000, "EMPTY"))
+        self.westBoundary = tile(None, None, None, None, None, cell(-1000, 0, "EMPTY"))
         self.boundaries = [self.northBoundary, self.eastBoundary, self.westBoundary, self.southBoundary]
         orientation = ''
 
@@ -251,8 +251,8 @@ class layer(object):
         cellListCopy = copy.deepcopy(self.stitchList)
         accountedCells = []
 
-        accountedCells.append(cellListCopy[layer.lowestCell(cellListCopy)]) #adding to accounted cells
-        del cellListCopy[layer.lowestCell(cellListCopy)] #removing from the original list so we don't double count
+        accountedCells.append(cellListCopy[cornerStitch.lowestCell(cellListCopy)]) #adding to accounted cells
+        del cellListCopy[cornerStitch.lowestCell(cellListCopy)] #removing from the original list so we don't double count
 
         print len(cellListCopy)
         print len(accountedCells)
@@ -315,9 +315,9 @@ class layer(object):
 
         return cc
 
-    def plow(self, cornerStitch, destX, destY):
+    def plow(self, tile, destX, destY):
         """
-        the cornerStitch cell is moved so that its lower left corner is dextX, destY, and all tiles in the way 
+        the tile cell is moved so that its lower left corner is dextX, destY, and all tiles in the way 
         are moved out of the way. They are in turn moved by recursive calls to plow. 
         """
         return
@@ -325,7 +325,7 @@ class layer(object):
     def compaction(self, dimension):
         """
         reduce all possible empty space in the dimension specified ("H", or "V"), while still maintaining any 
-        design constraints and the relative structure of the layer
+        design constraints and the relative structure of the cornerStitch
         """
         return
 
@@ -352,9 +352,9 @@ class layer(object):
 
     def drawLayer(self, truePointer = False):
         """
-        Draw all cells in this layer with stitches pointing to their stitch neighbors
+        Draw all cells in this cornerStitch with stitches pointing to their stitch neighbors
         TODO:
-         Also should probably change the dimensions of the object window depending on the layer size.
+         Also should probably change the dimensions of the object window depending on the cornerStitch size.
         """
         fig1 = matplotlib.pyplot.figure()
 
@@ -462,7 +462,7 @@ class layer(object):
         if x < splitCell.cell.x or x > splitCell.cell.x + splitCell.getWidth():
             print "out of bounds, x = ", x
             return
-        newCell = cornerStitch(None, None, None, None, None, cell(x, splitCell.cell.y, splitCell.cell.type))
+        newCell = tile(None, None, None, None, None, cell(x, splitCell.cell.y, splitCell.cell.type))
         self.stitchList.append(newCell) #figure out how to fix this and pass in by reference*
 
         #print newCell, self.stitchList[-1]
@@ -520,7 +520,7 @@ class layer(object):
         if y < splitCell.cell.y or y > splitCell.cell.y + splitCell.getHeight():
             print "out of bounds, y = ", y
             return
-        newCell = cornerStitch(None, None, None, None, None, cell(splitCell.cell.x, y, splitCell.cell.type))
+        newCell = tile(None, None, None, None, None, cell(splitCell.cell.x, y, splitCell.cell.type))
         self.stitchList.append(newCell)
 
         #assign new cell directions
@@ -582,23 +582,23 @@ class layer(object):
 
         return [x1, y1, x2, y2]
 
-class vLayer(layer):
+class vLayer(cornerStitch):
     def __init__(self, stitchList, max_x, max_y):
         """
         northBoundary and eastBoundary should be integer values, the upper and right edges of the editable rectangle
         """
         self.stitchList = stitchList
-        self.northBoundary = cornerStitch(None, None, None, None, None, cell(0, max_y, "EMPTY"))
-        self.eastBoundary = cornerStitch(None, None, None, None, None, cell(max_x, 0, "EMPTY"))
-        self.southBoundary = cornerStitch(None, None, None, None, None, cell(0, -1000, "EMPTY"))
-        self.westBoundary = cornerStitch(None, None, None, None, None, cell(-1000, 0, "EMPTY"))
+        self.northBoundary = tile(None, None, None, None, None, cell(0, max_y, "EMPTY"))
+        self.eastBoundary = tile(None, None, None, None, None, cell(max_x, 0, "EMPTY"))
+        self.southBoundary = tile(None, None, None, None, None, cell(0, -1000, "EMPTY"))
+        self.westBoundary = tile(None, None, None, None, None, cell(-1000, 0, "EMPTY"))
         self.boundaries = [self.northBoundary, self.eastBoundary, self.westBoundary, self.southBoundary]
         self.orientation = 'v'
 
     def insert(self, x1, y1, x2, y2, type):
         """
         insert a new solid cell into the rectangle defined by the top left corner(x1, y1) and the bottom right corner
-        (x2, y2) and adds the new cell to the layer's stitchList, then corrects empty space vertically
+        (x2, y2) and adds the new cell to the cornerStitch's stitchList, then corrects empty space vertically
         Four steps:
         1. vsplit x1, x2
         2. hsplit y1, y2
@@ -752,23 +752,23 @@ class vLayer(layer):
 
         return False
 
-class hLayer(layer):
+class hLayer(cornerStitch):
     def __init__(self, stitchList, max_x, max_y):
         """
         northBoundary and eastBoundary should be integer values, the upper and right edges of the editable rectangle
         """
         self.stitchList = stitchList
-        self.northBoundary = cornerStitch(None, None, None, None, None, cell(0, max_y, "EMPTY"))
-        self.eastBoundary = cornerStitch(None, None, None, None, None, cell(max_x, 0, "EMPTY"))
-        self.southBoundary = cornerStitch(None, None, None, None, None, cell(0, -1000, "EMPTY"))
-        self.westBoundary = cornerStitch(None, None, None, None, None, cell(-1000, 0, "EMPTY"))
+        self.northBoundary = tile(None, None, None, None, None, cell(0, max_y, "EMPTY"))
+        self.eastBoundary = tile(None, None, None, None, None, cell(max_x, 0, "EMPTY"))
+        self.southBoundary = tile(None, None, None, None, None, cell(0, -1000, "EMPTY"))
+        self.westBoundary = tile(None, None, None, None, None, cell(-1000, 0, "EMPTY"))
         self.boundaries = [self.northBoundary, self.eastBoundary, self.westBoundary, self.southBoundary]
         self.orientation = 'h'
 
     def insert(self, x1, y1, x2, y2, type):
         """
         insert a new solid cell into the rectangle defined by the top left corner(x1, y1) and the bottom right corner
-        (x2, y2) and adds the new cell to the layer's stitchList, then corrects empty space horizontally
+        (x2, y2) and adds the new cell to the cornerStitch's stitchList, then corrects empty space horizontally
         1. hsplit y1, y2
         2. vsplit x1, x2
         3. merge cells affected by 2
@@ -962,14 +962,14 @@ class constraintGraph:
         """
         return
 
-    def graphFromLayer(self, layer):
+    def graphFromLayer(self, cornerStitch):
         """
-        given a layer and an orientation = 'v' or 'h', construct a constraint graph detailing the dependencies of
+        given a cornerStitch and an orientation = 'v' or 'h', construct a constraint graph detailing the dependencies of
         one dimension point to another
         """
-        self.dimListFromLayer(layer)
+        self.dimListFromLayer(cornerStitch)
         self.matrixFromDimList()
-        self.setEdgesFromLayer(layer)
+        self.setEdgesFromLayer(cornerStitch)
 
     def matrixFromDimList(self):
         """
@@ -989,36 +989,36 @@ class constraintGraph:
             print index, ": ", i
             index += 1
 
-    def setEdgesFromLayer(self, layer):
+    def setEdgesFromLayer(self, cornerStitch):
         """
-        given a layer and orientation, set the connectivity matrix of this constraint graph
+        given a cornerStitch and orientation, set the connectivity matrix of this constraint graph
         """
-        if layer.orientation == 'v':
-            for rect in layer.stitchList:
+        if cornerStitch.orientation == 'v':
+            for rect in cornerStitch.stitchList:
                 origin = self.zeroDimensionList.index(rect.cell.y)
                 dest = self.zeroDimensionList.index(rect.getNorth().cell.y)
                 self.vertexMatrix[origin][dest] = rect.getHeight()
-        elif layer.orientation == 'h':
-            for rect in layer.stitchList:
+        elif cornerStitch.orientation == 'h':
+            for rect in cornerStitch.stitchList:
                 origin = self.zeroDimensionList.index(rect.cell.x)
                 dest = self.zeroDimensionList.index(rect.getEast().cell.x)
                 print "origin = ", origin, "dest = ", dest, "val = ", rect.getWidth()
                 self.vertexMatrix[origin][dest] = rect.getWidth()
 
-    def dimListFromLayer(self, layer):
+    def dimListFromLayer(self, cornerStitch):
         """
-        generate the zeroDimensionList from a layer         
+        generate the zeroDimensionList from a cornerStitch         
         """
         pointSet = Set() #this is a set of zero dimensional line coordinates, (e.g. x0, x1, x2, etc.)
 
-        if layer.orientation == 'v': #if orientation is vertical, add all unique y values for cells
-            for rect in layer.stitchList:
+        if cornerStitch.orientation == 'v': #if orientation is vertical, add all unique y values for cells
+            for rect in cornerStitch.stitchList:
                 pointSet.add(rect.cell.y)
-            pointSet.add(layer.northBoundary.cell.y) # this won't be included in the normal list, so we do it here
-        elif layer.orientation == 'h': #same for horizontal orientation
-            for rect in layer.stitchList:
+            pointSet.add(cornerStitch.northBoundary.cell.y) # this won't be included in the normal list, so we do it here
+        elif cornerStitch.orientation == 'h': #same for horizontal orientation
+            for rect in cornerStitch.stitchList:
                 pointSet.add(rect.cell.x)
-            pointSet.add(layer.eastBoundary.cell.x)
+            pointSet.add(cornerStitch.eastBoundary.cell.x)
 
         asdf = list(pointSet)
 
@@ -1107,9 +1107,9 @@ class CSgraph:
 
     def drawLayer(self, truePointer = False):
         """
-        Draw all cells in this layer with stitches pointing to their stitch neighbors
+        Draw all cells in this cornerStitch with stitches pointing to their stitch neighbors
         TODO:
-         Also should probably change the dimensions of the object window depending on the layer size.
+         Also should probably change the dimensions of the object window depending on the cornerStitch size.
         """
         fig1 = matplotlib.pyplot.figure()
 
@@ -1221,8 +1221,8 @@ class CSgraph:
 
 
 if __name__ == '__main__':
-    emptyVPlane = cornerStitch(None, None, None, None, None, cell(0, 0, "EMPTY"))
-    emptyHPlane = cornerStitch(None, None, None, None, None, cell(0, 0, "EMPTY"))
+    emptyVPlane = tile(None, None, None, None, None, cell(0, 0, "EMPTY"))
+    emptyHPlane = tile(None, None, None, None, None, cell(0, 0, "EMPTY"))
 
     emptyVStitchList = [emptyVPlane]
     emptyHStitchList = [emptyHPlane]
