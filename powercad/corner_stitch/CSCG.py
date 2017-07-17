@@ -5,6 +5,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from matplotlib import pylab
+import copy
 
 class CSCG:
     """
@@ -35,28 +36,40 @@ class CSCG:
     def findGraphEdges(self):
         matrixCopy = np.copy(self.CG.vertexMatrix)
         print matrixCopy[0][1]
-        edgeList = []#find the unique X/Y coordinate connections
         arrowList = []#contains the information for arrows to be drawn in matplotlib (x,y,dx,dy)
 
+        """
+        edgeList = []#find the unique X/Y coordinate connections
         it = np.nditer(self.CG.vertexMatrix, flags=['multi_index'])
         while not it.finished:
             if it[0] != 0:
                 edgeList.append((it.multi_index))
             it.iternext()
+            getattr(self.CG, "edges")
+        """
+        edgeList = copy.deepcopy(getattr(self.CG, "edges"))
 
         if self.CS.orientation == 'h':
             for stitch in self.CS.stitchList:
                 for edge in edgeList:
-                    if (self.CG.zeroDimensionList[edge[0]] == stitch.cell.getX()
-                            and self.CG.zeroDimensionList[edge[1]] == stitch.cell.getX() + stitch.getWidth()):
-                        arrowList.append((stitch.cell.getX(), stitch.cell.getY(), stitch.getWidth(), 0))
+                    if (self.CG.zeroDimensionList[edge.source] == stitch.cell.getX()
+                            and self.CG.zeroDimensionList[edge.dest] == stitch.cell.getX() + stitch.getWidth()):
+                        if edge.getConstraint().getConstraintName() == "Min_spacing":
+                            color = "red"
+                        elif edge.getConstraint().getConstraintName() == "Min_width":
+                            color = "blue"
+                        arrowList.append((stitch.cell.getX(), stitch.cell.getY(), stitch.getWidth(), 0, color))
                         edgeList.remove(edge)
         elif self.CS.orientation == 'v':
             for stitch in self.CS.stitchList:
                 for edge in edgeList:
-                    if (self.CG.zeroDimensionList[edge[0]] == stitch.cell.getY()
-                             and self.CG.zeroDimensionList[edge[1]] == stitch.cell.getY() + stitch.getHeight()):
-                        arrowList.append((stitch.cell.getX(), stitch.cell.getY(), 0, stitch.getHeight()))
+                    if (self.CG.zeroDimensionList[edge.source] == stitch.cell.getY()
+                             and self.CG.zeroDimensionList[edge.dest] == stitch.cell.getY() + stitch.getHeight()):
+                        if edge.getConstraint().getConstraintName() == "Min_spacing":
+                            color = "red"
+                        elif edge.getConstraint().getConstraintName() == "Min_width":
+                            color = "blue"
+                        arrowList.append((stitch.cell.getX(), stitch.cell.getY(), 0, stitch.getHeight(), color))
                         edgeList.remove(edge)
 
         for foo in arrowList:
@@ -181,7 +194,7 @@ class CSCG:
         self.setAxisLabels(plt)
 
         for arr in self.findGraphEdges():
-            ax1.arrow(arr[0], arr[1], arr[2], arr[3], head_width = .30, head_length = .3, color = 'red')
+            ax1.arrow(arr[0], arr[1], arr[2], arr[3], head_width = .30, head_length = .3, color = arr[4])
 
         plt.xlim(0, self.CS.eastBoundary.cell.x)
         plt.ylim(0, self.CS.northBoundary.cell.y)

@@ -1,5 +1,6 @@
 from sets import Set
 import numpy as np
+import constraint
 
 class constraintGraph:
     """
@@ -52,7 +53,7 @@ class constraintGraph:
 
     def graphFromLayer(self, cornerStitch):
         """
-        given a cornerStitch and an orientation = 'v' or 'h', construct a constraint graph detailing the dependencies of
+        given a cornerStitch, construct a constraint graph detailing the dependencies of
         one dimension point to another
         """
         self.dimListFromLayer(cornerStitch)
@@ -86,12 +87,22 @@ class constraintGraph:
                 origin = self.zeroDimensionList.index(rect.cell.y)
                 dest = self.zeroDimensionList.index(rect.getNorth().cell.y)
                 self.vertexMatrix[origin][dest] = rect.getHeight()
+                if rect.cell.getType() == "EMPTY":
+                    self.edges.append(Edge(origin, dest, constraint.constraint(0)))
+                elif rect.cell.getType() == "SOLID":
+                    self.edges.append(Edge(origin, dest, constraint.constraint(1)))
+
         elif cornerStitch.orientation == 'h':
             for rect in cornerStitch.stitchList:
                 origin = self.zeroDimensionList.index(rect.cell.x)
                 dest = self.zeroDimensionList.index(rect.getEast().cell.x)
                 print "origin = ", origin, "dest = ", dest, "val = ", rect.getWidth()
                 self.vertexMatrix[origin][dest] = rect.getWidth()
+                if rect.cell.getType() == "EMPTY":
+                    self.edges.append(Edge(origin, dest, constraint.constraint(0)))
+                elif rect.cell.getType() == "SOLID":
+                    self.edges.append(Edge(origin, dest, constraint.constraint(1)))
+
 
     def dimListFromLayer(self, cornerStitch):
         """
@@ -108,9 +119,9 @@ class constraintGraph:
                 pointSet.add(rect.cell.x)
             pointSet.add(cornerStitch.eastBoundary.cell.x)
 
-        asdf = list(pointSet)
+        setToList = list(pointSet)
 
-        self.zeroDimensionList =  asdf#setting the list of orientation values to an ordered list
+        self.zeroDimensionList =  setToList#setting the list of orientation values to an ordered list
 
     def reduce(self):
         """
@@ -147,3 +158,16 @@ class constraintGraph:
         nx.draw_networkx_labels(G, pos)
         nx.draw(G, pos, node_color='white', node_size=300, edge_color=edge_colors, edge_cmap=plt.cm.Reds)
         pylab.show()
+
+class Edge():
+
+    def __init__(self, source, dest, constraint):
+        self.source = source
+        self.dest = dest
+        self.constraint = constraint
+
+    def getConstraint(self):
+        return self.constraint
+
+    def printEdge(self):
+        print "s: ", self.source, "d: ", self.dest, "con: ", self.constraint.printCon()
