@@ -32,6 +32,14 @@ class cell:
         if printType: print "type = ", self.type
         return
 
+    def getX(self):
+        return self.x
+
+    def getY(self):
+        return self.y
+
+    def getType(self):
+        return self.type
 
 class tile:
     """
@@ -1086,16 +1094,36 @@ class CSgraph:
         return wedgeList
 
     #figure this out later
-    def drawGraphEdges(self):
+    def findGraphEdges(self):
         matrixCopy = np.copy(self.CG.vertexMatrix)
         print matrixCopy[0][1]
+        edgeList = []#find the unique X/Y coordinate connections
+        arrowList = []#contains the information for arrows to be drawn in matplotlib (x,y,dx,dy)
 
         it = np.nditer(self.CG.vertexMatrix, flags=['multi_index'])
         while not it.finished:
             if it[0] != 0:
-                G.add_edges_from([it.multi_index], weight = it[0])
-                print it[0]
+                edgeList.append((it.multi_index))
             it.iternext()
+
+        if self.CS.orientation == 'h':
+            for stitch in self.CS.stitchList:
+                for edge in edgeList:
+                    if (self.CG.zeroDimensionList[edge[0]] == stitch.cell.getX()
+                            and self.CG.zeroDimensionList[edge[1]] == stitch.cell.getX() + stitch.getWidth()):
+                        arrowList.append((stitch.cell.getX(), stitch.cell.getY(), stitch.getWidth(), 0))
+                        edgeList.remove(edge)
+        elif self.CS.orientation == 'v':
+            for stitch in self.CS.stitchList:
+                for edge in edgeList:
+                    if (self.CG.zeroDimensionList[edge[0]] == stitch.cell.getY()
+                             and self.CG.zeroDimensionList[edge[1]] == stitch.cell.getY() + stitch.getHeight()):
+                        arrowList.append((stitch.cell.getX(), stitch.cell.getY(), 0, stitch.getHeight()))
+                        edgeList.remove(edge)
+
+        for foo in arrowList:
+            print foo
+        return arrowList
 
     def setAxisLabels(self, plt):
         if self.CS.orientation == 'v':
@@ -1214,6 +1242,9 @@ class CSgraph:
         #automatically handle orientation
         self.setAxisLabels(plt)
 
+        for arr in self.findGraphEdges():
+            ax1.arrow(arr[0], arr[1], arr[2], arr[3], head_width = .30, head_length = .3, color = 'red')
+
         plt.xlim(0, self.CS.eastBoundary.cell.x)
         plt.ylim(0, self.CS.northBoundary.cell.y)
         fig1.show()
@@ -1253,6 +1284,6 @@ if __name__ == '__main__':
     #cg.drawGraph()
 
     CGCS = CSgraph(emptyHExample, cg)
-    #CGCS.drawGraphEdges()
+    CGCS.findGraphEdges()
     CGCS.drawLayer()
     #emptyHExample.drawLayer(truePointer=True)
