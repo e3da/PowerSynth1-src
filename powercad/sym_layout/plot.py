@@ -446,7 +446,7 @@ def detect_corners_90(sym_layout2, ax):
     for i in fillets:
         i.calcInnerFilletSpecs() # Find fillet/arc specifications
         print (i.corner.x, i.corner.y), i.concavityQuadrant
-        a = Arc((i.centerX, i.centerY), i.radius*2, i.radius*2, theta1=i.theta1, theta2=i.theta2, facecolor='#E6E6E6', edgecolor='black', linewidth=2)
+        a = Arc((i.centerX, i.centerY), i.radius*2, i.radius*2, theta1=i.theta1, theta2=i.theta2, facecolor='#E6E6E6', edgecolor='red', linewidth=2)
         #ax.add_patch(r) # toggle comment to enable/disable rectangle markings
         ax.add_patch(a) # toggle comment to enable/disable fillet markings
 
@@ -520,7 +520,7 @@ def detect_corners_270(sym_layout2, ax, innerFillets, supertraces):
     for i in outerFillets:
         i.calcOuterFilletSpecs() # Find fillet/arc specifications
         print ((i.corner.x, i.corner.y), i.concavityQuadrant, i.radius)
-        a = Arc((i.centerX, i.centerY), i.radius*2, i.radius*2, theta1=i.theta1, theta2=i.theta2, facecolor='#E6E6E6', edgecolor='#333333', linewidth=2)
+        a = Arc((i.centerX, i.centerY), i.radius*2, i.radius*2, theta1=i.theta1, theta2=i.theta2, facecolor='#E6E6E6', edgecolor='blue', linewidth=2)
         ax.add_patch(a) # toggle comment to enable/disable fillet markings
 
 # test Jun 30, 2017
