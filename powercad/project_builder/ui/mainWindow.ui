@@ -204,15 +204,15 @@ p, li { white-space: pre-wrap; }
           </property>
          </spacer>
         </item>
-        <item row="1" column="0">
-         <spacer name="horizontalSpacer_4">
+        <item row="2" column="1">
+         <spacer name="verticalSpacer_17">
           <property name="orientation">
-           <enum>Qt::Horizontal</enum>
+           <enum>Qt::Vertical</enum>
           </property>
           <property name="sizeHint" stdset="0">
            <size>
-            <width>183</width>
-            <height>123</height>
+            <width>273</width>
+            <height>276</height>
            </size>
           </property>
          </spacer>
@@ -230,15 +230,15 @@ p, li { white-space: pre-wrap; }
           </property>
          </spacer>
         </item>
-        <item row="2" column="1">
-         <spacer name="verticalSpacer_17">
+        <item row="1" column="0">
+         <spacer name="horizontalSpacer_4">
           <property name="orientation">
-           <enum>Qt::Vertical</enum>
+           <enum>Qt::Horizontal</enum>
           </property>
           <property name="sizeHint" stdset="0">
            <size>
-            <width>273</width>
-            <height>276</height>
+            <width>183</width>
+            <height>123</height>
            </size>
           </property>
          </spacer>
@@ -444,219 +444,7 @@ p, li { white-space: pre-wrap; }
       </layout>
      </widget>
     </item>
-    <item row="0" column="0">
-     <widget class="QLabel" name="label_4">
-      <property name="maximumSize">
-       <size>
-        <width>300</width>
-        <height>150</height>
-       </size>
-      </property>
-      <property name="palette">
-       <palette>
-        <active>
-         <colorrole role="Button">
-          <brush brushstyle="RadialGradientPattern">
-           <gradient centralx="0.500000000000000" centraly="0.500000000000000" focalx="0.653409000000000" focaly="0.312000000000000" radius="0.481000000000000" type="RadialGradient" spread="PadSpread" coordinatemode="ObjectBoundingMode">
-            <gradientstop position="0.698864000000000">
-             <color alpha="194">
-              <red>255</red>
-              <green>255</green>
-              <blue>255</blue>
-             </color>
-            </gradientstop>
-            <gradientstop position="1.000000000000000">
-             <color alpha="0">
-              <red>255</red>
-              <green>255</green>
-              <blue>255</blue>
-             </color>
-            </gradientstop>
-           </gradient>
-          </brush>
-         </colorrole>
-         <colorrole role="Base">
-          <brush brushstyle="RadialGradientPattern">
-           <gradient centralx="0.500000000000000" centraly="0.500000000000000" focalx="0.653409000000000" focaly="0.312000000000000" radius="0.481000000000000" type="RadialGradient" spread="PadSpread" coordinatemode="ObjectBoundingMode">
-            <gradientstop position="0.698864000000000">
-             <color alpha="194">
-              <red>255</red>
-              <green>255</green>
-              <blue>255</blue>
-             </color>
-            </gradientstop>
-            <gradientstop position="1.000000000000000">
-             <color alpha="0">
-              <red>255</red>
-              <green>255</green>
-              <blue>255</blue>
-             </color>
-            </gradientstop>
-           </gradient>
-          </brush>
-         </colorrole>
-         <colorrole role="Window">
-          <brush brushstyle="RadialGradientPattern">
-           <gradient centralx="0.500000000000000" centraly="0.500000000000000" focalx="0.653409000000000" focaly="0.312000000000000" radius="0.481000000000000" type="RadialGradient" spread="PadSpread" coordinatemode="ObjectBoundingMode">
-            <gradientstop position="0.698864000000000">
-             <color alpha="194">
-              <red>255</red>
-              <green>255</green>
-              <blue>255</blue>
-             </color>
-            </gradientstop>
-            <gradientstop position="1.000000000000000">
-             <color alpha="0">
-              <red>255</red>
-              <green>255</green>
-              <blue>255</blue>
-             </color>
-            </gradientstop>
-           </gradient>
-          </brush>
-         </colorrole>
-        </active>
-        <inactive>
-         <colorrole role="Button">
-          <brush brushstyle="RadialGradientPattern">
-           <gradient centralx="0.500000000000000" centraly="0.500000000000000" focalx="0.653409000000000" focaly="0.312000000000000" radius="0.481000000000000" type="RadialGradient" spread="PadSpread" coordinatemode="ObjectBoundingMode">
-            <gradientstop position="0.698864000000000">
-             <color alpha="194">
-              <red>255</red>
-              <green>255</green>
-              <blue>255</blue>
-             </color>
-            </gradientstop>
-            <gradientstop position="1.000000000000000">
-             <color alpha="0">
-              <red>255</red>
-              <green>255</green>
-              <blue>255</blue>
-             </color>
-            </gradientstop>
-           </gradient>
-          </brush>
-         </colorrole>
-         <colorrole role="Base">
-          <brush brushstyle="RadialGradientPattern">
-           <gradient centralx="0.500000000000000" centraly="0.500000000000000" focalx="0.653409000000000" focaly="0.312000000000000" radius="0.481000000000000" type="RadialGradient" spread="PadSpread" coordinatemode="ObjectBoundingMode">
-            <gradientstop position="0.698864000000000">
-             <color alpha="194">
-              <red>255</red>
-              <green>255</green>
-              <blue>255</blue>
-             </color>
-            </gradientstop>
-            <gradientstop position="1.000000000000000">
-             <color alpha="0">
-              <red>255</red>
-              <green>255</green>
-              <blue>255</blue>
-             </color>
-            </gradientstop>
-           </gradient>
-          </brush>
-         </colorrole>
-         <colorrole role="Window">
-          <brush brushstyle="RadialGradientPattern">
-           <gradient centralx="0.500000000000000" centraly="0.500000000000000" focalx="0.653409000000000" focaly="0.312000000000000" radius="0.481000000000000" type="RadialGradient" spread="PadSpread" coordinatemode="ObjectBoundingMode">
-            <gradientstop position="0.698864000000000">
-             <color alpha="194">
-              <red>255</red>
-              <green>255</green>
-              <blue>255</blue>
-             </color>
-            </gradientstop>
-            <gradientstop position="1.000000000000000">
-             <color alpha="0">
-              <red>255</red>
-              <green>255</green>
-              <blue>255</blue>
-             </color>
-            </gradientstop>
-           </gradient>
-          </brush>
-         </colorrole>
-        </inactive>
-        <disabled>
-         <colorrole role="Button">
-          <brush brushstyle="RadialGradientPattern">
-           <gradient centralx="0.500000000000000" centraly="0.500000000000000" focalx="0.653409000000000" focaly="0.312000000000000" radius="0.481000000000000" type="RadialGradient" spread="PadSpread" coordinatemode="ObjectBoundingMode">
-            <gradientstop position="0.698864000000000">
-             <color alpha="194">
-              <red>255</red>
-              <green>255</green>
-              <blue>255</blue>
-             </color>
-            </gradientstop>
-            <gradientstop position="1.000000000000000">
-             <color alpha="0">
-              <red>255</red>
-              <green>255</green>
-              <blue>255</blue>
-             </color>
-            </gradientstop>
-           </gradient>
-          </brush>
-         </colorrole>
-         <colorrole role="Base">
-          <brush brushstyle="RadialGradientPattern">
-           <gradient centralx="0.500000000000000" centraly="0.500000000000000" focalx="0.653409000000000" focaly="0.312000000000000" radius="0.481000000000000" type="RadialGradient" spread="PadSpread" coordinatemode="ObjectBoundingMode">
-            <gradientstop position="0.698864000000000">
-             <color alpha="194">
-              <red>255</red>
-              <green>255</green>
-              <blue>255</blue>
-             </color>
-            </gradientstop>
-            <gradientstop position="1.000000000000000">
-             <color alpha="0">
-              <red>255</red>
-              <green>255</green>
-              <blue>255</blue>
-             </color>
-            </gradientstop>
-           </gradient>
-          </brush>
-         </colorrole>
-         <colorrole role="Window">
-          <brush brushstyle="RadialGradientPattern">
-           <gradient centralx="0.500000000000000" centraly="0.500000000000000" focalx="0.653409000000000" focaly="0.312000000000000" radius="0.481000000000000" type="RadialGradient" spread="PadSpread" coordinatemode="ObjectBoundingMode">
-            <gradientstop position="0.698864000000000">
-             <color alpha="194">
-              <red>255</red>
-              <green>255</green>
-              <blue>255</blue>
-             </color>
-            </gradientstop>
-            <gradientstop position="1.000000000000000">
-             <color alpha="0">
-              <red>255</red>
-              <green>255</green>
-              <blue>255</blue>
-             </color>
-            </gradientstop>
-           </gradient>
-          </brush>
-         </colorrole>
-        </disabled>
-       </palette>
-      </property>
-      <property name="styleSheet">
-       <string notr="true">background-color: qradialgradient(spread:pad, cx:0.5, cy:0.5, radius:0.481, fx:0.653409, fy:0.312, stop:0.698864 rgba(255, 255, 255, 194), stop:1 rgba(255, 255, 255, 0));</string>
-      </property>
-      <property name="text">
-       <string/>
-      </property>
-      <property name="pixmap">
-       <pixmap>:/logo/PowerSynth_Logo_Temp2.png</pixmap>
-      </property>
-      <property name="scaledContents">
-       <bool>true</bool>
-      </property>
-     </widget>
-    </item>
-    <item row="1" column="0" rowspan="4">
+    <item row="1" column="0" rowspan="4" colspan="2">
      <widget class="QToolBox" name="navigation">
       <property name="enabled">
        <bool>true</bool>
@@ -802,15 +590,15 @@ p, li { white-space: pre-wrap; }
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>242</width>
-         <height>637</height>
+         <width>276</width>
+         <height>653</height>
         </rect>
        </property>
        <attribute name="label">
         <string>Module Stack</string>
        </attribute>
-       <layout class="QVBoxLayout" name="verticalLayout">
-        <item>
+       <layout class="QGridLayout" name="gridLayout_22">
+        <item row="0" column="0" colspan="2">
          <widget class="QGroupBox" name="groupBox_5">
           <property name="minimumSize">
            <size>
@@ -844,7 +632,7 @@ p, li { white-space: pre-wrap; }
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'MS Shell Dlg 2'; font-size:10pt; font-weight:600; font-style:normal;&quot;&gt;
-&lt;p align=&quot;justify&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;Use the dropdown boxes below to select a material from the technology library for each layer of the module stack.  Use the respective input boxes to define the properties of each layer of the stack.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;Use the dropdown boxes below to select a material from the technology library for each layer of the module stack.  Import a layer stack CSV file or use the respective input boxes to define the properties of each layer of the stack. &lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
              </property>
              <property name="wordWrap">
               <bool>true</bool>
@@ -854,7 +642,21 @@ p, li { white-space: pre-wrap; }
           </layout>
          </widget>
         </item>
-        <item>
+        <item row="1" column="0">
+         <widget class="QPushButton" name="btn_import_layer_stack">
+          <property name="text">
+           <string>Import Layer Stack CSV File</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QPushButton" name="btn_refresh_module_stack">
+          <property name="text">
+           <string>Refresh Module Stack</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0" colspan="2">
          <widget class="QGroupBox" name="box_baseplate_props">
           <property name="font">
            <font>
@@ -1171,7 +973,7 @@ p, li { white-space: pre-wrap; }
           </layout>
          </widget>
         </item>
-        <item>
+        <item row="3" column="0" colspan="2">
          <widget class="QGroupBox" name="box_sub_attach_props">
           <property name="font">
            <font>
@@ -1283,7 +1085,7 @@ p, li { white-space: pre-wrap; }
           </layout>
          </widget>
         </item>
-        <item>
+        <item row="4" column="0" colspan="2">
          <widget class="QGroupBox" name="box_substrate_props">
           <property name="font">
            <font>
@@ -1295,25 +1097,91 @@ p, li { white-space: pre-wrap; }
            <string>Substrate Properties</string>
           </property>
           <layout class="QGridLayout" name="gridLayout_10">
-           <item row="0" column="0">
-            <widget class="QLabel" name="label_12">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
+           <item row="4" column="1">
+            <widget class="QLineEdit" name="txt_subLedge">
+             <property name="maximumSize">
+              <size>
+               <width>50</width>
+               <height>16777215</height>
+              </size>
              </property>
+             <property name="styleSheet">
+              <string notr="true">background-color: rgb(255, 255, 255);</string>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="0">
+            <widget class="QLabel" name="label_14">
              <property name="layoutDirection">
               <enum>Qt::LeftToRight</enum>
              </property>
              <property name="text">
-              <string>Material</string>
+              <string>Length</string>
              </property>
              <property name="alignment">
               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
              </property>
              <property name="buddy">
-              <cstring>cmb_subMaterial</cstring>
+              <cstring>txt_subLength</cstring>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="3">
+            <widget class="QLabel" name="lbl_err_subLength">
+             <property name="minimumSize">
+              <size>
+               <width>50</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="3">
+            <widget class="QLabel" name="lbl_err_subLedge">
+             <property name="minimumSize">
+              <size>
+               <width>50</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="2">
+            <widget class="QLabel" name="label_17">
+             <property name="text">
+              <string>mm</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <widget class="QLineEdit" name="txt_subLength">
+             <property name="maximumSize">
+              <size>
+               <width>50</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">background-color: rgb(255, 255, 255);</string>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="2">
+            <widget class="QLabel" name="label_16">
+             <property name="text">
+              <string>mm</string>
              </property>
             </widget>
            </item>
@@ -1427,19 +1295,36 @@ p, li { white-space: pre-wrap; }
              </property>
             </widget>
            </item>
-           <item row="1" column="0">
-            <widget class="QLabel" name="label_13">
-             <property name="layoutDirection">
-              <enum>Qt::LeftToRight</enum>
+           <item row="4" column="2">
+            <widget class="QLabel" name="label_18">
+             <property name="text">
+              <string>mm</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="3">
+            <widget class="QLabel" name="lbl_err_subMaterial">
+             <property name="minimumSize">
+              <size>
+               <width>50</width>
+               <height>0</height>
+              </size>
              </property>
              <property name="text">
-              <string>Width</string>
+              <string/>
              </property>
-             <property name="alignment">
-              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </widget>
+           </item>
+           <item row="1" column="3">
+            <widget class="QLabel" name="lbl_err_subWidth">
+             <property name="minimumSize">
+              <size>
+               <width>50</width>
+               <height>0</height>
+              </size>
              </property>
-             <property name="buddy">
-              <cstring>txt_subWidth</cstring>
+             <property name="text">
+              <string/>
              </property>
             </widget>
            </item>
@@ -1459,53 +1344,7 @@ p, li { white-space: pre-wrap; }
              </property>
             </widget>
            </item>
-           <item row="1" column="2">
-            <widget class="QLabel" name="label_16">
-             <property name="text">
-              <string>mm</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="0">
-            <widget class="QLabel" name="label_14">
-             <property name="layoutDirection">
-              <enum>Qt::LeftToRight</enum>
-             </property>
-             <property name="text">
-              <string>Length</string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-             </property>
-             <property name="buddy">
-              <cstring>txt_subLength</cstring>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="1">
-            <widget class="QLineEdit" name="txt_subLength">
-             <property name="maximumSize">
-              <size>
-               <width>50</width>
-               <height>16777215</height>
-              </size>
-             </property>
-             <property name="styleSheet">
-              <string notr="true">background-color: rgb(255, 255, 255);</string>
-             </property>
-             <property name="text">
-              <string/>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="2">
-            <widget class="QLabel" name="label_17">
-             <property name="text">
-              <string>mm</string>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="0">
+           <item row="4" column="0">
             <widget class="QLabel" name="label_15">
              <property name="layoutDirection">
               <enum>Qt::LeftToRight</enum>
@@ -1521,85 +1360,48 @@ p, li { white-space: pre-wrap; }
              </property>
             </widget>
            </item>
-           <item row="3" column="1">
-            <widget class="QLineEdit" name="txt_subLedge">
-             <property name="maximumSize">
-              <size>
-               <width>50</width>
-               <height>16777215</height>
-              </size>
-             </property>
-             <property name="styleSheet">
-              <string notr="true">background-color: rgb(255, 255, 255);</string>
+           <item row="1" column="0">
+            <widget class="QLabel" name="label_13">
+             <property name="layoutDirection">
+              <enum>Qt::LeftToRight</enum>
              </property>
              <property name="text">
-              <string/>
+              <string>Width</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+             </property>
+             <property name="buddy">
+              <cstring>txt_subWidth</cstring>
              </property>
             </widget>
            </item>
-           <item row="3" column="2">
-            <widget class="QLabel" name="label_18">
-             <property name="text">
-              <string>mm</string>
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_12">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
              </property>
-            </widget>
-           </item>
-           <item row="1" column="3">
-            <widget class="QLabel" name="lbl_err_subWidth">
-             <property name="minimumSize">
-              <size>
-               <width>50</width>
-               <height>0</height>
-              </size>
+             <property name="layoutDirection">
+              <enum>Qt::LeftToRight</enum>
              </property>
              <property name="text">
-              <string/>
+              <string>Material</string>
              </property>
-            </widget>
-           </item>
-           <item row="0" column="3">
-            <widget class="QLabel" name="lbl_err_subMaterial">
-             <property name="minimumSize">
-              <size>
-               <width>50</width>
-               <height>0</height>
-              </size>
+             <property name="alignment">
+              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
              </property>
-             <property name="text">
-              <string/>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="3">
-            <widget class="QLabel" name="lbl_err_subLength">
-             <property name="minimumSize">
-              <size>
-               <width>50</width>
-               <height>0</height>
-              </size>
-             </property>
-             <property name="text">
-              <string/>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="3">
-            <widget class="QLabel" name="lbl_err_subLedge">
-             <property name="minimumSize">
-              <size>
-               <width>50</width>
-               <height>0</height>
-              </size>
-             </property>
-             <property name="text">
-              <string/>
+             <property name="buddy">
+              <cstring>cmb_subMaterial</cstring>
              </property>
             </widget>
            </item>
           </layout>
          </widget>
         </item>
-        <item>
+        <item row="5" column="0" colspan="2">
          <widget class="QGroupBox" name="box_system_props">
           <property name="font">
            <font>
@@ -3295,15 +3097,73 @@ p, li { white-space: pre-wrap; }
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>300</width>
-         <height>517</height>
+         <width>354</width>
+         <height>582</height>
         </rect>
        </property>
        <attribute name="label">
         <string>Design Performance Identification</string>
        </attribute>
        <layout class="QGridLayout" name="gridLayout_7">
-        <item row="4" column="0" colspan="3">
+        <item row="0" column="0" colspan="6">
+         <widget class="QGroupBox" name="groupBox">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="font">
+           <font>
+            <weight>75</weight>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="title">
+           <string>Instructions</string>
+          </property>
+          <layout class="QGridLayout" name="gridLayout_9">
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_42">
+             <property name="text">
+              <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:600; font-style:normal;&quot;&gt;
+&lt;p align=&quot;justify&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;Use the interface below to define electrical and thermal performance measures to be considered in the layout optimizer. First define the performance measure and give it a name. Then use the module layout to the right to choose the respective devices and leads to be considered when determining performance.  Finally, click &amp;quot;Add Performance Measure&amp;quot; in order to add it to the optimization criteria.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+             <property name="wordWrap">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <spacer name="verticalSpacer_12">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeType">
+           <enum>QSizePolicy::Fixed</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item row="2" column="0" colspan="4">
+         <widget class="QLabel" name="label_25">
+          <property name="text">
+           <string>Step 1:  Define a performance measure</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="0" colspan="3">
          <widget class="QLineEdit" name="txt_perform_name">
           <property name="minimumSize">
            <size>
@@ -3319,7 +3179,7 @@ p, li { white-space: pre-wrap; }
           </property>
          </widget>
         </item>
-        <item row="4" column="3">
+        <item row="3" column="3">
          <widget class="QComboBox" name="cmb_perform_elecTherm">
           <property name="minimumSize">
            <size>
@@ -3338,7 +3198,7 @@ p, li { white-space: pre-wrap; }
           </property>
          </widget>
         </item>
-        <item row="4" column="4">
+        <item row="3" column="4" colspan="2">
          <widget class="QComboBox" name="cmb_perform_type">
           <property name="minimumSize">
            <size>
@@ -3357,7 +3217,159 @@ p, li { white-space: pre-wrap; }
           </property>
          </widget>
         </item>
-        <item row="9" column="4">
+        <item row="4" column="0">
+         <spacer name="verticalSpacer_8">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeType">
+           <enum>QSizePolicy::Fixed</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>13</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item row="5" column="0" colspan="2">
+         <widget class="QLabel" name="lbl_sel_electrical_model">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="text">
+           <string>Step 2:  Electrical Model:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="5" column="2" colspan="2">
+         <widget class="QComboBox" name="cmb_elec_model">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>100</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>150</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">background-color: rgb(255, 255, 255);</string>
+          </property>
+          <item>
+           <property name="text">
+            <string>Micro Strip</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Response Surface</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+        <item row="5" column="5">
+         <spacer name="horizontalSpacer_12">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>97</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item row="6" column="1">
+         <widget class="QLabel" name="lbl_sel_thermal_model">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="text">
+           <string>Thermal Model:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="6" column="2" colspan="2">
+         <widget class="QComboBox" name="cmb_thermal_model">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>100</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>150</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">background-color: rgb(255, 255, 255);</string>
+          </property>
+          <item>
+           <property name="text">
+            <string>Fast Thermal (FEM)</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Rectangle Flux</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+        <item row="6" column="5">
+         <spacer name="horizontalSpacer_11">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>97</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item row="7" column="0">
+         <spacer name="verticalSpacer_6">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeType">
+           <enum>QSizePolicy::Fixed</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>10</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item row="8" column="0" colspan="5">
+         <widget class="QLabel" name="lbl_perform_step3">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="text">
+           <string>Step 3:  Select Devices/Leads.</string>
+          </property>
+         </widget>
+        </item>
+        <item row="8" column="5">
          <spacer name="horizontalSpacer_2">
           <property name="orientation">
            <enum>Qt::Horizontal</enum>
@@ -3370,7 +3382,137 @@ p, li { white-space: pre-wrap; }
           </property>
          </spacer>
         </item>
-        <item row="10" column="0" colspan="5">
+        <item row="9" column="0">
+         <spacer name="verticalSpacer_7">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeType">
+           <enum>QSizePolicy::Fixed</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>10</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item row="10" column="0">
+         <widget class="QLabel" name="lbl_perform_step4">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="text">
+           <string>Step 4:</string>
+          </property>
+          <property name="buddy">
+           <cstring>btn_perform_addPerformance</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="10" column="1" colspan="3">
+         <widget class="QPushButton" name="btn_perform_addPerformance">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="palette">
+           <palette>
+            <active>
+             <colorrole role="Button">
+              <brush brushstyle="SolidPattern">
+               <color alpha="255">
+                <red>245</red>
+                <green>245</green>
+                <blue>245</blue>
+               </color>
+              </brush>
+             </colorrole>
+             <colorrole role="Base">
+              <brush brushstyle="SolidPattern">
+               <color alpha="255">
+                <red>245</red>
+                <green>245</green>
+                <blue>245</blue>
+               </color>
+              </brush>
+             </colorrole>
+             <colorrole role="Window">
+              <brush brushstyle="SolidPattern">
+               <color alpha="255">
+                <red>245</red>
+                <green>245</green>
+                <blue>245</blue>
+               </color>
+              </brush>
+             </colorrole>
+            </active>
+            <inactive>
+             <colorrole role="Button">
+              <brush brushstyle="SolidPattern">
+               <color alpha="255">
+                <red>245</red>
+                <green>245</green>
+                <blue>245</blue>
+               </color>
+              </brush>
+             </colorrole>
+             <colorrole role="Base">
+              <brush brushstyle="SolidPattern">
+               <color alpha="255">
+                <red>245</red>
+                <green>245</green>
+                <blue>245</blue>
+               </color>
+              </brush>
+             </colorrole>
+             <colorrole role="Window">
+              <brush brushstyle="SolidPattern">
+               <color alpha="255">
+                <red>245</red>
+                <green>245</green>
+                <blue>245</blue>
+               </color>
+              </brush>
+             </colorrole>
+            </inactive>
+            <disabled>
+             <colorrole role="Button">
+              <brush brushstyle="SolidPattern">
+               <color alpha="255">
+                <red>245</red>
+                <green>245</green>
+                <blue>245</blue>
+               </color>
+              </brush>
+             </colorrole>
+             <colorrole role="Base">
+              <brush brushstyle="SolidPattern">
+               <color alpha="255">
+                <red>245</red>
+                <green>245</green>
+                <blue>245</blue>
+               </color>
+              </brush>
+             </colorrole>
+             <colorrole role="Window">
+              <brush brushstyle="SolidPattern">
+               <color alpha="255">
+                <red>245</red>
+                <green>245</green>
+                <blue>245</blue>
+               </color>
+              </brush>
+             </colorrole>
+            </disabled>
+           </palette>
+          </property>
+          <property name="text">
+           <string>Add Performance Measure</string>
+          </property>
+         </widget>
+        </item>
+        <item row="11" column="0" colspan="6">
          <widget class="QTableWidget" name="tbl_performance">
           <property name="palette">
            <palette>
@@ -3495,220 +3637,6 @@ p, li { white-space: pre-wrap; }
           <column/>
           <column/>
           <column/>
-         </widget>
-        </item>
-        <item row="7" column="0" colspan="5">
-         <widget class="QLabel" name="lbl_perform_step2">
-          <property name="enabled">
-           <bool>false</bool>
-          </property>
-          <property name="text">
-           <string>Step 2:  Select Devices/Leads.</string>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="0" colspan="5">
-         <widget class="QLabel" name="label_25">
-          <property name="text">
-           <string>Step 1:  Define a performance measure</string>
-          </property>
-         </widget>
-        </item>
-        <item row="6" column="0">
-         <spacer name="verticalSpacer_6">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-          <property name="sizeType">
-           <enum>QSizePolicy::Fixed</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>20</width>
-            <height>10</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item row="8" column="0">
-         <spacer name="verticalSpacer_7">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-          <property name="sizeType">
-           <enum>QSizePolicy::Fixed</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>20</width>
-            <height>10</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item row="9" column="0">
-         <widget class="QLabel" name="lbl_perform_step3">
-          <property name="enabled">
-           <bool>false</bool>
-          </property>
-          <property name="text">
-           <string>Step 3:</string>
-          </property>
-          <property name="buddy">
-           <cstring>btn_perform_addPerformance</cstring>
-          </property>
-         </widget>
-        </item>
-        <item row="9" column="1" colspan="3">
-         <widget class="QPushButton" name="btn_perform_addPerformance">
-          <property name="enabled">
-           <bool>false</bool>
-          </property>
-          <property name="palette">
-           <palette>
-            <active>
-             <colorrole role="Button">
-              <brush brushstyle="SolidPattern">
-               <color alpha="255">
-                <red>245</red>
-                <green>245</green>
-                <blue>245</blue>
-               </color>
-              </brush>
-             </colorrole>
-             <colorrole role="Base">
-              <brush brushstyle="SolidPattern">
-               <color alpha="255">
-                <red>245</red>
-                <green>245</green>
-                <blue>245</blue>
-               </color>
-              </brush>
-             </colorrole>
-             <colorrole role="Window">
-              <brush brushstyle="SolidPattern">
-               <color alpha="255">
-                <red>245</red>
-                <green>245</green>
-                <blue>245</blue>
-               </color>
-              </brush>
-             </colorrole>
-            </active>
-            <inactive>
-             <colorrole role="Button">
-              <brush brushstyle="SolidPattern">
-               <color alpha="255">
-                <red>245</red>
-                <green>245</green>
-                <blue>245</blue>
-               </color>
-              </brush>
-             </colorrole>
-             <colorrole role="Base">
-              <brush brushstyle="SolidPattern">
-               <color alpha="255">
-                <red>245</red>
-                <green>245</green>
-                <blue>245</blue>
-               </color>
-              </brush>
-             </colorrole>
-             <colorrole role="Window">
-              <brush brushstyle="SolidPattern">
-               <color alpha="255">
-                <red>245</red>
-                <green>245</green>
-                <blue>245</blue>
-               </color>
-              </brush>
-             </colorrole>
-            </inactive>
-            <disabled>
-             <colorrole role="Button">
-              <brush brushstyle="SolidPattern">
-               <color alpha="255">
-                <red>245</red>
-                <green>245</green>
-                <blue>245</blue>
-               </color>
-              </brush>
-             </colorrole>
-             <colorrole role="Base">
-              <brush brushstyle="SolidPattern">
-               <color alpha="255">
-                <red>245</red>
-                <green>245</green>
-                <blue>245</blue>
-               </color>
-              </brush>
-             </colorrole>
-             <colorrole role="Window">
-              <brush brushstyle="SolidPattern">
-               <color alpha="255">
-                <red>245</red>
-                <green>245</green>
-                <blue>245</blue>
-               </color>
-              </brush>
-             </colorrole>
-            </disabled>
-           </palette>
-          </property>
-          <property name="text">
-           <string>Add Performance Measure</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="0">
-         <spacer name="verticalSpacer_12">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-          <property name="sizeType">
-           <enum>QSizePolicy::Fixed</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>20</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item row="0" column="0" colspan="5">
-         <widget class="QGroupBox" name="groupBox">
-          <property name="minimumSize">
-           <size>
-            <width>0</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="font">
-           <font>
-            <weight>75</weight>
-            <bold>true</bold>
-           </font>
-          </property>
-          <property name="title">
-           <string>Instructions</string>
-          </property>
-          <layout class="QGridLayout" name="gridLayout_9">
-           <item row="0" column="0">
-            <widget class="QLabel" name="label_42">
-             <property name="text">
-              <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
-&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
-p, li { white-space: pre-wrap; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:600; font-style:normal;&quot;&gt;
-&lt;p align=&quot;justify&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;Use the interface below to define electrical and thermal performance measures to be considered in the layout optimizer. First define the performance measure and give it a name. Then use the module layout to the right to choose the respective devices and leads to be considered when determining performance.  Finally, click &amp;quot;Add Performance Measure&amp;quot; in order to add it to the optimization criteria.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-             </property>
-             <property name="wordWrap">
-              <bool>true</bool>
-             </property>
-            </widget>
-           </item>
-          </layout>
          </widget>
         </item>
        </layout>
@@ -4051,22 +3979,234 @@ p, li { white-space: pre-wrap; }
           </layout>
          </widget>
         </item>
-        <item row="4" column="0">
+        <item row="5" column="0">
+         <widget class="QCheckBox" name="checkBox_fillet">
+          <property name="text">
+           <string>Apply fillets</string>
+          </property>
+         </widget>
+        </item>
+        <item row="5" column="1">
          <widget class="QPushButton" name="btn_open_sol_browser">
           <property name="text">
            <string>Open Solution Browser</string>
           </property>
          </widget>
         </item>
-        <item row="4" column="1">
-         <widget class="QPushButton" name="btn_fillet">
-          <property name="text">
-           <string>Fillet corners</string>
-          </property>
-         </widget>
-        </item>
        </layout>
       </widget>
+     </widget>
+    </item>
+    <item row="0" column="0" colspan="2">
+     <widget class="QLabel" name="label_4">
+      <property name="maximumSize">
+       <size>
+        <width>300</width>
+        <height>150</height>
+       </size>
+      </property>
+      <property name="palette">
+       <palette>
+        <active>
+         <colorrole role="Button">
+          <brush brushstyle="RadialGradientPattern">
+           <gradient centralx="0.500000000000000" centraly="0.500000000000000" focalx="0.653409000000000" focaly="0.312000000000000" radius="0.481000000000000" type="RadialGradient" spread="PadSpread" coordinatemode="ObjectBoundingMode">
+            <gradientstop position="0.698864000000000">
+             <color alpha="194">
+              <red>255</red>
+              <green>255</green>
+              <blue>255</blue>
+             </color>
+            </gradientstop>
+            <gradientstop position="1.000000000000000">
+             <color alpha="0">
+              <red>255</red>
+              <green>255</green>
+              <blue>255</blue>
+             </color>
+            </gradientstop>
+           </gradient>
+          </brush>
+         </colorrole>
+         <colorrole role="Base">
+          <brush brushstyle="RadialGradientPattern">
+           <gradient centralx="0.500000000000000" centraly="0.500000000000000" focalx="0.653409000000000" focaly="0.312000000000000" radius="0.481000000000000" type="RadialGradient" spread="PadSpread" coordinatemode="ObjectBoundingMode">
+            <gradientstop position="0.698864000000000">
+             <color alpha="194">
+              <red>255</red>
+              <green>255</green>
+              <blue>255</blue>
+             </color>
+            </gradientstop>
+            <gradientstop position="1.000000000000000">
+             <color alpha="0">
+              <red>255</red>
+              <green>255</green>
+              <blue>255</blue>
+             </color>
+            </gradientstop>
+           </gradient>
+          </brush>
+         </colorrole>
+         <colorrole role="Window">
+          <brush brushstyle="RadialGradientPattern">
+           <gradient centralx="0.500000000000000" centraly="0.500000000000000" focalx="0.653409000000000" focaly="0.312000000000000" radius="0.481000000000000" type="RadialGradient" spread="PadSpread" coordinatemode="ObjectBoundingMode">
+            <gradientstop position="0.698864000000000">
+             <color alpha="194">
+              <red>255</red>
+              <green>255</green>
+              <blue>255</blue>
+             </color>
+            </gradientstop>
+            <gradientstop position="1.000000000000000">
+             <color alpha="0">
+              <red>255</red>
+              <green>255</green>
+              <blue>255</blue>
+             </color>
+            </gradientstop>
+           </gradient>
+          </brush>
+         </colorrole>
+        </active>
+        <inactive>
+         <colorrole role="Button">
+          <brush brushstyle="RadialGradientPattern">
+           <gradient centralx="0.500000000000000" centraly="0.500000000000000" focalx="0.653409000000000" focaly="0.312000000000000" radius="0.481000000000000" type="RadialGradient" spread="PadSpread" coordinatemode="ObjectBoundingMode">
+            <gradientstop position="0.698864000000000">
+             <color alpha="194">
+              <red>255</red>
+              <green>255</green>
+              <blue>255</blue>
+             </color>
+            </gradientstop>
+            <gradientstop position="1.000000000000000">
+             <color alpha="0">
+              <red>255</red>
+              <green>255</green>
+              <blue>255</blue>
+             </color>
+            </gradientstop>
+           </gradient>
+          </brush>
+         </colorrole>
+         <colorrole role="Base">
+          <brush brushstyle="RadialGradientPattern">
+           <gradient centralx="0.500000000000000" centraly="0.500000000000000" focalx="0.653409000000000" focaly="0.312000000000000" radius="0.481000000000000" type="RadialGradient" spread="PadSpread" coordinatemode="ObjectBoundingMode">
+            <gradientstop position="0.698864000000000">
+             <color alpha="194">
+              <red>255</red>
+              <green>255</green>
+              <blue>255</blue>
+             </color>
+            </gradientstop>
+            <gradientstop position="1.000000000000000">
+             <color alpha="0">
+              <red>255</red>
+              <green>255</green>
+              <blue>255</blue>
+             </color>
+            </gradientstop>
+           </gradient>
+          </brush>
+         </colorrole>
+         <colorrole role="Window">
+          <brush brushstyle="RadialGradientPattern">
+           <gradient centralx="0.500000000000000" centraly="0.500000000000000" focalx="0.653409000000000" focaly="0.312000000000000" radius="0.481000000000000" type="RadialGradient" spread="PadSpread" coordinatemode="ObjectBoundingMode">
+            <gradientstop position="0.698864000000000">
+             <color alpha="194">
+              <red>255</red>
+              <green>255</green>
+              <blue>255</blue>
+             </color>
+            </gradientstop>
+            <gradientstop position="1.000000000000000">
+             <color alpha="0">
+              <red>255</red>
+              <green>255</green>
+              <blue>255</blue>
+             </color>
+            </gradientstop>
+           </gradient>
+          </brush>
+         </colorrole>
+        </inactive>
+        <disabled>
+         <colorrole role="Button">
+          <brush brushstyle="RadialGradientPattern">
+           <gradient centralx="0.500000000000000" centraly="0.500000000000000" focalx="0.653409000000000" focaly="0.312000000000000" radius="0.481000000000000" type="RadialGradient" spread="PadSpread" coordinatemode="ObjectBoundingMode">
+            <gradientstop position="0.698864000000000">
+             <color alpha="194">
+              <red>255</red>
+              <green>255</green>
+              <blue>255</blue>
+             </color>
+            </gradientstop>
+            <gradientstop position="1.000000000000000">
+             <color alpha="0">
+              <red>255</red>
+              <green>255</green>
+              <blue>255</blue>
+             </color>
+            </gradientstop>
+           </gradient>
+          </brush>
+         </colorrole>
+         <colorrole role="Base">
+          <brush brushstyle="RadialGradientPattern">
+           <gradient centralx="0.500000000000000" centraly="0.500000000000000" focalx="0.653409000000000" focaly="0.312000000000000" radius="0.481000000000000" type="RadialGradient" spread="PadSpread" coordinatemode="ObjectBoundingMode">
+            <gradientstop position="0.698864000000000">
+             <color alpha="194">
+              <red>255</red>
+              <green>255</green>
+              <blue>255</blue>
+             </color>
+            </gradientstop>
+            <gradientstop position="1.000000000000000">
+             <color alpha="0">
+              <red>255</red>
+              <green>255</green>
+              <blue>255</blue>
+             </color>
+            </gradientstop>
+           </gradient>
+          </brush>
+         </colorrole>
+         <colorrole role="Window">
+          <brush brushstyle="RadialGradientPattern">
+           <gradient centralx="0.500000000000000" centraly="0.500000000000000" focalx="0.653409000000000" focaly="0.312000000000000" radius="0.481000000000000" type="RadialGradient" spread="PadSpread" coordinatemode="ObjectBoundingMode">
+            <gradientstop position="0.698864000000000">
+             <color alpha="194">
+              <red>255</red>
+              <green>255</green>
+              <blue>255</blue>
+             </color>
+            </gradientstop>
+            <gradientstop position="1.000000000000000">
+             <color alpha="0">
+              <red>255</red>
+              <green>255</green>
+              <blue>255</blue>
+             </color>
+            </gradientstop>
+           </gradient>
+          </brush>
+         </colorrole>
+        </disabled>
+       </palette>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-color: qradialgradient(spread:pad, cx:0.5, cy:0.5, radius:0.481, fx:0.653409, fy:0.312, stop:0.698864 rgba(255, 255, 255, 194), stop:1 rgba(255, 255, 255, 0));</string>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="pixmap">
+       <pixmap>../../../../../../../images/main_window/PowerSynth_Logo_Temp2.png</pixmap>
+      </property>
+      <property name="scaledContents">
+       <bool>true</bool>
+      </property>
      </widget>
     </item>
    </layout>
@@ -4084,6 +4224,7 @@ p, li { white-space: pre-wrap; }
     <property name="title">
      <string>Settings</string>
     </property>
+    <addaction name="actionInterface_Setup"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -4100,6 +4241,8 @@ p, li { white-space: pre-wrap; }
     <addaction name="actionOpen_Project"/>
     <addaction name="action_edit_design_rules"/>
     <addaction name="action_load_symbolic_layout"/>
+    <addaction name="actionexport_layout_script"/>
+    <addaction name="actionOpen_Layout_Editor"/>
    </widget>
    <widget class="QMenu" name="menuLibraries">
     <property name="title">
@@ -4108,9 +4251,16 @@ p, li { white-space: pre-wrap; }
     <addaction name="action_open_tech_lib_editor"/>
     <addaction name="action_edit_tech_path"/>
    </widget>
+   <widget class="QMenu" name="menuModel">
+    <property name="title">
+     <string>Model</string>
+    </property>
+    <addaction name="actionResponse_Surface_Setup"/>
+   </widget>
    <addaction name="menuProject"/>
    <addaction name="menuLibraries"/>
    <addaction name="menuSettings"/>
+   <addaction name="menuModel"/>
    <addaction name="menuHelp"/>
   </widget>
   <action name="actionNew_Project">
@@ -4166,6 +4316,31 @@ p, li { white-space: pre-wrap; }
     <string>Edit Tech. Lib. Path</string>
    </property>
   </action>
+  <action name="actionexport_layout_script">
+   <property name="text">
+    <string>Export Layout Sript</string>
+   </property>
+  </action>
+  <action name="actionOpen_Layout_Editor">
+   <property name="text">
+    <string>Open Layout Editor</string>
+   </property>
+  </action>
+  <action name="actionExport_Layout_Script">
+   <property name="text">
+    <string>Export Layout Script</string>
+   </property>
+  </action>
+  <action name="actionResponse_Surface_Setup">
+   <property name="text">
+    <string>Response Surface Setup</string>
+   </property>
+  </action>
+  <action name="actionInterface_Setup">
+   <property name="text">
+    <string>Interface Setup</string>
+   </property>
+  </action>
  </widget>
  <tabstops>
   <tabstop>btn_newProject</tabstop>
@@ -4175,8 +4350,6 @@ p, li { white-space: pre-wrap; }
   <tabstop>txt_baseLength</tabstop>
   <tabstop>txt_baseThickness</tabstop>
   <tabstop>txt_baseConvection</tabstop>
-  <tabstop>cmb_subAttchMaterial</tabstop>
-  <tabstop>txt_subAttchThickness</tabstop>
   <tabstop>cmb_subMaterial</tabstop>
   <tabstop>txt_subWidth</tabstop>
   <tabstop>txt_subLength</tabstop>
@@ -4210,7 +4383,6 @@ p, li { white-space: pre-wrap; }
   <tabstop>txt_numGenerations</tabstop>
   <tabstop>btn_runSim</tabstop>
   <tabstop>lst_solution</tabstop>
-  <tabstop>btn_open_sol_browser</tabstop>
  </tabstops>
  <resources>
   <include location="main_window_images.qrc"/>
