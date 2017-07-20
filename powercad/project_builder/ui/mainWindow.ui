@@ -795,15 +795,15 @@ p, li { white-space: pre-wrap; }
        <number>2</number>
       </property>
       <property name="currentIndex">
-       <number>4</number>
+       <number>5</number>
       </property>
       <widget class="QWidget" name="page_12">
        <property name="geometry">
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>376</width>
-         <height>599</height>
+         <width>242</width>
+         <height>637</height>
         </rect>
        </property>
        <attribute name="label">
@@ -1760,9 +1760,9 @@ p, li { white-space: pre-wrap; }
        <property name="geometry">
         <rect>
          <x>0</x>
-         <y>-207</y>
-         <width>359</width>
-         <height>806</height>
+         <y>0</y>
+         <width>282</width>
+         <height>832</height>
         </rect>
        </property>
        <attribute name="label">
@@ -2805,8 +2805,8 @@ p, li { white-space: pre-wrap; }
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>376</width>
-         <height>599</height>
+         <width>125</width>
+         <height>655</height>
         </rect>
        </property>
        <attribute name="label">
@@ -3101,8 +3101,8 @@ p, li { white-space: pre-wrap; }
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>376</width>
-         <height>599</height>
+         <width>215</width>
+         <height>386</height>
         </rect>
        </property>
        <attribute name="label">
@@ -3295,8 +3295,8 @@ p, li { white-space: pre-wrap; }
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>376</width>
-         <height>599</height>
+         <width>300</width>
+         <height>517</height>
         </rect>
        </property>
        <attribute name="label">
@@ -4055,6 +4055,13 @@ p, li { white-space: pre-wrap; }
          <widget class="QPushButton" name="btn_open_sol_browser">
           <property name="text">
            <string>Open Solution Browser</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="1">
+         <widget class="QPushButton" name="btn_fillet">
+          <property name="text">
+           <string>Fillet corners</string>
           </property>
          </widget>
         </item>

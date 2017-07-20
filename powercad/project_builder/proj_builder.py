@@ -102,7 +102,9 @@ class ProjectBuilder(QtGui.QMainWindow):
         self.ui.btn_open_sol_browser.pressed.connect(self.open_sol_browser)
         self.ui.lst_categories.clicked.connect(self.display_categ_items)
         self.ui.lst_solution.itemDoubleClicked.connect(self.show_sol_doc)
-        
+        self.ui.btn_fillet.pressed.connect(self.show_sol_doc_fillet)
+        #self.ui.check_cornerCorrection.isChecked(self.show_sol_doc2)
+
         self.ui.btn_previous.pressed.connect(self.previous)
         self.ui.btn_next.pressed.connect(self.next)
         self.ui.tbl_projDevices.cellPressed.connect(self.component_pressed)
@@ -1329,6 +1331,10 @@ class ProjectBuilder(QtGui.QMainWindow):
         m = SolutionWindow(sol, self.project.symb_layout, filletFlag)
         self.ui.mdiArea.addSubWindow(m)
         m.show()
+
+    def show_sol_doc_fillet(self, item):
+        sol = self.project.solutions[self.ui.lst_solution.row(item)]
+        self.project.symb_layout.gen_solution_layout(sol.index)
         filletFlag = True
         m2 = SolutionWindow(sol, self.project.symb_layout, filletFlag)
         self.ui.mdiArea.addSubWindow(m2) # open up another window with filleted layout

@@ -2,14 +2,10 @@
 
 # Form implementation generated from reading ui file 'mainWindow.ui'
 #
-# Created: Mon Oct 17 17:15:59 2016
+# Created: Thu Jul 20 12:12:32 2017
 #      by: pyside-uic 0.2.15 running on PySide 1.2.4
 #
 # WARNING! All changes made in this file will be lost!
-
-'''
-Created by combining Import Layer Stack CSV File button with mainWindow_ui2.py - jhmain 4/22/17
-'''
 
 from PySide import QtCore, QtGui
 
@@ -320,9 +316,6 @@ class Ui_MainWindow(object):
         self.label_27.setObjectName("label_27")
         self.gridLayout_14.addWidget(self.label_27, 0, 0, 1, 1)
         self.verticalLayout.addWidget(self.groupBox_5)
-        self.btn_import_layer_stack = QtGui.QPushButton(self.page_12)
-        self.btn_import_layer_stack.setObjectName("btn_import_layer_stack")
-        self.verticalLayout.addWidget(self.btn_import_layer_stack)
         self.box_baseplate_props = QtGui.QGroupBox(self.page_12)
         font = QtGui.QFont()
         font.setWeight(75)
@@ -1191,7 +1184,7 @@ class Ui_MainWindow(object):
         self.gridLayout_6.addWidget(self.btn_remove_constraint, 11, 2, 1, 1)
         self.navigation.addItem(self.page_10, "")
         self.page_3 = QtGui.QWidget()
-        self.page_3.setGeometry(QtCore.QRect(0, 0, 376, 599))
+        self.page_3.setGeometry(QtCore.QRect(0, 0, 300, 517))
         self.page_3.setObjectName("page_3")
         self.gridLayout_7 = QtGui.QGridLayout(self.page_3)
         self.gridLayout_7.setObjectName("gridLayout_7")
@@ -1323,7 +1316,7 @@ class Ui_MainWindow(object):
         self.gridLayout_7.addWidget(self.groupBox, 0, 0, 1, 5)
         self.navigation.addItem(self.page_3, "")
         self.page_4 = QtGui.QWidget()
-        self.page_4.setGeometry(QtCore.QRect(0, 0, 271, 465))
+        self.page_4.setGeometry(QtCore.QRect(0, 0, 376, 599))
         self.page_4.setObjectName("page_4")
         self.gridLayout_4 = QtGui.QGridLayout(self.page_4)
         self.gridLayout_4.setObjectName("gridLayout_4")
@@ -1448,6 +1441,9 @@ class Ui_MainWindow(object):
         self.btn_open_sol_browser = QtGui.QPushButton(self.page_4)
         self.btn_open_sol_browser.setObjectName("btn_open_sol_browser")
         self.gridLayout_4.addWidget(self.btn_open_sol_browser, 4, 0, 1, 1)
+        self.btn_fillet = QtGui.QPushButton(self.page_4)
+        self.btn_fillet.setObjectName("btn_fillet")
+        self.gridLayout_4.addWidget(self.btn_fillet, 4, 1, 1, 1)
         self.navigation.addItem(self.page_4, "")
         self.gridLayout.addWidget(self.navigation, 1, 0, 4, 1)
         MainWindow.setCentralWidget(self.centralwidget)
@@ -1483,18 +1479,12 @@ class Ui_MainWindow(object):
         self.action_save_project_as.setObjectName("action_save_project_as")
         self.action_edit_tech_path = QtGui.QAction(MainWindow)
         self.action_edit_tech_path.setObjectName("action_edit_tech_path")
-        self.actionexport_layout_script = QtGui.QAction(MainWindow)
-        self.actionexport_layout_script.setObjectName("actionexport_layout_script")
-        self.actionOpen_Layout_Editor = QtGui.QAction(MainWindow)
-        self.actionOpen_Layout_Editor.setObjectName("actionOpen_Layout_Editor")
         self.menuProject.addAction(self.actionNew_Project)
         self.menuProject.addAction(self.actionSave_Project)
         self.menuProject.addAction(self.action_save_project_as)
         self.menuProject.addAction(self.actionOpen_Project)
         self.menuProject.addAction(self.action_edit_design_rules)
         self.menuProject.addAction(self.action_load_symbolic_layout)
-        self.menuProject.addAction(self.actionexport_layout_script)
-        self.menuProject.addAction(self.actionOpen_Layout_Editor)
         self.menuLibraries.addAction(self.action_open_tech_lib_editor)
         self.menuLibraries.addAction(self.action_edit_tech_path)
         self.menubar.addAction(self.menuProject.menuAction())
@@ -1526,7 +1516,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
         self.stackedWidget.setCurrentIndex(6)
-        self.navigation.setCurrentIndex(4)
+        self.navigation.setCurrentIndex(5)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
         MainWindow.setTabOrder(self.btn_newProject, self.btn_openProject)
         MainWindow.setTabOrder(self.btn_openProject, self.cmb_baseMaterial)
@@ -1592,8 +1582,7 @@ class Ui_MainWindow(object):
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
 "p, li { white-space: pre-wrap; }\n"
 "</style></head><body style=\" font-family:\'MS Shell Dlg 2\'; font-size:10pt; font-weight:600; font-style:normal;\">\n"
-"<p align=\"justify\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:8pt;\">Use the dropdown boxes below to select a material from the technology library for each layer of the module stack.  Import a layer stack CSV file or use the respective input boxes to define the properties of each layer of the stack.</span></p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
-        self.btn_import_layer_stack.setText(QtGui.QApplication.translate("MainWindow", "Import Layer Stack CSV File", None, QtGui.QApplication.UnicodeUTF8))
+"<p align=\"justify\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:8pt;\">Use the dropdown boxes below to select a material from the technology library for each layer of the module stack.  Use the respective input boxes to define the properties of each layer of the stack.</span></p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
         self.box_baseplate_props.setTitle(QtGui.QApplication.translate("MainWindow", "Baseplate Properties", None, QtGui.QApplication.UnicodeUTF8))
         self.label_36.setText(QtGui.QApplication.translate("MainWindow", "Material", None, QtGui.QApplication.UnicodeUTF8))
         self.label_30.setText(QtGui.QApplication.translate("MainWindow", "Width", None, QtGui.QApplication.UnicodeUTF8))
@@ -1684,7 +1673,6 @@ class Ui_MainWindow(object):
 "p, li { white-space: pre-wrap; }\n"
 "</style></head><body style=\" font-family:\'MS Shell Dlg 2\'; font-size:8.25pt; font-weight:600; font-style:normal;\">\n"
 "<p align=\"justify\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:8pt;\">Use the interface below to define electrical and thermal performance measures to be considered in the layout optimizer. First define the performance measure and give it a name. Then use the module layout to the right to choose the respective devices and leads to be considered when determining performance.  Finally, click &quot;Add Performance Measure&quot; in order to add it to the optimization criteria.</span></p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_4.setText(QtGui.QApplication.translate("MainWindow", "<html><head/><body><p><img src=\":/images/images/main_window/PowerSynth_Logo_Temp3.png\"/></p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
         self.navigation.setItemText(self.navigation.indexOf(self.page_3), QtGui.QApplication.translate("MainWindow", "Design Performance Identification", None, QtGui.QApplication.UnicodeUTF8))
         self.groupBox_6.setTitle(QtGui.QApplication.translate("MainWindow", "Instructions", None, QtGui.QApplication.UnicodeUTF8))
         self.label_43.setText(QtGui.QApplication.translate("MainWindow", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
@@ -1700,6 +1688,7 @@ class Ui_MainWindow(object):
         self.btn_runSim.setText(QtGui.QApplication.translate("MainWindow", "Run Optimization", None, QtGui.QApplication.UnicodeUTF8))
         self.groupBox_7.setTitle(QtGui.QApplication.translate("MainWindow", "Saved Solutions from Solution Browser", None, QtGui.QApplication.UnicodeUTF8))
         self.btn_open_sol_browser.setText(QtGui.QApplication.translate("MainWindow", "Open Solution Browser", None, QtGui.QApplication.UnicodeUTF8))
+        self.btn_fillet.setText(QtGui.QApplication.translate("MainWindow", "Fillet corners", None, QtGui.QApplication.UnicodeUTF8))
         self.navigation.setItemText(self.navigation.indexOf(self.page_4), QtGui.QApplication.translate("MainWindow", "Results", None, QtGui.QApplication.UnicodeUTF8))
         self.menuSettings.setTitle(QtGui.QApplication.translate("MainWindow", "Settings", None, QtGui.QApplication.UnicodeUTF8))
         self.menuHelp.setTitle(QtGui.QApplication.translate("MainWindow", "Help", None, QtGui.QApplication.UnicodeUTF8))
@@ -1716,7 +1705,5 @@ class Ui_MainWindow(object):
         self.action_load_symbolic_layout.setText(QtGui.QApplication.translate("MainWindow", "Load Symbolic Layout", None, QtGui.QApplication.UnicodeUTF8))
         self.action_save_project_as.setText(QtGui.QApplication.translate("MainWindow", "Save Project As...", None, QtGui.QApplication.UnicodeUTF8))
         self.action_edit_tech_path.setText(QtGui.QApplication.translate("MainWindow", "Edit Tech. Lib. Path", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionexport_layout_script.setText(QtGui.QApplication.translate("MainWindow", "Export Layout Script", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionOpen_Layout_Editor.setText(QtGui.QApplication.translate("MainWindow", "Open Layout Editor", None, QtGui.QApplication.UnicodeUTF8))
 
-from powercad.project_builder.windows import main_window_images_rc
+import main_window_images_rc
