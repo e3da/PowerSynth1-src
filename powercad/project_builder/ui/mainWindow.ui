@@ -590,8 +590,8 @@ p, li { white-space: pre-wrap; }
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>276</width>
-         <height>653</height>
+         <width>359</width>
+         <height>640</height>
         </rect>
        </property>
        <attribute name="label">
@@ -1563,8 +1563,8 @@ p, li { white-space: pre-wrap; }
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>282</width>
-         <height>832</height>
+         <width>359</width>
+         <height>806</height>
         </rect>
        </property>
        <attribute name="label">
@@ -2607,8 +2607,8 @@ p, li { white-space: pre-wrap; }
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>125</width>
-         <height>655</height>
+         <width>376</width>
+         <height>599</height>
         </rect>
        </property>
        <attribute name="label">
@@ -2903,8 +2903,8 @@ p, li { white-space: pre-wrap; }
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>215</width>
-         <height>386</height>
+         <width>376</width>
+         <height>599</height>
         </rect>
        </property>
        <attribute name="label">
@@ -3097,8 +3097,8 @@ p, li { white-space: pre-wrap; }
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>354</width>
-         <height>582</height>
+         <width>376</width>
+         <height>599</height>
         </rect>
        </property>
        <attribute name="label">
@@ -4202,7 +4202,7 @@ p, li { white-space: pre-wrap; }
        <string/>
       </property>
       <property name="pixmap">
-       <pixmap>../../../../../../../images/main_window/PowerSynth_Logo_Temp2.png</pixmap>
+       <pixmap resource="main_window_images.qrc">:/images/images/main_window/PowerSynth_Logo_Temp3.png</pixmap>
       </property>
       <property name="scaledContents">
        <bool>true</bool>

@@ -262,7 +262,7 @@ def searchCorner(trace1, trace2, corneredTraces):
     return False
 
 def detect_corners_90(sym_layout2, ax):
-    '''CORNER DETECTION 
+    '''INNER CORNER DETECTION
     @author: Shilpi Mukherjee 
     @date: 30-JUN-2017
     This function detects inner corners on traces that connect orthogonally for a selected solution layout.

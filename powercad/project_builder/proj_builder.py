@@ -1326,7 +1326,7 @@ class ProjectBuilder(QtGui.QMainWindow):
         # add mdi window for viewing
         sol = self.project.solutions[self.ui.lst_solution.row(item)]
         self.project.symb_layout.gen_solution_layout(sol.index)
-        filletFlag = self.ui.checkBox_fillet.isChecked()
+        filletFlag = self.ui.checkBox_fillet.isChecked() # Show filleted layout if fillet checkbox is checked
         m = SolutionWindow(sol, self.project.symb_layout, filletFlag)
         self.ui.mdiArea.addSubWindow(m)
         m.show()

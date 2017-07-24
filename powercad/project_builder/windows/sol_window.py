@@ -40,13 +40,11 @@ class SolutionWindow(QtGui.QWidget):
         self.ui.btn_export_solidworks.pressed.connect(self.export_solidworks)
         self.ui.btn_export_spice_parasitics.pressed.connect(self.export_spice_parasitics)        
         self.ui.btn_export_spice_thermal.pressed.connect(self.export_spice_thermal)
-        #self.ui.btn_applyCornerCorrection.presses.connect(self.show_sol_doc_cornerCorrected)
         #self.ui.btn_run_succesive_approxomation.pressed.connect(self.Run_Sucessive_approximation)#sxm; new button function added based on self.export_spice_parasitics
         
         self.solution = solution
         self.sym_layout = sym_layout
-        #self.filletFlag = False
-        
+
         # display objective data in table widget
         self.ui.tbl_info.setRowCount(len(solution.params))
         self.i = 0
@@ -181,10 +179,6 @@ class SolutionWindow(QtGui.QWidget):
             except:
                 QtGui.QMessageBox.warning(None, "SPICE Thermal Netlist", "Failed to export netlist! Check log/console.")
                 print traceback.format_exc()
-
-    # def show_sol_doc_cornerCorrected(self):
-    #     self.filletFlag = True
-    #     ProjectBuilder.show_sol_doc()
 
 #    def electro_thermal_simulation(self):
         
