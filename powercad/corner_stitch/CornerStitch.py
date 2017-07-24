@@ -17,6 +17,7 @@ from matplotlib.patches import Circle, Wedge
 from matplotlib.collections import PatchCollection
 import constraintGraph as cg
 import CSCG
+import constraint
 
 class cell:
     """
@@ -948,14 +949,21 @@ if __name__ == '__main__':
     emptyHExample.insert(20, 13, 25, 8, "SOLID")
     emptyHExample.insert(15, 20, 17, 3, "SOLID")
 
-    cg = cg.constraintGraph()
-    cg.graphFromLayer(emptyHExample)
+    CG = cg.constraintGraph()
+    CG.graphFromLayer(emptyHExample)
 
-    cg.printVM()
-    cg.printZDL()
-    #cg.drawGraph()
+    CG.printVM()
+    CG.printZDL()
+    diGraph = cg.multiCG(CG)
+    con = constraint.constraint(1, "minWidth", 0, 1)
+    diGraph.addEdge(con.source, con.dest, con)
+    for foo in diGraph.diGraph.edges(data = True):
+        print foo
 
-    CSCG = CSCG.CSCG(emptyHExample, cg)
+
+    diGraph.drawGraph()
+
+    CSCG = CSCG.CSCG(emptyHExample, CG)
     CSCG.findGraphEdges()
     CSCG.drawLayer()
     #emptyHExample.drawLayer(truePointer=True)

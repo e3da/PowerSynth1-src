@@ -1,6 +1,8 @@
 from sets import Set
 import numpy as np
 import constraint
+import networkx as nx
+from matplotlib import pylab
 
 class constraintGraph:
     """
@@ -30,6 +32,9 @@ class constraintGraph:
         self.vertexMatrix = None
         self.edges = []
         self.zeroDimensionList = []
+
+    def getVertexMatrix(self):
+        return self.vertexMatrix
 
     def getNeighbors(self, vertex):
         """
@@ -88,9 +93,9 @@ class constraintGraph:
                 dest = self.zeroDimensionList.index(rect.getNorth().cell.y)
                 self.vertexMatrix[origin][dest] = rect.getHeight()
                 if rect.cell.getType() == "EMPTY":
-                    self.edges.append(Edge(origin, dest, constraint.constraint(0)))
+                    self.edges.append(Edge(origin, dest, "Min_spacing"))
                 elif rect.cell.getType() == "SOLID":
-                    self.edges.append(Edge(origin, dest, constraint.constraint(1)))
+                    self.edges.append(Edge(origin, dest, "Min_width"))
 
         elif cornerStitch.orientation == 'h':
             for rect in cornerStitch.stitchList:
@@ -99,10 +104,9 @@ class constraintGraph:
                 print "origin = ", origin, "dest = ", dest, "val = ", rect.getWidth()
                 self.vertexMatrix[origin][dest] = rect.getWidth()
                 if rect.cell.getType() == "EMPTY":
-                    self.edges.append(Edge(origin, dest, constraint.constraint(0)))
+                    self.edges.append(Edge(origin, dest, "Min_spacing"))
                 elif rect.cell.getType() == "SOLID":
-                    self.edges.append(Edge(origin, dest, constraint.constraint(1)))
-
+                    self.edges.append(Edge(origin, dest, "Min_width"))
 
     def dimListFromLayer(self, cornerStitch):
         """
@@ -130,13 +134,16 @@ class constraintGraph:
         """
         return
 
-    def edgeReduce(self):
-        """Eliminate redundant edges"""
-        return
+    def cgToGraph(self):
+        G = nx.Graph()
 
-    def vertexReduce(self):
-        """Eliminate redundant vertices"""
-        return
+        it = np.nditer(self.vertexMatrix, flags=['multi_index'])
+        while not it.finished:
+            if it[0] != 0:
+                G.add_edges_from([it.multi_index], weight = it[0])
+#                print it[0]
+            it.iternext()
+        return G
 
     def drawGraph(self):
         G = nx.DiGraph()
@@ -153,11 +160,51 @@ class constraintGraph:
 
         edge_colors = ['black' for edge in G.edges()]
 
+        #, edge_cmap = plt.cm.Reds - goes with nx.draw if needed
         pos = nx.shell_layout(G)
         nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels)
         nx.draw_networkx_labels(G, pos)
-        nx.draw(G, pos, node_color='white', node_size=300, edge_color=edge_colors, edge_cmap=plt.cm.Reds)
+        nx.draw(G, pos, node_color='white', node_size=300, edge_color=edge_colors)
         pylab.show()
+
+class multiCG():
+    """
+    Same as a constraint graph class, except this allows for multiple edges between nodes. Necessary for
+    inserting custom constraints. 
+    """
+    def __init__(self, sourceGraph):
+        """
+        given a source graph, copy vertices and all existing nodes into a multigraph
+        """
+        self.diGraph = nx.MultiDiGraph()
+        self.diGraph.add_nodes_from(sourceGraph.cgToGraph().nodes(data = True))
+        self.diGraph.add_edges_from(sourceGraph.cgToGraph().edges(data = True))
+
+    def addEdge(self, source, dest, constraint):
+        self.diGraph.add_edge(source, dest, constraint, weight = constraint.getConstraintVal())
+
+    def drawGraph(self):
+        G = self.diGraph
+        edge_Labels = dict([((u, v,), d['weight'])
+                            for u, v, d in G.edges(data=True)])
+        for foo in list(edge_Labels):
+            print foo
+
+        edge_colors = ['black' for edge in G.edges()]
+
+        pos = nx.shell_layout(self.diGraph)
+        nx.draw_networkx_edge_labels(self.diGraph, pos, edge_labels = edge_Labels)
+        nx.draw_networkx_labels(self.diGraph, pos)
+        nx.draw(self.diGraph, pos, node_color='white', node_size=300, edge_color=edge_colors)
+        pylab.show()
+
+    def edgeReduce(self):
+        """Eliminate redundant edges"""
+        return
+
+    def vertexReduce(self):
+        """Eliminate redundant vertices"""
+        return
 
 class Edge():
 
