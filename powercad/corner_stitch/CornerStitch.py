@@ -932,8 +932,8 @@ if __name__ == '__main__':
     emptyHStitchList = [emptyHPlane]
     #exampleVLayer = vLayer(stitchList, 30, 30)
     #exampleHLayer = hLayer(stitchList, 30, 30)
-    emptyVExample = vLayer(emptyVStitchList, 30, 30)
-    emptyHExample = hLayer(emptyHStitchList, 30, 30)
+    emptyVExample = vLayer(emptyVStitchList, 40, 60)
+    emptyHExample = hLayer(emptyHStitchList, 40, 60)
 
     emptyVPlane.NORTH = emptyVExample.northBoundary
     emptyVPlane.EAST = emptyVExample.eastBoundary
@@ -945,25 +945,31 @@ if __name__ == '__main__':
     emptyHPlane.SOUTH = emptyHExample.southBoundary
     emptyHPlane.WEST = emptyHExample.westBoundary
 
-    emptyHExample.insert(10, 10, 13, 5, "SOLID")
-    emptyHExample.insert(20, 13, 25, 8, "SOLID")
-    emptyHExample.insert(15, 20, 17, 3, "SOLID")
+    emptyVExample.insert(3, 15, 37, 2, "SOLID")
+    emptyVExample.insert(3, 24, 37, 17, "SOLID")
+    emptyVExample.insert(21, 45, 37, 24, "SOLID")
+    emptyVExample.insert(3, 57, 37, 45, "SOLID")
+    emptyVExample.insert(3, 28, 19, 26, "SOLID")
+    emptyVExample.insert(3, 33, 19, 30, "SOLID")
+    emptyVExample.insert(3, 43, 19, 35, "SOLID")
+
+
+#    emptyHExample.insert(20, 13, 25, 8, "SOLID")
+#    emptyHExample.insert(15, 20, 17, 3, "SOLID")
 
     CG = cg.constraintGraph()
-    CG.graphFromLayer(emptyHExample)
+    CG.graphFromLayer(emptyVExample)
 
     CG.printVM()
     CG.printZDL()
     diGraph = cg.multiCG(CG)
     con = constraint.constraint(1, "minWidth", 0, 1)
     diGraph.addEdge(con.source, con.dest, con)
-    for foo in diGraph.diGraph.edges(data = True):
-        print foo
 
-
+    CG.drawGraph()
     diGraph.drawGraph()
 
-    CSCG = CSCG.CSCG(emptyHExample, CG)
+    CSCG = CSCG.CSCG(emptyVExample, CG)
     CSCG.findGraphEdges()
     CSCG.drawLayer()
-    #emptyHExample.drawLayer(truePointer=True)
+    emptyHExample.drawLayer(truePointer=False)

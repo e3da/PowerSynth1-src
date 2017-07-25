@@ -13,7 +13,7 @@ class constraintGraph:
     def __init__(self, vertices, edges):
         """
         create from a given set of edges and vertices
-        vertexMatrix shows the connectivity between the vertices, it is a 2d list n vertices long
+        vertexMatrix is a 2d list n vertices long that shows the connectivity between the vertices
         edges is just a set of edges
         zeroDimensionList is where, independent of orientation, the list index corresponds to the graph's orientation
         zero dimension representation. For example, in a very simple horizontally oriented 30 x30 plane,
@@ -83,6 +83,16 @@ class constraintGraph:
             print index, ": ", i
             index += 1
 
+    def merge_dicts(self, dict_args):
+        """
+        Given any number of dicts, shallow copy and merge into a new dict,
+        precedence goes to key value pairs in latter dicts.
+        """
+        result = {}
+        for dictionary in dict_args:
+            result.update(dictionary)
+        return result
+
     def setEdgesFromLayer(self, cornerStitch):
         """
         given a cornerStitch and orientation, set the connectivity matrix of this constraint graph
@@ -93,9 +103,9 @@ class constraintGraph:
                 dest = self.zeroDimensionList.index(rect.getNorth().cell.y)
                 self.vertexMatrix[origin][dest] = rect.getHeight()
                 if rect.cell.getType() == "EMPTY":
-                    self.edges.append(Edge(origin, dest, "Min_spacing"))
+                    self.edges.append(Edge(origin, dest, constraint.constraint(0, 'minWidth', origin, dest)))
                 elif rect.cell.getType() == "SOLID":
-                    self.edges.append(Edge(origin, dest, "Min_width"))
+                    self.edges.append(Edge(origin, dest, constraint.constraint(1, 'minWidth', origin, dest)))
 
         elif cornerStitch.orientation == 'h':
             for rect in cornerStitch.stitchList:
@@ -104,9 +114,9 @@ class constraintGraph:
                 print "origin = ", origin, "dest = ", dest, "val = ", rect.getWidth()
                 self.vertexMatrix[origin][dest] = rect.getWidth()
                 if rect.cell.getType() == "EMPTY":
-                    self.edges.append(Edge(origin, dest, "Min_spacing"))
+                    self.edges.append(Edge(origin, dest, constraint.constraint(0, 'minWidth', origin, dest)))
                 elif rect.cell.getType() == "SOLID":
-                    self.edges.append(Edge(origin, dest, "Min_width"))
+                    self.edges.append(Edge(origin, dest, constraint.constraint(1, 'minWidth', origin, dest)))
 
     def dimListFromLayer(self, cornerStitch):
         """
@@ -124,6 +134,7 @@ class constraintGraph:
             pointSet.add(cornerStitch.eastBoundary.cell.x)
 
         setToList = list(pointSet)
+        setToList.sort()
 
         self.zeroDimensionList =  setToList#setting the list of orientation values to an ordered list
 
@@ -155,8 +166,21 @@ class constraintGraph:
                 print it[0]
             it.iternext()
 
-        edge_labels = dict([((u, v,), d['weight'])
-                            for u, v, d in G.edges(data=True)])
+        dictList = []
+        print "checking edges"
+        for foo in self.edges:
+            dictList.append(foo.getEdgeDict())
+            print dir(foo.getEdgeDict())
+        # edge_labels[(foo.source, foo.dest): foo.constraint.getConstraintVal()]
+        #for foo in self.edges:
+        #    dictList.append(foo.getEdgeDict())
+
+        edge_labels = self.merge_dicts(dictList)
+        print "checking edge labels"
+        for foo in edge_labels:
+            print foo
+#        edge_labels = dict([((u, v,), d)
+#                            for u, v, d in self.edges])
 
         edge_colors = ['black' for edge in G.edges()]
 
@@ -208,13 +232,21 @@ class multiCG():
 
 class Edge():
 
+
     def __init__(self, source, dest, constraint):
         self.source = source
         self.dest = dest
         self.constraint = constraint
+        self.setEdgeDict()
 
     def getConstraint(self):
         return self.constraint
 
+    def setEdgeDict(self):
+        self.edgeDict = {(self.source, self.dest): self.constraint.getConstraintVal()}
+
+    def getEdgeDict(self):
+        return self.edgeDict
+
     def printEdge(self):
-        print "s: ", self.source, "d: ", self.dest, "con: ", self.constraint.printCon()
+        print "s: ", self.source, "d: ", self.dest, "con = ", self.constraint.printCon()

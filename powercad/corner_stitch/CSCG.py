@@ -29,7 +29,6 @@ class CSCG:
             for point in self.CG.zeroDimensionList:
                 wedgeList.append(Wedge((point, 0), .5, 0, 360, width = 1))
 
-        print "wedgeList length = ", len(wedgeList)
         return wedgeList
 
     #figure this out later
@@ -45,9 +44,9 @@ class CSCG:
                 for edge in edgeList:
                     if (self.CG.zeroDimensionList[edge.source] == stitch.cell.getX()
                             and self.CG.zeroDimensionList[edge.dest] == stitch.cell.getX() + stitch.getWidth()):
-                        if edge.getConstraint() == "Min_spacing":
+                        if edge.getConstraint().getConstraintName() == "Empty":
                             color = "red"
-                        elif edge.getConstraint() == "Min_width":
+                        elif edge.getConstraint().getConstraintName() == "type1":
                             color = "blue"
                         arrowList.append((stitch.cell.getX(), stitch.cell.getY(), stitch.getWidth(), 0, color))
                         edgeList.remove(edge)
@@ -56,9 +55,9 @@ class CSCG:
                 for edge in edgeList:
                     if (self.CG.zeroDimensionList[edge.source] == stitch.cell.getY()
                              and self.CG.zeroDimensionList[edge.dest] == stitch.cell.getY() + stitch.getHeight()):
-                        if edge.getConstraint() == "Min_spacing":
+                        if edge.getConstraint().getConstraintName() == "Empty":
                             color = "red"
-                        elif edge.getConstraint() == "Min_width":
+                        elif edge.getConstraint().getConstraintName() == "type1":
                             color = "blue"
                         arrowList.append((stitch.cell.getX(), stitch.cell.getY(), 0, stitch.getHeight(), color))
                         edgeList.remove(edge)
