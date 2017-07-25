@@ -523,4 +523,4 @@ def detect_corners_270(sym_layout2, ax, innerFillets, supertraces):
         a = Arc((i.centerX, i.centerY), i.radius*2, i.radius*2, theta1=i.theta1, theta2=i.theta2, facecolor='#E6E6E6', edgecolor='blue', linewidth=2)
         ax.add_patch(a) # toggle comment to enable/disable fillet markings
 
-# test Jun 30, 2017
+# test Jul 25, 2017
