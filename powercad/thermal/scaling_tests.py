@@ -5,11 +5,10 @@ Created on Aug 24, 2011
 @author: shook
 '''
 
-import math
 import numpy as np
 
-from powercad.util import Rect
-from thermal_circuit import DieThermal, solve_for_temps
+from powercad.general.data_struct.util import Rect
+
 
 class TFSMInputError(Exception):
     def __init__(self, value):
@@ -201,8 +200,8 @@ def find_trace_area(trace_rects):
     
 def test_plot_layout(rects, dies):
     import matplotlib.pyplot as plt
-    from matplotlib.patches import Rectangle, PathPatch, Circle
-    
+    from matplotlib.patches import Rectangle
+
     ax = plt.subplot('111', adjustable='box', aspect=1.0)
     
     for rect in rects:

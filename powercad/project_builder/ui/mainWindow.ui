@@ -583,7 +583,7 @@ p, li { white-space: pre-wrap; }
        <number>2</number>
       </property>
       <property name="currentIndex">
-       <number>5</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="page_12">
        <property name="geometry">
@@ -3979,14 +3979,7 @@ p, li { white-space: pre-wrap; }
           </layout>
          </widget>
         </item>
-        <item row="5" column="0">
-         <widget class="QCheckBox" name="checkBox_fillet">
-          <property name="text">
-           <string>Apply fillets</string>
-          </property>
-         </widget>
-        </item>
-        <item row="5" column="1">
+        <item row="4" column="0">
          <widget class="QPushButton" name="btn_open_sol_browser">
           <property name="text">
            <string>Open Solution Browser</string>
@@ -4202,7 +4195,7 @@ p, li { white-space: pre-wrap; }
        <string/>
       </property>
       <property name="pixmap">
-       <pixmap resource="main_window_images.qrc">:/images/images/main_window/PowerSynth_Logo_Temp3.png</pixmap>
+       <pixmap>../../../../../../../images/main_window/PowerSynth_Logo_Temp2.png</pixmap>
       </property>
       <property name="scaledContents">
        <bool>true</bool>
@@ -4383,9 +4376,10 @@ p, li { white-space: pre-wrap; }
   <tabstop>txt_numGenerations</tabstop>
   <tabstop>btn_runSim</tabstop>
   <tabstop>lst_solution</tabstop>
+  <tabstop>btn_open_sol_browser</tabstop>
  </tabstops>
  <resources>
-  <include location="main_window_images.qrc"/>
+  <include location="../../../../../../../Users/qmle/Desktop/UI Design/main_window_images.qrc"/>
  </resources>
  <connections/>
 </ui>

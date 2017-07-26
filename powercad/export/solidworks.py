@@ -5,10 +5,7 @@ Created on Jan 03, 2013
 '''
 
 import os
-from math import fabs
 
-from powercad.design.module_design import ModuleDesign
-from powercad.util import Rect
 
 def output_solidworks_vbscript(md, output_filename, data_dir, final_dir):
     # This code creates two macros: BuildParts and BuildAssembly, and a Material Library. BuildParts creates the part files by taking their dimensions, setting their

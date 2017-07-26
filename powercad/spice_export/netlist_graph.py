@@ -92,7 +92,7 @@ class Module_SPICE_lumped_graph():
     
 class Module_SPICE_netlist_graph_v2():
     
-    def __init__(self, name, sym_layout, solution_index, template_graph=None):
+    def __init__(self, name, sym_layout, solution_index, template_graph=None,type=None):
         """
         Creates a graph to hold SPICE information based on a symbolic layout solution or template graph
         
@@ -111,8 +111,8 @@ class Module_SPICE_netlist_graph_v2():
         self.sym_layout = sym_layout
         self.sym_layout.gen_solution_layout(solution_index)
         if template_graph is None:
-            template_graph = self.sym_layout.lumped_graph
-        
+            template_graph = self.sym_layout.lumped_graph[1]
+
         # ensure every node has a type
         self._check_node_types(template_graph)
         
@@ -162,8 +162,9 @@ class Module_SPICE_netlist_graph_v2():
                 # check Verilog-A file for module
                 try:
                     model_name = ((re.search('(?<=module) \w+', model)).group(0)).strip()
-                except AttributeError:
-                    raise DeviceError(DeviceError.NO_VA_MODULE, device[1]['obj'].tech.device_tech.name)
+                except:
+                    model_name = 'INSERT'
+                    #raise DeviceError(DeviceError.NO_VA_MODULE, device[1]['obj'].tech.device_tech.name)
                 
                 # add to device dictionary
                 self.device_models[device_name] = (model_name, model)
@@ -187,6 +188,8 @@ class Module_SPICE_netlist_graph_v2():
         Keyword Arguments:
             graph -- networkx graph
         """
+        print graph
+
         for node,node_attrib in graph.nodes_iter(data=True):
             try:
                 node_attrib['type']  # check that node has a 'type'
@@ -667,12 +670,14 @@ class Module_SPICE_netlist_graph_v2():
         """
         
         # write each device Verilog-A file to local directory
-        for model in self.device_models.itervalues():
-            full_path = os.path.join(directory, '{}.va'.format(model[0]))
-            model_file = open(full_path, 'w')
-            model_file.write(model[1])
-            model_file.close()
-        
+        try:
+            for model in self.device_models.itervalues():
+                full_path = os.path.join(directory, '{}.va'.format(model[0]))
+                model_file = open(full_path, 'w')
+                model_file.write(model[1])
+                model_file.close()
+        except:
+            print "did not add model file, a temporary device is added"
         # find leads of module
         lead_list = ''
         for lead in [node for node in self.spice_graph.nodes(data=True) if node[1]['type']=='lead']:

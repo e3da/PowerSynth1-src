@@ -4,18 +4,18 @@ Created on Apr 16, 2013
 @author: bxs003
 sxm063 - added parameter CACHED_CHAR_PATH to settings.py; Called here as settings.CACHED_CHAR_PATH; Reason for addition: change of path between release=True and release=False in settings.py
 '''
-import os
 import hashlib
+import os
 import pickle
 import shutil
 
-from numpy import min, max, array, shape, average
+from numpy import min, max, array, average
 
-from powercad.export.gmsh import create_box_stack_mesh
+import powercad.general.settings.settings as settings
 from powercad.export.elmer import write_module_elmer_sif, elmer_solve, get_nodes_near_z_value
+from powercad.export.gmsh import create_box_stack_mesh
 from powercad.thermal.characterization import characterize_dist
 from powercad.thermal.fast_thermal import DieThermalFeatures, SublayerThermalFeatures
-import powercad.settings as settings
 
 MIN_LAYER_THICKNESS = 0.01 # minimum layer thickness in mm
 
@@ -27,7 +27,7 @@ class CachedCharacterization(object):
         self.materials = materials
         self.conv_coeff = conv_coeff
 
-def characterize_devices(sym_layout, temp_dir=settings.TEMP_DIR, conv_tol=1e-6):
+def characterize_devices(sym_layout, temp_dir=settings.TEMP_DIR, conv_tol=1e-3):
     """
     Generates device thermal characterizations automatically, or
     checks for cached characterizations.
@@ -97,7 +97,6 @@ def characterize_devices(sym_layout, temp_dir=settings.TEMP_DIR, conv_tol=1e-6):
         
         dev_density = float(dev.device_tech.properties.density)
         dev_cond = float(dev.device_tech.properties.thermal_cond)
-        
         bp_coeff = float(sym_layout.module.baseplate.eff_conv_coeff)
         
         materials = [(bp_density, bp_cond), (solder_density, solder_cond),
