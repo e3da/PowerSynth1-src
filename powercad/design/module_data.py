@@ -4,7 +4,7 @@ Created on Mar 4, 2013
 @author: bxs003
 '''
 
-from powercad.tech_lib.test_techlib import get_baseplate, get_sub_attach, get_substrate
+from powercad.tech_lib.test_techlib import *
 from powercad.design.project_structures import BaseplateInstance, SubstrateAttachInstance, DeviceInstance
 from powercad.design.project_structures import SubstrateInstance, ProcessDesignRules
 from powercad.thermal.fast_thermal import SublayerThermalFeatures
@@ -35,19 +35,19 @@ class ModuleData(object):
         if not isinstance(self.ambient_temp, float):
             raise Exception('Ambient Temperature should be supplied in floating point format!')
         
-def gen_test_module_data():
+def gen_test_module_data(freq):
     data = ModuleData()
     # dimensions, eff_conv_coeff, baseplate_tech
-    data.baseplate = BaseplateInstance((91.44, 74.93, 3.81), 100, get_baseplate())
+    data.baseplate = BaseplateInstance((60, 60, 5), 150, get_baseplate())
     
     # thickness, attach_tech
     data.substrate_attach = SubstrateAttachInstance(0.1, get_sub_attach())
     
     # dimensions, ledge_width, substrate_tech
-    data.substrate = SubstrateInstance((83.82, 54.61), 1.27, get_substrate())
+    data.substrate = SubstrateInstance((40, 50), 2, get_substrate2())
     
-    data.design_rules = ProcessDesignRules(1.27, 1.27, 0.5, 0.5, 0.8, 0.3, 0.2, 0.2)
-    data.frequency = 100e3 # 100 kHz
+    data.design_rules = ProcessDesignRules(2, 1.27, 0.5, 0.5, 0.8, 0.3, 0.2, 0.2)
+    data.frequency = freq # 100 kHz
     data.ambient_temp = 300.0 # 300 Kelvin
     
     return data

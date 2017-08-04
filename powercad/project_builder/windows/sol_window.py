@@ -188,3 +188,5 @@ if __name__ == "__main__":
     test = SolutionWindow()
     test.show()
     sys.exit(app.exec_())
+
+# test - Jul 25, 2017

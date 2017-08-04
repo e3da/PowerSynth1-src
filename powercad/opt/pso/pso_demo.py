@@ -4,19 +4,13 @@ Created on Sep 5, 2012
 @author: bxs003
 '''
 
-
-from OpenGL.GL import *
-from OpenGL.GLUT import *
-from OpenGL.GLU import *
-from OpenGL.extensions import *
-
-import sys
-import time
-import math
-
 from math import fabs, sin, pow
 
 import numpy
+from OpenGL.GL import *
+from OpenGL.GLU import *
+from OpenGL.GLUT import *
+from OpenGL.extensions import *
 
 ESCAPE = '\x1b'
 
@@ -176,9 +170,9 @@ def special_key_released(key, x, y):
 def main():
     global particle_hist
     
-    from powercad.pso.pso import ParticleSwarm
-    from powercad.pso.design_2d import Design2DConfig, Design2D
-    import powercad.pso.pso_config as pso_config
+    from powercad.opt.pso.pso import ParticleSwarm
+    from powercad.opt.pso import Design2DConfig, Design2D
+    import powercad.opt.pso.pso_config as pso_config
     
     config = Design2DConfig()
     opt = ParticleSwarm(Design2D, config, pso_config)

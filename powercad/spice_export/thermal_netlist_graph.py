@@ -25,11 +25,13 @@ Added documentation comments and spacing for better readability - jhmain 7-1-16
 '''
 
 import os
+
 import networkx as nx
-import matplotlib.pyplot as plt
-from powercad.thermal.fast_thermal import ThermalGeometry, DieThermal, TraceIsland, eval_island,test_plot_layout
+
+from powercad.general.data_struct.util import SolveVolume
 from powercad.spice_export.components import Resistor,Capacitor, Current_Source, Voltage_Source, SpiceNameError, SpiceNodeError
-from powercad.util import SolveVolume
+from powercad.thermal.fast_thermal import ThermalGeometry, DieThermal, TraceIsland, eval_island
+
 
 class Module_Full_Thermal_Netlist_Graph():
     

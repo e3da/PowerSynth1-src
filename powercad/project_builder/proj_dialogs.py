@@ -5,14 +5,14 @@ Created on Oct 12, 2012
 '''
 # IMPORT METHODS
 import os
-import pickle
 import traceback
-from PySide import QtGui, QtCore
+
+from PySide import QtGui
 from PySide.QtGui import QFileDialog, QStandardItemModel,QStandardItem, QMessageBox,QFont
 
 import powercad.sym_layout.plot as plot
 from powercad.project_builder.dialogs.propertiesDeviceDialog import Ui_device_propeties
-from powercad.export.Q3D import output_q3d_vbscript
+
 plot.plt.matplotlib.use('Qt4Agg')
 plot.plt.matplotlib.rcParams['backend.qt4']='PySide'
 
@@ -24,11 +24,17 @@ from powercad.project_builder.dialogs.genericDeviceDialog_ui import Ui_generic_d
 from powercad.project_builder.dialogs.layoutEditor_ui import Ui_layouteditorDialog
 from powercad.project_builder.project import Project
 from powercad.sym_layout.symbolic_layout import SymbolicLayout
-from powercad.settings import LAST_ENTRIES_PATH, DEFAULT_TECH_LIB_DIR
+from powercad.general.settings.settings import LAST_ENTRIES_PATH, DEFAULT_TECH_LIB_DIR,EXPORT_DATA_PATH,ANSYS_IPY64
 from powercad.spice_import import Netlist_SVG_converter
-
 from powercad.electro_thermal.ElectroThermal_toolbox import rdson_fit_transistor, list2float, csv_load_file,Vth_fit,fCRSS_fit
-from powercad.save_and_load import save_file, load_file
+from powercad.general.settings.save_and_load import save_file, load_file
+from powercad.project_builder.dialogs.ResponseSurface import Ui_ResponseSurface
+from powercad.project_builder.dialogs.ModelSelection import Ui_ModelSelection
+from powercad.layer_stack.layer_stack_import import *
+from powercad.general.settings.Error_messages import *
+from PySide import QtCore, QtGui
+from powercad.response_surface.Model_Formulation import form_trace_model
+import sys
 # CLASSES FOR DIALOG USAGE
 class GenericDeviceDialog(QtGui.QDialog):   
     # Author: quang le
@@ -414,8 +420,7 @@ class NewProjectDialog(QtGui.QDialog):
         directory = str(QFileDialog.getExistingDirectory(self, "Select Project Directory", str(self.project_path)))
         if os.path.isdir(directory):
             self.ui.txt_dir.setText(directory)
-        self.parent.layout_script_dir = directory
-
+        self.parent.layout_script_dir=directory
     def select_filetype(self):
         self.ui.txt_symbnet_address.clear() 					# Clear "Open file" text area.
         if self.ui.dropdown_filetype.currentIndex() > 0: 		# If something other than the default is selected from the filetype dropdown menu, 
@@ -517,7 +522,9 @@ class OpenProjectDialog(QtGui.QDialog):
             last_entries = load_file(LAST_ENTRIES_PATH)
             prev_folder = last_entries[0]
         except:
-            prev_folder = 'C://'    
+            prev_folder = 'C://'
+        if not os.path.exists(prev_folder):  # check if the last entry file store a correct path
+            prev_folder = 'C://'
         self.project_file = QFileDialog.getOpenFileName(self, "Select Project File",prev_folder,"Project Files (*.p)")
         self.ui.txt_projectLocation.setText(self.project_file[0])
         self.parent.layout_script_dir=os.path.dirname(self.project_file[0])
@@ -607,6 +614,162 @@ class LayoutEditorDialog(QtGui.QDialog):
         f=open(path,'wb')
         f.write(self.parent.layout_script)
         self.close()
-        
-        
-        
+
+class ResponseSurfaceDialog(QtGui.QDialog):
+    def __init__(self,parent):
+        QtGui.QDialog.__init__(self, parent)
+        self.ui=Ui_ResponseSurface()
+        self.ui.setupUi(self)
+        self.parent=parent
+        self.layer_stack_import=None
+        self.DOE='mesh'
+        # Suggested Min Max ranges
+        self.ui.lineEdit_minL.setText('5')
+        self.ui.lineEdit_maxL.setText('40')
+        self.ui.lineEdit_minW.setText('5')
+        self.ui.lineEdit_maxW.setText('40')
+        self.ui.lineEdit_fmin.setText('10')
+        self.ui.lineEdit_fmax.setText('500')
+        self.ui.lineEdit_fstep.setText('10')
+        # Initialization, only load layer stack button is enabled
+        # 1 buttons:
+        self.ui.btn_view_layer_stack.setEnabled(False)
+        self.ui.btn_build.setEnabled(False)
+        # 2 text_edit:
+        self.ui.lineEdit_minL.setEnabled(False)
+        self.ui.lineEdit_maxL.setEnabled(False)
+        self.ui.lineEdit_minW.setEnabled(False)
+        self.ui.lineEdit_maxW.setEnabled(False)
+        self.ui.lineEdit_fmin.setEnabled(False)
+        self.ui.lineEdit_fmax.setEnabled(False)
+        self.ui.lineEdit_fstep.setEnabled(False)
+        self.ui.text_edt_model_info.setReadOnly(True)
+        # 3 cmb list
+        self.ui.cmb_DOE.setEnabled(False)
+        self.ui.cmb_sims.setEnabled(False)
+        self.ui.cmb_trace_layer.setVisible(0) # For now only... rework when the layer stack is more Object Oriented
+
+        # 4 connecting signals
+        self.ui.btn_add_layer_stack.pressed.connect(self.importlayerstack)
+        self.ui.btn_build.pressed.connect(self.build)
+        self.ui.list_mdl_lib.clicked.connect(self.show_mdl_info)
+        self.ui.cmb_DOE.currentIndexChanged.connect(self.set_up_DOE)
+
+        # populate model files
+        self.model_dir=os.path.join(DEFAULT_TECH_LIB_DIR,'Model','Trace')
+        self.rs_model = QtGui.QFileSystemModel()
+        self.rs_model.setRootPath(self.model_dir)
+        self.rs_model.setFilter(QtCore.QDir.Files)
+        self.ui.list_mdl_lib.setModel(self.rs_model)
+        self.ui.list_mdl_lib.setRootIndex(self.rs_model.setRootPath(self.model_dir))
+        self.wp_dir=os.path.join(EXPORT_DATA_PATH,'workspace','RS')
+
+    def importlayerstack(self):
+        prev_folder='C://'
+        layer_stack_csv_file = QFileDialog.getOpenFileName(self, "Select Layer Stack File", prev_folder,
+                                                           "CSV Files (*.csv)")
+        layer_stack_csv_file = layer_stack_csv_file[0]
+        self.layer_stack_import = LayerStackImport(layer_stack_csv_file)
+        self.layer_stack_import.import_csv()
+        if self.layer_stack_import.compatible:
+            Notifier(msg="Sucessfully Imported Layer Stack File",msg_name="Success!!!")
+            # 1 buttons:
+            self.ui.btn_view_layer_stack.setEnabled(True)
+            self.ui.btn_build.setEnabled(True)
+            # 2 text_edit:
+            self.ui.lineEdit_minL.setEnabled(True)
+            self.ui.lineEdit_maxL.setEnabled(True)
+            self.ui.lineEdit_minW.setEnabled(True)
+            self.ui.lineEdit_maxW.setEnabled(True)
+            self.ui.lineEdit_fmin.setEnabled(True)
+            self.ui.lineEdit_fmax.setEnabled(True)
+            self.ui.lineEdit_fstep.setEnabled(True)
+            # 3 cmb list
+            self.ui.cmb_DOE.setEnabled(True)
+            self.ui.cmb_sims.setEnabled(True)
+            self.ui.cmb_trace_layer.setEnabled(True)
+        else:
+            InputError(msg="Layer Stack format is not compatible")
+
+    def refresh_mdl_list(self):
+        self.rs_model.setRootPath(self.model_dir)
+        self.rs_model.setFilter(QtCore.QDir.Files)
+        self.ui.list_mdl_lib.setModel(self.rs_model)
+        self.ui.list_mdl_lib.setRootIndex(self.rs_model.setRootPath(self.model_dir))
+
+
+    def build(self):
+        # check all input types:
+        minL=self.ui.lineEdit_minL.text()
+        maxL=self.ui.lineEdit_maxL.text()
+        minW=self.ui.lineEdit_minW.text()
+        maxW=self.ui.lineEdit_maxW.text()
+        fmin=self.ui.lineEdit_fmin.text()
+        fmax=self.ui.lineEdit_fmax.text()
+        fstep=self.ui.lineEdit_fstep.text()
+        mdl_name=self.ui.lineEdit_name.text()
+        checknum = minL.isdigit() or maxL.isdigit() or minW.isdigit() or maxW.isdigit() or fmin.isdigit() or fmax.isdigit()\
+                or fstep.isdigit()
+        env_dir=os.path.join(ANSYS_IPY64,'ipy64.exe')
+        self.sims=str(self.ui.cmb_sims.currentText())
+        options=[self.sims,self.DOE,False]
+        if not(checknum):
+            InputError(msg="not all inputs for width length and frequency are numeric, double check please")
+            return
+        else:
+            all_num=[minL,maxL,minW,maxW,fmin,fmax,fstep]
+            minL, maxL, minW, maxW, fmin, fmax, fstep=[float(x) for x in all_num]
+
+            form_trace_model(layer_stack=self.layer_stack_import,Width=[minW,maxW],Length=[minL,maxL],
+                             freq=[fmin,fmax,fstep],wdir=self.wp_dir,savedir=self.model_dir,mdl_name=mdl_name
+                             ,env=env_dir,options=options)
+
+            self.refresh_mdl_list()
+
+    def set_up_DOE(self):
+        if self.ui.cmb_DOE.currentText()=="Mesh":
+            self.DOE="mesh" # add DOE option later fix for now
+            print 'mesh 5 x 5'
+        elif self.ui.cmb_DOE.currentText()=="Center Composite":
+            print "center composite"
+            self.DOE = "cc"  # add DOE option later fix for now
+
+    def show_mdl_info(self):
+        selected=str(self.rs_model.fileName(self.ui.list_mdl_lib.currentIndex()))
+        mdl = load_file(os.path.join(self.model_dir,selected))
+        text=mdl['info']
+        self.ui.text_edt_model_info.setText(text)
+        self.ui.list_mdl_lib.currentIndex()
+
+
+
+class ModelSelectionDialog(QtGui.QDialog):
+    def __init__(self, parent):
+        QtGui.QDialog.__init__(self, parent)
+        self.ui = Ui_ModelSelection()
+        self.ui.setupUi(self)
+        self.parent = parent
+        # populate model files
+        self.model_dir = os.path.join(DEFAULT_TECH_LIB_DIR, 'Model', 'Trace')
+        self.rs_model = QtGui.QFileSystemModel()
+        self.rs_model.setRootPath(self.model_dir)
+        self.rs_model.setFilter(QtCore.QDir.Files)
+        self.ui.list_mdl_choices.setModel(self.rs_model)
+        self.ui.list_mdl_choices.setRootIndex(self.rs_model.setRootPath(self.model_dir))
+        self.ui.list_mdl_choices.clicked.connect(self.show_mdl_info)
+        self.ui.buttonBox.accepted.connect(self.select_mdl)
+
+    def show_mdl_info(self):
+        selected=str(self.rs_model.fileName(self.ui.list_mdl_choices.currentIndex()))
+        mdl = load_file(os.path.join(self.model_dir,selected))
+        text=mdl['info']
+        self.ui.textEdit.setText(text)
+        self.ui.list_mdl_choices.currentIndex()
+
+    def select_mdl(self):
+        try:
+            self.model=load_file(os.path.join(self.model_dir,self.rs_model.fileName(self.ui.list_mdl_choices.currentIndex())))
+            self.parent.project.symb_layout.set_RS_model(self.model)
+            Notifier(msg="model is set to: "+str(self.rs_model.fileName(self.ui.list_mdl_choices.currentIndex())),msg_name="model selected")
+        except:
+            InputError(msg="Unexpected error:"+str(sys.exc_info()[0]))
