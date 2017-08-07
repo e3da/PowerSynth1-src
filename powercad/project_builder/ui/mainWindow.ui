@@ -583,15 +583,15 @@ p, li { white-space: pre-wrap; }
        <number>2</number>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>5</number>
       </property>
       <widget class="QWidget" name="page_12">
        <property name="geometry">
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>359</width>
-         <height>640</height>
+         <width>276</width>
+         <height>653</height>
         </rect>
        </property>
        <attribute name="label">
@@ -1563,8 +1563,8 @@ p, li { white-space: pre-wrap; }
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>359</width>
-         <height>806</height>
+         <width>282</width>
+         <height>832</height>
         </rect>
        </property>
        <attribute name="label">
@@ -2607,8 +2607,8 @@ p, li { white-space: pre-wrap; }
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>376</width>
-         <height>599</height>
+         <width>125</width>
+         <height>655</height>
         </rect>
        </property>
        <attribute name="label">
@@ -2903,8 +2903,8 @@ p, li { white-space: pre-wrap; }
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>376</width>
-         <height>599</height>
+         <width>215</width>
+         <height>386</height>
         </rect>
        </property>
        <attribute name="label">
@@ -3097,8 +3097,8 @@ p, li { white-space: pre-wrap; }
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>376</width>
-         <height>599</height>
+         <width>354</width>
+         <height>582</height>
         </rect>
        </property>
        <attribute name="label">
@@ -3980,6 +3980,13 @@ p, li { white-space: pre-wrap; }
          </widget>
         </item>
         <item row="4" column="0">
+         <widget class="QCheckBox" name="checkBox_fillet">
+          <property name="text">
+           <string>Fillet corners</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="1">
          <widget class="QPushButton" name="btn_open_sol_browser">
           <property name="text">
            <string>Open Solution Browser</string>
@@ -4376,10 +4383,9 @@ p, li { white-space: pre-wrap; }
   <tabstop>txt_numGenerations</tabstop>
   <tabstop>btn_runSim</tabstop>
   <tabstop>lst_solution</tabstop>
-  <tabstop>btn_open_sol_browser</tabstop>
  </tabstops>
  <resources>
-  <include location="../../../../../../../Users/qmle/Desktop/UI Design/main_window_images.qrc"/>
+  <include location="main_window_images.qrc"/>
  </resources>
  <connections/>
 </ui>
