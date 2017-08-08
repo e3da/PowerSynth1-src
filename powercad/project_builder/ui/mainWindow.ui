@@ -4202,7 +4202,7 @@ p, li { white-space: pre-wrap; }
        <string/>
       </property>
       <property name="pixmap">
-       <pixmap>../../../../../../../images/main_window/PowerSynth_Logo_Temp2.png</pixmap>
+       <pixmap resource="main_window_images.qrc">:/images/images/main_window/PowerSynth_Logo_Temp3.png</pixmap>
       </property>
       <property name="scaledContents">
        <bool>true</bool>
