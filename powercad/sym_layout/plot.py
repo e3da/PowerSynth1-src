@@ -489,7 +489,8 @@ def detect_corners_270(sym_layout2, ax, innerFillets, supertraces):
     for i in supertraces:
         for j in supertraces:
             if i is not j:
-                if j.trace_rect.top <= i.trace_rect.top and j.trace_rect.bottom >= i.trace_rect.bottom and j.trace_rect.left >= i.trace_rect.left and j.trace_rect.right <= i.trace_rect.right:
+                if round(j.trace_rect.top,2) <= round(i.trace_rect.top,2) and round(j.trace_rect.bottom,2) >= round(i.trace_rect.bottom,2) and \
+                                round(j.trace_rect.left,2) >= round(i.trace_rect.left,2) and round(j.trace_rect.right,2) <= round(i.trace_rect.right,2):
                     phantomSupertraces.append(j)
                     supertraces.remove(j)
                     sym_layout2.all_trace_lines.remove(j) # REMOVE THE PHANTOM TRACES FROM ALL_TRACE_LINES OF THE DUPLICATE SYM_LAYOUT OBJECT
@@ -499,6 +500,9 @@ def detect_corners_270(sym_layout2, ax, innerFillets, supertraces):
     outerFillets = []
 
     for i in sym_layout2.all_trace_lines:
+        r2 = Rectangle((i.trace_rect.left, i.trace_rect.bottom), i.trace_rect.right - i.trace_rect.left, i.trace_rect.top - i.trace_rect.bottom, facecolor='grey',
+                      edgecolor='grey', fill=False) # enhances the outline of the traces (graphical purpose only)
+        ax.add_patch(r2)
         oc = getOuterCorners(i) # Returns four OuterCorner objects for the given trace, i
         # REMOVE OUTERCORNERS THAT ARE CONGRUENT TO AN INNERCORNER (i.e. their x,y coordinates match)
         for j in oc:
