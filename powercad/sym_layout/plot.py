@@ -148,10 +148,10 @@ def plot_layout(sym_layout, filletFlag, ax = plt.subplot('111', adjustable='box'
 
 class Trace(object):
     def __init__(self, t):
-        self.top = round(t.trace_rect.top, 2)
-        self.bottom = round(t.trace_rect.bottom, 2)
-        self.left = round(t.trace_rect.left, 2)
-        self.right = round(t.trace_rect.right, 2)
+        self.top = round(t.trace_rect.top, 1)
+        self.bottom = round(t.trace_rect.bottom, 1)
+        self.left = round(t.trace_rect.left, 1)
+        self.right = round(t.trace_rect.right, 1)
 
 class InnerCorner(object):
     def __init__(self, t1, t2):
@@ -168,10 +168,16 @@ class OuterCorner(object):
         self.trace = t
 
 class Fillet(object):
-    def __init__(self, corner, quadrant):
+    def __init__(self, corner, quadrant, gap):
+        default = 2
+        if gap is None: # L-junction
+            gap = default*2 # assume gap is twice the would-be fillet radius if this were a T-junction
         self.corner = corner # coordinates of the corner (object of class InnerCorner or OuterCorner)
         self.concavityQuadrant = quadrant # 1= concave in 1st quadrant, 2= conc n 2nd quad, 3= conc in 3rd quad, 4= conc in 4th quad
-        self.radius = 2 # default fillet depth
+        if gap <= 2*default:
+            self.radius = gap/2 # if fillet size needs to be limited based on a design rule (example: T-junction with small overhang) # todo
+        else:
+            self.radius = default # default fillet depth
         self.centerX = None
         self.centerY = None
         self.theta1 = None
@@ -179,7 +185,7 @@ class Fillet(object):
 
     def calcOuterFilletSpecs(self):
         """Calculate an outer corner's fillet specifications such as fillet arc center coordinates and sector starting angle and ending angle based on the concavity quadrant."""
-        self.radius = (round(min(self.corner.trace.trace_rect.top-self.corner.trace.trace_rect.bottom, self.corner.trace.trace_rect.right-self.corner.trace.trace_rect.left, 2), 2))/2
+        self.radius = (round(min(self.corner.trace.trace_rect.top-self.corner.trace.trace_rect.bottom, self.corner.trace.trace_rect.right-self.corner.trace.trace_rect.left, 2), 1))/2
         if self.concavityQuadrant == 1:
             self.centerX = self.corner.x + self.radius
             self.centerY = self.corner.y + self.radius
@@ -204,7 +210,7 @@ class Fillet(object):
     def calcInnerFilletSpecs(self):
         """Calculate an inner corner's fillet specifications such as fillet arc center coordinates and sector starting angle and ending angle based on the concavity quadrant."""
         self.radius = (round(min(self.corner.trace1.top-self.corner.trace1.bottom, self.corner.trace1.right-self.corner.trace1.left, \
-                                self.corner.trace2.top-self.corner.trace2.bottom, self.corner.trace2.right-self.corner.trace2.left, 2), 2))/2
+                                self.corner.trace2.top-self.corner.trace2.bottom, self.corner.trace2.right-self.corner.trace2.left, 2), 1))/2
         if self.concavityQuadrant == 1:
             self.centerX = self.corner.x + self.radius
             self.centerY = self.corner.y + self.radius
@@ -229,28 +235,41 @@ class Fillet(object):
 def getOuterCorners(t):
     """For a given trace, return the top-left, top-right, bottom-left, bottom-right corner coordinates."""
     oc1 = OuterCorner(t)
-    oc1.x = round(t.trace_rect.left, 2)
-    oc1.y = round(t.trace_rect.top, 2)
+    oc1.x = round(t.trace_rect.left, 1)
+    oc1.y = round(t.trace_rect.top, 1)
     oc1.concavityQuadrant = 4
     oc2 = OuterCorner(t)
-    oc2.x = round(t.trace_rect.right, 2)
-    oc2.y = round(t.trace_rect.top, 2)
+    oc2.x = round(t.trace_rect.right, 1)
+    oc2.y = round(t.trace_rect.top, 1)
     oc2.concavityQuadrant = 3
     oc3 = OuterCorner(t)
-    oc3.x = round(t.trace_rect.left, 2)
-    oc3.y = round(t.trace_rect.bottom, 2)
+    oc3.x = round(t.trace_rect.left, 1)
+    oc3.y = round(t.trace_rect.bottom, 1)
     oc3.concavityQuadrant = 1
     oc4 = OuterCorner(t)
-    oc4.x = round(t.trace_rect.right, 2)
-    oc4.y = round(t.trace_rect.bottom, 2)
+    oc4.x = round(t.trace_rect.right, 1)
+    oc4.y = round(t.trace_rect.bottom, 1)
     oc4.concavityQuadrant = 2
     return oc1, oc2, oc3, oc4
 
-def addFillet(fillets, corner, temp_x, temp_y, concavityQuadrant):
-    """Creates a Fillet object using the given InnerCorner(OuterCorner) object and the given concavity quadrant, and then adds it to the given fillets[] list"""
+def addFillet(fillets, corner, temp_x, temp_y, concavityQuadrant, limit):
+    """Creates a Fillet object using the given InnerCorner(OuterCorner) object and the given concavity quadrant, and then adds it to the given fillets[] list if it isn't already there."""
     corner.x = temp_x
     corner.y = temp_y
-    fillets.append(Fillet(corner, concavityQuadrant))
+    f = Fillet(corner, concavityQuadrant, limit)
+    if len(fillets) == 0:
+        fillets.append(f)
+    else:
+        found = False
+        for i in fillets:
+            if f.corner.x == i.corner.x and f.corner.y == i.corner.y:
+                found = True
+                break
+            else:
+                continue
+        if found == False:
+            fillets.append(f)
+
 
 def searchCorner(trace1, trace2, corneredTraces):
     """Search if the combination of trace1 and trace2 exist in the corneredTraces[] list. Return True if so, False otherwise."""
@@ -298,8 +317,8 @@ def detect_corners_90(sym_layout2, ax):
             if j.intersecting_trace is not None: # supertrace found
                 continue
             else: # regular (non-supertrace) trace found
-                if round(i.trace_rect.top,2) == round(j.trace_rect.bottom,2) or round(i.trace_rect.right,2) == round(j.trace_rect.left,2) or \
-                                round(i.trace_rect.bottom,2) == round(j.trace_rect.top,2) or round(i.trace_rect.left,2) == round(j.trace_rect.right,2):
+                if round(i.trace_rect.top,1) == round(j.trace_rect.bottom,1) or round(i.trace_rect.right,1) == round(j.trace_rect.left,1) or \
+                                round(i.trace_rect.bottom,1) == round(j.trace_rect.top,1) or round(i.trace_rect.left,1) == round(j.trace_rect.right,1):
                     trace_rectangle = Trace(i) # trace rectangle converted to a Trace object
                     connecting_trace_rectangle = Trace(j) # connecting trace rectangle converted to a Trace object
                     corner1 = InnerCorner(trace_rectangle, connecting_trace_rectangle)  # create an InnerCrner object using the two traces
@@ -312,141 +331,158 @@ def detect_corners_90(sym_layout2, ax):
         temp_x = None
         temp_y = None
         concavityQuadrant = None
-        if i.trace1.top == i.trace2.bottom: # common y (top of one matching bottom of the other)
+        if round(i.trace1.top, 1) == round(i.trace2.bottom, 1): # common y (top of one matching bottom of the other)
             temp_y = i.trace1.top
-        elif i.trace1.bottom == i.trace2.top: # common y (top of one matching bottom of the other)
+        elif round(i.trace1.bottom, 1) == round(i.trace2.top, 1): # common y (top of one matching bottom of the other)
             temp_y = i.trace1.bottom
-        elif i.trace1.left == i.trace2.right: # common x (left of one matching right of the other)
+        elif round(i.trace1.left, 1) == round(i.trace2.right, 1): # common x (left of one matching right of the other)
             temp_x = i.trace1.left
-        elif i.trace1.right == i.trace2.left: # common x (left of one matching right of the other)
+        elif round(i.trace1.right, 1) == round(i.trace2.left, 1): # common x (left of one matching right of the other)
             temp_x = i.trace1.right
         if ((temp_x is None) and (temp_y is None)): # If both x and y are blank, it's not a valid corner. If so, go to next item in list.
             continue
 
         # FIND THE OTHER COORDINATE (L-JUNCTION) BY COMPARING EDGE LOCATIONS OF THE PAIR OF TRACES BEING ASSESSED
         elif temp_x is None: # Find x-coordinate of the corner
-            if i.trace1.left == i.trace2.left: # if left side is common, select right side of the lower width box as the corner-x.
-                if i.trace1.right < i.trace2.right:
+            if round(i.trace1.left, 1) == round(i.trace2.left, 1): # if left side is common, select right side of the lower width box as the corner-x.
+                if round(i.trace1.right, 1) < round(i.trace2.right, 1):
                     temp_x = i.trace1.right
-                    if temp_y == i.trace1.bottom:
+                    if round(temp_y, 1) == round(i.trace1.bottom, 1):
                         concavityQuadrant = 1
-                    elif temp_y == i.trace2.bottom:
+                    elif round(temp_y, 1) == round(i.trace2.bottom, 1):
                         concavityQuadrant = 4
-                elif i.trace1.right > i.trace2.right: # explicit condition used here to avoid phantom traces from being counted as valid.
+                elif round(i.trace1.right, 1) > round(i.trace2.right, 1): # explicit condition used here to avoid phantom traces from being counted as valid.
                     temp_x = i.trace2.right
-                    if temp_y == i.trace2.bottom:
+                    if round(temp_y, 1) == round(i.trace2.bottom, 1):
                         concavityQuadrant = 1
-                    elif temp_y == i.trace1.bottom:
+                    elif round(temp_y, 1) == round(i.trace1.bottom, 1):
                         concavityQuadrant = 4
-            elif i.trace1.right == i.trace2.right: # if right side is common, select left side of the lower width box as the corner-x.
-                if i.trace1.left > i.trace2.left:
+            elif round(i.trace1.right, 1) == round(i.trace2.right, 1): # if right side is common, select left side of the lower width box as the corner-x.
+                if round(i.trace1.left, 1) > round(i.trace2.left, 1):
                     temp_x = i.trace1.left
-                    if temp_y == i.trace1.bottom:
+                    if round(temp_y, 1) == round(i.trace1.bottom, 1):
                         concavityQuadrant = 2
-                    elif temp_y == i.trace2.bottom:
+                    elif round(temp_y, 1) == round(i.trace2.bottom, 1):
                         concavityQuadrant = 3
-                elif i.trace1.left < i.trace2.left: # explicit condition used here to avoid phantom traces from being counted as valid.
+                elif round(i.trace1.left, 1) < round(i.trace2.left, 1): # explicit condition used here to avoid phantom traces from being counted as valid.
                     temp_x = i.trace2.left
-                    if temp_y == i.trace2.bottom:
+                    if round(temp_y, 1) == round(i.trace2.bottom, 1):
                         concavityQuadrant = 2
-                    elif temp_y == i.trace1.bottom:
+                    elif round(temp_y, 1) == round(i.trace1.bottom, 1):
                         concavityQuadrant = 3
         elif temp_y is None: # Find y-coordinate of the corner
-            if i.trace1.top == i.trace2.top:  # if top side is common, select bottom side of the lower height box as the corner-y.
-                if i.trace1.bottom > i.trace2.bottom:
+            if round(i.trace1.top, 1) == round(i.trace2.top, 1):  # if top side is common, select bottom side of the lower height box as the corner-y.
+                if round(i.trace1.bottom, 1) > round(i.trace2.bottom, 1):
                     temp_y = i.trace1.bottom
-                    if temp_x == i.trace1.right:
+                    if round(temp_x, 1) == round(i.trace1.right, 1):
                         concavityQuadrant = 3
-                    elif temp_x == i.trace2.right:
+                    elif round(temp_x, 1) == round(i.trace2.right, 1):
                         concavityQuadrant = 4
-                elif i.trace1.bottom < i.trace2.bottom: # explicit condition used here to avoid phantom traces from being counted as valid.
+                elif round(i.trace1.bottom, 1) < round(i.trace2.bottom, 1): # explicit condition used here to avoid phantom traces from being counted as valid.
                     temp_y = i.trace2.bottom
-                    if temp_x == i.trace2.right:
+                    if round(temp_x, 1) == round(i.trace2.right, 1):
                         concavityQuadrant = 3
-                    elif temp_x == i.trace1.right:
+                    elif round(temp_x, 1) == round(i.trace1.right, 1):
                         concavityQuadrant = 4
-            elif i.trace1.bottom == i.trace2.bottom: # if bottom side is common, select top side of the lower height box as the corner-y.
-                if i.trace1.top < i.trace2.top:
+            elif round(i.trace1.bottom, 1) == round(i.trace2.bottom, 1): # if bottom side is common, select top side of the lower height box as the corner-y.
+                if round(i.trace1.top, 1) < round(i.trace2.top, 1):
                     temp_y = i.trace1.top
-                    if temp_x == i.trace1.right:
+                    if round(temp_x, 1) == round(i.trace1.right, 1):
                         concavityQuadrant = 2
-                    elif temp_x == i.trace2.right:
+                    elif round(temp_x, 1) == round(i.trace2.right, 1):
                         concavityQuadrant = 1
-                elif i.trace1.top > i.trace2.top: # explicit condition used here to avoid phantom traces from being counted as valid.
+                elif round(i.trace1.top, 1) > round(i.trace2.top, 1): # explicit condition used here to avoid phantom traces from being counted as valid.
                     temp_y = i.trace2.top
-                    if temp_x == i.trace2.right:
+                    if round(temp_x, 1) == round(i.trace2.right, 1):
                         concavityQuadrant = 2
-                    elif temp_x == i.trace1.right:
+                    elif round(temp_x, 1) == round(i.trace1.right, 1):
                         concavityQuadrant = 1
         if ((temp_x is not None) and (temp_y is not None)):
-            addFillet(fillets, i, temp_x, temp_y, concavityQuadrant)
+            addFillet(fillets, i, temp_x, temp_y, concavityQuadrant, None)
 
         # FIND THE OTHER COORDINATE (T-JUNCTION) BY COMPARING EDGE LOCATIONS OF THE PAIR OF TRACES BEING ASSESSED
         elif temp_x is None and temp_y is not None: # if temp_x is still None (but temp_y has been found), this is a T-junction.
-            if (((i.trace1.left > i.trace2.left) & (i.trace1.left < i.trace2.right))) & (((i.trace1.right > i.trace2.left) & (i.trace1.right < i.trace2.right))):
+            minGap = 1 # minGap is the is the minimum gap between the leftmost(rightmost) edge of a horizontal trace and the leftmost(rightmost) edge of a vertical trace that forms a T-junction
+            if (((round(i.trace1.left, 1) > round(i.trace2.left, 1)) & (round(i.trace1.left,1 ) < round(i.trace2.right, 1)))) & (((round(i.trace1.right, 1) > round(i.trace2.left, 1)) & (round(i.trace1.right, 1) < round(i.trace2.right, 1)))):
                 temp_x = i.trace1.left
-                if temp_y == i.trace1.bottom:
+                if round(temp_y, 1) == round(i.trace1.bottom, 1):
                     concavityQuadrant = 2
-                elif temp_y == i.trace2.bottom:
+                elif round(temp_y, 1) == round(i.trace2.bottom, 1):
                     concavityQuadrant = 3
-                addFillet(fillets, i, temp_x, temp_y, concavityQuadrant)
+                gap = i.trace1.left - i.trace2.left #todo
+                if gap > minGap:
+                    addFillet(fillets, i, temp_x, temp_y, concavityQuadrant, gap)
                 temp_x = i.trace1.right
-                if temp_y == i.trace2.bottom:
+                if round(temp_y, 1) == round(i.trace2.bottom, 1):
                     concavityQuadrant = 4
-                elif temp_y == i.trace1.bottom:
+                elif round(temp_y, 1) == round(i.trace1.bottom, 1):
                     concavityQuadrant = 1
-                c = InnerCorner(i.trace1, i.trace2) # create a new InnerCorner object so as not to overwite the previous InnerCorner object
-                addFillet(fillets, c, temp_x, temp_y, concavityQuadrant)
-            elif (((i.trace2.left > i.trace1.left) & (i.trace2.left < i.trace1.right))) & (((i.trace2.right > i.trace1.left) & (i.trace2.right < i.trace1.right))):
+                gap = i.trace2.right, 1 - i.trace1.right #todo
+                if gap > minGap:
+                    c = InnerCorner(i.trace1, i.trace2) # create a new InnerCorner object so as not to overwite the previous InnerCorner object
+                    addFillet(fillets, c, temp_x, temp_y, concavityQuadrant, gap)
+            elif (((round(i.trace2.left, 1) > round(i.trace1.left, 1)) & (round(i.trace2.left, 1) < round(i.trace1.right, 1)))) & (((round(i.trace2.right, 1) > round(i.trace1.left, 1)) & (round(i.trace2.right, 1) < round(i.trace1.right, 1)))):
                 temp_x = i.trace2.left
-                if temp_y == i.trace2.bottom:
+                if round(temp_y, 1) == round(i.trace2.bottom, 1):
                     concavityQuadrant = 2
-                elif temp_y == i.trace1.bottom:
+                elif round(temp_y, 1) == round(i.trace1.bottom, 1):
                     concavityQuadrant = 3
-                addFillet(fillets, i, temp_x, temp_y, concavityQuadrant)
+                gap = i.trace2.left - i.trace1.left #todo
+                if gap > minGap:
+                    addFillet(fillets, i, temp_x, temp_y, concavityQuadrant, gap)
                 temp_x = i.trace2.right
-                if temp_y == i.trace1.bottom:
+                if round(temp_y, 1) == round(i.trace1.bottom, 1):
                     concavityQuadrant = 4
-                elif temp_y == i.trace2.bottom:
+                elif round(temp_y, 1) == round(i.trace2.bottom, 1):
                     concavityQuadrant = 1
-                c = InnerCorner(i.trace1, i.trace2)  # create a new InnerCorner object so as not to overwite the previous InnerCorner object
-                addFillet(fillets, c, temp_x, temp_y, concavityQuadrant)
+                gap = i.trace1.right - i.trace2.right #todo
+                if gap > minGap:
+                    c = InnerCorner(i.trace1, i.trace2)  # create a new InnerCorner object so as not to overwite the previous InnerCorner object
+                    addFillet(fillets, c, temp_x, temp_y, concavityQuadrant, gap)
         elif temp_y is None and temp_x is not None: # if temp_y is still None (but temp_x has been found), this is a sideways T-junction.
-            if (((i.trace1.top > i.trace2.bottom) & (i.trace1.top < i.trace2.top))) & (((i.trace1.bottom > i.trace2.bottom) & (i.trace1.bottom < i.trace2.top))):
+            if (((round(i.trace1.top, 1) > round(i.trace2.bottom, 1)) & (round(i.trace1.top, 1) < round(i.trace2.top, 1)))) & (((round(i.trace1.bottom, 1) > round(i.trace2.bottom, 1)) & (round(i.trace1.bottom, 1) < round(i.trace2.top, 1)))):
                 temp_y = i.trace1.top
-                if temp_x == i.trace1.right:
+                if round(temp_x, 1) == round(i.trace1.right, 1):
                     concavityQuadrant = 2
-                elif temp_x == i.trace2.right:
+                elif round(temp_x, 1) == round(i.trace2.right, 1):
                     concavityQuadrant = 1
-                addFillet(fillets, i, temp_x, temp_y, concavityQuadrant)
+                gap = i.trace2.top - i.trace1.top #todo
+                if gap > minGap:
+                    addFillet(fillets, i, temp_x, temp_y, concavityQuadrant, gap)
                 temp_y = i.trace1.bottom
-                if temp_x == i.trace1.right:
+                if round(temp_x, 1) == round(i.trace1.right, 1):
                     concavityQuadrant = 3
-                elif temp_x == i.trace2.right:
+                elif round(temp_x, 1) == round(i.trace2.right, 1):
                     concavityQuadrant = 4
-                c = InnerCorner(i.trace1, i.trace2)  # create a new InnerCorner object so as not to overwite the previous InnerCorner object
-                addFillet(fillets, c, temp_x, temp_y, concavityQuadrant)
-            elif (((i.trace2.top > i.trace1.bottom) & (i.trace2.top < i.trace1.top))) & ((i.trace2.bottom > i.trace1.bottom) & (i.trace2.bottom < i.trace1.top)):
+                gap = i.trace1.bottom - i.trace2.bottom #todo
+                if gap > minGap:
+                    c = InnerCorner(i.trace1, i.trace2)  # create a new InnerCorner object so as not to overwite the previous InnerCorner object
+                    addFillet(fillets, c, temp_x, temp_y, concavityQuadrant, gap)
+            elif (((round(i.trace2.top, 1) > round(i.trace1.bottom, 1)) & (round(i.trace2.top, 1) < round(i.trace1.top, 1)))) & ((round(i.trace2.bottom, 1) > round(i.trace1.bottom, 1)) & (round(i.trace2.bottom, 1) < round(i.trace1.top, 1))):
                 temp_y = i.trace2.top
-                if temp_x == i.trace2.right:
+                if round(temp_x, 1) == round(i.trace2.right, 1):
                     concavityQuadrant = 2
-                elif temp_x == i.trace1.right:
+                elif round(temp_x, 1) == round(i.trace1.right, 1):
                     concavityQuadrant = 1
-                addFillet(fillets, i, temp_x, temp_y, concavityQuadrant)
+                gap = i.trace1.top - i.trace2.top #todo
+                if gap > minGap:
+                    addFillet(fillets, i, temp_x, temp_y, concavityQuadrant, gap)
                 temp_y = i.trace2.bottom
-                if temp_x == i.trace2.right:
+                if round(temp_x, 1) == round(i.trace2.right, 1):
                     concavityQuadrant = 3
-                elif temp_x == i.trace1.right:
+                elif round(temp_x, 1) == round(i.trace1.right, 1):
                     concavityQuadrant = 4
-                c = InnerCorner(i.trace1, i.trace2)  # create a new InnerCorner object so as not to overwite the previous InnerCorner object
-                addFillet(fillets, c, temp_x, temp_y, concavityQuadrant)
+                gap = i.trace2.bottom - i.trace1.bottom #todo
+                if gap > minGap:
+                    c = InnerCorner(i.trace1, i.trace2)  # create a new InnerCorner object so as not to overwite the previous InnerCorner object
+                    addFillet(fillets, c, temp_x, temp_y, concavityQuadrant, gap)
 
     # OUTPUT THE fillets[] LIST AND MARK THE FILLETS ON THE LAYOUT PREVIEW AND SOLUTION WINDOW
     print "Inner Corners (90 degrees): "
     print "Format: (x, y), fillet concavity quadrant"
     for i in fillets:
         i.calcInnerFilletSpecs() # Find fillet/arc specifications
-        print (i.corner.x, i.corner.y), i.concavityQuadrant
+        print (i.corner.x, i.corner.y), i.concavityQuadrant, i.corner.trace1.top, i.corner.trace1.bottom, i.corner.trace1.left, i.corner.trace1.right, i.corner.trace2.top, i.corner.trace2.bottom, i.corner.trace2.left, i.corner.trace2.right
         a = Arc((i.centerX, i.centerY), i.radius*2, i.radius*2, theta1=i.theta1, theta2=i.theta2, facecolor='#E6E6E6', edgecolor='red', linewidth=2)
         #ax.add_patch(r) # toggle comment to enable/disable rectangle markings
         ax.add_patch(a) # toggle comment to enable/disable fillet markings
@@ -454,18 +490,22 @@ def detect_corners_90(sym_layout2, ax):
     return fillets, supertraces
 
 def searchInnerFillets(oc, innerFillets):
-    '''Searches for given OuterCorner, j, in given innerFillets list and returns the list of duplicates.'''
+    '''Searches for given OuterCorner, oc, in given innerFillets list and returns the list of duplicates.'''
     duplicates = [] # create an empty list to store indices where oc is found in innerFillets
+    minGap = 1
     for i in innerFillets:
-        if (round(oc.x, 2) == round(i.corner.x, 2)) and (round(oc.y, 2) == round(i.corner.y, 2)):
+        if (round(i.corner.x, 1)-minGap <= round(oc.x, 1) <= round(i.corner.x, 1)+minGap) and (round(i.corner.y, 1)-minGap <= round(oc.y, 1) <= round(i.corner.y, 1)+minGap):
+        #if ((round(oc.x, 1) in range(round(i.corner.x, 1)-minGap, round(i.corner.x, 1)+minGap)) and (round(oc.y, 1) in range(round(i.corner.y, 1)-minGap, round(i.corner.y, 1)+minGap))):
             duplicates.append(i)
     return duplicates
 
 def searchOuterFillets(f, outerFillets):
     '''Searches for given fillet, f, in given outerFillets list and returns the list of duplicates.'''
     duplicates = []  # create an empty list to store indices where f is found in outerFillets
+    minGap = 1
     for i in outerFillets:
-        if (f.corner.x == i.corner.x) and (f.corner.y == i.corner.y):
+        if (round(i.corner.x, 1)-minGap <= round(f.corner.x, 1) <= round(i.corner.x, 1)+minGap) and (round(i.corner.y, 1)-minGap <= round(f.corner.y, 1) <= round(i.corner.y, 1)+minGap):
+        #if (round(f.corner.x, 1) == round(i.corner.x, 1)) and (round(f.corner.y, 1) == round(i.corner.y, 1)):
             duplicates.append(i)
     return duplicates
 
@@ -500,15 +540,17 @@ def detect_corners_270(sym_layout2, ax, innerFillets, supertraces):
     outerFillets = []
 
     for i in sym_layout2.all_trace_lines:
+        # enhances the outline of the traces (graphical purpose only)
         r2 = Rectangle((i.trace_rect.left, i.trace_rect.bottom), i.trace_rect.right - i.trace_rect.left, i.trace_rect.top - i.trace_rect.bottom, facecolor='grey',
-                      edgecolor='grey', fill=False) # enhances the outline of the traces (graphical purpose only)
+                      edgecolor='grey', fill=False)
         ax.add_patch(r2)
+
         oc = getOuterCorners(i) # Returns four OuterCorner objects for the given trace, i
         # REMOVE OUTERCORNERS THAT ARE CONGRUENT TO AN INNERCORNER (i.e. their x,y coordinates match)
         for j in oc:
             innerDuplicates = searchInnerFillets(j, innerFillets) # save the duplicate objects in innerFillets[] list
             if len(innerDuplicates) == 0:
-                f = Fillet(j, j.concavityQuadrant)
+                f = Fillet(j, j.concavityQuadrant, None)
                 outerduplicates = searchOuterFillets(f, outerFillets) # save the duplicate objects in outerFillets[] list
                 if len(outerduplicates) > 0:
                     for k in outerduplicates:
