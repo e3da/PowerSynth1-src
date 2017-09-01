@@ -262,7 +262,6 @@ def wire_resistance(f, l, r, p=1.724e-8):
     Aeff=s_d*math.pi*2*r
     r=p*l/Aeff
     r_w=1000*r
-    r_w=0.9
     print r_w
     return r_w
 #-------------------------------------------------------------

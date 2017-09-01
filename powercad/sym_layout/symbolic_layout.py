@@ -2803,7 +2803,6 @@ def one_measure(symlayout):
                     #                    print measure_type, val
             ret.append(val)
 
-
         elif isinstance(measure, ThermalMeasure):
             type = measure.mdl
             if type == 'TFSM_MODEL':
