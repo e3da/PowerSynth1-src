@@ -1669,7 +1669,7 @@ class SymbolicLayout(object):
                     else:
                         trace_y = trace_rect.bottom + dist
                     end_pt = (start_pt[0], trace_y)
-                    land_pt = (wire.device.center_position[1], trace_y)
+                    land_pt = (wire.device.center_position[0], trace_y) # Quang: fixed a critical and ancient bug on bonding wire: center_position[1] -> center_position[0]
                     
                 start_pts.append(start_pt)
                 end_pts.append(end_pt)
