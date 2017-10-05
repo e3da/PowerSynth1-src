@@ -24,6 +24,7 @@ Created on Jun 27, 2012
 # - Need to handle supertrace connecting to supertrace
 #     * this will involve writing/changing code in both layout generation and parasitic extraction
 
+
 # Future work notes:
 # Work the concept of supertraces into the program better (more elegantly)
 # Remove the use of dictionaries in the design variable formulation process
