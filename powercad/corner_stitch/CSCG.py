@@ -188,6 +188,7 @@ class CSCG:
 
         plt.xlim(0, self.CS.eastBoundary.cell.x)
         plt.ylim(0, self.CS.northBoundary.cell.y)
-        fig1.show()
+        #fig1.show()
+        fig1.savefig('C://Users//ialrazi//Pictures//Figs//case.png')
         pylab.pause(11000)  # figure out how to do this better
 

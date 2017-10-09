@@ -745,20 +745,25 @@ class vLayer(cornerStitch):
                 if j < len(changeSet) - 1:
                     j += 1
         return
-
+    """
     def areaSearch(self, x1, y1, x2, y2):
-        """
+        
         Find if there are solid tiles in the rectangle defined by two diagonal points
         x1y1 = the upper left corner, x2y2 = bottom right corner (as per the paper's instructions)        
         this is designed with vertically aligned space assumptions in mind
-        """
+       
         cc = self.findPoint(x1, y1, self.stitchList[0]) #the tile that contains the first corner point
         secondCorner = self.findPoint(x2, y2, self.stitchList[0]) #the tile that contains the second(bottom right) corner
 
         if cc.cell.type == "SOLID":
             return True  # the bottom left corner is in a solid cell
-        elif cc.cell.y + cc.getHeight() < y1:
-            return True  # the corner cell is empty but touches a solid cell within the search area
+        #elif secondCorner.cell.type == "SOLID":
+            #return True
+        elif cc.cell.y >y2:
+            return True
+
+        #elif cc.cell.y + cc.getHeight() < y1:
+            #return True  # the corner cell is empty but touches a solid cell within the search area
 
 
         while(cc.EAST.cell.x < x2):
@@ -771,7 +776,52 @@ class vLayer(cornerStitch):
                 cc = cc.NORTH # if it doesn't, traverse the top right stitch to find the next cell of interest
 
         return False
+    """
+    #"""
+    ### NEW AREA SEARCH
+    def areaSearch(self, x1, y1, x2, y2):
 
+        
+        cc = self.findPoint(x1, y1, self.stitchList[0]) #the tile that contains the first corner point
+        sc = self.findPoint(x2, y2, self.stitchList[0]) #the tile that contains the second(bottom right) corner
+
+        if cc.cell.type == "SOLID":
+            return True  # the bottom left corner is in a solid cell
+        elif cc.cell.y >y2:
+            return True  # the corner cell is empty but touches a solid cell within the search area
+        cc=cc.EAST
+        """
+        while (cc.cell.x< x2):
+            
+            while(cc.cell.y>y2):
+                if cc.cell.y<y1:
+                    if cc.cell.type=="SOLID":
+                        return True
+                    #else:
+                        #cc=cc.SOUTH
+                cc=cc.SOUTH
+            if cc.cell.type=="SOLID":
+                return True
+            cc=cc.EAST
+            if cc.cell.type=="SOLID":
+                return True
+        if cc.cell.y==sc.cell.y:
+            if cc.cell.type =="SOLID":
+                return True
+        """
+
+        while (cc.cell.x < x2):
+            if cc.cell.y < y1 and cc.cell.type =="SOLID":
+                        return True
+                        # else:
+                        # cc=cc.SOUTH
+            while(cc!=self.southBoundary and cc.cell.y+cc.getHeight()>y2):
+                if cc.cell.type=="SOLID":
+                    return True
+                cc=cc.SOUTH
+            cc=cc.EAST
+        return False
+    #"""
 class hLayer(cornerStitch):
     def __init__(self, stitchList, max_x, max_y):
         """
@@ -844,6 +894,7 @@ class hLayer(cornerStitch):
             mergedCell = self.merge(topCell, lowerCell)
 
             changeList.insert(0, mergedCell)
+            print "len=",len(changeList)
 
         #step 4: rectify shadows
         if len(changeList) > 0:
@@ -854,11 +905,11 @@ class hLayer(cornerStitch):
 
     def rectifyShadow(self, caster):
         """
-        this checks the EAST and WEST of caster, to see if there are alligned empty cells that could be merged.
-        Primarily called after insert, but for simplicity and OOP's sake, I'm separating this from the other
-        
-        Re-write this to walk along the E and W edges and try to combine neighbors sequentially
-        """
+                this checks the EAST and WEST of caster, to see if there are alligned empty cells that could be merged.
+                Primarily called after insert, but for simplicity and OOP's sake, I'm separating this from the other
+
+                Re-write this to walk along the E and W edges and try to combine neighbors sequentially
+                """
         changeSet = []
 
         cc = caster.EAST #recitfy east side, walking downwards
@@ -912,12 +963,13 @@ class hLayer(cornerStitch):
                     j += 1
         return
 
+    """
     def areaSearch(self, x1, y1, x2, y2):
-        """"
+        
         Find if there are solid tiles in the rectangle defined by two diagonal points
         x1y1 = the upper left corner, x2y2 = bottom right corner (as per the paper's instructions)    
         this is designed with horizontally aligned space assumptions in mind
-        """
+        
         cc = self.findPoint(x1, y1, self.stitchList[0]) #the tile that contains the first corner point
         secondCorner = self.findPoint(x2, y2, self.stitchList[0]) #the tile that contains the second(top right) corner
 
@@ -925,48 +977,41 @@ class hLayer(cornerStitch):
             return True  # the bottom left corner is in a solid cell
         elif cc.cell.x + cc.getWidth() < x2:
             return True# the corner cell is empty but touches a solid cell within the search area
-        
-       
-        
-
+  
         while(cc.SOUTH.cell.y > y2):
+            
             if cc.cell.type == "SOLID":
                 return True  # the bottom left corner is in a solid cell
             elif cc.cell.x + cc.getWidth() < x2:
                 return True  # the corner cell is empty but touches a solid cell within the search area
             cc = cc.SOUTH #check the next lowest cell
-            while(cc.cell.x + cc.getWidth() < x1): #making sure that the CurrentCell's right edge lays within the area
-                cc = cc.EAST # if it doesn't, traverse the top right stitch to find the next cell of interest
+            while (cc.cell.x + cc.getWidth() < x1):  # making sure that the CurrentCell's right edge lays within the area
+                cc = cc.EAST# if it doesn't, traverse the top right stitch to find the next cell of interest
 
         return False
-
     """
     def areaSearch(self, x1, y1, x2, y2):
        
         cc = self.findPoint(x1, y1, self.stitchList[0]) #the tile that contains the first corner point
-        secondCorner = self.findPoint(x2, y2, self.stitchList[0]) #the tile that contains the second(top right) corner
-
+        secondCorner = self.findPoint(x2, y2, self.stitchList[0])  # the tile that contains the second(bottom right) corne        if cc.cell.type == "SOLID":
         if cc.cell.type == "SOLID":
-            return True  # the bottom left corner is in a solid cell
-        elif cc.cell.x + cc.getWidth() < x2:
-            return True# the corner cell is empty but touches a solid cell within the search area
-
-        elif secondCorner.cell.type == "SOLID":
             return True
-        elif secondCorner.cell.x > x1:
+
+        elif cc.cell.x + cc.getWidth() < x2:
             return True
 
         cc=cc.SOUTH
-        while(cc.cell.y > y2):
+
+        while(cc!= self.southBoundary and cc.cell.y+cc.getHeight()> y2):
             while (cc.cell.x + cc.getWidth() < x1):  # making sure that the CurrentCell's right edge lays within the area
                 cc = cc.EAST  # if it doesn't, traverse the top right stitch to find the next cell of interest
             if cc.cell.type == "SOLID":
                 return True  # the bottom left corner is in a solid cell
-            elif cc.cell.x + cc.getWidth() < x2:
+            elif cc.cell.x+cc.getWidth()<x2:
                 return True  # the corner cell is empty but touches a solid cell within the search area
             cc = cc.SOUTH #check the next lowest cell
         return False
-    """
+
 if __name__ == '__main__':
     emptyVPlane = tile(None, None, None, None, None, cell(0, 0, "EMPTY"))
     emptyHPlane = tile(None, None, None, None, None, cell(0, 0, "EMPTY"))
@@ -998,11 +1043,10 @@ if __name__ == '__main__':
     emptyHExample.insert(3, 43, 19, 35, "SOLID")
     """
 
-   #emptyHExample.insert(20, 13, 25, 8, "SOLID")
-   #emptyHExample.insert(15, 20, 17, 3, "SOLID")
-    """
-    emptyHExample.insert(15, 20, 19, 15, "SOLID")
-    emptyHExample.insert(8, 17, 17, 2, "SOLID")
+    emptyVExample.insert(12, 8, 18, 2, "SOLID")
+    emptyVExample.insert(3, 25, 10, 18, "SOLID")
+    emptyVExample.insert(8, 15, 15, 10, "SOLID")
+
     """
     #emptyVExample.insert(26, 20, 30, 15, "SOLID")
 
@@ -1012,20 +1056,23 @@ if __name__ == '__main__':
 
     #emptyHExample.insert(12, 20, 15,8, "SOLID")
     #emptyHExample.insert(10, 17, 17, 10, "SOLID")
-   # emptyHExample.insert(8, 12, 17, 2, "SOLID")
+    # emptyHExample.insert(8, 12, 17, 2, "SOLID")
 
 
-    #emptyVExample.insert(5, 20, 10, 15, "SOLID")
+    #emptyHExample.insert(8, 17, 17, 2, "SOLID")
+    emptyHExample.insert(5, 20, 10, 18, "SOLID")
+    emptyHExample.insert(15, 20, 19, 15, "SOLID")
 
-    emptyVExample.insert(8, 20, 15, 16, "SOLID")
-    emptyVExample.insert(3, 15, 17, 2, "SOLID")
+    #
+
+    # emptyVExample.insert(5, 20, 10, 15, "SOLID")
 
     #emptyVExample.insert(8, 20, 15, 16, "SOLID")
     #emptyVExample.insert(3, 15, 17, 2, "SOLID")
 
 
 
-    """
+    
     emptyHExample.insert(20, 17, 25, 12, "SOLID")
 
     emptyHExample.insert(21, 19, 28, 15, "SOLID")
@@ -1047,13 +1094,14 @@ if __name__ == '__main__':
     con = constraint.constraint(1, "minWidth", 0, 1)
     diGraph.addEdge(con.source, con.dest, con)
 
-    CG.drawGraph()
-    diGraph.drawGraph()
+    #CG.drawGraph()
+    #diGraph.drawGraph()
 
     #CSCG = CSCG.CSCG(emptyHExample, CG)
     CSCG = CSCG.CSCG(emptyVExample, CG)
     CSCG.findGraphEdges()
     CSCG.drawLayer()
-    emptyVExample.drawLayer(truePointer=False)
+    #emptyVExample.drawLayer(truePointer=False)
+
 
     #emptyHExample.drawLayer(truePointer=False)
