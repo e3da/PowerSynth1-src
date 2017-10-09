@@ -745,13 +745,14 @@ class vLayer(cornerStitch):
                 if j < len(changeSet) - 1:
                     j += 1
         return
+
     """
     def areaSearch(self, x1, y1, x2, y2):
         
         Find if there are solid tiles in the rectangle defined by two diagonal points
         x1y1 = the upper left corner, x2y2 = bottom right corner (as per the paper's instructions)        
         this is designed with vertically aligned space assumptions in mind
-       
+        
         cc = self.findPoint(x1, y1, self.stitchList[0]) #the tile that contains the first corner point
         secondCorner = self.findPoint(x2, y2, self.stitchList[0]) #the tile that contains the second(bottom right) corner
 
@@ -776,12 +777,10 @@ class vLayer(cornerStitch):
                 cc = cc.NORTH # if it doesn't, traverse the top right stitch to find the next cell of interest
 
         return False
-    """
-    #"""
+        """
+
     ### NEW AREA SEARCH
     def areaSearch(self, x1, y1, x2, y2):
-
-        
         cc = self.findPoint(x1, y1, self.stitchList[0]) #the tile that contains the first corner point
         sc = self.findPoint(x2, y2, self.stitchList[0]) #the tile that contains the second(bottom right) corner
 
@@ -790,38 +789,20 @@ class vLayer(cornerStitch):
         elif cc.cell.y >y2:
             return True  # the corner cell is empty but touches a solid cell within the search area
         cc=cc.EAST
-        """
-        while (cc.cell.x< x2):
-            
-            while(cc.cell.y>y2):
-                if cc.cell.y<y1:
-                    if cc.cell.type=="SOLID":
-                        return True
-                    #else:
-                        #cc=cc.SOUTH
-                cc=cc.SOUTH
-            if cc.cell.type=="SOLID":
+        while (cc!=self.eastBoundary and cc.cell.x< x2):
+            if cc.cell.y<y1 and cc.cell.type=="SOLID":
                 return True
-            cc=cc.EAST
-            if cc.cell.type=="SOLID":
-                return True
-        if cc.cell.y==sc.cell.y:
-            if cc.cell.type =="SOLID":
-                return True
-        """
-
-        while (cc.cell.x < x2):
-            if cc.cell.y < y1 and cc.cell.type =="SOLID":
-                        return True
-                        # else:
-                        # cc=cc.SOUTH
-            while(cc!=self.southBoundary and cc.cell.y+cc.getHeight()>y2):
-                if cc.cell.type=="SOLID":
+            while(cc.cell.y+cc.getHeight()>y2):
+                if cc.cell.y<y1 and cc.cell.type=="SOLID":
                     return True
-                cc=cc.SOUTH
+                if cc.SOUTH!=self.southBoundary:
+                    cc=cc.SOUTH
+                else:
+                    break
             cc=cc.EAST
+
         return False
-    #"""
+
 class hLayer(cornerStitch):
     def __init__(self, stitchList, max_x, max_y):
         """
@@ -1042,10 +1023,9 @@ if __name__ == '__main__':
     emptyHExample.insert(3, 33, 19, 30, "SOLID")
     emptyHExample.insert(3, 43, 19, 35, "SOLID")
     """
-
-    emptyVExample.insert(12, 8, 18, 2, "SOLID")
-    emptyVExample.insert(3, 25, 10, 18, "SOLID")
-    emptyVExample.insert(8, 15, 15, 10, "SOLID")
+    emptyVExample.insert(15, 18, 19, 10, "SOLID")
+    emptyVExample.insert(5, 20, 10, 15, "SOLID")
+    emptyVExample.insert(8, 25, 17, 2, "SOLID")
 
     """
     #emptyVExample.insert(26, 20, 30, 15, "SOLID")
@@ -1066,16 +1046,9 @@ if __name__ == '__main__':
     #
 
     # emptyVExample.insert(5, 20, 10, 15, "SOLID")
-
-    #emptyVExample.insert(8, 20, 15, 16, "SOLID")
-    #emptyVExample.insert(3, 15, 17, 2, "SOLID")
-
-
-
     
-    emptyHExample.insert(20, 17, 25, 12, "SOLID")
-
-    emptyHExample.insert(21, 19, 28, 15, "SOLID")
+    emptyVExample.insert(8, 20, 15, 16, "SOLID")
+    #emptyVExample.insert(3, 15, 17, 2, "SOLID")
 
 
     emptyVExample.insert(12, 10, 15, 1, "SOLID")

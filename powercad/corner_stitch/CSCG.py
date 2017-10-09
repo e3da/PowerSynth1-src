@@ -65,7 +65,7 @@ class CSCG:
         for foo in arrowList:
             print foo
         return arrowList
-
+    """
     def setAxisLabels(self, plt):
         if self.CS.orientation == 'v':
             labels = ('Y' + str(i) for i in range(0, len(self.CG.zeroDimensionList)))
@@ -73,7 +73,7 @@ class CSCG:
         elif self.CS.orientation == 'h':
             labels = ('X' + str(i) for i in range(0, len(self.CG.zeroDimensionList)))
             plt.xticks(self.CG.zeroDimensionList, list(labels))
-
+    """
     def drawLayer(self, truePointer = False):
         """
         Draw all cells in this cornerStitch with stitches pointing to their stitch neighbors
@@ -181,7 +181,7 @@ class CSCG:
 
         #handle relative spacing from orientation to orientation-n (X0-Xn, Y0-Yn). Remove if refactoring to
         #automatically handle orientation
-        self.setAxisLabels(plt)
+        #self.setAxisLabels(plt)
 
         for arr in self.findGraphEdges():
             ax1.arrow(arr[0], arr[1], arr[2], arr[3], head_width = .30, head_length = .3, color = arr[4])
