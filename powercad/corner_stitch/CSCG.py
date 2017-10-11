@@ -11,10 +11,10 @@ class CSCG:
     """
     a cornerstitch representation with edges corresponding to constraint graph edges bolded
     """
-    def __init__(self, CS, CG):
+    def __init__(self, CS, CG,name):
         self.CS = CS
         self.CG = CG
-
+        self.name=name
     #def drawCGLines(self, figure):
 
     def drawZeroDimsVertices(self):
@@ -80,6 +80,7 @@ class CSCG:
         TODO:
          Also should probably change the dimensions of the object window depending on the cornerStitch size.
         """
+
         fig1 = matplotlib.pyplot.figure()
 
         for cell in self.CS.stitchList:
@@ -188,7 +189,12 @@ class CSCG:
 
         plt.xlim(0, self.CS.eastBoundary.cell.x)
         plt.ylim(0, self.CS.northBoundary.cell.y)
-        #fig1.show()
-        fig1.savefig('C://Users//ialrazi//Pictures//Figs//case.png')
-        pylab.pause(11000)  # figure out how to do this better
+
+        if self.name:
+            fig1.savefig(self.name)
+            matplotlib.pyplot.close(fig1)
+        else:
+            fig1.show()
+            pylab.pause(11000)  # figure out how to do this better
+
 

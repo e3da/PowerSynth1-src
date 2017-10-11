@@ -3,7 +3,8 @@ Created on June 1, 2017
 
 @author: John Calvin Alumbaugh, jcalumba
 '''
-
+import os
+import sys
 import copy
 import matplotlib
 import matplotlib.pyplot as plt
@@ -295,7 +296,7 @@ class cornerStitch(object):
             return self.westBoundary
 
         cc = startCell #current cell
-        while (y < cc.cell.y or y > (cc.cell.y + cc.getHeight())):
+        while (y < cc.cell.y or y >(cc.cell.y + cc.getHeight())):
             if (y >= cc.cell.y + cc.getHeight()):
                if(cc.NORTH is not None):
                    cc = cc.NORTH
@@ -308,7 +309,7 @@ class cornerStitch(object):
                 else:
                     print("out of bounds 2")
                     return "Failed"
-        while(x < cc.cell.x or x > (cc.cell.x + cc.getWidth())):
+        while(x < cc.cell.x or x >(cc.cell.x + cc.getWidth())):
             if(x <= cc.cell.x ):
                 if(cc.WEST is not None):
                     cc = cc.WEST
@@ -632,6 +633,7 @@ class vLayer(cornerStitch):
         topLeft = self.findPoint(x1, y1, self.stitchList[0])
         bottomRight = self.findPoint(x2, y2, self.stitchList[0])
 
+
         #don't change the order of these, it won't work otherwise
         if x2 != bottomRight.cell.x and x2 != bottomRight.EAST.cell.x:  # vertically split the bottom edge
             bottomRight = self.vSplit(bottomRight, x2)
@@ -648,8 +650,10 @@ class vLayer(cornerStitch):
                 cc = cc.NORTH
 
         for rect in changeList:
+
             if not rect.NORTH.cell.y == y1: self.hSplit(rect, y1)
-            if not rect.cell.y == y2: self.hSplit(rect, y2) #order is vital, again
+            if not rect.cell.y == y2: self.hSplit(rect, y2)#order is vital, again
+
 
         #3. merge cells affected by 2
         changeList = []
@@ -657,6 +661,7 @@ class vLayer(cornerStitch):
 
         cc = cc.EAST
         while cc.cell.y >= y1:
+
             cc = cc.SOUTH
         #print "cc = "
         #cc.cell.printCell(True, True)
@@ -665,12 +670,14 @@ class vLayer(cornerStitch):
             changeList.append(cc)
             cc = cc.EAST
        # if direction=True:
+        """
         while len(changeList) > 1:
                 print "in second loop"
                 leftCell = changeList.pop(0)
                 rightCell = changeList.pop(0)
                 mergedCell = self.merge(leftCell, rightCell)
                 changeList.insert(0, mergedCell)
+        """
        # else:
         while len(changeList) > 1:
                # print " in first loop", len(changeList)
@@ -714,7 +721,7 @@ class vLayer(cornerStitch):
             else:
                 del changeSet[j]
                 changeSet[i] = mergedCell
-                if j < len(changeSet) - 1:
+                if j < len(changeSet) -1:
                     j += 1
 
         cc = caster.SOUTH#recitfy SOUTH side, walking eastwards
@@ -737,7 +744,7 @@ class vLayer(cornerStitch):
             if mergedCell == "Tiles are not alligned": #the tiles couldn't merge because they didn't line up
                 i += 1
                 print "i = ", i
-                if j < len(changeSet) - 1:
+                if j < len(changeSet) -1:
                     j += 1
             else:
                 del changeSet[j]
@@ -755,7 +762,7 @@ class vLayer(cornerStitch):
         
         cc = self.findPoint(x1, y1, self.stitchList[0]) #the tile that contains the first corner point
         secondCorner = self.findPoint(x2, y2, self.stitchList[0]) #the tile that contains the second(bottom right) corner
-
+        
         if cc.cell.type == "SOLID":
             return True  # the bottom left corner is in a solid cell
         #elif secondCorner.cell.type == "SOLID":
@@ -777,7 +784,7 @@ class vLayer(cornerStitch):
                 cc = cc.NORTH # if it doesn't, traverse the top right stitch to find the next cell of interest
 
         return False
-        """
+    """
 
     ### NEW AREA SEARCH
     def areaSearch(self, x1, y1, x2, y2):
@@ -788,6 +795,7 @@ class vLayer(cornerStitch):
             return True  # the bottom left corner is in a solid cell
         elif cc.cell.y >y2:
             return True  # the corner cell is empty but touches a solid cell within the search area
+
         cc=cc.EAST
         while (cc!=self.eastBoundary and cc.cell.x< x2):
             if cc.cell.y<y1 and cc.cell.type=="SOLID":
@@ -800,6 +808,7 @@ class vLayer(cornerStitch):
                 else:
                     break
             cc=cc.EAST
+
 
         return False
 
@@ -974,15 +983,12 @@ class hLayer(cornerStitch):
     def areaSearch(self, x1, y1, x2, y2):
        
         cc = self.findPoint(x1, y1, self.stitchList[0]) #the tile that contains the first corner point
-        secondCorner = self.findPoint(x2, y2, self.stitchList[0])  # the tile that contains the second(bottom right) corne        if cc.cell.type == "SOLID":
+        secondCorner = self.findPoint(x2, y2, self.stitchList[0])  # the tile that contains the second(bottom right)corner
         if cc.cell.type == "SOLID":
             return True
-
         elif cc.cell.x + cc.getWidth() < x2:
             return True
-
         cc=cc.SOUTH
-
         while(cc!= self.southBoundary and cc.cell.y+cc.getHeight()> y2):
             while (cc.cell.x + cc.getWidth() < x1):  # making sure that the CurrentCell's right edge lays within the area
                 cc = cc.EAST  # if it doesn't, traverse the top right stitch to find the next cell of interest
@@ -1022,10 +1028,15 @@ if __name__ == '__main__':
     emptyHExample.insert(3, 28, 19, 26, "SOLID")
     emptyHExample.insert(3, 33, 19, 30, "SOLID")
     emptyHExample.insert(3, 43, 19, 35, "SOLID")
+    
     """
-    emptyVExample.insert(15, 18, 19, 10, "SOLID")
-    emptyVExample.insert(5, 20, 10, 15, "SOLID")
-    emptyVExample.insert(8, 25, 17, 2, "SOLID")
+    #for i in range(0,2):
+        #emptyVExample.insert(10+5*i, 30-5*i, 15+5*i, 20-5*i, "SOLID")
+    #emptyVExample.insert(8, 15, 17, 2, "SOLID")
+    #emptyVExample.insert(17, 25, 30, 20, "SOLID")
+
+    #emptyHExample.insert(5, 20, 10, 15, "SOLID")
+    #emptyHExample.insert(8, 15, 15, 10, "SOLID")
 
     """
     #emptyVExample.insert(26, 20, 30, 15, "SOLID")
@@ -1057,9 +1068,26 @@ if __name__ == '__main__':
     emptyVExample.insert(3, 43, 19, 35, "SOLID")
     """
 
+    if len(sys.argv)>1:
+        testfile=sys.argv[1]
+        f=open(testfile,"rb")
+    #with open ("C:\Users\ialrazi\Documents\Horizontal test cases\HF1a.txt","rb") as f:
+        index_of_dot = testfile.rindex('.')
+        testbase = os.path.basename(testfile[:index_of_dot])
+        testdir=os.path.dirname(testfile)
+        if not len(testdir):
+            testdir='.'
+
+        for line in f:
+            c=line.split(',')
+            if len(c)>4:
+                emptyHExample.insert(int(c[0]),int(c[1]) ,int(c[2]), int(c[3]), c[4])
+    else:
+        exit(1)
+
     CG = cg.constraintGraph()
-    #CG.graphFromLayer(emptyHExample)
-    CG.graphFromLayer(emptyVExample)
+    CG.graphFromLayer(emptyHExample)
+    #CG.graphFromLayer(emptyVExample)
 
     CG.printVM()
     CG.printZDL()
@@ -1070,11 +1098,10 @@ if __name__ == '__main__':
     #CG.drawGraph()
     #diGraph.drawGraph()
 
-    #CSCG = CSCG.CSCG(emptyHExample, CG)
-    CSCG = CSCG.CSCG(emptyVExample, CG)
+    CSCG = CSCG.CSCG(emptyHExample, CG,testdir+'/'+testbase+'.png')
+    #CSCG = CSCG.CSCG(emptyVExample, CG,dirname1)
     CSCG.findGraphEdges()
     CSCG.drawLayer()
     #emptyVExample.drawLayer(truePointer=False)
-
-
     #emptyHExample.drawLayer(truePointer=False)
+
