@@ -647,14 +647,14 @@ class vLayer(cornerStitch):
 
         #2. hsplit y1, y2
         cc = self.findPoint(x2, y2, self.stitchList[0])
-        print "xco=",cc.EAST.cell.x
+        #print "xco=",cc.EAST.cell.x
 
 
 
         while( cc.cell.x + cc.getWidth()> x1 ) :############## + cc.getWidth() has been added
             if cc.cell.x==x2:
                 cc=cc.WEST
-                print "xco2=", cc.cell.x
+                #print "xco2=", cc.cell.x
                     #changeList.append(cc)
             else:
                 while cc.cell.y + cc.getHeight() <= y2:
@@ -1162,5 +1162,5 @@ if __name__ == '__main__':
     CSCG.findGraphEdges()
     CSCG.drawLayer()
     #emptyVExample.drawLayer(truePointer=False)
-    emptyHExample.drawLayer(truePointer=False)
+    #emptyHExample.drawLayer(truePointer=False)
 
