@@ -952,8 +952,9 @@ class hLayer(cornerStitch):
                 if j < len(changeSet) : #there was a '-1'
                     j += 1
             else:
+                del changeSet[j]
                 changeSet[i] = mergedCell
-                #del changeSet[j] ## this line has been commented out
+
 
                 print "len3=", len(changeSet)
                 if j < len(changeSet) -1:
@@ -1075,9 +1076,10 @@ if __name__ == '__main__':
 
     #emptyHExample.insert(5,15,30,10,"SOLID")
 
-    #emptyHExample.insert(5,20,10,15,"SOLID")
 
-    #emptyHExample.insert(5, 25, 10, 17, "SOLID")
+
+    #emptyHExample.insert(5,20,15,5,"SOLID")
+    #emptyHExample.insert(8, 15, 12, 10, "SOLID")
 
     """
     #emptyVExample.insert(26, 20, 30, 15, "SOLID")
