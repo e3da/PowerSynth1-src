@@ -647,20 +647,22 @@ class vLayer(cornerStitch):
 
         #2. hsplit y1, y2
         cc = self.findPoint(x2, y2, self.stitchList[0])
+        print "xco=",cc.EAST.cell.x
 
 
 
-        while( cc.cell.x>= x1) :
+        while( cc.cell.x + cc.getWidth()> x1 ) :############## + cc.getWidth() has been added
             if cc.cell.x==x2:
                 cc=cc.WEST
+                print "xco2=", cc.cell.x
                     #changeList.append(cc)
             else:
                 while cc.cell.y + cc.getHeight() <= y2:
                     cc = cc.NORTH
                 changeList.append(cc)
                 cc = cc.WEST
-                while(cc.cell.x<x1 and cc.cell.y+cc.getHeight()<y2):#### To handle special case
-                    cc=cc.NORTH
+                #while(cc.cell.x<x1 and cc.cell.y+cc.getHeight()<y2):#### To handle special case
+                    #cc=cc.NORTH
 
         for rect in changeList:
 
@@ -1068,11 +1070,42 @@ if __name__ == '__main__':
     """
     #for i in range(0,2):
         #emptyVExample.insert(10+5*i, 30-5*i, 15+5*i, 20-5*i, "SOLID")
-    #emptyVExample.insert(8, 15, 17, 2, "SOLID")
-    #emptyVExample.insert(17, 25, 30, 20, "SOLID")
 
-    #emptyHExample.insert(5, 20, 10, 15, "SOLID")
-    #emptyHExample.insert(8, 15, 15, 10, "SOLID")
+    emptyHExample.insert(15, 25, 25, 15, "SOLID")
+
+    emptyHExample.insert(5,15,30,10,"SOLID")
+
+
+
+
+
+
+
+    #emptyHExample.insert(5,20,10,15,"SOLID")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    #emptyHExample.insert(5, 25, 10, 17, "SOLID")
 
     """
     #emptyVExample.insert(26, 20, 30, 15, "SOLID")
@@ -1103,7 +1136,7 @@ if __name__ == '__main__':
     emptyVExample.insert(3, 33, 19, 30, "SOLID")
     emptyVExample.insert(3, 43, 19, 35, "SOLID")
     """
-
+    """
     if len(sys.argv)>1:
         testfile=sys.argv[1]
         f=open(testfile,"rb")
@@ -1121,7 +1154,7 @@ if __name__ == '__main__':
     else:
         exit(1)
 
-
+    """
     #emptyVExample.insert(15,25,20,15,"SOLID")
     #emptyHExample.insert(10,30,15,5,"SOLID")
     """
@@ -1139,8 +1172,8 @@ if __name__ == '__main__':
 
     """
     CG = cg.constraintGraph()
-    #CG.graphFromLayer(emptyHExample)
-    CG.graphFromLayer(emptyVExample)
+    CG.graphFromLayer(emptyHExample)
+    #CG.graphFromLayer(emptyVExample)
 
     CG.printVM()
     CG.printZDL()
@@ -1152,10 +1185,10 @@ if __name__ == '__main__':
     #diGraph.drawGraph()
 
     #CSCG = CSCG.CSCG(emptyHExample, CG,testdir+'/'+testbase+'.png')
-    CSCG = CSCG.CSCG(emptyVExample, CG,testdir+'/'+testbase+'.png')
-    #CSCG=CSCG.CSCG(emptyVExample, CG)
+    #CSCG = CSCG.CSCG(emptyVExample, CG,testdir+'/'+testbase+'.png')
+    CSCG=CSCG.CSCG(emptyHExample, CG)
     CSCG.findGraphEdges()
     CSCG.drawLayer()
-    emptyVExample.drawLayer(truePointer=False)
-    #emptyHExample.drawLayer(truePointer=False)
+    #emptyVExample.drawLayer(truePointer=False)
+    emptyHExample.drawLayer(truePointer=False)
 

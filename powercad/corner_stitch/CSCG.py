@@ -11,10 +11,10 @@ class CSCG:
     """
     a cornerstitch representation with edges corresponding to constraint graph edges bolded
     """
-    def __init__(self, CS, CG,name):
+    def __init__(self, CS, CG):
         self.CS = CS
         self.CG = CG
-        self.name=name
+        #self.name=name
     #def drawCGLines(self, figure):
 
     def drawZeroDimsVertices(self):
@@ -189,13 +189,13 @@ class CSCG:
 
         plt.xlim(0, self.CS.eastBoundary.cell.x)
         plt.ylim(0, self.CS.northBoundary.cell.y)
-
+        """
         if self.name:
             fig1.savefig(self.name)
             matplotlib.pyplot.close(fig1)
         else:
-
-            fig1.show()
-            pylab.pause(11000)  # figure out how to do this better
+        """
+        fig1.show()
+        pylab.pause(11000)  # figure out how to do this better
 
 
