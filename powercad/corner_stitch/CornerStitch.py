@@ -1071,39 +1071,11 @@ if __name__ == '__main__':
     #for i in range(0,2):
         #emptyVExample.insert(10+5*i, 30-5*i, 15+5*i, 20-5*i, "SOLID")
 
-    emptyHExample.insert(15, 25, 25, 15, "SOLID")
+    #emptyHExample.insert(15, 25, 25, 15, "SOLID")
 
-    emptyHExample.insert(5,15,30,10,"SOLID")
-
-
-
-
-
-
+    #emptyHExample.insert(5,15,30,10,"SOLID")
 
     #emptyHExample.insert(5,20,10,15,"SOLID")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     #emptyHExample.insert(5, 25, 10, 17, "SOLID")
 
@@ -1136,7 +1108,7 @@ if __name__ == '__main__':
     emptyVExample.insert(3, 33, 19, 30, "SOLID")
     emptyVExample.insert(3, 43, 19, 35, "SOLID")
     """
-    """
+
     if len(sys.argv)>1:
         testfile=sys.argv[1]
         f=open(testfile,"rb")
@@ -1154,7 +1126,7 @@ if __name__ == '__main__':
     else:
         exit(1)
 
-    """
+
     #emptyVExample.insert(15,25,20,15,"SOLID")
     #emptyHExample.insert(10,30,15,5,"SOLID")
     """
@@ -1184,9 +1156,9 @@ if __name__ == '__main__':
     #CG.drawGraph()
     #diGraph.drawGraph()
 
-    #CSCG = CSCG.CSCG(emptyHExample, CG,testdir+'/'+testbase+'.png')
+    CSCG = CSCG.CSCG(emptyHExample, CG,testdir+'/'+testbase+'.png')
     #CSCG = CSCG.CSCG(emptyVExample, CG,testdir+'/'+testbase+'.png')
-    CSCG=CSCG.CSCG(emptyHExample, CG)
+    #CSCG=CSCG.CSCG(emptyHExample, CG)
     CSCG.findGraphEdges()
     CSCG.drawLayer()
     #emptyVExample.drawLayer(truePointer=False)
