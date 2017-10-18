@@ -72,8 +72,8 @@ class tile:
     def getHeight(self): #returns the height
         return (self.NORTH.cell.y - self.cell.y)
 
-    def getWidth(self): #returns the width
-        return (self.EAST.cell.x - self.cell.x)
+    def getWidth(self):#returns the width
+            return (self.EAST.cell.x - self.cell.x)
 
     def northWest(self, center):
         cc = center.WEST
@@ -286,6 +286,7 @@ class cornerStitch(object):
         """
         find the tile that contains the coordinates x, y
         """
+
         if y > self.northBoundary.cell.y:
             return self.northBoundary
         if y < 0:
@@ -296,21 +297,21 @@ class cornerStitch(object):
             return self.westBoundary
 
         cc = startCell #current cell
-        while (y < cc.cell.y or y >(cc.cell.y + cc.getHeight())):
+        while (y < cc.cell.y or y >=(cc.cell.y + cc.getHeight())):#y >(cc.cell.y + cc.getHeight()
             if (y >= cc.cell.y + cc.getHeight()):
                if(cc.NORTH is not None):
                    cc = cc.NORTH
                else:
                    print("out of bounds 1")
                    return "Failed"
-            elif y <= cc.cell.y:
+            elif y < cc.cell.y:#y <= cc.cell.y
                 if(cc.SOUTH is not None):
                     cc = cc.SOUTH
                 else:
                     print("out of bounds 2")
                     return "Failed"
-        while(x < cc.cell.x or x >(cc.cell.x + cc.getWidth())):
-            if(x <= cc.cell.x ):
+        while(x < cc.cell.x or x >=(cc.cell.x + cc.getWidth())):#x >(cc.cell.x + cc.getWidth()
+            if(x < cc.cell.x ):#x <= cc.cell.x
                 if(cc.WEST is not None):
                     cc = cc.WEST
                 else:
@@ -322,7 +323,7 @@ class cornerStitch(object):
                 else:
                     print("out of bounds 4")
                     return "Failed"
-        if not ((cc.cell.x <= x and cc.cell.x + cc.getWidth() >= x) and (cc.cell.y <= y and cc.cell.y + cc.getHeight() >= y)):
+        if not ((cc.cell.x <= x and cc.cell.x + cc.getWidth() > x) and (cc.cell.y <= y and cc.cell.y + cc.getHeight() > y)):#(cc.cell.x <= x and cc.cell.x + cc.getWidth() >= x) and (cc.cell.y <= y and cc.cell.y + cc.getHeight() >= y)
             return self.findPoint(x, y, cc)
 
         return cc
@@ -599,13 +600,16 @@ class vLayer(cornerStitch):
         """
         northBoundary and eastBoundary should be integer values, the upper and right edges of the editable rectangle
         """
+
         self.stitchList = stitchList
-        self.northBoundary = tile(None, None, None, None, None, cell(0, max_y, "EMPTY"))
-        self.eastBoundary = tile(None, None, None, None, None, cell(max_x, 0, "EMPTY"))
+        self.northBoundary = tile(None, None, None, None, None, cell(0,max_y, "EMPTY"))
+        self.eastBoundary = tile(None, None, None, None, None, cell(max_x,0, "EMPTY"))
         self.southBoundary = tile(None, None, None, None, None, cell(0, -1000, "EMPTY"))
         self.westBoundary = tile(None, None, None, None, None, cell(-1000, 0, "EMPTY"))
         self.boundaries = [self.northBoundary, self.eastBoundary, self.westBoundary, self.southBoundary]
         self.orientation = 'v'
+
+
 
     def insert(self, x1, y1, x2, y2, type):
         """
@@ -635,6 +639,7 @@ class vLayer(cornerStitch):
 
 
         #don't change the order of these, it won't work otherwise
+
         if x2 != bottomRight.cell.x and x2 != bottomRight.EAST.cell.x:  # vertically split the bottom edge
             bottomRight = self.vSplit(bottomRight, x2)
         if x1 != topLeft.cell.x and x1 != topLeft.EAST.cell.x: #vertically split the top edge
@@ -643,11 +648,19 @@ class vLayer(cornerStitch):
         #2. hsplit y1, y2
         cc = self.findPoint(x2, y2, self.stitchList[0])
 
-        while cc.cell.x >= x1:
-            changeList.append(cc)
-            cc = cc.WEST
-            while cc.cell.y + cc.getHeight() <= y2:
-                cc = cc.NORTH
+
+
+        while( cc.cell.x>= x1) :
+            if cc.cell.x==x2:
+                cc=cc.WEST
+                    #changeList.append(cc)
+            else:
+                while cc.cell.y + cc.getHeight() <= y2:
+                    cc = cc.NORTH
+                changeList.append(cc)
+                cc = cc.WEST
+                while(cc.cell.x<x1 and cc.cell.y+cc.getHeight()<y2):#### To handle special case
+                    cc=cc.NORTH
 
         for rect in changeList:
 
@@ -659,7 +672,7 @@ class vLayer(cornerStitch):
         changeList = []
         cc = self.findPoint(x1, y1, self.stitchList[0])
 
-        cc = cc.EAST
+        #cc = cc.EAST
         while cc.cell.y >= y1:
 
             cc = cc.SOUTH
@@ -669,7 +682,9 @@ class vLayer(cornerStitch):
         while cc.cell.x < x2: #find cells to be merged horizontally
             changeList.append(cc)
             cc = cc.EAST
+
        # if direction=True:
+
         """
         while len(changeList) > 1:
                 print "in second loop"
@@ -678,6 +693,7 @@ class vLayer(cornerStitch):
                 mergedCell = self.merge(leftCell, rightCell)
                 changeList.insert(0, mergedCell)
         """
+        #print"len=", len(changeList)
        # else:
         while len(changeList) > 1:
                # print " in first loop", len(changeList)
@@ -689,11 +705,12 @@ class vLayer(cornerStitch):
 
 
         if len(changeList) > 0:
-           # print changeList
+            print"Type=",type
             changeList[0].cell.type = type
             self.rectifyShadow(changeList[0]) #correcting empty cells that might be incorrectly split east of newCell
 
         return changeList
+
 
     def rectifyShadow(self, caster):
         """
@@ -853,15 +870,20 @@ class hLayer(cornerStitch):
         if y1 != topLeft.cell.y and y1 != topLeft.NORTH.cell.y: #horizontally split the top edge
             topLeft = self.hSplit(topLeft, y1).SOUTH #topleft will be the first cell below the split line
         if y2 != bottomRight.cell.y and y2 != bottomRight.NORTH.cell.y:#horizontally split the bottom edge
+            if bottomRight.cell.type=="SOLID":
+                bottomRight=bottomRight.WEST
             bottomRight = self.hSplit(bottomRight, y2)
 
         #step 2: vsplit x1 and x2
-        cc = self.findPoint(x1, y1, self.stitchList[0])#first cell under y1
-
-        while cc.cell.y >= y2: #find all cells that need to be vsplit
+        cc = self.findPoint(x1, y1, self.stitchList[0]).SOUTH  ##Changed according to pointfind #first cell under y1
+        while cc.cell.y>=y2:     ##need to be added +cc.getHeight()
+            while cc.cell.x+cc.getWidth()<=x1: ## 2 lines have been added
+                cc=cc.EAST
+        #while cc.cell.y >= y2: #find all cells that need to be vsplit
             changeList.append(cc)
             cc = cc.SOUTH
-            while cc != self.southBoundary and cc != self.eastBoundary and cc.cell.x + cc.getWidth() <= x2:
+
+            while cc != self.southBoundary and cc != self.eastBoundary and cc.cell.x + cc.getWidth() < x2:#it was <=x2
                 cc = cc.EAST
 
         for rect in changeList: #split vertically
@@ -870,12 +892,19 @@ class hLayer(cornerStitch):
 
         #step 3: merge cells affected by 2
         changeList = []
-        cc = self.findPoint(x1, y1, self.stitchList[0])
-
+        #cc = self.findPoint(x1, y1, self.stitchList[0])
+        cc = self.findPoint(x2, y2, self.stitchList[0]).WEST ##Changed according to pointfind
+        while cc.cell.y<y2: ## (895-899)lines are inserted
+            cc=cc.NORTH
+        while cc.cell.y+cc.getHeight() <=y1 :  # find cells to be merged vertically
+            changeList.append(cc)
+            cc = cc.NORTH
+        #print "len3=", len(changeList)
+        """
         while cc.cell.y >= y2: #find cells to be merged vertically
             changeList.append(cc)
             cc = cc.SOUTH
-
+        """
         while len(changeList) > 1:
             topCell = changeList.pop(0)
             lowerCell = changeList.pop(0)
@@ -884,7 +913,7 @@ class hLayer(cornerStitch):
             mergedCell = self.merge(topCell, lowerCell)
 
             changeList.insert(0, mergedCell)
-            print "len=",len(changeList)
+            #print "len3=",len(changeList)
 
         #step 4: rectify shadows
         if len(changeList) > 0:
@@ -905,9 +934,10 @@ class hLayer(cornerStitch):
         cc = caster.EAST #recitfy east side, walking downwards
 
         while (cc != self.eastBoundary and cc != self.southBoundary and cc.cell.y >= caster.cell.y):
-            changeSet.append(cc)
+            if cc.cell.type=="EMPTY":
+                changeSet.append(cc)
             cc = cc.SOUTH
-        print "len=",len(changeSet)
+        print "len4=", len(changeSet)
         i = 0
         j = 1
         while j < len(changeSet): #merge all cells with the same width along the eastern side
@@ -920,15 +950,19 @@ class hLayer(cornerStitch):
                 if j < len(changeSet) : #there was a '-1'
                     j += 1
             else:
-                del changeSet[j]
                 changeSet[i] = mergedCell
-                if j < len(changeSet) - 1:
+                #del changeSet[j] ## this line has been commented out
+
+                print "len3=", len(changeSet)
+                if j < len(changeSet) -1:
                     j += 1
 
         cc = caster.WEST#recitfy west side, walking upwards
         changeSet = []
 
         while (cc != self.westBoundary and cc != self.northBoundary and cc.cell.y < caster.cell.y + caster.getHeight()):
+            while cc.cell.type=="SOLID":## 2 lines have been included here
+                cc=cc.NORTH
             changeSet.append(cc)
             cc = cc.NORTH
 
@@ -983,14 +1017,16 @@ class hLayer(cornerStitch):
     def areaSearch(self, x1, y1, x2, y2):
        
         cc = self.findPoint(x1, y1, self.stitchList[0]) #the tile that contains the first corner point
-        secondCorner = self.findPoint(x2, y2, self.stitchList[0])  # the tile that contains the second(bottom right)corner
+        secondCorner = self.findPoint(x2, y2, self.stitchList[0])# the tile that contains the second(bottom right)corner
+        if x1==cc.cell.x:
+            cc=cc.SOUTH
         if cc.cell.type == "SOLID":
             return True
-        elif cc.cell.x + cc.getWidth() < x2:
+        elif cc.cell.x + cc.getWidth() < x2 and cc.cell.y!=y1:## and cc.cell.y!=y1 has been added
             return True
         cc=cc.SOUTH
         while(cc!= self.southBoundary and cc.cell.y+cc.getHeight()> y2):
-            while (cc.cell.x + cc.getWidth() < x1):  # making sure that the CurrentCell's right edge lays within the area
+            while (cc.cell.x + cc.getWidth() <= x1):## = has been inserted after changing point finding  # making sure that the CurrentCell's right edge lays within the area
                 cc = cc.EAST  # if it doesn't, traverse the top right stitch to find the next cell of interest
             if cc.cell.type == "SOLID":
                 return True  # the bottom left corner is in a solid cell
@@ -1085,9 +1121,26 @@ if __name__ == '__main__':
     else:
         exit(1)
 
+
+    #emptyVExample.insert(15,25,20,15,"SOLID")
+    #emptyHExample.insert(10,30,15,5,"SOLID")
+    """
+    emptyVExample.insert(15,40,20,30,"SOLID")
+
+    emptyVExample.insert(5,20,10,15,"SOLID")
+
+
+
+    emptyVExample.insert(15,25,20,15,"SOLID")
+    emptyVExample.insert(30, 40, 37, 35, "SOLID")
+    emptyVExample.insert(35, 30, 39, 25, "SOLID")
+    emptyVExample.insert(20, 32, 35, 20, "SOLID")
+    emptyVExample.insert(20, 45, 25, 35, "SOLID")
+
+    """
     CG = cg.constraintGraph()
-    CG.graphFromLayer(emptyHExample)
-    #CG.graphFromLayer(emptyVExample)
+    #CG.graphFromLayer(emptyHExample)
+    CG.graphFromLayer(emptyVExample)
 
     CG.printVM()
     CG.printZDL()
@@ -1098,10 +1151,11 @@ if __name__ == '__main__':
     #CG.drawGraph()
     #diGraph.drawGraph()
 
-    CSCG = CSCG.CSCG(emptyHExample, CG,testdir+'/'+testbase+'.png')
-    #CSCG = CSCG.CSCG(emptyVExample, CG,dirname1)
+    #CSCG = CSCG.CSCG(emptyHExample, CG,testdir+'/'+testbase+'.png')
+    CSCG = CSCG.CSCG(emptyVExample, CG,testdir+'/'+testbase+'.png')
+    #CSCG=CSCG.CSCG(emptyVExample, CG)
     CSCG.findGraphEdges()
     CSCG.drawLayer()
-    #emptyVExample.drawLayer(truePointer=False)
+    emptyVExample.drawLayer(truePointer=False)
     #emptyHExample.drawLayer(truePointer=False)
 

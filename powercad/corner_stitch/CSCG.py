@@ -194,6 +194,7 @@ class CSCG:
             fig1.savefig(self.name)
             matplotlib.pyplot.close(fig1)
         else:
+
             fig1.show()
             pylab.pause(11000)  # figure out how to do this better
 
