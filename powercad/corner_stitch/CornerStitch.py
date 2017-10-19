@@ -1078,14 +1078,14 @@ if __name__ == '__main__':
         for line in f:
             c=line.split(',')
             if len(c)>3:
-                emptyVExample.insert(int(c[0]),int(c[1]),int(c[2]),int(c[3]),"SOLID")
+                emptyHExample.insert(int(c[0]),int(c[1]),int(c[2]),int(c[3]),"SOLID")
     else:
         exit(1)
 
 
     CG = cg.constraintGraph()
-    #CG.graphFromLayer(emptyHExample)
-    CG.graphFromLayer(emptyVExample)
+    CG.graphFromLayer(emptyHExample)
+    #CG.graphFromLayer(emptyVExample)
 
     CG.printVM()
     CG.printZDL()
@@ -1096,8 +1096,8 @@ if __name__ == '__main__':
     #CG.drawGraph()
     #diGraph.drawGraph()
 
-    #CSCG = CSCG.CSCG(emptyHExample, CG,testdir+'/'+testbase+'.png')
-    CSCG = CSCG.CSCG(emptyVExample, CG,testdir+'/'+testbase+'.png')
+    CSCG = CSCG.CSCG(emptyHExample, CG,testdir+'/'+testbase+'.png')
+    #CSCG = CSCG.CSCG(emptyVExample, CG,testdir+'/'+testbase+'.png')
     #CSCG=CSCG.CSCG(emptyVExample, CG)
     CSCG.findGraphEdges()
     CSCG.drawLayer()
