@@ -737,7 +737,7 @@ class vLayer(cornerStitch):
                 if j < len(changeSet): # there was a '-1'
                     j += 1
             else:
-                #del changeSet[j]
+                del changeSet[j]
                 changeSet[i] = mergedCell
                 if j < len(changeSet) -1:
                     j += 1
@@ -765,7 +765,7 @@ class vLayer(cornerStitch):
                 if j < len(changeSet) -1:
                     j += 1
             else:
-                #del changeSet[j]
+                del changeSet[j]
                 changeSet[i] = mergedCell
                 if j < len(changeSet) - 1:
                     j += 1
@@ -983,7 +983,7 @@ class hLayer(cornerStitch):
                 if j < len(changeSet)-1 :
                     j += 1
             else:
-                #del changeSet[j]
+                del changeSet[j]
                 changeSet[i] = mergedCell
                 if j < len(changeSet) -1:
                     j += 1
@@ -1083,9 +1083,6 @@ if __name__ == '__main__':
         exit(1)
 
 
-    #emptyVExample.insert(15,25,20,15,"SOLID")
-    #emptyHExample.insert(10,30,15,5,"SOLID")
-
     CG = cg.constraintGraph()
     #CG.graphFromLayer(emptyHExample)
     CG.graphFromLayer(emptyVExample)
@@ -1101,7 +1098,7 @@ if __name__ == '__main__':
 
     #CSCG = CSCG.CSCG(emptyHExample, CG,testdir+'/'+testbase+'.png')
     CSCG = CSCG.CSCG(emptyVExample, CG,testdir+'/'+testbase+'.png')
-    #CSCG=CSCG.CSCG(emptyHExample, CG)
+    #CSCG=CSCG.CSCG(emptyVExample, CG)
     CSCG.findGraphEdges()
     CSCG.drawLayer()
     #emptyVExample.drawLayer(truePointer=False)
