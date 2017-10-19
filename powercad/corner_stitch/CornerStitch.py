@@ -661,8 +661,7 @@ class vLayer(cornerStitch):
                     cc = cc.NORTH
                 changeList.append(cc)
                 cc = cc.WEST
-                #while(cc.cell.x<x1 and cc.cell.y+cc.getHeight()<y2):#### To handle special case
-                    #cc=cc.NORTH
+
 
         for rect in changeList:
 
@@ -738,7 +737,7 @@ class vLayer(cornerStitch):
                 if j < len(changeSet): # there was a '-1'
                     j += 1
             else:
-                del changeSet[j]
+                #del changeSet[j]
                 changeSet[i] = mergedCell
                 if j < len(changeSet) -1:
                     j += 1
@@ -766,7 +765,7 @@ class vLayer(cornerStitch):
                 if j < len(changeSet) -1:
                     j += 1
             else:
-                del changeSet[j]
+                #del changeSet[j]
                 changeSet[i] = mergedCell
                 if j < len(changeSet) - 1:
                     j += 1
@@ -952,7 +951,7 @@ class hLayer(cornerStitch):
                 if j < len(changeSet) : #there was a '-1'
                     j += 1
             else:
-                del changeSet[j]
+                #del changeSet[j]
                 changeSet[i] = mergedCell
 
 
@@ -984,7 +983,7 @@ class hLayer(cornerStitch):
                 if j < len(changeSet)-1 :
                     j += 1
             else:
-                del changeSet[j]
+                #del changeSet[j]
                 changeSet[i] = mergedCell
                 if j < len(changeSet) -1:
                     j += 1
@@ -1059,62 +1058,17 @@ if __name__ == '__main__':
     emptyHPlane.SOUTH = emptyHExample.southBoundary
     emptyHPlane.WEST = emptyHExample.westBoundary
 
-    """
-    emptyHExample.insert(3, 15, 37, 2, "SOLID")
-    emptyHExample.insert(3, 24, 37, 17, "SOLID")
-    emptyHExample.insert(21, 45, 37, 24, "SOLID")
-    emptyHExample.insert(3, 57, 37, 45, "SOLID")
-    emptyHExample.insert(3, 28, 19, 26, "SOLID")
-    emptyHExample.insert(3, 33, 19, 30, "SOLID")
-    emptyHExample.insert(3, 43, 19, 35, "SOLID")
-    
-    """
-    #for i in range(0,2):
-        #emptyVExample.insert(10+5*i, 30-5*i, 15+5*i, 20-5*i, "SOLID")
-
-    #emptyHExample.insert(15, 25, 25, 15, "SOLID")
-
-    #emptyHExample.insert(5,15,30,10,"SOLID")
 
 
 
     #emptyHExample.insert(5,20,15,5,"SOLID")
     #emptyHExample.insert(8, 15, 12, 10, "SOLID")
 
-    """
-    #emptyVExample.insert(26, 20, 30, 15, "SOLID")
 
-
-
-    #emptyHExample.insert(15, 20, 19, 15, "SOLID")
-
-    #emptyHExample.insert(12, 20, 15,8, "SOLID")
-    #emptyHExample.insert(10, 17, 17, 10, "SOLID")
-    # emptyHExample.insert(8, 12, 17, 2, "SOLID")
-
-
-    #emptyHExample.insert(8, 17, 17, 2, "SOLID")
-    emptyHExample.insert(5, 20, 10, 18, "SOLID")
-    emptyHExample.insert(15, 20, 19, 15, "SOLID")
-
-    #
-
-    # emptyVExample.insert(5, 20, 10, 15, "SOLID")
-    
-    emptyVExample.insert(8, 20, 15, 16, "SOLID")
-    #emptyVExample.insert(3, 15, 17, 2, "SOLID")
-
-
-    emptyVExample.insert(12, 10, 15, 1, "SOLID")
-    emptyVExample.insert(3, 28, 19, 26, "SOLID")
-    emptyVExample.insert(3, 33, 19, 30, "SOLID")
-    emptyVExample.insert(3, 43, 19, 35, "SOLID")
-    """
 
     if len(sys.argv)>1:
         testfile=sys.argv[1]
         f=open(testfile,"rb")
-    #with open ("C:\Users\ialrazi\Documents\Horizontal test cases\HF1a.txt","rb") as f:
         index_of_dot = testfile.rindex('.')
         testbase = os.path.basename(testfile[:index_of_dot])
         testdir=os.path.dirname(testfile)
@@ -1124,27 +1078,14 @@ if __name__ == '__main__':
         for line in f:
             c=line.split(',')
             if len(c)>4:
-                emptyHExample.insert(int(c[0]),int(c[1]) ,int(c[2]), int(c[3]), c[4])
+                emptyVExample.insert(int(c[0]),int(c[1]) ,int(c[2]), int(c[3]), c[4])
     else:
         exit(1)
 
 
     #emptyVExample.insert(15,25,20,15,"SOLID")
     #emptyHExample.insert(10,30,15,5,"SOLID")
-    """
-    emptyVExample.insert(15,40,20,30,"SOLID")
 
-    emptyVExample.insert(5,20,10,15,"SOLID")
-
-
-
-    emptyVExample.insert(15,25,20,15,"SOLID")
-    emptyVExample.insert(30, 40, 37, 35, "SOLID")
-    emptyVExample.insert(35, 30, 39, 25, "SOLID")
-    emptyVExample.insert(20, 32, 35, 20, "SOLID")
-    emptyVExample.insert(20, 45, 25, 35, "SOLID")
-
-    """
     CG = cg.constraintGraph()
     CG.graphFromLayer(emptyHExample)
     #CG.graphFromLayer(emptyVExample)
@@ -1158,8 +1099,8 @@ if __name__ == '__main__':
     #CG.drawGraph()
     #diGraph.drawGraph()
 
-    CSCG = CSCG.CSCG(emptyHExample, CG,testdir+'/'+testbase+'.png')
-    #CSCG = CSCG.CSCG(emptyVExample, CG,testdir+'/'+testbase+'.png')
+    #CSCG = CSCG.CSCG(emptyHExample, CG,testdir+'/'+testbase+'.png')
+    CSCG = CSCG.CSCG(emptyVExample, CG,testdir+'/'+testbase+'.png')
     #CSCG=CSCG.CSCG(emptyHExample, CG)
     CSCG.findGraphEdges()
     CSCG.drawLayer()
