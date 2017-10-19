@@ -1087,8 +1087,8 @@ if __name__ == '__main__':
     #emptyHExample.insert(10,30,15,5,"SOLID")
 
     CG = cg.constraintGraph()
-    CG.graphFromLayer(emptyHExample)
-    #CG.graphFromLayer(emptyVExample)
+    #CG.graphFromLayer(emptyHExample)
+    CG.graphFromLayer(emptyVExample)
 
     CG.printVM()
     CG.printZDL()
