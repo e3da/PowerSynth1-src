@@ -1077,8 +1077,8 @@ if __name__ == '__main__':
 
         for line in f:
             c=line.split(',')
-            if len(c)>4:
-                emptyVExample.insert(int(c[0]),int(c[1]) ,int(c[2]), int(c[3]), c[4])
+            if len(c)>3:
+                emptyVExample.insert(int(c[0]),int(c[1]),int(c[2]),int(c[3]),"SOLID")
     else:
         exit(1)
 
