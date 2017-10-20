@@ -182,7 +182,7 @@ class cornerStitch(object):
         """
         if(tile1.cell.type != tile2.cell.type):
             print "Types are not the same"
-            return
+            return "Tiles are not alligned"
 
         if tile1.cell.x == tile2.cell.x and tile1.cell.y == tile2.cell.y:
             return ("Tiles are not alligned")
@@ -652,7 +652,7 @@ class vLayer(cornerStitch):
         #2. hsplit y1, y2
         cc = self.findPoint(x2, y2, self.stitchList[0])
 
-
+        #print "xco2=", cc.cell.x
 
 
         while(cc.cell.x + cc.getWidth()> x1 ) :############## + cc.getWidth() has been added
@@ -665,10 +665,10 @@ class vLayer(cornerStitch):
                     cc = cc.NORTH
                 changeList.append(cc)
                 cc = cc.WEST
-                if cc.cell.y<=y2 and cc.cell.y+cc.getHeight()>y1 and cc.cell.type!="SOLID":
-                    changeList.append(cc)
-                if cc.cell.x + cc.getWidth()> x1:
-                    cc = cc.WEST
+                #if cc.cell.x>=x1 and cc.cell.y<=y2 and cc.cell.y+cc.getHeight()>=y1:# >= is inserted
+                    #changeList.append(cc)
+                #if cc.WEST!=self.westBoundary and cc.cell.type!="SOLID" and cc.cell.x+cc.getWidth()<x1:
+                    #cc = cc.WEST
         print"chlen=", len(changeList)
         for rect in changeList:
 
@@ -711,7 +711,7 @@ class vLayer(cornerStitch):
                 changeList.insert(0, mergedCell)
         #print " bf second loop",len(changeList)
 
-
+        #print"mlen=", len(changeList)
         if len(changeList) > 0:
             print"Type=",type
             changeList[0].cell.type = type
@@ -744,7 +744,7 @@ class vLayer(cornerStitch):
                 if j < len(changeSet): # there was a '-1'
                     j += 1
             else:
-                del changeSet[j]
+                #del changeSet[j]
                 changeSet[i] = mergedCell
                 if j < len(changeSet) -1:
                     j += 1
@@ -772,7 +772,7 @@ class vLayer(cornerStitch):
                 if j < len(changeSet) -1:
                     j += 1
             else:
-                del changeSet[j]
+                #del changeSet[j]
                 changeSet[i] = mergedCell
                 if j < len(changeSet) - 1:
                     j += 1
@@ -1089,15 +1089,15 @@ if __name__ == '__main__':
         for line in f.read().splitlines():
             c=line.split(',')
             if len(c)>4:
-                emptyHExample.insert(int(c[0]),int(c[1]),int(c[2]),int(c[3]),c[4])
+                emptyVExample.insert(int(c[0]),int(c[1]),int(c[2]),int(c[3]),c[4])
 
     else:
         exit(1)
 
 
     CG = cg.constraintGraph()
-    #CG.graphFromLayer(emptyVExample)
-    CG.graphFromLayer(emptyHExample)
+    CG.graphFromLayer(emptyVExample)
+    #CG.graphFromLayer(emptyHExample)
 
     CG.printVM()
     CG.printZDL()
@@ -1108,8 +1108,8 @@ if __name__ == '__main__':
     #CG.drawGraph()
     #diGraph.drawGraph()
 
-    #CSCG = CSCG.CSCG(emptyVExample, CG,testdir+'/'+testbase+'.png')
-    CSCG = CSCG.CSCG(emptyHExample, CG,testdir+'/'+testbase+'.png')
+    CSCG = CSCG.CSCG(emptyVExample, CG,testdir+'/'+testbase+'.png')
+    #CSCG = CSCG.CSCG(emptyHExample, CG,testdir+'/'+testbase+'.png')
     #CSCG=CSCG.CSCG(emptyVExample, CG)
     CSCG.findGraphEdges()
     CSCG.drawLayer()
