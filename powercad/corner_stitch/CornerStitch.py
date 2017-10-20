@@ -636,22 +636,26 @@ class vLayer(cornerStitch):
         #1. vsplit x1, x2
         topLeft = self.findPoint(x1, y1, self.stitchList[0])
         bottomRight = self.findPoint(x2, y2, self.stitchList[0])
-
+        if topLeft.cell.y==y1:
+            topLeft=topLeft.SOUTH
+            while topLeft.cell.x+topLeft.getWidth()<x1 :
+                topLeft=topLeft.EAST
 
         #don't change the order of these, it won't work otherwise
 
         if x2 != bottomRight.cell.x and x2 != bottomRight.EAST.cell.x:  # vertically split the bottom edge
             bottomRight = self.vSplit(bottomRight, x2)
+
         if x1 != topLeft.cell.x and x1 != topLeft.EAST.cell.x: #vertically split the top edge
-            topLeft = self.vSplit(topLeft, x1).SOUTH #topleft will be the first cell below the split line
+            topLeft = self.vSplit(topLeft, x1) #topleft will be the first cell below the split line
 
         #2. hsplit y1, y2
         cc = self.findPoint(x2, y2, self.stitchList[0])
-        #print "xco=",cc.EAST.cell.x
 
 
 
-        while( cc.cell.x + cc.getWidth()> x1 ) :############## + cc.getWidth() has been added
+
+        while(cc.cell.x + cc.getWidth()> x1 ) :############## + cc.getWidth() has been added
             if cc.cell.x==x2:
                 cc=cc.WEST
                 #print "xco2=", cc.cell.x
@@ -661,8 +665,11 @@ class vLayer(cornerStitch):
                     cc = cc.NORTH
                 changeList.append(cc)
                 cc = cc.WEST
-
-
+                if cc.cell.y<=y2 and cc.cell.y+cc.getHeight()>y1 and cc.cell.type!="SOLID":
+                    changeList.append(cc)
+                if cc.cell.x + cc.getWidth()> x1:
+                    cc = cc.WEST
+        print"chlen=", len(changeList)
         for rect in changeList:
 
             if not rect.NORTH.cell.y == y1: self.hSplit(rect, y1)
@@ -672,20 +679,20 @@ class vLayer(cornerStitch):
         #3. merge cells affected by 2
         changeList = []
         cc = self.findPoint(x1, y1, self.stitchList[0])
-
+        #print "xco2=", cc.cell.x
         #cc = cc.EAST
         while cc.cell.y >= y1:
-
             cc = cc.SOUTH
         #print "cc = "
         #cc.cell.printCell(True, True)
 
         while cc.cell.x < x2: #find cells to be merged horizontally
-            changeList.append(cc)
+            if cc.cell.x>=x1:
+                changeList.append(cc)
             cc = cc.EAST
 
        # if direction=True:
-
+        print "chl=", len(changeList)
         """
         while len(changeList) > 1:
                 print "in second loop"
@@ -808,8 +815,12 @@ class vLayer(cornerStitch):
     def areaSearch(self, x1, y1, x2, y2):
         cc = self.findPoint(x1, y1, self.stitchList[0]) #the tile that contains the first corner point
         sc = self.findPoint(x2, y2, self.stitchList[0]) #the tile that contains the second(bottom right) corner
+        if cc.cell.y==y1:
+            cc=cc.SOUTH
+            while cc.cell.x+cc.getWidth()<x1 : #and cc.cell.type=="SOLID"
+                cc=cc.EAST
 
-        if cc.cell.type == "SOLID":
+        if   cc.cell.type == "SOLID":
             return True  # the bottom left corner is in a solid cell
         elif cc.cell.y >y2:
             return True  # the corner cell is empty but touches a solid cell within the search area
@@ -1077,15 +1088,15 @@ if __name__ == '__main__':
 
         for line in f:
             c=line.split(',')
-            if len(c)>3:
-                emptyHExample.insert(int(c[0]),int(c[1]),int(c[2]),int(c[3]),"SOLID")
+            if len(c)>4:
+                emptyHExample.insert(int(c[0]),int(c[1]),int(c[2]),int(c[3]))
     else:
         exit(1)
 
 
     CG = cg.constraintGraph()
-    CG.graphFromLayer(emptyHExample)
     #CG.graphFromLayer(emptyVExample)
+    CG.graphFromLayer(emptyHExample)
 
     CG.printVM()
     CG.printZDL()
@@ -1096,8 +1107,8 @@ if __name__ == '__main__':
     #CG.drawGraph()
     #diGraph.drawGraph()
 
-    CSCG = CSCG.CSCG(emptyHExample, CG,testdir+'/'+testbase+'.png')
     #CSCG = CSCG.CSCG(emptyVExample, CG,testdir+'/'+testbase+'.png')
+    CSCG = CSCG.CSCG(emptyHExample, CG,testdir+'/'+testbase+'.png')
     #CSCG=CSCG.CSCG(emptyVExample, CG)
     CSCG.findGraphEdges()
     CSCG.drawLayer()
