@@ -1086,10 +1086,11 @@ if __name__ == '__main__':
         if not len(testdir):
             testdir='.'
 
-        for line in f:
+        for line in f.read().splitlines():
             c=line.split(',')
             if len(c)>4:
-                emptyHExample.insert(int(c[0]),int(c[1]),int(c[2]),int(c[3]),"c[4]")
+                emptyHExample.insert(int(c[0]),int(c[1]),int(c[2]),int(c[3]),c[4])
+
     else:
         exit(1)
 
