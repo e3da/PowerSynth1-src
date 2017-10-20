@@ -772,7 +772,7 @@ class vLayer(cornerStitch):
                 if j < len(changeSet) -1:
                     j += 1
             else:
-                #del changeSet[j]
+                del changeSet[j]
                 changeSet[i] = mergedCell
                 if j < len(changeSet) - 1:
                     j += 1
