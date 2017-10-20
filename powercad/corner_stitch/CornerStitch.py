@@ -1020,11 +1020,11 @@ class hLayer(cornerStitch):
        
         cc = self.findPoint(x1, y1, self.stitchList[0]) #the tile that contains the first corner point
         secondCorner = self.findPoint(x2, y2, self.stitchList[0])# the tile that contains the second(bottom right)corner
-        if x1==cc.cell.x:
-            cc=cc.SOUTH
-        if cc.cell.type == "SOLID":
+
+
+        if  cc.cell.type == "SOLID" and cc.cell.y!=y1 and cc.cell.x!=x1:## cc.cell.x!=x1 and cc.cell.y!=y1 have been added
             return True
-        elif cc.cell.x + cc.getWidth() < x2 and cc.cell.y!=y1:## and cc.cell.y!=y1 has been added
+        elif cc.cell.x + cc.getWidth() < x2 and cc.cell.y!=y1 and cc.cell.x!=x1 :## cc.cell.x!=x1 and cc.cell.y!=y1 have been added
             return True
         cc=cc.SOUTH
         while(cc!= self.southBoundary and cc.cell.y+cc.getHeight()> y2):
