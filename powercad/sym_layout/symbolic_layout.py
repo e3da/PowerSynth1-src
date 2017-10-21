@@ -1115,7 +1115,7 @@ class SymbolicLayout(object):
                                              self.removed_vert_dv_index, self.v_design_values, self.sub_dim[1], False)
         
         self._fix_supertrace_overlaps()
-        self._replace_intersections()
+        self._replace_intersections() # replace intersecting traces (supertraces) with a rectangle
         self._build_trace_rect_list()
         self._place_devices()
         self._place_leads()
@@ -2818,7 +2818,7 @@ def make_test_setup():
     from powercad.tech_lib.test_techlib import get_device, get_dieattach
     from powercad.export.Q3D import output_q3d_vbscript
     temp_dir = os.path.abspath(settings.TEMP_DIR)
-    test_file = os.path.abspath('C:/Users/qmle/Desktop/POETS/Final/T1/layout.psc')
+    test_file = os.path.abspath('../../../sym_layouts/rd100.svg')
     
     sym_layout = SymbolicLayout()
     sym_layout.load_layout(test_file,'script')
@@ -2981,4 +2981,4 @@ if __name__ == '__main__':
     #optimization_test(sym_layout)
     #sym_layout = build_test_layout()
     #test_pickle_symbolic_layout()
-    
+

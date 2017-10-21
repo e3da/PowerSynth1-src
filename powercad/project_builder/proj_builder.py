@@ -1409,7 +1409,8 @@ class ProjectBuilder(QtGui.QMainWindow):
         # add mdi window for viewing
         sol = self.project.solutions[self.ui.lst_solution.row(item)]
         self.project.symb_layout.gen_solution_layout(sol.index)
-        m = SolutionWindow(sol, self.project.symb_layout)
+        filletFlag = self.ui.checkBox_fillet.isChecked() # Show filleted layout if fillet checkbox is checked
+        m = SolutionWindow(sol, self.project.symb_layout, filletFlag)
         self.ui.mdiArea.addSubWindow(m)
         m.show()
         
@@ -1546,6 +1547,8 @@ if __name__ == "__main__":
 # 
 # - Optimization progress bar (graphic) pauses even though optimization is in progress (as seen on console). This is especially true for large number of generations.
 # 
-# - "Open Solution Browser" button needs to be disabled while solution browser is already open, and vice versa. 
+# - "Open Solution Browser" button needs to be disabled while solution browser is already open, and vice versa.
+
+# test- Jul 25, 2017
 
         

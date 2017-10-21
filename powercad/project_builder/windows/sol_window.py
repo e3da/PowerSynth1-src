@@ -28,7 +28,7 @@ from powercad.drc.design_rule_check import DesignRuleCheck
 
 class SolutionWindow(QtGui.QWidget):
     """Solution windows that show up in MDI area"""
-    def __init__(self, solution, sym_layout):
+    def __init__(self, solution, sym_layout, filletFlag):
         """Set up the solution window"""
         QtGui.QWidget.__init__(self)
         self.ui = Ui_layout_form()
@@ -44,14 +44,14 @@ class SolutionWindow(QtGui.QWidget):
         
         self.solution = solution
         self.sym_layout = sym_layout
-        
+
         # display objective data in table widget
         self.ui.tbl_info.setRowCount(len(solution.params))
         self.i = 0
         for objective in solution.params:
             self.tbl_item = QtGui.QTableWidgetItem(objective[0])
             self.ui.tbl_info.setItem(self.i,0,self.tbl_item)
-            self.tbl_item = QtGui.QTableWidgetItem(str(round(objective[1],4)))
+            self.tbl_item = QtGui.QTableWidgetItem(objective[1]) #TODO sxm: check datatype (float) here, remove str; original: self.tbl_item = QtGui.QTableWidgetItem(str(round(objective[1],4)))
             self.ui.tbl_info.setItem(self.i,2,self.tbl_item)
             self.tbl_item = QtGui.QTableWidgetItem(objective[2])
             self.ui.tbl_info.setItem(self.i,1,self.tbl_item)
@@ -65,7 +65,7 @@ class SolutionWindow(QtGui.QWidget):
         self.ui.preview_layout.addWidget(canvas,0,0,1,1)
         
         ax = fig.add_subplot(111, aspect=1.0)
-        plot_layout(sym_layout, ax, new_window=False)
+        plot_layout(sym_layout, filletFlag, ax, new_window=False)
         canvas.draw()
         
     def run_drc(self):
@@ -179,7 +179,7 @@ class SolutionWindow(QtGui.QWidget):
             except:
                 QtGui.QMessageBox.warning(None, "SPICE Thermal Netlist", "Failed to export netlist! Check log/console.")
                 print traceback.format_exc()
-        
+
 #    def electro_thermal_simulation(self):
         
                     
@@ -188,3 +188,5 @@ if __name__ == "__main__":
     test = SolutionWindow()
     test.show()
     sys.exit(app.exec_())
+
+# test - Jul 25, 2017
