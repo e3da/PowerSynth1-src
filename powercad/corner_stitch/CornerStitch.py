@@ -185,7 +185,7 @@ class cornerStitch(object):
             return "Tiles are not alligned"
 
         if tile1.cell.x == tile2.cell.x and tile1.cell.y == tile2.cell.y:
-            return ("Tiles are not alligned")
+            return "Tiles are not alligned"
 
         if tile1.cell.x == tile2.cell.x and (tile1.NORTH == tile2 or tile1.SOUTH == tile2) and tile1.getWidth() == tile2.getWidth():
             basis = tile1 if tile1.cell.y < tile2.cell.y else tile2
@@ -243,7 +243,7 @@ class cornerStitch(object):
             else:
                 self.stitchList.remove(tile2)
         else:
-            return ("Tiles are not alligned")
+            return "Tiles are not alligned"
 
         return basis
 
@@ -963,13 +963,13 @@ class hLayer(cornerStitch):
                 if j < len(changeSet) : #there was a '-1'
                     j += 1
             else:
-                #del changeSet[j]
+                del changeSet[j]
                 changeSet[i] = mergedCell
 
 
                 print "len3=", len(changeSet)
-                if j < len(changeSet) -1:
-                    j += 1
+                #if j < len(changeSet) -1:## these 2 lines have been commented out
+                    #j += 1
 
         cc = caster.WEST#recitfy west side, walking upwards
         changeSet = []
@@ -979,15 +979,19 @@ class hLayer(cornerStitch):
                 cc=cc.NORTH
             changeSet.append(cc)
             cc = cc.NORTH
-
+        print "lenw=", len(changeSet)
+        """
         for foo in changeSet:
             foo.cell.printCell(True, True)
-
+            #print"w=",foo.getWidth()
+        """
         i = 0
         j = 1
         while j < len(changeSet) and i < len(changeSet): #merge all cells with the same width along the eastern side
             topCell = changeSet[i]
+            topCell.cell.printCell(True, True)
             lowerCell = changeSet[j]
+            lowerCell.cell.printCell(True, True)
             mergedCell = self.merge(topCell, lowerCell)
             if mergedCell == "Tiles are not alligned": #the tiles couldn't merge because they didn't line up
                 i += 1
@@ -995,10 +999,10 @@ class hLayer(cornerStitch):
                 if j < len(changeSet)-1 :
                     j += 1
             else:
-                del changeSet[j]
                 changeSet[i] = mergedCell
-                if j < len(changeSet) -1:
-                    j += 1
+                del changeSet[j]
+                #if j < len(changeSet) -1: ## these 2 lines have been commented out
+                    #j += 1
         return
 
     """
