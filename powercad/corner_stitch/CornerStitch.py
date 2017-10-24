@@ -888,11 +888,12 @@ class hLayer(cornerStitch):
 
         #step 2: vsplit x1 and x2
         cc = self.findPoint(x1, y1, self.stitchList[0]).SOUTH  ##Changed according to pointfind #first cell under y1
-        while cc.cell.y>=y2:     ##need to be added +cc.getHeight()
+        while(cc!=self.southBoundary and cc.cell.y+cc.getHeight()>y2):     ##has been added +cc.getHeight()
             while cc.cell.x+cc.getWidth()<=x1: ## 2 lines have been added
                 cc=cc.EAST
         #while cc.cell.y >= y2: #find all cells that need to be vsplit
             changeList.append(cc)
+
             cc = cc.SOUTH
 
             while cc != self.southBoundary and cc != self.eastBoundary and cc.cell.x + cc.getWidth() < x2:#it was <=x2
@@ -1078,26 +1079,26 @@ if __name__ == '__main__':
 
 
     if len(sys.argv)>1:
-        testfile=sys.argv[1]
-        f=open(testfile,"rb")
-        index_of_dot = testfile.rindex('.')
-        testbase = os.path.basename(testfile[:index_of_dot])
-        testdir=os.path.dirname(testfile)
+        testfile=sys.argv[1] # taking input from command line
+        f=open(testfile,"rb") # opening file in binary read mode
+        index_of_dot = testfile.rindex('.') # finding the index of (.) in path
+        testbase = os.path.basename(testfile[:index_of_dot]) # extracting basename from path
+        testdir=os.path.dirname(testfile) # returns the directory name of file
         if not len(testdir):
             testdir='.'
 
-        for line in f.read().splitlines():
-            c=line.split(',')
+        for line in f.read().splitlines(): # considering each line in file
+            c=line.split(',') # splitting each line with (,) and inserting each string in c
             if len(c)>4:
-                emptyVExample.insert(int(c[0]),int(c[1]),int(c[2]),int(c[3]),c[4])
+                emptyHExample.insert(int(c[0]),int(c[1]),int(c[2]),int(c[3]),c[4]) # taking parameters of insert function (4 coordinates as integer and type of cell as string)
 
     else:
         exit(1)
 
 
     CG = cg.constraintGraph()
-    CG.graphFromLayer(emptyVExample)
-    #CG.graphFromLayer(emptyHExample)
+    #CG.graphFromLayer(emptyVExample)
+    CG.graphFromLayer(emptyHExample)
 
     CG.printVM()
     CG.printZDL()
@@ -1108,8 +1109,8 @@ if __name__ == '__main__':
     #CG.drawGraph()
     #diGraph.drawGraph()
 
-    CSCG = CSCG.CSCG(emptyVExample, CG,testdir+'/'+testbase+'.png')
-    #CSCG = CSCG.CSCG(emptyHExample, CG,testdir+'/'+testbase+'.png')
+    #CSCG = CSCG.CSCG(emptyVExample, CG,testdir+'/'+testbase+'.png')
+    CSCG = CSCG.CSCG(emptyHExample, CG,testdir+'/'+testbase+'.png')
     #CSCG=CSCG.CSCG(emptyVExample, CG)
     CSCG.findGraphEdges()
     CSCG.drawLayer()
