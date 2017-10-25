@@ -744,10 +744,10 @@ class vLayer(cornerStitch):
                 if j < len(changeSet): # there was a '-1'
                     j += 1
             else:
-                #del changeSet[j]
+                del changeSet[j]
                 changeSet[i] = mergedCell
-                if j < len(changeSet) -1:
-                    j += 1
+                #if j < len(changeSet) -1:
+                    #j += 1
 
         cc = caster.SOUTH#recitfy SOUTH side, walking eastwards
         changeSet = []
@@ -774,8 +774,8 @@ class vLayer(cornerStitch):
             else:
                 del changeSet[j]
                 changeSet[i] = mergedCell
-                if j < len(changeSet) - 1:
-                    j += 1
+                #if j < len(changeSet) - 1:
+                    #j += 1
         return
 
     """
@@ -882,8 +882,12 @@ class hLayer(cornerStitch):
         if y1 != topLeft.cell.y and y1 != topLeft.NORTH.cell.y: #horizontally split the top edge
             topLeft = self.hSplit(topLeft, y1).SOUTH #topleft will be the first cell below the split line
         if y2 != bottomRight.cell.y and y2 != bottomRight.NORTH.cell.y:#horizontally split the bottom edge
-            if bottomRight.cell.type=="SOLID":
-                bottomRight=bottomRight.WEST
+            if bottomRight.cell.type=="SOLID": ## this part has been corrected
+                bottomRight = bottomRight.WEST
+                #bottomRight= self.findPoint(x2,y2, self.stitchList[0]).WEST
+                while(bottomRight.cell.y+bottomRight.getHeight()<y2):
+                    bottomRight = bottomRight.NORTH
+
             bottomRight = self.hSplit(bottomRight, y2)
 
         #step 2: vsplit x1 and x2
