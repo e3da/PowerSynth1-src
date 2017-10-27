@@ -1040,7 +1040,8 @@ class hLayer(cornerStitch):
        
         cc = self.findPoint(x1, y1, self.stitchList[0]) #the tile that contains the first corner point
         secondCorner = self.findPoint(x2, y2, self.stitchList[0])# the tile that contains the second(bottom right)corner
-
+        if cc==secondCorner and cc.cell.type=="SOLID": # these 2 lines have been inserted to handle if 2 solid tiles are entirely overlapping
+            return True
 
         if  cc.cell.type == "SOLID" and cc.cell.y!=y1 and cc.cell.x!=x1:## cc.cell.x!=x1 and cc.cell.y!=y1 have been added
             return True
