@@ -1098,14 +1098,14 @@ if __name__ == '__main__':
         for line in f.read().splitlines(): # considering each line in file
             c=line.split(',') # splitting each line with (,) and inserting each string in c
             if len(c)>4:
-                emptyVExample.insert(int(c[0]),int(c[1]),int(c[2]),int(c[3]),c[4]) # taking parameters of insert function (4 coordinates as integer and type of cell as string)
+                emptyHExample.insert(int(c[0]),int(c[1]),int(c[2]),int(c[3]),c[4]) # taking parameters of insert function (4 coordinates as integer and type of cell as string)
 
     else:
         exit(1)
 
 
     CG = cg.constraintGraph()
-    CG.graphFromLayer(emptyVExample)
+    CG.graphFromLayer(emptyHExample)
     #CG.graphFromLayer(emptyHExample)
 
     CG.printVM()
@@ -1117,8 +1117,8 @@ if __name__ == '__main__':
     #CG.drawGraph()
     #diGraph.drawGraph()
 
-    CSCG = CSCG.CSCG(emptyVExample, CG,testdir+'/'+testbase+'.png')
-    #CSCG = CSCG.CSCG(emptyHExample, CG,testdir+'/'+testbase+'.png')
+    #CSCG = CSCG.CSCG(emptyVExample, CG,testdir+'/'+testbase+'.png')
+    CSCG = CSCG.CSCG(emptyHExample, CG,testdir+'/'+testbase+'.png')
     #CSCG=CSCG.CSCG(emptyVExample, CG)
     CSCG.findGraphEdges()
     CSCG.drawLayer()
