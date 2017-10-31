@@ -827,8 +827,8 @@ class vLayer(cornerStitch):
 
         cc=cc.EAST
         while (cc!=self.eastBoundary and cc.cell.x< x2):
-            if cc.cell.y<y1 and cc.cell.type=="SOLID":
-                return True
+            #if cc.cell.y<y1 and cc.cell.type=="SOLID":
+                #return True ## these 2 lines have been commented out
             while(cc.cell.y+cc.getHeight()>y2):
                 if cc.cell.y<y1 and cc.cell.type=="SOLID":
                     return True
@@ -1040,8 +1040,7 @@ class hLayer(cornerStitch):
        
         cc = self.findPoint(x1, y1, self.stitchList[0]) #the tile that contains the first corner point
         secondCorner = self.findPoint(x2, y2, self.stitchList[0])# the tile that contains the second(bottom right)corner
-        #if cc==secondCorner and cc.cell.type=="SOLID": # these 2 lines have been inserted to handle if 2 solid tiles are entirely overlapping
-            #return True
+
 
         if  cc.cell.type == "SOLID" and cc.cell.y!=y1 :## cc.cell.x!=x1 and cc.cell.y!=y1 have been added ## cc.cell.x!=x has been deleted
             return True
@@ -1099,7 +1098,7 @@ if __name__ == '__main__':
         for line in f.read().splitlines(): # considering each line in file
             c=line.split(',') # splitting each line with (,) and inserting each string in c
             if len(c)>4:
-                emptyHExample.insert(int(c[0]),int(c[1]),int(c[2]),int(c[3]),c[4]) # taking parameters of insert function (4 coordinates as integer and type of cell as string)
+                emptyVExample.insert(int(c[0]),int(c[1]),int(c[2]),int(c[3]),c[4]) # taking parameters of insert function (4 coordinates as integer and type of cell as string)
 
     else:
         exit(1)
@@ -1118,8 +1117,8 @@ if __name__ == '__main__':
     #CG.drawGraph()
     #diGraph.drawGraph()
 
-    #CSCG = CSCG.CSCG(emptyVExample, CG,testdir+'/'+testbase+'.png')
-    CSCG = CSCG.CSCG(emptyHExample, CG,testdir+'/'+testbase+'.png')
+    CSCG = CSCG.CSCG(emptyVExample, CG,testdir+'/'+testbase+'.png')
+    #CSCG = CSCG.CSCG(emptyHExample, CG,testdir+'/'+testbase+'.png')
     #CSCG=CSCG.CSCG(emptyVExample, CG)
     CSCG.findGraphEdges()
     CSCG.drawLayer()
