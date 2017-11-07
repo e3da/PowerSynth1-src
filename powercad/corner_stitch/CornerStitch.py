@@ -878,9 +878,62 @@ class hLayer(cornerStitch):
         topLeft = self.findPoint(x1, y1, self.stitchList[0])
         bottomRight = self.findPoint(x2, y2, self.stitchList[0])
 
+        splitList=[]
+        splitList.append(topLeft)
+        if topLeft.WEST!=self.westBoundary and topLeft.WEST.cell.type=="SOLID" and topLeft.WEST.cell.x+topLeft.WEST.getWidth()==x1:
+            cc=topLeft.WEST
+            splitList.append(cc)
+            cc=cc.WEST
+            while cc.cell.y+cc.getHeight()<y1:
+                cc=cc.NORTH
+            if cc.cell.type=="EMPTY":
+                splitList.append(cc)
+        if topLeft.EAST!=self.eastBoundary and topLeft.EAST.cell.type=="SOLID" and topLeft.EAST.cell.x == x2:
+            cc=topLeft.EAST
+            splitList.append(cc)
+            cc=cc.EAST
+            while cc.cell.y > y1:
+                cc=cc.SOUTH
+            if cc.cell.type=="EMPTY":
+                splitList.append(cc)
+        print"splitList=",len(splitList)
+        for rect in splitList:
+            if y1 != rect.cell.y and y1 != rect.NORTH.cell.y:
+                self.hSplit(rect, y1)
+
+        splitList = []
+        splitList.append(bottomRight)
+        if bottomLeft.WEST != self.westBoundary and topLeft.WEST.cell.type == "SOLID" and topLeft.WEST.cell.x + topLeft.WEST.getWidth() == x1:
+            cc = topLeft.WEST
+            splitList.append(cc)
+            cc = cc.WEST
+            while cc.cell.y + cc.getHeight() < y1:
+                cc = cc.NORTH
+            if cc.cell.type == "EMPTY":
+                splitList.append(cc)
+        if topLeft.EAST != self.eastBoundary and topLeft.EAST.cell.type == "SOLID" and topLeft.EAST.cell.x == x2:
+            cc = topLeft.EAST
+            splitList.append(cc)
+            cc = cc.EAST
+            while cc.cell.y > y1:
+                cc = cc.SOUTH
+            if cc.cell.type == "EMPTY":
+                splitList.append(cc)
+        print"splitList=", len(splitList)
+        for rect in splitList:
+            if y1 != rect.cell.y and y1 != rect.NORTH.cell.y:
+                self.hSplit(rect, y1)
+
+
+            
+            
+        
+
+        """
         #do not change the order of either the hsplit or vpslit sections, this will break it
         if y1 != topLeft.cell.y and y1 != topLeft.NORTH.cell.y: #horizontally split the top edge
             topLeft = self.hSplit(topLeft, y1).SOUTH #topleft will be the first cell below the split line
+        """
         if y2 != bottomRight.cell.y and y2 != bottomRight.NORTH.cell.y:#horizontally split the bottom edge
             if bottomRight.cell.type=="SOLID": ## this part has been corrected
                 bottomRight = bottomRight.WEST
@@ -1098,7 +1151,7 @@ if __name__ == '__main__':
         for line in f.read().splitlines(): # considering each line in file
             c=line.split(',') # splitting each line with (,) and inserting each string in c
             if len(c)>4:
-                emptyVExample.insert(int(c[0]),int(c[1]),int(c[2]),int(c[3]),c[4]) # taking parameters of insert function (4 coordinates as integer and type of cell as string)
+                emptyHExample.insert(int(c[0]),int(c[1]),int(c[2]),int(c[3]),c[4]) # taking parameters of insert function (4 coordinates as integer and type of cell as string)
 
     else:
         exit(1)
@@ -1117,7 +1170,7 @@ if __name__ == '__main__':
     #CG.drawGraph()
     #diGraph.drawGraph()
 
-    CSCG = CSCG.CSCG(emptyVExample, CG,testdir+'/'+testbase+'.png')
+    CSCG = CSCG.CSCG(emptyHExample, CG,testdir+'/'+testbase+'.png')
     #CSCG = CSCG.CSCG(emptyHExample, CG,testdir+'/'+testbase+'.png')
     #CSCG=CSCG.CSCG(emptyVExample, CG)
     CSCG.findGraphEdges()
