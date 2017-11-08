@@ -876,8 +876,15 @@ class hLayer(cornerStitch):
 
         #step 1: hsplit y1 and y2
         topLeft = self.findPoint(x1, y1, self.stitchList[0])
-
-
+        if topLeft.cell.y==y1:
+            cc=topLeft
+            if topLeft.SOUTH!=self.southBoundary:
+                cc=topLeft.SOUTH
+            while cc.EAST!=self.eastBoundary and cc.cell.x+cc.getWidth()<=x1: ## 2 lines have been added
+                    cc=cc.EAST
+            #while cc.cell.y >= y2: #find all cells that need to be vsplit
+            topLeft=cc
+        print"topx=",topLeft.cell.y
         splitList=[]
         splitList.append(topLeft)
         if topLeft.WEST!=self.westBoundary and topLeft.WEST.cell.type=="SOLID" and topLeft.WEST.cell.x+topLeft.WEST.getWidth()==x1:
@@ -963,6 +970,7 @@ class hLayer(cornerStitch):
 
             while cc != self.southBoundary and cc != self.eastBoundary and cc.cell.x + cc.getWidth() < x2:#it was <=x2
                 cc = cc.EAST
+        print"vlist=",len(changeList)
 
         for rect in changeList: #split vertically
             if not rect.EAST.cell.x == x2: self.vSplit(rect, x2) #do not reorder these lines
@@ -974,7 +982,7 @@ class hLayer(cornerStitch):
         changeList1= []
         flag= False
         cc = self.findPoint(x1, y2, self.stitchList[0])
-        #print"x1y2=",cc.cell.y
+        print"x1y2=", cc.cell.y
         while cc.cell.y+cc.getHeight()<=y1 :
             if (cc.WEST.cell.type=="SOLID"):
                 flag= True
@@ -983,12 +991,29 @@ class hLayer(cornerStitch):
             if cc.EAST.cell.type=="SOLID":
                 flag= True
                 changeList1.append(cc)
+                #print"x1y2=", cc.cell.y
                 changeList1.append(cc.EAST)
+                #print"x1y2=", cc.EAST.cell.y
             if (cc not in changeList1):
                 changeList.append(cc)
-            cc=cc.NORTH
-        print"clist1=",len(changeList1)
+            print"clist1=", len(changeList1)
+            cc = cc.NORTH
+            while len(changeList1) > 1:
+                topCell = changeList1.pop(0)
+                lowerCell = changeList1.pop(0)
+                # print topCell.__class__, ",", lowerCell.__class__
+
+                mergedCell = self.merge(topCell, lowerCell)
+
+                changeList1.insert(0, mergedCell)
+            if len(changeList1) > 0:
+                changeList1[0].cell.type = type
+                self.rectifyShadow(changeList1[0])
+            changeList1 = []
+
+
         print"clist=", len(changeList)
+        """
         while len(changeList1) > 1:
             topCell = changeList1.pop(0)
             lowerCell = changeList1.pop(0)
@@ -1000,7 +1025,7 @@ class hLayer(cornerStitch):
         if len(changeList1) > 0:
             changeList1[0].cell.type = type
             self.rectifyShadow(changeList1[0])
-
+        """
         if (flag == True):
             for i in range(0,len(changeList)-1):
                 print"i in t=",i
@@ -1022,6 +1047,7 @@ class hLayer(cornerStitch):
             if len(changeList) > 0:
                 changeList[0].cell.type = type
                 self.rectifyShadow(changeList[0])
+
 
         else:
             while len(changeList) > 1:
