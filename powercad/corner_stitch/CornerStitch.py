@@ -872,9 +872,16 @@ class vLayer(cornerStitch):
                     changeList[0].cell.type = type
                     k=0
                 else:
+                    changeList.append(topCell)
+                    changeList.append(lowerCell)
                     break
+
+
+            print "k=", k
+            print"clist=", len(changeList)
             if k==1 and len(changeList)>0:
                 for i in (0,len(changeList)-1):
+
                     changeList[i].cell.type = type
                 #changeList[i + 1].cell.type = type
 
