@@ -919,7 +919,8 @@ class vLayer(cornerStitch):
         cc = caster.NORTH #recitfy north side, walking downwards
 
         while (cc != self.northBoundary and cc != self.westBoundary and cc.cell.x >= caster.cell.x):
-            changeSet.append(cc)
+            if cc.NORTH==self.northBoundary or cc.NORTH.cell.type=="EMPTY":
+                changeSet.append(cc)
             cc = cc.WEST
         print "len=", len(changeSet)
         i = 0
@@ -943,7 +944,8 @@ class vLayer(cornerStitch):
         #print"caster=",caster.cell.x+caster.getHeight()
 
         while (cc != self.southBoundary and cc != self.eastBoundary and cc.cell.x < caster.cell.x + caster.getWidth()):
-            changeSet.append(cc)
+            if cc.SOUTH == self.southBoundary or cc.SOUTH.cell.type == "EMPTY":
+                changeSet.append(cc)
             cc = cc.EAST
         print "len=", len(changeSet)
         for foo in changeSet:
@@ -1444,14 +1446,14 @@ if __name__ == '__main__':
         for line in f.read().splitlines(): # considering each line in file
             c=line.split(',') # splitting each line with (,) and inserting each string in c
             if len(c)>4:
-                emptyHExample.insert(int(c[0]),int(c[1]),int(c[2]),int(c[3]),c[4]) # taking parameters of insert function (4 coordinates as integer and type of cell as string)
+                emptyVExample.insert(int(c[0]),int(c[1]),int(c[2]),int(c[3]),c[4]) # taking parameters of insert function (4 coordinates as integer and type of cell as string)
 
     else:
         exit(1)
 
 
     CG = cg.constraintGraph()
-    CG.graphFromLayer(emptyHExample)
+    CG.graphFromLayer(emptyVExample)
     #CG.graphFromLayer(emptyHExample)
 
     CG.printVM()
@@ -1463,7 +1465,7 @@ if __name__ == '__main__':
     #CG.drawGraph()
     #diGraph.drawGraph()
 
-    CSCG = CSCG.CSCG(emptyHExample, CG,testdir+'/'+testbase+'.png')
+    CSCG = CSCG.CSCG(emptyVExample, CG,testdir+'/'+testbase+'.png')
     #CSCG = CSCG.CSCG(emptyHExample, CG,testdir+'/'+testbase+'.png')
     #CSCG=CSCG.CSCG(emptyVExample, CG)
     CSCG.findGraphEdges()
