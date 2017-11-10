@@ -622,13 +622,13 @@ class vLayer(cornerStitch):
         4. rectify shadows outside of the inserted cell
         """
         changeList = [] #list of empty tiles that contain the area to be effected
-        """
+
         foo = self.orderInput(x1, y1, x2, y2)
         x1 = foo[0]
         y1 = foo[1]
         x2 = foo[2]
         y2 = foo[3]
-        """
+
         if self.areaSearch(x1, y1, x2, y2):#check to ensure that the area is empty
             return "Area is not empty"
         """
@@ -786,13 +786,13 @@ class vLayer(cornerStitch):
                 self.vSplit(rect, x1)
         cc = self.findPoint(x2, y2, self.stitchList[0])
 
-        # print "xco2=", cc.cell.x
+       # print "xco2=", cc.cell.x
 
 
         while (cc.cell.x + cc.getWidth() > x1):  ############## + cc.getWidth() has been added
             if cc.cell.x == x2:
                 cc = cc.WEST
-                # print "xco2=", cc.cell.x
+               # print "xco2=", cc.cell.y+cc.getHeight()
                 # changeList.append(cc)
             else:
                 while cc.cell.y + cc.getHeight() <= y2:
@@ -803,7 +803,7 @@ class vLayer(cornerStitch):
                 # changeList.append(cc)
                 # if cc.WEST!=self.westBoundary and cc.cell.type!="SOLID" and cc.cell.x+cc.getWidth()<x1:
                 # cc = cc.WEST
-        print"chlen=", len(changeList)
+        print"chlen=", changeList[0].cell.x
         for rect in changeList:
 
             if not rect.NORTH.cell.y == y1: self.hSplit(rect, y1)
@@ -877,7 +877,7 @@ class vLayer(cornerStitch):
                     break
 
 
-            print "k=", k
+
             print"clist=", len(changeList)
             if k==1 and len(changeList)>0:
                 for i in (0,len(changeList)-1):
@@ -895,6 +895,8 @@ class vLayer(cornerStitch):
 
 
         else:
+            print "k=", k
+            print"clist=", len(changeList)
             while len(changeList) > 1:
                 topCell = changeList.pop(0)
                 lowerCell = changeList.pop(0)
@@ -938,11 +940,12 @@ class vLayer(cornerStitch):
 
         cc = caster.SOUTH#recitfy SOUTH side, walking eastwards
         changeSet = []
+        #print"caster=",caster.cell.x+caster.getHeight()
 
         while (cc != self.southBoundary and cc != self.eastBoundary and cc.cell.x < caster.cell.x + caster.getWidth()):
             changeSet.append(cc)
             cc = cc.EAST
-
+        print "len=", len(changeSet)
         for foo in changeSet:
             foo.cell.printCell(True, True)
             print "\n\n"
@@ -1293,7 +1296,7 @@ class hLayer(cornerStitch):
         cc = caster.EAST #recitfy east side, walking downwards
 
         while (cc != self.eastBoundary and cc != self.southBoundary and cc.cell.y >= caster.cell.y):
-            if cc.cell.type=="EMPTY":
+            if cc.EAST==self.eastBoundary or cc.EAST.cell.type=="EMPTY":#this condition has been added here
                 changeSet.append(cc)
             cc = cc.SOUTH
         print "len4=", len(changeSet)
@@ -1313,7 +1316,7 @@ class hLayer(cornerStitch):
                 changeSet[i] = mergedCell
 
 
-                print "len3=", len(changeSet)
+                #print "len3=", len(changeSet)
                 #if j < len(changeSet) -1:## these 2 lines have been commented out
                     #j += 1
 
@@ -1323,7 +1326,8 @@ class hLayer(cornerStitch):
         while (cc != self.westBoundary and cc != self.northBoundary and cc.cell.y < caster.cell.y + caster.getHeight()):
             while cc.cell.type=="SOLID":## 2 lines have been included here
                 cc=cc.NORTH
-            changeSet.append(cc)
+            if cc.WEST==self.westBoundary or cc.WEST.cell.type=="EMPTY":#this condition has been added here
+                changeSet.append(cc)
             cc = cc.NORTH
         print "lenw=", len(changeSet)
         """
@@ -1335,9 +1339,9 @@ class hLayer(cornerStitch):
         j = 1
         while j < len(changeSet) and i < len(changeSet): #merge all cells with the same width along the eastern side
             topCell = changeSet[i]
-            topCell.cell.printCell(True, True)
+            #topCell.cell.printCell(True, True)
             lowerCell = changeSet[j]
-            lowerCell.cell.printCell(True, True)
+            #lowerCell.cell.printCell(True, True)
             mergedCell = self.merge(topCell, lowerCell)
             if mergedCell == "Tiles are not alligned": #the tiles couldn't merge because they didn't line up
                 i += 1
@@ -1440,14 +1444,14 @@ if __name__ == '__main__':
         for line in f.read().splitlines(): # considering each line in file
             c=line.split(',') # splitting each line with (,) and inserting each string in c
             if len(c)>4:
-                emptyVExample.insert(int(c[0]),int(c[1]),int(c[2]),int(c[3]),c[4]) # taking parameters of insert function (4 coordinates as integer and type of cell as string)
+                emptyHExample.insert(int(c[0]),int(c[1]),int(c[2]),int(c[3]),c[4]) # taking parameters of insert function (4 coordinates as integer and type of cell as string)
 
     else:
         exit(1)
 
 
     CG = cg.constraintGraph()
-    CG.graphFromLayer(emptyVExample)
+    CG.graphFromLayer(emptyHExample)
     #CG.graphFromLayer(emptyHExample)
 
     CG.printVM()
@@ -1459,7 +1463,7 @@ if __name__ == '__main__':
     #CG.drawGraph()
     #diGraph.drawGraph()
 
-    CSCG = CSCG.CSCG(emptyVExample, CG,testdir+'/'+testbase+'.png')
+    CSCG = CSCG.CSCG(emptyHExample, CG,testdir+'/'+testbase+'.png')
     #CSCG = CSCG.CSCG(emptyHExample, CG,testdir+'/'+testbase+'.png')
     #CSCG=CSCG.CSCG(emptyVExample, CG)
     CSCG.findGraphEdges()
