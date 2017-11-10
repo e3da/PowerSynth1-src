@@ -730,6 +730,11 @@ class vLayer(cornerStitch):
             while topLeft.cell.x + topLeft.getWidth() <= x1:
                 topLeft = topLeft.EAST
 
+        if bottomRight.cell.x==x2  :  ## this part has been corrected( and bottomRight.cell.type=="SOLID"
+            bottomRight = bottomRight.WEST
+                # bottomRight= self.findPoint(x2,y2, self.stitchList[0]).WEST
+            while (bottomRight.cell.y + bottomRight.getHeight() < y2):
+                bottomRight = bottomRight.NORTH
 
         splitList = []
         splitList.append(bottomRight)
@@ -819,7 +824,9 @@ class vLayer(cornerStitch):
                 changeList1.append(cc.NORTH)
             if cc.SOUTH.cell.type == "SOLID":
                 flag = True
-                changeList1.append(cc)
+                if (cc not in changeList1):
+                    changeList1.append(cc)
+                #changeList1.append(cc)
                 # print"x1y2=", cc.cell.y
                 changeList1.append(cc.SOUTH)
                 # print"x1y2=", cc.EAST.cell.y
@@ -854,19 +861,23 @@ class vLayer(cornerStitch):
             changeList1[0].cell.type = type
             self.rectifyShadow(changeList1[0])
         """
+        k=1
         if (flag == True):
-            for i in range(0, len(changeList) - 1):
-                print"i in t=", i
-                if changeList[i + 1].cell.x == changeList[i].cell.x + changeList[i].getWidth():
-                    topCell = changeList.pop(0)
-                    lowerCell = changeList.pop(0)
+            while len(changeList)>1:
+                topCell = changeList.pop(0)
+                lowerCell = changeList.pop(0)
+                if lowerCell.cell.x == topCell.cell.x + topCell.getWidth():
                     mergedCell = self.merge(topCell, lowerCell)
-
                     changeList.insert(0, mergedCell)
                     changeList[0].cell.type = type
+                    k=0
                 else:
+                    break
+            if k==1 and len(changeList)>0:
+                for i in (0,len(changeList)-1):
                     changeList[i].cell.type = type
-                    changeList[i + 1].cell.type = type
+                #changeList[i + 1].cell.type = type
+
             if len(changeList) > 0:
                 # changeList[0].cell.type = type
                 self.rectifyShadow(changeList[0])
