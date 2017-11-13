@@ -1197,13 +1197,15 @@ class hLayer(cornerStitch):
             while len(changeList1) > 1:
                 topCell = changeList1.pop(0)
                 lowerCell = changeList1.pop(0)
+                topCell.cell.type = type
+                lowerCell.cell.type = type
                 # print topCell.__class__, ",", lowerCell.__class__
 
                 mergedCell = self.merge(topCell, lowerCell)
 
                 changeList1.insert(0, mergedCell)
             if len(changeList1) > 0:
-                changeList1[0].cell.type = type
+                #changeList1[0].cell.type = type
                 self.rectifyShadow(changeList1[0])
             changeList1 = []
 
@@ -1228,10 +1230,12 @@ class hLayer(cornerStitch):
                 if changeList[i+1].cell.y==changeList[i].cell.y+changeList[i].getHeight():
                     topCell = changeList.pop(0)
                     lowerCell = changeList.pop(0)
+                    topCell.cell.type = type
+                    lowerCell.cell.type = type
                     mergedCell = self.merge(topCell, lowerCell)
 
                     changeList.insert(0, mergedCell)
-                    changeList[0].cell.type = type
+                    #changeList[0].cell.type = type
                 else:
                     changeList[i].cell.type=type
                     changeList[i+1].cell.type = type
@@ -1450,15 +1454,15 @@ if __name__ == '__main__':
         for line in f.read().splitlines(): # considering each line in file
             c=line.split(',') # splitting each line with (,) and inserting each string in c
             if len(c)>4:
-                emptyVExample.insert(int(c[0]),int(c[1]),int(c[2]),int(c[3]),c[4]) # taking parameters of insert function (4 coordinates as integer and type of cell as string)
+                emptyHExample.insert(int(c[0]),int(c[1]),int(c[2]),int(c[3]),c[4]) # taking parameters of insert function (4 coordinates as integer and type of cell as string)
 
     else:
         exit(1)
 
 
     CG = cg.constraintGraph()
-    CG.graphFromLayer(emptyVExample)
-    #CG.graphFromLayer(emptyHExample)
+    #CG.graphFromLayer(emptyVExample)
+    CG.graphFromLayer(emptyHExample)
 
     CG.printVM()
     CG.printZDL()
@@ -1469,8 +1473,8 @@ if __name__ == '__main__':
     #CG.drawGraph()
     #diGraph.drawGraph()
 
-    CSCG = CSCG.CSCG(emptyVExample, CG,testdir+'/'+testbase+'.png')
-    #CSCG = CSCG.CSCG(emptyHExample, CG,testdir+'/'+testbase+'.png')
+    #CSCG = CSCG.CSCG(emptyVExample, CG,testdir+'/'+testbase+'.png')
+    CSCG = CSCG.CSCG(emptyHExample, CG,testdir+'/'+testbase+'.png')
     #CSCG=CSCG.CSCG(emptyVExample, CG)
     CSCG.findGraphEdges()
     CSCG.drawLayer()
