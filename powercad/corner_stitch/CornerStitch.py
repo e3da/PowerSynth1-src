@@ -180,9 +180,9 @@ class cornerStitch(object):
         merge two tiles into one, reassign neighborhood, and return the merged tile in case a reference is needed
 
         """
-        #if(tile1.cell.type != tile2.cell.type):
+        if(tile1.cell.type != tile2.cell.type):
             #print "Types are not the same"
-            #return "Tiles are not alligned"
+            return "Tiles are not alligned"
 
         if tile1.cell.x == tile2.cell.x and tile1.cell.y == tile2.cell.y:
             return "Tiles are not alligned"
@@ -838,12 +838,13 @@ class vLayer(cornerStitch):
                 topCell = changeList1.pop(0)
                 lowerCell = changeList1.pop(0)
                 # print topCell.__class__, ",", lowerCell.__class__
-
+                topCell.cell.type=type
+                lowerCell.cell.type = type
                 mergedCell = self.merge(topCell, lowerCell)
 
                 changeList1.insert(0, mergedCell)
             if len(changeList1) > 0:
-                changeList1[0].cell.type = type
+                #changeList1[0].cell.type = type
                 self.rectifyShadow(changeList1[0])
             changeList1 = []
 
@@ -867,9 +868,11 @@ class vLayer(cornerStitch):
                 topCell = changeList.pop(0)
                 lowerCell = changeList.pop(0)
                 if lowerCell.cell.x == topCell.cell.x + topCell.getWidth():
+                    topCell.cell.type = type
+                    lowerCell.cell.type = type
                     mergedCell = self.merge(topCell, lowerCell)
                     changeList.insert(0, mergedCell)
-                    changeList[0].cell.type = type
+                    #changeList[0].cell.type = type
                     k=0
                 else:
                     changeList.append(topCell)
@@ -948,10 +951,11 @@ class vLayer(cornerStitch):
                 changeSet.append(cc)
             cc = cc.EAST
         print "len=", len(changeSet)
+        """
         for foo in changeSet:
             foo.cell.printCell(True, True)
             print "\n\n"
-
+        """
         i = 0
         j = 1
         while j < len(changeSet) and i < len(changeSet): #merge all cells with the same width along the northern side
@@ -1326,8 +1330,8 @@ class hLayer(cornerStitch):
         changeSet = []
 
         while (cc != self.westBoundary and cc != self.northBoundary and cc.cell.y < caster.cell.y + caster.getHeight()):
-            while cc.cell.type=="SOLID":## 2 lines have been included here
-                cc=cc.NORTH
+            #while cc.cell.type=="SOLID":## 2 lines have been included here
+                #cc=cc.NORTH
             if cc.WEST==self.westBoundary or cc.WEST.cell.type=="EMPTY":#this condition has been added here
                 changeSet.append(cc)
             cc = cc.NORTH
