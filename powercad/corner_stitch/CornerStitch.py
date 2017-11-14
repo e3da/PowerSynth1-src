@@ -1171,17 +1171,19 @@ class hLayer(cornerStitch):
                 changeList.append(cc1)
 
             if (cc.cell.type=="SOLID" and cc.EAST!=self.eastBoundary) :## Overlapping change 2 lines have been inserted (or (cc.EAST.cell.x<x2 and cc.EAST!=self.eastBoundary))
-                changeList.append(cc.EAST)
+                if cc.EAST not in changeList and cc.EAST.cell.type=="SOLID":
+                   changeList.append(cc.EAST)
 
 
             if cc.cell.type=="SOLID" and cc.WEST!=self.westBoundary :## Overlapping change 2 lines have been inserted
-                changeList.append(cc.WEST)
+                if cc.WEST not in changeList and cc.WEST.cell.type=="SOLID" :
+                    changeList.append(cc.WEST)
 
             cc = cc.SOUTH
-            """
-            while cc != self.southBoundary and cc != self.eastBoundary and cc.cell.x + cc.getWidth() < x2:#it was <=x2 (commented out for overlapping)
-                cc = cc.EAST
-            """
+
+            #while cc != self.southBoundary and cc != self.eastBoundary and cc.cell.x + cc.getWidth() < x2:#it was <=x2 (commented out for overlapping)
+                #cc = cc.EAST
+
         print"vlist=",len(changeList)
 
         for rect in changeList: #split vertically
