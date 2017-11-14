@@ -1067,11 +1067,12 @@ class hLayer(cornerStitch):
         x2 = foo[2]
         y2 = foo[3]
 
-        if self.areaSearch(x1, y1, x2, y2): #check to ensure that the area is empty
-            return "Area is not empty"
+        #if self.areaSearch(x1, y1, x2, y2): #check to ensure that the area is empty
+            #return "Area is not empty"
 
         #step 1: hsplit y1 and y2
         topLeft = self.findPoint(x1, y1, self.stitchList[0])
+
         if topLeft.cell.y==y1:
             cc=topLeft
             if topLeft.SOUTH!=self.southBoundary:
@@ -1083,21 +1084,21 @@ class hLayer(cornerStitch):
         print"topx=",topLeft.cell.y
         splitList=[]
         splitList.append(topLeft)
-        if topLeft.WEST!=self.westBoundary and topLeft.WEST.cell.type=="SOLID" and topLeft.WEST.cell.x+topLeft.WEST.getWidth()==x1:
+        if topLeft.WEST!=self.westBoundary and topLeft.WEST.cell.type=="SOLID" and topLeft.WEST.cell.x+topLeft.WEST.getWidth()>=x1 or topLeft.cell.type=="SOLID":#it was ==x1, changed to handle overlap
             cc=topLeft.WEST
             splitList.append(cc)
             cc=cc.WEST
-            while cc.cell.y+cc.getHeight()<y1:
+            while cc!=self.westBoundary and cc.cell.y+cc.getHeight()<y1:
                 cc=cc.NORTH
-            if cc.cell.type=="EMPTY":
+            if cc.cell.type=="EMPTY" and cc!=self.westBoundary:
                 splitList.append(cc)
-        if topLeft.EAST!=self.eastBoundary and topLeft.EAST.cell.type=="SOLID" and topLeft.EAST.cell.x == x2:
+        if topLeft.EAST!=self.eastBoundary and topLeft.EAST.cell.type=="SOLID" and topLeft.EAST.cell.x <= x2 or topLeft.cell.type=="SOLID":#it was ==x2, changed to handle overlap
             cc=topLeft.EAST
             splitList.append(cc)
             cc=cc.EAST
-            while cc.cell.y > y1:
+            while cc!=self.eastBoundary and cc.cell.y > y1:
                 cc=cc.SOUTH
-            if cc.cell.type=="EMPTY":
+            if cc.cell.type=="EMPTY" and cc!=self.eastBoundary:
                 splitList.append(cc)
         print"splitListy1=",len(splitList)
         for rect in splitList:
@@ -1105,30 +1106,32 @@ class hLayer(cornerStitch):
                 self.hSplit(rect, y1)
 
         bottomRight = self.findPoint(x2, y2, self.stitchList[0])
+
         #if y2 != bottomRight.cell.y and y2 != bottomRight.NORTH.cell.y:  # horizontally split the bottom edge
-        if bottomRight.cell.type == "SOLID":  ## this part has been corrected
+
+        if bottomRight.cell.x == x2:  ## this part has been corrected (reinserted to consider overlap)
             bottomRight = bottomRight.WEST
                 # bottomRight= self.findPoint(x2,y2, self.stitchList[0]).WEST
             while (bottomRight.cell.y + bottomRight.getHeight() < y2):
                 bottomRight = bottomRight.NORTH
-
+        print"bot=", bottomRight.cell.x
         splitList = []
         splitList.append(bottomRight)
-        if bottomRight.WEST != self.westBoundary and bottomRight.WEST.cell.type == "SOLID" and bottomRight.WEST.cell.x + bottomRight.WEST.getWidth() == x1:
+        if bottomRight.WEST != self.westBoundary and bottomRight.WEST.cell.type == "SOLID" and bottomRight.WEST.cell.x + bottomRight.WEST.getWidth() >= x1 or bottomRight.cell.type=="SOLID":#it was ==x1 ,changed to handle overlap
             cc = bottomRight.WEST
             splitList.append(cc)
             cc = cc.WEST
-            while cc.cell.y + cc.getHeight() < y2:
+            while cc!=self.westBoundary and cc.cell.y + cc.getHeight() < y2:
                 cc = cc.NORTH
-            if cc.cell.type == "EMPTY":
+            if cc.cell.type == "EMPTY" and cc!=self.westBoundary:
                 splitList.append(cc)
-        if bottomRight.EAST != self.eastBoundary and bottomRight.EAST.cell.type == "SOLID" and bottomRight.EAST.cell.x == x2:
+        if bottomRight.EAST != self.eastBoundary and bottomRight.EAST.cell.type == "SOLID" and bottomRight.EAST.cell.x <= x2 or bottomRight.cell.type=="SOLID":#it was ==x2 ,changed to handle overlap
             cc = bottomRight.EAST
             splitList.append(cc)
             cc = cc.EAST
             while cc.cell.y > y2:
                 cc = cc.SOUTH
-            if cc.cell.type == "EMPTY":
+            if cc.cell.type == "EMPTY" and cc!=self.eastBoundary:
                 splitList.append(cc)
         print"splitListy2=", len(splitList)
         for rect in splitList:
@@ -1136,9 +1139,9 @@ class hLayer(cornerStitch):
                 self.hSplit(rect, y2)
 
 
-            
-            
-        
+
+
+
 
         """
         #do not change the order of either the hsplit or vpslit sections, this will break it
@@ -1156,16 +1159,29 @@ class hLayer(cornerStitch):
         """
         #step 2: vsplit x1 and x2
         cc = self.findPoint(x1, y1, self.stitchList[0]).SOUTH  ##Changed according to pointfind #first cell under y1
+        print"top1=", cc.cell.y
         while(cc!=self.southBoundary and cc.cell.y+cc.getHeight()>y2):     ##has been added +cc.getHeight()
             while cc.cell.x+cc.getWidth()<=x1: ## 2 lines have been added
                 cc=cc.EAST
         #while cc.cell.y >= y2: #find all cells that need to be vsplit
             changeList.append(cc)
+            cc1=cc
+            while(cc1.cell.x+cc1.getWidth()<=x2 and cc1.EAST!=self.eastBoundary):##While loop has been added to consider overlapping
+                cc1=cc1.EAST
+                changeList.append(cc1)
+
+            if (cc.cell.type=="SOLID" and cc.EAST!=self.eastBoundary) :## Overlapping change 2 lines have been inserted (or (cc.EAST.cell.x<x2 and cc.EAST!=self.eastBoundary))
+                changeList.append(cc.EAST)
+
+
+            if cc.cell.type=="SOLID" and cc.WEST!=self.westBoundary :## Overlapping change 2 lines have been inserted
+                changeList.append(cc.WEST)
 
             cc = cc.SOUTH
-
-            while cc != self.southBoundary and cc != self.eastBoundary and cc.cell.x + cc.getWidth() < x2:#it was <=x2
+            """
+            while cc != self.southBoundary and cc != self.eastBoundary and cc.cell.x + cc.getWidth() < x2:#it was <=x2 (commented out for overlapping)
                 cc = cc.EAST
+            """
         print"vlist=",len(changeList)
 
         for rect in changeList: #split vertically
@@ -1178,17 +1194,31 @@ class hLayer(cornerStitch):
         changeList1= []
         flag= False
         cc = self.findPoint(x1, y2, self.stitchList[0])
-        print"x1y2=", cc.cell.y
+        print"x1y2=", cc.cell.x
         while cc.cell.y+cc.getHeight()<=y1 :
-            if (cc.WEST.cell.type=="SOLID"):
+            if cc.WEST.cell.type=="SOLID" or cc.WEST.cell.x == x1:#or cc.WEST.cell.x==x1 has been added overlapping issue
                 flag= True
                 changeList1.append(cc)
-                changeList1.append(cc.WEST)
-            if cc.EAST.cell.type=="SOLID":
+                cc1=cc.WEST
+                while cc1.cell.type=="SOLID" or cc1.cell.x>=x1:#added to consider overlap
+                    changeList1.append(cc1)
+                    cc1=cc1.WEST
+                #changeList1.append(cc.WEST)
+                #if cc.WEST.WEST.cell.type=="SOLID":
+                    #changeList1.append(cc.WEST.WEST)
+            if cc.EAST.cell.type=="SOLID" or cc.EAST.cell.x+cc.EAST.getWidth()==x2:#or cc.EAST.cell.x+cc.EAST.getWidth()==x2 has been added overlapping issue
                 flag= True
-                changeList1.append(cc)
+                if cc not in changeList1:
+                    changeList1.append(cc)
                 #print"x1y2=", cc.cell.y
-                changeList1.append(cc.EAST)
+                cc1=cc.EAST
+                while cc1.cell.type=="SOLID" or cc1.cell.x+cc1.getWidth()<=x2:#added to consider overlap
+
+                     changeList1.append(cc1)
+                     cc1=cc1.EAST
+                #changeList1.append(cc.EAST)
+                #if cc.EAST.EAST.cell.type=="SOLID":
+                    #changeList1.append(cc.EAST.EAST)
                 #print"x1y2=", cc.EAST.cell.y
             if (cc not in changeList1):
                 changeList.append(cc)
@@ -1196,6 +1226,7 @@ class hLayer(cornerStitch):
             cc = cc.NORTH
             while len(changeList1) > 1:
                 topCell = changeList1.pop(0)
+                print"cell0=", topCell.cell.x
                 lowerCell = changeList1.pop(0)
                 topCell.cell.type = type
                 lowerCell.cell.type = type
