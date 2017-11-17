@@ -1169,7 +1169,7 @@ class hLayer(cornerStitch):
                 while cc1.cell.y > y2:
                     cc2 = cc2.SOUTH
                 splitList.append(cc2)
-        while cc.cell.x >x1 and cc!=self.westBoundary:#it was cc.WEST!=
+        while cc.cell.x >=x1 and cc!=self.westBoundary:#it was cc.WEST!= (previously >x1)
             if cc not in splitList:
                 splitList.append(cc)
 
