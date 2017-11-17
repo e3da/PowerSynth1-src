@@ -1097,26 +1097,29 @@ class hLayer(cornerStitch):
             splitList.append(cc1)
            # if cc1.cell.type=="SOLID" and cc1.cell.x+cc1.getWidth()==x1:
             cc2=cc1.WEST
-            print"cc2=",cc2.cell.y+cc2.getHeight()
+            #print"cc2=",cc2.cell.y+cc2.getHeight()
             while cc2!=self.westBoundary and cc2.cell.y + cc2.getHeight() < y1:
                 cc2 = cc2.NORTH
-            splitList.append(cc2)
-        while cc.cell.x<x2 and cc.EAST!=self.eastBoundary:
+            if cc2!=self.westBoundary:
+                splitList.append(cc2)
+        print"cc.x",cc.cell.x
+        while cc.cell.x<=x2 and cc!=self.eastBoundary:#it was only <x2
             if cc not in splitList:
                 print "testx",cc.cell.x
                 splitList.append(cc)
             cc=cc.EAST
             while cc.cell.y > y1:
                 cc= cc.SOUTH
-        if cc.cell.type=="SOLID" and cc.cell.x==x2 and cc!=self.eastBoundary :#or tr.cell.type=="SOLID"
+        if cc.cell.type=="SOLID" and cc.cell.x==x2 and cc!=self.eastBoundary or (tr.cell.type=="SOLID" and tr.cell.y!=y1 and cc!=self.eastBoundary):
             print "testex", cc.cell.x
             splitList.append(cc)
             if cc.EAST!=self.eastBoundary:
                 cc=cc.EAST
+
                 while cc.cell.y > y1:
                     cc= cc.SOUTH
-            print "testsx", cc.cell.x
-            splitList.append(cc)
+            #print "testsx", cc.cell.x
+                splitList.append(cc)
 
 
         """
@@ -1139,7 +1142,7 @@ class hLayer(cornerStitch):
         """
         print"splitListy1=",len(splitList)
         for rect in splitList:
-            print "height=",rect.cell.y+rect.getHeight()
+            #print "height=",rect.cell.y+rect.getHeight()
             if y1 != rect.cell.y and y1 != rect.NORTH.cell.y:
                 self.hSplit(rect, y1)
 
@@ -1166,18 +1169,23 @@ class hLayer(cornerStitch):
                 while cc1.cell.y > y2:
                     cc2 = cc2.SOUTH
                 splitList.append(cc2)
-        while cc.cell.x+cc.getWidth()>x1 and cc.WEST!=self.westBoundary:
-            splitList.append(cc)
+        while cc.cell.x >x1 and cc!=self.westBoundary:#it was cc.WEST!=
+            if cc not in splitList:
+                splitList.append(cc)
+
             cc=cc.WEST
-            while cc.cell.y+cc.getHeight() < y2:
-                cc= cc.NORTH
-        if cc.cell.type=="SOLID" and cc.cell.x+cc.getWidth()==x1 or bl.cell.type=="SOLID":
-            splitList.append(cc)
+            if cc!=self.westBoundary:
+                while cc.cell.y+cc.getHeight() < y2  :
+                    cc= cc.NORTH
+        print"cc2.x", cc.cell.x
+        if cc.cell.type=="SOLID" and cc.cell.x+cc.getWidth()>=x1 or bl.cell.type=="SOLID" or bl.cell.x+bl.getWidth()>x1:#previously it was ==x1
+            if cc not in splitList:
+                splitList.append(cc)
             if cc.WEST!=self.westBoundary:
                 cc1 = cc.WEST
-            while cc1.cell.y+cc1.getHeight() < y2:
-                cc1 = cc1.NORTH
-            splitList.append(cc1)
+                while cc1.cell.y+cc1.getHeight() < y2:
+                   cc1 = cc1.NORTH
+                splitList.append(cc1)
 
 
         """
