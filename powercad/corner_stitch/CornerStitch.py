@@ -1264,6 +1264,22 @@ class hLayer(cornerStitch):
             if not rect.EAST.cell.x == x2: self.vSplit(rect, x2) #do not reorder these lines
             if not rect.cell.x == x1: self.vSplit(rect, x1)#do not reorder these lines
 
+        #### resplitting is required for those cases, where horizontal splitting is required other than top edge or bottom edge
+        resplit=[]
+        cc = self.findPoint(x1, y1, self.stitchList[0]).SOUTH
+        print"resplit1=",cc.cell.y
+        while cc.cell.y>=y2:
+            if cc.WEST.cell.type=="SOLID" and cc.WEST.cell.x+cc.WEST.getWidth()==cc.cell.x and cc.WEST!=self.westBoundary and cc.WEST.cell.y!=cc.cell.y:
+                resplit.append(cc.WEST)
+                resplit.append(cc.WEST.WEST)
+            if cc.EAST.cell.type=="SOLID" and cc.EAST.cell.x ==cc.cell.x+cc.getWidth and cc.EAST!=self.eastBoundary and cc.EAST.cell.y!=cc.cell.y:
+                resplit.append(cc.EAST)
+                resplit.append(cc.EAST.EAST)
+            print"resplit=",len(resplit)
+            for rect in resplit:
+                self.hSplit(rect,cc.cell.y)
+            cc=cc.SOUTH
+
 
         ## New Merge Algorithm
         changeList = []
@@ -1280,7 +1296,7 @@ class hLayer(cornerStitch):
                     cc.cell.type="SOLID"
                 changeList1.append(cc)
                 if cc.WEST != self.westBoundary and cc.WEST.cell.type == "SOLID" :#cc.WEST.cell.y+cc.WEST.getHeight()==cc..cell.y+cc.getHeight()
-                    if cc.WEST not in changeList1:
+                    if cc.WEST not in changeList1:## and cc.WEST.getHeight()==cc.getHeight() has been added
                         changeList1.append(cc.WEST)
                 cc=cc.EAST
                 print"cc.x=",cc.getWidth()
@@ -1306,8 +1322,8 @@ class hLayer(cornerStitch):
                 topCell.cell.type = type
                 lowerCell.cell.type = type
                 mergedCell = self.merge(topCell, lowerCell)
-                print"m0=", mergedCell.cell.y + mergedCell.getHeight()
-                print"m0=", mergedCell.cell.x+ mergedCell.getWidth()
+                #print"m0=", mergedCell.cell.y + mergedCell.getHeight()
+                #print"m0=", mergedCell.cell.x+ mergedCell.getWidth()
                 changeList1.insert(0, mergedCell)
             print"clist1_=", len(changeList1)
             if len(changeList1) > 0:
@@ -1336,6 +1352,7 @@ class hLayer(cornerStitch):
             else:
                 changeList[i].cell.type = type
                 i=i+1
+
         """
         for i in range(0, len(changeList) - 1):
             print"i in t=", i
@@ -1359,7 +1376,36 @@ class hLayer(cornerStitch):
         if len(changeList) > 0:
             changeList[0].cell.type = type
             self.rectifyShadow(changeList[0])
+        """
+        if flag == True:
+            print"flag"
+            #print"toprex=", re_merge.cell.x #+ re_merge.getWidth()
+            changeList1 = []
+            changeList1.append(re_merge)
+            if re_merge.EAST.cell.type == "SOLID":
+                changeList1.append(re_merge.EAST)
+            if re_merge.WEST.cell.type == "SOLID":
+                print"flag"
+                changeList1.append(re_merge.WEST)
+            while len(changeList1) > 1:
+                print"merge=",len(changeList1)
+                topCell = changeList1.pop(0)
+                print"toprex=", topCell.cell.x#+topCell.getWidth()
+                print"topy=", topCell.cell.y + topCell.getHeight()
 
+                lowerCell = changeList1.pop(0)
+                print"lowx=", lowerCell.cell.x+lowerCell.getWidth()
+                print"lowy=", lowerCell.cell.y+lowerCell.getHeight()
+                topCell.cell.type = type
+                lowerCell.cell.type = type
+                mergedCell = self.merge(topCell, lowerCell)
+                #print"m0=", mergedCell.cell.y + mergedCell.getHeight()
+                #print"m0=", mergedCell.cell.x+ mergedCell.getWidth()
+                changeList1.insert(0, mergedCell)
+        if len(changeList1) > 0:
+            changeList1[0].cell.type = type
+            self.rectifyShadow(changeList1[0])
+        """
         return  changeList1 and changeList
 
 
