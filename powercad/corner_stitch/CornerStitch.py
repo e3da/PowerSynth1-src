@@ -1272,7 +1272,7 @@ class hLayer(cornerStitch):
             if cc.WEST.cell.type=="SOLID" and cc.WEST.cell.x+cc.WEST.getWidth()==cc.cell.x and cc.WEST!=self.westBoundary and cc.WEST.cell.y!=cc.cell.y:
                 resplit.append(cc.WEST)
                 resplit.append(cc.WEST.WEST)
-            if cc.EAST.cell.type=="SOLID" and cc.EAST.cell.x ==cc.cell.x+cc.getWidth and cc.EAST!=self.eastBoundary and cc.EAST.cell.y!=cc.cell.y:
+            if cc.EAST.cell.type=="SOLID" and cc.EAST.cell.x ==cc.cell.x+cc.getWidth() and cc.EAST!=self.eastBoundary and cc.EAST.cell.y!=cc.cell.y:
                 resplit.append(cc.EAST)
                 resplit.append(cc.EAST.EAST)
             print"resplit=",len(resplit)
