@@ -1263,7 +1263,7 @@ class hLayer(cornerStitch):
         for rect in changeList: #split vertically
             if not rect.EAST.cell.x == x2: self.vSplit(rect, x2) #do not reorder these lines
             if not rect.cell.x == x1: self.vSplit(rect, x1)#do not reorder these lines
-
+        flag = False
         #### resplitting is required for those cases, where horizontal splitting is required other than top edge or bottom edge
         resplit=[]
         cc = self.findPoint(x1, y1, self.stitchList[0]).SOUTH
@@ -1277,6 +1277,7 @@ class hLayer(cornerStitch):
                 resplit.append(cc.EAST.EAST)
             print"resplit=",len(resplit)
             for rect in resplit:
+                flag = True
                 self.hSplit(rect,cc.cell.y)
             cc=cc.SOUTH
 
@@ -1284,7 +1285,7 @@ class hLayer(cornerStitch):
         ## New Merge Algorithm
         changeList = []
         changeList1= []
-        #flag= False
+        #
         cc = self.findPoint(x1, y2, self.stitchList[0])
 
         print"x1y2=", cc.cell.x
@@ -1326,10 +1327,12 @@ class hLayer(cornerStitch):
                 #print"m0=", mergedCell.cell.x+ mergedCell.getWidth()
                 changeList1.insert(0, mergedCell)
             print"clist1_=", len(changeList1)
+            if flag==True:
+                changeList.append(changeList1[0])
             if len(changeList1) > 0:
                 changeList1[0].cell.type = type
                 self.rectifyShadow(changeList1[0])
-            #changeList.append(changeList1[0])
+
 
             changeList1 = []
             while cc.cell.x>x1 and cc.WEST!=self.westBoundary:
