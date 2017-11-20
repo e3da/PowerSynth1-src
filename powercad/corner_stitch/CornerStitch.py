@@ -1251,6 +1251,9 @@ class hLayer(cornerStitch):
         print"resplit1=",cc.cell.x
 
         while cc.cell.y >= y2:
+            if cc.WEST.cell.type == "SOLID" and cc.WEST.cell.x + cc.WEST.getWidth() == x1 and cc.WEST != self.westBoundary and cc.WEST.cell.y != cc.cell.y:
+                resplit.append(cc.WEST)
+                resplit.append(cc.WEST.WEST)
             cc1=cc
             y=cc.cell.y
             while cc1.cell.x+cc1.getWidth()<=x2:
@@ -1259,8 +1262,12 @@ class hLayer(cornerStitch):
                 cc1 = cc1.EAST
                 while cc1.cell.y > cc.cell.y:
                     cc1 = cc1.SOUTH
+            if cc.EAST.cell.type == "SOLID" and cc.EAST.cell.x == x2 and cc.EAST != self.eastBoundary and cc.EAST.cell.y != cc.cell.y:
+                resplit.append(cc.EAST)
+                resplit.append(cc.EAST.EAST)
             print"resplit=", len(resplit)
             for rect in resplit:
+                flag=True
                 self.hSplit(rect,y)
             resplit=[]
             cc=cc.SOUTH
