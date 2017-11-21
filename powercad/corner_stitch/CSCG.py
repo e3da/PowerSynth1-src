@@ -197,4 +197,11 @@ class CSCG:
             fig1.show()
             pylab.pause(11000)  # figure out how to do this better
 
-
+    def drawRectangle(self,list=[],*args):
+        fig = plt.figure()
+        ax3 = fig.add_subplot(111, aspect='equal')
+        for p in list:
+            ax3.add_patch(p)
+        plt.xlim(0,60)
+        plt.ylim(0,60)
+        fig.savefig(self.name+'-1.png')

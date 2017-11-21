@@ -1696,11 +1696,16 @@ if __name__ == '__main__':
         if not len(testdir):
             testdir='.'
 
-        for line in f.read().splitlines(): # considering each line in file
-            c=line.split(',') # splitting each line with (,) and inserting each string in c
-            if len(c)>4:
-                emptyHExample.insert(int(c[0]),int(c[1]),int(c[2]),int(c[3]),c[4]) # taking parameters of insert function (4 coordinates as integer and type of cell as string)
-
+        list = []
+        for line in f.read().splitlines():  # considering each line in file
+            c = line.split(',')  # splitting each line with (,) and inserting each string in c
+            if len(c) > 4:
+                emptyHExample.insert(int(c[0]), int(c[1]), int(c[2]), int(c[3]), c[
+                    4])  # taking parameters of insert function (4 coordinates as integer and type of cell as string)
+                list.append(patches.Rectangle(
+                    (int(c[0]), int(c[3])), (int(c[2]) - int(c[0])), (int(c[1]) - int(c[3])),
+                    fill=False
+                ))
     else:
         exit(1)
 
@@ -1723,6 +1728,7 @@ if __name__ == '__main__':
     #CSCG=CSCG.CSCG(emptyVExample, CG)
     CSCG.findGraphEdges()
     CSCG.drawLayer()
+    CSCG.drawRectangle(list)
     #emptyVExample.drawLayer(truePointer=False)
     #emptyHExample.drawLayer(truePointer=False)
 
