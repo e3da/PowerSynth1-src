@@ -1249,7 +1249,21 @@ class hLayer(cornerStitch):
         #cc = self.findPoint(x1, y1, self.stitchList[0]).SOUTH
         cc=topLeft
         print"resplit1=",cc.cell.x
+        while cc.cell.y >= y2:
+            if cc.WEST.cell.type == "SOLID" and cc.WEST.cell.x + cc.WEST.getWidth() == x1 and cc.WEST != self.westBoundary and cc.WEST.cell.y != cc.cell.y:
+                resplit.append(cc.WEST)
+                resplit.append(cc.WEST.WEST)
+            elif cc.EAST.cell.type == "SOLID" and cc.EAST.cell.x == x2 and cc.EAST != self.eastBoundary and cc.EAST.cell.y != cc.cell.y:
+                resplit.append(cc.EAST)
+                resplit.append(cc.EAST.EAST)
+            print"resplit=", len(resplit)
+            for rect in resplit:
+                flag = True
+                self.hSplit(rect, y)
+            resplit = []
+            cc = cc.SOUTH
 
+        """
         while cc.cell.y >= y2:
             if cc.WEST.cell.type == "SOLID" and cc.WEST.cell.x + cc.WEST.getWidth() == x1 and cc.WEST != self.westBoundary and cc.WEST.cell.y != cc.cell.y:
                 resplit.append(cc.WEST)
@@ -1271,7 +1285,63 @@ class hLayer(cornerStitch):
                 self.hSplit(rect,y)
             resplit=[]
             cc=cc.SOUTH
-                
+        """
+        changeList=[]
+        done = False
+        dirn =1# to_leaves
+        t = self.findPoint(x1, y1, self.stitchList[0]).SOUTH
+
+        while t.cell.x + t.getWidth() <= x1:  ## 2 lines have been added
+            t = t.EAST
+        while t.cell.y>=y1:
+            t=t.SOUTH
+        print"t.x,y=",t.cell.x,t.cell.y
+        if t.WEST.cell.type=="SOLID" and t.WEST.cell.x+t.WEST.getWidth()==x1:
+            changeList.append(t.WEST)
+        changeList.append(t)
+
+        while (done== False):
+            if dirn == 1:
+                child = t.EAST
+                while child.cell.y >= y1:  # t.cell.y
+                    child = child.SOUTH
+                if child.WEST == t and child.cell.x < x2 and child.cell.y >= y2:  # = inserted later
+
+                    t = child
+                    if child not in changeList:
+                        changeList.append(child)
+
+                else:
+                    if child.cell.type == "SOLID" and child.cell.x == x2:
+                        if child not in changeList:
+                            changeList.append(child)
+                    dirn = 2#to_root
+
+            else:
+                oldt = t
+                if t.cell.x <= x1 or t.cell.y <= y2:
+                    if t.cell.y > y2:
+                        t = t.SOUTH
+                        while t.cell.x + t.getWidth() <= x1:
+                            t = t.EAST
+                        if t.WEST.cell.type == "SOLID" and t.WEST.cell.x + t.WEST.getWidth() == x1:
+                            changeList.append(t.WEST)
+                        dirn = 1
+                    elif t.cell.x + t.getWidth() < x2:  # it was <=
+                        t = t.EAST
+                        while t.cell.y > y2:
+                            t = t.SOUTH
+                        dirn = 1
+                    else:
+                        done = True
+                elif t.WEST == t.SOUTH.WEST and t.SOUTH.WEST.cell.y >= y2:
+                    t = t.SOUTH
+                    dirn = 1
+                else:
+                    t = t.WEST
+                if t not in changeList:
+                    changeList.append(t)
+        print"arealist=", len(changeList)
                 
         """
         while cc.cell.y>=y2:
@@ -1287,7 +1357,155 @@ class hLayer(cornerStitch):
                 self.hSplit(rect,cc.cell.y)
             cc=cc.SOUTH
         """
+        #for foo in changeList:
+            #foo.cell.printCell(True, True)
 
+        ## New Merge Algorithm v2
+        i=0
+        while i<len(changeList)-1:
+
+            top=changeList[i+1]
+            low=changeList[i]
+            if top.cell.x==low.cell.x+low.getWidth() or top.cell.x+top.getWidth()==low.cell.x:
+                top.cell.type=type
+                low.cell.type=type
+                mergedcell=self.merge(top,low)
+                if mergedcell=="Tiles are not alligned":
+                    i+=1
+                else:
+                    del changeList[i+1]
+                    del changeList[i]
+                    changeList.insert(i,mergedcell)
+            else:
+                i+=1
+
+
+        list_len= len(changeList)
+        print"len=",list_len
+        c=0
+
+        while(len(changeList)>1):
+            i=0
+            c+=1
+
+            while i<len(changeList)-1:
+                print"i=",i,len(changeList)
+                j=0
+                while j<len(changeList)-1:
+                    #j=i+1
+                    print"j=", j
+                    top = changeList[j]
+                    low = changeList[i]
+                    top.cell.type = type
+                    low.cell.type = type
+                    print"topx=", top.cell.x, top.cell.y
+                    print"lowx=", low.cell.x, low.cell.y
+                    mergedcell = self.merge(top, low)
+                    if mergedcell == "Tiles are not alligned":
+                        if j<len(changeList):
+                            j+=1
+
+                    else:
+
+                        del changeList[j]
+                        del changeList[i]
+                        changeList.insert(i, mergedcell)
+                        #if j<len(changeList):
+                            #j+=1
+
+                i+=1
+            if c==list_len+1:
+                break
+        i = 0
+        while i < len(changeList) - 1:
+
+            top = changeList[i + 1]
+            low = changeList[i]
+            #if top.cell.x == low.cell.x + low.getWidth() or top.cell.x + top.getWidth() == low.cell.x:
+            top.cell.type = type
+            low.cell.type = type
+            mergedcell = self.merge(top, low)
+            if mergedcell == "Tiles are not alligned":
+                i += 1
+            else:
+                del changeList[i + 1]
+                del changeList[i]
+                changeList.insert(i, mergedcell)
+
+        for foo in changeList:
+            foo.cell.printCell(True, True)
+        for x in range(0,len(changeList)):
+            changeList[x].cell.type = type
+            print"x=", changeList[x].cell.x, changeList[x].cell.y
+            self.rectifyShadow(changeList[x])
+            x+=1
+
+        if len(changeList) > 0:
+            changeList[0].cell.type = type
+            self.rectifyShadow(changeList[0])
+        """
+        
+        i=0
+        while len(changeList)>1:
+            if i<len(changeList)-1:
+                print"i=",i
+                #print"cell=",changeList[2].cell.x
+
+                lowcell = changeList.pop(i)
+                topcell = changeList.pop(i)
+
+                print"topx=", topcell.cell.x, topcell.cell.y
+                print"lowx=", lowcell.cell.x, lowcell.cell.y
+                topcell.cell.type=type
+                lowcell.cell.type=type
+                #if topcell.cell.x+topcell.getWidth()==lowcell.cell.x or lowcell.cell.x+lowcell.getWidth()==topcell.cell.x:
+
+                mergedcell=self.merge(topcell,lowcell)
+
+                if mergedcell=="Tiles are not alligned":
+
+                    changeList.insert(i,topcell)
+                    changeList.insert(i,lowcell)
+                    if i<len(changeList)-1:
+                        i=i+1
+
+                else:
+
+                    changeList.insert(i,mergedcell)
+                    print"len in merge=", len(changeList)
+                    #self.rectifyShadow(changeList[0])
+
+                if i==len(changeList)-1:
+                    break
+        i = 0
+        print"len before 2=", len(changeList)
+        while i < len(changeList) - 1:
+            print"i in 2=", i
+            for j in range(len(changeList) - 1):
+                j = 0
+                topcell = changeList.pop(j)
+                lowcell = changeList.pop(i)
+
+                topcell.cell.type = type
+                lowcell.cell.type = type
+                mergedcell = self.merge(topcell, lowcell)
+                if mergedcell == "Tiles are not alligned":
+                    changeList.insert(j + 1, topcell)
+                    changeList.insert(i + 1, lowcell)
+                    if j < len(changeList) - 1:
+                        j += 1
+                else:
+                    print"len in merge2=", len(changeList)
+                    changeList.insert(i, mergedcell)
+                    j += 1
+            i += 1
+
+
+
+        """
+
+
+        """
         ## New Merge Algorithm
         changeList = []
         changeList1= []
@@ -1362,22 +1580,7 @@ class hLayer(cornerStitch):
                 changeList[i].cell.type = type
                 i=i+1
 
-        """
-        for i in range(0, len(changeList) - 1):
-            print"i in t=", i
-            if changeList[i + 1].cell.y == changeList[i].cell.y + changeList[i].getHeight():
-                topCell = changeList.pop(0)
-                lowerCell = changeList.pop(0)
-                topCell.cell.type = type
-                lowerCell.cell.type = type
-                mergedCell = self.merge(topCell, lowerCell)
-
-                changeList.insert(0, mergedCell)
-                # changeList[0].cell.type = type
-            else:
-                changeList[i].cell.type = type
-                changeList[i + 1].cell.type = type
-        """
+     
         if len(changeList) > 0:
             # changeList[0].cell.type = type
             self.rectifyShadow(changeList[0])
@@ -1385,37 +1588,8 @@ class hLayer(cornerStitch):
         if len(changeList) > 0:
             changeList[0].cell.type = type
             self.rectifyShadow(changeList[0])
-        """
-        if flag == True:
-            print"flag"
-            #print"toprex=", re_merge.cell.x #+ re_merge.getWidth()
-            changeList1 = []
-            changeList1.append(re_merge)
-            if re_merge.EAST.cell.type == "SOLID":
-                changeList1.append(re_merge.EAST)
-            if re_merge.WEST.cell.type == "SOLID":
-                print"flag"
-                changeList1.append(re_merge.WEST)
-            while len(changeList1) > 1:
-                print"merge=",len(changeList1)
-                topCell = changeList1.pop(0)
-                print"toprex=", topCell.cell.x#+topCell.getWidth()
-                print"topy=", topCell.cell.y + topCell.getHeight()
-
-                lowerCell = changeList1.pop(0)
-                print"lowx=", lowerCell.cell.x+lowerCell.getWidth()
-                print"lowy=", lowerCell.cell.y+lowerCell.getHeight()
-                topCell.cell.type = type
-                lowerCell.cell.type = type
-                mergedCell = self.merge(topCell, lowerCell)
-                #print"m0=", mergedCell.cell.y + mergedCell.getHeight()
-                #print"m0=", mergedCell.cell.x+ mergedCell.getWidth()
-                changeList1.insert(0, mergedCell)
-        if len(changeList1) > 0:
-            changeList1[0].cell.type = type
-            self.rectifyShadow(changeList1[0])
-        """
-        return  changeList1 and changeList
+      """
+        return  changeList
 
 
         ######
@@ -1700,8 +1874,8 @@ if __name__ == '__main__':
         for line in f.read().splitlines():  # considering each line in file
             c = line.split(',')  # splitting each line with (,) and inserting each string in c
             if len(c) > 4:
-                emptyHExample.insert(int(c[0]), int(c[1]), int(c[2]), int(c[3]), c[
-                    4])  # taking parameters of insert function (4 coordinates as integer and type of cell as string)
+                emptyHExample.insert(int(c[0]), int(c[1]), int(c[2]), int(c[3]), c[4])  # taking parameters of insert function (4 coordinates as integer and type of cell as string)
+
                 list.append(patches.Rectangle(
                     (int(c[0]), int(c[3])), (int(c[2]) - int(c[0])), (int(c[1]) - int(c[3])),
                     fill=False
