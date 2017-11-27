@@ -1404,13 +1404,14 @@ class hLayer(cornerStitch):
                 splitList.append(cc2)
         while cc.cell.x>=x1 and cc!=self.westBoundary:#it was cc.WEST!= (previously >x1)
             cc = cc.WEST
-            if cc not in splitList:
-                splitList.append(cc)
-
 
             if cc!=self.westBoundary:
                 while cc.cell.y+cc.getHeight() <= y2  :#previously it was <y2
                     cc= cc.NORTH
+            if cc not in splitList:
+                splitList.append(cc)
+
+
         print"cc2.x", cc.cell.x
         if cc.cell.type=="SOLID" and cc.cell.x+cc.getWidth()>=x1 or bl.cell.type=="SOLID"   :#previously it was ==x1 or bl.cell.x+bl.getWidth()>x1
             if cc not in splitList:
@@ -1488,6 +1489,8 @@ class hLayer(cornerStitch):
                 #cc = cc.EAST
 
         print"vlist=",len(changeList)
+        for foo in changeList:
+            foo.cell.printCell(True, True)
 
         for rect in changeList: #split vertically
             if not rect.EAST.cell.x == x2: self.vSplit(rect, x2) #do not reorder these lines
@@ -1509,6 +1512,7 @@ class hLayer(cornerStitch):
             for rect in resplit:
                 flag = True
                 self.hSplit(rect, cc.cell.y)
+            resplit=[]
             cc = cc.SOUTH
 
 
