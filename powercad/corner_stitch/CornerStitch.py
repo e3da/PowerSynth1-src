@@ -1470,7 +1470,7 @@ class hLayer(cornerStitch):
         cc = self.findPoint(x1, y1, self.stitchList[0]).SOUTH
         while cc.cell.x + cc.getWidth() <= x1:  ## 2 lines have been added
             cc = cc.EAST
-        while cc.cell.y >= y2:
+        while (cc!=self.southBoundary and cc.cell.y+cc.getHeight()>y2):
             while cc.cell.x + cc.getWidth() <= x1:  ## 2 lines have been added
                 cc = cc.EAST
             if cc not in changeList:
@@ -1486,7 +1486,7 @@ class hLayer(cornerStitch):
         while cc.cell.x + cc.getWidth() < x2:  ## 2 lines have been added
             cc = cc.EAST
 
-        while cc.cell.y >= y2:
+        while (cc!=self.southBoundary and cc.cell.y+cc.getHeight()>y2):
             while cc.cell.x + cc.getWidth() < x2:  ## 2 lines have been added
                 cc = cc.EAST
             if cc not in changeList:
