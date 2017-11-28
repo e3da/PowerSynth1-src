@@ -1171,8 +1171,8 @@ class vLayer(cornerStitch):
         cc = caster.NORTH #recitfy north side, walking downwards
 
         while (cc != self.northBoundary and cc != self.westBoundary and cc.cell.x >= caster.cell.x):
-            if cc.NORTH==self.northBoundary or cc.NORTH.cell.type=="EMPTY":
-                changeSet.append(cc)
+            #if cc.NORTH==self.northBoundary or cc.NORTH.cell.type=="EMPTY":
+            changeSet.append(cc)
             cc = cc.WEST
         print "len=", len(changeSet)
         i = 0
@@ -1180,16 +1180,22 @@ class vLayer(cornerStitch):
         while j < len(changeSet): #merge all cells with the same width along the northern side
             topCell = changeSet[i]
             lowerCell = changeSet[j]
-            mergedCell = self.merge(topCell, lowerCell)
-            if mergedCell == "Tiles are not alligned": #the tiles couldn't merge because they didn't line up
-                i += 1
-                if j < len(changeSet): # there was a '-1'
-                    j += 1
-            else:
-                del changeSet[j]
-                changeSet[i] = mergedCell
+            if topCell.NORTH==lowerCell.NORTH:
+                mergedCell = self.merge(topCell, lowerCell)
+                if mergedCell == "Tiles are not alligned": #the tiles couldn't merge because they didn't line up
+                    i += 1
+                    if j < len(changeSet): # there was a '-1'
+                        j += 1
+                else:
+                    del changeSet[j]
+                    changeSet[i] = mergedCell
                 #if j < len(changeSet) -1:
                     #j += 1
+            else:
+                i += 1
+                if j < len(changeSet) - 1:
+                    j += 1
+
 
         cc = caster.SOUTH#recitfy SOUTH side, walking eastwards
         changeSet = []
@@ -1210,17 +1216,24 @@ class vLayer(cornerStitch):
         while j < len(changeSet) and i < len(changeSet): #merge all cells with the same width along the northern side
             topCell = changeSet[i]
             lowerCell = changeSet[j]
-            mergedCell = self.merge(topCell, lowerCell)
-            if mergedCell == "Tiles are not alligned": #the tiles couldn't merge because they didn't line up
-                i += 1
-                print "i = ", i
-                if j < len(changeSet) -1:
-                    j += 1
+            if topCell.SOUTH==lowerCell.SOUTH:
+                mergedCell = self.merge(topCell, lowerCell)
+
+                if mergedCell == "Tiles are not alligned": #the tiles couldn't merge because they didn't line up
+                    i += 1
+                    print "i = ", i
+                    if j < len(changeSet) -1:
+                        j += 1
+                else:
+                    del changeSet[j]
+                    changeSet[i] = mergedCell
+                    #if j < len(changeSet) - 1:
+                        #j += 1
             else:
-                del changeSet[j]
-                changeSet[i] = mergedCell
-                #if j < len(changeSet) - 1:
-                    #j += 1
+                i += 1
+                if j < len(changeSet) - 1:
+                    j += 1
+
         return
 
     """
@@ -1948,8 +1961,8 @@ class hLayer(cornerStitch):
         cc = caster.EAST #recitfy east side, walking downwards
 
         while (cc != self.eastBoundary and cc != self.southBoundary and cc.cell.y >= caster.cell.y):
-            if cc.EAST==self.eastBoundary or cc.EAST.cell.type=="EMPTY":#this condition has been added here
-                changeSet.append(cc)
+            #if cc.EAST==self.eastBoundary or cc.EAST.cell.type=="EMPTY":#this condition has been added here
+            changeSet.append(cc)
             cc = cc.SOUTH
         print "len4=", len(changeSet)
         i = 0
@@ -1958,14 +1971,20 @@ class hLayer(cornerStitch):
            # print "test",len(changeSet),i,j
             topCell = changeSet[i]
             lowerCell = changeSet[j]
-            mergedCell = self.merge(topCell, lowerCell)
-            if mergedCell == "Tiles are not alligned": #the tiles couldn't merge because they didn't line up
-                i += 1
-                if j < len(changeSet) : #there was a '-1'
-                    j += 1
+            if topCell.EAST==lowerCell.EAST:
+                mergedCell = self.merge(topCell, lowerCell)
+                if mergedCell == "Tiles are not alligned": #the tiles couldn't merge because they didn't line up
+                    i += 1
+                    if j < len(changeSet) : #there was a '-1'
+                        j += 1
+                else:
+                    del changeSet[j]
+                    changeSet[i] = mergedCell
             else:
-                del changeSet[j]
-                changeSet[i] = mergedCell
+                i += 1
+                if j < len(changeSet) - 1 :
+                    j += 1
+
 
 
                 #print "len3=", len(changeSet)
@@ -1979,8 +1998,8 @@ class hLayer(cornerStitch):
             #while cc.cell.type=="SOLID":## 2 lines have been included here
                 #cc=cc.NORTH
 
-            if cc.WEST==self.westBoundary or cc.WEST.cell.type=="EMPTY" :#this condition has been added here (or cc.WEST.cell.y!=cc.cell.y and cc.WEST.cell.type=="SOLID")
-                changeSet.append(cc)
+            #if cc.WEST==self.westBoundary or cc.WEST.cell.type=="EMPTY" :#this condition has been added here (or cc.WEST.cell.y!=cc.cell.y and cc.WEST.cell.type=="SOLID")
+            changeSet.append(cc)
             cc = cc.NORTH
         print "lenw=", len(changeSet)
         """
@@ -1995,17 +2014,23 @@ class hLayer(cornerStitch):
             #topCell.cell.printCell(True, True)
             lowerCell = changeSet[j]
             #lowerCell.cell.printCell(True, True)
-            mergedCell = self.merge(topCell, lowerCell)
-            if mergedCell == "Tiles are not alligned": #the tiles couldn't merge because they didn't line up
-                i += 1
-                print "i = ", i
-                if j < len(changeSet)-1 :
-                    j += 1
-            else:
-                changeSet[i] = mergedCell
-                del changeSet[j]
+            if topCell.WEST == lowerCell.WEST:
+                mergedCell = self.merge(topCell, lowerCell)
+                if mergedCell == "Tiles are not alligned": #the tiles couldn't merge because they didn't line up
+                    i += 1
+                    print "i = ", i
+                    if j < len(changeSet)-1 :
+                        j += 1
+                else:
+                    changeSet[i] = mergedCell
+                    del changeSet[j]
                 #if j < len(changeSet) -1: ## these 2 lines have been commented out
                     #j += 1
+            else:
+                i += 1
+                if j < len(changeSet) - 1:
+                    j += 1
+
         return
 
     """
