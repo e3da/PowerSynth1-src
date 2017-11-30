@@ -85,6 +85,8 @@ class CSCG:
 
         for cell in self.CS.stitchList:
 
+
+
             ax1 = fig1.add_subplot(111, aspect='equal')
             if not cell.cell.type == "EMPTY":
                 pattern = '\\'
