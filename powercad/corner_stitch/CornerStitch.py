@@ -754,17 +754,20 @@ class vLayer(cornerStitch):
                 if cc2 not in splitList:
                     splitList.append(cc2)
         cc= bottomRight
+        print "bot=",cc.cell.x, cc.cell.y
         while cc.cell.y<=y1 and cc!=self.northBoundary:
+            print"1"
 
             if cc not in splitList:
                 splitList.append(cc)
             cc = cc.NORTH
-            while cc.cell.x > x2:
+            print "bot=", cc.cell.x, cc.cell.y
+            while cc.cell.x >= x2:
                 cc = cc.WEST
         if cc.cell.type=="SOLID" and cc.cell.y==y1 or tr.cell.type=="SOLID":
             if cc not in splitList and cc!=self.northBoundary:
                 splitList.append(cc)
-            if cc.NORTH !=self.northBoundary:
+            if cc!=self.northBoundary:
                 cc=cc.NORTH
                 while cc.cell.x > x2:
                     cc = cc.WEST
