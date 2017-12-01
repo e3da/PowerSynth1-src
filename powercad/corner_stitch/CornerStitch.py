@@ -754,7 +754,7 @@ class vLayer(cornerStitch):
                 if cc2 not in splitList:
                     splitList.append(cc2)
         cc= bottomRight
-        while cc.cell.y+cc.getHeight()<=y1 and cc!=self.northBoundary:
+        while cc.cell.y<=y1 and cc!=self.northBoundary:
 
             if cc not in splitList:
                 splitList.append(cc)
@@ -762,7 +762,7 @@ class vLayer(cornerStitch):
             while cc.cell.x > x2:
                 cc = cc.WEST
         if cc.cell.type=="SOLID" and cc.cell.y==y1 or tr.cell.type=="SOLID":
-            if cc not in splitList:
+            if cc not in splitList and cc!=self.northBoundary:
                 splitList.append(cc)
             if cc.NORTH !=self.northBoundary:
                 cc=cc.NORTH
@@ -788,18 +788,19 @@ class vLayer(cornerStitch):
                 cc1 = cc.NORTH
                 while cc1.cell.x > x1:
                     cc1 = cc1.WEST
-                if cc1 not in splitList:
+                if cc1 not in splitList and cc !=self.westBoundary:
                     splitList.append(cc1)
         cc=topLeft
-        while cc.cell.y >=y2 and cc.SOUTH!=self.southBoundary:
+        while cc!=self.southBoundary and cc.cell.y+cc.getHeight() >=y2 :
             if cc not in splitList:
                 splitList.append(cc)
+
             cc=cc.SOUTH
-            while cc.cell.x+cc.getWidth()<=x1:
+            while cc!=self.southBoundary and cc.cell.x+cc.getWidth()<=x1:
                 cc=cc.EAST
 
         if cc.cell.type == "SOLID" and cc.cell.y+cc.getHeight() == y2 or bl.cell.type == "SOLID":
-            if cc not in splitList:
+            if cc not in splitList and cc!=self.southBoundary:
                 splitList.append(cc)
             if cc.cell.type=="SOLID" and cc.cell.y+cc.getHeight() == y2:
                 if cc.SOUTH != self.southBoundary:
