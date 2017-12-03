@@ -753,9 +753,9 @@ class vLayer(cornerStitch):
                     cc2 = cc2.EAST
                 if cc2 not in splitList:
                     splitList.append(cc2)
-        cc= bottomRight
+        cc= bottomRight.NORTH
         print "bot=",cc.cell.x, cc.cell.y
-        while cc.cell.y<y1 and cc!=self.northBoundary:
+        while cc.cell.y<=tr.cell.y and cc!=self.northBoundary:#has been added
             print"1"
 
             if cc not in splitList:
@@ -764,7 +764,7 @@ class vLayer(cornerStitch):
             print "bot=", cc.cell.x, cc.cell.y
             while cc.cell.x >= x2:
                 cc = cc.WEST
-        if cc.cell.type=="SOLID" and cc.cell.y==y1 or tr.cell.type=="SOLID":
+        if cc.cell.type=="SOLID" and cc.cell.y==y1 or tr.cell.type=="SOLID"  :
             if cc not in splitList and cc!=self.northBoundary:
                 splitList.append(cc)
             if cc!=self.northBoundary:
@@ -2111,21 +2111,23 @@ if __name__ == '__main__':
             testdir='.'
 
         list = []
+        a = ["blue","red","green","yellow","black","orange"]
+        i = 0
         for line in f.read().splitlines():  # considering each line in file
-            l=1
+
             c = line.split(',')  # splitting each line with (,) and inserting each string in c
             if len(c) > 4:
                 emptyVExample.insert(int(c[0]), int(c[1]), int(c[2]), int(c[3]), c[4])  # taking parameters of insert function (4 coordinates as integer and type of cell as string)
 
                 list.append(patches.Rectangle(
                     (int(c[0]), int(c[3])), (int(c[2]) - int(c[0])), (int(c[1]) - int(c[3])),
-
-                    fill=False,
+                    facecolor=a[i],
+                    #fill=False,
 
 
 
                 ))
-            l+=1
+            i += 1
     else:
         exit(1)
 
