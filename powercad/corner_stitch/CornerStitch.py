@@ -1888,8 +1888,8 @@ if __name__ == '__main__':
     emptyHStitchList = [emptyHPlane]
     #exampleVLayer = vLayer(stitchList, 30, 30)
     #exampleHLayer = hLayer(stitchList, 30, 30)
-    emptyVExample = vLayer(emptyVStitchList, 40, 60)
-    emptyHExample = hLayer(emptyHStitchList, 40, 60)
+    emptyVExample = vLayer(emptyVStitchList, 60, 60)
+    emptyHExample = hLayer(emptyHStitchList, 60, 60)
 
     emptyVPlane.NORTH = emptyVExample.northBoundary
     emptyVPlane.EAST = emptyVExample.eastBoundary
@@ -1925,7 +1925,7 @@ if __name__ == '__main__':
 
             c = line.split(',')  # splitting each line with (,) and inserting each string in c
             if len(c) > 4:
-                emptyVExample.insert(int(c[0]), int(c[1]), int(c[2]), int(c[3]), c[4])  # taking parameters of insert function (4 coordinates as integer and type of cell as string)
+                emptyHExample.insert(int(c[0]), int(c[1]), int(c[2]), int(c[3]), c[4])  # taking parameters of insert function (4 coordinates as integer and type of cell as string)
 
                 list.append(patches.Rectangle(
                     (int(c[0]), int(c[3])), (int(c[2]) - int(c[0])), (int(c[1]) - int(c[3])),
@@ -1942,7 +1942,7 @@ if __name__ == '__main__':
 
     CG = cg.constraintGraph()
     #CG.graphFromLayer(emptyVExample)
-    CG.graphFromLayer(emptyVExample)
+    CG.graphFromLayer(emptyHExample)
 
     CG.printVM()
     CG.printZDL()
@@ -1954,7 +1954,7 @@ if __name__ == '__main__':
     #diGraph.drawGraph()
 
     #CSCG = CSCG.CSCG(emptyVExample, CG,testdir+'/'+testbase+'.png')
-    CSCG = CSCG.CSCG(emptyVExample, CG,testdir+'/'+testbase+'.png')
+    CSCG = CSCG.CSCG(emptyHExample, CG,testdir+'/'+testbase+'.png')
     #CSCG=CSCG.CSCG(emptyVExample, CG)
     CSCG.findGraphEdges()
     CSCG.drawLayer()

@@ -193,7 +193,7 @@ class CSCG:
         plt.ylim(0, self.CS.northBoundary.cell.y)
 
         if self.name:
-            fig1.savefig(self.name)
+            fig1.savefig(self.name,bbox_inches='tight')
             matplotlib.pyplot.close(fig1)
         else:
             fig1.show()
@@ -206,4 +206,4 @@ class CSCG:
             ax3.add_patch(p)
         plt.xlim(0,60)
         plt.ylim(0,60)
-        fig.savefig(self.name+'-1.png')
+        fig.savefig(self.name+'-1.png',bbox_inches='tight')
