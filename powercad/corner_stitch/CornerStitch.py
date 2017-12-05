@@ -1173,8 +1173,16 @@ class hLayer(cornerStitch):
                 cc=topLeft.SOUTH
             while cc.EAST!=self.eastBoundary and cc.cell.x+cc.getWidth()<=x1: ## 2 lines have been added
                     cc=cc.EAST
+            topLeft = cc
             #while cc.cell.y >= y2: #find all cells that need to be vsplit
-            topLeft=cc
+        if tr.cell.y == y1:
+            cc = tr
+            if tr.SOUTH != self.southBoundary:
+                cc = tr.SOUTH
+            while cc.EAST != self.eastBoundary and cc.cell.x + cc.getWidth() < x2:  ## 2 lines have been added
+                cc = cc.EAST
+            tr=cc
+
         print"topx=",topLeft.cell.x
         print"topy=", topLeft.cell.y
         splitList=[]
@@ -1195,16 +1203,16 @@ class hLayer(cornerStitch):
                 splitList.append(cc2)
         print"cc.x",cc.cell.x
 
-        while cc.cell.x<=x2 and cc!=self.eastBoundary:#it was only <x2
+        while cc.cell.x<=tr.cell.x and cc!=self.eastBoundary:#it was only <x2
             if cc not in splitList:
                 print "testx",cc.cell.x+cc.getWidth()
                 splitList.append(cc)
 
             cc=cc.EAST
             print"cc.x2", cc.cell.y
-            while cc.cell.y >= y1:#previously it was >y1
+            while cc.cell.y >= y1 and cc!=self.eastBoundary:#previously it was >y1
                 cc= cc.SOUTH
-        if cc.cell.type=="SOLID" and cc.cell.x==x2 and cc!=self.eastBoundary or (tr.cell.type=="SOLID" and tr.cell.y!=y1 and cc!=self.eastBoundary):
+        if cc.cell.type=="SOLID" and cc.cell.x==x2 and cc!=self.eastBoundary or tr.cell.type=="SOLID" :##and tr.cell.y!=y1 and cc!=self.eastBoundary)
             print "testex", cc.cell.x
             splitList.append(cc)
             if cc.EAST!=self.eastBoundary:
