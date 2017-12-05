@@ -1188,6 +1188,7 @@ class hLayer(cornerStitch):
         splitList=[]
         splitList.append(topLeft)
         cc=topLeft
+
         if cc.WEST != self.westBoundary and cc.WEST.cell.type=="SOLID" and cc.WEST.cell.x+cc.WEST.getWidth()==x1 or cc.cell.type=="SOLID":
             cc1 = cc.WEST
             while cc1.cell.y + cc1.getHeight() < y1:
@@ -1249,7 +1250,7 @@ class hLayer(cornerStitch):
             splitList.append(cc1)
             if cc1.cell.type=="SOLID" and cc1.cell.x==x2:
                 cc2=cc1.EAST
-                while cc1.cell.y > y2:
+                while cc2.cell.y > y2:
                     cc2 = cc2.SOUTH
                 splitList.append(cc2)
         while cc.cell.x>=x1 and cc!=self.westBoundary:#it was cc.WEST!= (previously >x1)
@@ -1327,19 +1328,23 @@ class hLayer(cornerStitch):
                 changeList.append(cc)
             cc = cc.SOUTH
         print"vlistx2=", len(changeList)
+        for foo in changeList:
+            foo.cell.printCell(True, True)
         for rect in changeList:  # split vertically
             if not rect.EAST.cell.x == x2: self.vSplit(rect, x2)  # do not reorder these lines
             if not rect.cell.x == x1: self.vSplit(rect, x1)  # do not reorder these lines
 
-
+        """
         cc = self.findPoint(x1, y1, self.stitchList[0]).SOUTH
         while cc.cell.x + cc.getWidth() <= x1:  ## 2 lines have been added
             cc = cc.EAST
+
         while cc.cell.y>=y2:
             if cc.WEST.cell.type == "SOLID" and cc.WEST.cell.x + cc.WEST.getWidth() == x1 and cc.WEST != self.westBoundary and cc.WEST.cell.y != cc.cell.y:
                 self.hSplit(cc.WEST,cc.cell.y)
                 self.hSplit(cc.WEST.WEST, cc.cell.y)
             cc=cc.SOUTH
+
         cc = self.findPoint(x2, y1, self.stitchList[0]).SOUTH
         while cc.cell.x + cc.getWidth() < x2:  ## 2 lines have been added
             cc = cc.EAST
@@ -1351,7 +1356,7 @@ class hLayer(cornerStitch):
                 self.hSplit(cc.EAST.EAST, cc.cell.y)
             cc = cc.SOUTH
 
-
+        
         # cc = self.findPoint(x1, y1, self.stitchList[0]).SOUTH
         cc = topLeft  ##There was topLeft.SOUTH
         while cc!=self.southBoundary and cc.cell.x<x1:
@@ -1360,6 +1365,7 @@ class hLayer(cornerStitch):
 
         while cc.cell.y >= y2:
             cc1 = cc
+            print"resplitsouth=", cc.cell.x, cc.cell.y
             resplit = []
             min_y=0
             while cc1.cell.x + cc1.getWidth() <= x2:
@@ -1369,15 +1375,55 @@ class hLayer(cornerStitch):
                 if cc1.cell.x==x1 and cc1.WEST!=self.westBoundary:
                     resplit.append(cc1.WEST)
                 cc1=cc1.EAST
+            print"resplitlen=",len(resplit)
+            for foo in resplit:
+                foo.cell.printCell(True, True)
             if len(resplit)>1:
                 for foo in resplit:
                     if foo.cell.y<min_y:
                         if foo.cell.y!=min_y:
                             print"split"
+
                             self.hSplit(foo,min_y)
+
             cc=cc.SOUTH
 
+        """
+        cc = self.findPoint(x2, y2, self.stitchList[0]).WEST ##There was topLeft.SOUTH
 
+        print"resplit1=", cc.cell.x, cc.cell.y
+
+        while cc!=self.northBoundary and cc.cell.y+cc.getHeight() <= y1:
+            cc1 = cc
+            print"resplitsouth=", cc.cell.x, cc.cell.y
+            resplit = []
+            min_y = 100000
+            while cc1!=self.westBoundary and cc1.cell.x >= x1:
+                if cc1.cell.y+cc1.getHeight() < min_y:
+                    min_y = cc1.cell.y+cc1.getHeight()
+                resplit.append(cc1)
+                if cc1.cell.x == x1:
+                    resplit.append(cc1.WEST)
+                    if cc1.WEST.cell.type=="SOLID":
+                        resplit.append(cc1.WEST.WEST)
+                if cc1.EAST.cell.x == x2:
+                    resplit.append(cc1.EAST)
+                    if cc1.EAST.cell.type=="SOLID":
+                        resplit.append(cc1.EAST.EAST)
+
+                cc1 = cc1.WEST
+            print"resplitlen=", len(resplit)
+            for foo in resplit:
+                foo.cell.printCell(True, True)
+
+            if len(resplit) > 1:
+                for foo in resplit:
+                    if foo.cell.y+foo.getHeight() > min_y:
+                        #if foo.cell.y+foo.getHeight()!= min_y:
+                        print"split"
+                        self.hSplit(foo, min_y)
+            if cc.NORTH!=self.northBoundary:
+                cc = cc.NORTH
 
         #changeList = []
 
@@ -1454,8 +1500,8 @@ class hLayer(cornerStitch):
 
 
 
-        #for foo in changeList1:
-            #foo.cell.printCell(True, True)
+        for foo in changeList:
+            foo.cell.printCell(True, True)
 
         ## New Merge Algorithm v2
 
