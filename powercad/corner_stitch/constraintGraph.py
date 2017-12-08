@@ -3,6 +3,7 @@ import numpy as np
 import constraint
 import networkx as nx
 from matplotlib import pylab
+import matplotlib.pyplot as plt
 
 class constraintGraph:
     """
@@ -25,13 +26,15 @@ class constraintGraph:
         self.edges = edges
         self.zeroDimensionList = []
 
-    def __init__(self):
+
+    def __init__(self,name):
         """
         Default constructor
         """
         self.vertexMatrix = None
         self.edges = []
         self.zeroDimensionList = []
+        self.name = name
 
     def getVertexMatrix(self):
         return self.vertexMatrix
@@ -98,17 +101,25 @@ class constraintGraph:
         given a cornerStitch and orientation, set the connectivity matrix of this constraint graph
         """
         if cornerStitch.orientation == 'v':
+            print"stitchlist"
             for rect in cornerStitch.stitchList:
+
+                rect.cell.printCell(True,True)
                 origin = self.zeroDimensionList.index(rect.cell.y)
+                #print"origin-",origin
                 dest = self.zeroDimensionList.index(rect.getNorth().cell.y)
                 self.vertexMatrix[origin][dest] = rect.getHeight()
+                #print"origin-", rect.getHeight()
                 if rect.cell.getType() == "EMPTY":
                     self.edges.append(Edge(origin, dest, constraint.constraint(0, 'minWidth', origin, dest)))
                 elif rect.cell.getType() == "SOLID":
+
                     self.edges.append(Edge(origin, dest, constraint.constraint(1, 'minWidth', origin, dest)))
 
         elif cornerStitch.orientation == 'h':
+            print"stitchlist-h"
             for rect in cornerStitch.stitchList:
+                rect.cell.printCell(True, True)
                 origin = self.zeroDimensionList.index(rect.cell.x)
                 dest = self.zeroDimensionList.index(rect.getEast().cell.x)
                 print "origin = ", origin, "dest = ", dest, "val = ", rect.getWidth()
@@ -126,6 +137,7 @@ class constraintGraph:
 
         if cornerStitch.orientation == 'v': #if orientation is vertical, add all unique y values for cells
             for rect in cornerStitch.stitchList:
+
                 pointSet.add(rect.cell.y)
             pointSet.add(cornerStitch.northBoundary.cell.y) # this won't be included in the normal list, so we do it here
         elif cornerStitch.orientation == 'h': #same for horizontal orientation
@@ -137,6 +149,7 @@ class constraintGraph:
         setToList.sort()
 
         self.zeroDimensionList =  setToList#setting the list of orientation values to an ordered list
+        #print"ZDL=",len(setToList)
 
     def reduce(self):
         """
@@ -170,13 +183,16 @@ class constraintGraph:
         print "checking edges"
         for foo in self.edges:
             dictList.append(foo.getEdgeDict())
-            print dir(foo.getEdgeDict())
+            print foo.getEdgeDict()
+        print dictList
+            #print dir(foo.getEdgeDict())
         # edge_labels[(foo.source, foo.dest): foo.constraint.getConstraintVal()]
         #for foo in self.edges:
         #    dictList.append(foo.getEdgeDict())
 
         edge_labels = self.merge_dicts(dictList)
         print "checking edge labels"
+        print edge_labels
         for foo in edge_labels:
             print foo
 #        edge_labels = dict([((u, v,), d)
@@ -188,8 +204,9 @@ class constraintGraph:
         pos = nx.shell_layout(G)
         nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels)
         nx.draw_networkx_labels(G, pos)
-        nx.draw(G, pos, node_color='white', node_size=300, edge_color=edge_colors)
-        pylab.show()
+        nx.draw(G, pos, node_color='red', node_size=300, edge_color=edge_colors)
+        plt.savefig(self.name)
+        #pylab.show()
 
 class multiCG():
     """
@@ -219,7 +236,8 @@ class multiCG():
         pos = nx.shell_layout(self.diGraph)
         nx.draw_networkx_edge_labels(self.diGraph, pos, edge_labels = edge_Labels)
         nx.draw_networkx_labels(self.diGraph, pos)
-        nx.draw(self.diGraph, pos, node_color='white', node_size=300, edge_color=edge_colors)
+        nx.draw(self.diGraph, pos, node_color='white', node_size=300, edge_color=edge_colors,arrows=True)
+
         pylab.show()
 
     def edgeReduce(self):

@@ -187,7 +187,7 @@ class CSCG:
         #self.setAxisLabels(plt)
 
         for arr in self.findGraphEdges():
-            ax1.arrow(arr[0], arr[1], arr[2], arr[3], head_width = .30, head_length = .3, color = arr[4])
+            ax1.arrow(arr[0], arr[1], arr[2], arr[3], head_width = .30, head_length = .3,  color =arr[4] )#
 
         plt.xlim(0, self.CS.eastBoundary.cell.x)
         plt.ylim(0, self.CS.northBoundary.cell.y)

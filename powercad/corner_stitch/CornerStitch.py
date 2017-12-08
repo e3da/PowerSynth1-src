@@ -1245,7 +1245,7 @@ class hLayer(cornerStitch):
         cc=bottomRight
         if cc.EAST!= self.eastBoundary and cc.EAST.cell.type=="SOLID" and cc.EAST.cell.x==x2 or cc.cell.type=="SOLID":
             cc1 = cc.EAST
-            while cc1.cell.y >  y2:
+            while cc1.cell.y > y2:
                 cc1 = cc1.SOUTH
             splitList.append(cc1)
             if cc1.cell.type=="SOLID" and cc1.cell.x==x2:
@@ -1919,7 +1919,8 @@ if __name__ == '__main__':
 
             c = line.split(',')  # splitting each line with (,) and inserting each string in c
             if len(c) > 4:
-                emptyHExample.insert(int(c[0]), int(c[1]), int(c[2]), int(c[3]), c[4])  # taking parameters of insert function (4 coordinates as integer and type of cell as string)
+                emptyVExample.insert(int(c[0]), int(c[1]), int(c[2]), int(c[3]), c[4])  # taking parameters of insert function (4 coordinates as integer and type of cell as string)
+                emptyHExample.insert(int(c[0]), int(c[1]), int(c[2]), int(c[3]), c[4])
 
                 list.append(patches.Rectangle(
                     (int(c[0]), int(c[3])), (int(c[2]) - int(c[0])), (int(c[1]) - int(c[3])),
@@ -1932,27 +1933,63 @@ if __name__ == '__main__':
             i += 1
     else:
         exit(1)
+    """
+    if len(sys.argv)>1:
+        testfile=sys.argv[1] # taking input from command line
+        f=open(testfile,"rb") # opening file in binary read mode
+        index_of_dot = testfile.rindex('.') # finding the index of (.) in path
+        testbase = os.path.basename(testfile[:index_of_dot]) # extracting basename from path
+        testdir=os.path.dirname(testfile) # returns the directory name of file
+        if not len(testdir):
+            testdir='.'
+
+        list = []
+        #a = ["blue","red","green","yellow","black","orange"]
+        i = 0
+        for line in f.read().splitlines():  # considering each line in file
+
+            c = line.split(',')  # splitting each line with (,) and inserting each string in c
+            if len(c) > 4:
+                #emptyVExample.insert(int(c[0]), int(c[1]), int(c[2]), int(c[3]), c[4])  # taking parameters of insert function (4 coordinates as integer and type of cell as string)
+                emptyHExample.insert(int(c[0]), int(c[1]), int(c[2]), int(c[3]), c[4])
+
+                list.append(patches.Rectangle(
+                    (int(c[0]), int(c[3])), (int(c[2]) - int(c[0])), (int(c[1]) - int(c[3])),
+                    #facecolor=a[i],
+                    fill=False,
 
 
-    CG = cg.constraintGraph()
-    #CG.graphFromLayer(emptyVExample)
-    CG.graphFromLayer(emptyHExample)
 
-    CG.printVM()
-    CG.printZDL()
-    diGraph = cg.multiCG(CG)
-    con = constraint.constraint(1, "minWidth", 0, 1)
-    diGraph.addEdge(con.source, con.dest, con)
+                ))
+            i += 1
+    else:
+        exit(1)
+    """
+    CG1 = cg.constraintGraph(testdir+'/'+testbase+'gh.png')
+    CG2 = cg.constraintGraph(testdir+'/'+testbase+'gv.png')
+    CG1.graphFromLayer(emptyHExample)
+    CG2.graphFromLayer(emptyVExample)
 
-    #CG.drawGraph()
+    CG1.printVM()
+    CG2.printVM()
+    CG1.printZDL()
+    CG2.printZDL()
+    #diGraph = cg.multiCG(CG)
+    #con = constraint.constraint(1, "minWidth", 0, 1)
+    #diGraph.addEdge(con.source, con.dest, con)
+
+    CG1.drawGraph()
+    CG2.drawGraph()
     #diGraph.drawGraph()
 
-    #CSCG = CSCG.CSCG(emptyVExample, CG,testdir+'/'+testbase+'.png')
-    CSCG = CSCG.CSCG(emptyHExample, CG,testdir+'/'+testbase+'.png')
+    CSCG1 = CSCG.CSCG(emptyHExample, CG1,testdir+'/'+testbase+'h.png')
+    CSCG2 = CSCG.CSCG(emptyVExample, CG2,testdir+'/'+testbase+'v.png')
     #CSCG=CSCG.CSCG(emptyVExample, CG)
-    CSCG.findGraphEdges()
-    CSCG.drawLayer()
-    CSCG.drawRectangle(list)
+    CSCG1.findGraphEdges()
+    CSCG1.drawLayer()
+    CSCG2.findGraphEdges()
+    CSCG2.drawLayer()
+    CSCG1.drawRectangle(list)
     #emptyVExample.drawLayer(truePointer=False)
     #emptyHExample.drawLayer(truePointer=False)
 
