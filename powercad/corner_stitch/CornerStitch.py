@@ -129,7 +129,7 @@ class tile:
 
         cc = self.SOUTH #Walk eastwards along the bottomLeft (SW) corner
         while (cc.cell.x  < self.cell.x + self.getWidth()):
-            print "2 appending" , cc.cell.x , " ", cc.cell.y
+           # print "2 appending" , cc.cell.x , " ", cc.cell.y
             neighbors.append(cc)
             if cc.EAST is not None:
                 cc = cc.EAST
@@ -138,7 +138,7 @@ class tile:
 
         cc = self.WEST #Walk northwards along the bottomLeft (SW) corner
         while (cc.cell.y < self.cell.y + self.getHeight()):
-            print "3 appending" , cc.cell.x , " ", cc.cell.y
+            #print "3 appending" , cc.cell.x , " ", cc.cell.y
             neighbors.append(cc)
             if cc.NORTH is not None:
                 cc = cc.NORTH
@@ -147,7 +147,7 @@ class tile:
 
         cc = self.NORTH #Walk westwards along the topright (NE) corner
         while (cc.cell.x + cc.getWidth() > self.cell.x):
-            print "4 appending" , cc.cell.x , " ", cc.cell.y
+           # print "4 appending" , cc.cell.x , " ", cc.cell.y
             neighbors.append(cc)
             if cc.WEST is not None:
                 cc = cc.WEST
@@ -266,8 +266,8 @@ class cornerStitch(object):
         accountedCells.append(cellListCopy[cornerStitch.lowestCell(cellListCopy)]) #adding to accounted cells
         del cellListCopy[cornerStitch.lowestCell(cellListCopy)] #removing from the original list so we don't double count
 
-        print len(cellListCopy)
-        print len(accountedCells)
+        #print len(cellListCopy)
+        #print len(accountedCells)
         return
 
     def findLayerDimensions(self, boundaries):
@@ -302,13 +302,13 @@ class cornerStitch(object):
                if(cc.NORTH is not None):
                    cc = cc.NORTH
                else:
-                   print("out of bounds 1")
+                   #print("out of bounds 1")
                    return "Failed"
             elif y < cc.cell.y:#y <= cc.cell.y
                 if(cc.SOUTH is not None):
                     cc = cc.SOUTH
                 else:
-                    print("out of bounds 2")
+                    #print("out of bounds 2")
                     return "Failed"
         while(x < cc.cell.x or x >=(cc.cell.x + cc.getWidth())):#x >(cc.cell.x + cc.getWidth()
             if(x < cc.cell.x ):#x <= cc.cell.x
@@ -321,7 +321,7 @@ class cornerStitch(object):
                 if(cc.EAST is not None):
                     cc = cc.EAST
                 else:
-                    print("out of bounds 4")
+                    #print("out of bounds 4")
                     return "Failed"
         if not ((cc.cell.x <= x and cc.cell.x + cc.getWidth() > x) and (cc.cell.y <= y and cc.cell.y + cc.getHeight() > y)):#(cc.cell.x <= x and cc.cell.x + cc.getWidth() >= x) and (cc.cell.y <= y and cc.cell.y + cc.getHeight() >= y)
             return self.findPoint(x, y, cc)
@@ -378,7 +378,7 @@ class cornerStitch(object):
                 pattern = '\\'
             else:
                 pattern = ''
-            print "type of cell in this loop", type(cell)
+           # print "type of cell in this loop", type(cell)
             ax1.add_patch(
                 matplotlib.patches.Rectangle(
                     (cell.cell.x, cell.cell.y),  # (x,y)
@@ -473,7 +473,7 @@ class cornerStitch(object):
 
     def vSplit(self, splitCell, x):
         if x < splitCell.cell.x or x > splitCell.cell.x + splitCell.getWidth():
-            print "out of bounds, x = ", x
+            #print "out of bounds, x = ", x
             return
         newCell = tile(None, None, None, None, None, cell(x, splitCell.cell.y, splitCell.cell.type))
         self.stitchList.append(newCell) #figure out how to fix this and pass in by reference*
@@ -516,7 +516,7 @@ class cornerStitch(object):
 
         cc = newCell.SOUTH#reassign the NORTH pointers for the bottom edge
         if cc != self.southBoundary:
-            cc.SOUTH.cell.printCell(True, True)
+            #cc.SOUTH.cell.printCell(True, True)
             ccWidth = cc.getWidth() #I don't know why, but this solves getWidth() throwing an error otherwise
             while cc != self.eastBoundary and (cc.cell.x + ccWidth <= newCell.cell.x + newCell.getWidth()):
                 cc.NORTH = newCell
@@ -531,7 +531,7 @@ class cornerStitch(object):
         newCell is the top half of the split
         """
         if y < splitCell.cell.y or y > splitCell.cell.y + splitCell.getHeight():
-            print "out of bounds, y = ", y
+           # print "out of bounds, y = ", y
             return
         newCell = tile(None, None, None, None, None, cell(splitCell.cell.x, y, splitCell.cell.type))
         self.stitchList.append(newCell)
@@ -656,7 +656,7 @@ class vLayer(cornerStitch):
 
         splitList = []
         splitList.append(bottomRight)
-        print"x=",bottomRight.cell.x, bottomRight.cell.y
+        #print"x=",bottomRight.cell.x, bottomRight.cell.y
         if bottomRight.SOUTH != self.southBoundary and bottomRight.SOUTH.cell.type == "SOLID" and bottomRight.SOUTH.cell.y+bottomRight.SOUTH.getHeight() == y2 or bottomRight.cell.type=="SOLID":
             cc1 = bottomRight.SOUTH
             while cc1.cell.x+cc1.getWidth()<x2:
@@ -670,14 +670,14 @@ class vLayer(cornerStitch):
                 if cc2 not in splitList:
                     splitList.append(cc2)
         cc= bottomRight.NORTH
-        print "bot=",cc.cell.x, cc.cell.y
+        #print "bot=",cc.cell.x, cc.cell.y
         while cc.cell.y<=tr.cell.y and cc!=self.northBoundary:#has been added
-            print"1"
+           # print"1"
 
             if cc not in splitList:
                 splitList.append(cc)
             cc = cc.NORTH
-            print "bot=", cc.cell.x, cc.cell.y
+            #print "bot=", cc.cell.x, cc.cell.y
             while cc.cell.x >= x2:
                 cc = cc.WEST
         if cc.cell.type=="SOLID" and cc.cell.y==y1 or tr.cell.type=="SOLID"  :
@@ -690,7 +690,7 @@ class vLayer(cornerStitch):
                 if cc!=self.northBoundary:
                     splitList.append(cc)
 
-        print"splitListx2=", len(splitList)
+        #print"splitListx2=", len(splitList)
         for rect in splitList:
             if x2 != rect.cell.x and x2 != rect.EAST.cell.x:
                 self.vSplit(rect, x2)
@@ -729,7 +729,7 @@ class vLayer(cornerStitch):
                     cc = cc.EAST
                 splitList.append(cc)
 
-        print"splitListx1=", len(splitList)
+        #print"splitListx1=", len(splitList)
         for rect in splitList:
             if x1 != rect.cell.x and x1 != rect.EAST.cell.x:
                 self.vSplit(rect, x1)
@@ -756,7 +756,7 @@ class vLayer(cornerStitch):
             cc1=cc1.EAST
             while cc1.cell.y>y2:
                 cc1=cc1.SOUTH
-        print"chlen=", len(changeList)
+        #print"chlen=", len(changeList)
         for rect in changeList:
 
             if not rect.NORTH.cell.y == y1: self.hSplit(rect, y1)
@@ -765,7 +765,7 @@ class vLayer(cornerStitch):
         cc = self.findPoint(x1, y1, self.stitchList[0]).SOUTH
         while cc != self.southBoundary and cc.cell.x < x1:
             cc = cc.EAST
-        print"resplit1=", cc.cell.x
+       # print"resplit1=", cc.cell.x
 
         while cc.cell.x < x2:
             cc1 = cc
@@ -786,7 +786,7 @@ class vLayer(cornerStitch):
         resplit = []
         # cc = self.findPoint(x1, y1, self.stitchList[0]).SOUTH
         cc = self.findPoint(x1, y2, self.stitchList[0])
-        print"resplit1=", cc.cell.x, cc.cell.y, cc.cell.x+cc.getWidth()
+       # print"resplit1=", cc.cell.x, cc.cell.y, cc.cell.x+cc.getWidth()
         while cc.cell.x+cc.getWidth() <= x2:
             if cc.SOUTH.cell.type == "SOLID" and cc.SOUTH.cell.y + cc.SOUTH.getHeight() == y2 and cc.SOUTH != self.southBoundary and cc.SOUTH.cell.x+cc.SOUTH.getWidth() != cc.cell.x+cc.getWidth():
                 resplit.append(cc.SOUTH)
@@ -794,7 +794,7 @@ class vLayer(cornerStitch):
             #if cc.EAST.cell.type == "SOLID" and cc.EAST.cell.x == x2 and cc.EAST != self.eastBoundary and cc.EAST.cell.y != cc.cell.y:
                 #resplit.append(cc.EAST)
                 #resplit.append(cc.EAST.EAST)
-            print"resplit=", len(resplit)
+           # print"resplit=", len(resplit)
             #for foo in resplit:
                 #foo.cell.printCell(True, True)
                 #print"width=", foo.cell.x+foo.getWidth()
@@ -813,7 +813,7 @@ class vLayer(cornerStitch):
            if cc.NORTH.cell.type == "SOLID" and cc.NORTH.cell.y == y1 and cc.NORTH != self.northBoundary and cc.NORTH.cell.x+cc.NORTH.getWidth() != cc.cell.x+cc.getWidth():
                resplit.append(cc.NORTH)
                resplit.append(cc.NORTH.NORTH)
-               print"resplit=", len(resplit)
+               #print"resplit=", len(resplit)
                #for foo in resplit:
                    #foo.cell.printCell(True, True)
                    #print"width=", foo.cell.x + foo.getWidth()
@@ -833,7 +833,7 @@ class vLayer(cornerStitch):
             cc = cc.EAST
             while cc.cell.y >= y1:
                 cc = cc.SOUTH
-        print"list=", len(changeList)
+        #print"list=", len(changeList)
         done = False
         dirn = 1  # to_leaves
         t = self.findPoint(x1, y1, self.stitchList[0]).SOUTH
@@ -842,7 +842,7 @@ class vLayer(cornerStitch):
             t = t.EAST
         while t.cell.y >= y1:
             t = t.SOUTH
-        print"t.x,y=", t.cell.x, t.cell.y
+       # print"t.x,y=", t.cell.x, t.cell.y
         #if t.NORTH.cell.type == "SOLID" and t.NORTH.cell.y == y1:
             #changeList.append(t.NORTH)
         changeList.append(t)
@@ -853,7 +853,7 @@ class vLayer(cornerStitch):
                 while child.cell.y >= y1:  # t.cell.y
                     child = child.SOUTH
                 if child.WEST == t and child.cell.x < x2 and child.cell.y >= y2:  # = inserted later
-                    print"entry"
+                   # print"entry"
 
                     t = child
                     if child not in changeList:
@@ -894,14 +894,14 @@ class vLayer(cornerStitch):
             cc1 = cc1.EAST
             while cc1.cell.y > y2:
                 cc1 = cc1.SOUTH
-        print"arealist=", len(changeList)
+       # print"arealist=", len(changeList)
         changeList.sort(key=lambda cc: cc.cell.x)
 
 
 
-        for foo in changeList:
-            foo.cell.printCell(True, True)
-            print "\n\n"
+        #for foo in changeList:
+            #foo.cell.printCell(True, True)
+            #print "\n\n"
 
         ##### Merge Algorithm:
 
@@ -914,22 +914,22 @@ class vLayer(cornerStitch):
             if top.cell.y == low.cell.y + low.getHeight() or top.cell.y + top.getHeight() == low.cell.y:
                 top.cell.type = type
                 low.cell.type = type
-                print"topx=", top.NORTH.cell.x, top.NORTH.cell.y, top.cell.x + top.getWidth()
-                print"lowx=", low.cell.x, low.cell.y, low.cell.x + low.getWidth()
+               # print"topx=", top.NORTH.cell.x, top.NORTH.cell.y, top.cell.x + top.getWidth()
+                #print"lowx=", low.cell.x, low.cell.y, low.cell.x + low.getWidth()
                 mergedcell = self.merge(top, low)
                 if mergedcell == "Tiles are not alligned":
-                    print"-i=", i
+                   # print"-i=", i
                     i += 1
                 else:
                     del changeList[i + 1]
                     del changeList[i]
                     changeList.insert(i, mergedcell)
-                    print"i=",i
+                    #print"i=",i
             else:
                 i += 1
 
         list_len = len(changeList)
-        print"len=", list_len
+        #print"len=", list_len
         c = 0
 
         while (len(changeList) > 1):
@@ -937,18 +937,18 @@ class vLayer(cornerStitch):
             c += 1
 
             while i < len(changeList) - 1:
-                print"i=", i, len(changeList)
+                #print"i=", i, len(changeList)
                 j = 0
                 while j < len(changeList):
                     # j=i+1
-                    print"j=", j
+                   # print"j=", j
 
                     top = changeList[j]
                     low = changeList[i]
                     top.cell.type = type
                     low.cell.type = type
-                    print"topx=", top.cell.x, top.cell.y
-                    print"lowx=", low.cell.x, low.cell.y
+                    #print"topx=", top.cell.x, top.cell.y
+                    #print"lowx=", low.cell.x, low.cell.y
                     mergedcell = self.merge(top, low)
                     if mergedcell == "Tiles are not alligned":
                         if j < len(changeList):
@@ -971,14 +971,14 @@ class vLayer(cornerStitch):
 
             if c == list_len:
                 break
-        print"len_1", len(changeList)
+       # print"len_1", len(changeList)
 
 
-        for foo in changeList:
-            foo.cell.printCell(True, True)
+        #for foo in changeList:
+            #foo.cell.printCell(True, True)
         for x in range(0, len(changeList)):
             changeList[x].cell.type = type
-            print"x=", changeList[x].cell.x, changeList[x].cell.y
+            #print"x=", changeList[x].cell.x, changeList[x].cell.y
             self.rectifyShadow(changeList[x])
             x += 1
 
@@ -1003,7 +1003,7 @@ class vLayer(cornerStitch):
             #if cc.NORTH==self.northBoundary or cc.NORTH.cell.type=="EMPTY":
             changeSet.append(cc)
             cc = cc.WEST
-        print "len=", len(changeSet)
+        #print "len=", len(changeSet)
         i = 0
         j = 1
         while j < len(changeSet): #merge all cells with the same width along the northern side
@@ -1034,7 +1034,7 @@ class vLayer(cornerStitch):
             #if cc.SOUTH == self.southBoundary or cc.SOUTH.cell.type == "EMPTY":
             changeSet.append(cc)
             cc = cc.EAST
-        print "lenr=", len(changeSet)
+       # print "lenr=", len(changeSet)
         """
         for foo in changeSet:
             foo.cell.printCell(True, True)
@@ -1050,7 +1050,7 @@ class vLayer(cornerStitch):
 
                 if mergedCell == "Tiles are not alligned": #the tiles couldn't merge because they didn't line up
                     i += 1
-                    print "i = ", i
+                   # print "i = ", i
                     if j < len(changeSet) -1:
                         j += 1
                 else:
@@ -1183,8 +1183,8 @@ class hLayer(cornerStitch):
                 cc = cc.EAST
             tr=cc
 
-        print"topx=",topLeft.cell.x
-        print"topy=", topLeft.cell.y
+        #print"topx=",topLeft.cell.x
+        #print"topy=", topLeft.cell.y
         splitList=[]
         splitList.append(topLeft)
         cc=topLeft
@@ -1193,7 +1193,7 @@ class hLayer(cornerStitch):
             cc1 = cc.WEST
             while cc1.cell.y + cc1.getHeight() < y1:
                 cc1 = cc1.NORTH
-            print "testwx", cc1.cell.x
+           # print "testwx", cc1.cell.x
             splitList.append(cc1)
            # if cc1.cell.type=="SOLID" and cc1.cell.x+cc1.getWidth()==x1:
             cc2=cc1.WEST
@@ -1202,15 +1202,15 @@ class hLayer(cornerStitch):
                 cc2 = cc2.NORTH
             if cc2!=self.westBoundary:
                 splitList.append(cc2)
-        print"cc.x",cc.cell.x
+        #print"cc.x",cc.cell.x
 
         while cc.cell.x<=tr.cell.x and cc!=self.eastBoundary:#it was only <x2
             if cc not in splitList:
-                print "testx",cc.cell.x+cc.getWidth()
+                #print "testx",cc.cell.x+cc.getWidth()
                 splitList.append(cc)
 
             cc=cc.EAST
-            print"cc.x2", cc.cell.y
+            #print"cc.x2", cc.cell.y
             while cc.cell.y >= y1 and cc!=self.eastBoundary:#previously it was >y1
                 cc= cc.SOUTH
         if cc.cell.type=="SOLID" and cc.cell.x==x2 and cc!=self.eastBoundary or tr.cell.type=="SOLID" :##and tr.cell.y!=y1 and cc!=self.eastBoundary)
@@ -1224,7 +1224,7 @@ class hLayer(cornerStitch):
             #print "testsx", cc.cell.x
                 splitList.append(cc)
 
-        print"splitListy1=",len(splitList)
+        #print"splitListy1=",len(splitList)
         for rect in splitList:
             #print "height=",rect.cell.y+rect.getHeight()
             if y1 != rect.cell.y and y1 != rect.NORTH.cell.y:
@@ -1239,7 +1239,7 @@ class hLayer(cornerStitch):
                 # bottomRight= self.findPoint(x2,y2, self.stitchList[0]).WEST
             while (bottomRight.cell.y + bottomRight.getHeight() < y2):
                 bottomRight = bottomRight.NORTH
-        print"bot=", bottomRight.cell.y
+        #print"bot=", bottomRight.cell.y
         splitList = []
         splitList.append(bottomRight)
         cc=bottomRight
@@ -1263,7 +1263,7 @@ class hLayer(cornerStitch):
                 splitList.append(cc)
 
 
-        print"cc2.x", cc.cell.x
+        #print"cc2.x", cc.cell.x
         if cc.cell.type=="SOLID" and cc.cell.x+cc.getWidth()>=x1 or bl.cell.type=="SOLID"   :#previously it was ==x1 or bl.cell.x+bl.getWidth()>x1
             if cc not in splitList:
                 splitList.append(cc)
@@ -1292,7 +1292,7 @@ class hLayer(cornerStitch):
             if cc.cell.type == "EMPTY" and cc!=self.eastBoundary:
                 splitList.append(cc)
         """
-        print"splitListy2=", len(splitList)
+        #print"splitListy2=", len(splitList)
         for rect in splitList:
             if y2 != rect.cell.y and y2 != rect.NORTH.cell.y:
                 self.hSplit(rect, y2)
@@ -1311,7 +1311,7 @@ class hLayer(cornerStitch):
             if cc not in changeList:
                 changeList.append(cc)
             cc=cc.SOUTH
-        print"vlistx1=", len(changeList)
+       # print"vlistx1=", len(changeList)
 
         #changeList = []
         # step 2: vsplit x1 and x2
@@ -1327,12 +1327,14 @@ class hLayer(cornerStitch):
             if cc not in changeList:
                 changeList.append(cc)
             cc = cc.SOUTH
-        print"vlistx2=", len(changeList)
-        for foo in changeList:
-            foo.cell.printCell(True, True)
+       # print"vlistx2=", len(changeList)
+
+        #for foo in changeList:
+           # foo.cell.printCell(True, True)
         for rect in changeList:  # split vertically
             if not rect.EAST.cell.x == x2: self.vSplit(rect, x2)  # do not reorder these lines
             if not rect.cell.x == x1: self.vSplit(rect, x1)  # do not reorder these lines
+
 
         """
         cc = self.findPoint(x1, y1, self.stitchList[0]).SOUTH
@@ -1391,11 +1393,11 @@ class hLayer(cornerStitch):
         """
         cc = self.findPoint(x2, y2, self.stitchList[0]).WEST ##There was topLeft.SOUTH
 
-        print"resplit1=", cc.cell.x, cc.cell.y
+       #print"resplit1=", cc.cell.x, cc.cell.y
 
         while cc!=self.northBoundary and cc.cell.y+cc.getHeight() <= y1:
             cc1 = cc
-            print"resplitsouth=", cc.cell.x, cc.cell.y
+            #print"resplitsouth=", cc.cell.x, cc.cell.y
             resplit = []
             min_y = 100000
             while cc1!=self.westBoundary and cc1.cell.x >= x1:
@@ -1412,15 +1414,15 @@ class hLayer(cornerStitch):
                         resplit.append(cc1.EAST.EAST)
 
                 cc1 = cc1.WEST
-            print"resplitlen=", len(resplit)
-            for foo in resplit:
-                foo.cell.printCell(True, True)
+           # print"resplitlen=", len(resplit)
+            #for foo in resplit:
+                #foo.cell.printCell(True, True)
 
             if len(resplit) > 1:
                 for foo in resplit:
                     if foo.cell.y+foo.getHeight() > min_y:
                         #if foo.cell.y+foo.getHeight()!= min_y:
-                        print"split"
+                        #print"split"
                         self.hSplit(foo, min_y)
             if cc.NORTH!=self.northBoundary:
                 cc = cc.NORTH
@@ -1477,7 +1479,7 @@ class hLayer(cornerStitch):
                     t = t.WEST
                 if t not in changeList:
                     changeList.append(t)
-        print"arealist=", len(changeList)
+        #"arealist=", len(changeList)
         """
         min_Height=100000
         for foo in changeList:
@@ -1500,8 +1502,8 @@ class hLayer(cornerStitch):
 
 
 
-        for foo in changeList:
-            foo.cell.printCell(True, True)
+        #for foo in changeList:
+            #foo.cell.printCell(True, True)
 
         ## New Merge Algorithm v2
 
@@ -1511,8 +1513,8 @@ class hLayer(cornerStitch):
 
             top=changeList[i+1]
             low=changeList[i]
-            print"topx=", top.cell.x, top.cell.y
-            print"lowx=", low.cell.x, low.cell.y
+            #print"topx=", top.cell.x, top.cell.y
+            #print"lowx=", low.cell.x, low.cell.y
             if top.cell.x==low.cell.x+low.getWidth() or top.cell.x+top.getWidth()==low.cell.x:
                 top.cell.type=type
                 low.cell.type=type
@@ -1522,7 +1524,7 @@ class hLayer(cornerStitch):
                 else:
                     del changeList[i+1]
                     del changeList[i]
-                    print"arealist=", len(changeList)
+                    #print"arealist=", len(changeList)
                     if len(changeList)==0:
                         changeList.append(mergedcell)
                     else:
@@ -1534,7 +1536,7 @@ class hLayer(cornerStitch):
  
             
         list_len= len(changeList)
-        print"len=",list_len
+        #print"len=",list_len
         c=0
 
         while(len(changeList)>1):
@@ -1542,18 +1544,18 @@ class hLayer(cornerStitch):
             c+=1
 
             while i< len(changeList)-1:
-                print"i=",i,len(changeList)
+                #print"i=",i,len(changeList)
                 j=0
                 while j<len(changeList):
                     #j=i+1
-                    print"j=", j
+                    #print"j=", j
 
                     top = changeList[j]
                     low = changeList[i]
                     top.cell.type = type
                     low.cell.type = type
-                    print"topx=", top.cell.x, top.cell.y
-                    print"lowx=", low.cell.x, low.cell.y
+                    #print"topx=", top.cell.x, top.cell.y
+                    #print"lowx=", low.cell.x, low.cell.y
                     mergedcell = self.merge(top, low)
                     if mergedcell == "Tiles are not alligned":
                         if j<len(changeList):
@@ -1577,7 +1579,7 @@ class hLayer(cornerStitch):
 
             if c==list_len:
                 break
-        print"len_1",len(changeList)
+        #print"len_1",len(changeList)
         
         ######
         i = 0
@@ -1585,8 +1587,8 @@ class hLayer(cornerStitch):
 
             top = changeList[i + 1]
             low = changeList[i]
-            print"topx=", top.cell.x, top.cell.y
-            print"lowx=", low.cell.x, low.cell.y
+            #print"topx=", top.cell.x, top.cell.y
+            #print"lowx=", low.cell.x, low.cell.y
             #if top.cell.x == low.cell.x + low.getWidth() or top.cell.x + top.getWidth() == low.cell.x:
             top.cell.type = type
             low.cell.type = type
@@ -1596,7 +1598,7 @@ class hLayer(cornerStitch):
             else:
                 del changeList[i + 1]
                 del changeList[i]
-                print"arealist=", len(changeList)
+                #print"arealist=", len(changeList)
                 if len(changeList) == 0:
                     changeList.append(mergedcell)
                 else:
@@ -1605,11 +1607,11 @@ class hLayer(cornerStitch):
 
         
 
-        for foo in changeList:
-            foo.cell.printCell(True, True)
+        #for foo in changeList:
+            #foo.cell.printCell(True, True)
         for x in range(0,len(changeList)):
             changeList[x].cell.type = type
-            print"x=", changeList[x].cell.x, changeList[x].cell.y
+            #print"x=", changeList[x].cell.x, changeList[x].cell.y
             self.rectifyShadow(changeList[x])
             x+=1
 
@@ -1757,7 +1759,7 @@ class hLayer(cornerStitch):
             #if cc.EAST==self.eastBoundary or cc.EAST.cell.type=="EMPTY":#this condition has been added here
             changeSet.append(cc)
             cc = cc.SOUTH
-        print "len4=", len(changeSet)
+        #print "len4=", len(changeSet)
         i = 0
         j = 1
         while j < len(changeSet): #merge all cells with the same width along the eastern side
@@ -1794,7 +1796,7 @@ class hLayer(cornerStitch):
             #if cc.WEST==self.westBoundary or cc.WEST.cell.type=="EMPTY" :#this condition has been added here (or cc.WEST.cell.y!=cc.cell.y and cc.WEST.cell.type=="SOLID")
             changeSet.append(cc)
             cc = cc.NORTH
-        print "lenw=", len(changeSet)
+        #print "lenw=", len(changeSet)
         """
         for foo in changeSet:
             foo.cell.printCell(True, True)
@@ -1811,7 +1813,7 @@ class hLayer(cornerStitch):
                 mergedCell = self.merge(topCell, lowerCell)
                 if mergedCell == "Tiles are not alligned": #the tiles couldn't merge because they didn't line up
                     i += 1
-                    print "i = ", i
+                    #print "i = ", i
                     if j < len(changeSet)-1 :
                         j += 1
                 else:

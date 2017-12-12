@@ -31,7 +31,7 @@ class CSCG:
         wedgeList = []
         #if self.CS.orientation == 'v':
         #elif self.CS.orientation == 'h':
-        for point in self.CG.zeroDimensionListhx:
+        for point in self.CG.zeroDimensionListh:
             wedgeList.append(Wedge((point, 0), .5, 0, 360, width = 1))
 
         return wedgeList
@@ -42,60 +42,17 @@ class CSCG:
         """
         wedgeList = []
         # if self.CS.orientation == 'v':
-        for point in self.CG.zeroDimensionListvy:
+        for point in self.CG.zeroDimensionListv:
             wedgeList.append(Wedge((0, point), .5, 0, 360, width=1))
 
 
         return wedgeList
     #figure this out later
-    '''
+
+    ###final
     def findGraphEdges1(self):
         matrixCopy = np.copy(self.CG.getVertexMatrixh())
-        print matrixCopy[0][1]
-        arrowList1 = []  # contains the information for arrows to be drawn in matplotlib (x,y,dx,dy)
-
-        edgeList = copy.deepcopy(getattr(self.CG, "edgesh"))
-
-        for stitch in self.CS1.stitchList:
-            #print edgeList
-            for edge in edgeList:
-                if edge.getConstraint().getConstraintName() == "Empty":
-                    if (self.CG.zeroDimensionListhx[edge.source] == stitch.cell.getX() and self.CG.zeroDimensionListhx[edge.dest] == stitch.cell.getX() + stitch.getWidth()):
-                        color = "red"
-                        arrowList1.append((stitch.cell.getX(), stitch.cell.getY(), stitch.getWidth(), 0, color))
-                        #edgeList.remove(edge)
-                elif edge.getConstraint().getConstraintName() == "type1":
-                    #if (self.CG.zeroDimensionListhy[edge.source] == stitch.cell.getY()): #and self.CG.zeroDimensionListhy[edge.dest] == stitch.cell.getY() + stitch.getHeight()):
-                    color = "blue"
-                    arrowList1.append((stitch.cell.getX(), stitch.cell.getY(), 0, stitch.getHeight(), color))
-                edgeList.remove(edge)
-        return arrowList1
-    def findGraphEdges2(self):
-        matrixCopy = np.copy(self.CG.getVertexMatrixv())
-        print matrixCopy[0][1]
-        arrowList2 = []  # contains the information for arrows to be drawn in matplotlib (x,y,dx,dy)
-
-        edgeList1 = copy.deepcopy(getattr(self.CG, "edgesv"))
-
-        for stitch in self.CS2.stitchList:
-            # print edgeList
-            for edge in edgeList1:
-                if edge.getConstraint().getConstraintName() == "Empty":
-                    if (self.CG.zeroDimensionListvy[edge.source] == stitch.cell.getY() and self.CG.zeroDimensionListvy[edge.dest] == stitch.cell.getY() + stitch.getHeight()):
-                        color = "red"
-                        arrowList2.append((stitch.cell.getX(), stitch.cell.getY(),  0,stitch.getHeight(), color))
-                        # edgeList.remove(edge)
-                elif edge.getConstraint().getConstraintName() == "type1":
-                    #if (self.CG.zeroDimensionListvx[edge.source] == stitch.cell.getX()): #and self.CG.zeroDimensionListvx[edge.dest] == stitch.cell.getX() + stitch.getWidth()):
-                    color = "blue"
-                    arrowList2.append((stitch.cell.getX(), stitch.cell.getY(), stitch.getWidth(), 0, color))
-                edgeList1.remove(edge)
-        return arrowList2
-        '''
-
-    def findGraphEdges1(self):
-        matrixCopy = np.copy(self.CG.getVertexMatrixh())
-        print matrixCopy[0][1]
+       # print matrixCopy[0][1]
         arrowList1 = []#contains the information for arrows to be drawn in matplotlib (x,y,dx,dy)
 
         edgeList = copy.deepcopy(getattr(self.CG, "edgesh"))
@@ -114,7 +71,7 @@ class CSCG:
         #elif self.CS.orientation == 'v':
     def findGraphEdges2(self):
         matrixCopy = np.copy(self.CG.getVertexMatrixv())
-        print matrixCopy[0][1]
+        #print matrixCopy[0][1]
         edgeList = copy.deepcopy(getattr(self.CG, "edgesv"))
         #print "EDGE=",edgeList
         arrowList2 = []
@@ -133,7 +90,7 @@ class CSCG:
             #print foo
         return arrowList2
 
-        """
+    """
                 for stitch in self.CS1.stitchList:
             print edgeList
             for edge in edgeList:

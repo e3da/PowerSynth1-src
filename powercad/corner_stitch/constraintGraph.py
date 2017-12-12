@@ -26,7 +26,7 @@ class constraintGraph:
         self.edges = edges
         self.zeroDimensionList = []
 
-
+    '''###final
     def __init__(self,name1,name2):
         """
         Default constructor
@@ -42,7 +42,22 @@ class constraintGraph:
         self.zeroDimensionListvy = []
         self.name1 = name1
         self.name2 = name2
+    '''
 
+    def __init__(self, name1, name2):
+        """
+        Default constructor
+        """
+        self.vertexMatrixh = None
+        self.vertexMatrixv = None
+        self.edgesv = []
+        self.edgesh = []
+        # self.zeroDimensionList = []
+        self.zeroDimensionListh = []
+        self.zeroDimensionListv = []
+
+        self.name1 = name1
+        self.name2 = name2
     def getVertexMatrixh(self):
         return self.vertexMatrixh
     def getVertexMatrixv(self):
@@ -101,6 +116,7 @@ class constraintGraph:
         self.vertexMatrix = np.zeros((n, n), np.int8)
 
     '''
+    '''###final 
     def matrixFromDimList(self):
         """
         initializes a N x N matrix of 0's as self's matrix object
@@ -109,9 +125,26 @@ class constraintGraph:
         #n = len(self.zeroDimensionList)
 
         n1 = len(self.zeroDimensionListhx)
-        n2= len(self.zeroDimensionListhy)
-        #n=max(n1,n2)
+        n2= len(self.zeroDimensionListvx)
+        n=max(n1,n2)
         # self.vertexMatrix = np.zeros((n, n), np.int8)
+        n_1 = len(self.zeroDimensionListvy)
+        n_2 = len(self.zeroDimensionListhy)
+        n0 = max(n_1, n_2)
+
+        self.vertexMatrixh = np.zeros((n, n), np.int8)
+        self.vertexMatrixv = np.zeros((n0, n0), np.int8)
+        
+    '''
+    def matrixFromDimList(self):
+        """
+        initializes a N x N matrix of 0's as self's matrix object
+        """
+        #if cornerStitch.orientation == 'v':
+        #n = len(self.zeroDimensionList)
+
+        n1 = len(self.zeroDimensionListh)
+        n2= len(self.zeroDimensionListv)
 
         self.vertexMatrixh = np.zeros((n1, n1), np.int8)
         self.vertexMatrixv = np.zeros((n2, n2), np.int8)
@@ -185,7 +218,7 @@ class constraintGraph:
     """
         #print"stitchList=", cornerStitch.stitchList
 
-
+    '''
     def setEdgesFromLayer(self, cornerStitch1,cornerStitch2):
         #if cornerStitch.orientation == 'v':
         for rect in cornerStitch2.stitchList:
@@ -231,7 +264,47 @@ class constraintGraph:
             #elif rect.cell.getType() == "SOLID":
                 #self.edges.append(Edge(origin, dest, constraint.constraint(1, 'minWidth', origin, dest)))
 
+    '''
+    def setEdgesFromLayer(self, cornerStitch1,cornerStitch2):
+        #if cornerStitch.orientation == 'v':
+        for rect in cornerStitch2.stitchList:
+            #rect.cell.printCell(True,True)
+            if rect.cell.type=="SOLID":
+                origin = self.zeroDimensionListh.index(rect.cell.x)
+                #print"origin-",origin
+                dest = self.zeroDimensionListh.index(rect.getEast().cell.x)
+                self.vertexMatrixh[origin][dest] = rect.getWidth()
+                self.edgesh.append(Edge(origin, dest, constraint.constraint(1, 'minWidth', origin, dest)))
+            elif rect.cell.type=="EMPTY":
+                origin = self.zeroDimensionListv.index(rect.cell.y)
+                #print"origin-",origin
+                dest = self.zeroDimensionListv.index(rect.getNorth().cell.y)
+                self.vertexMatrixv[origin][dest] = rect.getHeight()
+                self.edgesv.append(Edge(origin, dest, constraint.constraint(0, 'minWidth', origin, dest)))
+            #print"origin-", rect.getHeight()
+            #if rect.cell.getType() == "EMPTY":
+                #self.edges.append(Edge(origin, dest, constraint.constraint(0, 'minWidth', origin, dest)))
+            #elif rect.cell.getType() == "SOLID":
+                #self.edges.append(Edge(origin, dest, constraint.constraint(1, 'minWidth', origin, dest)))
+        #elif cornerStitch.orientation == 'h':
+        # print"stitchlist-h"
 
+        for rect in cornerStitch1.stitchList:
+            if rect.cell.type == "SOLID":
+                origin = self.zeroDimensionListv.index(rect.cell.y)
+                #print"origins-",origin
+                dest = self.zeroDimensionListv.index(rect.getNorth().cell.y)
+                #print"dests-", dest
+                self.vertexMatrixv[origin][dest] = rect.getHeight()
+                self.edgesv.append(Edge(origin, dest, constraint.constraint(1, 'minWidth', origin, dest)))
+            elif rect.cell.type == "EMPTY":
+                #print"rect=",rect.cell.x
+                origin = self.zeroDimensionListh.index(rect.cell.x)
+                #print"origine-",origin
+                dest = self.zeroDimensionListh.index(rect.getEast().cell.x)
+                #print"deste-", dest
+                self.vertexMatrixh[origin][dest] = rect.getWidth()
+                self.edgesh.append(Edge(origin, dest, constraint.constraint(0, 'minWidth', origin, dest)))
 
     '''
     def dimListFromLayer(self, cornerStitch):
@@ -258,6 +331,7 @@ class constraintGraph:
 
         # print"ZDL=",len(setToList)
      '''
+    '''####final
     def dimListFromLayer(self, cornerStitch1,cornerStitch2):
         """
         generate the zeroDimensionList from a cornerStitch         
@@ -305,6 +379,40 @@ class constraintGraph:
         print"hy=", setToList
 
 
+    '''
+    def dimListFromLayer(self, cornerStitch1,cornerStitch2):
+        """
+        generate the zeroDimensionList from a cornerStitch
+        """
+        pointSet1 = Set() #this is a set of zero dimensional line coordinates, (e.g. x0, x1, x2, etc.)
+        #if cornerStitch.orientation == 'v':  # if orientation is vertical, add all unique y values for cells
+        for rect in cornerStitch2.stitchList:
+                pointSet1.add(rect.cell.y)
+
+        pointSet1.add(cornerStitch2.northBoundary.cell.y)  # this won't be included in the normal list, so we do it here
+        for rect in cornerStitch1.stitchList:
+                pointSet1.add(rect.cell.y)
+
+        pointSet1.add(cornerStitch1.northBoundary.cell.y)
+        setToList = list(pointSet1)
+        setToList.sort()
+        #self.zeroDimensionListvy = setToList
+        self.zeroDimensionListv = setToList
+        #print"vy=", setToList
+        pointSet = Set()
+        for rect in cornerStitch2.stitchList:
+                pointSet.add(rect.cell.x)
+        pointSet.add(cornerStitch2.eastBoundary.cell.x)  # this won't be included in the normal list, so we do it here
+        for rect in cornerStitch1.stitchList:
+                pointSet.add(rect.cell.x)
+        pointSet.add(cornerStitch1.eastBoundary.cell.x)
+        setToList = list(pointSet)
+        setToList.sort()
+        self.zeroDimensionListh = setToList
+        #print"vx=", setToList
+
+
+
 
     def reduce(self):
         """
@@ -320,7 +428,7 @@ class constraintGraph:
         while not it.finished:
             if it[0] != 0:
                 G.add_edges_from([it.multi_index], weight = it[0])
-#                print it[0]
+#               # print it[0]
             it.iternext()
         return G
     '''
@@ -378,20 +486,20 @@ class constraintGraph:
         while not it.finished:
             if it[0] != 0:
                 G2.add_edges_from([it.multi_index], weight=it[0])
-                print it[0]
+                #print it[0]
             it.iternext()
 
         dictList1 = []
-        print "checking edges"
+        #print "checking edges"
         for foo in self.edgesv:
             dictList1.append(foo.getEdgeDict())
-            print foo.getEdgeDict()
-        print dictList1
+            #print foo.getEdgeDict()
+        #print dictList1
         edge_labels1 = self.merge_dicts(dictList1)
-        print "checking edge labels"
-        print edge_labels1
-        for foo in edge_labels1:
-            print foo
+        #print "checking edge labels"
+        #print edge_labels1
+        #for foo in edge_labels1:
+            #print foo
 
         edge_colors1 = ['black' for edge in G2.edges()]
         # edge_colors1 = ['black' for edge in G.edges()]
@@ -415,21 +523,21 @@ class constraintGraph:
         while not it.finished:
             if it[0] != 0:
                 G1.add_edges_from([it.multi_index], weight=it[0])
-                print it[0]
+                #print it[0]
             it.iternext()
 
         dictList = []
-        print "checking edges"
+        #print "checking edges"
         for foo in self.edgesh:
             dictList.append(foo.getEdgeDict())
             # print foo.getEdgeDict()
-        print"dictlist=", dictList
+        #print"dictlist=", dictList
 
         edge_labels = self.merge_dicts(dictList)
-        print "checking edge labels"
-        print edge_labels
-        for foo in edge_labels:
-            print foo
+        #print "checking edge labels"
+        #print edge_labels
+        #for foo in edge_labels:
+           # print foo
         edge_colors = ['black' for edge in G1.edges()]
         pos = nx.shell_layout(G1)
         nx.draw_networkx_edge_labels(G1, pos, edge_labels=edge_labels)
@@ -464,8 +572,8 @@ class multiCG():
         G = self.diGraph
         edge_Labels = dict([((u, v,), d['weight'])
                             for u, v, d in G.edges(data=True)])
-        for foo in list(edge_Labels):
-            print foo
+        #for foo in list(edge_Labels):
+            #print foo
 
         edge_colors = ['black' for edge in G.edges()]
 
