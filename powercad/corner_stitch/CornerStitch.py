@@ -1880,8 +1880,7 @@ if __name__ == '__main__':
 
     emptyVStitchList = [emptyVPlane]
     emptyHStitchList = [emptyHPlane]
-    #exampleVLayer = vLayer(stitchList, 30, 30)
-    #exampleHLayer = hLayer(stitchList, 30, 30)
+
     emptyVExample = vLayer(emptyVStitchList, 60, 60)
     emptyHExample = hLayer(emptyHStitchList, 60, 60)
 
@@ -1965,31 +1964,34 @@ if __name__ == '__main__':
     else:
         exit(1)
     """
-    CG1 = cg.constraintGraph(testdir+'/'+testbase+'gh.png')
-    CG2 = cg.constraintGraph(testdir+'/'+testbase+'gv.png')
-    CG1.graphFromLayer(emptyHExample)
-    CG2.graphFromLayer(emptyVExample)
 
-    CG1.printVM()
-    CG2.printVM()
-    CG1.printZDL()
-    CG2.printZDL()
+    CG = cg.constraintGraph(testdir+'/'+testbase+'gh.png',testdir+'/'+testbase+'gv.png')
+    #CG2 = cg.constraintGraph(testdir+'/'+testbase+'gv.png')
+    CG.graphFromLayer(emptyHExample,emptyVExample)
+    #CG2.graphFromLayer(emptyVExample)
+
+
+    CG.printVM(testdir+'/'+testbase+'vmat_h.txt',testdir+'/'+testbase+'vmat_v.txt')
+    #CG2.printVM(testdir+'/'+testbase+'vmat_v.txt')
+    #CG1.printZDL()
+    #CG2.printZDL()
     #diGraph = cg.multiCG(CG)
     #con = constraint.constraint(1, "minWidth", 0, 1)
     #diGraph.addEdge(con.source, con.dest, con)
+    CG.drawGraph1()
+    CG.drawGraph2()
+    #CG1.drawGraph()
 
-    CG1.drawGraph()
-    CG2.drawGraph()
     #diGraph.drawGraph()
 
-    CSCG1 = CSCG.CSCG(emptyHExample, CG1,testdir+'/'+testbase+'h.png')
-    CSCG2 = CSCG.CSCG(emptyVExample, CG2,testdir+'/'+testbase+'v.png')
+    CSCG = CSCG.CSCG(emptyHExample,emptyVExample, CG,testdir+'/'+testbase+'h.png',testdir+'/'+testbase+'v.png')
+    #CSCG2 = CSCG.CSCG(emptyVExample, CG2,testdir+'/'+testbase+'v.png')
     #CSCG=CSCG.CSCG(emptyVExample, CG)
-    CSCG1.findGraphEdges()
-    CSCG1.drawLayer()
-    CSCG2.findGraphEdges()
-    CSCG2.drawLayer()
-    CSCG1.drawRectangle(list)
+    CSCG.findGraphEdges1()
+    CSCG.drawLayer1()
+    CSCG.findGraphEdges2()
+    CSCG.drawLayer2()
+    CSCG.drawRectangle(list)
     #emptyVExample.drawLayer(truePointer=False)
     #emptyHExample.drawLayer(truePointer=False)
 
