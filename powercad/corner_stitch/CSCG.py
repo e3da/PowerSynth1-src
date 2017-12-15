@@ -51,7 +51,7 @@ class CSCG:
 
     ###final
     def findGraphEdges1(self):
-        matrixCopy = np.copy(self.CG.getVertexMatrixh())
+        #matrixCopy = np.copy(self.CG.getVertexMatrixh())
        # print matrixCopy[0][1]
         arrowList1 = []#contains the information for arrows to be drawn in matplotlib (x,y,dx,dy)
 
@@ -70,7 +70,7 @@ class CSCG:
         return arrowList1
         #elif self.CS.orientation == 'v':
     def findGraphEdges2(self):
-        matrixCopy = np.copy(self.CG.getVertexMatrixv())
+        #matrixCopy = np.copy(self.CG.getVertexMatrixv())
         #print matrixCopy[0][1]
         edgeList = copy.deepcopy(getattr(self.CG, "edgesv"))
         #print "EDGE=",edgeList

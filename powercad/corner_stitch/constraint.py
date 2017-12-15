@@ -4,7 +4,15 @@ class constraint():
     constraintIndex = ["Empty", "type1"]
     minWidth = [1, 2]
     minSpacing = np.zeros(shape = (len(constraintIndex), len(constraintIndex)))
-
+    '''
+    def __init__(self, constraintval, source, dest):
+        self.setupMinSpacing()
+        self.constraintval = constraintval
+        #self.indexNo = indexNo
+        #self.constraintType = constraintType
+        self.source = source
+        self.dest = dest
+    '''
     def __init__(self, indexNo, constraintType, source, dest):
         self.setupMinSpacing()
         self.constraintName = self.constraintIndex[indexNo]
