@@ -18,9 +18,9 @@ class CSCG:
         self.name=name
     #def drawCGLines(self, figure):
     '''
-    def __init__(self, CS1,CS2, CG,name1,name2):
-        self.CS1 = CS1
-        self.CS2 = CS2
+    def __init__(self, cornerStitch_h,cornerStitch_v, CG,name1,name2):
+        self.cornerStitch_h = cornerStitch_h
+        self.cornerStitch_v = cornerStitch_v
         self.CG = CG
         self.name1=name1
         self.name2 = name2
@@ -32,6 +32,7 @@ class CSCG:
         #if self.CS.orientation == 'v':
         #elif self.CS.orientation == 'h':
         for point in self.CG.zeroDimensionListh:
+            print self.CG.zeroDimensionListh.index(point)
             wedgeList.append(Wedge((point, 0), .5, 0, 360, width = 1))
 
         return wedgeList
@@ -50,14 +51,14 @@ class CSCG:
     #figure this out later
 
     ###final
-    def findGraphEdges1(self):
+    def findGraphEdges_h(self):
         #matrixCopy = np.copy(self.CG.getVertexMatrixh())
        # print matrixCopy[0][1]
         arrowList1 = []#contains the information for arrows to be drawn in matplotlib (x,y,dx,dy)
 
         edgeList = copy.deepcopy(getattr(self.CG, "edgesh"))
         #if self.CS.orientation == 'h':
-        for rect in self.CS1.stitchList:
+        for rect in self.cornerStitch_h.stitchList:
             # rect.cell.printCell(True,True)
             if rect.cell.type == "SOLID":
                 color = "blue"
@@ -69,13 +70,13 @@ class CSCG:
 
         return arrowList1
         #elif self.CS.orientation == 'v':
-    def findGraphEdges2(self):
+    def findGraphEdges_v(self):
         #matrixCopy = np.copy(self.CG.getVertexMatrixv())
         #print matrixCopy[0][1]
         edgeList = copy.deepcopy(getattr(self.CG, "edgesv"))
         #print "EDGE=",edgeList
         arrowList2 = []
-        for rect in self.CS2.stitchList:
+        for rect in self.cornerStitch_v.stitchList:
             #rect.cell.printCell(True,True)
             if rect.cell.type=="SOLID":
                 color = "blue"
@@ -91,7 +92,7 @@ class CSCG:
         return arrowList2
 
     """
-                for stitch in self.CS1.stitchList:
+                for stitch in self.cornerStitch_h.stitchList:
             print edgeList
             for edge in edgeList:
                 if edge.getConstraint().getConstraintName() == "Empty":
@@ -149,7 +150,19 @@ class CSCG:
         elif self.CS.orientation == 'h':
             labels = ('X' + str(i) for i in range(0, len(self.CG.zeroDimensionList)))
             plt.xticks(self.CG.zeroDimensionList, list(labels))
+        
+    def setAxisLabels(self, plt):
+        #if self.CS.orientation == 'v':
+        labels_y = ('Y' + str(i) for i in range(0, len(self.CG.zeroDimensionListv)))
+        #plt.tick_params(self.CG.zeroDimensionListv, list(labels_y), axis='y', which='both', labelleft='off',labelright='on')
+        plt.yticks(self.CG.zeroDimensionListv, list(labels_y))
+
+        #elif self.CS.orientation == 'h':
+        labels_h = ('X' + str(i) for i in range(0, len(self.CG.zeroDimensionListh)))
+        #plt.tick_params(self.CG.zeroDimensionListh, list(labels_h),axis='x', which='both', labelbottom='off', labeltop='on')
+        plt.xticks(self.CG.zeroDimensionListh, list(labels))
     """
+
     def drawLayer1(self, truePointer = False):
         """
         Draw all cells in this cornerStitch with stitches pointing to their stitch neighbors
@@ -159,11 +172,12 @@ class CSCG:
 
         fig1 = matplotlib.pyplot.figure()
 
-        for cell in self.CS1.stitchList:
+        for cell in self.cornerStitch_h.stitchList:
 
 
 
             ax1 = fig1.add_subplot(111, aspect='equal')
+            #ax2 = ax1.twiny()
             if not cell.cell.type == "EMPTY":
                 pattern = '\\'
             else:
@@ -179,7 +193,7 @@ class CSCG:
                 )
             )
             #NORTH pointer
-            if cell.getNorth() == self.CS1.northBoundary:
+            if cell.getNorth() == self.cornerStitch_h.northBoundary:
                 dx = 0
                 dy = 0
             elif truePointer:
@@ -199,7 +213,7 @@ class CSCG:
                       ec = 'k'
                     )
             #EAST pointer
-            if cell.getEast() == self.CS1.eastBoundary:
+            if cell.getEast() == self.cornerStitch_h.eastBoundary:
                 dx = 0
                 dy = 0
             elif truePointer:
@@ -218,7 +232,7 @@ class CSCG:
                       ec = 'k'
                     )
             #SOUTH pointer
-            if cell.getSouth() == self.CS1.southBoundary:
+            if cell.getSouth() == self.cornerStitch_h.southBoundary:
                 dx = 0
                 dy = 0
             elif truePointer:
@@ -237,7 +251,7 @@ class CSCG:
                       ec = 'k'
                     )
             #WEST pointer
-            if cell.getWest() == self.CS1.westBoundary:
+            if cell.getWest() == self.cornerStitch_h.westBoundary:
                 dx = 0
                 dy = 0
             elif truePointer:
@@ -262,11 +276,18 @@ class CSCG:
         #automatically handle orientation
         #self.setAxisLabels(plt)
 
-        for arr in self.findGraphEdges1():
+        for arr in self.findGraphEdges_h():
             ax1.arrow(arr[0], arr[1], arr[2], arr[3], head_width = .30, head_length = .3,  color =arr[4] )#
 
-        plt.xlim(0, self.CS1.eastBoundary.cell.x)
-        plt.ylim(0, self.CS1.northBoundary.cell.y)
+        #plt.tick_params(axis="x2", labelcolor="b",labeltop=True)
+        plt.xlim(0, self.cornerStitch_h.eastBoundary.cell.x)
+        plt.ylim(0, self.cornerStitch_h.northBoundary.cell.y)
+        labels_h = ( str(i) for i in range(0, len(self.CG.zeroDimensionListh)))
+        #labels_h = ('X' + str(i) for i in range(0, len(self.CG.zeroDimensionListh)))
+        # plt.tick_params(self.CG.zeroDimensionListh, list(labels_h),axis='x', which='both', labelbottom='off', labeltop='on')
+        plt.xticks(self.CG.zeroDimensionListh, list(labels_h))
+        ax1.xaxis.tick_top()
+        #ax1.tick_params(labeltop=True, labelright=True)
 
         if self.name1:
             fig1.savefig(self.name1,bbox_inches='tight')
@@ -283,7 +304,7 @@ class CSCG:
 
         fig2 = matplotlib.pyplot.figure()
 
-        for cell in self.CS2.stitchList:
+        for cell in self.cornerStitch_v.stitchList:
 
 
 
@@ -303,7 +324,7 @@ class CSCG:
                 )
             )
             #NORTH pointer
-            if cell.getNorth() == self.CS2.northBoundary:
+            if cell.getNorth() == self.cornerStitch_v.northBoundary:
                 dx = 0
                 dy = 0
             elif truePointer:
@@ -323,7 +344,7 @@ class CSCG:
                       ec = 'k'
                     )
             #EAST pointer
-            if cell.getEast() == self.CS2.eastBoundary:
+            if cell.getEast() == self.cornerStitch_v.eastBoundary:
                 dx = 0
                 dy = 0
             elif truePointer:
@@ -342,7 +363,7 @@ class CSCG:
                       ec = 'k'
                     )
             #SOUTH pointer
-            if cell.getSouth() == self.CS2.southBoundary:
+            if cell.getSouth() == self.cornerStitch_v.southBoundary:
                 dx = 0
                 dy = 0
             elif truePointer:
@@ -361,7 +382,7 @@ class CSCG:
                       ec = 'k'
                     )
             #WEST pointer
-            if cell.getWest() == self.CS2.westBoundary:
+            if cell.getWest() == self.cornerStitch_v.westBoundary:
                 dx = 0
                 dy = 0
             elif truePointer:
@@ -386,11 +407,18 @@ class CSCG:
         #automatically handle orientation
         #self.setAxisLabels(plt)
 
-        for arr in self.findGraphEdges2():
+        for arr in self.findGraphEdges_v():
             ax2.arrow(arr[0], arr[1], arr[2], arr[3], head_width = .30, head_length = .3,  color =arr[4] )#
 
-        plt.xlim(0, self.CS2.eastBoundary.cell.x)
-        plt.ylim(0, self.CS2.northBoundary.cell.y)
+
+        plt.xlim(0, self.cornerStitch_v.eastBoundary.cell.x)
+        plt.ylim(0, self.cornerStitch_v.northBoundary.cell.y)
+        labels_y = ( str(i) for i in range(0, len(self.CG.zeroDimensionListv)))
+        #labels_y = ('Y' + str(i) for i in range(0, len(self.CG.zeroDimensionListv)))
+        # plt.tick_params(self.CG.zeroDimensionListv, list(labels_y), axis='y', which='both', labelleft='off',labelright = 'on')
+        plt.yticks(self.CG.zeroDimensionListv, list(labels_y))
+        ax2.yaxis.tick_right()
+        #ax2.tick_params(labeltop=True, labelright=True)
 
         if self.name2:
             fig2.savefig(self.name2,bbox_inches='tight')

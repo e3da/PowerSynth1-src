@@ -1973,7 +1973,7 @@ if __name__ == '__main__':
     #CG2.graphFromLayer(emptyVExample)
 
 
-    #CG.printVM(testdir+'/'+testbase+'vmat_h.txt',testdir+'/'+testbase+'vmat_v.txt')
+    CG.printVM(testdir+'/'+testbase+'vmat_h.txt',testdir+'/'+testbase+'vmat_v.txt')
     #CG2.printVM(testdir+'/'+testbase+'vmat_v.txt')
     #CG1.printZDL()
     #CG2.printZDL()
@@ -1981,8 +1981,8 @@ if __name__ == '__main__':
     #diGraph2 = cg.multiCG(CG)
     #con = constraint.constraint(1, "minWidth", 0, 1)
     #diGraph.addEdge(con.source, con.dest, con)
-    CG.drawGraph1(testdir+'/'+testbase+'edgeh.txt')
-    CG.drawGraph2(testdir+'/'+testbase+'edgev.txt')
+    CG.cgToGraph_h(testdir+'/'+testbase+'edgeh.txt')
+    CG.cgToGraph_v(testdir+'/'+testbase+'edgev.txt')
     #CG1.drawGraph()
 
     #diGraph1.drawGraph1()
@@ -1991,9 +1991,9 @@ if __name__ == '__main__':
     CSCG = CSCG.CSCG(emptyHExample,emptyVExample, CG,testdir+'/'+testbase+'h.png',testdir+'/'+testbase+'v.png')
     #CSCG2 = CSCG.CSCG(emptyVExample, CG2,testdir+'/'+testbase+'v.png')
     #CSCG=CSCG.CSCG(emptyVExample, CG)
-    CSCG.findGraphEdges1()
+    CSCG.findGraphEdges_h()
     CSCG.drawLayer1()
-    CSCG.findGraphEdges2()
+    CSCG.findGraphEdges_v()
     CSCG.drawLayer2()
     CSCG.drawRectangle(list)
     #emptyVExample.drawLayer(truePointer=False)
