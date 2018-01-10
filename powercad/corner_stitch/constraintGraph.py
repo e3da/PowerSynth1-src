@@ -5,7 +5,7 @@ import networkx as nx
 from matplotlib import pylab
 import matplotlib.pyplot as plt
 from collections import defaultdict
-from networkx_viewer import Viewer
+import json
 
 import scipy as sp
 class constraintGraph:
@@ -48,6 +48,8 @@ class constraintGraph:
 
         self.name1 = name1
         self.name2 = name2
+        self.paths_h=[]
+        self.paths_v=[]
     '''
     def getVertexMatrixh(self):
         return self.vertexMatrixh
@@ -82,6 +84,7 @@ class constraintGraph:
         self.dimListFromLayer(cornerStitch_h,cornerStitch_v)
         #self.matrixFromDimList()
         self.setEdgesFromLayer(cornerStitch_h,cornerStitch_v)
+
     '''
     def matrixFromDimList(self):
         """
@@ -186,33 +189,42 @@ class constraintGraph:
             if rect.cell.type=="SOLID":
                 origin = self.zeroDimensionListh.index(rect.cell.x)
                 dest = self.zeroDimensionListh.index(rect.getEast().cell.x)
-
+                e=Edge(origin, dest, constraint.constraint(1, 'minWidth', origin, dest))
+                print"e=", Edge.getEdgeWeight(e,origin,dest)
+                #self.edgesv.append(e)
                 self.edgesh.append(Edge(origin, dest, constraint.constraint(1, 'minWidth', origin, dest)))
-                self.vertexMatrixh[origin][dest].append((rect.getWidth()))
+                #self.vertexMatrixh[origin][dest].append((rect.getWidth()))
+                self.vertexMatrixh[origin][dest].append(Edge.getEdgeWeight(e,origin,dest))
 
                 #self.edgesh.append(Edge(origin, dest, constraint.constraint(rect.getWidth(), origin, dest)))#
             elif rect.cell.type=="EMPTY":
                 origin = self.zeroDimensionListv.index(rect.cell.y)
                 dest = self.zeroDimensionListv.index(rect.getNorth().cell.y)
+                e = Edge(origin, dest, constraint.constraint(0, 'minWidth', origin, dest))
+                #self.edgesv.append(e)
                 self.edgesv.append(Edge(origin, dest, constraint.constraint(0, 'minWidth', origin, dest)))
-                self.vertexMatrixv[origin][dest].append((rect.getHeight()))
+                self.vertexMatrixv[origin][dest].append(Edge.getEdgeWeight(e,origin,dest))
                 #self.edgesv.append(Edge(origin, dest, constraint.constraint( rect.getHeight(), origin, dest)))
 
         for rect in cornerStitch_h.stitchList:
             if rect.cell.type == "SOLID":
                 origin = self.zeroDimensionListv.index(rect.cell.y)
                 dest = self.zeroDimensionListv.index(rect.getNorth().cell.y)
+                e = Edge(origin, dest, constraint.constraint(1, 'minWidth', origin, dest))
+                #self.edgesh.append(e)
                 self.edgesv.append(Edge(origin, dest, constraint.constraint(1, 'minWidth', origin, dest)))
                 #self.vertexMatrixv[origin][dest] = rect.getHeight()
-                self.vertexMatrixv[origin][dest].append((rect.getHeight()))
+                self.vertexMatrixv[origin][dest].append(e.getEdgeWeight(origin,dest))
                 #self.edgesv.append(Edge(origin, dest, constraint.constraint(rect.getHeight() , origin, dest)))#
 
             elif rect.cell.type == "EMPTY":
                 origin = self.zeroDimensionListh.index(rect.cell.x)
                 dest = self.zeroDimensionListh.index(rect.getEast().cell.x)
+                e = Edge(origin, dest, constraint.constraint(0, 'minWidth', origin, dest))
+                #self.edgesh.append(e)
                 self.edgesh.append(Edge(origin, dest, constraint.constraint(0, 'minWidth', origin, dest)))
                 #self.vertexMatrixh[origin][dest] = rect.getWidth()
-                self.vertexMatrixh[origin][dest].append((rect.getWidth()))
+                self.vertexMatrixh[origin][dest].append(e.getEdgeWeight(origin,dest))
                 ##'minWidth'
 
                 #self.edgesh.append(Edge(origin, dest, constraint.constraint( rect.getWidth(), origin, dest)))
@@ -323,16 +335,33 @@ class constraintGraph:
         setToList.sort()
         self.zeroDimensionListh = setToList
         #print"vx=", setToList
+    '''
+    def toposort(self,graph):
 
 
+        data = defaultdict(set)
+        for x, y in graph.items():
+            for z in y:
+                data[z[0]].add(x)
 
+        # Ignore self dependencies.
+        for k, v in data.items():
+            v.discard(k)
+        # Find all items that don't depend on anything.
+        extra_items_in_deps = reduce(set.union, data.values()) - set(data.keys())
+        # Add empty dependences where needed
+        data.update({item: set() for item in extra_items_in_deps})
+        while True:
+            ordered = set(item for item, dep in data.items() if not dep)
+            if not ordered:
+                break
+            yield ordered
+            data = {item: (dep - ordered)
+                    for item, dep in data.items()
+                    if item not in ordered}
+        assert not data, "Cyclic dependencies exist among these items:\n%s" % '\n'.join(repr(x) for x in data.items())
+    '''
 
-    def reduce(self):
-        """
-        This should call subroutines for edge and vertex reduction, to pare the constraint graph down to its 
-        minimum form
-        """
-        return
 
     def cgToGraph_h(self,name):
         G2 = nx.MultiDiGraph()
@@ -347,6 +376,7 @@ class constraintGraph:
             k, v = list(i.items())[0]  # an alternative to the single-iterating inner loop from the previous solution
             d[k].append(v)
         edge_labels1=d
+        #print max(edge_labels1[(0,7)])
 
         nodes=[x for x in range(len(self.zeroDimensionListh))]
         G2.add_nodes_from(nodes)
@@ -358,14 +388,21 @@ class constraintGraph:
         for branch in edge_labels1:
             lst_branch=list(branch)
             data=[]
+
+
             for internal_edge in edge_labels1[branch]:
                 #print lst_branch[0], lst_branch[1]
                 #print internal_edge
-                #if (lst_branch[0], lst_branch[1], {'route': internal_edge}) not in data:
+                #if (lst_branch[0], lst_branch[1], internal_edge) not in data:
+                data.append((lst_branch[0], lst_branch[1], internal_edge))
+                label.append({(lst_branch[0], lst_branch[1]): internal_edge})
+                '''
+                if (lst_branch[0], lst_branch[1], {'route': internal_edge}) not in data:
                 data.append((lst_branch[0], lst_branch[1], {'route': internal_edge}))
                 label.append({(lst_branch[0], lst_branch[1]): internal_edge})
+                '''
             print data
-            G2.add_edges_from(data)
+            G2.add_weighted_edges_from(data)
 
         d = defaultdict(list)
 
@@ -373,7 +410,7 @@ class constraintGraph:
             k, v = list(i.items())[0]  # an alternative to the single-iterating inner loop from the previous solution
             d[k].append(v)
         edge_labels1 = d
-
+        z = [(u, v, d['weight']) for u, v, d in G2.edges(data=True)]
         for n in G2.edges():
             n=list(n)
             print n
@@ -407,10 +444,177 @@ class constraintGraph:
                 del edge_labels1[k]
         '''
         f1 = open(name, 'w')
-        for i in edge_labels1:
-            print >> f1, i, edge_labels1[i]
+        #for i in edge_labels1:
+        for i in z:
+            print >> f1,i
+            #print >> f1, i, edge_labels1[i]
+        print list(nx.topological_sort(G2))
+        n=list(G2.nodes())
+        print "n=",n
+        paths_h = self.FindingAllPaths_h(G2, n[0], n[-1])
+        print "paths_h",paths_h
+        f2 = open("paths_h.txt", "rb")
+        for line in f2.read().splitlines():  # considering each line in file
+            self.paths_h.append(line)
+        #Route=[]
+        #Route.append(list(self.paths_h[0]))
+
+
+        paths=[json.loads(y) for y in self.paths_h]
+
+        print paths
+        '''
+        dist = {}  # stores [node, distance] pair
+        for node in nx.topological_sort(G2):
+            # pairs of dist,node for all incoming edges
+
+            # pairs = [(dist[v][0] + 1, v) for v in G1.pred[node]]
+            #pairs = [(dist[v][0] + (edge_labels1[(v, node)][0]), v) for v in G2.pred[node]]
+            pairs = [(dist[v][0]+max(edge_labels1[(v,node)]),v)  for v in G2.pred[node]]
+            #print [[dist[v][0] + d['weight'], v] for v, u, d in G2.edges(data=True) for v in G2.pred[node]]
+            print "node=", node, v
+            value= [self.vertexMatrixh[v][node]for v in G2.pred[node]]
+            print value
+            #print "pred=", dict(G2.pred[node])
+            #print "pred=", list(G2.pred[node][0]['weight'])
+
+            print "pairs=", pairs
+            if pairs:
+                dist[node] = max(pairs, key=lambda x: x[0])
+                print "dist[node]=", dist[node]
+            else:
+                dist[node] = (0, node)
+            print "dist=", dist
+            print dist.items()
+            node, (length, _) = max(dist.items(), key=lambda x: x[1])
+            print node, (length, _)
+            path = []
+            while length > 0:
+                path.append(node)
+                length, node = dist[node]
+
+            print "list=",list(reversed(path))
+        '''
+
+        l=[]
+        for path in paths:
+            l.append (len(path))
+        L=max(l)
+        for path in paths:
+            if(len(path))==L:
+                p=path
+        print"p=",p
+
+        longest_path = [p]
+
+        for j in range(len(paths)):
+            print paths[j]
+
+            if (not (set(paths[j]).issubset(set(p)))):
+
+                if (paths[j] not in longest_path):
+                    longest_path.append(paths[j])
+
+        print "long=", longest_path
+        #### finding new location of each vertex in longest paths (begin)########
+        l = []
+        for path in paths:
+            l.append(len(path))
+        L = max(l)
+        for path in paths:
+            if (len(path)) == L:
+                p = path
+        print"p=", p
+
+        longest_path = [p]
+
+        for j in range(len(paths)):
+            print paths[j]
+
+            if (not (set(paths[j]).issubset(set(p)))):
+
+                if (paths[j] not in longest_path):
+                    longest_path.append(paths[j])
+        # print "LONG=",longest_path
+
+        print "edge_labels", edge_labels1
+        print "long=", longest_path
+        dist = {}
+        distance = set()
+        for i in range(len(longest_path)):
+            path = longest_path[i]
+            print path
+            for j in range(len(path)):
+                node = path[j]
+                if j > 0:
+                    pred = path[j - 1]
+                else:
+                    pred = node
+                print node, pred
+                if node == 0:
+                    dist[node] = (0, pred)
+                    # distance.append((pred,node,0))
+                    distance.add((pred, node, 0))
+                else:
+                    pairs = (dist[pred][0] + max(edge_labels1[(pred, node)]), pred)
+                    print  max(edge_labels1[(pred, node)])
+                    dist[node] = pairs
+                    print dist[node][0]
+
+                    distance.add((pred, node, pairs[0]))
+                    # distance.append((pred,node,pairs[0]))
+
+                    print "PAIR+", pairs
+            print dist
+            print "DISTANCE=",list(distance)
+        #### finding new location of each vertex in longest paths (end)########
+
 
         self.drawGraph_h(name,G2,edge_labels1)
+
+    def FindingAllPaths_h(self, G, start, end):
+        """
+        This should call subroutines for edge and vertex reduction, to pare the constraint graph down to its
+        minimum form
+        """
+        f1 = open("paths_h.txt", 'w')
+        visited = [False] * (len(G.nodes()))
+        path = []
+
+        self.printAllPaths_h(G, start, end, visited, path,f1)
+
+
+    def printAllPaths_h(self, G, start, end, visited, path,f1):
+        visited[start] = True
+        path.append(start)
+
+        # If current vertex is same as destination, then print
+        # current path[]
+
+        if start == end:
+
+            # for i in edge_labels1:
+            print >> f1, path
+
+
+
+            #self.paths_h.append(path)
+            #print "self.paths_h",self.paths_h
+
+            # paths.append(path)
+        else:
+            # If current vertex is not destination
+            # Recur for all the vertices adjacent to this vertex
+
+            for i in G.neighbors(start):
+                if visited[i] == False:
+                    self.printAllPaths_h(G, i, end, visited, path,f1)
+
+        # Remove current vertex from path[] and mark it as unvisited
+        #print"PATHS=", paths
+        path.pop()
+        visited[start] = False
+
 
     def cgToGraph_v(self, name):
         G1 = nx.MultiDiGraph()
@@ -427,7 +631,7 @@ class constraintGraph:
             k, v = list(i.items())[0]  # an alternative to the single-iterating inner loop from the previous solution
             d[k].append(v)
         edge_labels = d
-
+        print "edge_labels",d
         nodes = [x for x in range(len(self.zeroDimensionListv))]
         G1.add_nodes_from(nodes)
 
@@ -443,11 +647,13 @@ class constraintGraph:
                 print internal_edge
                 # if internal_edge not in label:
                 # label.append(internal_edge)
-                #if (lst_branch[0], lst_branch[1], {'route': internal_edge}) not in data:
-                data.append((lst_branch[0], lst_branch[1], {'route': internal_edge}))
+                #if (lst_branch[0], lst_branch[1],  internal_edge) not in data:
+                data.append((lst_branch[0],lst_branch[1],internal_edge))
+                #data.append((lst_branch[0], lst_branch[1], {'route': internal_edge}))
                 label.append({(lst_branch[0], lst_branch[1]): internal_edge})
-            print data
-            G1.add_edges_from(data)
+            print"data=", data
+            G1.add_weighted_edges_from(data)
+            #G1.add_edges_from(data)
         print"label_=", label
         d = defaultdict(list)
 
@@ -458,9 +664,12 @@ class constraintGraph:
         for n in G1.edges():
             n = list(n)
             print n
-            print G1[n[0]][n[1]]
+            print"w=", G1[n[0]]
 
         edgeList = G1.edges()
+        z=[(u, v, d['weight'])for u, v, d in G1.edges(data=True)]
+        print z
+        #print "we=",[((u, v,), d['weight']) for u, v, d in G1.edges(data=True)]
         # edge_labels=
         print"label=", edge_labels
         # f1 = open(self.name1, 'w')
@@ -469,35 +678,153 @@ class constraintGraph:
         A = nx.adjacency_matrix(G1)
         print "A=", A
         print(A.todense())
-        # edge_labels = self.merge_dicts(dictList)
-        #######reduction
 
-
-        '''
-        N = G1.nodes()
-        for x in N:
-            for y in N:
-                for z in N:
-                    # print("(%d,%d,%d)" % (x,y,z))
-                    if (x, y) != (y, z) and (x, y) != (x, z):
-                        e1 = (x, y)
-                        e2 = (y, z)
-                        e3 = (x, z)
-                        # if G2.get_edge_data(*e1)== G2.get_edge_data(*e1)
-                        if (x, y) in G1.edges and (y, z) in G1.edges and (x, z) in G1.edges() and G1.get_edge_data(*e1) == G1.get_edge_data(*e2) == G1.get_edge_data(*e3):
-                            G1.remove_edge(x, z)
-
-        print"edgeList", edgeList
-        for k in edge_labels.keys():
-            if k not in edgeList:
-                del edge_labels[k]
-        '''
         f1 = open(name, 'w')
 
-        for i in edge_labels:
-            print >> f1, i, edge_labels[i]
-        print edge_labels
+        #for i in edge_labels:
+        for i in z:
+            print >> f1, i
+            #print >> f1, i, edge_labels[i]
+        #print edge_labels
+
         self.drawGraph_v(name, G1, edge_labels)
+
+        n=list(G1.nodes())
+        self.FindingAllPaths_v(G1, n[0], n[-1],edge_labels)
+        f = open("paths_v.txt", "rb")
+        for line in f.read().splitlines():  # considering each line in file
+            self.paths_v.append(line)
+        print "PATHS_V+",self.paths_v
+        paths = [json.loads(y) for y in self.paths_v]
+        #print"paths=",(list(paths))
+        #visited = [False]*(G1.nodes())
+        #print G1.nodes
+        '''
+        for node in G1.nodes():
+            print [v for u,v in G1.edges(node)]
+            tree = nx.dfs_tree(G1,node)
+            print"tree=",tree.edges()
+        '''
+        '''
+        dist = {}  # stores {v : (length, u)}
+        for v in nx.topological_sort(G1):
+            print  G1.pred[v]
+            #us = [(dist[u][0] + data.get(weight, default_weight), u)for u, data in G1.pred[v].items()]
+            print  G1.pred[v].items()
+            # Use the best predecessor if there is one and its distance is non-negative, otherwise terminate.
+            maxu = max(us, key=lambda x: x[0]) if us else (0, v)
+            dist[v] = maxu if maxu[0] >= 0 else (0, v)
+        u = None
+        v = max(dist, key=lambda x: dist[x][0])
+        path = []
+        while u != v:
+            path.append(v)
+            u = v
+            v = dist[v][1]
+        path.reverse()
+       
+        '''
+        #### finding new location of each vertex in longest paths (begin)########
+        l = []
+        for path in paths:
+            l.append(len(path))
+        L = max(l)
+        for path in paths:
+            if (len(path)) == L:
+                p = path
+        print"p=", p
+
+        longest_path = [p]
+
+        for j in range(len(paths)):
+            print paths[j]
+
+            if (not (set(paths[j]).issubset(set(p)))):
+
+                if (paths[j] not in longest_path):
+                    longest_path.append(paths[j])
+        #print "LONG=",longest_path
+
+        print "edge_labels",edge_labels
+        print "long=", longest_path
+        dist = {}
+        distance =set()
+        for i in range(len(longest_path)):
+            path=longest_path[i]
+            print path
+            for j in range(len(path)):
+                node=path[j]
+                if j>0:
+                    pred=path[j-1]
+                else:
+                    pred=node
+                print node,pred
+                if node==0:
+                    dist[node]=(0,pred)
+                    #distance.append((pred,node,0))
+                    distance.add((pred, node, 0))
+                else:
+                    pairs = (dist[pred][0] + max(edge_labels[(pred, node)]), pred)
+                    print  max(edge_labels[(pred, node)])
+                    dist[node]=pairs
+                    print dist[node][0]
+
+                    distance.add((pred, node, pairs[0]))
+                    #distance.append((pred,node,pairs[0]))
+
+                    print "PAIR+",pairs
+            print dist
+            print list(distance)
+            #### finding new location of each vertex in longest paths (end)########
+            '''
+            for node in path:
+                print "node=",node
+                pairs = [(dist[v][0] + max(edge_labels[(v, node)], v) for v in path.pred[node]]
+                print pairs
+                if pairs:
+                    dist[node] = max(pairs, key=lambda x: x[0])
+                else:
+                    dist[node] = (0, node)
+            print dist
+            '''
+        '''
+        dist = {}  # stores [node, distance] pair
+        distance={}
+        for node in nx.topological_sort(G1):
+            # pairs of dist,node for all incoming edges
+            # pairs = [(dist[v][0] + 1, v) for v in G1.pred[node]]
+            pairs = [(dist[v][0] + max(edge_labels[(v, node)]), v) for v in G1.pred[node]]
+            #pairs=[(dist[v][0]+max(edge_labels[(v, node)],v) for v in path]
+            print "node=", node, v
+            print "pairs=", pairs
+            if pairs:
+                l=[]
+                for j,k in pairs:
+                    l.append(j)
+
+                maxv=max(l)
+                y= [item for item in pairs if item[0] == maxv]
+                print "Y=",y
+                dist[node] =max(pairs, key=lambda x: x[0])
+                distance[node]= y
+               
+                #dist[node].append(x)
+                print distance[node]
+            else:
+                dist[node] = (0, node)
+                distance[node]=[(0, node)]
+                print "1"
+                print dist[0][0]
+            print "dist=", dist
+            print"distance=",distance
+            print dist.items()
+            #node, (length, _) = max(dist.items(), key=lambda x: x[1])
+            #print node, (length, _)
+        '''
+
+        #"""
+        #print nx.algorithms.dag.dag_longest_path(G1)
+
 
     '''
     G = nx.Graph()
@@ -566,6 +893,50 @@ class constraintGraph:
         #pylab.show()
 
    '''
+    def FindingAllPaths_v(self,G,start,end,edge_labels):
+        """
+        This should call subroutines for edge and vertex reduction, to pare the constraint graph down to its
+        minimum form
+        """
+        f1 = open("paths_v.txt", 'w')
+
+        # for i in edge_labels:
+
+        visited = [False] * (len(G.nodes()))
+        path=[]
+
+        paths = []
+        self.printAllPaths_v(G,start, end, visited, path,f1,edge_labels)
+        #print "PATHS+",paths
+
+    def printAllPaths_v(self,G, start,end, visited, path,f1,edge_labels):
+        visited[start] = True
+        path.append(start)
+
+        # If current vertex is same as destination, then print
+        # current path[]
+
+        if start == end:
+             print >> f1, path
+            #paths.append(path)
+        else:
+            # If current vertex is not destination
+            # Recur for all the vertices adjacent to this vertex
+            sum=0
+            for i in G.neighbors(start):
+
+                if visited[i] == False:
+                    #sum += max(edge_labels[start][i])
+
+                    self.printAllPaths_v(G,i,end, visited, path,f1,edge_labels)
+
+            print "sum=",sum
+        # Remove current vertex from path[] and mark it as unvisited
+
+        path.pop()
+        visited[start] = False
+
+
 
     def drawGraph_h(self,name,G2,edge_labels1):
 
@@ -676,6 +1047,8 @@ class Edge():
 
     def getEdgeDict(self):
         return self.edgeDict
+    def getEdgeWeight(self,source,dest):
+        return self.getEdgeDict()[(self.source, self.dest)]
 
     def printEdge(self):
         print "s: ", self.source, "d: ", self.dest, "con = ", self.constraint.printCon()

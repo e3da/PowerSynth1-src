@@ -172,12 +172,13 @@ class CSCG:
 
         fig1 = matplotlib.pyplot.figure()
 
+
         for cell in self.cornerStitch_h.stitchList:
 
 
 
             ax1 = fig1.add_subplot(111, aspect='equal')
-            #ax2 = ax1.twiny()
+
             if not cell.cell.type == "EMPTY":
                 pattern = '\\'
             else:
@@ -281,12 +282,24 @@ class CSCG:
 
         #plt.tick_params(axis="x2", labelcolor="b",labeltop=True)
         plt.xlim(0, self.cornerStitch_h.eastBoundary.cell.x)
-        plt.ylim(0, self.cornerStitch_h.northBoundary.cell.y)
+        ax1.set_ylim(0, self.cornerStitch_h.northBoundary.cell.y)
         labels_h = ( str(i) for i in range(0, len(self.CG.zeroDimensionListh)))
+        plt.xticks(self.CG.zeroDimensionListh, list(labels_h))
+
         #labels_h = ('X' + str(i) for i in range(0, len(self.CG.zeroDimensionListh)))
         # plt.tick_params(self.CG.zeroDimensionListh, list(labels_h),axis='x', which='both', labelbottom='off', labeltop='on')
-        plt.xticks(self.CG.zeroDimensionListh, list(labels_h))
-        ax1.xaxis.tick_top()
+        limit=range(0,self.cornerStitch_h.eastBoundary.cell.x)
+        #ax2=ax1.twiny()
+
+        #ax2.set_xlim(0, self.cornerStitch_h.eastBoundary.cell.x)
+        #plt.xticks(0, self.cornerStitch_h.eastBoundary.cell.x,labelbottom='on')
+
+        #ax1.xaxis.tick_top()
+        #ax1.set_xticklabels(limit)
+        #ax2=ax1.twinx()
+        #ax2.xaxis.set_tick_params(labeltop='on')
+
+
         #ax1.tick_params(labeltop=True, labelright=True)
 
         if self.name1:

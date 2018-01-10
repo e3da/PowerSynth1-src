@@ -21,6 +21,8 @@ class constraint():
         self.source = source
         self.dest = dest
 
+
+
     def setupMinSpacing(self):
         constraint.minSpacing = ([[0, 1],[1, 2]])
 
