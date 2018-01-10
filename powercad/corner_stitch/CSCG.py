@@ -170,20 +170,21 @@ class CSCG:
          Also should probably change the dimensions of the object window depending on the cornerStitch size.
         """
 
-        fig1 = matplotlib.pyplot.figure()
-
+        #fig1 = matplotlib.pyplot.figure()
+        #ax1 = fig1.add_subplot(111, aspect='equal')
+        fig1,ax1=plt.subplots()
 
         for cell in self.cornerStitch_h.stitchList:
 
 
 
-            ax1 = fig1.add_subplot(111, aspect='equal')
+
 
             if not cell.cell.type == "EMPTY":
                 pattern = '\\'
             else:
                 pattern = ''
-
+            print cell.cell.x, cell.cell.y
             ax1.add_patch(
                 matplotlib.patches.Rectangle(
                     (cell.cell.x, cell.cell.y),  # (x,y)
@@ -193,6 +194,8 @@ class CSCG:
                     fill=False
                 )
             )
+
+
             #NORTH pointer
             if cell.getNorth() == self.cornerStitch_h.northBoundary:
                 dx = 0
@@ -281,26 +284,25 @@ class CSCG:
             ax1.arrow(arr[0], arr[1], arr[2], arr[3], head_width = .30, head_length = .3,  color =arr[4] )#
 
         #plt.tick_params(axis="x2", labelcolor="b",labeltop=True)
-        plt.xlim(0, self.cornerStitch_h.eastBoundary.cell.x)
+        #plt.xlim(0, self.cornerStitch_h.eastBoundary.cell.x)
+
+        ####Setting axis labels(begin)
+
         ax1.set_ylim(0, self.cornerStitch_h.northBoundary.cell.y)
-        labels_h = ( str(i) for i in range(0, len(self.CG.zeroDimensionListh)))
-        plt.xticks(self.CG.zeroDimensionListh, list(labels_h))
+        limit = np.arange(0, self.cornerStitch_h.eastBoundary.cell.x+10,10)
+        ax1.set_xticks(limit)
+        ax2 = ax1.twiny()
+        ax2.set_xticks(self.CG.zeroDimensionListh)
+        #limit=range(0,self.cornerStitch_h.eastBoundary.cell.x)
+        labels_h = (str(i) for i in range(0, len(self.CG.zeroDimensionListh)))
+        ax2.xaxis.set_ticklabels(list(labels_h))
+        ax6 = ax1.twinx()
+        ax6.set_yticks(self.CG.zeroDimensionListv)
+        labels_h = (str(i) for i in range(0, len(self.CG.zeroDimensionListv)))
+        ax6.yaxis.set_ticklabels(list(labels_h))
 
-        #labels_h = ('X' + str(i) for i in range(0, len(self.CG.zeroDimensionListh)))
-        # plt.tick_params(self.CG.zeroDimensionListh, list(labels_h),axis='x', which='both', labelbottom='off', labeltop='on')
-        limit=range(0,self.cornerStitch_h.eastBoundary.cell.x)
-        #ax2=ax1.twiny()
+        ####Setting axis labels(end)
 
-        #ax2.set_xlim(0, self.cornerStitch_h.eastBoundary.cell.x)
-        #plt.xticks(0, self.cornerStitch_h.eastBoundary.cell.x,labelbottom='on')
-
-        #ax1.xaxis.tick_top()
-        #ax1.set_xticklabels(limit)
-        #ax2=ax1.twinx()
-        #ax2.xaxis.set_tick_params(labeltop='on')
-
-
-        #ax1.tick_params(labeltop=True, labelright=True)
 
         if self.name1:
             fig1.savefig(self.name1,bbox_inches='tight')
@@ -315,19 +317,19 @@ class CSCG:
          Also should probably change the dimensions of the object window depending on the cornerStitch size.
         """
 
-        fig2 = matplotlib.pyplot.figure()
-
+        #fig2 = matplotlib.pyplot.figure()
+        fig2,ax4 = plt.subplots()
         for cell in self.cornerStitch_v.stitchList:
 
 
 
-            ax2 = fig2.add_subplot(111, aspect='equal')
+            #ax4 = fig2.add_subplot(111, aspect='equal')
             if not cell.cell.type == "EMPTY":
                 pattern = '\\'
             else:
                 pattern = ''
 
-            ax2.add_patch(
+            ax4.add_patch(
                 matplotlib.patches.Rectangle(
                     (cell.cell.x, cell.cell.y),  # (x,y)
                     cell.getWidth(),  # width
@@ -347,7 +349,7 @@ class CSCG:
                 dx =  0
                 dy = .75
 
-            ax2.arrow((cell.cell.x + cell.getWidth() - .5),
+            ax4.arrow((cell.cell.x + cell.getWidth() - .5),
                       (cell.cell.y + cell.getHeight()- .5),
                       dx,
                       dy,
@@ -366,7 +368,7 @@ class CSCG:
             else:
                 dx = .75
                 dy = 0
-            ax2.arrow((cell.cell.x + cell.getWidth() - .5),
+            ax4.arrow((cell.cell.x + cell.getWidth() - .5),
                       (cell.cell.y + cell.getHeight()- .5),
                       dx,
                       dy,
@@ -385,7 +387,7 @@ class CSCG:
             else:
                 dx =  0
                 dy = -.5
-            ax2.arrow((cell.cell.x + .5),
+            ax4.arrow((cell.cell.x + .5),
                       (cell.cell.y + .5),
                       dx,
                       dy,
@@ -404,7 +406,7 @@ class CSCG:
             else:
                 dx =  -.5
                 dy = 0
-            ax2.arrow((cell.cell.x + .5),
+            ax4.arrow((cell.cell.x + .5),
                       (cell.cell.y + .5),
                       dx,
                       dy,
@@ -414,16 +416,33 @@ class CSCG:
                       ec = 'k'
                     )
         p = PatchCollection(self.drawZeroDimsVertices2())
-        ax2.add_collection(p)
+        ax4.add_collection(p)
 
         #handle relative spacing from orientation to orientation-n (X0-Xn, Y0-Yn). Remove if refactoring to
         #automatically handle orientation
         #self.setAxisLabels(plt)
 
         for arr in self.findGraphEdges_v():
-            ax2.arrow(arr[0], arr[1], arr[2], arr[3], head_width = .30, head_length = .3,  color =arr[4] )#
+            ax4.arrow(arr[0], arr[1], arr[2], arr[3], head_width = .30, head_length = .3,  color =arr[4] )#
 
 
+        ####Setting axis labels(begin)
+        ax4.set_xlim(0, self.cornerStitch_v.eastBoundary.cell.x)
+        limit = np.arange(0, self.cornerStitch_v.northBoundary.cell.y + 10, 10)
+        ax4.set_yticks(limit)
+        ax3 = ax4.twinx()
+        ax3.set_yticks(self.CG.zeroDimensionListv)
+        labels_h = (str(i) for i in range(0, len(self.CG.zeroDimensionListv)))
+        ax3.yaxis.set_ticklabels(list(labels_h))
+        ax5 = ax4.twiny()
+        ax5.set_xticks(self.CG.zeroDimensionListh)
+        #limit = range(0, self.cornerStitch_h.eastBoundary.cell.x)
+        labels_h = (str(i) for i in range(0, len(self.CG.zeroDimensionListh)))
+        ax5.xaxis.set_ticklabels(list(labels_h))
+
+        ####Setting axis labels(end)
+
+        '''
         plt.xlim(0, self.cornerStitch_v.eastBoundary.cell.x)
         plt.ylim(0, self.cornerStitch_v.northBoundary.cell.y)
         labels_y = ( str(i) for i in range(0, len(self.CG.zeroDimensionListv)))
@@ -432,13 +451,14 @@ class CSCG:
         plt.yticks(self.CG.zeroDimensionListv, list(labels_y))
         ax2.yaxis.tick_right()
         #ax2.tick_params(labeltop=True, labelright=True)
-
+        '''
         if self.name2:
             fig2.savefig(self.name2,bbox_inches='tight')
             matplotlib.pyplot.close(fig2)
         else:
             fig2.show()
             pylab.pause(11000)  # figure out how to do this better
+
     def drawRectangle(self,list=[],*args):
         fig = plt.figure()
         ax3 = fig.add_subplot(111, aspect='equal')
