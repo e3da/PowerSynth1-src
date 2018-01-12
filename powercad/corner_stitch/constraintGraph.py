@@ -190,7 +190,7 @@ class constraintGraph:
                 origin = self.zeroDimensionListh.index(rect.cell.x)
                 dest = self.zeroDimensionListh.index(rect.getEast().cell.x)
                 e=Edge(origin, dest, constraint.constraint(1, 'minWidth', origin, dest))
-                print"e=", Edge.getEdgeWeight(e,origin,dest)
+                #print"e=", Edge.getEdgeWeight(e,origin,dest)
                 #self.edgesv.append(e)
                 self.edgesh.append(Edge(origin, dest, constraint.constraint(1, 'minWidth', origin, dest)))
                 #self.vertexMatrixh[origin][dest].append((rect.getWidth()))
@@ -366,10 +366,10 @@ class constraintGraph:
     def cgToGraph_h(self,name):
         G2 = nx.MultiDiGraph()
         dictList1 = []
-        print self.edgesh
+        #print self.edgesh
         for foo in self.edgesh:
             dictList1.append(foo.getEdgeDict())
-        print dictList1
+        #print dictList1
         ######
         d = defaultdict(list)
         for i in dictList1:
@@ -401,7 +401,7 @@ class constraintGraph:
                 data.append((lst_branch[0], lst_branch[1], {'route': internal_edge}))
                 label.append({(lst_branch[0], lst_branch[1]): internal_edge})
                 '''
-            print data
+            #print data
             G2.add_weighted_edges_from(data)
 
         d = defaultdict(list)
@@ -413,15 +413,15 @@ class constraintGraph:
         z = [(u, v, d['weight']) for u, v, d in G2.edges(data=True)]
         for n in G2.edges():
             n=list(n)
-            print n
-            print G2[n[0]][n[1]]
+            #print n
+            #print G2[n[0]][n[1]]
 
         edgeList = G2.edges()
-        print "D",G2.get_edge_data(1,2)
-        print"edgeList", edgeList
+        #print "D",G2.get_edge_data(1,2)
+        #print"edgeList", edgeList
         A=nx.adjacency_matrix(G2)
-        print "A=",A
-        print(A.todense())
+        #print "A=",A
+        #print(A.todense())
         ######
         '''
         N = G2.nodes()
@@ -448,11 +448,11 @@ class constraintGraph:
         for i in z:
             print >> f1,i
             #print >> f1, i, edge_labels1[i]
-        print list(nx.topological_sort(G2))
+        #print list(nx.topological_sort(G2))
         n=list(G2.nodes())
-        print "n=",n
-        paths_h = self.FindingAllPaths_h(G2, n[0], n[-1])
-        print "paths_h",paths_h
+        #print "n=",n
+        self.FindingAllPaths_h(G2, n[0], n[-1])
+        #print "paths_h",paths_h
         f2 = open("paths_h.txt", "rb")
         for line in f2.read().splitlines():  # considering each line in file
             self.paths_h.append(line)
@@ -495,7 +495,7 @@ class constraintGraph:
 
             print "list=",list(reversed(path))
         '''
-
+        '''
         l=[]
         for path in paths:
             l.append (len(path))
@@ -503,12 +503,12 @@ class constraintGraph:
         for path in paths:
             if(len(path))==L:
                 p=path
-        print"p=",p
+        #print"p=",p
 
         longest_path = [p]
 
         for j in range(len(paths)):
-            print paths[j]
+            #print paths[j]
 
             if (not (set(paths[j]).issubset(set(p)))):
 
@@ -516,6 +516,7 @@ class constraintGraph:
                     longest_path.append(paths[j])
 
         print "long=", longest_path
+        '''
         #### finding new location of each vertex in longest paths (begin)########
         l = []
         for path in paths:
@@ -524,35 +525,35 @@ class constraintGraph:
         for path in paths:
             if (len(path)) == L:
                 p = path
-        print"p=", p
+        #print"p=", p
 
         longest_path = [p]
 
         for j in range(len(paths)):
-            print paths[j]
+            #print paths[j]
 
             if (not (set(paths[j]).issubset(set(p)))):
 
                 if (paths[j] not in longest_path):
                     longest_path.append(paths[j])
-        # print "LONG=",longest_path
+        print "LONG=",longest_path
 
-        print "edge_labels", edge_labels1
-        print "long=", longest_path
+        #print "edge_labels", edge_labels1
+        #print "long=", longest_path
         dist = {}
         distance =set()###stores (u,v,w)where u=parent,v=child,w=cumulative weight from source to child
         location=set()
         position={}## stores {node:location}
         for i in range(len(longest_path)):
             path = longest_path[i]
-            print path
+            #print path
             for j in range(len(path)):
                 node = path[j]
                 if j > 0:
                     pred = path[j - 1]
                 else:
                     pred = node
-                print node, pred
+                #print node, pred
                 if node == 0:
                     dist[node] = (0, pred)
                     # distance.append((pred,node,0))
@@ -563,12 +564,12 @@ class constraintGraph:
                     position[key].append(0)
                 else:
                     pairs = (dist[pred][0] + max(edge_labels1[(pred, node)]), pred)
-                    print  max(edge_labels1[(pred, node)])
+                    #print  max(edge_labels1[(pred, node)])
                     dist[node] = pairs
-                    print dist[node][0]
+                    #print dist[node][0]
 
                     distance.add((pred, node, pairs[0]))
-                    print pairs[0]
+                    #print pairs[0]
                     #if location[node]<pairs[0]:
                     location.add((node,pairs[0]))
                     key = node
@@ -577,10 +578,10 @@ class constraintGraph:
                     #print"loc[node]",location[node]
                     # distance.append((pred,node,pairs[0]))
 
-                    print "PAIR+", pairs
-            print dist
-            print "DISTANCE=",list(distance)
-            print"LOC=",position[7][0]
+                    #print "PAIR+", pairs
+            #print dist
+            #print "DISTANCE=",list(distance)
+            #print"LOC=",position[7][0]
             loc={}
             for key in position:
                 #val=max(position[key])
@@ -593,14 +594,14 @@ class constraintGraph:
 
 
         keys = [(0, node) for node in G2.nodes()]
-        print keys
+        #print keys
         nodelist = [node for node in G2.nodes()]
         zeros = np.zeros(len(nodelist))
         values = [loc[node] for node in loc]
-        print values
+        #print values
 
         data = map(lambda x, y, z: (x, y, z), zeros, nodelist, values)
-        print data
+        # data
         G.add_weighted_edges_from(data)
         # val=[((u for u in G1.nodes()),(v for v in values))]
         val = map(lambda x, y: (x, y), G2.nodes(), values)
@@ -671,7 +672,7 @@ class constraintGraph:
         for foo in self.edgesv:
             dictList.append(foo.getEdgeDict())
             # print foo.getEdgeDict()
-        print"dictlist=", dictList
+        #print"dictlist=", dictList
         # print dictList
         ######
         d = defaultdict(list)
@@ -679,30 +680,30 @@ class constraintGraph:
             k, v = list(i.items())[0]  # an alternative to the single-iterating inner loop from the previous solution
             d[k].append(v)
         edge_labels = d
-        print "edge_labels",d
+        #print "edge_labels",d
         nodes = [x for x in range(len(self.zeroDimensionListv))]
         G1.add_nodes_from(nodes)
 
-        print G1.nodes()
-        print G1.edges()
+        #print G1.nodes()
+        #print G1.edges()
 
         label = []
         for branch in edge_labels:
             lst_branch = list(branch)
             data = []
             for internal_edge in edge_labels[branch]:
-                print lst_branch[0], lst_branch[1]
-                print internal_edge
+                #print lst_branch[0], lst_branch[1]
+                #print internal_edge
                 # if internal_edge not in label:
                 # label.append(internal_edge)
                 #if (lst_branch[0], lst_branch[1],  internal_edge) not in data:
                 data.append((lst_branch[0],lst_branch[1],internal_edge))
                 #data.append((lst_branch[0], lst_branch[1], {'route': internal_edge}))
                 label.append({(lst_branch[0], lst_branch[1]): internal_edge})
-            print"data=", data
+            #print"data=", data
             G1.add_weighted_edges_from(data)
             #G1.add_edges_from(data)
-        print"label_=", label
+        #print"label_=", label
         d = defaultdict(list)
 
         for i in label:
@@ -711,21 +712,21 @@ class constraintGraph:
         edge_labels = d
         for n in G1.edges():
             n = list(n)
-            print n
-            print"w=", G1[n[0]]
+            #print n
+            #print"w=", G1[n[0]]
 
         edgeList = G1.edges()
         z=[(u, v, d['weight'])for u, v, d in G1.edges(data=True)]
         print z
         #print "we=",[((u, v,), d['weight']) for u, v, d in G1.edges(data=True)]
         # edge_labels=
-        print"label=", edge_labels
+        #print"label=", edge_labels
         # f1 = open(self.name1, 'w')
 
 
         A = nx.adjacency_matrix(G1)
-        print "A=", A
-        print(A.todense())
+        #print "A=", A
+        #print(A.todense())
 
         f1 = open(name, 'w')
 
@@ -742,7 +743,7 @@ class constraintGraph:
         f = open("paths_v.txt", "rb")
         for line in f.read().splitlines():  # considering each line in file
             self.paths_v.append(line)
-        print "PATHS_V+",self.paths_v
+        # "PATHS_V+",self.paths_v
         paths = [json.loads(y) for y in self.paths_v]
         #print"paths=",(list(paths))
         #visited = [False]*(G1.nodes())
@@ -780,12 +781,12 @@ class constraintGraph:
         for path in paths:
             if (len(path)) == L:
                 p = path
-        print"p=", p
+        #print"p=", p
 
         longest_path = [p]
 
         for j in range(len(paths)):
-            print paths[j]
+            #print paths[j]
 
             if (not (set(paths[j]).issubset(set(p)))):
 
@@ -793,21 +794,21 @@ class constraintGraph:
                     longest_path.append(paths[j])
         #print "LONG=",longest_path
 
-        print "edge_labels",edge_labels
+        #print "edge_labels",edge_labels
         print "long=", longest_path
         dist = {}
         distance =set()
         position = {}  ## stores {node:location}
         for i in range(len(longest_path)):
             path=longest_path[i]
-            print path
+            #print path
             for j in range(len(path)):
                 node=path[j]
                 if j>0:
                     pred=path[j-1]
                 else:
                     pred=node
-                print node,pred
+                #print node,pred
                 if node==0:
                     dist[node]=(0,pred)
                     #distance.append((pred,node,0))
@@ -817,9 +818,9 @@ class constraintGraph:
                     position[key].append(0)
                 else:
                     pairs = (dist[pred][0] + max(edge_labels[(pred, node)]), pred)
-                    print  max(edge_labels[(pred, node)])
+                    #print  max(edge_labels[(pred, node)])
                     dist[node]=pairs
-                    print dist[node][0]
+                    #print dist[node][0]
 
                     distance.add((pred, node, pairs[0]))
                     #distance.append((pred,node,pairs[0]))
@@ -827,9 +828,9 @@ class constraintGraph:
                     position.setdefault(key, [])
                     position[key].append(pairs[0])
 
-                    print "PAIR+",pairs
-            print dist
-            print list(distance)
+                    #print "PAIR+",pairs
+            #print dist
+            # print list(distance)
             loc = {}
             for key in position:
                 # val=max(position[key])
@@ -846,14 +847,14 @@ class constraintGraph:
 
 
             keys=[(0,node)for node in G1.nodes()]
-            print keys
+            #print keys
             nodelist = [node for node in G1.nodes()]
             zeros = np.zeros(len(nodelist))
             values = [loc[node] for node in loc]
-            print values
+            # values
 
             data=map(lambda x,y,z:(x,y,z),zeros,nodelist,values)
-            print data
+            #print data
             G.add_weighted_edges_from(data)
             #val=[((u for u in G1.nodes()),(v for v in values))]
             val=map(lambda x,y:(x,y),G1.nodes(),values)
