@@ -32,7 +32,7 @@ class CSCG:
         #if self.CS.orientation == 'v':
         #elif self.CS.orientation == 'h':
         for point in self.CG.zeroDimensionListh:
-            print self.CG.zeroDimensionListh.index(point)
+            #print self.CG.zeroDimensionListh.index(point)
             wedgeList.append(Wedge((point, 0), .5, 0, 360, width = 1))
 
         return wedgeList
@@ -184,7 +184,7 @@ class CSCG:
                 pattern = '\\'
             else:
                 pattern = ''
-            print cell.cell.x, cell.cell.y
+            #print cell.cell.x, cell.cell.y
             ax1.add_patch(
                 matplotlib.patches.Rectangle(
                     (cell.cell.x, cell.cell.y),  # (x,y)

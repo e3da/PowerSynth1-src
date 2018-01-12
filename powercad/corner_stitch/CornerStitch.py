@@ -1967,7 +1967,8 @@ if __name__ == '__main__':
         exit(1)
     """
 
-    CG = cg.constraintGraph(testdir+'/'+testbase+'gh.png',testdir+'/'+testbase+'gv.png')
+    #CG = cg.constraintGraph(testdir+'/'+testbase+'gh.png',testdir+'/'+testbase+'gv.png')
+    CG = cg.constraintGraph(testdir + '/' + testbase , testdir + '/' + testbase)
     #CG2 = cg.constraintGraph(testdir+'/'+testbase+'gv.png')
     CG.graphFromLayer(emptyHExample,emptyVExample)
     #CG2.graphFromLayer(emptyVExample)

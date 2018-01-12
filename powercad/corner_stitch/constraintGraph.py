@@ -540,7 +540,9 @@ class constraintGraph:
         print "edge_labels", edge_labels1
         print "long=", longest_path
         dist = {}
-        distance = set()
+        distance =set()###stores (u,v,w)where u=parent,v=child,w=cumulative weight from source to child
+        location=set()
+        position={}## stores {node:location}
         for i in range(len(longest_path)):
             path = longest_path[i]
             print path
@@ -555,6 +557,10 @@ class constraintGraph:
                     dist[node] = (0, pred)
                     # distance.append((pred,node,0))
                     distance.add((pred, node, 0))
+                    #location.add((node,0))
+                    key=node
+                    position.setdefault(key,[])
+                    position[key].append(0)
                 else:
                     pairs = (dist[pred][0] + max(edge_labels1[(pred, node)]), pred)
                     print  max(edge_labels1[(pred, node)])
@@ -562,11 +568,53 @@ class constraintGraph:
                     print dist[node][0]
 
                     distance.add((pred, node, pairs[0]))
+                    print pairs[0]
+                    #if location[node]<pairs[0]:
+                    location.add((node,pairs[0]))
+                    key = node
+                    position.setdefault(key, [])
+                    position[key].append(pairs[0])
+                    #print"loc[node]",location[node]
                     # distance.append((pred,node,pairs[0]))
 
                     print "PAIR+", pairs
             print dist
             print "DISTANCE=",list(distance)
+            print"LOC=",position[7][0]
+            loc={}
+            for key in position:
+                #val=max(position[key])
+                #print val
+                loc[key]=max(position[key])
+            print"LOC=", loc
+        #####Final Plot to show locations of new position
+        G = nx.DiGraph()
+        # for node in G1.nodes():
+
+
+        keys = [(0, node) for node in G2.nodes()]
+        print keys
+        nodelist = [node for node in G2.nodes()]
+        zeros = np.zeros(len(nodelist))
+        values = [loc[node] for node in loc]
+        print values
+
+        data = map(lambda x, y, z: (x, y, z), zeros, nodelist, values)
+        print data
+        G.add_weighted_edges_from(data)
+        # val=[((u for u in G1.nodes()),(v for v in values))]
+        val = map(lambda x, y: (x, y), G2.nodes(), values)
+
+        pos = nx.shell_layout(G)
+        labels = dict(zip(keys, values))
+        print labels
+        # labels = {(z[0],: list(z[1:]) for z in zip(list1, list2, list3)}
+        nx.draw_networkx_edge_labels(G, pos, edge_labels=labels)
+        nx.draw_networkx_labels(G, pos)
+        nx.draw(G, pos, node_color='red', node_size=300, edge_color='black')
+        plt.savefig(self.name1 + 'loc_h.png')
+        plt.close()
+        #plt.show()
         #### finding new location of each vertex in longest paths (end)########
 
 
@@ -611,7 +659,7 @@ class constraintGraph:
                     self.printAllPaths_h(G, i, end, visited, path,f1)
 
         # Remove current vertex from path[] and mark it as unvisited
-        #print"PATHS=", paths
+
         path.pop()
         visited[start] = False
 
@@ -749,6 +797,7 @@ class constraintGraph:
         print "long=", longest_path
         dist = {}
         distance =set()
+        position = {}  ## stores {node:location}
         for i in range(len(longest_path)):
             path=longest_path[i]
             print path
@@ -763,6 +812,9 @@ class constraintGraph:
                     dist[node]=(0,pred)
                     #distance.append((pred,node,0))
                     distance.add((pred, node, 0))
+                    key = node
+                    position.setdefault(key, [])
+                    position[key].append(0)
                 else:
                     pairs = (dist[pred][0] + max(edge_labels[(pred, node)]), pred)
                     print  max(edge_labels[(pred, node)])
@@ -771,11 +823,52 @@ class constraintGraph:
 
                     distance.add((pred, node, pairs[0]))
                     #distance.append((pred,node,pairs[0]))
+                    key = node
+                    position.setdefault(key, [])
+                    position[key].append(pairs[0])
 
                     print "PAIR+",pairs
             print dist
             print list(distance)
+            loc = {}
+            for key in position:
+                # val=max(position[key])
+                # print val
+                loc[key] = max(position[key])
+
+            print"LOC=", loc
+
             #### finding new location of each vertex in longest paths (end)########
+            #### redraw graph with new position
+
+            G = nx.DiGraph()
+            #for node in G1.nodes():
+
+
+            keys=[(0,node)for node in G1.nodes()]
+            print keys
+            nodelist = [node for node in G1.nodes()]
+            zeros = np.zeros(len(nodelist))
+            values = [loc[node] for node in loc]
+            print values
+
+            data=map(lambda x,y,z:(x,y,z),zeros,nodelist,values)
+            print data
+            G.add_weighted_edges_from(data)
+            #val=[((u for u in G1.nodes()),(v for v in values))]
+            val=map(lambda x,y:(x,y),G1.nodes(),values)
+
+            pos = nx.shell_layout(G)
+            labels=dict(zip(keys, values))
+            print labels
+            #labels = {(z[0],: list(z[1:]) for z in zip(list1, list2, list3)}
+            nx.draw_networkx_edge_labels(G, pos, edge_labels=labels)
+            nx.draw_networkx_labels(G, pos)
+            nx.draw(G, pos, node_color='red', node_size=300, edge_color='black')
+            plt.savefig(self.name2 + 'loc_v.png')
+            plt.close()
+            #plt.show()
+
             '''
             for node in path:
                 print "node=",node
@@ -922,15 +1015,12 @@ class constraintGraph:
         else:
             # If current vertex is not destination
             # Recur for all the vertices adjacent to this vertex
-            sum=0
+
             for i in G.neighbors(start):
 
                 if visited[i] == False:
-                    #sum += max(edge_labels[start][i])
-
                     self.printAllPaths_v(G,i,end, visited, path,f1,edge_labels)
 
-            print "sum=",sum
         # Remove current vertex from path[] and mark it as unvisited
 
         path.pop()
@@ -950,7 +1040,7 @@ class constraintGraph:
         nx.draw(G2, pos, node_color='red', node_size=300, edge_color=edge_colors1)
         # nx.draw(G, pos, node_color='red', node_size=300, edge_color=edge_colors)
         #plt.show()
-        plt.savefig(self.name1)
+        plt.savefig(self.name1+'gh.png')
         plt.close()
         #pylab.show()
 
@@ -966,7 +1056,7 @@ class constraintGraph:
         # nx.draw(G, pos, node_color='red', node_size=300, edge_color=edge_colors)
         #app = Viewer(G1)
         #app.mainloop()
-        plt.savefig(self.name2)
+        plt.savefig(self.name2+'gv.png')
         plt.close()
         #pylab.show()
 
