@@ -459,6 +459,8 @@ class CSCG:
             fig2.show()
             pylab.pause(11000)  # figure out how to do this better
 
+
+
     def drawRectangle(self,list=[],*args):
         fig = plt.figure()
         ax3 = fig.add_subplot(111, aspect='equal')
