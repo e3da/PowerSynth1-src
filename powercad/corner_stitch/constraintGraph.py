@@ -427,6 +427,7 @@ class constraintGraph:
         print paths
         #### (end)
         #### finding new location of each vertex in longest paths (begin)########
+        '''
         l = []
         for path in paths:
             l.append(len(path))
@@ -440,12 +441,13 @@ class constraintGraph:
                 if (paths[j] not in longest_path):
                     longest_path.append(paths[j])
         print "LONG=",longest_path ### Finds all unique paths so that all nodes are covered.
+        '''
         dist = {}
         distance =set()###stores (u,v,w)where u=parent,v=child,w=cumulative weight from source to child
         location=set()###No use
         position={}## stores {node:location}
-        for i in range(len(longest_path)):
-            path = longest_path[i]
+        for i in range(len(paths)):
+            path = paths[i]
             #print path
             for j in range(len(path)):
                 node = path[j]
@@ -475,10 +477,11 @@ class constraintGraph:
                     key = node
                     position.setdefault(key, [])
                     position[key].append(pairs[0])
+            #print position
         loc={}
         for key in position:
             loc[key]=max(position[key])
-        print"LOC=", loc,position
+        print"LOC=", loc
         dist={}
         for node in loc:
             key = node
@@ -622,6 +625,7 @@ class constraintGraph:
        
         '''
         #### finding new location of each vertex in longest paths (begin)########
+        '''
         l = []
         for path in paths:
             l.append(len(path))
@@ -635,11 +639,13 @@ class constraintGraph:
                 if (paths[j] not in longest_path):
                     longest_path.append(paths[j])
         print "long=", longest_path
+        '''
         dist = {}
         distance =set()
         position = {}  ## stores {node:location}
-        for i in range(len(longest_path)):
-            path=longest_path[i]
+        for i in range(len(paths)):
+            path=paths[i]
+            #print path
             for j in range(len(path)):
                 node=path[j]
                 if j>0:
@@ -659,6 +665,7 @@ class constraintGraph:
                     key = node
                     position.setdefault(key, [])
                     position[key].append(pairs[0])
+            #print position
         loc = {}
         for key in position:
             loc[key] = max(position[key])
