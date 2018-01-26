@@ -24,6 +24,8 @@ class CSCG:
         self.CG = CG
         self.name1=name1
         self.name2 = name2
+        self. Newcornerstitch_h=cornerStitch_h
+        self. Newcornerstitch_v=cornerStitch_v
     def drawZeroDimsVertices1(self):
         """
         derive and return a list of wedges which will represent vertices on the CS drawing
@@ -176,15 +178,11 @@ class CSCG:
 
         for cell in self.cornerStitch_h.stitchList:
 
-
-
-
-
             if not cell.cell.type == "EMPTY":
                 pattern = '\\'
             else:
                 pattern = ''
-            #print cell.cell.x, cell.cell.y
+
             ax1.add_patch(
                 matplotlib.patches.Rectangle(
                     (cell.cell.x, cell.cell.y),  # (x,y)
@@ -305,11 +303,38 @@ class CSCG:
 
 
         if self.name1:
-            fig1.savefig(self.name1,bbox_inches='tight')
+            fig1.savefig(self.name1+'h.png',bbox_inches='tight')
             matplotlib.pyplot.close(fig1)
         else:
             fig1.show()
             pylab.pause(11000)  # figure out how to do this better
+
+
+        # elif self.CS.orientation == 'v':
+
+    def findGraphEdges_v(self):
+        # matrixCopy = np.copy(self.CG.getVertexMatrixv())
+        # print matrixCopy[0][1]
+        edgeList = copy.deepcopy(getattr(self.CG, "edgesv"))
+        # print "EDGE=",edgeList
+        arrowList2 = []
+        for rect in self.cornerStitch_v.stitchList:
+            # rect.cell.printCell(True,True)
+            if rect.cell.type == "SOLID":
+                color = "blue"
+                arrowList2.append((rect.cell.getX(), rect.cell.getY(), rect.getWidth(), 0, color))
+
+            elif rect.cell.type == "EMPTY":
+                color = "red"
+                arrowList2.append((rect.cell.getX(), rect.cell.getY(), 0, rect.getHeight(), color))
+
+
+                # for foo in arrowList:
+                # print foo
+        return arrowList2
+
+
+
     def drawLayer2(self, truePointer = False):
         """
         Draw all cells in this cornerStitch with stitches pointing to their stitch neighbors
@@ -453,13 +478,422 @@ class CSCG:
         #ax2.tick_params(labeltop=True, labelright=True)
         '''
         if self.name2:
-            fig2.savefig(self.name2,bbox_inches='tight')
+            fig2.savefig(self.name2+'v.png',bbox_inches='tight')
             matplotlib.pyplot.close(fig2)
         else:
             fig2.show()
             pylab.pause(11000)  # figure out how to do this better
 
+    def update_stitchList(self):
 
+        #self.Newcornerstitch_h=copy.deepcopy(self.cornerStitch_h)
+        #self.Newcornerstitch_v= copy.deepcopy(self.cornerStitch_v)
+        #print self.CG.newXlocation
+        #print self.CG.newYlocation
+        X_H=[]
+        Y_H=[]
+        for cell in self.Newcornerstitch_h.stitchList:
+
+            X_H.append(cell.cell.x)
+            X_H.append(self.Newcornerstitch_h.eastBoundary.cell.x)
+            Y_H.append(cell.cell.y)
+            Y_H.append(self.Newcornerstitch_h.northBoundary.cell.y)
+
+            #print cell.cell.x, cell.cell.y
+        #print"H="
+        X_H=list(sorted(set(X_H)))
+        Y_H=list(sorted(set(Y_H)))
+        #print X_H, Y_H
+        valuesX_H=self.CG.newXlocation
+        valuesY_H = self.CG.newYlocation
+        dictionary_X_H = dict(zip(X_H, valuesX_H))
+        dictionary_Y_H = dict(zip(Y_H, valuesY_H))
+        print"Horizontal New Cornerstitch", dictionary_X_H,dictionary_Y_H
+        #print X_H,Y_H
+        for cell in self.Newcornerstitch_h.stitchList:
+            #print cell.cell.x,cell.cell.y
+            cell.cell.x=dictionary_X_H[cell.cell.x]
+            cell.cell.y = dictionary_Y_H[cell.cell.y]
+            #print cell.cell.x,cell.cell.y
+        for cell in self.Newcornerstitch_h.boundaries:
+            #print cell.cell.x, cell.cell.y
+            if cell.cell.x in dictionary_X_H:
+                cell.cell.x = dictionary_X_H[cell.cell.x]
+            if cell.cell.y in dictionary_Y_H:
+                cell.cell.y = dictionary_Y_H[cell.cell.y]
+            #print cell.cell.x,cell.cell.y
+        X_V = []
+        Y_V = []
+        for cell in self.Newcornerstitch_v.stitchList:
+
+            X_V.append(cell.cell.x)
+            X_V.append(self.Newcornerstitch_v.eastBoundary.cell.x)
+            Y_V.append(cell.cell.y)
+            Y_V.append(self.Newcornerstitch_v.northBoundary.cell.y)
+
+            #print cell.cell.x, cell.cell.y
+        #print"v="
+        X_V = list(sorted(set(X_V)))
+        Y_V = list(sorted(set(Y_V)))
+        valuesX_V = self.CG.newXlocation
+        valuesY_V = self.CG.newYlocation
+        dictionary_X_V = dict(zip(X_V, valuesX_V))
+        dictionary_Y_V = dict(zip(Y_V, valuesY_V))
+        print "Vertical New Cornerstitch",dictionary_X_V,dictionary_Y_V
+        for cell in self.Newcornerstitch_v.stitchList:
+            #print cell.cell.x,cell.cell.y
+            cell.cell.x=dictionary_X_V[cell.cell.x]
+            cell.cell.y = dictionary_Y_V[cell.cell.y]
+            #print cell.cell.x,cell.cell.y
+        #print "BOUND=",self.Newcornerstitch_v.northBoundary.cell.x,self.Newcornerstitch_v.northBoundary.cell.y
+        for cell in self.Newcornerstitch_v.boundaries:
+            #print cell.cell.x, cell.cell.y
+            if cell.cell.x in dictionary_X_V:
+                cell.cell.x = dictionary_X_V[cell.cell.x]
+            if cell.cell.y in dictionary_Y_V:
+                cell.cell.y = dictionary_Y_V[cell.cell.y]
+            #print cell.cell.x,cell.cell.y
+
+
+
+
+    def findGraphEdges_hnew(self):
+        # matrixCopy = np.copy(self.CG.getVertexMatrixh())
+        # print matrixCopy[0][1]
+        arrowList1 = []  # contains the information for arrows to be drawn in matplotlib (x,y,dx,dy)
+
+        edgeList = copy.deepcopy(getattr(self.CG, "edgesh"))
+        # if self.CS.orientation == 'h':
+        for rect in  self. Newcornerstitch_h.stitchList:
+            # rect.cell.printCell(True,True)
+            if rect.cell.type == "SOLID":
+                color = "blue"
+                arrowList1.append((rect.cell.getX(), rect.cell.getY(), 0, rect.getHeight(), color))
+
+            elif rect.cell.type == "EMPTY":
+                color = "red"
+                arrowList1.append((rect.cell.getX(), rect.cell.getY(), rect.getWidth(), 0, color))
+
+        return arrowList1
+    def drawLayer_hnew(self, truePointer=False):
+        """
+        Draw all cells in this cornerStitch with stitches pointing to their stitch neighbors
+        TODO:
+         Also should probably change the dimensions of the object window depending on the cornerStitch size.
+        """
+
+        # fig1 = matplotlib.pyplot.figure()
+        # ax1 = fig1.add_subplot(111, aspect='equal')
+        fig1, ax1 = plt.subplots()
+
+        for cell in  self.Newcornerstitch_h.stitchList:
+            #print"latest=", cell.cell.x,cell.cell.y
+
+            if not cell.cell.type == "EMPTY":
+                pattern = '\\'
+            else:
+                pattern = ''
+
+            ax1.add_patch(
+                matplotlib.patches.Rectangle(
+                    (cell.cell.x, cell.cell.y),  # (x,y)
+                    cell.getWidth(),  # width
+                    cell.getHeight(),  # height
+                    hatch=pattern,
+                    fill=False
+                )
+            )
+
+            # NORTH pointer
+            if cell.getNorth() ==  self. Newcornerstitch_h.northBoundary:
+                dx = 0
+                dy = 0
+            elif truePointer:
+                dx = cell.getNorth().cell.x + (.08 * cell.getNorth().getWidth()) - (
+                cell.cell.x + cell.getWidth()) + .08
+                dy = cell.getNorth().cell.y + (.08 * cell.getNorth().getHeight()) - (
+                cell.cell.y + cell.getHeight()) + .08
+            else:
+                dx = 0
+                dy = .1
+
+            ax1.arrow((cell.cell.x + cell.getWidth() - .08),
+                      (cell.cell.y + cell.getHeight() - .08),
+                      dx,
+                      dy,
+                      head_width=.04,
+                      head_length=.04,
+                      fc='k',
+                      ec='k'
+                      )
+            # EAST pointer
+            if cell.getEast() ==  self. Newcornerstitch_h.eastBoundary:
+                dx = 0
+                dy = 0
+            elif truePointer:
+                dx = cell.getEast().cell.x + (.08 * cell.getEast().getWidth()) - (cell.cell.x + cell.getWidth()) + .08
+                dy = cell.getEast().cell.y + (.08 * cell.getEast().getHeight()) - (
+                cell.cell.y + cell.getHeight()) + .08
+            else:
+                dx = .1
+                dy = 0
+            ax1.arrow((cell.cell.x + cell.getWidth() - .08),
+                      (cell.cell.y + cell.getHeight() - .08),
+                      dx,
+                      dy,
+                      head_width=.04,
+                      head_length=.04,
+                      fc='k',
+                      ec='k'
+                      )
+            # SOUTH pointer
+            if cell.getSouth() ==  self. Newcornerstitch_h.southBoundary:
+                dx = 0
+                dy = 0
+            elif truePointer:
+                dx = cell.getSouth().cell.x + (.08 * cell.getSouth().getWidth()) - (cell.cell.x + .08)
+                dy = cell.getSouth().cell.y + (.08 * cell.getSouth().getHeight()) - (cell.cell.y + .08)
+            else:
+                dx = 0
+                dy = -.1
+            ax1.arrow((cell.cell.x + .08),
+                      (cell.cell.y + .08),
+                      dx,
+                      dy,
+                      head_width=.04,
+                      head_length=.04,
+                      fc='k',
+                      ec='k'
+                      )
+            # WEST pointer
+            if cell.getWest() ==  self. Newcornerstitch_h.westBoundary:
+                dx = 0
+                dy = 0
+            elif truePointer:
+                dx = cell.getWest().cell.x + (.08 * cell.getWest().getWidth()) - (cell.cell.x + .08)
+                dy = cell.getWest().cell.y + (.08 * cell.getWest().getHeight()) - (cell.cell.y + .08)
+            else:
+                dx = -.1
+                dy = 0
+            ax1.arrow((cell.cell.x + .08),
+                      (cell.cell.y + .08),
+                      dx,
+                      dy,
+                      head_width=.04,
+                      head_length=.04,
+                      fc='k',
+                      ec='k'
+                      )
+        p = PatchCollection(self.drawZeroDimsVertices1())
+        ax1.add_collection(p)
+
+        # handle relative spacing from orientation to orientation-n (X0-Xn, Y0-Yn). Remove if refactoring to
+        # automatically handle orientation
+        # self.setAxisLabels(plt)
+
+        for arr in self.findGraphEdges_hnew():
+            ax1.arrow(arr[0], arr[1], arr[2], arr[3], head_width=.09, head_length=.09, color=arr[4])  #
+
+        # plt.tick_params(axis="x2", labelcolor="b",labeltop=True)
+        # plt.xlim(0, self.cornerStitch_h.eastBoundary.cell.x)
+
+        ####Setting axis labels(begin)
+
+        ax1.set_ylim(0,  self. Newcornerstitch_h.northBoundary.cell.y)
+        limit = np.arange(0,  self. Newcornerstitch_h.eastBoundary.cell.x + 1, 1)
+        ax1.set_xticks(limit)
+        ax2 = ax1.twiny()
+        ax2.set_xticks(self.CG.newXlocation)
+        # limit=range(0,self.cornerStitch_h.eastBoundary.cell.x)
+        labels_h = (str(i) for i in range(0, len(self.CG.newXlocation)))
+        ax2.xaxis.set_ticklabels(list(labels_h))
+        ax6 = ax1.twinx()
+        ax6.set_yticks(self.CG.newYlocation)
+        labels_h = (str(i) for i in range(0, len(self.CG.newYlocation)))
+        ax6.yaxis.set_ticklabels(list(labels_h))
+
+        ####Setting axis labels(end)
+
+
+        if self.name1:
+            fig1.savefig(self.name1 + 'newh.png', bbox_inches='tight')
+            matplotlib.pyplot.close(fig1)
+        else:
+            fig1.show()
+            pylab.pause(11000)  # figure out how to do this better
+
+
+    def findGraphEdges_vnew(self):
+        # matrixCopy = np.copy(self.CG.getVertexMatrixv())
+        # print matrixCopy[0][1]
+        #edgeList = copy.deepcopy(getattr(self.CG, "edgesv"))
+        # print "EDGE=",edgeList
+        arrowList2 = []
+        for rect in self. Newcornerstitch_v.stitchList:
+            # rect.cell.printCell(True,True)
+            if rect.cell.type == "SOLID":
+                color = "blue"
+                arrowList2.append((rect.cell.getX(), rect.cell.getY(), rect.getWidth(), 0, color))
+
+            elif rect.cell.type == "EMPTY":
+                color = "red"
+                arrowList2.append((rect.cell.getX(), rect.cell.getY(), 0, rect.getHeight(), color))
+
+
+                # for foo in arrowList:
+                # print foo
+        return arrowList2
+
+
+
+    def drawLayer_vnew(self, truePointer = False):
+        """
+        Draw all cells in this cornerStitch with stitches pointing to their stitch neighbors
+        TODO:
+         Also should probably change the dimensions of the object window depending on the cornerStitch size.
+        """
+
+        #fig2 = matplotlib.pyplot.figure()
+        fig2,ax4 = plt.subplots()
+        for cell in self. Newcornerstitch_v.stitchList:
+
+
+            #print "Latestv=",cell.cell.x,cell.cell.y
+            #ax4 = fig2.add_subplot(111, aspect='equal')
+            if not cell.cell.type == "EMPTY":
+                pattern = '\\'
+            else:
+                pattern = ''
+
+            ax4.add_patch(
+                matplotlib.patches.Rectangle(
+                    (cell.cell.x, cell.cell.y),  # (x,y)
+                    cell.getWidth(),  # width
+                    cell.getHeight(),  # height
+                    hatch = pattern,
+                    fill=False
+                )
+            )
+            #NORTH pointer
+            if cell.getNorth() == self. Newcornerstitch_v.northBoundary:
+                dx = 0
+                dy = 0
+            elif truePointer:
+                dx = cell.getNorth().cell.x + (.08 * cell.getNorth().getWidth()) - (cell.cell.x + cell.getWidth()) + .08
+                dy = cell.getNorth().cell.y + (.08 * cell.getNorth().getHeight()) - (cell.cell.y + cell.getHeight()) + .08
+            else:
+                dx =  0
+                dy = .1
+
+            ax4.arrow((cell.cell.x + cell.getWidth() - .08),
+                      (cell.cell.y + cell.getHeight()- .08),
+                      dx,
+                      dy,
+                      head_width = .04,
+                      head_length = .04,
+                      fc = 'k',
+                      ec = 'k'
+                    )
+            #EAST pointer
+            if cell.getEast() == self. Newcornerstitch_v.eastBoundary:
+                dx = 0
+                dy = 0
+            elif truePointer:
+                dx = cell.getEast().cell.x + (.08 * cell.getEast().getWidth()) - (cell.cell.x + cell.getWidth()) + .08
+                dy = cell.getEast().cell.y + (.08 * cell.getEast().getHeight()) - (cell.cell.y + cell.getHeight()) + .08
+            else:
+                dx = .1
+                dy = 0
+            ax4.arrow((cell.cell.x + cell.getWidth() - .08),
+                      (cell.cell.y + cell.getHeight()- .08),
+                      dx,
+                      dy,
+                      head_width = .04,
+                      head_length = .04,
+                      fc = 'k',
+                      ec = 'k'
+                    )
+            #SOUTH pointer
+            if cell.getSouth() == self. Newcornerstitch_v.southBoundary:
+                dx = 0
+                dy = 0
+            elif truePointer:
+                dx = cell.getSouth().cell.x + (.08 * cell.getSouth().getWidth()) - (cell.cell.x + .08)
+                dy = cell.getSouth().cell.y + (.08 * cell.getSouth().getHeight()) - (cell.cell.y + .08)
+            else:
+                dx =  0
+                dy = -.1
+            ax4.arrow((cell.cell.x + .08),
+                      (cell.cell.y + .08),
+                      dx,
+                      dy,
+                      head_width = .04,
+                      head_length = .04,
+                      fc = 'k',
+                      ec = 'k'
+                    )
+            #WEST pointer
+            if cell.getWest() == self. Newcornerstitch_v.westBoundary:
+                dx = 0
+                dy = 0
+            elif truePointer:
+                dx = cell.getWest().cell.x + (.08 * cell.getWest().getWidth()) - (cell.cell.x + .08)
+                dy = cell.getWest().cell.y + (.08 * cell.getWest().getHeight()) - (cell.cell.y + .08)
+            else:
+                dx =  -.1
+                dy = 0
+            ax4.arrow((cell.cell.x + .08),
+                      (cell.cell.y + .08),
+                      dx,
+                      dy,
+                      head_width = .04,
+                      head_length = .04,
+                      fc = 'k',
+                      ec = 'k'
+                    )
+        p = PatchCollection(self.drawZeroDimsVertices2())
+        ax4.add_collection(p)
+
+        #handle relative spacing from orientation to orientation-n (X0-Xn, Y0-Yn). Remove if refactoring to
+        #automatically handle orientation
+        #self.setAxisLabels(plt)
+
+        for arr in self.findGraphEdges_vnew():
+            ax4.arrow(arr[0], arr[1], arr[2], arr[3], head_width = .09, head_length = .09,  color =arr[4] )#
+
+
+        ####Setting axis labels(begin)
+        ax4.set_xlim(0, self. Newcornerstitch_v.eastBoundary.cell.x)
+        limit = np.arange(0, self. Newcornerstitch_v.northBoundary.cell.y + 1, 1)
+        ax4.set_yticks(limit)
+        ax3 = ax4.twinx()
+        ax3.set_yticks(self.CG.newYlocation)
+        labels_h = (str(i) for i in range(0, len(self.CG.newYlocation)))
+        ax3.yaxis.set_ticklabels(list(labels_h))
+        ax5 = ax4.twiny()
+        ax5.set_xticks(self.CG.newXlocation)
+        #limit = range(0, self.cornerStitch_h.eastBoundary.cell.x)
+        labels_h = (str(i) for i in range(0, len(self.CG.newXlocation)))
+        ax5.xaxis.set_ticklabels(list(labels_h))
+
+        ####Setting axis labels(end)
+
+        '''
+        plt.xlim(0, self.cornerStitch_v.eastBoundary.cell.x)
+        plt.ylim(0, self.cornerStitch_v.northBoundary.cell.y)
+        labels_y = ( str(i) for i in range(0, len(self.CG.zeroDimensionListv)))
+        #labels_y = ('Y' + str(i) for i in range(0, len(self.CG.zeroDimensionListv)))
+        # plt.tick_params(self.CG.zeroDimensionListv, list(labels_y), axis='y', which='both', labelleft='off',labelright = 'on')
+        plt.yticks(self.CG.zeroDimensionListv, list(labels_y))
+        ax2.yaxis.tick_right()
+        #ax2.tick_params(labeltop=True, labelright=True)
+        '''
+        if self.name2:
+            fig2.savefig(self.name2+'newv.png',bbox_inches='tight')
+            matplotlib.pyplot.close(fig2)
+        else:
+            fig2.show()
+            pylab.pause(11000)  # figure out how to do this better
 
     def drawRectangle(self,list=[],*args):
         fig = plt.figure()
