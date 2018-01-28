@@ -292,11 +292,11 @@ class CSCG:
         ax2 = ax1.twiny()
         ax2.set_xticks(self.CG.zeroDimensionListh)
         #limit=range(0,self.cornerStitch_h.eastBoundary.cell.x)
-        labels_h = (str(i) for i in range(0, len(self.CG.zeroDimensionListh)))
+        labels_h = ('X'+str(i) for i in range(0, len(self.CG.zeroDimensionListh)))
         ax2.xaxis.set_ticklabels(list(labels_h))
         ax6 = ax1.twinx()
         ax6.set_yticks(self.CG.zeroDimensionListv)
-        labels_h = (str(i) for i in range(0, len(self.CG.zeroDimensionListv)))
+        labels_h = ('Y'+str(i) for i in range(0, len(self.CG.zeroDimensionListv)))
         ax6.yaxis.set_ticklabels(list(labels_h))
 
         ####Setting axis labels(end)
@@ -311,6 +311,8 @@ class CSCG:
 
 
         # elif self.CS.orientation == 'v':
+
+
 
     def findGraphEdges_v(self):
         # matrixCopy = np.copy(self.CG.getVertexMatrixv())
@@ -457,12 +459,12 @@ class CSCG:
         ax4.set_yticks(limit)
         ax3 = ax4.twinx()
         ax3.set_yticks(self.CG.zeroDimensionListv)
-        labels_h = (str(i) for i in range(0, len(self.CG.zeroDimensionListv)))
+        labels_h = ('Y'+str(i) for i in range(0, len(self.CG.zeroDimensionListv)))
         ax3.yaxis.set_ticklabels(list(labels_h))
         ax5 = ax4.twiny()
         ax5.set_xticks(self.CG.zeroDimensionListh)
         #limit = range(0, self.cornerStitch_h.eastBoundary.cell.x)
-        labels_h = (str(i) for i in range(0, len(self.CG.zeroDimensionListh)))
+        labels_h = ('X'+str(i) for i in range(0, len(self.CG.zeroDimensionListh)))
         ax5.xaxis.set_ticklabels(list(labels_h))
 
         ####Setting axis labels(end)
@@ -554,8 +556,29 @@ class CSCG:
                 cell.cell.y = dictionary_Y_V[cell.cell.y]
             #print cell.cell.x,cell.cell.y
 
+    def drawZeroDimsVertices_h(self):
+        """
+        derive and return a list of wedges which will represent vertices on the CS drawing
+        """
+        wedgeList = []
+        # if self.CS.orientation == 'v':
+        # elif self.CS.orientation == 'h':
+        for point in self.CG.newXlocation:
+            # print self.CG.zeroDimensionListh.index(point)
+            wedgeList.append(Wedge((point, 0), 0.01, 0, 360, width=0.4))
 
+        return wedgeList
 
+    def drawZeroDimsVertices_v(self):
+        """
+        derive and return a list of wedges which will represent vertices on the CS drawing
+        """
+        wedgeList = []
+        # if self.CS.orientation == 'v':
+        for point in self.CG.newYlocation:
+            wedgeList.append(Wedge((0, point), 0.01, 0, 360, width=0.4))
+
+        return wedgeList
 
     def findGraphEdges_hnew(self):
         # matrixCopy = np.copy(self.CG.getVertexMatrixh())
@@ -684,8 +707,8 @@ class CSCG:
                       fc='k',
                       ec='k'
                       )
-        p = PatchCollection(self.drawZeroDimsVertices1())
-        ax1.add_collection(p)
+        #p = PatchCollection(self.drawZeroDimsVertices_h())
+        #ax1.add_collection(p)
 
         # handle relative spacing from orientation to orientation-n (X0-Xn, Y0-Yn). Remove if refactoring to
         # automatically handle orientation
@@ -705,11 +728,11 @@ class CSCG:
         ax2 = ax1.twiny()
         ax2.set_xticks(self.CG.newXlocation)
         # limit=range(0,self.cornerStitch_h.eastBoundary.cell.x)
-        labels_h = (str(i) for i in range(0, len(self.CG.newXlocation)))
+        labels_h = ('X'+str(i) for i in range(0, len(self.CG.newXlocation)))
         ax2.xaxis.set_ticklabels(list(labels_h))
         ax6 = ax1.twinx()
         ax6.set_yticks(self.CG.newYlocation)
-        labels_h = (str(i) for i in range(0, len(self.CG.newYlocation)))
+        labels_h = ('Y'+str(i) for i in range(0, len(self.CG.newYlocation)))
         ax6.yaxis.set_ticklabels(list(labels_h))
 
         ####Setting axis labels(end)
@@ -851,8 +874,8 @@ class CSCG:
                       fc = 'k',
                       ec = 'k'
                     )
-        p = PatchCollection(self.drawZeroDimsVertices2())
-        ax4.add_collection(p)
+        #p = PatchCollection(self.drawZeroDimsVertices_v())
+        #ax4.add_collection(p)
 
         #handle relative spacing from orientation to orientation-n (X0-Xn, Y0-Yn). Remove if refactoring to
         #automatically handle orientation
@@ -868,12 +891,12 @@ class CSCG:
         ax4.set_yticks(limit)
         ax3 = ax4.twinx()
         ax3.set_yticks(self.CG.newYlocation)
-        labels_h = (str(i) for i in range(0, len(self.CG.newYlocation)))
+        labels_h = ('Y'+str(i) for i in range(0, len(self.CG.newYlocation)))
         ax3.yaxis.set_ticklabels(list(labels_h))
         ax5 = ax4.twiny()
         ax5.set_xticks(self.CG.newXlocation)
         #limit = range(0, self.cornerStitch_h.eastBoundary.cell.x)
-        labels_h = (str(i) for i in range(0, len(self.CG.newXlocation)))
+        labels_h = ('X'+str(i) for i in range(0, len(self.CG.newXlocation)))
         ax5.xaxis.set_ticklabels(list(labels_h))
 
         ####Setting axis labels(end)
