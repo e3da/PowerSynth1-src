@@ -482,7 +482,7 @@ class constraintGraph:
 
         ######
         d3 = defaultdict(list)
-        for i in dictList1:
+        for i in dictList3:
             k, v = list(i.items())[0]  # an alternative to the single-iterating inner loop from the previous solution
             d3[k].append(v)
         edge_labels3 = d3
@@ -714,11 +714,11 @@ class constraintGraph:
         edge_labels = d
         self.drawGraph_v(name, G1, edge_labels)
         G4 = nx.MultiDiGraph()
-        dictList = []
+        dictList4= []
         for foo in self.edgesv_new:
-            dictList.append(foo.getEdgeDict())
+            dictList4.append(foo.getEdgeDict())
         d4 = defaultdict(list)
-        for i in dictList:
+        for i in dictList4:
             k, v = list(i.items())[0]  # an alternative to the single-iterating inner loop from the previous solution
             d4[k].append(v)
         edge_labels4 = d4
