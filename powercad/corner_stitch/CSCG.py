@@ -723,8 +723,9 @@ class CSCG:
         ####Setting axis labels(begin)
 
         ax1.set_ylim(0,  self. Newcornerstitch_h.northBoundary.cell.y)
-        limit = np.arange(0,  self. Newcornerstitch_h.eastBoundary.cell.x + 1, 1)
-        ax1.set_xticks(limit)
+        ax1.set_xlim(0, self.Newcornerstitch_h.eastBoundary.cell.x)
+        #limit = np.arange(0,  self. Newcornerstitch_h.eastBoundary.cell.x + 1, 1)
+        #ax1.set_xticks(limit)
         ax2 = ax1.twiny()
         ax2.set_xticks(self.CG.newXlocation)
         # limit=range(0,self.cornerStitch_h.eastBoundary.cell.x)
@@ -887,8 +888,9 @@ class CSCG:
 
         ####Setting axis labels(begin)
         ax4.set_xlim(0, self. Newcornerstitch_v.eastBoundary.cell.x)
-        limit = np.arange(0, self. Newcornerstitch_v.northBoundary.cell.y + 1, 1)
-        ax4.set_yticks(limit)
+        ax4.set_ylim(0, self.Newcornerstitch_v.northBoundary.cell.y)
+        #limit = np.arange(0, self. Newcornerstitch_v.northBoundary.cell.y + 1, 1)
+        #ax4.set_yticks(limit)
         ax3 = ax4.twinx()
         ax3.set_yticks(self.CG.newYlocation)
         labels_h = ('Y'+str(i) for i in range(0, len(self.CG.newYlocation)))
