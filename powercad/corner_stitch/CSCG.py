@@ -534,7 +534,7 @@ class CSCG:
         valuesX_H=[]
         for i in range(len(self.CG.NEWXLOCATION)):
             valuesX_H.append( self.CG.NEWXLOCATION[i])
-        print valuesX_H
+        #print valuesX_H
         valuesY_H = []
         for i in range(len(self.CG.NEWYLOCATION)):
             valuesY_H.append(self.CG.NEWYLOCATION[i])
@@ -542,12 +542,9 @@ class CSCG:
         dictionary_X_H=[]
         for i in range(len(valuesX_H)):
             dictionary_X_H.append(dict(zip(X_H, valuesX_H[i])))
-        #print dictionary_X_H
-        dictionary_Y_H=[]
+        dictionary_Y_H = []
         for i in range(len(valuesY_H)):
             dictionary_Y_H.append(dict(zip(Y_H, valuesY_H[i])))
-        print dictionary_Y_H
-        #Newcornerstitch_H=[]
         for i in range(len(dictionary_X_H)):
             self.Newcornerstitch_H.append(copy.deepcopy(self.Newcornerstitch_h))
             #print Newcornerstitch_H[i].stitchList
@@ -557,18 +554,51 @@ class CSCG:
             #print self.Newcornerstitch_H[i]
             #for cell in self.Newcornerstitch_h.stitchList:
             for cell in self.Newcornerstitch_H[i].stitchList:
-                print cell.cell.y
+                #print cell.cell.y
                 cell.cell.x = dictionary_X_H[i][cell.cell.x]
                 cell.cell.y = dictionary_Y_H[i][cell.cell.y]
-                print cell.cell.x,cell.cell.y
+                #print cell.cell.x,cell.cell.y
             for cell in self.Newcornerstitch_H[i].boundaries:
                 # print cell.cell.x, cell.cell.y
                 if cell.cell.x in dictionary_X_H[i]:
                     cell.cell.x = dictionary_X_H[i][cell.cell.x]
                 if cell.cell.y in dictionary_Y_H[i]:
                     cell.cell.y = dictionary_Y_H[i][cell.cell.y]
+        #print dictionary_X_H
+        ############### Added for correction
+        X_V = []
+        Y_V = []
+        for cell in self.Newcornerstitch_v.stitchList:
+            X_V.append(cell.cell.x)
+            X_V.append(self.Newcornerstitch_v.eastBoundary.cell.x)
+            Y_V.append(cell.cell.y)
+            Y_V.append(self.Newcornerstitch_v.northBoundary.cell.y)
+
+            # print cell.cell.x, cell.cell.y
+        # print"v="
+        X_V = list(sorted(set(X_V)))
+        Y_V = list(sorted(set(Y_V)))
+        valuesX_V = []
+        for i in range(len(self.CG.NEWXLOCATION)):
+            valuesX_V.append(self.CG.NEWXLOCATION[i])
+        #print valuesX_V
+        valuesY_V = []
+        for i in range(len(self.CG.NEWYLOCATION)):
+            valuesY_V.append(self.CG.NEWYLOCATION[i])
+        # valuesY_H = self.CG.newYlocation
+
+        dictionary_X_V = []
+        for i in range(len(valuesX_V)):
+            dictionary_X_V.append(dict(zip(X_V, valuesX_V[i])))
+        dictionary_Y_V = []
+        for i in range(len(valuesY_V)):
+            dictionary_Y_V.append(dict(zip(Y_V, valuesY_V[i])))
+        #print"len=",len(dictionary_X_V),len( dictionary_Y_V)
+
+        #Newcornerstitch_H=[]
+
         #### vertical
-        for i in range(len(dictionary_Y_H)):
+        for i in range(len(dictionary_Y_V)):
             self.Newcornerstitch_V.append(copy.deepcopy(self.Newcornerstitch_v))
             # print Newcornerstitch_H[i].stitchList
         for i in range(len(self.Newcornerstitch_V)):
@@ -578,15 +608,15 @@ class CSCG:
             # for cell in self.Newcornerstitch_h.stitchList:
             for cell in self.Newcornerstitch_V[i].stitchList:
                 #print cell.cell.y
-                cell.cell.x = dictionary_X_H[i][cell.cell.x]
-                cell.cell.y = dictionary_Y_H[i][cell.cell.y]
-                print cell.cell.x, cell.cell.y
+                cell.cell.x = dictionary_X_V[i][cell.cell.x]
+                cell.cell.y = dictionary_Y_V[i][cell.cell.y]
+                #print cell.cell.x, cell.cell.y
             for cell in self.Newcornerstitch_V[i].boundaries:
                 # print cell.cell.x, cell.cell.y
-                if cell.cell.x in dictionary_X_H[i]:
-                    cell.cell.x = dictionary_X_H[i][cell.cell.x]
-                if cell.cell.y in dictionary_Y_H[i]:
-                    cell.cell.y = dictionary_Y_H[i][cell.cell.y]
+                if cell.cell.x in dictionary_X_V[i]:
+                    cell.cell.x = dictionary_X_V[i][cell.cell.x]
+                if cell.cell.y in dictionary_Y_V[i]:
+                    cell.cell.y = dictionary_Y_V[i][cell.cell.y]
         #print Newcornerstitch_H[i].stitchList
 
         #############

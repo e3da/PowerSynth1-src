@@ -372,7 +372,7 @@ class constraintGraph:
         setToList_v.sort()
         #self.zeroDimensionListvy = setToList
         self.zeroDimensionListv = setToList_v
-        print self.zeroDimensionListv
+        #print self.zeroDimensionListv
         #print"vy=", setToList
         pointSet_h = Set()
         for rect in cornerStitch_v.stitchList:
@@ -384,7 +384,7 @@ class constraintGraph:
         setToList_h = list(pointSet_h)
         setToList_h.sort()
         self.zeroDimensionListh = setToList_h
-        print self.zeroDimensionListh
+        #print self.zeroDimensionListh
         #print"vx=", setToList
     '''
     def toposort(self,graph):
@@ -539,7 +539,7 @@ class constraintGraph:
             for i in range(len(D)):
                 W.append(randint(2, 20))
             W_total.append(W)
-        print W_total
+        #print W_total
 
         NewD=[]
         for i in range(len(D)):
@@ -558,14 +558,14 @@ class constraintGraph:
                 labelnew.extend(Space)
             new_label.append(labelnew)
 
-        print len(new_label)
-        for i in new_label:
-            print i
+        #print len(new_label)
+        #for i in new_label:
+            #print i
         D_3=[]
         for j in range(len(new_label)):
             d[j]= defaultdict(list)
             #print d[j]
-            print"N=", new_label[j]
+            #print"N=", new_label[j]
             for i in new_label[j]:
                 #print i
                 #print new_label[j]
@@ -574,12 +574,12 @@ class constraintGraph:
                 #print k,v
                 d[j][k].append(v)
             #print d[j]
-            print "d[j]",d[j]
+            #print "d[j]",d[j]
 
 
             D_3.append(d[j])
 
-        print len(D_3),D_3
+        #print len(D_3),D_3
 
         '''
         NewD = []
@@ -617,7 +617,7 @@ class constraintGraph:
             k, v = list(i.items())[0]  # an alternative to the single-iterating inner loop from the previous solution
             d3[k].append(v)
         edge_labels3 = d3
-        print len(edge_labels3)
+        #print len(edge_labels3)
 
 
         #### Storing edge data in (u,v,w) format in a file(begin)
@@ -705,7 +705,7 @@ class constraintGraph:
             loct.append(loc_i)
 
             self.NEWXLOCATION.append(new_Xlocation)
-            print"LOC=",loct, self.NEWXLOCATION
+        print"LOC=",loct, self.NEWXLOCATION
         '''
 
         ###############       Without optimization
@@ -955,7 +955,7 @@ class constraintGraph:
             for i in range(len(D)):
                 W.append(randint(2, 20))
             W_total.append(W)
-        print W_total
+        #print W_total
 
         NewD = []
         for i in range(len(D)):
@@ -974,7 +974,7 @@ class constraintGraph:
                 labelnew.extend(Space)
             new_label.append(labelnew)
 
-        print len(new_label)
+        #print len(new_label)
         #for i in new_label:
             #print i
         D_3 = []
@@ -993,7 +993,7 @@ class constraintGraph:
 
             D_3.append(d[j])
 
-        print "V=",len(D_3), D_3
+        #print "V=",len(D_3), D_3
 
         ############################
         d4 = defaultdict(list)
@@ -1001,7 +1001,7 @@ class constraintGraph:
             k, v = list(i.items())[0]  # an alternative to the single-iterating inner loop from the previous solution
             d4[k].append(v)
         edge_labels4 = d4
-        print len(d4)
+        #print len(d4)
 
         z=[(u, v, d['weight'])for u, v, d in G4.edges(data=True)]
         f1 = open(name, 'w')
