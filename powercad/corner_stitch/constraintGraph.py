@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from collections import defaultdict
 import json
 import copy
-
+from random import randint
 import scipy as sp
 class constraintGraph:
     """
@@ -48,8 +48,10 @@ class constraintGraph:
         # self.zeroDimensionList = []
         self.zeroDimensionListh = []
         self.zeroDimensionListv = []
-        self.newXlocation=[]
-        self.newYlocation = []
+        #self.newXlocation=[]
+        #self.newYlocation = []
+        self.NEWXLOCATION=[] ####OPTIMIZATIioN
+        self.NEWYLOCATION =[]####OPTIMIZATION
         self.name1 = name1
         self.name2 = name2
         self.paths_h=[]
@@ -522,17 +524,107 @@ class constraintGraph:
                 '''
             # print data
             G3.add_weighted_edges_from(data)
-        d3 = defaultdict(list)
+        #############################################################
+        label4=copy.deepcopy(label3)
+        D=[]
+        #print label3
+        for i in label4:
+            if i.values()[0]==2:
+                D.append(i)
 
+        #print D, len(D)
+        W_total=[]
+        for i in range(20):
+            W=[]
+            for i in range(len(D)):
+                W.append(randint(2, 20))
+            W_total.append(W)
+        print W_total
+
+        NewD=[]
+        for i in range(len(D)):
+            NewD.append(D[i].keys()[0])
+        Space = []
+        for i in label4:
+            if i.values()[0] == 1:
+                Space.append(i)
+        #print Space
+        new_label=[]
+        for j in range(len(W_total)):
+            labelnew=[]
+            for i in range(len(NewD)):
+                newdict = {NewD[i]:W_total[j][i]}
+                labelnew.append(newdict)
+                labelnew.extend(Space)
+            new_label.append(labelnew)
+
+        print len(new_label)
+        for i in new_label:
+            print i
+        D_3=[]
+        for j in range(len(new_label)):
+            d[j]= defaultdict(list)
+            #print d[j]
+            print"N=", new_label[j]
+            for i in new_label[j]:
+                #print i
+                #print new_label[j]
+                k, v = list(i.items())[0]  # an alternative to the single-iterating inner loop from the previous solution
+
+                #print k,v
+                d[j][k].append(v)
+            #print d[j]
+            print "d[j]",d[j]
+
+
+            D_3.append(d[j])
+
+        print len(D_3),D_3
+
+        '''
+        NewD = []
+        for i in range(len(D)):
+            NewD.append(D[i].keys()[0])
+        for j in range(len(W_total)):
+            labelnew = []
+            for i in range(len(NewD)):
+                newdict = {NewD[i]: W_total[0][i]}
+                labelnew.append(newdict)
+        Space = []
+        for i in label4:
+            if i.values()[0] == 1:
+                Space.append(i)
+        #print Space
+        labelnew.extend(Space)
+        print "labelnew", labelnew
+        d_3 = defaultdict(list)
+        for i in labelnew:
+            k, v = list(i.items())[0]  # an alternative to the single-iterating inner loop from the previous solution
+            d_3[k].append(v)
+        edge_labels_3 = d_3
+        print d_3
+        #print len(edge_labels_3)
+        '''
+
+
+
+
+
+
+        ###############################################################
+        d3 = defaultdict(list)
         for i in label3:
             k, v = list(i.items())[0]  # an alternative to the single-iterating inner loop from the previous solution
             d3[k].append(v)
         edge_labels3 = d3
+        print len(edge_labels3)
+
 
         #### Storing edge data in (u,v,w) format in a file(begin)
         z = [(u, v, d['weight']) for u, v, d in G3.edges(data=True)]
         f1 = open(name, 'w')
         for i in z:
+            #print i
             print >> f1,i
         ######## Storing edge data in (u,v,w) format in a file(end)
 
@@ -561,6 +653,62 @@ class constraintGraph:
                     longest_path.append(paths[j])
         print "LONG=",longest_path ### Finds all unique paths so that all nodes are covered.
         '''
+
+
+        ##############TESTING
+        #NEWXLOCATION=[]
+        loct = []
+        for k in range(len(D_3)):
+            new_Xlocation=[]
+
+            dist = {}
+            distance =set()###stores (u,v,w)where u=parent,v=child,w=cumulative weight from source to child
+            location=set()###No use
+            position_k={}## stores {node:location}
+            for i in range(len(paths)):
+                path = paths[i]
+                #print path
+                for j in range(len(path)):
+                    node = path[j]
+                    if j > 0:
+                        pred = path[j - 1]
+                    else:
+                        pred = node
+                    #print node, pred
+                    if node == 0:
+                        dist[node] = (0, pred)
+                        # distance.append((pred,node,0))
+                        distance.add((pred, node, 0))
+                        #location.add((node,0))
+                        key=node
+                        position_k.setdefault(key,[])
+                        position_k[key].append(0)
+                    else:
+
+                        pairs = (dist[pred][0] + max(D_3[k][(pred, node)]), pred)
+                        #print  max(edge_labels1[(pred, node)])
+                        dist[node] = pairs
+                        #print dist[node][0]
+
+                        distance.add((pred, node, pairs[0]))
+                        #print pairs[0]
+                        #if location[node]<pairs[0]:
+                        location.add((node,pairs[0]))
+                        key = node
+                        position_k.setdefault(key, [])
+                        position_k[key].append(pairs[0])
+                #print position
+            loc_i={}
+            for key in position_k:
+                loc_i[key]=max(position_k[key])
+                new_Xlocation.append(loc_i[key])
+            loct.append(loc_i)
+
+            self.NEWXLOCATION.append(new_Xlocation)
+            print"LOC=",loct, self.NEWXLOCATION
+        '''
+
+        ###############       Without optimization
         dist = {}
         distance =set()###stores (u,v,w)where u=parent,v=child,w=cumulative weight from source to child
         location=set()###No use
@@ -584,6 +732,7 @@ class constraintGraph:
                     position.setdefault(key,[])
                     position[key].append(0)
                 else:
+
                     pairs = (dist[pred][0] + max(edge_labels3[(pred, node)]), pred)
                     #print  max(edge_labels1[(pred, node)])
                     dist[node] = pairs
@@ -610,9 +759,11 @@ class constraintGraph:
             dist[node].append(node)
             dist[node].append(loc[node])
         self.drawGraph_h_new(name, G3, edge_labels3, dist)  ### Drawing HCG
+
         #print dist
         '''
-        #####Final Plot to show locations of new position
+        '''
+        #####Final Plot to show locations of new position(No need)
         G = nx.DiGraph()
         keys = [(0, node) for node in G2.nodes()]
         nodelist = [node for node in G2.nodes()]
@@ -707,11 +858,14 @@ class constraintGraph:
                 #data.append((lst_branch[0], lst_branch[1], {'route': internal_edge}))
                 label.append({(lst_branch[0], lst_branch[1]): internal_edge})
             G1.add_weighted_edges_from(data)
+
+
         d = defaultdict(list)
         for i in label:
             k, v = list(i.items())[0]  # an alternative to the single-iterating inner loop from the previous solution
             d[k].append(v)
         edge_labels = d
+        print len(d)
         self.drawGraph_v(name, G1, edge_labels)
         G4 = nx.MultiDiGraph()
         dictList4= []
@@ -743,17 +897,118 @@ class constraintGraph:
                 # data.append((lst_branch[0], lst_branch[1], {'route': internal_edge}))
                 label4.append({(lst_branch[0], lst_branch[1]): internal_edge})
             G4.add_weighted_edges_from(data)
+        #############################################################
+        '''(One output figure with variable Y)
+        label_4 = copy.deepcopy(label4)
+        D = []
+        # print label3
+        for i in label_4:
+            if i.values()[0] == 2:
+                D.append(i)
+
+        # print D, len(D)
+        W_total = []
+        for i in range(10):
+            W = []
+            for i in range(len(D)):
+                W.append(randint(2, 10))
+            W_total.append(W)
+        print W_total
+        NewD = []
+        for i in range(len(D)):
+            NewD.append(D[i].keys()[0])
+        labelnew = []
+
+        for i in range(len(NewD)):
+            newdict = {NewD[i]: W_total[0][i]}
+            labelnew.append(newdict)
+
+        Space = []
+        for i in label4:
+            if i.values()[0] == 1:
+                Space.append(i)
+        print Space
+        labelnew.extend(Space)
+        print "labelnew", labelnew
+        d_3 = defaultdict(list)
+        for i in labelnew:
+            k, v = list(i.items())[
+                0]  # an alternative to the single-iterating inner loop from the previous solution
+            d_3[k].append(v)
+        edge_labels_3 = d_3
+        print len(edge_labels_3)
+        '''
+
+        ###############################################################
+        ##############################           OPTIMIZATION
+        label_4 = copy.deepcopy(label4)
+        D = []
+        # print label3
+        for i in label_4:
+            if i.values()[0] == 2:
+                D.append(i)
+
+        # print D, len(D)
+        W_total = []
+        for i in range(20):
+            W = []
+            for i in range(len(D)):
+                W.append(randint(2, 20))
+            W_total.append(W)
+        print W_total
+
+        NewD = []
+        for i in range(len(D)):
+            NewD.append(D[i].keys()[0])
+        Space = []
+        for i in label_4:
+            if i.values()[0] == 1:
+                Space.append(i)
+        # print Space
+        new_label = []
+        for j in range(len(W_total)):
+            labelnew = []
+            for i in range(len(NewD)):
+                newdict = {NewD[i]: W_total[j][i]}
+                labelnew.append(newdict)
+                labelnew.extend(Space)
+            new_label.append(labelnew)
+
+        print len(new_label)
+        #for i in new_label:
+            #print i
+        D_3 = []
+        for j in range(len(new_label)):
+            d[j] = defaultdict(list)
+            # print d[j]
+            #print"N=", new_label[j]
+            for i in new_label[j]:
+                # print i
+                # print new_label[j]
+                k, v = list(i.items())[0]  # an alternative to the single-iterating inner loop from the previous solution
+                # print k,v
+                d[j][k].append(v)
+            # print d[j]
+            #print "d[j]", d[j]
+
+            D_3.append(d[j])
+
+        print "V=",len(D_3), D_3
+
+        ############################
         d4 = defaultdict(list)
         for i in label4:
             k, v = list(i.items())[0]  # an alternative to the single-iterating inner loop from the previous solution
             d4[k].append(v)
         edge_labels4 = d4
+        print len(d4)
 
         z=[(u, v, d['weight'])for u, v, d in G4.edges(data=True)]
         f1 = open(name, 'w')
         for i in z:
             print >> f1, i
         #A = nx.adjacency_matrix(G1)
+
 
         #self.drawGraph_v(name, G1, edge_labels)### Drawing VCG
         #### Finding all possible paths from start vertex to end vertex
@@ -805,6 +1060,8 @@ class constraintGraph:
                     longest_path.append(paths[j])
         print "long=", longest_path
         '''
+        '''
+        ########### Without optimization
         dist = {}
         distance =set()
         position = {}  ## stores {node:location}
@@ -850,6 +1107,60 @@ class constraintGraph:
         #### redraw graph with new position
         #print loc
         self.drawGraph_v_new(name, G4, edge_labels4, dist)  ### Drawing VCG
+        ####################################
+        '''
+        ##############TESTING optimization
+        # NEWXLOCATION=[]
+        loct = []
+        for k in range(len(D_3)):
+            new_Ylocation = []
+
+            dist = {}
+            distance = set()  ###stores (u,v,w)where u=parent,v=child,w=cumulative weight from source to child
+            location = set()  ###No use
+            position_k = {}  ## stores {node:location}
+            for i in range(len(paths)):
+                path = paths[i]
+                # print path
+                for j in range(len(path)):
+                    node = path[j]
+                    if j > 0:
+                        pred = path[j - 1]
+                    else:
+                        pred = node
+                    # print node, pred
+                    if node == 0:
+                        dist[node] = (0, pred)
+                        # distance.append((pred,node,0))
+                        distance.add((pred, node, 0))
+                        # location.add((node,0))
+                        key = node
+                        position_k.setdefault(key, [])
+                        position_k[key].append(0)
+                    else:
+
+                        pairs = (dist[pred][0] + max(D_3[k][(pred, node)]), pred)
+                        # print  max(edge_labels1[(pred, node)])
+                        dist[node] = pairs
+                        # print dist[node][0]
+
+                        distance.add((pred, node, pairs[0]))
+                        # print pairs[0]
+                        # if location[node]<pairs[0]:
+                        location.add((node, pairs[0]))
+                        key = node
+                        position_k.setdefault(key, [])
+                        position_k[key].append(pairs[0])
+                # print position
+            loc_i = {}
+            for key in position_k:
+                loc_i[key] = max(position_k[key])
+                new_Ylocation.append(loc_i[key])
+            loct.append(loc_i)
+
+            self.NEWYLOCATION.append(new_Ylocation)
+        print"LOC=", loct, self.NEWYLOCATION
+
         '''
         G = nx.DiGraph()
         keys=[(0,node)for node in G1.nodes()]

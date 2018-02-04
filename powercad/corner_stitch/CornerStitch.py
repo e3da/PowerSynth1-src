@@ -1906,10 +1906,13 @@ if __name__ == '__main__':
 
     if len(sys.argv)>1:
         testfile=sys.argv[1] # taking input from command line
+
         f=open(testfile,"rb") # opening file in binary read mode
         index_of_dot = testfile.rindex('.') # finding the index of (.) in path
+
         testbase = os.path.basename(testfile[:index_of_dot]) # extracting basename from path
         testdir=os.path.dirname(testfile) # returns the directory name of file
+        print testbase
         if not len(testdir):
             testdir='.'
 
