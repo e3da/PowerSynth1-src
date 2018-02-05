@@ -705,6 +705,10 @@ class constraintGraph:
             loct.append(loc_i)
 
             self.NEWXLOCATION.append(new_Xlocation)
+        f3 = open(name+"location_x.txt", 'wb')
+        for i in loct:
+            # print i
+            print >> f3, i
         print"LOC=",loct, self.NEWXLOCATION
         '''
 
@@ -1159,6 +1163,10 @@ class constraintGraph:
             loct.append(loc_i)
 
             self.NEWYLOCATION.append(new_Ylocation)
+        f4 = open(name+'location_y.txt', 'w')
+        for i in loct:
+            # print i
+            print >> f4, i
         print"LOC=", loct, self.NEWYLOCATION
 
         '''

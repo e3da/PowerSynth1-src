@@ -2003,9 +2003,9 @@ if __name__ == '__main__':
     #CSCG.drawLayer_v()
     #CSCG.drawLayer_hnew()
     CSCG.drawRectangle(list)
-    CSCG.update_stitchList()
-    CSCG.drawLayer_hnew()
-    CSCG.drawLayer_vnew()
+    #CSCG.update_stitchList()
+    #CSCG.drawLayer_hnew()
+    #CSCG.drawLayer_vnew()
     #emptyVExample.drawLayer(truePointer=False)
     #emptyHExample.drawLayer(truePointer=False)
 
