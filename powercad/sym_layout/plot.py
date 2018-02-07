@@ -175,7 +175,7 @@ class Fillet(object):
         self.corner = corner # coordinates of the corner (object of class InnerCorner or OuterCorner)
         self.concavityQuadrant = quadrant # 1= concave in 1st quadrant, 2= conc n 2nd quad, 3= conc in 3rd quad, 4= conc in 4th quad
         if gap <= 2*default:
-            self.radius = gap/2 # if fillet size needs to be limited based on a design rule (example: T-junction with small overhang) # todo
+            self.radius = gap/2.0 # if fillet size needs to be limited based on a design rule (example: T-junction with small overhang) # todo
         else:
             self.radius = default # default fillet depth
         self.centerX = None
@@ -479,10 +479,10 @@ def detect_corners_90(sym_layout2, ax):
 
     # OUTPUT THE fillets[] LIST AND MARK THE FILLETS ON THE LAYOUT PREVIEW AND SOLUTION WINDOW
     print "Inner Corners (90 degrees): "
-    print "Format: (x, y), fillet concavity quadrant"
+    print "Format: (x, y), fillet concavity quadrant, fillet radius, ..."
     for i in fillets:
         i.calcInnerFilletSpecs() # Find fillet/arc specifications
-        print (i.corner.x, i.corner.y), i.concavityQuadrant, i.corner.trace1.top, i.corner.trace1.bottom, i.corner.trace1.left, i.corner.trace1.right, i.corner.trace2.top, i.corner.trace2.bottom, i.corner.trace2.left, i.corner.trace2.right
+        print (i.corner.x, i.corner.y), i.concavityQuadrant, i.radius, i.corner.trace1.top, i.corner.trace1.bottom, i.corner.trace1.left, i.corner.trace1.right, i.corner.trace2.top, i.corner.trace2.bottom, i.corner.trace2.left, i.corner.trace2.right
         a = Arc((i.centerX, i.centerY), i.radius*2, i.radius*2, theta1=i.theta1, theta2=i.theta2, facecolor='#E6E6E6', edgecolor='red', linewidth=2)
         #ax.add_patch(r) # toggle comment to enable/disable rectangle markings
         ax.add_patch(a) # toggle comment to enable/disable fillet markings
@@ -570,4 +570,81 @@ def detect_corners_270(sym_layout2, ax, innerFillets, supertraces):
         a = Arc((i.centerX, i.centerY), i.radius*2, i.radius*2, theta1=i.theta1, theta2=i.theta2, facecolor='#E6E6E6', edgecolor='blue', linewidth=2)
         ax.add_patch(a) # toggle comment to enable/disable fillet markings
 
-# test Jul 25, 2017
+''' WORK IN PROGRESS
+def make_test_setup():
+    import os
+    from powercad.sym_layout.symbolic_layout import SymbolicLayout, DeviceInstance, make_test_bonds, make_test_leads, make_test_devices, make_test_symmetries, add_test_measures
+    from powercad.tech_lib.test_techlib import get_power_lead, get_signal_lead
+    from powercad.tech_lib.test_techlib import get_power_bondwire, get_signal_bondwire
+    from powercad.design.module_design import ModuleDesign
+    from powercad.tech_lib.test_techlib import get_device, get_dieattach
+    import powercad.general.settings.settings as settings
+
+    # from powercad.export.Q3D import output_q3d_vbscript
+    temp_dir = os.path.abspath(settings.TEMP_DIR)
+    # test_file = os.path.abspath('../../../sym_layouts/rd100.svg')
+    test_file = os.path.abspath('C:\Users\sxm063\Documents\Tests and Temp\Aug 08 Resp Surf\\t4\layout.psc')
+
+    sym_layout = SymbolicLayout()
+    sym_layout.load_layout(test_file, 'script')
+    symbols = sym_layout.all_sym
+
+    individual = [6.920827976700803, 4.461667137187969, 1.3510358072416575, 7.125867384900647, 4.485341551343113, 6.148187315947553, 7.858033069900291, 3.5036195273112076, 5.579406164773942, 5.014025755388444, 3.08054188918201, 10.291698066119505, 5.787431412699365, 8.381764054043357, 5.687155288920724, 0.421898041081173, 0.0, 0.7002046853504733, 0.4984362197292984, 0.0, 1.0]
+    print 'individual', individual
+
+    dev = DeviceInstance(0.1, 10.68, get_device(), get_dieattach())
+    pow_lead = get_power_lead()
+    sig_lead = get_signal_lead()
+    power_bw = get_power_bondwire()
+    signal_bw = get_signal_bondwire()
+    make_test_leads(symbols, pow_lead, sig_lead)
+    make_test_bonds(symbols, power_bw, signal_bw)
+    make_test_devices(symbols, dev)
+    make_test_symmetries(sym_layout)
+    add_test_measures(sym_layout)
+
+    plot_layout(sym_layout, True, ax=plt.subplot('111', adjustable='box', aspect=1.0), new_window=True)
+
+
+
+    #
+    # module = gen_test_module_data(100.0)
+    # print "symbolic_layout.py > make_test_setup() > temp_dir=", temp_dir
+    # sym_layout.form_design_problem(module, temp_dir)
+    # sym_layout.set_RS_model()
+    sym_layout._map_design_vars()
+    setup_model(sym_layout)
+    individual = [10.81242585041992, 9.166102790830909, 4, 8, 2.0, 2.0, 10, 4, 0.8, 0.8]
+    print 'individual', individual
+    print "opt_to_sym_index", sym_layout.opt_to_sym_index
+    sym_layout.rev_map_design_vars(individual)
+    sym_layout.generate_layout()
+    sym_layout._build_lumped_graph()
+    ret = one_measure(sym_layout)
+    md = ModuleDesign(sym_layout)
+    output_q3d_vbscript(md, 'C:/Users/qmle/Desktop/POETS/Run/Test.vbs')
+    w_corner = [10, 12, 10, 5]
+    l_corner = [6, 5, 2.5, 5]
+    ind_corner = trace_ind_krige(100, w_corner, l_corner, sym_layout.LAC_mdl)
+    res_corner = trace_res_krige(100, w_corner, l_corner, sym_layout.RAC_mdl)
+    # print 'corner',sum(ind_corner),sum(res_corner)
+    # print "LAC_RS", ret[0]#-sum(ind_corner)
+    # print "RAC_RS", ret[1]#-sum(res_corner)
+    ind_ms_corner = 0
+    res_ms_corner = 0
+    ind_bw_spline = 0
+    res_bw_spline = 0
+    for w, l in zip(w_corner, l_corner):
+        ind_ms_corner += trace_inductance(w, l, 0.2, 0.64)
+        res_ms_corner += trace_resistance(100, w, l, 0.2, 0.64)
+
+    # print "LAC_MS", ret[2]#- ind_ms_corner
+    # print "RAC_MS", ret[3]#- res_ms_corner
+    print "MAX TEMP", ret[4]
+    
+
+#if __name__ == "__main__":
+    #make_test_setup()
+'''
+
+# Last tested: Feb 04, 2018

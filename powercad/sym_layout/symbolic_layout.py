@@ -1934,7 +1934,8 @@ class SymbolicLayout(object):
         self._opt_eval(individual)
     '''-----------------------------------------------------------------------------------------------------------------------------------------------------'''      
     def _opt_eval(self, individual):
-        
+
+        print individual # sxm test
         self.rev_map_design_vars(individual)
         self.generate_layout()
         ret = []
