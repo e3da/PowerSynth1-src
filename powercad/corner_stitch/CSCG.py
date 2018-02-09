@@ -1380,4 +1380,4 @@ class CSCG:
             ax3.add_patch(p)
         plt.xlim(0,60)
         plt.ylim(0,60)
-        fig.savefig(self.name1+'-1.png',bbox_inches='tight')
+        fig.savefig(self.name1+'-input.png',bbox_inches='tight')

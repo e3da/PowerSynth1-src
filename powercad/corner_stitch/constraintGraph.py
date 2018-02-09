@@ -537,7 +537,8 @@ class constraintGraph:
         for i in range(20):
             W=[]
             for i in range(len(D)):
-                W.append(randint(2, 20))
+                #W.append(randint(2, 10))
+                W.append(randint(2, 5))
             W_total.append(W)
         #print W_total
 
@@ -549,6 +550,49 @@ class constraintGraph:
             if i.values()[0] == 1:
                 Space.append(i)
         #print Space
+        ############################ Varying Spacing
+        S_total = []
+        for i in range(20):
+            S = []
+            for i in range(len(Space)):
+                S.append(randint(1, 3))
+            S_total.append(S)
+        NewS = []
+        for i in range(len(Space)):
+            NewS.append(Space[i].keys()[0])
+        #print "NEWD=", NewS
+        new_labelw = []
+        for j in range(len(W_total)):
+            labelnew = []
+            for i in range(len(NewD)):
+                newdict = {NewD[i]: W_total[j][i]}
+                labelnew.append(newdict)
+                # labelnew.extend(Space)
+            new_labelw.append(labelnew)
+        #print new_labelw
+        new_labels = []
+        for j in range(len(S_total)):
+            labelnew = []
+            for i in range(len(NewS)):
+                newdict = {NewS[i]: S_total[j][i]}
+                labelnew.append(newdict)
+            new_labels.append(labelnew)
+
+        #print new_labels
+        new_label = []
+        for i in range(len(new_labels)):
+            new_labels[i].extend(new_labelw[i])
+            new_label.append(new_labels[i])
+        #print new_label
+        #print "l4=", label4
+        for i in range(len(new_label)):
+            #
+            new_label[i].extend(label4)
+            #print new_label[i]
+
+        #print new_label
+        ################################
+        '''
         new_label=[]
         for j in range(len(W_total)):
             labelnew=[]
@@ -557,7 +601,7 @@ class constraintGraph:
                 labelnew.append(newdict)
                 labelnew.extend(Space)
             new_label.append(labelnew)
-
+        '''
         #print len(new_label)
         #for i in new_label:
             #print i
@@ -631,10 +675,13 @@ class constraintGraph:
         ######## Finds all possible paths from start vertex to end vertex(begin)
         n=list(G3.nodes())
         self.FindingAllPaths_h(G3, n[0], n[-1])
+        '''
         f2 = open("paths_h.txt", "rb")
         for line in f2.read().splitlines():  # considering each line in file
             self.paths_h.append(line)
         paths=[json.loads(y) for y in self.paths_h]
+        '''
+        paths=self.paths_h
         print paths
         #### (end)
         #### finding new location of each vertex in longest paths (begin)########
@@ -793,14 +840,14 @@ class constraintGraph:
         This should call subroutines for edge and vertex reduction, to pare the constraint graph down to its
         minimum form
         """
-        f1 = open("paths_h.txt", 'w')
+        #f1 = open("paths_h.txt", 'w')
         visited = [False] * (len(G.nodes()))
         path = []
 
-        self.printAllPaths_h(G, start, end, visited, path,f1)
+        self.printAllPaths_h(G, start, end, visited, path)
 
 
-    def printAllPaths_h(self, G, start, end, visited, path,f1):
+    def printAllPaths_h(self, G, start, end, visited, path):
         visited[start] = True
         path.append(start)
 
@@ -808,9 +855,10 @@ class constraintGraph:
         # current path[]
 
         if start == end:
-
+            saved_path = path[:]
+            self.paths_h.append(saved_path)
             # for i in edge_labels1:
-            print >> f1, path
+            #print >> f1, path
 
 
 
@@ -824,7 +872,7 @@ class constraintGraph:
 
             for i in G.neighbors(start):
                 if visited[i] == False:
-                    self.printAllPaths_h(G, i, end, visited, path,f1)
+                    self.printAllPaths_h(G, i, end, visited, path)
 
         # Remove current vertex from path[] and mark it as unvisited
 
@@ -957,18 +1005,69 @@ class constraintGraph:
         for i in range(20):
             W = []
             for i in range(len(D)):
-                W.append(randint(2, 20))
+                W.append(randint(2, 10))
             W_total.append(W)
         #print W_total
 
         NewD = []
         for i in range(len(D)):
             NewD.append(D[i].keys()[0])
+        #print "NEWD=",NewD
         Space = []
         for i in label_4:
             if i.values()[0] == 1:
                 Space.append(i)
+        ################### Varying spacing
+        S_total = []
+        for i in range(20):
+            S = []
+            for i in range(len(Space)):
+                S.append(randint(1, 4))
+            S_total.append(S)
+        NewS = []
+        for i in range(len(Space)):
+            NewS.append(Space[i].keys()[0])
+        #print "NEWD=", NewS
+        new_labelw = []
+        for j in range(len(W_total)):
+            labelnew = []
+            for i in range(len(NewD)):
+                newdict = {NewD[i]: W_total[j][i]}
+                labelnew.append(newdict)
+                #labelnew.extend(Space)
+            new_labelw.append(labelnew)
+        #print new_labelw
+        new_labels = []
+        for j in range(len(S_total)):
+            labelnew = []
+            for i in range(len(NewS)):
+                newdict = {NewS[i]: S_total[j][i]}
+                labelnew.append(newdict)
+            new_labels.append(labelnew)
+
+
+        #print new_labels
+        new_label=[]
+        for i in range(len(new_labels)):
+            new_labels[i].extend(new_labelw[i])
+            new_label.append(new_labels[i])
+        #print new_label
+        #print "l4=",label4
+
+        for i in range(len(new_label)):
+            #
+            new_label[i].extend(label4)
+            #print new_label[i]
+
+        #print new_label
+
+
+
+
+
+        ###########################
         # print Space
+        '''
         new_label = []
         for j in range(len(W_total)):
             labelnew = []
@@ -977,7 +1076,7 @@ class constraintGraph:
                 labelnew.append(newdict)
                 labelnew.extend(Space)
             new_label.append(labelnew)
-
+        '''
         #print len(new_label)
         #for i in new_label:
             #print i
@@ -1018,10 +1117,13 @@ class constraintGraph:
         #### Finding all possible paths from start vertex to end vertex
         n=list(G4.nodes())
         self.FindingAllPaths_v(G4, n[0], n[-1])
+        '''
         f = open("paths_v.txt", "rb")
         for line in f.read().splitlines():  # considering each line in file
             self.paths_v.append(line)
         paths = [json.loads(y) for y in self.paths_v]
+        '''
+        paths=self.paths_v
         print paths
         '''
         for node in G1.nodes():
@@ -1316,22 +1418,24 @@ class constraintGraph:
         This should call subroutines for edge and vertex reduction, to pare the constraint graph down to its
         minimum form
         """
-        f1 = open("paths_v.txt", 'w')
+        #f1 = open("paths_v.txt", 'w')
         visited = [False] * (len(G.nodes()))
         path=[]
-        self.printAllPaths_v(G,start, end, visited, path,f1)
-    def printAllPaths_v(self,G, start,end, visited, path,f1):
+        self.printAllPaths_v(G,start, end, visited, path)
+    def printAllPaths_v(self,G, start,end, visited, path):
         visited[start] = True
         path.append(start)
         # If current vertex is same as destination, then print
         # current path[]
         if start == end:
-             print >> f1, path
+            saved_path = path[:]
+            self.paths_v.append(saved_path)
+             #print >> f1, path
         else:
             for i in G.neighbors(start):
 
                 if visited[i] == False:
-                    self.printAllPaths_v(G,i,end, visited, path,f1)
+                    self.printAllPaths_v(G,i,end, visited, path)
         # Remove current vertex from path[] and mark it as unvisited
         path.pop()
         visited[start] = False
