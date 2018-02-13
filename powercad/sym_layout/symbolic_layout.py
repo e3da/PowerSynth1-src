@@ -282,6 +282,7 @@ class SymbolicLayout(object):
     BONDWIRE_DV = 4
 
     def __init__(self):
+        # type: () -> object
         self.design_rules = None
         self.sub_dim = None
         self.gap = None

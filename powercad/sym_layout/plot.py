@@ -169,13 +169,13 @@ class OuterCorner(object):
 
 class Fillet(object):
     def __init__(self, corner, quadrant, gap):
-        default = 2
+        default = 2.0 # default fillet radius
         if gap is None: # L-junction
-            gap = default*2 # assume gap is twice the would-be fillet radius if this were a T-junction
+            gap = default*2.0 # assume gap is twice the would-be fillet radius if this were a T-junction
         self.corner = corner # coordinates of the corner (object of class InnerCorner or OuterCorner)
         self.concavityQuadrant = quadrant # 1= concave in 1st quadrant, 2= conc n 2nd quad, 3= conc in 3rd quad, 4= conc in 4th quad
-        if gap <= 2*default:
-            self.radius = gap/2.0 # if fillet size needs to be limited based on a design rule (example: T-junction with small overhang) # todo
+        if gap <= 2.0*default:
+            self.radius = gap/3.0 # if fillet size needs to be limited based on a design rule (example: T-junction with small overhang) # todo
         else:
             self.radius = default # default fillet depth
         self.centerX = None
@@ -185,7 +185,7 @@ class Fillet(object):
 
     def calcOuterFilletSpecs(self):
         """Calculate an outer corner's fillet specifications such as fillet arc center coordinates and sector starting angle and ending angle based on the concavity quadrant."""
-        self.radius = (round(min(self.corner.trace.trace_rect.top-self.corner.trace.trace_rect.bottom, self.corner.trace.trace_rect.right-self.corner.trace.trace_rect.left, 2), 1))/2
+        self.radius = (round(min(self.corner.trace.trace_rect.top-self.corner.trace.trace_rect.bottom, self.corner.trace.trace_rect.right-self.corner.trace.trace_rect.left, 2*self.radius, 2), 1))/2
         if self.concavityQuadrant == 1:
             self.centerX = self.corner.x + self.radius
             self.centerY = self.corner.y + self.radius
@@ -208,9 +208,10 @@ class Fillet(object):
             self.theta2 = 180.0
 
     def calcInnerFilletSpecs(self):
-        """Calculate an inner corner's fillet specifications such as fillet arc center coordinates and sector starting angle and ending angle based on the concavity quadrant."""
+        """Calculate an inner corner's fillet specifications such as fillet arc center coordinates and sector starting angle and ending angle based on the concavity quadrant.
+        Modify the radius based on the smallest feature size (either minGap or trace dimensions) if needed."""
         self.radius = (round(min(self.corner.trace1.top-self.corner.trace1.bottom, self.corner.trace1.right-self.corner.trace1.left, \
-                                self.corner.trace2.top-self.corner.trace2.bottom, self.corner.trace2.right-self.corner.trace2.left, 2), 1))/2
+                                self.corner.trace2.top-self.corner.trace2.bottom, self.corner.trace2.right-self.corner.trace2.left, 2*self.radius, 2), 1))/2 # limit the radius based on the smallest feature size.
         if self.concavityQuadrant == 1:
             self.centerX = self.corner.x + self.radius
             self.centerY = self.corner.y + self.radius
@@ -269,7 +270,6 @@ def addFillet(fillets, corner, temp_x, temp_y, concavityQuadrant, limit):
                 continue
         if found == False:
             fillets.append(f)
-
 
 def searchCorner(trace1, trace2, corneredTraces):
     """Search if the combination of trace1 and trace2 exist in the corneredTraces[] list. Return True if so, False otherwise."""
@@ -402,7 +402,7 @@ def detect_corners_90(sym_layout2, ax):
 
         # FIND THE OTHER COORDINATE (T-JUNCTION) BY COMPARING EDGE LOCATIONS OF THE PAIR OF TRACES BEING ASSESSED
         elif temp_x is None and temp_y is not None: # if temp_x is still None (but temp_y has been found), this is a T-junction.
-            minGap = 1 # minGap is the is the minimum gap between the leftmost(rightmost) edge of a horizontal trace and the leftmost(rightmost) edge of a vertical trace that forms a T-junction
+            minGap = 1 # minGap is the threshold below which fillet is not applied. It is the minimum gap between the leftmost(rightmost) edge of a horizontal trace and the leftmost(rightmost) edge of a vertical trace that forms a T-junction
             if (((round(i.trace1.left, 1) > round(i.trace2.left, 1)) & (round(i.trace1.left,1 ) < round(i.trace2.right, 1)))) & (((round(i.trace1.right, 1) > round(i.trace2.left, 1)) & (round(i.trace1.right, 1) < round(i.trace2.right, 1)))):
                 temp_x = i.trace1.left
                 if round(temp_y, 1) == round(i.trace1.bottom, 1):
@@ -490,11 +490,11 @@ def detect_corners_90(sym_layout2, ax):
     return fillets, supertraces
 
 def searchInnerFillets(oc, innerFillets):
-    '''Searches for given OuterCorner, oc, in given innerFillets list and returns the list of duplicates.'''
+    '''Searches for given OuterCorner, oc, in given innerFillets list and returns the list of duplicates (including outer corners that may be too close to an innercorner that a fillet can not be manufactured).'''
     duplicates = [] # create an empty list to store indices where oc is found in innerFillets
-    minGap = 1
+    minFilletRadius = 0.2 # minimum manufacturable size of a fillet (radius)
     for i in innerFillets:
-        if (round(i.corner.x, 1)-minGap <= round(oc.x, 1) <= round(i.corner.x, 1)+minGap) and (round(i.corner.y, 1)-minGap <= round(oc.y, 1) <= round(i.corner.y, 1)+minGap):
+        if (round(i.corner.x, 1)-2*minFilletRadius <= round(oc.x, 1) <= round(i.corner.x, 1)+2*minFilletRadius) and (round(i.corner.y, 1)-2*minFilletRadius <= round(oc.y, 1) <= round(i.corner.y, 1)+2*minFilletRadius):
         #if ((round(oc.x, 1) in range(round(i.corner.x, 1)-minGap, round(i.corner.x, 1)+minGap)) and (round(oc.y, 1) in range(round(i.corner.y, 1)-minGap, round(i.corner.y, 1)+minGap))):
             duplicates.append(i)
     return duplicates
@@ -502,12 +502,23 @@ def searchInnerFillets(oc, innerFillets):
 def searchOuterFillets(f, outerFillets):
     '''Searches for given fillet, f, in given outerFillets list and returns the list of duplicates.'''
     duplicates = []  # create an empty list to store indices where f is found in outerFillets
-    minGap = 1
+    minGap = 1 # So that you don't have two outer fillets when there a short T-overhang.
     for i in outerFillets:
         if (round(i.corner.x, 1)-minGap <= round(f.corner.x, 1) <= round(i.corner.x, 1)+minGap) and (round(i.corner.y, 1)-minGap <= round(f.corner.y, 1) <= round(i.corner.y, 1)+minGap):
         #if (round(f.corner.x, 1) == round(i.corner.x, 1)) and (round(f.corner.y, 1) == round(i.corner.y, 1)):
             duplicates.append(i)
     return duplicates
+
+def findGap(oc, innerFillets):
+    '''Search if given outerCorner is within a short T-overhang distance of any InnerCorner. Modify radius appropriately.'''
+    gap = None
+    defaultGap = 2.0
+    for i in innerFillets:
+        if ((oc.x == i.corner.x) and (i.corner.y-defaultGap < oc.y < i.corner.y+defaultGap)) or ((oc.y == i.corner.y) and (i.corner.x-defaultGap < oc.x < i.corner.x+defaultGap)):
+            gap = max(abs(oc.x - i.corner.x), abs(oc.y - i.corner.y)) # or radius = i.radius
+            print gap
+            break
+    return gap
 
 def detect_corners_270(sym_layout2, ax, innerFillets, supertraces):
     """OUTER CORNER DETECTION
@@ -548,9 +559,10 @@ def detect_corners_270(sym_layout2, ax, innerFillets, supertraces):
         oc = getOuterCorners(i) # Returns four OuterCorner objects for the given trace, i
         # REMOVE OUTERCORNERS THAT ARE CONGRUENT TO AN INNERCORNER (i.e. their x,y coordinates match)
         for j in oc:
-            innerDuplicates = searchInnerFillets(j, innerFillets) # save the duplicate objects in innerFillets[] list
+            innerDuplicates = searchInnerFillets(j, innerFillets) # save the duplicate objects from innerFillets[] list
             if len(innerDuplicates) == 0:
-                f = Fillet(j, j.concavityQuadrant, None)
+                gap = findGap(j, innerFillets) # limit radius if near a very short t-overhang
+                f = Fillet(j, j.concavityQuadrant, gap)
                 outerduplicates = searchOuterFillets(f, outerFillets) # save the duplicate objects in outerFillets[] list
                 if len(outerduplicates) > 0:
                     for k in outerduplicates:
@@ -563,9 +575,9 @@ def detect_corners_270(sym_layout2, ax, innerFillets, supertraces):
 
     # MARK THE OUTER CORNERS WITH FILLETS WITH CUSTOMIZED ORIENTATION AND SIZE
     print "Outer Corners (270 degrees):"
-    print "Format: ((x, y), fillet concavity quadrant, fillet size (default=2))"
+    print "Format: ((x, y), fillet concavity quadrant, fillet size (default=1))"
     for i in outerFillets:
-        i.calcOuterFilletSpecs() # Find fillet/arc specifications
+        i.calcOuterFilletSpecs() # Find fillet/arc specifications; modify radius if needed (based on smallest feature size)
         print ((i.corner.x, i.corner.y), i.concavityQuadrant, i.radius)
         a = Arc((i.centerX, i.centerY), i.radius*2, i.radius*2, theta1=i.theta1, theta2=i.theta2, facecolor='#E6E6E6', edgecolor='blue', linewidth=2)
         ax.add_patch(a) # toggle comment to enable/disable fillet markings
