@@ -30,6 +30,7 @@ class cell:
         self.y = y
         self.type = type
 
+
     def printCell(self, printX = False, printY = False, printType = False):
         if printX: print "x = ", self.x
         if printY: print "y = ", self.y
@@ -1619,7 +1620,7 @@ class hLayer(cornerStitch):
             changeList[0].cell.type = type
             self.rectifyShadow(changeList[0])
 
-
+        print changeList
         return  changeList
 
 

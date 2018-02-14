@@ -195,10 +195,10 @@ class constraintGraph:
             if rect.cell.type=="SOLID":
                 origin = self.zeroDimensionListh.index(rect.cell.x)
                 dest = self.zeroDimensionListh.index(rect.getEast().cell.x)
-                e=Edge(origin, dest, constraint.constraint(1, 'minWidth', origin, dest))
+                e=Edge(origin, dest, constraint.constraint(1, 'minWidth', origin, dest),"1")
                 #print"e=", Edge.getEdgeWeight(e,origin,dest)
                 #self.edgesv.append(e)
-                self.edgesh.append(Edge(origin, dest, constraint.constraint(1, 'minWidth', origin, dest)))
+                self.edgesh.append(Edge(origin, dest, constraint.constraint(1, 'minWidth', origin, dest),"1"))
                 #self.vertexMatrixh[origin][dest].append((rect.getWidth()))
                 self.vertexMatrixh[origin][dest].append(Edge.getEdgeWeight(e,origin,dest))
 
@@ -206,9 +206,9 @@ class constraintGraph:
             elif rect.cell.type=="EMPTY":
                 origin = self.zeroDimensionListv.index(rect.cell.y)
                 dest = self.zeroDimensionListv.index(rect.getNorth().cell.y)
-                e = Edge(origin, dest, constraint.constraint(0, 'minWidth', origin, dest))
+                e = Edge(origin, dest, constraint.constraint(0, 'minWidth', origin, dest),"0")
                 #self.edgesv.append(e)
-                self.edgesv.append(Edge(origin, dest, constraint.constraint(0, 'minWidth', origin, dest)))
+                self.edgesv.append(Edge(origin, dest, constraint.constraint(0, 'minWidth', origin, dest),"0"))
                 self.vertexMatrixv[origin][dest].append(Edge.getEdgeWeight(e,origin,dest))
                 #self.edgesv.append(Edge(origin, dest, constraint.constraint( rect.getHeight(), origin, dest)))
 
@@ -216,9 +216,9 @@ class constraintGraph:
             if rect.cell.type == "SOLID":
                 origin = self.zeroDimensionListv.index(rect.cell.y)
                 dest = self.zeroDimensionListv.index(rect.getNorth().cell.y)
-                e = Edge(origin, dest, constraint.constraint(1, 'minWidth', origin, dest))
+                e = Edge(origin, dest, constraint.constraint(1, 'minWidth', origin, dest),"1")
                 #self.edgesh.append(e)
-                self.edgesv.append(Edge(origin, dest, constraint.constraint(1, 'minWidth', origin, dest)))
+                self.edgesv.append(Edge(origin, dest, constraint.constraint(1, 'minWidth', origin, dest),"1"))
                 #self.vertexMatrixv[origin][dest] = rect.getHeight()
                 self.vertexMatrixv[origin][dest].append(e.getEdgeWeight(origin,dest))
                 #self.edgesv.append(Edge(origin, dest, constraint.constraint(rect.getHeight() , origin, dest)))#
@@ -226,9 +226,9 @@ class constraintGraph:
             elif rect.cell.type == "EMPTY":
                 origin = self.zeroDimensionListh.index(rect.cell.x)
                 dest = self.zeroDimensionListh.index(rect.getEast().cell.x)
-                e = Edge(origin, dest, constraint.constraint(0, 'minWidth', origin, dest))
+                e = Edge(origin, dest, constraint.constraint(0, 'minWidth', origin, dest),"0")
                 #self.edgesh.append(e)
-                self.edgesh.append(Edge(origin, dest, constraint.constraint(0, 'minWidth', origin, dest)))
+                self.edgesh.append(Edge(origin, dest, constraint.constraint(0, 'minWidth', origin, dest),"0"))
                 #self.vertexMatrixh[origin][dest] = rect.getWidth()
                 self.vertexMatrixh[origin][dest].append(e.getEdgeWeight(origin,dest))
                 ##'minWidth'
@@ -242,7 +242,7 @@ class constraintGraph:
         self.edgesh_new=copy.deepcopy(self.edgesh)
         #print self.edgesh_new
         for foo in self.edgesh_new:
-            # print foo.getEdgeDict()
+            #print foo.getEdgeDict()
             dictList1.append(foo.getEdgeDict())
         # print dictList1
 
@@ -252,6 +252,7 @@ class constraintGraph:
             k, v = list(i.items())[0]  # an alternative to the single-iterating inner loop from the previous solution
             d[k].append(v)
         edge_labels1 = d
+        #print d
         # print d.keys()
         # for u,v in d.keys():
         # print u,v
@@ -262,7 +263,7 @@ class constraintGraph:
         for i in range(len(nodes) - 1):
             if (nodes[i], nodes[i + 1]) not in d.keys():
                 #d[nodes[i], nodes[i + 1]] = [1]
-                self.edgesh_new.append(Edge(nodes[i], nodes[i+1], constraint.constraint(0, 'minWidth', nodes[i], nodes[i+1])))
+                self.edgesh_new.append(Edge(nodes[i], nodes[i+1], constraint.constraint(0, 'minWidth', nodes[i], nodes[i+1]),"0"))
         dictList = []
         self.edgesv_new = copy.deepcopy(self.edgesv)
         for foo in self.edgesv_new:
@@ -272,13 +273,15 @@ class constraintGraph:
             k, v = list(i.items())[0]  # an alternative to the single-iterating inner loop from the previous solution
             d1[k].append(v)
         edge_labels = d1
+        #print d1
         nodes_v = [x for x in range(len(self.zeroDimensionListv))]
         #G1.add_nodes_from(nodes)
         ### adding missing edges for evaluation
         for i in range(len(nodes_v) - 1):
             if (nodes_v[i], nodes_v[i + 1]) not in d1.keys():
                 #d[nodes[i], nodes[i + 1]] = [1]
-                self.edgesv_new.append(Edge(nodes_v[i], nodes_v[i+1], constraint.constraint(0, 'minWidth', nodes_v[i], nodes_v[i+1])))
+                self.edgesv_new.append(Edge(nodes_v[i], nodes_v[i+1], constraint.constraint(0, 'minWidth', nodes_v[i], nodes_v[i+1]),"0"))
+        #print "edge",self.edgesv_new
     '''
     def dimListFromLayer(self, cornerStitch):
         """
@@ -467,7 +470,7 @@ class constraintGraph:
             #print data
             G2.add_weighted_edges_from(data)
         d = defaultdict(list)
-
+        #print label
         for i in label:
             k, v = list(i.items())[0]  # an alternative to the single-iterating inner loop from the previous solution
             d[k].append(v)
@@ -507,16 +510,18 @@ class constraintGraph:
         # print G2.edges()
         # print"label=", edge_labels1
         label3 = []
+        label5=[]
         for branch in edge_labels3:
             lst_branch = list(branch)
             data = []
 
             for internal_edge in edge_labels3[branch]:
                 # print lst_branch[0], lst_branch[1]
-                # print internal_edge
+                #print internal_edge[0]
                 # if (lst_branch[0], lst_branch[1], internal_edge) not in data:
                 data.append((lst_branch[0], lst_branch[1], internal_edge))
                 label3.append({(lst_branch[0], lst_branch[1]): internal_edge})
+                label5.append({(lst_branch[0], lst_branch[1]): internal_edge[0]})
                 '''
                 if (lst_branch[0], lst_branch[1], {'route': internal_edge}) not in data:
                 data.append((lst_branch[0], lst_branch[1], {'route': internal_edge}))
@@ -526,37 +531,40 @@ class constraintGraph:
             G3.add_weighted_edges_from(data)
         #############################################################
         label4=copy.deepcopy(label3)
+        #print "l3",label3
         D=[]
         #print label3
         for i in label4:
-            if i.values()[0]==2:
+            #print i.values()[0][1]
+            if i.values()[0][1]=="1":
                 D.append(i)
 
         #print D, len(D)
         W_total=[]
-        for i in range(20):
+        for i in range(5):
             W=[]
             for i in range(len(D)):
                 #W.append(randint(2, 10))
-                W.append(randint(2, 5))
+                W.append(randint(2, 6))
             W_total.append(W)
-        #print W_total
+        print "W_T=",W_total
 
         NewD=[]
         for i in range(len(D)):
             NewD.append(D[i].keys()[0])
         Space = []
         for i in label4:
-            if i.values()[0] == 1:
+            if i.values()[0][1] == "0":
                 Space.append(i)
         #print Space
         ############################ Varying Spacing
         S_total = []
-        for i in range(20):
+        for i in range(5):
             S = []
             for i in range(len(Space)):
-                S.append(randint(1, 3))
+                S.append(randint(1,3))
             S_total.append(S)
+        print "S_T=", S_total
         NewS = []
         for i in range(len(Space)):
             NewS.append(Space[i].keys()[0])
@@ -583,11 +591,12 @@ class constraintGraph:
         for i in range(len(new_labels)):
             new_labels[i].extend(new_labelw[i])
             new_label.append(new_labels[i])
-        #print new_label
+        # new_label
         #print "l4=", label4
+
         for i in range(len(new_label)):
             #
-            new_label[i].extend(label4)
+            new_label[i].extend(label5)
             #print new_label[i]
 
         #print new_label
@@ -623,7 +632,7 @@ class constraintGraph:
 
             D_3.append(d[j])
 
-        #print len(D_3),D_3
+        print len(D_3),D_3
 
         '''
         NewD = []
@@ -717,6 +726,7 @@ class constraintGraph:
                 #print path
                 for j in range(len(path)):
                     node = path[j]
+                    #print "node=",path[-1]
                     if j > 0:
                         pred = path[j - 1]
                     else:
@@ -730,6 +740,8 @@ class constraintGraph:
                         key=node
                         position_k.setdefault(key,[])
                         position_k[key].append(0)
+                    #elif node== path[-1]:
+
                     else:
 
                         pairs = (dist[pred][0] + max(D_3[k][(pred, node)]), pred)
@@ -744,10 +756,14 @@ class constraintGraph:
                         key = node
                         position_k.setdefault(key, [])
                         position_k[key].append(pairs[0])
-                #print position
+                #print position_k
             loc_i={}
             for key in position_k:
                 loc_i[key]=max(position_k[key])
+                #if key==n[-2]:
+                    #loc_i[key] = 19
+                #elif key==n[-1]:
+                    #loc_i[key] = 20
                 new_Xlocation.append(loc_i[key])
             loct.append(loc_i)
 
@@ -757,6 +773,19 @@ class constraintGraph:
             # print i
             print >> f3, i
         print"LOC=",loct, self.NEWXLOCATION
+        Graph_pos_h = []
+        for i in range(len(loct)):
+            dist = {}
+            for node in loct[i]:
+                key = node
+
+                dist.setdefault(key, [])
+                dist[node].append(node)
+                dist[node].append(loct[i][node])
+            Graph_pos_h.append(dist)
+        #print Graph_pos_h
+
+        self.drawGraph_h_new(name,G3,D_3,Graph_pos_h)
         '''
 
         ###############       Without optimization
@@ -917,7 +946,7 @@ class constraintGraph:
             k, v = list(i.items())[0]  # an alternative to the single-iterating inner loop from the previous solution
             d[k].append(v)
         edge_labels = d
-        print len(d)
+        #print len(d)
         self.drawGraph_v(name, G1, edge_labels)
         G4 = nx.MultiDiGraph()
         dictList4= []
@@ -940,6 +969,7 @@ class constraintGraph:
         ######
         '''
         label4 = []
+        label6=[]
         for branch in edge_labels4:
             lst_branch = list(branch)
             data = []
@@ -948,6 +978,7 @@ class constraintGraph:
                 data.append((lst_branch[0], lst_branch[1], internal_edge))
                 # data.append((lst_branch[0], lst_branch[1], {'route': internal_edge}))
                 label4.append({(lst_branch[0], lst_branch[1]): internal_edge})
+                label6.append({(lst_branch[0], lst_branch[1]): internal_edge[0]})
             G4.add_weighted_edges_from(data)
         #############################################################
         '''(One output figure with variable Y)
@@ -997,17 +1028,17 @@ class constraintGraph:
         D = []
         # print label3
         for i in label_4:
-            if i.values()[0] == 2:
+            if i.values()[0][1] == "1":
                 D.append(i)
 
         # print D, len(D)
         W_total = []
-        for i in range(20):
+        for i in range(5):
             W = []
             for i in range(len(D)):
                 W.append(randint(2, 10))
             W_total.append(W)
-        #print W_total
+        print "W_T",W_total
 
         NewD = []
         for i in range(len(D)):
@@ -1015,19 +1046,20 @@ class constraintGraph:
         #print "NEWD=",NewD
         Space = []
         for i in label_4:
-            if i.values()[0] == 1:
+            if i.values()[0][1] == "0":
                 Space.append(i)
         ################### Varying spacing
         S_total = []
-        for i in range(20):
+        for i in range(5):
             S = []
             for i in range(len(Space)):
                 S.append(randint(1, 4))
             S_total.append(S)
+        print "S_T=", S_total
         NewS = []
         for i in range(len(Space)):
             NewS.append(Space[i].keys()[0])
-        #print "NEWD=", NewS
+
         new_labelw = []
         for j in range(len(W_total)):
             labelnew = []
@@ -1056,10 +1088,10 @@ class constraintGraph:
 
         for i in range(len(new_label)):
             #
-            new_label[i].extend(label4)
+            new_label[i].extend(label6)
             #print new_label[i]
 
-        #print new_label
+        #print "new_label",new_label
 
 
 
@@ -1096,7 +1128,7 @@ class constraintGraph:
 
             D_3.append(d[j])
 
-        #print "V=",len(D_3), D_3
+        print "V=",len(D_3), D_3
 
         ############################
         d4 = defaultdict(list)
@@ -1270,7 +1302,19 @@ class constraintGraph:
             # print i
             print >> f4, i
         print"LOC=", loct, self.NEWYLOCATION
+        Graph_pos_v=[]
+        for i in range(len(loct)):
+            dist = {}
+            for node in loct[i]:
+                key = node
 
+                dist.setdefault(key, [])
+                dist[node].append(node)
+                dist[node].append(loct[i][node])
+            Graph_pos_v.append(dist)
+        print Graph_pos_v
+
+        self.drawGraph_v_new(name, G4, D_3, Graph_pos_v)
         '''
         G = nx.DiGraph()
         keys=[(0,node)for node in G1.nodes()]
@@ -1455,25 +1499,23 @@ class constraintGraph:
 
     def drawGraph_h_new(self,name,G2,edge_labels1,loc):
 
-
+        for i in range(len(loc)):
 
         #edge_labels1 = self.merge_dicts(dictList1)
-        edge_colors1 = ['black' for edge in G2.edges()]
-        pos = nx.shell_layout(G2)
-
-
-
-        nx.draw_networkx_labels(G2, pos, labels=loc)
-        nx.draw_networkx_edge_labels(G2, pos, edge_labels=edge_labels1)
-        nx.draw(G2, pos, node_color='red', node_size=900, edge_color=edge_colors1)
-        plt.savefig(self.name2 + 'location_h.png')
-        plt.close()
+            edge_colors1 = ['black' for edge in G2.edges()]
+            pos = nx.shell_layout(G2)
+            nx.draw_networkx_labels(G2, pos, labels=loc[i])
+            nx.draw_networkx_edge_labels(G2, pos, edge_labels=edge_labels1[i])
+            nx.draw(G2, pos, node_color='red', node_size=900, edge_color=edge_colors1)
+            plt.savefig(self.name2 +'-'+str(i)+ 'location_h.png')
+            plt.close()
         #pylab.show()
 
 
     def drawGraph_v(self,name2,G1,edge_labels):
 
         #######
+
         edge_colors = ['black' for edge in G1.edges()]
         pos = nx.shell_layout(G1)
         nx.draw_networkx_edge_labels(G1, pos, edge_labels=edge_labels)
@@ -1501,15 +1543,16 @@ class constraintGraph:
     def drawGraph_v_new(self,name2,G1,edge_labels,loc):
 
             #######
-            edge_colors = ['black' for edge in G1.edges()]
-            pos = nx.shell_layout(G1)
+            for i in range(len(loc)):
+                edge_colors = ['black' for edge in G1.edges()]
+                pos = nx.shell_layout(G1)
 
 
-            nx.draw_networkx_labels(G1, pos, labels=loc)
-            nx.draw_networkx_edge_labels(G1, pos, edge_labels=edge_labels)
-            nx.draw(G1, pos, node_color='red', node_size=900, edge_color=edge_colors)
-            plt.savefig(self.name2 + 'location_v.png')
-            plt.close()
+                nx.draw_networkx_labels(G1, pos, labels=loc[i])
+                nx.draw_networkx_edge_labels(G1, pos, edge_labels=edge_labels[i])
+                nx.draw(G1, pos, node_color='red', node_size=900, edge_color=edge_colors)
+                plt.savefig(self.name2 +'-'+str(i)+'location_v.png')
+                plt.close()
 
 
 
@@ -1572,17 +1615,20 @@ class multiCG():
 class Edge():
 
 
-    def __init__(self, source, dest, constraint):
+    def __init__(self, source, dest, constraint,type):
         self.source = source
         self.dest = dest
         self.constraint = constraint
+        self.type = type
         self.setEdgeDict()
+
+
 
     def getConstraint(self):
         return self.constraint
 
     def setEdgeDict(self):
-        self.edgeDict = {(self.source, self.dest): self.constraint.getConstraintVal()}
+        self.edgeDict = {(self.source, self.dest): (self.constraint.getConstraintVal(),self.type)}
         #self.edgeDict = {(self.source, self.dest): self.constraint.constraintval}
 
     def getEdgeDict(self):
