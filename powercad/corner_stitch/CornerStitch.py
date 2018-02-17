@@ -25,10 +25,11 @@ class cell:
     This is the basis for a cell, with only internal information being stored. information pertaining to the 
     structure of a cornerStitch or the relative position of a cell is stored in a cornerStitch obj.
     """
-    def __init__(self, x, y, type):
+    def __init__(self, x, y, type,id=None):
         self.x = x
         self.y = y
         self.type = type
+        self.id=id
 
 
     def printCell(self, printX = False, printY = False, printType = False):
@@ -986,8 +987,10 @@ class vLayer(cornerStitch):
         if len(changeList) > 0:
             changeList[0].cell.type = type
             self.rectifyShadow(changeList[0])
+        #print len(changeList)
 
         return changeList
+
 
 
 
@@ -1128,6 +1131,17 @@ class vLayer(cornerStitch):
 
 
         return False
+    def set_id(self):
+        length=len(self.stitchList)
+        i=1
+        print length
+        for rect in self.stitchList:
+            #rect.cell.id=i
+            if rect.cell.type=="SOLID":
+                rect.cell.id=i
+                i+=1
+
+            #print rect.cell.id,rect.cell.type
 
 class hLayer(cornerStitch):
     def __init__(self, stitchList, max_x, max_y):
@@ -1612,6 +1626,7 @@ class hLayer(cornerStitch):
             #foo.cell.printCell(True, True)
         for x in range(0,len(changeList)):
             changeList[x].cell.type = type
+
             #print"x=", changeList[x].cell.x, changeList[x].cell.y
             self.rectifyShadow(changeList[x])
             x+=1
@@ -1620,7 +1635,9 @@ class hLayer(cornerStitch):
             changeList[0].cell.type = type
             self.rectifyShadow(changeList[0])
 
-        print changeList
+            #print"id=", foo.cell.id
+
+        #print len(changeList)
         return  changeList
 
 
@@ -1876,6 +1893,18 @@ class hLayer(cornerStitch):
                 return True  # the corner cell is empty but touches a solid cell within the search area
             cc = cc.SOUTH #check the next lowest cell
         return False
+#class ID(hLayer,vLayer):
+    def set_id(self):
+        length=len(self.stitchList)
+        i=1
+        print length
+        for rect in self.stitchList:
+            if rect.cell.type=="SOLID":
+                rect.cell.id=i
+                i+=1
+
+            #print rect.cell.id,rect.cell.type
+
 
 if __name__ == '__main__':
     emptyVPlane = tile(None, None, None, None, None, cell(0, 0, "EMPTY"))
@@ -1896,6 +1925,10 @@ if __name__ == '__main__':
     emptyHPlane.EAST = emptyHExample.eastBoundary
     emptyHPlane.SOUTH = emptyHExample.southBoundary
     emptyHPlane.WEST = emptyHExample.westBoundary
+
+
+
+
 
 
 
@@ -1970,6 +2003,8 @@ if __name__ == '__main__':
     else:
         exit(1)
     """
+    emptyHExample.set_id()
+    emptyVExample.set_id()
 
     #CG = cg.constraintGraph(testdir+'/'+testbase+'gh.png',testdir+'/'+testbase+'gv.png')
     CG = cg.constraintGraph(testdir + '/' + testbase , testdir + '/' + testbase)
@@ -2005,8 +2040,12 @@ if __name__ == '__main__':
     #CSCG.drawLayer_hnew()
     CSCG.drawRectangle(list)
     CSCG.update_stitchList()
-    CSCG.drawLayer_hnew()
-    CSCG.drawLayer_vnew()
+    #CSCG.drawLayer_hnew()
+    #CSCG.drawLayer_vnew()
+    #CSCG.findGraphEdges_h1()
+    CSCG.drawLayer11()
+    #CSCG.findGraphEdges_v1()
+    CSCG.drawLayer22()
     #emptyVExample.drawLayer(truePointer=False)
     #emptyHExample.drawLayer(truePointer=False)
 
