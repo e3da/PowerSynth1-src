@@ -29,7 +29,7 @@ class cell:
         self.x = x
         self.y = y
         self.type = type
-        self.id=id
+        self.id = id
 
 
     def printCell(self, printX = False, printY = False, printType = False):
@@ -649,6 +649,13 @@ class vLayer(cornerStitch):
             topLeft = topLeft.SOUTH
             while topLeft.cell.x + topLeft.getWidth() <= x1:
                 topLeft = topLeft.EAST
+        ###############################################################(added on 2.19.2018)
+        if tr.cell.y == y1:
+            tr = tr.SOUTH
+            while tr.cell.x + tr.getWidth() <= x1:
+                tr = tr.EAST
+        ################################################################
+            #print topLeft.cell.x, topLeft.cell.y
 
         if bottomRight.cell.x==x2  :  ## and bottomRight.cell.y==y2 has been added to consider overlapping
             bottomRight = bottomRight.WEST
@@ -672,7 +679,8 @@ class vLayer(cornerStitch):
                 if cc2 not in splitList:
                     splitList.append(cc2)
         cc= bottomRight.NORTH
-        #print "bot=",cc.cell.x, cc.cell.y
+        #print len(splitList)
+        #print "bot=",tr.cell.x, tr.cell.y,cc.cell.x, cc.cell.y
         while cc.cell.y<=tr.cell.y and cc!=self.northBoundary:#has been added
            # print"1"
 
@@ -693,7 +701,9 @@ class vLayer(cornerStitch):
                     splitList.append(cc)
 
         #print"splitListx2=", len(splitList)
+
         for rect in splitList:
+            #print rect.cell.x,rect.cell.y
             if x2 != rect.cell.x and x2 != rect.EAST.cell.x:
                 self.vSplit(rect, x2)
 
@@ -987,10 +997,8 @@ class vLayer(cornerStitch):
         if len(changeList) > 0:
             changeList[0].cell.type = type
             self.rectifyShadow(changeList[0])
-        #print len(changeList)
 
         return changeList
-
 
 
 
@@ -1128,20 +1136,19 @@ class vLayer(cornerStitch):
                 else:
                     break
             cc=cc.EAST
-
-
         return False
-    def set_id(self):
+
+    def set_id(self):  ########## Setting id for all type 1 blocks
+
         length=len(self.stitchList)
         i=1
-        print length
+        #print length
         for rect in self.stitchList:
             #rect.cell.id=i
             if rect.cell.type=="SOLID":
                 rect.cell.id=i
                 i+=1
-
-            #print rect.cell.id,rect.cell.type
+        return
 
 class hLayer(cornerStitch):
     def __init__(self, stitchList, max_x, max_y):
@@ -1178,6 +1185,7 @@ class hLayer(cornerStitch):
 
         #step 1: hsplit y1 and y2
         topLeft = self.findPoint(x1, y1, self.stitchList[0])
+        #print topLeft.cell.x, topLeft.cell.y
         bottomRight = self.findPoint(x2, y2, self.stitchList[0])
         tr=self.findPoint(x2, y1, self.stitchList[0])
         bl=self.findPoint(x1, y2, self.stitchList[0])
@@ -1189,6 +1197,7 @@ class hLayer(cornerStitch):
             while cc.EAST!=self.eastBoundary and cc.cell.x+cc.getWidth()<=x1: ## 2 lines have been added
                     cc=cc.EAST
             topLeft = cc
+            #print topLeft.cell.x,topLeft.cell.y
             #while cc.cell.y >= y2: #find all cells that need to be vsplit
         if tr.cell.y == y1:
             cc = tr
@@ -1318,6 +1327,8 @@ class hLayer(cornerStitch):
         changeList=[]
         #step 2: vsplit x1 and x2
         cc = self.findPoint(x1, y1, self.stitchList[0]).SOUTH
+        #print x1,y1
+        #print "n",cc.cell.x,cc.cell.y
         while cc.cell.x + cc.getWidth() <= x1:  ## 2 lines have been added
             cc = cc.EAST
         while (cc!=self.southBoundary and cc.cell.y+cc.getHeight()>y2):
@@ -1548,8 +1559,8 @@ class hLayer(cornerStitch):
             else:
                 i+=1
 
- 
-            
+
+
         list_len= len(changeList)
         #print"len=",list_len
         c=0
@@ -1595,7 +1606,7 @@ class hLayer(cornerStitch):
             if c==list_len:
                 break
         #print"len_1",len(changeList)
-        
+
         ######
         i = 0
         while i < len(changeList) - 1:
@@ -1620,13 +1631,12 @@ class hLayer(cornerStitch):
                     changeList.insert(i, mergedcell)
                 self.rectifyShadow(changeList[i])
 
-        
+
 
         #for foo in changeList:
             #foo.cell.printCell(True, True)
         for x in range(0,len(changeList)):
             changeList[x].cell.type = type
-
             #print"x=", changeList[x].cell.x, changeList[x].cell.y
             self.rectifyShadow(changeList[x])
             x+=1
@@ -1635,9 +1645,7 @@ class hLayer(cornerStitch):
             changeList[0].cell.type = type
             self.rectifyShadow(changeList[0])
 
-            #print"id=", foo.cell.id
-
-        #print len(changeList)
+        #print changeList
         return  changeList
 
 
@@ -1874,7 +1882,7 @@ class hLayer(cornerStitch):
         return False
     """
     def areaSearch(self, x1, y1, x2, y2):
-       
+
         cc = self.findPoint(x1, y1, self.stitchList[0]) #the tile that contains the first corner point
         secondCorner = self.findPoint(x2, y2, self.stitchList[0])# the tile that contains the second(bottom right)corner
 
@@ -1893,18 +1901,16 @@ class hLayer(cornerStitch):
                 return True  # the corner cell is empty but touches a solid cell within the search area
             cc = cc.SOUTH #check the next lowest cell
         return False
-#class ID(hLayer,vLayer):
+
     def set_id(self):
         length=len(self.stitchList)
         i=1
-        print length
+        #print length
         for rect in self.stitchList:
             if rect.cell.type=="SOLID":
                 rect.cell.id=i
                 i+=1
-
-            #print rect.cell.id,rect.cell.type
-
+        return
 
 if __name__ == '__main__':
     emptyVPlane = tile(None, None, None, None, None, cell(0, 0, "EMPTY"))
@@ -1925,10 +1931,6 @@ if __name__ == '__main__':
     emptyHPlane.EAST = emptyHExample.eastBoundary
     emptyHPlane.SOUTH = emptyHExample.southBoundary
     emptyHPlane.WEST = emptyHExample.westBoundary
-
-
-
-
 
 
 
@@ -2005,7 +2007,6 @@ if __name__ == '__main__':
     """
     emptyHExample.set_id()
     emptyVExample.set_id()
-
     #CG = cg.constraintGraph(testdir+'/'+testbase+'gh.png',testdir+'/'+testbase+'gv.png')
     CG = cg.constraintGraph(testdir + '/' + testbase , testdir + '/' + testbase)
     #CG2 = cg.constraintGraph(testdir+'/'+testbase+'gv.png')
@@ -2040,12 +2041,11 @@ if __name__ == '__main__':
     #CSCG.drawLayer_hnew()
     CSCG.drawRectangle(list)
     CSCG.update_stitchList()
+    CSCG.ID_Conversion()
+    CSCG.drawLayer11()
+    CSCG.drawLayer22()
     #CSCG.drawLayer_hnew()
     #CSCG.drawLayer_vnew()
-    #CSCG.findGraphEdges_h1()
-    CSCG.drawLayer11()
-    #CSCG.findGraphEdges_v1()
-    CSCG.drawLayer22()
     #emptyVExample.drawLayer(truePointer=False)
     #emptyHExample.drawLayer(truePointer=False)
 

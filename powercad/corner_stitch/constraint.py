@@ -2,7 +2,7 @@ import numpy as np
 
 class constraint():
     constraintIndex = ["Empty", "type1"]
-    minWidth = [2, 10]
+    minWidth = [1, 2]
     minSpacing = np.zeros(shape = (len(constraintIndex), len(constraintIndex)))
     '''
     def __init__(self, constraintval, source, dest):
