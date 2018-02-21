@@ -1469,7 +1469,7 @@ class constraintGraph:
                     if edge.South!=None  :
                         if edge.South in SOUTH:
                         # print 1
-                            pecial_edge_v = [x for x in special_edge_v if x != edge]
+                            special_edge_v = [x for x in special_edge_v if x != edge]
                         # special_edge_v.remove(edge)
                 elif ed.source == edge.dest and ed.type == '1':
                     # print edge.source, edge.dest
