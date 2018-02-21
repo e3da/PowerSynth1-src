@@ -566,7 +566,7 @@ class constraintGraph:
 
         # print D, len(D)
         W_total = []
-        for i in range(5):
+        for i in range(10):
             W = []
             for i in range(len(D)):
                 # W.append(randint(2, 10))
@@ -584,7 +584,7 @@ class constraintGraph:
         # print Space
         ############################ Varying Spacing
         S_total = []
-        for i in range(5):
+        for i in range(10):
             S = []
             for i in range(len(Space)):
                 S.append(randint(1, 3))
@@ -808,7 +808,7 @@ class constraintGraph:
                         # for foo in special_edge_h:
                         # print "hfo", foo.getEdgeDict()
         #for foo in special_edge_h:
-            #print "hfo", foo.getEdgeDict()
+            #print "hfo", foo.getEdgeDict(),foo.id,foo.East,foo.West
         ######## Removing all of those edges which have connected neighbor edges of type 1 incoming to source or outgoing of dest
         EAST = []
         WEST = []
@@ -816,24 +816,29 @@ class constraintGraph:
             EAST.append(edge.East)
             WEST.append(edge.West)
         #print EAST,WEST
+
+
         for edge in special_edge_h:
             # print "src",edge.source
             for ed in self.edgesh_new:
                 # print "dest=",ed.dest
                 if ed.dest == edge.source and ed.type == '1':
                     # print edge.source, edge.dest
-                    # if edge.West == ed.id:
-                    if edge.West  in WEST:
-                        special_edge_h = [x for x in special_edge_h if x != edge]
+                    #if edge.West == ed.id:
+                    if edge.West!=None  :
+                        if edge.West in WEST:
+                            special_edge_h = [x for x in special_edge_h if x != edge]
                         # special_edge_v.remove(edge)
                 elif ed.source == edge.dest and ed.type == '1':
                     # print edge.source, edge.dest
-                    # if edge.East == ed.id:
-                    if edge.East  in EAST:
-                        special_edge_h = [x for x in special_edge_h if x != edge]
+                    #if edge.East == ed.id:
+                    if edge.East!=None :
+                        if edge.West in WEST:
+                            special_edge_h = [x for x in special_edge_h if x != edge]
                         # special_edge_v.remove(edge)
                         # for foo in special_edge_h:
                         # print "foh", foo.getEdgeDict()
+
         #print "len=", len(special_edge_h)
         #for edge in special_edge_h:
             #print edge.source,edge.dest,edge.id,edge.type
@@ -860,11 +865,31 @@ class constraintGraph:
                 offset1 = []
                 offset2 = []
                 for j in range(len(Wmax)):
+                    '''
+                    if Wmax[j]>2:
+                        Offsetmax = Wmax[j] - 2
+                    else:
+                        Offsetmax = Wmax[j]
+                    print "offmax",Offsetmax
+                    offset_1_1 = randint(0, Offsetmax)
+                    print offset_1_1
+                    offset_2_2 = randint(0, Offsetmax)
+                    print offset_1_1
+                    summation=offset_1_1 + offset_2_2
+                    if summation==0:
+                        summation = Offsetmax
+                    print summation
+                    offset_1 = ((offset_1_1)* Offsetmax ) / summation
+                    offset_2 = ((offset_2_2)* Offsetmax ) / summation
+
+                    '''
                     avg = (Wmax[j] - 2) / 2
                     offset_1 = randint(0, avg)
                     offset_2 = randint(0, avg)
+
                     offset1.append(offset_1)
                     offset2.append(offset_2)
+
                 # print offset1, offset2
                 # OFFSET.append([offset1, offset2])
                 for j in range(len(special_edge_h)):
@@ -880,7 +905,7 @@ class constraintGraph:
                     # print'lo',special_location_x
                 self.special_location_x.append(
                     special_location_x)  ######[[{special cell id_1:[x1,x2,width]},{special cell id_2:[x1,x2,width]}],[{special cell id_1:[x1,x2,width]},{special cell id_2:[x1,x2,width]},......]]
-            print self.special_location_x
+            #print self.special_location_x
 
         '''
 
@@ -1127,7 +1152,7 @@ class constraintGraph:
 
         # print D, len(D)
         W_total = []
-        for i in range(5):
+        for i in range(10):
             W = []
             for i in range(len(D)):
                 W.append(randint(2, 10))
@@ -1144,7 +1169,7 @@ class constraintGraph:
                 Space.append(i)
         ################### Varying spacing
         S_total = []
-        for i in range(5):
+        for i in range(10):
             S = []
             for i in range(len(Space)):
                 S.append(randint(1, 4))
@@ -1441,14 +1466,16 @@ class constraintGraph:
                 if ed.dest == edge.source and ed.type == '1':
                     # print edge.id,edge.North,edge.South
                     # print edge.source, edge.dest
-                    if edge.South in SOUTH:
+                    if edge.South!=None  :
+                        if edge.South in SOUTH:
                         # print 1
-                        special_edge_v = [x for x in special_edge_v if x != edge]
+                            pecial_edge_v = [x for x in special_edge_v if x != edge]
                         # special_edge_v.remove(edge)
                 elif ed.source == edge.dest and ed.type == '1':
                     # print edge.source, edge.dest
-                    if edge.North in NORTH:
-                        special_edge_v = [x for x in special_edge_v if x != edge]
+                    if edge.North!=None  :
+                        if edge.North in NORTH:
+                            special_edge_v = [x for x in special_edge_v if x != edge]
                         # special_edge_v.remove(edge)
         self.special_edgev = copy.deepcopy(special_edge_v)
         #print special_edge_v
@@ -1467,12 +1494,30 @@ class constraintGraph:
                 offset1 = []
                 offset2 = []
                 for j in range(len(Wmax)):
+                    '''
+                    if Wmax[j]>2:
+                        Offsetmax = Wmax[j] - 2
+                    else:
+                        Offsetmax = Wmax[j]
+                    print "offmax",Offsetmax
+                    offset_1_1 = randint(0, Offsetmax)
+                    print offset_1_1
+                    offset_2_2 = randint(0, Offsetmax)
+                    print offset_1_1
+                    summation=offset_1_1 + offset_2_2
+                    if summation==0:
+                        summation = Offsetmax
+                    print summation
+                    offset_1 = ((offset_1_1)* Offsetmax ) / summation
+                    offset_2 = ((offset_2_2)* Offsetmax ) / summation
+                    '''
                     avg = (Wmax[j] - 2) / 2
                     offset_1 = randint(0, avg)
                     offset_2 = randint(0, avg)
+
                     offset1.append(offset_1)
                     offset2.append(offset_2)
-                # print offset1, offset2
+                #print offset1, offset2
 
                 for j in range(len(special_edge_v)):
                     location = {}
@@ -1483,7 +1528,7 @@ class constraintGraph:
                     location[key].append(loct[i][special_edge_v[j].dest] - offset2[j])
                     location[key].append(Wmax[j] - (offset1[j] + offset2[j]))
                     special_location_y.append(location)
-                    # print'lo', special_location_y
+                    #print'lo', special_location_y
                 self.special_location_y.append(
                     special_location_y)  ######[[{special cell id_1:[x1,x2,width]},{special cell id_2:[x1,x2,width]}],[{special cell id_1:[x1,x2,width]},{special cell id_2:[x1,x2,width]},......]]
             print self.special_location_y
