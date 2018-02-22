@@ -1238,7 +1238,7 @@ class hLayer(cornerStitch):
             while cc.cell.y >= y1 and cc!=self.eastBoundary:#previously it was >y1
                 cc= cc.SOUTH
         if cc.cell.type=="SOLID" and cc.cell.x==x2 and cc!=self.eastBoundary or tr.cell.type=="SOLID" :##and tr.cell.y!=y1 and cc!=self.eastBoundary)
-            print "testex", cc.cell.x
+            #print "testex", cc.cell.x
             splitList.append(cc)
             if cc.EAST!=self.eastBoundary:
                 cc=cc.EAST
