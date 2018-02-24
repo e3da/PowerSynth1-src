@@ -1579,7 +1579,9 @@ class CSCG:
         # print self.Special_id,self.Special_id_h,self.Special_id_v
         for i in range(len(self.Newcornerstitch_H)):
             fig1, ax1 = plt.subplots()
+            #print "#"
             for cell in self.Newcornerstitch_H[i].stitchList:
+
 
                 # if not cell.cell.id in self.CG.special_cell_id_h or self.CG.special_cell_id_v:
                 if not cell.cell.type == "EMPTY":
@@ -1587,7 +1589,7 @@ class CSCG:
                     # pattern = ''
                     if not cell.cell.id in self.Special_id_h:
                         if not cell.cell.id in self.CG.special_cell_id_v:
-                            # print "1", cell.cell.id
+                            #print "1", cell.cell.id,cell.cell.x, cell.cell.y,cell.getWidth(),cell.getHeight()
                             pattern = '\\'
 
                 else:

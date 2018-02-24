@@ -70,7 +70,7 @@ class constraintGraph:
         self.Loc_X={}
         self.Loc_Y={}
         self.W_T=50
-        self.H_T=50
+        self.H_T=60
 
     '''
     def getVertexMatrixh(self):
@@ -1032,8 +1032,8 @@ class constraintGraph:
                         # print special_edge_h
                         # for foo in special_edge_h:
                         # print "hfo", foo.getEdgeDict()
-        # for foo in special_edge_h:
-        # print "hfo", foo.getEdgeDict(),foo.id,foo.East,foo.West
+        #for foo in special_edge_h:
+            #print "hfo", foo.getEdgeDict(),foo.id,foo.East,foo.West
         ######## Removing all of those edges which have connected neighbor edges of type 1 incoming to source or outgoing of dest
         EAST = []
         WEST = []
@@ -1070,8 +1070,8 @@ class constraintGraph:
         """
 
         # print "len=", len(special_edge_h)
-        # for edge in special_edge_h:
-        # print edge.source,edge.dest,edge.id,edge.type
+        #for edge in special_edge_h:
+            #print edge.source,edge.dest,edge.id,edge.type
         # self.special_edgeh = copy.deepcopy(special_edge_h)
         self.special_edgeh = copy.deepcopy(special_edge_h)
         for i in range(len(special_edge_h)):
@@ -1277,7 +1277,7 @@ class constraintGraph:
         #print paths
         start_ = start
         end_ = end
-        values, Min = self.PATH_FINDING(paths)
+
         #print "MIN=", Min
         for path in paths:
             if len(path) == 2:
@@ -1285,7 +1285,7 @@ class constraintGraph:
                     if path[i] == start_ and path[i + 1] == end_:
                         paths.remove(path)
 
-
+        values, Min = self.PATH_FINDING(paths)
         # print "values=", values
         r = self.Loc_X[end] - self.Loc_X[start]
         Range = r - max(Min)
@@ -1921,8 +1921,8 @@ class constraintGraph:
         """
         self.special_edgev = copy.deepcopy(special_edge_v)
         # print len(special_edge_v)
-        # for foo in special_edge_v:
-        # print foo.id,foo.North,foo.South
+        #for foo in special_edge_v:
+            #print foo.id,foo.North,foo.South
         for i in range(len(special_edge_v)):
             self.special_cell_id_v.append(special_edge_v[i].id)
 
@@ -2087,14 +2087,14 @@ class constraintGraph:
         #print paths
         start_ = start
         end_ = end
-        values, Min = self.PATH_FINDING_V(paths)
+
         for path in paths:
             if len(path) == 2:
                 for i in range(len(path) - 1):
                     if path[i] == start_ and path[i + 1] == end_:
                         paths.remove(path)
 
-
+        values, Min = self.PATH_FINDING_V(paths)
         #print "MIN=", Min
         # print "values=", values
         r = self.Loc_Y[end] - self.Loc_Y[start]
