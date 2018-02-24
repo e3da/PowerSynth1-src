@@ -7,8 +7,9 @@ import matplotlib.pyplot as plt
 from collections import defaultdict
 import json
 import copy
-from random import *
+import random
 import scipy as sp
+
 
 
 class constraintGraph:
@@ -63,6 +64,13 @@ class constraintGraph:
         self.special_cell_id_v = []
         self.special_edgev = []
         self.special_edgeh = []
+
+        self.X={}
+        self.Y={}
+        self.Loc_X={}
+        self.Loc_Y={}
+        self.W_T=50
+        self.H_T=50
 
     '''
     def getVertexMatrixh(self):
@@ -544,8 +552,7 @@ class constraintGraph:
                 # print internal_edge[0]
                 # if (lst_branch[0], lst_branch[1], internal_edge) not in data:
                 data.append((lst_branch[0], lst_branch[1], internal_edge))
-                label3.append({(lst_branch[0], lst_branch[
-                    1]): internal_edge})  #####{(source,dest):[weight,type,id,East cell id,West cell id]}
+                label3.append({(lst_branch[0], lst_branch[1]): internal_edge})  #####{(source,dest):[weight,type,id,East cell id,West cell id]}
                 label5.append({(lst_branch[0], lst_branch[1]): internal_edge[0]})  ######{(source,dest):weight}
                 '''
                 if (lst_branch[0], lst_branch[1], {'route': internal_edge}) not in data:
@@ -555,7 +562,42 @@ class constraintGraph:
             # print data
             G3.add_weighted_edges_from(data)
         #############################################################
+        #print label5
+        d3 = defaultdict(list)
+        for i in label5:
+            k, v = list(i.items())[0]  # an alternative to the single-iterating inner loop from the previous solution
+            d3[k].append(v)
+        #print d3
+
+        for i,j in d3.items():
+            #print i,max(j)
+            self.X[i]=max(j)
+        print self.X
+
+        loct = []
+        for i in range(5):
+            #print i
+            self.Loc_X = {0: 0, nodes[-1]: self.W_T}
+            self.FUNCTION(G3, start=nodes[0], end=nodes[-1])
+            loct.append(self.Loc_X)
+
+        for i in loct:
+            new_x_loc=[]
+            for j,k in i.items():
+                new_x_loc.append(k)
+            self.NEWXLOCATION.append(new_x_loc)
+        f3 = open(name + "location_x.txt", 'wb')
+        for i in loct:
+            # print i
+            print >> f3, i
+        print"LOC=", loct, self.NEWXLOCATION
+
+
+
+
+
         ##### Fixed floorplan width  #################
+        """
         new_label_fixed = []
         for i in range(5):
             D_V_initial = []
@@ -661,12 +703,7 @@ class constraintGraph:
         # print "V=", len(D_3), D_3
         n = list(G3.nodes())
         self.FindingAllPaths_h(G3, n[0], n[-1])
-        '''
-        f2 = open("paths_h.txt", "rb")
-        for line in f2.read().splitlines():  # considering each line in file
-            self.paths_h.append(line)
-        paths=[json.loads(y) for y in self.paths_h]
-        '''
+        
         paths = self.paths_h
         print paths
         #### (end)
@@ -729,11 +766,13 @@ class constraintGraph:
             loct.append(loc_i)
 
             self.NEWXLOCATION.append(new_Xlocation)
+        
         f3 = open(name + "location_x.txt", 'wb')
         for i in loct:
             # print i
             print >> f3, i
         print"LOC=", loct, self.NEWXLOCATION
+        """
         Graph_pos_h = []
         for i in range(len(loct)):
             dist = {}
@@ -746,7 +785,7 @@ class constraintGraph:
             Graph_pos_h.append(dist)
         # print Graph_pos_h
         # print"LOC=",Graph_pos_h
-        self.drawGraph_h_new(name, G3, D_3, Graph_pos_h)
+        #self.drawGraph_h_new(name, G3, D_3, Graph_pos_h)
 
         #################################################################
         """
@@ -1002,7 +1041,12 @@ class constraintGraph:
             EAST.append(edge.East)
             WEST.append(edge.West)
         # print"E=", EAST,WEST
-
+        for edge in special_edge_h:
+            if edge.West!=None or edge.id in EAST or edge.id in WEST:
+                    special_edge_h = [x for x in special_edge_h if x != edge]
+            if edge.East!=None or edge.id in EAST or edge.id in WEST:
+                    special_edge_h = [x for x in special_edge_h if x != edge]
+        """
         for edge in special_edge_h:
             # print "src",edge.source
             for ed in self.edgesh_new:
@@ -1023,6 +1067,7 @@ class constraintGraph:
                         # special_edge_v.remove(edge)
                         # for foo in special_edge_h:
                         # print "foh", foo.getEdgeDict()
+        """
 
         # print "len=", len(special_edge_h)
         # for edge in special_edge_h:
@@ -1052,8 +1097,8 @@ class constraintGraph:
                 for j in range(len(Wmax)):
                     # print Wmax[j]
                     if Wmax[j] > 2:
-                        offset_1 = randrange(0, (Wmax[j] - min) / (3 / 2))
-                        offset_2 = randrange(0, (Wmax[j] - offset_1 - min))
+                        offset_1 = random.randrange(0, (Wmax[j] - min) / (3 / 2))
+                        offset_2 = random.randrange(0, (Wmax[j] - offset_1 - min))
                     else:
                         offset_1 = 0
                         offset_2 = 0
@@ -1080,8 +1125,7 @@ class constraintGraph:
                     location[key].append(Wmax[j] - (offset1[j] + offset2[j]))
                     special_location_x.append(location)
                     # print'lo',special_location_x
-                self.special_location_x.append(
-                    special_location_x)  ######[[{special cell id_1:[x1,x2,width]},{special cell id_2:[x1,x2,width]}],[{special cell id_1:[x1,x2,width]},{special cell id_2:[x1,x2,width]},......]]
+                self.special_location_x.append(special_location_x)  ######[[{special cell id_1:[x1,x2,width]},{special cell id_2:[x1,x2,width]}],[{special cell id_1:[x1,x2,width]},{special cell id_2:[x1,x2,width]},......]]
             # print self.special_location_x
 
         '''
@@ -1160,6 +1204,123 @@ class constraintGraph:
         '''
 
         #### finding new location of each vertex in longest paths (end)########
+
+    def randomvaluegenerator(self,Range, value, Max):
+        variable = []
+        D_V_Newval = [0]
+        # n=len(D_V_change)
+
+        while (len(value) > 1):
+            # print value
+            i = 0
+            n = len(value)
+            # print"n", n
+            v = Range - sum(D_V_Newval)
+            #print v
+            if v != 0:
+                x = random.randrange(0, ((v) / (n / 2)))
+            else:
+                x = 0
+            # print "x", x
+            D_V_Newval.append(x)
+            p = value.pop(i)
+            # print p
+            variable.append(x + p)
+            # print variable
+        variable.append(Max - sum(variable))
+        return variable
+
+    def PATH_FINDING(self,paths):
+        dist = {}
+        value_1 = []
+        position = {}
+        for i in range(len(paths)):
+            path = paths[i]
+            end = path[-1]
+            # print path
+            values_1 = []
+            for j in range(len(path)):
+
+                node = path[j]
+                # print "node=",path[-1]
+                if j > 0:
+                    pred = path[j - 1]
+                else:
+                    pred = node
+                # print node, pred
+                if j == 0:
+                    dist[node] = (0, pred)
+                    key = node
+                    position.setdefault(key, [])
+                    position[key].append(0)
+
+
+                else:
+
+                    pairs = (dist[pred][0] + (self.X[(pred, node)]), pred)
+                    dist[node] = pairs
+                    values_1.append(self.X[(pred, node)])
+                    key = node
+                    position.setdefault(key, [])
+                    position[key].append(pairs[0])
+            value_1.append(values_1)
+            for i in position:
+                if i == end:
+                    Min = position[i]
+        return value_1, Min
+
+    def FUNCTION(self,G, start, end):
+        self.paths_h=[]
+        self.FindingAllPaths_h(G,start, end)
+        paths = self.paths_h
+        #paths = list(nx.all_simple_paths(G, source=start, target=end))
+        #print paths
+        start_ = start
+        end_ = end
+        values, Min = self.PATH_FINDING(paths)
+        #print "MIN=", Min
+        for path in paths:
+            if len(path) == 2:
+                for i in range(len(path) - 1):
+                    if path[i] == start_ and path[i + 1] == end_:
+                        paths.remove(path)
+
+
+        # print "values=", values
+        r = self.Loc_X[end] - self.Loc_X[start]
+        Range = r - max(Min)
+        # Range=W_T-max(Min)
+        # print Range, len(paths[3])
+        # N=len(paths[3])-1
+        # print Range
+        ind = Min.index(max(Min))
+        val = values[ind]
+        PATH = paths[ind]
+        #print PATH
+        variable = self.randomvaluegenerator(Range, val, self.W_T)
+        #print variable
+
+        loc = {}
+        for i in range(len(PATH)):
+            if PATH[i] in self.Loc_X:
+                loc[PATH[i]] = self.Loc_X[PATH[i]]
+            else:
+                loc[PATH[i]] = loc[PATH[i - 1]] + variable[i - 1]
+                self.Loc_X[PATH[i]] = loc[PATH[i - 1]] + variable[i - 1]
+        # print loc,Loc
+        flag = 0
+        for i in range(len(PATH) - 1):
+            if PATH[i + 1] - PATH[i] != 1:
+                start = PATH[i]
+                end = PATH[i + 1]
+                flag = 1
+        #print "S",start,end,flag
+        if flag == 1:
+            self.FUNCTION(G, start, end)
+            # Intra_path= list(nx.all_simple_paths(G, source=start, target=end))
+            # print Intra_path
+        else:
+            return
 
     def FindingAllPaths_h(self, G, start, end):
         """
@@ -1318,7 +1479,35 @@ class constraintGraph:
 
         ###############################################################
         ##############################           OPTIMIZATION
+        #print label6
+        d3 = defaultdict(list)
+        for i in label6:
+            k, v = list(i.items())[0]  # an alternative to the single-iterating inner loop from the previous solution
+            d3[k].append(v)
+        #print d3
 
+        for i, j in d3.items():
+            #print i, max(j)
+            self.Y[i] = max(j)
+        print self.Y
+        loct = []
+        for i in range(5):
+            self.Loc_Y = {0: 0, nodes[-1]: self.H_T}
+            self.FUNCTION_V(G4, start=nodes[0], end=nodes[-1])
+            loct.append(self.Loc_Y)
+        for i in loct:
+            new_y_loc = []
+            for j, k in i.items():
+                new_y_loc.append(k)
+            self.NEWYLOCATION.append(new_y_loc)
+        f4 = open(name + 'location_y.txt', 'w')
+        for i in loct:
+            # print i
+            print >> f4, i
+        print"LOC=", loct, self.NEWYLOCATION
+
+        ##########################################################
+        """
         ##### Fixed floorplan width  #################
         new_label_fixed = []
         for i in range(5):
@@ -1380,7 +1569,7 @@ class constraintGraph:
                 # print"n",n
                 value = range_V - sum(D_V_Newval)
                 # print value
-                x = randrange(0, ((value) / (n / 2)))
+                x = random.randrange(0, ((value) / (n / 2)))
                 # print "x",x
                 D_V_Newval.append(x)
                 p = D_V_Val.pop(i)
@@ -1482,6 +1671,7 @@ class constraintGraph:
             # print i
             print >> f4, i
         print"LOC=", loct, self.NEWYLOCATION
+        """
         Graph_pos_v = []
         for i in range(len(loct)):
             dist = {}
@@ -1494,7 +1684,7 @@ class constraintGraph:
             Graph_pos_v.append(dist)
         # print Graph_pos_v
 
-        self.drawGraph_v_new(name, G4, D_3, Graph_pos_v)
+        #self.drawGraph_v_new(name, G4, D_3, Graph_pos_v)
         #################################################################
         '''
         label_4 = copy.deepcopy(label4)
@@ -1704,6 +1894,12 @@ class constraintGraph:
             SOUTH.append(edge.South)
         #print NORTH, SOUTH
         for edge in special_edge_v:
+            if edge.North!=None or edge.id in NORTH or edge.id in SOUTH:
+                    special_edge_v = [x for x in special_edge_v if x != edge]
+            if edge.South!=None or edge.id in NORTH or edge.id in SOUTH:
+                    special_edge_v = [x for x in special_edge_v if x != edge]
+        """"
+        for edge in special_edge_v:
             # print edge.id,edge.North,edge.South
             # print "src",edge.source
             for ed in self.edgesv_new:
@@ -1713,7 +1909,7 @@ class constraintGraph:
                     # print edge.source, edge.dest
                     if edge.South != None:
                         if edge.South in SOUTH:
-                            # print 1
+
                             special_edge_v = [x for x in special_edge_v if x != edge]
                         # special_edge_v.remove(edge)
                 elif ed.source == edge.dest and ed.type == '1':
@@ -1722,6 +1918,7 @@ class constraintGraph:
                         if edge.North in NORTH:
                             special_edge_v = [x for x in special_edge_v if x != edge]
                         # special_edge_v.remove(edge)
+        """
         self.special_edgev = copy.deepcopy(special_edge_v)
         # print len(special_edge_v)
         # for foo in special_edge_v:
@@ -1745,8 +1942,8 @@ class constraintGraph:
                 offset2 = []
                 for j in range(len(Wmax)):
                     if Wmax[j] > 2:
-                        offset_1 = randrange(0, Wmax[j] - min / (3 / 2))
-                        offset_2 = randrange(0, (Wmax[j] - offset_1 - min))
+                        offset_1 = random.randrange(0, Wmax[j] - min / (3 / 2))
+                        offset_2 = random.randrange(0, (Wmax[j] - offset_1 - min))
                     else:
                         offset_1 = 0
                         offset_2 = 0
@@ -1821,6 +2018,119 @@ class constraintGraph:
         #pylab.show()
 
    '''
+    def randomvaluegenerator_V(self,Range, value, Max):
+        variable = []
+        D_V_Newval = [0]
+        # n=len(D_V_change)
+
+        while (len(value) > 1):
+            # print value
+            i = 0
+            n = len(value)
+            # print"n", n
+            v = Range - sum(D_V_Newval)
+            #print v
+            if v != 0:
+                x = random.randrange(0, ((v) / (n / 2)))
+            else:
+                x = 0
+            # print "x", x
+            D_V_Newval.append(x)
+            p = value.pop(i)
+            # print p
+            variable.append(x + p)
+            # print variable
+        variable.append(Max - sum(variable))
+        return variable
+
+    def PATH_FINDING_V(self,paths):
+        dist = {}
+        value_1 = []
+        position = {}
+        for i in range(len(paths)):
+            path = paths[i]
+            end = path[-1]
+            # print path
+            values_1 = []
+            for j in range(len(path)):
+
+                node = path[j]
+                # print "node=",path[-1]
+                if j > 0:
+                    pred = path[j - 1]
+                else:
+                    pred = node
+                # print node, pred
+                if j == 0:
+                    dist[node] = (0, pred)
+                    key = node
+                    position.setdefault(key, [])
+                    position[key].append(0)
+
+
+                else:
+
+                    pairs = (dist[pred][0] + (self.Y[(pred, node)]), pred)
+                    dist[node] = pairs
+                    values_1.append(self.Y[(pred, node)])
+                    key = node
+                    position.setdefault(key, [])
+                    position[key].append(pairs[0])
+            value_1.append(values_1)
+            for i in position:
+                if i == end:
+                    Min = position[i]
+        return value_1, Min
+
+    def FUNCTION_V(self,G, start, end):
+        paths = list(nx.all_simple_paths(G, source=start, target=end))
+        #print paths
+        start_ = start
+        end_ = end
+        values, Min = self.PATH_FINDING_V(paths)
+        for path in paths:
+            if len(path) == 2:
+                for i in range(len(path) - 1):
+                    if path[i] == start_ and path[i + 1] == end_:
+                        paths.remove(path)
+
+
+        #print "MIN=", Min
+        # print "values=", values
+        r = self.Loc_Y[end] - self.Loc_Y[start]
+        Range = r - max(Min)
+        # Range=W_T-max(Min)
+        # print Range, len(paths[3])
+        # N=len(paths[3])-1
+        # print Range
+        ind = Min.index(max(Min))
+        val = values[ind]
+        PATH = paths[ind]
+        #print PATH
+        variable = self.randomvaluegenerator_V(Range, val, self.W_T)
+        #print variable
+
+        loc = {}
+        for i in range(len(PATH)):
+            if PATH[i] in self.Loc_Y:
+                loc[PATH[i]] = self.Loc_Y[PATH[i]]
+            else:
+                loc[PATH[i]] = loc[PATH[i - 1]] + variable[i - 1]
+                self.Loc_Y[PATH[i]] = loc[PATH[i - 1]] + variable[i - 1]
+        # print loc,Loc
+        flag = 0
+        for i in range(len(PATH) - 1):
+            if PATH[i + 1] - PATH[i] != 1:
+                start = PATH[i]
+                end = PATH[i + 1]
+                flag = 1
+        # print "S",start,end
+        if flag == 1:
+            self.FUNCTION_V(G, start, end)
+            # Intra_path= list(nx.all_simple_paths(G, source=start, target=end))
+            # print Intra_path
+        else:
+            return
 
     def FindingAllPaths_v(self, G, start, end):
         """
