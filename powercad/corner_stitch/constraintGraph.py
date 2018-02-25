@@ -1306,7 +1306,7 @@ class constraintGraph:
         val = values[ind]
         PATH = paths[ind]
         #print PATH
-        variable = self.randomvaluegenerator(Range, val, self.W_T)
+        variable = self.randomvaluegenerator(Range, val, r)
         #print variable
 
         loc = {}
@@ -2124,7 +2124,7 @@ class constraintGraph:
         val = values[ind]
         PATH = paths[ind]
         #print PATH
-        variable = self.randomvaluegenerator_V(Range, val, self.W_T)
+        variable = self.randomvaluegenerator_V(Range, val,r)
         #print variable
 
         loc = {}
