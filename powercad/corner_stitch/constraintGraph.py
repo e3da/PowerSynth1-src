@@ -215,13 +215,14 @@ class constraintGraph:
                 id = rect.cell.id
                 East = rect.getEast().cell.id
                 West = rect.getWest().cell.id
+                northWest = rect.northWest(rect).cell.id
+                southEast = rect.southEast(rect).cell.id
+
                 # print id,East,West,rect.cell.x,rect.cell.y
-                e = Edge(origin, dest, constraint.constraint(1, 'minWidth', origin, dest), "1", id, East, West)
+                e = Edge(origin, dest, constraint.constraint(1, 'minWidth', origin, dest), "1", id, East, West,northWest,southEast)
                 # print"e=", Edge.getEdgeWeight(e,origin,dest)
                 # self.edgesv.append(e)
-                self.edgesh.append(
-                    Edge(origin, dest, constraint.constraint(1, 'minWidth', origin, dest), "1", id, East=East,
-                         West=West))
+                self.edgesh.append(Edge(origin, dest, constraint.constraint(1, 'minWidth', origin, dest), "1", id, East=East,West=West,northWest=northWest,southEast=southEast))
                 # self.vertexMatrixh[origin][dest].append((rect.getWidth()))
                 self.vertexMatrixh[origin][dest].append(Edge.getEdgeWeight(e, origin, dest))
 
@@ -244,12 +245,12 @@ class constraintGraph:
                 North = rect.getNorth().cell.id
                 South = rect.getSouth().cell.id
 
-                # print id,North,South
-                e = Edge(origin, dest, constraint.constraint(1, 'minWidth', origin, dest), "1", id, North, South)
+                westNorth=rect.westNorth(rect).cell.id
+                eastSouth=rect.eastSouth(rect).cell.id
+                #print id,North,South,southEast,northWest,westNorth,eastSouth,rect.cell.x,rect.cell.y
+                e = Edge(origin, dest, constraint.constraint(1, 'minWidth', origin, dest), "1", id, North, South,eastSouth,westNorth)
                 # self.edgesh.append(e)
-                self.edgesv.append(
-                    Edge(origin, dest, constraint.constraint(1, 'minWidth', origin, dest), "1", id, North=North,
-                         South=South))
+                self.edgesv.append(Edge(origin, dest, constraint.constraint(1, 'minWidth', origin, dest), "1", id, North=North,South=South,eastSouth=eastSouth,westNorth=westNorth))
                 # self.vertexMatrixv[origin][dest] = rect.getHeight()
                 self.vertexMatrixv[origin][dest].append(e.getEdgeWeight(origin, dest))
                 # self.edgesv.append(Edge(origin, dest, constraint.constraint(rect.getHeight() , origin, dest)))#
@@ -1037,15 +1038,23 @@ class constraintGraph:
         ######## Removing all of those edges which have connected neighbor edges of type 1 incoming to source or outgoing of dest
         EAST = []
         WEST = []
+        NORTHWEST=[]
+        SOUTHEAST=[]
         for edge in special_edge_h:
             EAST.append(edge.East)
             WEST.append(edge.West)
+            NORTHWEST.append(edge.northWest)
+            SOUTHEAST.append(edge.southEast)
         # print"E=", EAST,WEST
         for edge in special_edge_h:
             if edge.West!=None or edge.id in EAST or edge.id in WEST:
-                    special_edge_h = [x for x in special_edge_h if x != edge]
-            if edge.East!=None or edge.id in EAST or edge.id in WEST:
-                    special_edge_h = [x for x in special_edge_h if x != edge]
+                special_edge_h = [x for x in special_edge_h if x != edge]
+            elif edge.East!=None or edge.id in EAST or edge.id in WEST:
+                special_edge_h = [x for x in special_edge_h if x != edge]
+            elif edge.northWest!=None or edge.id in NORTHWEST or edge.id in SOUTHEAST:
+                special_edge_h = [x for x in special_edge_h if x != edge]
+            elif edge.southEast!=None or edge.id in NORTHWEST or edge.id in SOUTHEAST:
+                special_edge_h = [x for x in special_edge_h if x != edge]
         """
         for edge in special_edge_h:
             # print "src",edge.source
@@ -1889,14 +1898,22 @@ class constraintGraph:
 
         NORTH = []
         SOUTH = []
+        WESTNORTH=[]
+        EASTSOUTH=[]
         for edge in special_edge_v:
             NORTH.append(edge.North)
             SOUTH.append(edge.South)
+            WESTNORTH.append(edge.westNorth)
+            EASTSOUTH.append(edge.eastSouth)
         #print NORTH, SOUTH
         for edge in special_edge_v:
             if edge.North!=None or edge.id in NORTH or edge.id in SOUTH:
                     special_edge_v = [x for x in special_edge_v if x != edge]
-            if edge.South!=None or edge.id in NORTH or edge.id in SOUTH:
+            elif edge.South!=None or edge.id in NORTH or edge.id in SOUTH:
+                    special_edge_v = [x for x in special_edge_v if x != edge]
+            elif edge.eastSouth!=None or edge.id in EASTSOUTH or edge.id in WESTNORTH:
+                    special_edge_v = [x for x in special_edge_v if x != edge]
+            elif edge.westNorth!=None or edge.id in EASTSOUTH or edge.id in WESTNORTH:
                     special_edge_v = [x for x in special_edge_v if x != edge]
         """"
         for edge in special_edge_v:
@@ -2287,7 +2304,7 @@ class multiCG():
 
 
 class Edge():
-    def __init__(self, source, dest, constraint, type, id, East=None, West=None, North=None, South=None):
+    def __init__(self, source, dest, constraint, type, id, East=None, West=None, North=None, South=None, northWest=None,westNorth=None,southEast=None,eastSouth=None):
         self.source = source
         self.dest = dest
         self.constraint = constraint
@@ -2297,6 +2314,10 @@ class Edge():
         self.West = West
         self.North = North
         self.South = South
+        self.northWest=northWest
+        self.westNorth=westNorth
+        self.southEast=southEast
+        self.eastSouth = eastSouth
         self.setEdgeDict()
 
     def getConstraint(self):

@@ -85,7 +85,7 @@ class tile:
 
     def westNorth(self, center):
         cc = center.NORTH
-        while cc.cell.x > center.cell.x + center.getWidth():
+        while cc.cell.x > center.cell.x :#+ center.getWidth():
             cc = cc.WEST
         return cc
 
