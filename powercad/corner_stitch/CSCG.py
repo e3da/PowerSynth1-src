@@ -1663,7 +1663,7 @@ class CSCG:
             ax1.set_xlim(0, self.Newcornerstitch_H[i].eastBoundary.cell.x)
 
             if self.name1:
-                fig1.savefig(self.name1 + str(i) + 'n-h.png', bbox_inches='tight')
+                fig1.savefig(self.name1 +'-'+ str(i) + 'n-h.png', bbox_inches='tight')
                 matplotlib.pyplot.close(fig1)
             else:
                 fig1.show()
@@ -1760,7 +1760,7 @@ class CSCG:
             ax4.set_ylim(0, self.Newcornerstitch_V[i].northBoundary.cell.y)
             ax4.set_xlim(0, self.Newcornerstitch_V[i].eastBoundary.cell.x)
             if self.name2:
-                fig2.savefig(self.name2 + str(i) + 'n-v.png', bbox_inches='tight')
+                fig2.savefig(self.name2 +'-'+ str(i) + 'n-v.png', bbox_inches='tight')
                 matplotlib.pyplot.close(fig2)
             else:
                 fig2.show()

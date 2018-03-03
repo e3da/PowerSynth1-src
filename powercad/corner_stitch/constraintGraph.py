@@ -55,8 +55,8 @@ class constraintGraph:
         self.NEWYLOCATION = []  ####Array of all Y locations after optimization
         self.name1 = name1
         self.name2 = name2
-        self.paths_h = []  ### all paths in HCG from leftmost node to right most node
-        self.paths_v = []  ### all paths in VCG from bottom most node to top most node
+        #self.paths_h = []  ### all paths in HCG from leftmost node to right most node
+        #self.paths_v = []  ### all paths in VCG from bottom most node to top most node
 
         self.special_location_x = []
         self.special_location_y = []
@@ -65,8 +65,8 @@ class constraintGraph:
         self.special_edgev = []
         self.special_edgeh = []
 
-        self.X={}
-        self.Y={}
+        self.X=[]
+        self.Y=[]
         self.Loc_X={}
         self.Loc_Y={}
         self.W_T=50
@@ -569,17 +569,25 @@ class constraintGraph:
             k, v = list(i.items())[0]  # an alternative to the single-iterating inner loop from the previous solution
             d3[k].append(v)
         #print d3
-
+        X={}
         for i,j in d3.items():
             #print i,max(j)
-            self.X[i]=max(j)
-        print self.X
+            X[i]=max(j)
+        #print "X=", X
+        for k,v in X.items():
+            self.X.append((k[0],k[1],v))
+        #print self.X
 
         loct = []
-        for i in range(5):
-            #print i
-            self.Loc_X = {0: 0, nodes[-1]: self.W_T}
-            self.FUNCTION(G3, start=nodes[0], end=nodes[-1])
+        for i in range(10):
+            G = nx.MultiDiGraph()
+            n = list(G3.nodes())
+            G.add_nodes_from(n)
+            # G.add_weighted_edges_from([(0,1,2),(1,2,3),(2,3,4),(3,4,4),(4,5,3),(5,6,2),(1,4,15),(2,5,16),(1,5,20)])
+            G.add_weighted_edges_from(self.X)
+            # Draw(G)
+            self.Loc_X = {n[0]: 0, n[-1]: self.W_T}
+            self.FUNCTION(G)
             loct.append(self.Loc_X)
 
         for i in loct:
@@ -784,238 +792,9 @@ class constraintGraph:
                 dist[node].append(node)
                 dist[node].append(loct[i][node])
             Graph_pos_h.append(dist)
-        # print Graph_pos_h
-        # print"LOC=",Graph_pos_h
-        #self.drawGraph_h_new(name, G3, D_3, Graph_pos_h)
 
-        #################################################################
-        """
-        label4 = copy.deepcopy(label3)
-        print "l3",label3
-
-        D = []
-        # print label3
-        for i in label4:
-            # print i.values()[0][1]
-            if i.values()[0][1] == "1":
-                D.append(i)
-
-        # print D, len(D)
-        W_total = []
-        for i in range(10):
-            W = []
-            for i in range(len(D)):
-                # W.append(randint(2, 10))
-                W.append(randint(2, 10))
-            W_total.append(W)
-        # print "W_T=",W_total
-
-        NewD = []
-        for i in range(len(D)):
-            NewD.append(D[i].keys()[0])
-        Space = []
-        for i in label4:
-            if i.values()[0][1] == "0":
-                Space.append(i)
-        # print Space
-        ############################ Varying Spacing
-        S_total = []
-        for i in range(10):
-            S = []
-            for i in range(len(Space)):
-                S.append(randint(1, 3))
-            S_total.append(S)
-        # print "S_T=", S_total
-        NewS = []
-        for i in range(len(Space)):
-            NewS.append(Space[i].keys()[0])
-        # print "NEWD=", NewS
-        new_labelw = []
-        for j in range(len(W_total)):
-            labelnew = []
-            for i in range(len(NewD)):
-                newdict = {NewD[i]: W_total[j][i]}
-                labelnew.append(newdict)
-                # labelnew.extend(Space)
-            new_labelw.append(labelnew)
-        # print new_labelw
-        new_labels = []
-        for j in range(len(S_total)):
-            labelnew = []
-            for i in range(len(NewS)):
-                newdict = {NewS[i]: S_total[j][i]}
-                labelnew.append(newdict)
-            new_labels.append(labelnew)
-
-        # print new_labels
-        new_label = []
-        for i in range(len(new_labels)):
-            new_labels[i].extend(new_labelw[i])
-            new_label.append(new_labels[i])
-        # new_label
-        # print "l4=", label4
-
-        for i in range(len(new_label)):
-            #
-            new_label[i].extend(label5)
-            # print new_label[i]
-
-        # print new_label
-        ################################
-
-        # print len(new_label)
-        # for i in new_label:
-        # print i
-        D_3 = []
-        for j in range(len(new_label)):
-            d[j] = defaultdict(list)
-            # print d[j]
-            # print"N=", new_label[j]
-            for i in new_label[j]:
-                # print i
-                # print new_label[j]
-                k, v = list(i.items())[0]  # an alternative to the single-iterating inner loop from the previous solution
-
-                # print k,v
-                d[j][k].append(v)
-            # print d[j]
-            # print "d[j]",d[j]
-
-
-            D_3.append(d[j])
-
-        print len(D_3),D_3
-        ###############################################################
-        d3 = defaultdict(list)
-        for i in label3:
-            k, v = list(i.items())[0]  # an alternative to the single-iterating inner loop from the previous solution
-            d3[k].append(v)
-        edge_labels3 = d3
-        # print len(edge_labels3)
-
-
-        #### Storing edge data in (u,v,w) format in a file(begin)
-        z = [(u, v, d['weight']) for u, v, d in G3.edges(data=True)]
-        f1 = open(name, 'w')
-        for i in z:
-            # print i
-            print >> f1, i
-        ######## Storing edge data in (u,v,w) format in a file(end)
-
-        ######## Finds all possible paths from start vertex to end vertex(begin)
-        n = list(G3.nodes())
-        self.FindingAllPaths_h(G3, n[0], n[-1])
-        '''
-        f2 = open("paths_h.txt", "rb")
-        for line in f2.read().splitlines():  # considering each line in file
-            self.paths_h.append(line)
-        paths=[json.loads(y) for y in self.paths_h]
-        '''
-        paths = self.paths_h
-        print paths
-        #### (end)
-        #### finding new location of each vertex in longest paths (begin)########
-        '''
-        l = []
-        for path in paths:
-            l.append(len(path))
-        L = max(l)
-        for path in paths:
-            if (len(path)) == L:
-                p = path
-        longest_path = [p] ###finds the path which one has maximum nodes
-        for j in range(len(paths)):
-            if (not (set(paths[j]).issubset(set(p)))):
-                if (paths[j] not in longest_path):
-                    longest_path.append(paths[j])
-        print "LONG=",longest_path ### Finds all unique paths so that all nodes are covered.
-        '''
-
-        ##############TESTING
-        # NEWXLOCATION=[]
-        loct = []
-        for k in range(len(D_3)):
-            new_Xlocation = []
-
-            dist = {}
-            distance = set()  ###stores (u,v,w)where u=parent,v=child,w=cumulative weight from source to child
-            location = set()  ###No use
-            position_k = {}  ## stores {node:location}
-            for i in range(len(paths)):
-                path = paths[i]
-                # print path
-                for j in range(len(path)):
-                    node = path[j]
-                    # print "node=",path[-1]
-                    if j > 0:
-                        pred = path[j - 1]
-                    else:
-                        pred = node
-                    # print node, pred
-                    if node == 0:
-                        dist[node] = (0, pred)
-                        # distance.append((pred,node,0))
-                        distance.add((pred, node, 0))
-                        # location.add((node,0))
-                        key = node
-                        position_k.setdefault(key, [])
-                        position_k[key].append(0)
-                    # elif node== path[-1]:
-
-                    else:
-
-                        pairs = (dist[pred][0] + max(D_3[k][(pred, node)]), pred)
-                        # print  max(edge_labels1[(pred, node)])
-                        dist[node] = pairs
-                        # print dist[node][0]
-
-                        distance.add((pred, node, pairs[0]))
-                        # print pairs[0]
-                        # if location[node]<pairs[0]:
-                        location.add((node, pairs[0]))
-                        key = node
-                        position_k.setdefault(key, [])
-                        position_k[key].append(pairs[0])
-                        # print position_k
-            loc_i = {}
-            for key in position_k:
-                loc_i[key] = max(position_k[key])
-                # if key==n[-2]:
-                # loc_i[key] = 19
-                # elif key==n[-1]:
-                # loc_i[key] = 20
-                new_Xlocation.append(loc_i[key])
-            loct.append(loc_i)
-
-            self.NEWXLOCATION.append(new_Xlocation)
-        f3 = open(name + "location_x.txt", 'wb')
-        for i in loct:
-            # print i
-            print >> f3, i
-        print"LOC=", loct, self.NEWXLOCATION
-        Graph_pos_h = []
-        for i in range(len(loct)):
-            dist = {}
-            for node in loct[i]:
-                key = node
-
-                dist.setdefault(key, [])
-                dist[node].append(node)
-                dist[node].append(loct[i][node])
-            Graph_pos_h.append(dist)
-        # print Graph_pos_h
-        # print"LOC=",Graph_pos_h
-        self.drawGraph_h_new(name, G3, D_3, Graph_pos_h)
-        """
         ######################### Handling special edges independently
-        '''
-        for i in range(len(self.zeroDimensionListh)):
-            for j in range(len(self.zeroDimensionListh)):
-                if (len(self.vertexMatrixh[i][j])>1):
-                    for k in self.vertexMatrixh[i][j]:
-                        if k[1]=='1':
-                            print i,j
-        '''
+
 
         special_edge_h = []  ### list of edges which are of type"1"  and in same nodes
 
@@ -1237,78 +1016,207 @@ class constraintGraph:
             variable.append(x + p)
             # print variable
         variable.append(Max - sum(variable))
+        random.shuffle(variable)
         return variable
 
-    def PATH_FINDING(self,paths):
-        dist = {}
-        value_1 = []
-        position = {}
-        for i in range(len(paths)):
-            path = paths[i]
-            end = path[-1]
-            # print path
-            values_1 = []
-            for j in range(len(path)):
+    def LONGEST_PATH(self,B, source, target):
+        X = {}
+        for i in range(len(B)):
 
-                node = path[j]
-                # print "node=",path[-1]
-                if j > 0:
-                    pred = path[j - 1]
-                else:
-                    pred = node
+            for j in range(len(B[i])):
+                # print B[i][j]
+
+                if B[i][j] != 0:
+                    X[(i, j)] = B[i][j]
+        Pred = {}  ## Saves all predecessors of each node{node1:[p1,p2],node2:[p1,p2..]}
+        for i in range(source, target + 1):
+            j = source
+            while j != target:
+                if B[j][i] != 0:
+                    # print Matrix[j][i]
+                    key = i
+                    Pred.setdefault(key, [])
+                    Pred[key].append(j)
+                if i == source and j == source:
+                    key = i
+                    Pred.setdefault(key, [])
+                    Pred[key].append(j)
+                j += 1
+
+        # print Pred
+        n = list(Pred.keys())  ## list of all nodes
+        # print n
+
+        dist = {}  ## Saves each node's (cumulative maximum weight from source,predecessor) {node1:(cum weight,predecessor)}
+        position = {}
+
+        for j in range(source, target + 1):
+            #print j
+
+            node = j
+            for i in range(len(Pred[node])):
+                pred = Pred[node][i]
+
                 # print node, pred
-                if j == 0:
+
+                if j == source:
                     dist[node] = (0, pred)
                     key = node
                     position.setdefault(key, [])
                     position[key].append(0)
-
-
                 else:
+                    pairs = (max(position[pred]) + (X[(pred, node)]), pred)
 
-                    pairs = (dist[pred][0] + (self.X[(pred, node)]), pred)
-                    dist[node] = pairs
-                    values_1.append(self.X[(pred, node)])
+                    # if dist[node][0]<pairs[0]:
+                    # print pairs[0]
+                    f = 0
+                    for x, v in dist.items():
+                        # print"x", x
+                        if node == x:
+                            if v[0] > pairs[0]:
+                                # print "v", v[0]
+                                f = 1
+                    if f == 0:
+                        dist[node] = pairs
+
+                    # value_1.append(X[(pred, node)])
                     key = node
                     position.setdefault(key, [])
                     position[key].append(pairs[0])
-            value_1.append(values_1)
-            for i in position:
-                if i == end:
-                    Min = position[i]
-        return value_1, Min
 
-    def FUNCTION(self,G, start, end):
-        self.paths_h=[]
-        self.FindingAllPaths_h(G,start, end)
-        paths = self.paths_h
-        #paths = list(nx.all_simple_paths(G, source=start, target=end))
-        #print paths
-        start_ = start
-        end_ = end
+                #print "dist=", dist, position
 
-        #print "MIN=", Min
-        for path in paths:
-            if len(path) == 2:
-                for i in range(len(path) - 1):
-                    if path[i] == start_ and path[i + 1] == end_:
-                        paths.remove(path)
+        i = target
+        path = []
+        while i > source:
 
-        values, Min = self.PATH_FINDING(paths)
-        # print "values=", values
-        r = self.Loc_X[end] - self.Loc_X[start]
-        Range = r - max(Min)
-        # Range=W_T-max(Min)
-        # print Range, len(paths[3])
-        # N=len(paths[3])-1
-        # print Range
-        ind = Min.index(max(Min))
-        val = values[ind]
-        PATH = paths[ind]
+            if i not in path:
+                path.append(i)
+            i = dist[i][1]
+            # print i
+            path.append(i)
+        # print path
+        PATH = list(reversed(path))  ## Longest path
         #print PATH
-        variable = self.randomvaluegenerator(Range, val, r)
-        #print variable
+        Value = []
+        for i in range(len(PATH) - 1):
+            # print (PATH[i],PATH[i+1])
+            if (PATH[i], PATH[i + 1]) in X.keys():
+                Value.append(X[(PATH[i], PATH[i + 1])])
+        # print Value
+        Max = sum(Value)
+        # print Max
 
+        return PATH, Value, Max
+
+    def FUNCTION(self,G):
+        A = nx.adjacency_matrix(G)
+        B = A.toarray()
+
+        Zero_column = np.where(~B.any(axis=0))[0]  ## checking if total column is 0
+        #print Zero_column
+        SOURCE = []  ## Saving all possible real sources
+        for i in range(len(Zero_column)):
+            source_ = Zero_column[i]
+            for j in range(len(B)):
+                if B[source_][j] != 0:
+                    SOURCE.append(source_)
+        #print "SOURCE=", SOURCE
+
+        if len(SOURCE) == 1:
+            start = SOURCE[0]
+        elif len(SOURCE) > 1:
+            start = SOURCE[-1]
+            #print "start=", start
+            Weights = {}
+            Successors = {}
+            Difference = {}
+            for i in range(len(SOURCE) - 1):
+                j = SOURCE[i]
+                key = j
+                Weights.setdefault(key, [])
+                Successors.setdefault(key, [])
+                for k in range(len(B)):
+                    if B[j][k] != 0:
+                        Weights[key].append(B[j][k])
+                        Successors[key].append(k)
+                Difference[j] = self.Loc_X[start] - self.Loc_X[j]
+            #print Weights, Successors, Difference
+
+            for s in Weights.keys():
+                #print s
+                #print Weights[s]
+                for j in range(len(Successors[s])):
+                    i = start
+                    l = Successors[s][j]
+                    #print i, l
+                    for k in range(len(B)):
+                        if k == l:
+                            #print B[i][k], Weights[s][j] - Difference[s]
+                            if B[i][k] < Weights[s][j] - Difference[s]:
+                                B[i][k] = Weights[s][j] - Difference[s]
+            #print B
+
+        Zero_row = np.where(~B.any(axis=1))[0]  ## checking if total column is 0
+        #print Zero_row
+        TARGET = []  ## Saving all possible real sources
+        for i in range(len(Zero_row)):
+            target_ = Zero_row[i]
+            for j in range(len(B)):
+                if B[j][target_] != 0:
+                    TARGET.append(target_)
+        #print "TARGET=", TARGET
+
+        if len(TARGET) == 1:
+            end = TARGET[0]
+        elif len(TARGET) > 1:
+            end = TARGET[0]
+            #print "end=", end
+            Weights = {}
+            Predecessors = {}
+            Difference = {}
+            for i in range(1, len(TARGET)):
+                j = TARGET[i]
+                key = j
+                Weights.setdefault(key, [])
+                Predecessors.setdefault(key, [])
+                for k in range(len(B)):
+                    if B[k][j] != 0:
+                        Weights[key].append(B[k][j])
+                        Predecessors[key].append(k)
+                Difference[j] = self.Loc_X[j] - self.Loc_X[end]
+            #print Weights, Predecessors, Difference
+
+            for s in Weights.keys():
+                #print s
+                #print Weights[s]
+                for j in range(len(Predecessors[s])):
+                    i = Predecessors[s][j]
+                    l = end
+                    #print i, l
+                    for k in range(len(B)):
+                        if k == i:
+                            #print B[k][l], Weights[s][j] - Difference[s]
+                            if B[k][l] < Weights[s][j] - Difference[s]:
+                                B[k][l] = Weights[s][j] - Difference[s]
+            #print B
+
+        #print start, end
+
+        PATH, Value, Sum = self.LONGEST_PATH(B, start, end)
+        Fixed_Node =self.Loc_X.keys()
+        #print "F", Fixed_Node
+        for i in Fixed_Node:
+            for j in Fixed_Node:
+                if G.has_edge(i, j):
+                    G.remove_edge(i, j)
+
+        Max = self.Loc_X[end] - self.Loc_X[start]
+
+        Range = Max - Sum
+        #print Range, Value, Max
+        variable = self.randomvaluegenerator(Range, Value, Max)
+        #print variable
         loc = {}
         for i in range(len(PATH)):
             if PATH[i] in self.Loc_X:
@@ -1316,26 +1224,23 @@ class constraintGraph:
             else:
                 loc[PATH[i]] = loc[PATH[i - 1]] + variable[i - 1]
                 self.Loc_X[PATH[i]] = loc[PATH[i - 1]] + variable[i - 1]
-        # print loc,Loc
-        flag = 0
-        for i in range(len(PATH) - 1):
-            if PATH[i + 1] - PATH[i] != 1:
-                start = PATH[i]
-                end = PATH[i + 1]
-                flag = 1
-        #print "S",start,end,flag
-        if flag == 1:
-            self.FUNCTION(G, start, end)
-            # Intra_path= list(nx.all_simple_paths(G, source=start, target=end))
-            # print Intra_path
+        #print loc, self.Loc_X
+        Fixed_Node = self.Loc_X.keys()
+        #print "F", Fixed_Node
+        for i in Fixed_Node:
+            for j in Fixed_Node:
+                if G.has_edge(i, j):
+                    G.remove_edge(i, j)
+        # Draw(G)
+        L = len(self.Loc_X.keys())
+        #print "L=", L
+        if L == len(self.zeroDimensionListh):
+            return self.Loc_X
         else:
-            return
-
+            return self.FUNCTION(G)
+    """
     def FindingAllPaths_h(self, G, start, end):
-        """
-        This should call subroutines for edge and vertex reduction, to pare the constraint graph down to its
-        minimum form
-        """
+        
         # f1 = open("paths_h.txt", 'w')
         visited = [False] * (len(G.nodes()))
         path = []
@@ -1371,7 +1276,7 @@ class constraintGraph:
 
         path.pop()
         visited[start] = False
-
+    """
     def cgToGraph_v(self, name):
         G1 = nx.MultiDiGraph()
         dictList = []
@@ -1495,14 +1400,25 @@ class constraintGraph:
             d3[k].append(v)
         #print d3
 
-        for i, j in d3.items():
-            #print i, max(j)
-            self.Y[i] = max(j)
-        print self.Y
+        Y={}
+        for i,j in d3.items():
+            #print i,max(j)
+            Y[i]=max(j)
+        #print "Y=", Y
+        for k,v in Y.items():
+            self.Y.append((k[0],k[1],v))
+        #print self.Y
+
         loct = []
-        for i in range(5):
-            self.Loc_Y = {0: 0, nodes[-1]: self.H_T}
-            self.FUNCTION_V(G4, start=nodes[0], end=nodes[-1])
+        for i in range(10):
+            G = nx.MultiDiGraph()
+            n = list(G4.nodes())
+            G.add_nodes_from(n)
+            # G.add_weighted_edges_from([(0,1,2),(1,2,3),(2,3,4),(3,4,4),(4,5,3),(5,6,2),(1,4,15),(2,5,16),(1,5,20)])
+            G.add_weighted_edges_from(self.Y)
+            # Draw(G)
+            self.Loc_Y = {n[0]: 0, n[-1]: self.H_T}
+            self.FUNCTION_V(G)
             loct.append(self.Loc_Y)
         for i in loct:
             new_y_loc = []
@@ -2058,75 +1974,207 @@ class constraintGraph:
             variable.append(x + p)
             # print variable
         variable.append(Max - sum(variable))
+        random.shuffle(variable)
         return variable
 
-    def PATH_FINDING_V(self,paths):
-        dist = {}
-        value_1 = []
-        position = {}
-        for i in range(len(paths)):
-            path = paths[i]
-            end = path[-1]
-            # print path
-            values_1 = []
-            for j in range(len(path)):
+    def LONGEST_PATH_V(self,B, source, target):
+        X = {}
+        for i in range(len(B)):
 
-                node = path[j]
-                # print "node=",path[-1]
-                if j > 0:
-                    pred = path[j - 1]
-                else:
-                    pred = node
+            for j in range(len(B[i])):
+                # print B[i][j]
+
+                if B[i][j] != 0:
+                    X[(i, j)] = B[i][j]
+        Pred = {}  ## Saves all predecessors of each node{node1:[p1,p2],node2:[p1,p2..]}
+        for i in range(source, target + 1):
+            j = source
+            while j != target:
+                if B[j][i] != 0:
+                    # print Matrix[j][i]
+                    key = i
+                    Pred.setdefault(key, [])
+                    Pred[key].append(j)
+                if i == source and j == source:
+                    key = i
+                    Pred.setdefault(key, [])
+                    Pred[key].append(j)
+                j += 1
+
+        # print Pred
+        n = list(Pred.keys())  ## list of all nodes
+        # print n
+
+        dist = {}  ## Saves each node's (cumulative maximum weight from source,predecessor) {node1:(cum weight,predecessor)}
+        position = {}
+
+        for j in range(source, target + 1):
+            #print j
+
+            node = j
+            for i in range(len(Pred[node])):
+                pred = Pred[node][i]
+
                 # print node, pred
-                if j == 0:
+
+                if j == source:
                     dist[node] = (0, pred)
                     key = node
                     position.setdefault(key, [])
                     position[key].append(0)
-
-
                 else:
+                    pairs = (max(position[pred]) + (X[(pred, node)]), pred)
 
-                    pairs = (dist[pred][0] + (self.Y[(pred, node)]), pred)
-                    dist[node] = pairs
-                    values_1.append(self.Y[(pred, node)])
+                    # if dist[node][0]<pairs[0]:
+                    # print pairs[0]
+                    f = 0
+                    for x, v in dist.items():
+                        # print"x", x
+                        if node == x:
+                            if v[0] > pairs[0]:
+                                # print "v", v[0]
+                                f = 1
+                    if f == 0:
+                        dist[node] = pairs
+
+                    # value_1.append(X[(pred, node)])
                     key = node
                     position.setdefault(key, [])
                     position[key].append(pairs[0])
-            value_1.append(values_1)
-            for i in position:
-                if i == end:
-                    Min = position[i]
-        return value_1, Min
 
-    def FUNCTION_V(self,G, start, end):
-        paths = list(nx.all_simple_paths(G, source=start, target=end))
-        #print paths
-        start_ = start
-        end_ = end
+                #print "dist=", dist, position
 
-        for path in paths:
-            if len(path) == 2:
-                for i in range(len(path) - 1):
-                    if path[i] == start_ and path[i + 1] == end_:
-                        paths.remove(path)
+        i = target
+        path = []
+        while i > source:
 
-        values, Min = self.PATH_FINDING_V(paths)
-        #print "MIN=", Min
-        # print "values=", values
-        r = self.Loc_Y[end] - self.Loc_Y[start]
-        Range = r - max(Min)
-        # Range=W_T-max(Min)
-        # print Range, len(paths[3])
-        # N=len(paths[3])-1
-        # print Range
-        ind = Min.index(max(Min))
-        val = values[ind]
-        PATH = paths[ind]
+            if i not in path:
+                path.append(i)
+            i = dist[i][1]
+            # print i
+            path.append(i)
+        # print path
+        PATH = list(reversed(path))  ## Longest path
         #print PATH
-        variable = self.randomvaluegenerator_V(Range, val,r)
-        #print variable
+        Value = []
+        for i in range(len(PATH) - 1):
+            # print (PATH[i],PATH[i+1])
+            if (PATH[i], PATH[i + 1]) in X.keys():
+                Value.append(X[(PATH[i], PATH[i + 1])])
+        # print Value
+        Max = sum(Value)
+        # print Max
 
+        return PATH, Value, Max
+
+    def FUNCTION_V(self,G):
+        A = nx.adjacency_matrix(G)
+        B = A.toarray()
+
+        Zero_column = np.where(~B.any(axis=0))[0]  ## checking if total column is 0
+        #print Zero_column
+        SOURCE = []  ## Saving all possible real sources
+        for i in range(len(Zero_column)):
+            source_ = Zero_column[i]
+            for j in range(len(B)):
+                if B[source_][j] != 0:
+                    SOURCE.append(source_)
+        #print "SOURCE=", SOURCE
+
+        if len(SOURCE) == 1:
+            start = SOURCE[0]
+        elif len(SOURCE) > 1:
+            start = SOURCE[-1]
+            #print "start=", start
+            Weights = {}
+            Successors = {}
+            Difference = {}
+            for i in range(len(SOURCE) - 1):
+                j = SOURCE[i]
+                key = j
+                Weights.setdefault(key, [])
+                Successors.setdefault(key, [])
+                for k in range(len(B)):
+                    if B[j][k] != 0:
+                        Weights[key].append(B[j][k])
+                        Successors[key].append(k)
+                Difference[j] = self.Loc_Y[start] - self.Loc_Y[j]
+            #print Weights, Successors, Difference
+
+            for s in Weights.keys():
+                #print s
+                #print Weights[s]
+                for j in range(len(Successors[s])):
+                    i = start
+                    l = Successors[s][j]
+                    #print i, l
+                    for k in range(len(B)):
+                        if k == l:
+                            #print B[i][k], Weights[s][j] - Difference[s]
+                            if B[i][k] < Weights[s][j] - Difference[s]:
+                                B[i][k] = Weights[s][j] - Difference[s]
+            #print B
+
+        Zero_row = np.where(~B.any(axis=1))[0]  ## checking if total column is 0
+        #print Zero_row
+        TARGET = []  ## Saving all possible real sources
+        for i in range(len(Zero_row)):
+            target_ = Zero_row[i]
+            for j in range(len(B)):
+                if B[j][target_] != 0:
+                    TARGET.append(target_)
+        #print "TARGET=", TARGET
+
+        if len(TARGET) == 1:
+            end = TARGET[0]
+        elif len(TARGET) > 1:
+            end = TARGET[0]
+            #print "end=", end
+            Weights = {}
+            Predecessors = {}
+            Difference = {}
+            for i in range(1, len(TARGET)):
+                j = TARGET[i]
+                key = j
+                Weights.setdefault(key, [])
+                Predecessors.setdefault(key, [])
+                for k in range(len(B)):
+                    if B[k][j] != 0:
+                        Weights[key].append(B[k][j])
+                        Predecessors[key].append(k)
+                Difference[j] = self.Loc_Y[j] - self.Loc_Y[end]
+            #print Weights, Predecessors, Difference
+
+            for s in Weights.keys():
+                #print s
+                #print Weights[s]
+                for j in range(len(Predecessors[s])):
+                    i = Predecessors[s][j]
+                    l = end
+                    #print i, l
+                    for k in range(len(B)):
+                        if k == i:
+                            #print B[k][l], Weights[s][j] - Difference[s]
+                            if B[k][l] < Weights[s][j] - Difference[s]:
+                                B[k][l] = Weights[s][j] - Difference[s]
+            #print B
+
+        #print start, end
+
+        PATH, Value, Sum = self.LONGEST_PATH_V(B, start, end)
+        Fixed_Node =self.Loc_Y.keys()
+        #print "F", Fixed_Node
+        for i in Fixed_Node:
+            for j in Fixed_Node:
+                if G.has_edge(i, j):
+                    G.remove_edge(i, j)
+
+        Max = self.Loc_Y[end] - self.Loc_Y[start]
+
+        Range = Max - Sum
+        #print Range, Value, Max
+        variable = self.randomvaluegenerator_V(Range, Value, Max)
+        #print variable
         loc = {}
         for i in range(len(PATH)):
             if PATH[i] in self.Loc_Y:
@@ -2134,26 +2182,23 @@ class constraintGraph:
             else:
                 loc[PATH[i]] = loc[PATH[i - 1]] + variable[i - 1]
                 self.Loc_Y[PATH[i]] = loc[PATH[i - 1]] + variable[i - 1]
-        # print loc,Loc
-        flag = 0
-        for i in range(len(PATH) - 1):
-            if PATH[i + 1] - PATH[i] != 1:
-                start = PATH[i]
-                end = PATH[i + 1]
-                flag = 1
-        # print "S",start,end
-        if flag == 1:
-            self.FUNCTION_V(G, start, end)
-            # Intra_path= list(nx.all_simple_paths(G, source=start, target=end))
-            # print Intra_path
+        #print loc, self.Loc_Y
+        Fixed_Node = self.Loc_Y.keys()
+        #print "F", Fixed_Node
+        for i in Fixed_Node:
+            for j in Fixed_Node:
+                if G.has_edge(i, j):
+                    G.remove_edge(i, j)
+        # Draw(G)
+        L = len(self.Loc_Y.keys())
+        #print "L=", L
+        if L == len(self.zeroDimensionListv):
+            return self.Loc_Y
         else:
-            return
-
+            return self.FUNCTION_V(G)
+    """
     def FindingAllPaths_v(self, G, start, end):
-        """
-        This should call subroutines for edge and vertex reduction, to pare the constraint graph down to its
-        minimum form
-        """
+        
         # f1 = open("paths_v.txt", 'w')
         visited = [False] * (len(G.nodes()))
         path = []
@@ -2176,7 +2221,7 @@ class constraintGraph:
         # Remove current vertex from path[] and mark it as unvisited
         path.pop()
         visited[start] = False
-
+    """
     def drawGraph_h(self, name, G2, edge_labels1):
 
         # edge_labels1 = self.merge_dicts(dictList1)
