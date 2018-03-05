@@ -405,8 +405,7 @@ class constraintGraph:
         for rect in cornerStitch_v.stitchList:
             pointSet_v.add(rect.cell.y)
 
-        pointSet_v.add(
-            cornerStitch_v.northBoundary.cell.y)  # this won't be included in the normal list, so we do it here
+        pointSet_v.add(cornerStitch_v.northBoundary.cell.y)  # this won't be included in the normal list, so we do it here
         for rect in cornerStitch_h.stitchList:
             pointSet_v.add(rect.cell.y)
 
@@ -420,15 +419,15 @@ class constraintGraph:
         pointSet_h = Set()
         for rect in cornerStitch_v.stitchList:
             pointSet_h.add(rect.cell.x)
-        pointSet_h.add(
-            cornerStitch_v.eastBoundary.cell.x)  # this won't be included in the normal list, so we do it here
+        #print pointSet_h
+        pointSet_h.add(cornerStitch_v.eastBoundary.cell.x)  # this won't be included in the normal list, so we do it here
         for rect in cornerStitch_h.stitchList:
             pointSet_h.add(rect.cell.x)
         pointSet_h.add(cornerStitch_h.eastBoundary.cell.x)
         setToList_h = list(pointSet_h)
         setToList_h.sort()
         self.zeroDimensionListh = setToList_h
-        # print self.zeroDimensionListh
+        #print self.zeroDimensionListh
         # print"vx=", setToList
 
     '''
@@ -1120,7 +1119,8 @@ class constraintGraph:
             source_ = Zero_column[i]
             for j in range(len(B)):
                 if B[source_][j] != 0:
-                    SOURCE.append(source_)
+                    if source_  not in SOURCE:
+                        SOURCE.append(source_)
         #print "SOURCE=", SOURCE
 
         if len(SOURCE) == 1:
@@ -1164,7 +1164,8 @@ class constraintGraph:
             target_ = Zero_row[i]
             for j in range(len(B)):
                 if B[j][target_] != 0:
-                    TARGET.append(target_)
+                    if target_ not in TARGET:
+                        TARGET.append(target_)
         #print "TARGET=", TARGET
 
         if len(TARGET) == 1:

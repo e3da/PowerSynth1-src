@@ -189,7 +189,7 @@ class CSCG:
         fig1, ax1 = plt.subplots()
 
         for cell in self.cornerStitch_h.stitchList:
-
+            #print"id", cell.cell.id
             if not cell.cell.type == "EMPTY":
                 pattern = '\\'
             else:
@@ -490,8 +490,7 @@ class CSCG:
             fig2.show()
             pylab.pause(11000)  # figure out how to do this better
 
-    def ID_Conversion(
-            self):  ############### Determining cell id for vertical cornerstitch from horizontal cornerstitch stitchlist
+    def ID_Conversion(self):  ############### Determining cell id for vertical cornerstitch from horizontal cornerstitch stitchlist
         '''
         In self.CG.special_cell_id_v id's are from horizontal cornerstitch. And in self.CG.special_cell_id_h id's are from vertical cornerstitch. So to update we need to determine
         special_cell_id_v in vertical one and special_cell_id_h in horizontal one.
@@ -698,7 +697,7 @@ class CSCG:
         # print"H="
         X_H = list(sorted(set(X_H)))
         Y_H = list(sorted(set(Y_H)))
-        # print X_H, Y_H
+        #print X_H
         '''
         #######Without optimization
         valuesX_H=self.CG.newXlocation
@@ -725,13 +724,14 @@ class CSCG:
         valuesX_H = []
         for i in range(len(self.CG.NEWXLOCATION)):
             valuesX_H.append(self.CG.NEWXLOCATION[i])
-        # print valuesX_H
+        #print valuesX_H
         valuesY_H = []
         for i in range(len(self.CG.NEWYLOCATION)):
             valuesY_H.append(self.CG.NEWYLOCATION[i])
         # valuesY_H = self.CG.newYlocation
         dictionary_X_H = []
         for i in range(len(valuesX_H)):
+
             dictionary_X_H.append(dict(zip(X_H, valuesX_H[i])))
         dictionary_Y_H = []
         for i in range(len(valuesY_H)):
@@ -750,12 +750,13 @@ class CSCG:
                 cell.cell.y = dictionary_Y_H[i][cell.cell.y]
                 # print cell.cell.x,cell.cell.y
             for cell in self.Newcornerstitch_H[i].boundaries:
-                # print cell.cell.x, cell.cell.y
+                #print "x=",cell.cell.x
                 if cell.cell.x in dictionary_X_H[i]:
                     cell.cell.x = dictionary_X_H[i][cell.cell.x]
                 if cell.cell.y in dictionary_Y_H[i]:
                     cell.cell.y = dictionary_Y_H[i][cell.cell.y]
-        # print dictionary_X_H
+                #print cell.cell.x
+        #print dictionary_X_H
         ############### Added for correction
         X_V = []
         Y_V = []
