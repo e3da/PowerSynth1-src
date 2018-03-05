@@ -209,7 +209,8 @@ class constraintGraph:
         self.vertexMatrixv = [[[] for i in range(n2)] for j in range(n2)]
         for rect in cornerStitch_v.stitchList:
 
-            if rect.cell.type == "SOLID":
+            #if rect.cell.type == "SOLID":
+            if rect.cell.type == "Type_1":
                 origin = self.zeroDimensionListh.index(rect.cell.x)
                 dest = self.zeroDimensionListh.index(rect.getEast().cell.x)
                 id = rect.cell.id
@@ -238,7 +239,8 @@ class constraintGraph:
                 # self.edgesv.append(Edge(origin, dest, constraint.constraint( rect.getHeight(), origin, dest)))
 
         for rect in cornerStitch_h.stitchList:
-            if rect.cell.type == "SOLID":
+            #if rect.cell.type == "SOLID":
+            if rect.cell.type == "Type_1":
                 origin = self.zeroDimensionListv.index(rect.cell.y)
                 dest = self.zeroDimensionListv.index(rect.getNorth().cell.y)
                 id = rect.cell.id

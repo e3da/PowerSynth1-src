@@ -74,7 +74,8 @@ class CSCG:
         # if self.CS.orientation == 'h':
         for rect in self.cornerStitch_h.stitchList:
             # rect.cell.printCell(True,True)
-            if rect.cell.type == "SOLID":
+            #if rect.cell.type == "SOLID":
+            if rect.cell.type == "Type_1":
                 color = "blue"
                 arrowList1.append((rect.cell.getX(), rect.cell.getY(), 0, rect.getHeight(), color))
 
@@ -93,7 +94,8 @@ class CSCG:
         arrowList2 = []
         for rect in self.cornerStitch_v.stitchList:
             # rect.cell.printCell(True,True)
-            if rect.cell.type == "SOLID":
+            #if rect.cell.type == "SOLID":
+            if rect.cell.type == "Type_1":
                 color = "blue"
                 arrowList2.append((rect.cell.getX(), rect.cell.getY(), rect.getWidth(), 0, color))
 
@@ -331,7 +333,8 @@ class CSCG:
         arrowList2 = []
         for rect in self.cornerStitch_v.stitchList:
             # rect.cell.printCell(True,True)
-            if rect.cell.type == "SOLID":
+            #if rect.cell.type == "SOLID":
+            if rect.cell.type == "Type_1":
                 color = "blue"
                 arrowList2.append((rect.cell.getX(), rect.cell.getY(), rect.getWidth(), 0, color))
 

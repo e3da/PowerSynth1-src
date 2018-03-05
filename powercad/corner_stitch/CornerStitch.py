@@ -666,13 +666,15 @@ class vLayer(cornerStitch):
         splitList = []
         splitList.append(bottomRight)
         #print"x=",bottomRight.cell.x, bottomRight.cell.y
-        if bottomRight.SOUTH != self.southBoundary and bottomRight.SOUTH.cell.type == "SOLID" and bottomRight.SOUTH.cell.y+bottomRight.SOUTH.getHeight() == y2 or bottomRight.cell.type=="SOLID":
+        #if bottomRight.SOUTH != self.southBoundary and bottomRight.SOUTH.cell.type == "SOLID" and bottomRight.SOUTH.cell.y+bottomRight.SOUTH.getHeight() == y2 or bottomRight.cell.type=="SOLID":
+        if bottomRight.SOUTH != self.southBoundary and bottomRight.SOUTH.cell.type == "Type_1" and bottomRight.SOUTH.cell.y + bottomRight.SOUTH.getHeight() == y2 or bottomRight.cell.type == "Type_1":
             cc1 = bottomRight.SOUTH
             while cc1.cell.x+cc1.getWidth()<x2:
                 cc1 = cc1.EAST
             if cc1 not in splitList:
                 splitList.append(cc1)
-            if cc1.cell.type == "SOLID" and cc1.cell.y+cc1.getHeight() == y2:
+            #if cc1.cell.type == "SOLID" and cc1.cell.y+cc1.getHeight() == y2:
+            if cc1.cell.type == "Type_1" and cc1.cell.y + cc1.getHeight() == y2:
                 cc2 = cc1.SOUTH
                 while cc2.cell.x+cc2.getWidth()<x2:
                     cc2 = cc2.EAST
@@ -690,7 +692,8 @@ class vLayer(cornerStitch):
             #print "bot=", cc.cell.x, cc.cell.y
             while cc.cell.x >= x2:
                 cc = cc.WEST
-        if cc.cell.type=="SOLID" and cc.cell.y==y1 or tr.cell.type=="SOLID"  :
+        #if cc.cell.type=="SOLID" and cc.cell.y==y1 or tr.cell.type=="SOLID"  :
+        if cc.cell.type == "Type_1" and cc.cell.y == y1 or tr.cell.type == "Type_1":
             if cc not in splitList and cc!=self.northBoundary:
                 splitList.append(cc)
             if cc!=self.northBoundary:
@@ -710,13 +713,15 @@ class vLayer(cornerStitch):
         splitList = []
         splitList.append(topLeft)
 
-        if topLeft.NORTH != self.northBoundary and topLeft.NORTH.cell.type == "SOLID" and topLeft.NORTH.cell.y == y1 or topLeft.cell.type=="SOLID":
+        #if topLeft.NORTH != self.northBoundary and topLeft.NORTH.cell.type == "SOLID" and topLeft.NORTH.cell.y == y1 or topLeft.cell.type=="SOLID":
+        if topLeft.NORTH != self.northBoundary and topLeft.NORTH.cell.type == "Type_1" and topLeft.NORTH.cell.y == y1 or topLeft.cell.type == "Type_1":
             cc = topLeft.NORTH
             while cc.cell.x>x1:
                 cc=cc.WEST
             splitList.append(cc)
 
-            if cc.cell.type == "SOLID" and cc.cell.y == y1:
+            #if cc.cell.type == "SOLID" and cc.cell.y == y1:
+            if cc.cell.type == "Type_1" and cc.cell.y == y1:
                 cc1 = cc.NORTH
                 while cc1.cell.x > x1:
                     cc1 = cc1.WEST
@@ -731,10 +736,12 @@ class vLayer(cornerStitch):
             while cc!=self.southBoundary and cc.cell.x+cc.getWidth()<=x1:
                 cc=cc.EAST
 
-        if cc.cell.type == "SOLID" and cc.cell.y+cc.getHeight() == y2 or bl.cell.type == "SOLID":
+        #if cc.cell.type == "SOLID" and cc.cell.y+cc.getHeight() == y2 or bl.cell.type == "SOLID":
+        if cc.cell.type == "Type_1" and cc.cell.y + cc.getHeight() == y2 or bl.cell.type == "Type_1":
             if cc not in splitList and cc!=self.southBoundary:
                 splitList.append(cc)
-            if cc.cell.type=="SOLID" and cc.cell.y+cc.getHeight() == y2:
+            #if cc.cell.type=="SOLID" and cc.cell.y+cc.getHeight() == y2:
+            if cc.cell.type == "Type_1" and cc.cell.y + cc.getHeight() == y2:
                 if cc.SOUTH != self.southBoundary:
                     cc = cc.SOUTH
                 while cc.cell.x + cc.getWidth() <= x1:
@@ -800,7 +807,8 @@ class vLayer(cornerStitch):
         cc = self.findPoint(x1, y2, self.stitchList[0])
        # print"resplit1=", cc.cell.x, cc.cell.y, cc.cell.x+cc.getWidth()
         while cc.cell.x+cc.getWidth() <= x2:
-            if cc.SOUTH.cell.type == "SOLID" and cc.SOUTH.cell.y + cc.SOUTH.getHeight() == y2 and cc.SOUTH != self.southBoundary and cc.SOUTH.cell.x+cc.SOUTH.getWidth() != cc.cell.x+cc.getWidth():
+            #if cc.SOUTH.cell.type == "SOLID" and cc.SOUTH.cell.y + cc.SOUTH.getHeight() == y2 and cc.SOUTH != self.southBoundary and cc.SOUTH.cell.x+cc.SOUTH.getWidth() != cc.cell.x+cc.getWidth():
+            if cc.SOUTH.cell.type == "Type_1" and cc.SOUTH.cell.y + cc.SOUTH.getHeight() == y2 and cc.SOUTH != self.southBoundary and cc.SOUTH.cell.x + cc.SOUTH.getWidth() != cc.cell.x + cc.getWidth():
                 resplit.append(cc.SOUTH)
                 resplit.append(cc.SOUTH.SOUTH)
             #if cc.EAST.cell.type == "SOLID" and cc.EAST.cell.x == x2 and cc.EAST != self.eastBoundary and cc.EAST.cell.y != cc.cell.y:
@@ -822,7 +830,8 @@ class vLayer(cornerStitch):
         resplit = []
         cc = self.findPoint(x1, y1, self.stitchList[0]).SOUTH
         while cc.cell.x + cc.getWidth() <= x2:
-           if cc.NORTH.cell.type == "SOLID" and cc.NORTH.cell.y == y1 and cc.NORTH != self.northBoundary and cc.NORTH.cell.x+cc.NORTH.getWidth() != cc.cell.x+cc.getWidth():
+           #if cc.NORTH.cell.type == "SOLID" and cc.NORTH.cell.y == y1 and cc.NORTH != self.northBoundary and cc.NORTH.cell.x+cc.NORTH.getWidth() != cc.cell.x+cc.getWidth():
+           if cc.NORTH.cell.type == "Type_1" and cc.NORTH.cell.y == y1 and cc.NORTH != self.northBoundary and cc.NORTH.cell.x + cc.NORTH.getWidth() != cc.cell.x + cc.getWidth():
                resplit.append(cc.NORTH)
                resplit.append(cc.NORTH.NORTH)
                #print"resplit=", len(resplit)
@@ -840,7 +849,8 @@ class vLayer(cornerStitch):
         cc = self.findPoint(x1, y1, self.stitchList[0]).SOUTH
         # print "xco2=", cc.cell.x
         while cc.cell.x + cc.getWidth() <= x2:
-            if cc.NORTH.cell.type == "SOLID" and cc.NORTH.cell.y == y1:
+            #if cc.NORTH.cell.type == "SOLID" and cc.NORTH.cell.y == y1:
+            if cc.NORTH.cell.type == "Type_1" and cc.NORTH.cell.y == y1:
                 changeList.append(cc.NORTH)
             cc = cc.EAST
             while cc.cell.y >= y1:
@@ -901,7 +911,8 @@ class vLayer(cornerStitch):
                     changeList.append(t)
         cc1 = self.findPoint(x1, y2, self.stitchList[0])
         while cc1.cell.x + cc1.getWidth() <= x2:
-            if cc1.SOUTH.cell.type == "SOLID" and cc1.SOUTH.cell.y +cc1.SOUTH.getHeight()== y2:
+            #if cc1.SOUTH.cell.type == "SOLID" and cc1.SOUTH.cell.y +cc1.SOUTH.getHeight()== y2:
+            if cc1.SOUTH.cell.type == "Type_1" and cc1.SOUTH.cell.y + cc1.SOUTH.getHeight() == y2:
                 changeList.append(cc1.SOUTH)
             cc1 = cc1.EAST
             while cc1.cell.y > y2:
@@ -1119,7 +1130,8 @@ class vLayer(cornerStitch):
             while cc.cell.x+cc.getWidth()<x1 : #and cc.cell.type=="SOLID"
                 cc=cc.EAST
 
-        if   cc.cell.type == "SOLID":
+        #if cc.cell.type == "SOLID":
+        if cc.cell.type == "Type_1":
             return True  # the bottom left corner is in a solid cell
         elif cc.cell.y >y2:
             return True  # the corner cell is empty but touches a solid cell within the search area
@@ -1129,7 +1141,8 @@ class vLayer(cornerStitch):
             #if cc.cell.y<y1 and cc.cell.type=="SOLID":
                 #return True ## these 2 lines have been commented out
             while(cc.cell.y+cc.getHeight()>y2):
-                if cc.cell.y<y1 and cc.cell.type=="SOLID":
+                #if cc.cell.y<y1 and cc.cell.type=="SOLID":
+                if cc.cell.y < y1 and cc.cell.type == "Type_1":
                     return True
                 if cc.SOUTH!=self.southBoundary:
                     cc=cc.SOUTH
@@ -1145,7 +1158,8 @@ class vLayer(cornerStitch):
         #print length
         for rect in self.stitchList:
             #rect.cell.id=i
-            if rect.cell.type=="SOLID":
+            #if rect.cell.type=="SOLID":
+            if rect.cell.type == "Type_1":
                 rect.cell.id=i
                 i+=1
         return
@@ -1213,7 +1227,8 @@ class hLayer(cornerStitch):
         splitList.append(topLeft)
         cc=topLeft
 
-        if cc.WEST != self.westBoundary and cc.WEST.cell.type=="SOLID" and cc.WEST.cell.x+cc.WEST.getWidth()==x1 or cc.cell.type=="SOLID":
+        #if cc.WEST != self.westBoundary and cc.WEST.cell.type=="SOLID" and cc.WEST.cell.x+cc.WEST.getWidth()==x1 or cc.cell.type=="SOLID":
+        if cc.WEST != self.westBoundary and cc.WEST.cell.type == "Type_1" and cc.WEST.cell.x + cc.WEST.getWidth() == x1 or cc.cell.type == "Type_1":
             cc1 = cc.WEST
             while cc1.cell.y + cc1.getHeight() < y1:
                 cc1 = cc1.NORTH
@@ -1237,7 +1252,8 @@ class hLayer(cornerStitch):
             #print"cc.x2", cc.cell.y
             while cc.cell.y >= y1 and cc!=self.eastBoundary:#previously it was >y1
                 cc= cc.SOUTH
-        if cc.cell.type=="SOLID" and cc.cell.x==x2 and cc!=self.eastBoundary or tr.cell.type=="SOLID" :##and tr.cell.y!=y1 and cc!=self.eastBoundary)
+        #if cc.cell.type=="SOLID" and cc.cell.x==x2 and cc!=self.eastBoundary or tr.cell.type=="SOLID" :##and tr.cell.y!=y1 and cc!=self.eastBoundary)
+        if cc.cell.type == "Type_1" and cc.cell.x == x2 and cc != self.eastBoundary or tr.cell.type == "Type_1":  ##and tr.cell.y!=y1 and cc!=self.eastBoundary)
             #print "testex", cc.cell.x
             splitList.append(cc)
             if cc.EAST!=self.eastBoundary:
@@ -1267,12 +1283,14 @@ class hLayer(cornerStitch):
         splitList = []
         splitList.append(bottomRight)
         cc=bottomRight
-        if cc.EAST!= self.eastBoundary and cc.EAST.cell.type=="SOLID" and cc.EAST.cell.x==x2 or cc.cell.type=="SOLID":
+        #if cc.EAST!= self.eastBoundary and cc.EAST.cell.type=="SOLID" and cc.EAST.cell.x==x2 or cc.cell.type=="SOLID":
+        if cc.EAST != self.eastBoundary and cc.EAST.cell.type == "Type_1" and cc.EAST.cell.x == x2 or cc.cell.type == "Type_1":
             cc1 = cc.EAST
             while cc1.cell.y > y2:
                 cc1 = cc1.SOUTH
             splitList.append(cc1)
-            if cc1.cell.type=="SOLID" and cc1.cell.x==x2:
+            #if cc1.cell.type=="SOLID" and cc1.cell.x==x2:
+            if cc1.cell.type == "Type_1" and cc1.cell.x == x2:
                 cc2=cc1.EAST
                 while cc2.cell.y > y2:
                     cc2 = cc2.SOUTH
@@ -1288,7 +1306,8 @@ class hLayer(cornerStitch):
 
 
         #print"cc2.x", cc.cell.x
-        if cc.cell.type=="SOLID" and cc.cell.x+cc.getWidth()>=x1 or bl.cell.type=="SOLID"   :#previously it was ==x1 or bl.cell.x+bl.getWidth()>x1
+        #if cc.cell.type=="SOLID" and cc.cell.x+cc.getWidth()>=x1 or bl.cell.type=="SOLID"   :#previously it was ==x1 or bl.cell.x+bl.getWidth()>x1
+        if cc.cell.type == "Type_1" and cc.cell.x + cc.getWidth() >= x1 or bl.cell.type == "Type_1":  # previously it was ==x1 or bl.cell.x+bl.getWidth()>x1
             if cc not in splitList:
                 splitList.append(cc)
             if cc.WEST!=self.westBoundary:
@@ -1432,11 +1451,13 @@ class hLayer(cornerStitch):
                 resplit.append(cc1)
                 if cc1.cell.x == x1:
                     resplit.append(cc1.WEST)
-                    if cc1.WEST.cell.type=="SOLID":
+                    #if cc1.WEST.cell.type=="SOLID":
+                    if cc1.WEST.cell.type == "Type_1":
                         resplit.append(cc1.WEST.WEST)
                 if cc1.EAST.cell.x == x2:
                     resplit.append(cc1.EAST)
-                    if cc1.EAST.cell.type=="SOLID":
+                    #if cc1.EAST.cell.type=="SOLID":
+                    if cc1.EAST.cell.type == "Type_1":
                         resplit.append(cc1.EAST.EAST)
 
                 cc1 = cc1.WEST
@@ -1464,7 +1485,8 @@ class hLayer(cornerStitch):
             t = t.EAST
         while t.cell.y>=y1:
             t=t.SOUTH
-        if t.WEST.cell.type=="SOLID" and t.WEST.cell.x+t.WEST.getWidth()==x1:
+        #if t.WEST.cell.type=="SOLID" and t.WEST.cell.x+t.WEST.getWidth()==x1:
+        if t.WEST.cell.type == "Type_1" and t.WEST.cell.x + t.WEST.getWidth() == x1:
             changeList.append(t.WEST)
         changeList.append(t)
         while (done== False):
@@ -1478,7 +1500,8 @@ class hLayer(cornerStitch):
                     if child not in changeList:
                         changeList.append(child)
                 else:
-                    if child.cell.type == "SOLID" and child.cell.x == x2:
+                    #if child.cell.type == "SOLID" and child.cell.x == x2:
+                    if child.cell.type == "Type_1" and child.cell.x == x2:
                         if child not in changeList:
                             changeList.append(child)
                     dirn = 2#to_root
@@ -1488,7 +1511,8 @@ class hLayer(cornerStitch):
                         t = t.SOUTH
                         while t.cell.x + t.getWidth() <= x1:
                             t = t.EAST
-                        if t.WEST.cell.type == "SOLID" and t.WEST.cell.x + t.WEST.getWidth() == x1:
+                        #if t.WEST.cell.type == "SOLID" and t.WEST.cell.x + t.WEST.getWidth() == x1:
+                        if t.WEST.cell.type == "Type_1" and t.WEST.cell.x + t.WEST.getWidth() == x1:
                             changeList.append(t.WEST)
                         dirn = 1
                     elif t.cell.x + t.getWidth() < x2:  # it was <=
@@ -1887,7 +1911,8 @@ class hLayer(cornerStitch):
         secondCorner = self.findPoint(x2, y2, self.stitchList[0])# the tile that contains the second(bottom right)corner
 
 
-        if  cc.cell.type == "SOLID" and cc.cell.y!=y1 :## cc.cell.x!=x1 and cc.cell.y!=y1 have been added ## cc.cell.x!=x has been deleted
+        #if  cc.cell.type == "SOLID" and cc.cell.y!=y1 :## cc.cell.x!=x1 and cc.cell.y!=y1 have been added ## cc.cell.x!=x has been deleted
+        if cc.cell.type == "Type_1" and cc.cell.y != y1:  ## cc.cell.x!=x1 and cc.cell.y!=y1 have been added ## cc.cell.x!=x has been deleted
             return True
         elif cc.cell.x + cc.getWidth() < x2 and cc.cell.y!=y1 and cc.cell.x!=x1 :## cc.cell.x!=x1 and cc.cell.y!=y1 have been added
             return True
@@ -1895,7 +1920,8 @@ class hLayer(cornerStitch):
         while(cc!= self.southBoundary and cc.cell.y+cc.getHeight()> y2):
             while (cc.cell.x + cc.getWidth() <= x1):## = has been inserted after changing point finding  # making sure that the CurrentCell's right edge lays within the area
                 cc = cc.EAST  # if it doesn't, traverse the top right stitch to find the next cell of interest
-            if cc.cell.type == "SOLID":
+            #if cc.cell.type == "SOLID":
+            if cc.cell.type == "Type_1":
                 return True  # the bottom left corner is in a solid cell
             elif cc.cell.x+cc.getWidth()<x2:
                 return True  # the corner cell is empty but touches a solid cell within the search area
@@ -1907,7 +1933,8 @@ class hLayer(cornerStitch):
         i=1
         #print length
         for rect in self.stitchList:
-            if rect.cell.type=="SOLID":
+            #if rect.cell.type=="SOLID":
+            if rect.cell.type == "Type_1":
                 rect.cell.id=i
                 i+=1
         return
