@@ -74,7 +74,6 @@ class CSCG:
         # if self.CS.orientation == 'h':
         for rect in self.cornerStitch_h.stitchList:
             # rect.cell.printCell(True,True)
-            #if rect.cell.type == "SOLID":
             if rect.cell.type == "Type_1":
                 color = "blue"
                 arrowList1.append((rect.cell.getX(), rect.cell.getY(), 0, rect.getHeight(), color))
@@ -94,8 +93,7 @@ class CSCG:
         arrowList2 = []
         for rect in self.cornerStitch_v.stitchList:
             # rect.cell.printCell(True,True)
-            #if rect.cell.type == "SOLID":
-            if rect.cell.type == "Type_1":
+            if rect.cell.type == "SOLID":
                 color = "blue"
                 arrowList2.append((rect.cell.getX(), rect.cell.getY(), rect.getWidth(), 0, color))
 
@@ -191,23 +189,9 @@ class CSCG:
         fig1, ax1 = plt.subplots()
 
         for cell in self.cornerStitch_h.stitchList:
-            #print"id", cell.cell.id
-            '''
-            if cell.cell.type=="Type_2":
-                #print cell.cell.id,cell.cell.x,cell.cell.y
-                ax1.add_patch(
-                    matplotlib.patches.Rectangle(
-                        (cell.cell.x, cell.cell.y),  # (x,y)
-                        cell.getWidth(),  # width
-                        cell.getHeight(),  # height
 
-                        fill=True
-                    )
-                )
-            '''
             if not cell.cell.type == "EMPTY":
                 pattern = '\\'
-
             else:
                 pattern = ''
 
@@ -347,7 +331,6 @@ class CSCG:
         arrowList2 = []
         for rect in self.cornerStitch_v.stitchList:
             # rect.cell.printCell(True,True)
-            #if rect.cell.type == "SOLID":
             if rect.cell.type == "Type_1":
                 color = "blue"
                 arrowList2.append((rect.cell.getX(), rect.cell.getY(), rect.getWidth(), 0, color))
@@ -507,7 +490,8 @@ class CSCG:
             fig2.show()
             pylab.pause(11000)  # figure out how to do this better
 
-    def ID_Conversion(self):  ############### Determining cell id for vertical cornerstitch from horizontal cornerstitch stitchlist
+    def ID_Conversion(
+            self):  ############### Determining cell id for vertical cornerstitch from horizontal cornerstitch stitchlist
         '''
         In self.CG.special_cell_id_v id's are from horizontal cornerstitch. And in self.CG.special_cell_id_h id's are from vertical cornerstitch. So to update we need to determine
         special_cell_id_v in vertical one and special_cell_id_h in horizontal one.
@@ -714,7 +698,7 @@ class CSCG:
         # print"H="
         X_H = list(sorted(set(X_H)))
         Y_H = list(sorted(set(Y_H)))
-        #print X_H
+        # print X_H, Y_H
         '''
         #######Without optimization
         valuesX_H=self.CG.newXlocation
@@ -741,14 +725,13 @@ class CSCG:
         valuesX_H = []
         for i in range(len(self.CG.NEWXLOCATION)):
             valuesX_H.append(self.CG.NEWXLOCATION[i])
-        #print valuesX_H
+        # print valuesX_H
         valuesY_H = []
         for i in range(len(self.CG.NEWYLOCATION)):
             valuesY_H.append(self.CG.NEWYLOCATION[i])
         # valuesY_H = self.CG.newYlocation
         dictionary_X_H = []
         for i in range(len(valuesX_H)):
-
             dictionary_X_H.append(dict(zip(X_H, valuesX_H[i])))
         dictionary_Y_H = []
         for i in range(len(valuesY_H)):
@@ -767,13 +750,12 @@ class CSCG:
                 cell.cell.y = dictionary_Y_H[i][cell.cell.y]
                 # print cell.cell.x,cell.cell.y
             for cell in self.Newcornerstitch_H[i].boundaries:
-                #print "x=",cell.cell.x
+                # print cell.cell.x, cell.cell.y
                 if cell.cell.x in dictionary_X_H[i]:
                     cell.cell.x = dictionary_X_H[i][cell.cell.x]
                 if cell.cell.y in dictionary_Y_H[i]:
                     cell.cell.y = dictionary_Y_H[i][cell.cell.y]
-                #print cell.cell.x
-        #print dictionary_X_H
+        # print dictionary_X_H
         ############### Added for correction
         X_V = []
         Y_V = []
@@ -826,7 +808,7 @@ class CSCG:
                     cell.cell.x = dictionary_X_V[i][cell.cell.x]
                 if cell.cell.y in dictionary_Y_V[i]:
                     cell.cell.y = dictionary_Y_V[i][cell.cell.y]
-        #print Newcornerstitch_H[i].stitchList
+        # print Newcornerstitch_H[i].stitchList
 
         #############
 
@@ -1609,11 +1591,10 @@ class CSCG:
                         if not cell.cell.id in self.CG.special_cell_id_v:
                             #print "1", cell.cell.id,cell.cell.x, cell.cell.y,cell.getWidth(),cell.getHeight()
                             pattern = '\\'
-                            line='solid'
+
 
                 else:
                     pattern = ''
-                    line='dotted'
 
                 ax1.add_patch(
                     matplotlib.patches.Rectangle(
@@ -1622,7 +1603,7 @@ class CSCG:
                         cell.getHeight(),  # height
                         hatch=pattern,
                         fill=False,
-                        linestyle=line
+                        linewidth=3
 
                     )
                 )
@@ -1639,9 +1620,9 @@ class CSCG:
                                 matplotlib.patches.Rectangle((element[cell.cell.id][0], element[cell.cell.id][1]),
                                                              element[cell.cell.id][2],
                                                              element[cell.cell.id][3],  # height
-                                                             hatch='/',
+                                                             hatch=pattern,
                                                              fill=True,
-                                                             linewidth=3
+                                                             linestyle='dotted'
                                                              )
                             )
 
@@ -1656,9 +1637,9 @@ class CSCG:
                                     matplotlib.patches.Rectangle((element[cell.cell.id][0], cell.cell.y),
                                                                  element[cell.cell.id][2],
                                                                  cell.getHeight(),  # height
-                                                                 hatch='/',
+                                                                 hatch=pattern,
                                                                  fill=True,
-                                                                 linewidth=3
+                                                                 linestyle='dotted'
                                                                  )
                                 )
                 if cell.cell.id not in self.Special_id:
@@ -1672,9 +1653,9 @@ class CSCG:
                                     matplotlib.patches.Rectangle((cell.cell.x, element[cell.cell.id][0]),
                                                                  cell.getWidth(),
                                                                  element[cell.cell.id][2],  # height
-                                                                 hatch='/',
+                                                                 hatch=pattern,
                                                                  fill=True,
-                                                                 linewidth=3
+                                                                 linestyle='dotted'
                                                                  )
                                 )
 
@@ -1711,12 +1692,10 @@ class CSCG:
                         if not cell.cell.id in self.CG.special_cell_id_h:
                             # print "1", cell.cell.id
                             pattern = '\\'
-                            linestyle='solid'
 
 
                 else:
                     pattern = ''
-                    linestyle='dotted'
 
                 ax4.add_patch(
                     matplotlib.patches.Rectangle(
@@ -1725,8 +1704,7 @@ class CSCG:
                         cell.getHeight(),  # height
                         hatch=pattern,
                         fill=False,
-                        linestyle=linestyle
-
+                        linewidth=3
 
                     )
                 )
@@ -1737,14 +1715,14 @@ class CSCG:
                         if cell.cell.id in element.keys():
                             # cell.cell.x = element[cell.cell.id][0]
 
-                            #pattern = '\\'
+                            pattern = '\\'
                             ax4.add_patch(
                                 matplotlib.patches.Rectangle((element[cell.cell.id][0], element[cell.cell.id][1]),
                                                              element[cell.cell.id][2],
                                                              element[cell.cell.id][3],  # height
-                                                             hatch='/',
+                                                             hatch=pattern,
                                                              fill=True,
-                                                             linewidth=3
+                                                             linestyle='dotted'
                                                              )
                             )
 
@@ -1759,9 +1737,9 @@ class CSCG:
                                     matplotlib.patches.Rectangle((element[cell.cell.id][0], cell.cell.y),
                                                                  element[cell.cell.id][2],
                                                                  cell.getHeight(),  # height
-                                                                 hatch='/',
+                                                                 hatch=pattern,
                                                                  fill=True,
-                                                                 linewidth=3
+                                                                 linestyle='dotted'
                                                                  )
                                 )
                 if cell.cell.id not in self.Special_id:
@@ -1775,9 +1753,9 @@ class CSCG:
                                     matplotlib.patches.Rectangle((cell.cell.x, element[cell.cell.id][0]),
                                                                  cell.getWidth(),
                                                                  element[cell.cell.id][2],  # height
-                                                                 hatch='/',
+                                                                 hatch=pattern,
                                                                  fill=True,
-                                                                 linewidth=3
+                                                                 linestyle='dotted'
                                                                  )
                                 )
 

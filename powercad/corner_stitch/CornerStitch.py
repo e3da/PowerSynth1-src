@@ -1157,28 +1157,52 @@ class vLayer(cornerStitch):
         for rect in self.stitchList:
             if rect.cell.type=="Type_1":
                 changeList.append(rect)
-        i = 0
-        for i in range(len(changeList)):
-            for j in range(len(changeList)):
+        list_len = len(changeList)
+        c = 0
 
-                top = changeList[j]
-                low = changeList[i]
-                #print "top=",top.cell.x,top.cell.y
-                #print "low=",low.cell.x,low.cell.y
-                if top.cell.y == low.cell.y and  top.getHeight() == low.getHeight():
+        while (len(changeList) > 1):
+            i = 0
+            c += 1
+
+            while i < len(changeList) - 1:
+                # print"i=", i, len(changeList)
+                j = 0
+                while j < len(changeList):
+                    # j=i+1
+                    # print"j=", j
+
+                    top = changeList[j]
+                    low = changeList[i]
+                    #top.cell.type = type
+                    #low.cell.type = type
+                    # print"topx=", top.cell.x, top.cell.y
+                    # print"lowx=", low.cell.x, low.cell.y
                     mergedcell = self.merge(top, low)
-
                     if mergedcell == "Tiles are not alligned":
-                        # print"-i=", i
-                        continue
+                        if j < len(changeList):
+                            j += 1
+
                     else:
-                        #del changeList[j]
-                        del changeList[i]
-                        changeList.insert(i, mergedcell)
-                        # print"i=",i
-                else:
-                    continue
+
+                        del changeList[j]
+                        if i > j:
+                            del changeList[i - 1]
+                        else:
+                            del changeList[i]
+                        x = min(i, j)
+                        # print"x=",x
+                        mergedcell.type='Type_1'
+                        changeList.insert(x, mergedcell)
+                        self.rectifyShadow(changeList[x])
+                        # if j<len(changeList):
+                        # j+=1
+                i += 1
+
+            if c == list_len:
+                break
+        # print"len_1", len(changeList)
         for i in range(len(changeList)):
+
             self.rectifyShadow(changeList[i])
         return self.stitchList
 
@@ -1267,6 +1291,7 @@ class hLayer(cornerStitch):
         topLeft = self.findPoint(x1, y1, self.stitchList[0])
         #print topLeft.cell.x, topLeft.cell.y
         bottomRight = self.findPoint(x2, y2, self.stitchList[0])
+
         tr=self.findPoint(x2, y1, self.stitchList[0])
         bl=self.findPoint(x1, y2, self.stitchList[0])
 
@@ -2006,30 +2031,46 @@ class hLayer(cornerStitch):
         for rect in self.stitchList:
             if rect.cell.type=="Type_1":
                 changeList.append(rect)
+        #print len(changeList)
+        list_len = len(changeList)
 
-        for i in range(len(changeList)):
-            for j in range(len(changeList)):
+        c = 0
 
-                top = changeList[j]
-                low = changeList[i]
-                #print "top=",top.cell.x,top.cell.y
-                #print "low=",low.cell.x,low.cell.y
-                if top.cell.x == low.cell.x+low.getHeight() or top.cell.x+top.getHeight() == low.cell.x:
+        while (len(changeList) > 1):
+            i = 0
+            c += 1
+            while i < len(changeList) - 1:
+                # print"i=",i,len(changeList)
+                j = 0
+                while j < len(changeList):
+                    top = changeList[j]
+                    low = changeList[i]
+
                     mergedcell = self.merge(top, low)
-
                     if mergedcell == "Tiles are not alligned":
-                        # print"-i=", i
-                        continue
+                        if j < len(changeList):
+                            j += 1
                     else:
-                        #del changeList[j]
-                        del changeList[i]
-                        changeList.insert(i, mergedcell)
-                        # print"i=",i
-                else:
-                    continue
+                        del changeList[j]
+                        if i > j:
+                            del changeList[i - 1]
+                        else:
+                            del changeList[i]
+                        x = min(i, j)
+                        # print"x=",x
+                        changeList.insert(x, mergedcell)
+                        # self.rectifyShadow(changeList[x])
+                        # if j<len(changeList):
+                        # j+=1
+                i += 1
+
+            if c == list_len:
+                break
+        # print"len_1",len(changeList)
+
         for i in range(len(changeList)):
             self.rectifyShadow(changeList[i])
-        return self.stitchList
+        return
 
     def set_id(self):
         length=len(self.stitchList)
