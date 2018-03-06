@@ -219,7 +219,7 @@ class constraintGraph:
                 northWest = rect.northWest(rect).cell.id
                 southEast = rect.southEast(rect).cell.id
 
-                # print id,East,West,rect.cell.x,rect.cell.y
+                #print id,East,West,rect.cell.x,rect.cell.y
                 e = Edge(origin, dest, constraint.constraint(1, 'minWidth', origin, dest), "1", id, East, West,northWest,southEast)
                 # print"e=", Edge.getEdgeWeight(e,origin,dest)
                 # self.edgesv.append(e)

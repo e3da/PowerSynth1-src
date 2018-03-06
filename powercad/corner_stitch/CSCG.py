@@ -192,8 +192,22 @@ class CSCG:
 
         for cell in self.cornerStitch_h.stitchList:
             #print"id", cell.cell.id
+            '''
+            if cell.cell.type=="Type_2":
+                #print cell.cell.id,cell.cell.x,cell.cell.y
+                ax1.add_patch(
+                    matplotlib.patches.Rectangle(
+                        (cell.cell.x, cell.cell.y),  # (x,y)
+                        cell.getWidth(),  # width
+                        cell.getHeight(),  # height
+
+                        fill=True
+                    )
+                )
+            '''
             if not cell.cell.type == "EMPTY":
                 pattern = '\\'
+
             else:
                 pattern = ''
 
@@ -812,7 +826,7 @@ class CSCG:
                     cell.cell.x = dictionary_X_V[i][cell.cell.x]
                 if cell.cell.y in dictionary_Y_V[i]:
                     cell.cell.y = dictionary_Y_V[i][cell.cell.y]
-        # print Newcornerstitch_H[i].stitchList
+        #print Newcornerstitch_H[i].stitchList
 
         #############
 
@@ -1595,9 +1609,11 @@ class CSCG:
                         if not cell.cell.id in self.CG.special_cell_id_v:
                             #print "1", cell.cell.id,cell.cell.x, cell.cell.y,cell.getWidth(),cell.getHeight()
                             pattern = '\\'
+                            line='solid'
 
                 else:
                     pattern = ''
+                    line='dotted'
 
                 ax1.add_patch(
                     matplotlib.patches.Rectangle(
@@ -1606,7 +1622,8 @@ class CSCG:
                         cell.getHeight(),  # height
                         hatch=pattern,
                         fill=False,
-                        linewidth=3
+                        linestyle=line
+
                     )
                 )
                 # for j in self.Special_id[i]:
@@ -1622,9 +1639,9 @@ class CSCG:
                                 matplotlib.patches.Rectangle((element[cell.cell.id][0], element[cell.cell.id][1]),
                                                              element[cell.cell.id][2],
                                                              element[cell.cell.id][3],  # height
-                                                             hatch=pattern,
-                                                             fill=False,
-                                                             linestyle='dotted'
+                                                             hatch='/',
+                                                             fill=True,
+                                                             linewidth=3
                                                              )
                             )
 
@@ -1639,9 +1656,9 @@ class CSCG:
                                     matplotlib.patches.Rectangle((element[cell.cell.id][0], cell.cell.y),
                                                                  element[cell.cell.id][2],
                                                                  cell.getHeight(),  # height
-                                                                 hatch=pattern,
-                                                                 fill=False,
-                                                                 linestyle='dotted'
+                                                                 hatch='/',
+                                                                 fill=True,
+                                                                 linewidth=3
                                                                  )
                                 )
                 if cell.cell.id not in self.Special_id:
@@ -1655,9 +1672,9 @@ class CSCG:
                                     matplotlib.patches.Rectangle((cell.cell.x, element[cell.cell.id][0]),
                                                                  cell.getWidth(),
                                                                  element[cell.cell.id][2],  # height
-                                                                 hatch=pattern,
-                                                                 fill=False,
-                                                                 linestyle='dotted'
+                                                                 hatch='/',
+                                                                 fill=True,
+                                                                 linewidth=3
                                                                  )
                                 )
 
@@ -1694,10 +1711,12 @@ class CSCG:
                         if not cell.cell.id in self.CG.special_cell_id_h:
                             # print "1", cell.cell.id
                             pattern = '\\'
+                            linestyle='solid'
 
 
                 else:
                     pattern = ''
+                    linestyle='dotted'
 
                 ax4.add_patch(
                     matplotlib.patches.Rectangle(
@@ -1706,7 +1725,8 @@ class CSCG:
                         cell.getHeight(),  # height
                         hatch=pattern,
                         fill=False,
-                        linewidth=3
+                        linestyle=linestyle
+
 
                     )
                 )
@@ -1717,14 +1737,14 @@ class CSCG:
                         if cell.cell.id in element.keys():
                             # cell.cell.x = element[cell.cell.id][0]
 
-                            pattern = '\\'
+                            #pattern = '\\'
                             ax4.add_patch(
                                 matplotlib.patches.Rectangle((element[cell.cell.id][0], element[cell.cell.id][1]),
                                                              element[cell.cell.id][2],
                                                              element[cell.cell.id][3],  # height
-                                                             hatch=pattern,
-                                                             fill=False,
-                                                             linestyle='dotted'
+                                                             hatch='/',
+                                                             fill=True,
+                                                             linewidth=3
                                                              )
                             )
 
@@ -1739,9 +1759,9 @@ class CSCG:
                                     matplotlib.patches.Rectangle((element[cell.cell.id][0], cell.cell.y),
                                                                  element[cell.cell.id][2],
                                                                  cell.getHeight(),  # height
-                                                                 hatch=pattern,
-                                                                 fill=False,
-                                                                 linestyle='dotted'
+                                                                 hatch='/',
+                                                                 fill=True,
+                                                                 linewidth=3
                                                                  )
                                 )
                 if cell.cell.id not in self.Special_id:
@@ -1755,9 +1775,9 @@ class CSCG:
                                     matplotlib.patches.Rectangle((cell.cell.x, element[cell.cell.id][0]),
                                                                  cell.getWidth(),
                                                                  element[cell.cell.id][2],  # height
-                                                                 hatch=pattern,
-                                                                 fill=False,
-                                                                 linestyle='dotted'
+                                                                 hatch='/',
+                                                                 fill=True,
+                                                                 linewidth=3
                                                                  )
                                 )
 

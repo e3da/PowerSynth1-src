@@ -1150,6 +1150,37 @@ class vLayer(cornerStitch):
                     break
             cc=cc.EAST
         return False
+    def Final_Merge(self):
+        changeList=[]
+        #for cell in self.stitchList:
+
+        for rect in self.stitchList:
+            if rect.cell.type=="Type_1":
+                changeList.append(rect)
+        i = 0
+        for i in range(len(changeList)):
+            for j in range(len(changeList)):
+
+                top = changeList[j]
+                low = changeList[i]
+                #print "top=",top.cell.x,top.cell.y
+                #print "low=",low.cell.x,low.cell.y
+                if top.cell.y == low.cell.y and  top.getHeight() == low.getHeight():
+                    mergedcell = self.merge(top, low)
+
+                    if mergedcell == "Tiles are not alligned":
+                        # print"-i=", i
+                        continue
+                    else:
+                        #del changeList[j]
+                        del changeList[i]
+                        changeList.insert(i, mergedcell)
+                        # print"i=",i
+                else:
+                    continue
+        for i in range(len(changeList)):
+            self.rectifyShadow(changeList[i])
+        return self.stitchList
 
     def set_id(self):  ########## Setting id for all type 1 blocks
 
@@ -1163,6 +1194,8 @@ class vLayer(cornerStitch):
                 rect.cell.id=i
                 i+=1
         return
+
+
 
 class hLayer(cornerStitch):
     def __init__(self, stitchList, max_x, max_y):
@@ -1178,6 +1211,39 @@ class hLayer(cornerStitch):
         self.orientation = 'h'
 
     def insert(self, x1, y1, x2, y2, type):
+        '''
+
+        if type=="Type_2":
+            changeList=[]
+            DEV_TOP=self.findPoint(x1, y1, self.stitchList[0])
+            DEV_BOT=self.findPoint(x2, y2, self.stitchList[0])
+            #print DEV_BOT.cell.x, DEV_BOT.cell.y, DEV_TOP.cell.x,DEV_TOP.cell.y
+            if DEV_TOP.cell.id!=DEV_BOT.cell.id :
+                print"Device is not on same trace"
+
+            else:
+                self.hSplit(DEV_TOP,y1)
+                #print DEV_BOT.cell.x,DEV_BOT.cell.y
+                self.hSplit(DEV_BOT,y2)
+
+                DEV_TILE=self.findPoint(x2, y2, self.stitchList[0])
+                #print DEV_TILE.cell.x,DEV_TILE.cell.y
+                self.vSplit(DEV_TILE,x2)
+                #print DEV_TILE.cell.x, DEV_TILE.cell.y
+                self.vSplit(DEV_TILE, x1)
+
+                DEVICE=self.findPoint(x1,y2,self.stitchList[0])
+                print DEVICE.cell.x,DEVICE.cell.y,DEVICE.getHeight(),DEVICE.getWidth()
+                DEVICE.cell.type="Type_2"
+                changeList.append(DEVICE)
+                self.Remove_cell(DEVICE)
+            return changeList
+
+
+        else:
+        '''
+
+
         """
         insert a new solid cell into the rectangle defined by the top left corner(x1, y1) and the bottom right corner
         (x2, y2) and adds the new cell to the cornerStitch's stitchList, then corrects empty space horizontally
@@ -1877,6 +1943,12 @@ class hLayer(cornerStitch):
                     j += 1
 
         return
+    def Remove_cell(self,center):
+        cc=center
+        for cell in self.stitchList:
+            if center.NORTH==cell or center.EAST==cell or center.WEST==cell or center.SOUTH==cell:
+                self.stitchList.remove(cell)
+
 
     """
     def areaSearch(self, x1, y1, x2, y2):
@@ -1927,17 +1999,57 @@ class hLayer(cornerStitch):
                 return True  # the corner cell is empty but touches a solid cell within the search area
             cc = cc.SOUTH #check the next lowest cell
         return False
+    def Final_Merge(self):
+        changeList=[]
+        #for cell in self.stitchList:
+
+        for rect in self.stitchList:
+            if rect.cell.type=="Type_1":
+                changeList.append(rect)
+
+        for i in range(len(changeList)):
+            for j in range(len(changeList)):
+
+                top = changeList[j]
+                low = changeList[i]
+                #print "top=",top.cell.x,top.cell.y
+                #print "low=",low.cell.x,low.cell.y
+                if top.cell.x == low.cell.x+low.getHeight() or top.cell.x+top.getHeight() == low.cell.x:
+                    mergedcell = self.merge(top, low)
+
+                    if mergedcell == "Tiles are not alligned":
+                        # print"-i=", i
+                        continue
+                    else:
+                        #del changeList[j]
+                        del changeList[i]
+                        changeList.insert(i, mergedcell)
+                        # print"i=",i
+                else:
+                    continue
+        for i in range(len(changeList)):
+            self.rectifyShadow(changeList[i])
+        return self.stitchList
 
     def set_id(self):
         length=len(self.stitchList)
         i=1
+        j=1000
         #print length
         for rect in self.stitchList:
             #if rect.cell.type=="SOLID":
             if rect.cell.type == "Type_1":
                 rect.cell.id=i
                 i+=1
+            if rect.cell.type=="Type_2":
+                rect.cell.id=j
+                j+=1
+        #for rect in self.stitchList:
+            #print rect.cell.id
+
         return
+
+
 
 if __name__ == '__main__':
     emptyVPlane = tile(None, None, None, None, None, cell(0, 0, "EMPTY"))
@@ -2032,8 +2144,11 @@ if __name__ == '__main__':
     else:
         exit(1)
     """
+    emptyVExample.Final_Merge()
+    emptyHExample.Final_Merge()
     emptyHExample.set_id()
     emptyVExample.set_id()
+
     #CG = cg.constraintGraph(testdir+'/'+testbase+'gh.png',testdir+'/'+testbase+'gv.png')
     CG = cg.constraintGraph(testdir + '/' + testbase , testdir + '/' + testbase)
     #CG2 = cg.constraintGraph(testdir+'/'+testbase+'gv.png')
@@ -2049,28 +2164,36 @@ if __name__ == '__main__':
     #diGraph2 = cg.multiCG(CG)
     #con = constraint.constraint(1, "minWidth", 0, 1)
     #diGraph.addEdge(con.source, con.dest, con)
-    CG.cgToGraph_h(testdir+'/'+testbase+'edgeh.txt')
-    CG.cgToGraph_v(testdir+'/'+testbase+'edgev.txt')
+
     #CG1.drawGraph()
 
     #diGraph1.drawGraph1()
     #diGraph2.drawGraph2()
+    '''
+    CSCG = CSCG.CSCG(emptyHExample, emptyVExample, CG, testdir + '/' + testbase, testdir + '/' + testbase)
+    CSCG.findGraphEdges_h()
+    CSCG.drawLayer1()
+    '''
 
+
+    CG.cgToGraph_h(testdir + '/' + testbase + 'edgeh.txt')
+    CG.cgToGraph_v(testdir + '/' + testbase + 'edgev.txt')
     CSCG = CSCG.CSCG(emptyHExample,emptyVExample, CG,testdir+'/'+testbase,testdir+'/'+testbase)
-    #CSCG2 = CSCG.CSCG(emptyVExample, CG2,testdir+'/'+testbase+'v.png')
-    #CSCG=CSCG.CSCG(emptyVExample, CG)
+    
     CSCG.findGraphEdges_h()
     CSCG.drawLayer1()
     CSCG.findGraphEdges_v()
     CSCG.drawLayer2()
-    #CSCG.drawLayer_h()
-    #CSCG.drawLayer_v()
-    #CSCG.drawLayer_hnew()
+    
     CSCG.drawRectangle(list)
     CSCG.update_stitchList()
     CSCG.ID_Conversion()
     CSCG.drawLayer11()
     CSCG.drawLayer22()
+
+    # CSCG.drawLayer_h()
+    # CSCG.drawLayer_v()
+    # CSCG.drawLayer_hnew()
     #CSCG.drawLayer_hnew()
     #CSCG.drawLayer_vnew()
     #emptyVExample.drawLayer(truePointer=False)
