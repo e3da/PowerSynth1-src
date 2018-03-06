@@ -580,7 +580,7 @@ class constraintGraph:
         #print self.X
 
         loct = []
-        for i in range(10):
+        for i in range(5):
             G = nx.MultiDiGraph()
             n = list(G3.nodes())
             G.add_nodes_from(n)
@@ -1413,7 +1413,7 @@ class constraintGraph:
         #print self.Y
 
         loct = []
-        for i in range(10):
+        for i in range(5):
             G = nx.MultiDiGraph()
             n = list(G4.nodes())
             G.add_nodes_from(n)
