@@ -1578,6 +1578,79 @@ class CSCG:
         # print"el=", element
         # print self.Special_id,self.Special_id_h,self.Special_id_v
         for i in range(len(self.Newcornerstitch_H)):
+            '''
+            fig1,ax1=plt.subplots()
+            for cell in self.Newcornerstitch_H[i].stitchList:
+                if cell.cell.type!="EMPTY":
+                    if not cell.cell.id in self.Special_id_h:
+                        if not cell.cell.id in self.CG.special_cell_id_v:
+                            ax1.add_patch(
+                                matplotlib.patches.Rectangle(
+                                    (cell.cell.x, cell.cell.y),  # (x,y)
+                                    cell.getWidth(),  # width
+                                    cell.getHeight(),  # height
+                                    hatch='\\',
+                                    fill=False,
+                                    linewidth=3
+
+                                )
+                            )
+                    if cell.cell.id in self.Special_id:
+                        # print "id_h", cell.cell.id
+                        for element in self.Special_stitchlist[i]:
+                            # print element
+                            if cell.cell.id in element.keys():
+                                # cell.cell.x = element[cell.cell.id][0]
+
+                                pattern = '\\'
+                                ax1.add_patch(
+                                    matplotlib.patches.Rectangle((element[cell.cell.id][0], element[cell.cell.id][1]),
+                                                                 element[cell.cell.id][2],
+                                                                 element[cell.cell.id][3],  # height
+                                                                 hatch=pattern,
+                                                                 fill=True,
+                                                                 linestyle='dotted'
+                                                                 )
+                                )
+
+                    if cell.cell.id not in self.Special_id:
+                        if cell.cell.id in self.Special_id_h:
+                            for element in self.Special_stitchlist_h[i]:
+                                if cell.cell.id in element.keys():
+                                    # cell.cell.x = element[cell.cell.id][0]
+
+                                    pattern = '\\'
+                                    ax1.add_patch(
+                                        matplotlib.patches.Rectangle((element[cell.cell.id][0], cell.cell.y),
+                                                                     element[cell.cell.id][2],
+                                                                     cell.getHeight(),  # height
+                                                                     hatch=pattern,
+                                                                     fill=True,
+                                                                     linestyle='dotted'
+                                                                     )
+                                    )
+                    if cell.cell.id not in self.Special_id:
+                        if cell.cell.id in self.CG.special_cell_id_v:
+                            for element in self.CG.special_location_y[i]:
+                                if cell.cell.id in element.keys():
+                                    # cell.cell.x = element[cell.cell.id][0]
+
+                                    pattern = '\\'
+                                    ax1.add_patch(
+                                        matplotlib.patches.Rectangle((cell.cell.x, element[cell.cell.id][0]),
+                                                                     cell.getWidth(),
+                                                                     element[cell.cell.id][2],  # height
+                                                                     hatch=pattern,
+                                                                     fill=True,
+                                                                     linestyle='dotted'
+                                                                     )
+                                    )
+
+
+
+            '''
+
+                
             fig1, ax1 = plt.subplots()
             #print "#"
             for cell in self.Newcornerstitch_H[i].stitchList:
@@ -1709,7 +1782,7 @@ class CSCG:
                     )
                 )
                 if cell.cell.id in self.Special_id:
-                    # print "id_h", cell.cell.id
+                    #print "id_h", cell.cell.id
                     for element in self.Special_stitchlist[i]:
                         # print element
                         if cell.cell.id in element.keys():
@@ -1769,6 +1842,7 @@ class CSCG:
                 pylab.pause(11000)  # figure out how to do this better
 
     ###############################################################################################################################################
+
 
 
 
