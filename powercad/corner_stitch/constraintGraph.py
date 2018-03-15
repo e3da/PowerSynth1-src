@@ -55,8 +55,8 @@ class constraintGraph:
         self.NEWYLOCATION = []  ####Array of all Y locations after optimization
         self.name1 = name1
         self.name2 = name2
-        #self.paths_h = []  ### all paths in HCG from leftmost node to right most node
-        #self.paths_v = []  ### all paths in VCG from bottom most node to top most node
+        self.paths_h = []  ### all paths in HCG from leftmost node to right most node
+        self.paths_v = []  ### all paths in VCG from bottom most node to top most node
 
         self.special_location_x = []
         self.special_location_y = []
@@ -69,8 +69,8 @@ class constraintGraph:
         self.Y=[]
         self.Loc_X={}
         self.Loc_Y={}
-        self.W_T=50
-        self.H_T=60
+        self.W_T=120
+        self.H_T=120
 
     '''
     def getVertexMatrixh(self):
@@ -556,15 +556,11 @@ class constraintGraph:
                 data.append((lst_branch[0], lst_branch[1], internal_edge))
                 label3.append({(lst_branch[0], lst_branch[1]): internal_edge})  #####{(source,dest):[weight,type,id,East cell id,West cell id]}
                 label5.append({(lst_branch[0], lst_branch[1]): internal_edge[0]})  ######{(source,dest):weight}
-                '''
-                if (lst_branch[0], lst_branch[1], {'route': internal_edge}) not in data:
-                data.append((lst_branch[0], lst_branch[1], {'route': internal_edge}))
-                label.append({(lst_branch[0], lst_branch[1]): internal_edge})
-                '''
-            # print data
+
             G3.add_weighted_edges_from(data)
         #############################################################
         #print label5
+
         d3 = defaultdict(list)
         for i in label5:
             k, v = list(i.items())[0]  # an alternative to the single-iterating inner loop from the previous solution
@@ -580,14 +576,14 @@ class constraintGraph:
         #print self.X
 
         loct = []
-        for i in range(5):
+        for i in range(10):
             G = nx.MultiDiGraph()
             n = list(G3.nodes())
             G.add_nodes_from(n)
             # G.add_weighted_edges_from([(0,1,2),(1,2,3),(2,3,4),(3,4,4),(4,5,3),(5,6,2),(1,4,15),(2,5,16),(1,5,20)])
             G.add_weighted_edges_from(self.X)
             # Draw(G)
-            self.Loc_X = {n[0]:0,n[1]:3,n[-2]:47, n[-1]: self.W_T}
+            self.Loc_X = {n[0]:0,n[-1]: self.W_T}
             self.FUNCTION(G)
             loct.append(self.Loc_X)
 
@@ -601,14 +597,6 @@ class constraintGraph:
             # print i
             print >> f3, i
         print"LOC=", loct, self.NEWXLOCATION
-
-
-
-
-
-
-
-
         Graph_pos_h = []
         for i in range(len(loct)):
             dist = {}
@@ -619,6 +607,232 @@ class constraintGraph:
                 dist[node].append(node)
                 dist[node].append(loct[i][node])
             Graph_pos_h.append(dist)
+
+        ######## LEVEL-1OPTIMIZATION
+        """
+        #################################################################
+
+        label4 = copy.deepcopy(label3)
+        print "l3",label3
+
+        D = []
+        # print label3
+        for i in label4:
+            # print i.values()[0][1]
+            if i.values()[0][1] == "1":
+                D.append(i)
+
+        # print D, len(D)
+        W_total = []
+        for i in range(10):
+            W = []
+            for i in range(len(D)):
+                # W.append(randint(2, 10))
+                W.append(random.randint(5, 15))
+            W_total.append(W)
+        # print "W_T=",W_total
+
+        NewD = []
+        for i in range(len(D)):
+            NewD.append(D[i].keys()[0])
+        Space = []
+        for i in label4:
+            if i.values()[0][1] == "0":
+                Space.append(i)
+        # print Space
+        ############################ Varying Spacing
+        S_total = []
+        for i in range(10):
+            S = []
+            for i in range(len(Space)):
+                S.append(random.randint(2, 5))
+            S_total.append(S)
+        # print "S_T=", S_total
+        NewS = []
+        for i in range(len(Space)):
+            NewS.append(Space[i].keys()[0])
+        # print "NEWD=", NewS
+        new_labelw = []
+        for j in range(len(W_total)):
+            labelnew = []
+            for i in range(len(NewD)):
+                newdict = {NewD[i]: W_total[j][i]}
+                labelnew.append(newdict)
+                # labelnew.extend(Space)
+            new_labelw.append(labelnew)
+        # print new_labelw
+        new_labels = []
+        for j in range(len(S_total)):
+            labelnew = []
+            for i in range(len(NewS)):
+                newdict = {NewS[i]: S_total[j][i]}
+                labelnew.append(newdict)
+            new_labels.append(labelnew)
+
+        # print new_labels
+        new_label = []
+        for i in range(len(new_labels)):
+            new_labels[i].extend(new_labelw[i])
+            new_label.append(new_labels[i])
+        # new_label
+        # print "l4=", label4
+
+        for i in range(len(new_label)):
+            #
+            new_label[i].extend(label5)
+            # print new_label[i]
+
+        # print new_label
+        ################################
+
+        # print len(new_label)
+        # for i in new_label:
+        # print i
+        D_3 = []
+        for j in range(len(new_label)):
+            d[j] = defaultdict(list)
+            # print d[j]
+            # print"N=", new_label[j]
+            for i in new_label[j]:
+                # print i
+                # print new_label[j]
+                k, v = list(i.items())[0]  # an alternative to the single-iterating inner loop from the previous solution
+
+                # print k,v
+                d[j][k].append(v)
+            # print d[j]
+            # print "d[j]",d[j]
+
+
+            D_3.append(d[j])
+
+        print len(D_3),D_3
+        ###############################################################
+        d3 = defaultdict(list)
+        for i in label3:
+            k, v = list(i.items())[0]  # an alternative to the single-iterating inner loop from the previous solution
+            d3[k].append(v)
+        edge_labels3 = d3
+        # print len(edge_labels3)
+
+
+        #### Storing edge data in (u,v,w) format in a file(begin)
+        z = [(u, v, d['weight']) for u, v, d in G3.edges(data=True)]
+        f1 = open(name, 'w')
+        for i in z:
+            # print i
+            print >> f1, i
+        ######## Storing edge data in (u,v,w) format in a file(end)
+
+        ######## Finds all possible paths from start vertex to end vertex(begin)
+        n = list(G3.nodes())
+        self.FindingAllPaths_h(G3, n[0], n[-1])
+        '''
+        f2 = open("paths_h.txt", "rb")
+        for line in f2.read().splitlines():  # considering each line in file
+            self.paths_h.append(line)
+        paths=[json.loads(y) for y in self.paths_h]
+        '''
+        paths = self.paths_h
+        print paths
+        #### (end)
+        #### finding new location of each vertex in longest paths (begin)########
+        '''
+        l = []
+        for path in paths:
+            l.append(len(path))
+        L = max(l)
+        for path in paths:
+            if (len(path)) == L:
+                p = path
+        longest_path = [p] ###finds the path which one has maximum nodes
+        for j in range(len(paths)):
+            if (not (set(paths[j]).issubset(set(p)))):
+                if (paths[j] not in longest_path):
+                    longest_path.append(paths[j])
+        print "LONG=",longest_path ### Finds all unique paths so that all nodes are covered.
+        '''
+
+        ##############TESTING
+        # NEWXLOCATION=[]
+        loct = []
+        for k in range(len(D_3)):
+            new_Xlocation = []
+
+            dist = {}
+            distance = set()  ###stores (u,v,w)where u=parent,v=child,w=cumulative weight from source to child
+            location = set()  ###No use
+            position_k = {}  ## stores {node:location}
+            for i in range(len(paths)):
+                path = paths[i]
+                # print path
+                for j in range(len(path)):
+                    node = path[j]
+                    # print "node=",path[-1]
+                    if j > 0:
+                        pred = path[j - 1]
+                    else:
+                        pred = node
+                    # print node, pred
+                    if node == 0:
+                        dist[node] = (0, pred)
+                        # distance.append((pred,node,0))
+                        distance.add((pred, node, 0))
+                        # location.add((node,0))
+                        key = node
+                        position_k.setdefault(key, [])
+                        position_k[key].append(0)
+                    # elif node== path[-1]:
+
+                    else:
+
+                        pairs = (dist[pred][0] + max(D_3[k][(pred, node)]), pred)
+                        # print  max(edge_labels1[(pred, node)])
+                        dist[node] = pairs
+                        # print dist[node][0]
+
+                        distance.add((pred, node, pairs[0]))
+                        # print pairs[0]
+                        # if location[node]<pairs[0]:
+                        location.add((node, pairs[0]))
+                        key = node
+                        position_k.setdefault(key, [])
+                        position_k[key].append(pairs[0])
+                        # print position_k
+            loc_i = {}
+            for key in position_k:
+                loc_i[key] = max(position_k[key])
+                # if key==n[-2]:
+                # loc_i[key] = 19
+                # elif key==n[-1]:
+                # loc_i[key] = 20
+                new_Xlocation.append(loc_i[key])
+            loct.append(loc_i)
+
+            self.NEWXLOCATION.append(new_Xlocation)
+        f3 = open(name + "location_x.txt", 'wb')
+        for i in loct:
+            # print i
+            print >> f3, i
+        print"LOC=", loct, self.NEWXLOCATION
+        Graph_pos_h = []
+        for i in range(len(loct)):
+            dist = {}
+            for node in loct[i]:
+                key = node
+
+                dist.setdefault(key, [])
+                dist[node].append(node)
+                dist[node].append(loct[i][node])
+            Graph_pos_h.append(dist)
+        # print Graph_pos_h
+        # print"LOC=",Graph_pos_h
+        self.drawGraph_h_new(name, G3, D_3, Graph_pos_h)
+
+
+        #######
+        """
+
 
         ######################### Handling special edges independently
 
@@ -663,28 +877,7 @@ class constraintGraph:
                 special_edge_h = [x for x in special_edge_h if x != edge]
             elif edge.southEast!=None or edge.id in NORTHWEST or edge.id in SOUTHEAST:
                 special_edge_h = [x for x in special_edge_h if x != edge]
-        """
-        for edge in special_edge_h:
-            # print "src",edge.source
-            for ed in self.edgesh_new:
-                # print "dest=",ed.dest
-                if ed.dest == edge.source and ed.type == '1':
-                    # print edge.source, edge.dest
-                    # if edge.West == ed.id:
-                    if edge.West != None:
-                        if edge.West in WEST:
-                            special_edge_h = [x for x in special_edge_h if x != edge]
-                        # special_edge_v.remove(edge)
-                elif ed.source == edge.dest and ed.type == '1':
-                    # print edge.source, edge.dest
-                    # if edge.East == ed.id:
-                    if edge.East != None:
-                        if edge.East in EAST:
-                            special_edge_h = [x for x in special_edge_h if x != edge]
-                        # special_edge_v.remove(edge)
-                        # for foo in special_edge_h:
-                        # print "foh", foo.getEdgeDict()
-        """
+
 
         # print "len=", len(special_edge_h)
         #for edge in special_edge_h:
@@ -713,7 +906,7 @@ class constraintGraph:
                 offset2 = []
                 for j in range(len(Wmax)):
                     # print Wmax[j]
-                    if Wmax[j] > 2:
+                    if Wmax[j] > min:
                         offset_1 = random.randrange(0, (Wmax[j] - min) / (3 / 2))
                         offset_2 = random.randrange(0, (Wmax[j] - offset_1 - min))
                     else:
@@ -753,6 +946,7 @@ class constraintGraph:
         # print (A.todense())
         #print B
         Fixed_Node = self.Loc_X.keys()
+        Fixed_Node.sort()
         #print "F", Fixed_Node
 
         Splitlist = []
@@ -868,51 +1062,7 @@ class constraintGraph:
             #print H
             for graph in H:
                 Fixed_Node = self.Loc_X.keys()
-                # print "F", Fixed_Node
-                '''
-                Splitlist = []
-                for i, j in graph.edges():
-                    # print i,j
-                    for node in G.nodes():
-                        if node in Loc.keys() and node > i and node < j:
-                            edge = (i, j)
-                            if edge not in Splitlist:
-                                Splitlist.append(edge)
-                print Splitlist
-                med = {}
-                for i in Splitlist:
-                    start = i[0]
-                    end = i[1]
 
-                    for node in Fixed_Node:
-                        if node > start and node < end:
-                            key = (start, end)
-                            med.setdefault(key, [])
-                            med[key].append(node)
-                print med
-
-                for i, v in med.items():
-                    print i, v
-
-                    start = i[0]
-                    end = i[-1]
-                    succ = v
-
-                    print succ
-                    s = start
-                    e = end
-                    print "s,e", s, e
-                    # if len(succ)>1:
-                    if s in Fixed_Node or e in Fixed_Node:
-                        for i in range(len(succ)):
-                            edge_split(s, succ[i], e, Fixed_Node, B)
-                            if len(succ) > 1:
-                                s = succ[i]
-
-                print B
-                '''
-
-                # Draw(G)
                 n = list(graph.nodes())
                 start = n[0]
                 end = n[-1]
@@ -955,7 +1105,7 @@ class constraintGraph:
             # print value
             i = 0
             n = len(value)
-            # print"n", n
+            #print"n", n
             v = Range - sum(D_V_Newval)
             #print v
             if v != 0:
@@ -969,7 +1119,7 @@ class constraintGraph:
             variable.append(x + p)
             # print variable
         variable.append(Max - sum(variable))
-        random.shuffle(variable)
+        #random.shuffle(variable)
         return variable
 
     def LONGEST_PATH(self,B, source, target):
@@ -1092,57 +1242,39 @@ class constraintGraph:
             if i not in Fixed:
                 UnFixed.append(i)
         # print UnFixed
-        Min_val = {}
-        # Val=LONGEST_PATH(B,0,4)
-        # print "Val",Val[2]
-        for i in SOURCE:
+        while(len(UnFixed))>0:
+            Min_val = {}
+            # Val=LONGEST_PATH(B,0,4)
+            # print "Val",Val[2]
+            for i in SOURCE:
 
-            for j in UnFixed:
-                key = j
-                Min_val.setdefault(key, [])
-                # if B[i][j]!=0:
-                Val = self.LONGEST_PATH(B, i, j)
-                # print i,j,Val[2]
-                if Val[2] != 0:
-                    x = ( self.Loc_X[i] + Val[2])
-                    Min_val[key].append(x)
-        # print Min_val
-        Max_val = {}
-        for i in UnFixed:
+                for j in UnFixed:
+                    key = j
+                    Min_val.setdefault(key, [])
+                    # if B[i][j]!=0:
+                    Val = self.LONGEST_PATH(B, i, j)
+                    # print i,j,Val[2]
+                    if Val[2] != 0:
+                        x = ( self.Loc_X[i] + Val[2])
+                        Min_val[key].append(x)
+            # print Min_val
+            Max_val = {}
+            for i in UnFixed:
 
-            for j in TARGET:
-                key = i
-                Max_val.setdefault(key, [])
-                # if B[i][j]!=0:
-                Val = self.LONGEST_PATH(B, i, j)
-                # print i,j,Val[2]
+                for j in TARGET:
+                    key = i
+                    Max_val.setdefault(key, [])
+                    # if B[i][j]!=0:
+                    Val = self.LONGEST_PATH(B, i, j)
+                    # print i,j,Val[2]
 
-                if Val[2] != 0:
-                    x = ( self.Loc_X[j] - Val[2])
-                    Max_val[key].append(x)
-        # print Max_val
-        '''
-        start=PATH[0]
-        end=PATH[-1]
-        PATH, Value, Sum = LONGEST_PATH(B, start, end)
-        Max = Loc[end] - Loc[start]
+                    if Val[2] != 0:
+                        x = ( self.Loc_X[j] - Val[2])
+                        Max_val[key].append(x)
+            # print Max_val
 
-        Range = Max - Sum
-        variable = randomvaluegenerator(Range, Value, Max)
-        LOC=copy.deepcopy(Loc)
-        print variable,LOC
-
-        loc = {}
-        for i in range(len(PATH)):
-            if PATH[i] in LOC:
-                # continue
-                loc[PATH[i]] = LOC[PATH[i]]
-            else:
-                loc[PATH[i]] = LOC[PATH[i - 1]] + variable[i - 1]
-                LOC[PATH[i]] = LOC[PATH[i - 1]] + variable[i - 1]
-        print loc, Loc
-        '''
-        for i in UnFixed:
+            #for i in UnFixed:
+            i=UnFixed.pop(0)
             v_low = max(Min_val[i])
             # v_h1=LOC[i]
             v_h2 = min(Max_val[i])
@@ -1150,7 +1282,13 @@ class constraintGraph:
             # v2=max(v_h1,v_h2)
             v2 = v_h2
             #print v_low, v2
-            self.Loc_X[i] = random.randrange(v1, v2)
+            #self.Loc_X[i] = random.randrange(v1, v2)
+            if v1 < v2:
+                self.Loc_X[i] = random.randrange(v1, v2)
+            else:
+                self.Loc_X[i] = max(v1, v2)
+            SOURCE.append(i)
+            TARGET.append(i)
 
     def Location_finding(self,B, start, end, SOURCE, TARGET, flag):
 
@@ -1173,140 +1311,10 @@ class constraintGraph:
             #print loc, self.Loc_X
 
         return
-    '''
-    def FUNCTION(self,G):
-        A = nx.adjacency_matrix(G)
-        B = A.toarray()
 
-        Zero_column = np.where(~B.any(axis=0))[0]  ## checking if total column is 0
-        #print Zero_column
-        SOURCE = []  ## Saving all possible real sources
-        for i in range(len(Zero_column)):
-            source_ = Zero_column[i]
-            for j in range(len(B)):
-                if B[source_][j] != 0:
-                    if source_  not in SOURCE:
-                        SOURCE.append(source_)
-        #print "SOURCE=", SOURCE
 
-        if len(SOURCE) == 1:
-            start = SOURCE[0]
-        elif len(SOURCE) > 1:
-            start = SOURCE[-1]
-            #print "start=", start
-            Weights = {}
-            Successors = {}
-            Difference = {}
-            for i in range(len(SOURCE) - 1):
-                j = SOURCE[i]
-                key = j
-                Weights.setdefault(key, [])
-                Successors.setdefault(key, [])
-                for k in range(len(B)):
-                    if B[j][k] != 0:
-                        Weights[key].append(B[j][k])
-                        Successors[key].append(k)
-                Difference[j] = self.Loc_X[start] - self.Loc_X[j]
-            #print Weights, Successors, Difference
-
-            for s in Weights.keys():
-                #print s
-                #print Weights[s]
-                for j in range(len(Successors[s])):
-                    i = start
-                    l = Successors[s][j]
-                    #print i, l
-                    for k in range(len(B)):
-                        if k == l:
-                            #print B[i][k], Weights[s][j] - Difference[s]
-                            if B[i][k] < Weights[s][j] - Difference[s]:
-                                B[i][k] = Weights[s][j] - Difference[s]
-            #print B
-
-        Zero_row = np.where(~B.any(axis=1))[0]  ## checking if total column is 0
-        #print Zero_row
-        TARGET = []  ## Saving all possible real sources
-        for i in range(len(Zero_row)):
-            target_ = Zero_row[i]
-            for j in range(len(B)):
-                if B[j][target_] != 0:
-                    if target_ not in TARGET:
-                        TARGET.append(target_)
-        #print "TARGET=", TARGET
-
-        if len(TARGET) == 1:
-            end = TARGET[0]
-        elif len(TARGET) > 1:
-            end = TARGET[0]
-            #print "end=", end
-            Weights = {}
-            Predecessors = {}
-            Difference = {}
-            for i in range(1, len(TARGET)):
-                j = TARGET[i]
-                key = j
-                Weights.setdefault(key, [])
-                Predecessors.setdefault(key, [])
-                for k in range(len(B)):
-                    if B[k][j] != 0:
-                        Weights[key].append(B[k][j])
-                        Predecessors[key].append(k)
-                Difference[j] = self.Loc_X[j] - self.Loc_X[end]
-            #print Weights, Predecessors, Difference
-
-            for s in Weights.keys():
-                #print s
-                #print Weights[s]
-                for j in range(len(Predecessors[s])):
-                    i = Predecessors[s][j]
-                    l = end
-                    #print i, l
-                    for k in range(len(B)):
-                        if k == i:
-                            #print B[k][l], Weights[s][j] - Difference[s]
-                            if B[k][l] < Weights[s][j] - Difference[s]:
-                                B[k][l] = Weights[s][j] - Difference[s]
-            #print B
-
-        #print start, end
-
-        PATH, Value, Sum = self.LONGEST_PATH(B, start, end)
-        Fixed_Node =self.Loc_X.keys()
-        #print "F", Fixed_Node
-        for i in Fixed_Node:
-            for j in Fixed_Node:
-                if G.has_edge(i, j):
-                    G.remove_edge(i, j)
-
-        Max = self.Loc_X[end] - self.Loc_X[start]
-
-        Range = Max - Sum
-        #print Range, Value, Max
-        variable = self.randomvaluegenerator(Range, Value, Max)
-        #print variable
-        loc = {}
-        for i in range(len(PATH)):
-            if PATH[i] in self.Loc_X:
-                loc[PATH[i]] = self.Loc_X[PATH[i]]
-            else:
-                loc[PATH[i]] = loc[PATH[i - 1]] + variable[i - 1]
-                self.Loc_X[PATH[i]] = loc[PATH[i - 1]] + variable[i - 1]
-        #print loc, self.Loc_X
-        Fixed_Node = self.Loc_X.keys()
-        #print "F", Fixed_Node
-        for i in Fixed_Node:
-            for j in Fixed_Node:
-                if G.has_edge(i, j):
-                    G.remove_edge(i, j)
-        # Draw(G)
-        L = len(self.Loc_X.keys())
-        #print "L=", L
-        if L == len(self.zeroDimensionListh):
-            return self.Loc_X
-        else:
-            return self.FUNCTION(G)
-    '''
-    """
+    ###########################################################
+    #LEVEL-1 OPTMIZATION
     def FindingAllPaths_h(self, G, start, end):
         
         # f1 = open("paths_h.txt", 'w')
@@ -1344,7 +1352,8 @@ class constraintGraph:
 
         path.pop()
         visited[start] = False
-    """
+    #############################################################
+
     def cgToGraph_v(self, name):
         G1 = nx.MultiDiGraph()
         dictList = []
@@ -1461,6 +1470,8 @@ class constraintGraph:
 
         ###############################################################
         ##############################           OPTIMIZATION
+
+
         #print label6
         d3 = defaultdict(list)
         for i in label6:
@@ -1478,14 +1489,14 @@ class constraintGraph:
         #print self.Y
 
         loct = []
-        for i in range(5):
+        for i in range(10):
             G = nx.MultiDiGraph()
             n = list(G4.nodes())
             G.add_nodes_from(n)
             # G.add_weighted_edges_from([(0,1,2),(1,2,3),(2,3,4),(3,4,4),(4,5,3),(5,6,2),(1,4,15),(2,5,16),(1,5,20)])
             G.add_weighted_edges_from(self.Y)
             # Draw(G)
-            self.Loc_Y = {n[0]: 0,n[1]:3,n[-2]:57, n[-1]: self.H_T}
+            self.Loc_Y = {n[0]:0,n[-1]: self.H_T}
             self.FUNCTION_V(G)
             loct.append(self.Loc_Y)
         for i in loct:
@@ -1516,6 +1527,9 @@ class constraintGraph:
         #self.drawGraph_v_new(name, G4, D_3, Graph_pos_v)
         #################################################################
         '''
+        #LEVEL-1 OPTIMIZATION
+        #################################################################
+
         label_4 = copy.deepcopy(label4)
 
         D = []
@@ -1529,7 +1543,7 @@ class constraintGraph:
         for i in range(10):
             W = []
             for i in range(len(D)):
-                W.append(randint(2, 10))
+                W.append(random.randint(5, 15))
             W_total.append(W)
         # print "W_T",W_total
 
@@ -1546,7 +1560,7 @@ class constraintGraph:
         for i in range(10):
             S = []
             for i in range(len(Space)):
-                S.append(randint(1, 4))
+                S.append(random.randint(2,5))
             S_total.append(S)
         # print "S_T=", S_total
         NewS = []
@@ -1621,13 +1635,13 @@ class constraintGraph:
         f1 = open(name, 'w')
         for i in z:
             print >> f1, i
-
+       
         n = list(G4.nodes())
         self.FindingAllPaths_v(G4, n[0], n[-1])
-
+       
         paths = self.paths_v
         print paths
-
+        
         ##############TESTING optimization
         # NEWXLOCATION=[]
         loct = []
@@ -1671,7 +1685,7 @@ class constraintGraph:
                         position_k.setdefault(key, [])
                         position_k[key].append(pairs[0])
                         # print position
-
+                        
             loc_i = {}
             for key in position_k:
                 loc_i[key] = max(position_k[key])
@@ -1694,10 +1708,11 @@ class constraintGraph:
                 dist[node].append(node)
                 dist[node].append(loct[i][node])
             Graph_pos_v.append(dist)
-        # print Graph_pos_v
+        print Graph_pos_v
 
         self.drawGraph_v_new(name, G4, D_3, Graph_pos_v)
         '''
+
         #####################################################################################################################handling edge independently
         # for i in range(len(self.edgesv)):
         # print self.edgesv[i].id,self.edgesv[i].North,self.edgesv[i].South
@@ -1738,27 +1753,7 @@ class constraintGraph:
                     special_edge_v = [x for x in special_edge_v if x != edge]
             elif edge.westNorth!=None or edge.id in EASTSOUTH or edge.id in WESTNORTH:
                     special_edge_v = [x for x in special_edge_v if x != edge]
-        """"
-        for edge in special_edge_v:
-            # print edge.id,edge.North,edge.South
-            # print "src",edge.source
-            for ed in self.edgesv_new:
-                # print "dest=",ed.dest
-                if ed.dest == edge.source and ed.type == '1':
-                    # print edge.id,edge.North,edge.South
-                    # print edge.source, edge.dest
-                    if edge.South != None:
-                        if edge.South in SOUTH:
 
-                            special_edge_v = [x for x in special_edge_v if x != edge]
-                        # special_edge_v.remove(edge)
-                elif ed.source == edge.dest and ed.type == '1':
-                    # print edge.source, edge.dest
-                    if edge.North != None:
-                        if edge.North in NORTH:
-                            special_edge_v = [x for x in special_edge_v if x != edge]
-                        # special_edge_v.remove(edge)
-        """
         self.special_edgev = copy.deepcopy(special_edge_v)
         #print len(special_edge_v)
         #for foo in special_edge_v:
@@ -1778,11 +1773,11 @@ class constraintGraph:
                     Wmax.append(w)
                 # print Wmax
                 min = constraint.constraint.minWidth[1]
-                # print min
+                #print min
                 offset1 = []
                 offset2 = []
                 for j in range(len(Wmax)):
-                    if Wmax[j] > 2:
+                    if Wmax[j] > min:
                         offset_1 = random.randrange(0, Wmax[j] - min / (3 / 2))
                         offset_2 = random.randrange(0, (Wmax[j] - offset_1 - min))
                     else:
@@ -1820,6 +1815,7 @@ class constraintGraph:
         # print (A.todense())
         #print B
         Fixed_Node = self.Loc_Y.keys()
+        Fixed_Node.sort()
         #print "F", Fixed_Node
 
         Splitlist = []
@@ -2036,7 +2032,7 @@ class constraintGraph:
             variable.append(x + p)
             # print variable
         variable.append(Max - sum(variable))
-        random.shuffle(variable)
+        #random.shuffle(variable)
         return variable
 
     def LONGEST_PATH_V(self,B, source, target):
@@ -2158,66 +2154,77 @@ class constraintGraph:
         for i in PATH:
             if i not in Fixed:
                 UnFixed.append(i)
-        # print UnFixed
-        Min_val = {}
-        # Val=LONGEST_PATH(B,0,4)
-        # print "Val",Val[2]
-        for i in SOURCE:
+        #print UnFixed
+        while len(UnFixed)>0:
+            #Fixed = self.Loc_Y.keys()
+            Min_val = {}
+            # Val=LONGEST_PATH(B,0,4)
+            # print "Val",Val[2]
+            for i in SOURCE:
 
-            for j in UnFixed:
-                key = j
-                Min_val.setdefault(key, [])
-                # if B[i][j]!=0:
-                Val = self.LONGEST_PATH_V(B, i, j)
-                # print i,j,Val[2]
-                if Val[2] != 0:
-                    x = ( self.Loc_Y[i] + Val[2])
-                    Min_val[key].append(x)
-        # print Min_val
-        Max_val = {}
-        for i in UnFixed:
+                for j in UnFixed:
+                    key = j
+                    Min_val.setdefault(key, [])
+                    # if B[i][j]!=0:
+                    Val = self.LONGEST_PATH_V(B, i, j)
+                    # print i,j,Val[2]
+                    if Val[2] != 0:
+                        x = ( self.Loc_Y[i] + Val[2])
+                        Min_val[key].append(x)
+            #print Min_val
+            Max_val = {}
+            for i in UnFixed:
 
-            for j in TARGET:
-                key = i
-                Max_val.setdefault(key, [])
-                # if B[i][j]!=0:
-                Val = self.LONGEST_PATH_V(B, i, j)
-                # print i,j,Val[2]
+                for j in TARGET:
+                    key = i
+                    Max_val.setdefault(key, [])
+                    # if B[i][j]!=0:
+                    Val = self.LONGEST_PATH_V(B, i, j)
+                    # print i,j,Val[2]
 
-                if Val[2] != 0:
-                    x = ( self.Loc_Y[j] - Val[2])
-                    Max_val[key].append(x)
-        # print Max_val
-        '''
-        start=PATH[0]
-        end=PATH[-1]
-        PATH, Value, Sum = LONGEST_PATH(B, start, end)
-        Max = Loc[end] - Loc[start]
-
-        Range = Max - Sum
-        variable = randomvaluegenerator(Range, Value, Max)
-        LOC=copy.deepcopy(Loc)
-        print variable,LOC
-
-        loc = {}
-        for i in range(len(PATH)):
-            if PATH[i] in LOC:
-                # continue
-                loc[PATH[i]] = LOC[PATH[i]]
-            else:
-                loc[PATH[i]] = LOC[PATH[i - 1]] + variable[i - 1]
-                LOC[PATH[i]] = LOC[PATH[i - 1]] + variable[i - 1]
-        print loc, Loc
-        '''
-        for i in UnFixed:
+                    if Val[2] != 0:
+                        x = ( self.Loc_Y[j] - Val[2])
+                        Max_val[key].append(x)
+            #print Max_val
+            '''
+            start=PATH[0]
+            end=PATH[-1]
+            PATH, Value, Sum = LONGEST_PATH(B, start, end)
+            Max = Loc[end] - Loc[start]
+    
+            Range = Max - Sum
+            variable = randomvaluegenerator(Range, Value, Max)
+            LOC=copy.deepcopy(Loc)
+            print variable,LOC
+    
+            loc = {}
+            for i in range(len(PATH)):
+                if PATH[i] in LOC:
+                    # continue
+                    loc[PATH[i]] = LOC[PATH[i]]
+                else:
+                    loc[PATH[i]] = LOC[PATH[i - 1]] + variable[i - 1]
+                    LOC[PATH[i]] = LOC[PATH[i - 1]] + variable[i - 1]
+            print loc, Loc
+            '''
+            i=UnFixed.pop(0)
+            #for i in UnFixed:
+            #if i==UnFixed[0]:
             v_low = max(Min_val[i])
             # v_h1=LOC[i]
             v_h2 = min(Max_val[i])
             v1 = v_low
             # v2=max(v_h1,v_h2)
             v2 = v_h2
-            #print v_low, v2
-            self.Loc_Y[i] = random.randrange(v1, v2)
+            #print i,v1,v2
+            if v1<v2:
+                self.Loc_Y[i] = random.randrange(v1, v2)
+            else:
+                self.Loc_Y[i]=max(v1,v2)
+            #UnFixed.pop(i)
+            SOURCE.append(i)
+            TARGET.append(i)
+
 
     def Location_finding_V(self,B, start, end, SOURCE, TARGET, flag):
 
@@ -2309,257 +2316,12 @@ class constraintGraph:
         #pylab.show()
 
    '''
-    '''
-    def randomvaluegenerator_V(self,Range, value, Max):
-        variable = []
-        D_V_Newval = [0]
-        # n=len(D_V_change)
-
-        while (len(value) > 1):
-            # print value
-            i = 0
-            n = len(value)
-            # print"n", n
-            v = Range - sum(D_V_Newval)
-            #print v
-            if v != 0:
-                x = random.randrange(0, ((v) / (n / 2)))
-            else:
-                x = 0
-            # print "x", x
-            D_V_Newval.append(x)
-            p = value.pop(i)
-            # print p
-            variable.append(x + p)
-            # print variable
-        variable.append(Max - sum(variable))
-        random.shuffle(variable)
-        return variable
-
-    def LONGEST_PATH_V(self,B, source, target):
-        X = {}
-        for i in range(len(B)):
-
-            for j in range(len(B[i])):
-                # print B[i][j]
-
-                if B[i][j] != 0:
-                    X[(i, j)] = B[i][j]
-        Pred = {}  ## Saves all predecessors of each node{node1:[p1,p2],node2:[p1,p2..]}
-        for i in range(source, target + 1):
-            j = source
-            while j != target:
-                if B[j][i] != 0:
-                    # print Matrix[j][i]
-                    key = i
-                    Pred.setdefault(key, [])
-                    Pred[key].append(j)
-                if i == source and j == source:
-                    key = i
-                    Pred.setdefault(key, [])
-                    Pred[key].append(j)
-                j += 1
-
-        # print Pred
-        n = list(Pred.keys())  ## list of all nodes
-        # print n
-
-        dist = {}  ## Saves each node's (cumulative maximum weight from source,predecessor) {node1:(cum weight,predecessor)}
-        position = {}
-
-        for j in range(source, target + 1):
-            #print j
-
-            node = j
-            for i in range(len(Pred[node])):
-                pred = Pred[node][i]
-
-                # print node, pred
-
-                if j == source:
-                    dist[node] = (0, pred)
-                    key = node
-                    position.setdefault(key, [])
-                    position[key].append(0)
-                else:
-                    pairs = (max(position[pred]) + (X[(pred, node)]), pred)
-
-                    # if dist[node][0]<pairs[0]:
-                    # print pairs[0]
-                    f = 0
-                    for x, v in dist.items():
-                        # print"x", x
-                        if node == x:
-                            if v[0] > pairs[0]:
-                                # print "v", v[0]
-                                f = 1
-                    if f == 0:
-                        dist[node] = pairs
-
-                    # value_1.append(X[(pred, node)])
-                    key = node
-                    position.setdefault(key, [])
-                    position[key].append(pairs[0])
-
-                #print "dist=", dist, position
-
-        i = target
-        path = []
-        while i > source:
-
-            if i not in path:
-                path.append(i)
-            i = dist[i][1]
-            # print i
-            path.append(i)
-        # print path
-        PATH = list(reversed(path))  ## Longest path
-        #print PATH
-        Value = []
-        for i in range(len(PATH) - 1):
-            # print (PATH[i],PATH[i+1])
-            if (PATH[i], PATH[i + 1]) in X.keys():
-                Value.append(X[(PATH[i], PATH[i + 1])])
-        # print Value
-        Max = sum(Value)
-        # print Max
-
-        return PATH, Value, Max
-
-    def FUNCTION_V(self,G):
-        A = nx.adjacency_matrix(G)
-        B = A.toarray()
-
-        Zero_column = np.where(~B.any(axis=0))[0]  ## checking if total column is 0
-        #print Zero_column
-        SOURCE = []  ## Saving all possible real sources
-        for i in range(len(Zero_column)):
-            source_ = Zero_column[i]
-            for j in range(len(B)):
-                if B[source_][j] != 0:
-                    SOURCE.append(source_)
-        #print "SOURCE=", SOURCE
-
-        if len(SOURCE) == 1:
-            start = SOURCE[0]
-        elif len(SOURCE) > 1:
-            start = SOURCE[-1]
-            #print "start=", start
-            Weights = {}
-            Successors = {}
-            Difference = {}
-            for i in range(len(SOURCE) - 1):
-                j = SOURCE[i]
-                key = j
-                Weights.setdefault(key, [])
-                Successors.setdefault(key, [])
-                for k in range(len(B)):
-                    if B[j][k] != 0:
-                        Weights[key].append(B[j][k])
-                        Successors[key].append(k)
-                Difference[j] = self.Loc_Y[start] - self.Loc_Y[j]
-            #print Weights, Successors, Difference
-
-            for s in Weights.keys():
-                #print s
-                #print Weights[s]
-                for j in range(len(Successors[s])):
-                    i = start
-                    l = Successors[s][j]
-                    #print i, l
-                    for k in range(len(B)):
-                        if k == l:
-                            #print B[i][k], Weights[s][j] - Difference[s]
-                            if B[i][k] < Weights[s][j] - Difference[s]:
-                                B[i][k] = Weights[s][j] - Difference[s]
-            #print B
-
-        Zero_row = np.where(~B.any(axis=1))[0]  ## checking if total column is 0
-        #print Zero_row
-        TARGET = []  ## Saving all possible real sources
-        for i in range(len(Zero_row)):
-            target_ = Zero_row[i]
-            for j in range(len(B)):
-                if B[j][target_] != 0:
-                    TARGET.append(target_)
-        #print "TARGET=", TARGET
-
-        if len(TARGET) == 1:
-            end = TARGET[0]
-        elif len(TARGET) > 1:
-            end = TARGET[0]
-            #print "end=", end
-            Weights = {}
-            Predecessors = {}
-            Difference = {}
-            for i in range(1, len(TARGET)):
-                j = TARGET[i]
-                key = j
-                Weights.setdefault(key, [])
-                Predecessors.setdefault(key, [])
-                for k in range(len(B)):
-                    if B[k][j] != 0:
-                        Weights[key].append(B[k][j])
-                        Predecessors[key].append(k)
-                Difference[j] = self.Loc_Y[j] - self.Loc_Y[end]
-            #print Weights, Predecessors, Difference
-
-            for s in Weights.keys():
-                #print s
-                #print Weights[s]
-                for j in range(len(Predecessors[s])):
-                    i = Predecessors[s][j]
-                    l = end
-                    #print i, l
-                    for k in range(len(B)):
-                        if k == i:
-                            #print B[k][l], Weights[s][j] - Difference[s]
-                            if B[k][l] < Weights[s][j] - Difference[s]:
-                                B[k][l] = Weights[s][j] - Difference[s]
-            #print B
-
-        #print start, end
-
-        PATH, Value, Sum = self.LONGEST_PATH_V(B, start, end)
-        Fixed_Node =self.Loc_Y.keys()
-        #print "F", Fixed_Node
-        for i in Fixed_Node:
-            for j in Fixed_Node:
-                if G.has_edge(i, j):
-                    G.remove_edge(i, j)
-
-        Max = self.Loc_Y[end] - self.Loc_Y[start]
-
-        Range = Max - Sum
-        #print Range, Value, Max
-        variable = self.randomvaluegenerator_V(Range, Value, Max)
-        #print variable
-        loc = {}
-        for i in range(len(PATH)):
-            if PATH[i] in self.Loc_Y:
-                loc[PATH[i]] = self.Loc_Y[PATH[i]]
-            else:
-                loc[PATH[i]] = loc[PATH[i - 1]] + variable[i - 1]
-                self.Loc_Y[PATH[i]] = loc[PATH[i - 1]] + variable[i - 1]
-        #print loc, self.Loc_Y
-        Fixed_Node = self.Loc_Y.keys()
-        #print "F", Fixed_Node
-        for i in Fixed_Node:
-            for j in Fixed_Node:
-                if G.has_edge(i, j):
-                    G.remove_edge(i, j)
-        # Draw(G)
-        L = len(self.Loc_Y.keys())
-        #print "L=", L
-        if L == len(self.zeroDimensionListv):
-            return self.Loc_Y
-        else:
-            return self.FUNCTION_V(G)
-    
-    '''
 
 
-    """
+
+
+    #####################################################
+    #LEVEL-1 OPTIMIZATION
     def FindingAllPaths_v(self, G, start, end):
         
         # f1 = open("paths_v.txt", 'w')
@@ -2584,7 +2346,8 @@ class constraintGraph:
         # Remove current vertex from path[] and mark it as unvisited
         path.pop()
         visited[start] = False
-    """
+    ####################################################################
+
     def drawGraph_h(self, name, G2, edge_labels1):
 
         # edge_labels1 = self.merge_dicts(dictList1)

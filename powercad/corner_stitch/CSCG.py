@@ -296,7 +296,13 @@ class CSCG:
         # plt.xlim(0, self.cornerStitch_h.eastBoundary.cell.x)
 
         ####Setting axis labels(begin)
+        '''
+        font = {'family': 'normal',
+                
+                'size':15}
 
+        matplotlib.rc('font', **font)
+        '''
         ax1.set_ylim(0, self.cornerStitch_h.northBoundary.cell.y)
         limit = np.arange(0, self.cornerStitch_h.eastBoundary.cell.x + 10, 10)
         ax1.set_xticks(limit)
@@ -309,6 +315,8 @@ class CSCG:
         ax6.set_yticks(self.CG.zeroDimensionListv)
         labels_h = ('Y' + str(i) for i in range(0, len(self.CG.zeroDimensionListv)))
         ax6.yaxis.set_ticklabels(list(labels_h))
+        for item in (ax2.get_xticklabels() + ax2.get_yticklabels()+ax6.get_xticklabels() + ax6.get_yticklabels()):
+            item.set_fontsize(15)
 
         ####Setting axis labels(end)
 
@@ -458,6 +466,14 @@ class CSCG:
             ax4.arrow(arr[0], arr[1], arr[2], arr[3], head_width=.30, head_length=.3, color=arr[4])  #
 
         ####Setting axis labels(begin)
+        '''
+        font = {'family': 'normal',
+                'weight': 'bold',
+                'size': 20}
+
+        matplotlib.rc('font', **font)
+        '''
+
         ax4.set_xlim(0, self.cornerStitch_v.eastBoundary.cell.x)
         limit = np.arange(0, self.cornerStitch_v.northBoundary.cell.y + 10, 10)
         ax4.set_yticks(limit)
@@ -1578,77 +1594,7 @@ class CSCG:
         # print"el=", element
         # print self.Special_id,self.Special_id_h,self.Special_id_v
         for i in range(len(self.Newcornerstitch_H)):
-            '''
-            fig1,ax1=plt.subplots()
-            for cell in self.Newcornerstitch_H[i].stitchList:
-                if cell.cell.type!="EMPTY":
-                    if not cell.cell.id in self.Special_id_h:
-                        if not cell.cell.id in self.CG.special_cell_id_v:
-                            ax1.add_patch(
-                                matplotlib.patches.Rectangle(
-                                    (cell.cell.x, cell.cell.y),  # (x,y)
-                                    cell.getWidth(),  # width
-                                    cell.getHeight(),  # height
-                                    hatch='\\',
-                                    fill=False,
-                                    linewidth=3
 
-                                )
-                            )
-                    if cell.cell.id in self.Special_id:
-                        # print "id_h", cell.cell.id
-                        for element in self.Special_stitchlist[i]:
-                            # print element
-                            if cell.cell.id in element.keys():
-                                # cell.cell.x = element[cell.cell.id][0]
-
-                                pattern = '\\'
-                                ax1.add_patch(
-                                    matplotlib.patches.Rectangle((element[cell.cell.id][0], element[cell.cell.id][1]),
-                                                                 element[cell.cell.id][2],
-                                                                 element[cell.cell.id][3],  # height
-                                                                 hatch=pattern,
-                                                                 fill=True,
-                                                                 linestyle='dotted'
-                                                                 )
-                                )
-
-                    if cell.cell.id not in self.Special_id:
-                        if cell.cell.id in self.Special_id_h:
-                            for element in self.Special_stitchlist_h[i]:
-                                if cell.cell.id in element.keys():
-                                    # cell.cell.x = element[cell.cell.id][0]
-
-                                    pattern = '\\'
-                                    ax1.add_patch(
-                                        matplotlib.patches.Rectangle((element[cell.cell.id][0], cell.cell.y),
-                                                                     element[cell.cell.id][2],
-                                                                     cell.getHeight(),  # height
-                                                                     hatch=pattern,
-                                                                     fill=True,
-                                                                     linestyle='dotted'
-                                                                     )
-                                    )
-                    if cell.cell.id not in self.Special_id:
-                        if cell.cell.id in self.CG.special_cell_id_v:
-                            for element in self.CG.special_location_y[i]:
-                                if cell.cell.id in element.keys():
-                                    # cell.cell.x = element[cell.cell.id][0]
-
-                                    pattern = '\\'
-                                    ax1.add_patch(
-                                        matplotlib.patches.Rectangle((cell.cell.x, element[cell.cell.id][0]),
-                                                                     cell.getWidth(),
-                                                                     element[cell.cell.id][2],  # height
-                                                                     hatch=pattern,
-                                                                     fill=True,
-                                                                     linestyle='dotted'
-                                                                     )
-                                    )
-
-
-
-            '''
 
                 
             fig1, ax1 = plt.subplots()
