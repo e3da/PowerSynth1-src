@@ -1789,8 +1789,23 @@ class CSCG:
 
     ###############################################################################################################################################
 
-
-
+    def Redraw(self):
+        edgeList = copy.deepcopy(getattr(self.CG, "edgesh"))
+        for foo in edgeList:
+            print foo.source,foo.dest,foo.type,foo.id
+        print self.CG.NEWXLOCATION
+        #if self.CS.orientation == 'h':
+        '''
+        for stitch in self.CS.stitchList:
+                for edge in edgeList:
+                    if (self.CG.zeroDimensionList[edge.source] == stitch.cell.getX()
+                            and self.CG.zeroDimensionList[edge.dest] == stitch.cell.getX() + stitch.getWidth()):
+                        if edge.getConstraint().getConstraintName() == "Empty":
+                            color = "red"
+                        elif edge.getConstraint().getConstraintName() == "type1":
+                            color = "blue"
+                        arrowList.append((stitch.cell.getX(), stitch.cell.getY(), stitch.getWidth(), 0, color))
+        '''
 
 
 
