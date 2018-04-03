@@ -1664,21 +1664,23 @@ class Vnode(Node):
         while j < len(changeSet):  # merge all cells with the same width along the northern side
             topCell = changeSet[i]
             lowerCell = changeSet[j]
-            if topCell.NORTH == lowerCell.NORTH:
-                mergedCell = self.merge(topCell, lowerCell)
-                if mergedCell == "Tiles are not alligned":  # the tiles couldn't merge because they didn't line up
-                    i += 1
-                    if j < len(changeSet):  # there was a '-1'
-                        j += 1
-                else:
-                    del changeSet[j]
-                    changeSet[i] = mergedCell
-                # if j < len(changeSet) -1:
-                # j += 1
+            #if topCell.NORTH == lowerCell.NORTH:
+            mergedCell = self.merge(topCell, lowerCell)
+            if mergedCell == "Tiles are not alligned":  # the tiles couldn't merge because they didn't line up
+                i += 1
+                if j < len(changeSet):  # there was a '-1'
+                    j += 1
+            else:
+                del changeSet[j]
+                changeSet[i] = mergedCell
+            # if j < len(changeSet) -1:
+            # j += 1
+            '''
             else:
                 i += 1
                 if j < len(changeSet) - 1:
                     j += 1
+            '''
 
         cc = caster.SOUTH  # recitfy SOUTH side, walking eastwards
         changeSet = []
@@ -1695,23 +1697,25 @@ class Vnode(Node):
         while j < len(changeSet) and i < len(changeSet):  # merge all cells with the same width along the northern side
             topCell = changeSet[i]
             lowerCell = changeSet[j]
-            if topCell.SOUTH == lowerCell.SOUTH:
-                mergedCell = self.merge(topCell, lowerCell)
+            #if topCell.SOUTH == lowerCell.SOUTH:
+            mergedCell = self.merge(topCell, lowerCell)
 
-                if mergedCell == "Tiles are not alligned":  # the tiles couldn't merge because they didn't line up
-                    i += 1
-                    # print "i = ", i
-                    if j < len(changeSet) - 1:
-                        j += 1
-                else:
-                    del changeSet[j]
-                    changeSet[i] = mergedCell
-                    # if j < len(changeSet) - 1:
-                    # j += 1
+            if mergedCell == "Tiles are not alligned":  # the tiles couldn't merge because they didn't line up
+                i += 1
+                # print "i = ", i
+                if j < len(changeSet) - 1:
+                    j += 1
+            else:
+                del changeSet[j]
+                changeSet[i] = mergedCell
+                # if j < len(changeSet) - 1:
+                # j += 1
+            '''
             else:
                 i += 1
                 if j < len(changeSet) - 1:
                     j += 1
+            '''
 
         return
 
@@ -2260,6 +2264,7 @@ class Hnode(Node):
         if len(changeList) > 0:
 
             changeList[0].cell.type = type
+            #print changeList[0].cell.x
             self.rectifyShadow(changeList[0])
             self.set_id()
             rect = changeList[0]
@@ -2458,15 +2463,16 @@ class Hnode(Node):
             # print "test",len(changeSet),i,j
             topCell = changeSet[i]
             lowerCell = changeSet[j]
-            if topCell.EAST == lowerCell.EAST:
-                mergedCell = self.merge(topCell, lowerCell)
-                if mergedCell == "Tiles are not alligned":  # the tiles couldn't merge because they didn't line up
-                    i += 1
-                    if j < len(changeSet):  # there was a '-1'
-                        j += 1
-                else:
-                    del changeSet[j]
-                    changeSet[i] = mergedCell
+            #if topCell.EAST == lowerCell.EAST:
+            mergedCell = self.merge(topCell, lowerCell)
+            if mergedCell == "Tiles are not alligned":  # the tiles couldn't merge because they didn't line up
+                i += 1
+                if j < len(changeSet):  # there was a '-1'
+                    j += 1
+            else:
+                del changeSet[j]
+                changeSet[i] = mergedCell
+            '''
             else:
                 i += 1
                 if j < len(changeSet) - 1:
@@ -2475,46 +2481,51 @@ class Hnode(Node):
                 # print "len3=", len(changeSet)
                 # if j < len(changeSet) -1:## these 2 lines have been commented out
                 # j += 1
+            '''
 
         cc = caster.WEST  # recitfy west side, walking upwards
         changeSet = []
+        #print "CC",cc.cell.x,cc.cell.y
 
         while (cc not in self.boundaries and cc.cell.y < caster.cell.y + caster.getHeight()):
             # while cc.cell.type=="SOLID":## 2 lines have been included here
             # cc=cc.NORTH
-
+        #while (cc.cell.type!=None and cc.cell.y < caster.cell.y + caster.getHeight()):
             # if cc.WEST==self.westBoundary or cc.WEST.cell.type=="EMPTY" :#this condition has been added here (or cc.WEST.cell.y!=cc.cell.y and cc.WEST.cell.type=="SOLID")
             changeSet.append(cc)
             cc = cc.NORTH
-        # print "lenw=", len(changeSet)
-        """
-        for foo in changeSet:
-            foo.cell.printCell(True, True)
+        #print "lenw=", len(changeSet)
+
+        #for foo in changeSet:
+            #foo.cell.printCell(True, True)
             #print"w=",foo.getWidth()
-        """
+
         i = 0
         j = 1
         while j < len(changeSet) and i < len(changeSet):  # merge all cells with the same width along the eastern side
             topCell = changeSet[i]
-            # topCell.cell.printCell(True, True)
+            topCell.cell.printCell(True, True)
             lowerCell = changeSet[j]
-            # lowerCell.cell.printCell(True, True)
-            if topCell.WEST == lowerCell.WEST:
-                mergedCell = self.merge(topCell, lowerCell)
-                if mergedCell == "Tiles are not alligned":  # the tiles couldn't merge because they didn't line up
-                    i += 1
-                    # print "i = ", i
-                    if j < len(changeSet) - 1:
-                        j += 1
-                else:
-                    changeSet[i] = mergedCell
-                    del changeSet[j]
+            lowerCell.cell.printCell(True, True)
+            #if topCell.WEST == lowerCell.WEST:
+            #if topCell.EAST == lowerCell.EAST:
+            mergedCell = self.merge(topCell, lowerCell)
+            if mergedCell == "Tiles are not alligned":  # the tiles couldn't merge because they didn't line up
+                i += 1
+                # print "i = ", i
+                if j < len(changeSet) - 1:
+                    j += 1
+            else:
+                changeSet[i] = mergedCell
+                del changeSet[j]
                 # if j < len(changeSet) -1: ## these 2 lines have been commented out
                 # j += 1
+            '''
             else:
                 i += 1
                 if j < len(changeSet) - 1:
                     j += 1
+            '''
 
         return
 
