@@ -593,6 +593,8 @@ class constraintGraph:
                 new_x_loc.append(k)
             self.NEWXLOCATION.append(new_x_loc)
         f3 = open(name + "location_x.txt", 'wb')
+
+
         for i in loct:
             # print i
             print >> f3, i
