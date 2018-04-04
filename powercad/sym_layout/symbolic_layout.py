@@ -282,6 +282,7 @@ class SymbolicLayout(object):
     BONDWIRE_DV = 4
 
     def __init__(self):
+        # type: () -> object
         self.design_rules = None
         self.sub_dim = None
         self.gap = None
@@ -1934,7 +1935,8 @@ class SymbolicLayout(object):
         self._opt_eval(individual)
     '''-----------------------------------------------------------------------------------------------------------------------------------------------------'''      
     def _opt_eval(self, individual):
-        
+
+        print individual # sxm test
         self.rev_map_design_vars(individual)
         self.generate_layout()
         ret = []
