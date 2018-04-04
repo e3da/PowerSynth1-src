@@ -717,7 +717,7 @@ class Node(object):
 
         """
         if(tile1.cell.type != tile2.cell.type):
-            print "Types are not the same"
+            #print "Types are not the same"
             return "Tiles are not alligned"
 
         if tile1.cell.x == tile2.cell.x and tile1.cell.y == tile2.cell.y:
@@ -1563,11 +1563,11 @@ class Vnode(Node):
                     stitchList.append(rect)
                 else:
 
-                    boundaries.append(rect)
-            node = Vnode(parent=parent, child=[], stitchList=stitchList, id=id, boundaries=boundaries)
-            NODE = copy.deepcopy(node)
-            parent.child.append(NODE)
-            Vtree.vNodeList.append(NODE)
+                    boundaries.append(copy.copy(rect))
+            node = Vnode(parent=parent, child=[], stitchList=copy.deepcopy(stitchList), id=id, boundaries=boundaries)
+            #NODE = copy.deepcopy(node)
+            parent.child.append(node)
+            Vtree.vNodeList.append(node)
         if Flag == 0:
             stitchList = []
             boundaries = []
@@ -1580,13 +1580,13 @@ class Vnode(Node):
                     stitchList.append(rect)
                 else:
 
-                    boundaries.append(rect)
+                    boundaries.append(copy.copy(rect))
 
-            node = Vnode(parent=parent, child=[], stitchList=stitchList, id=id, boundaries=boundaries)
-            NODE = copy.deepcopy(node)
+            node = Vnode(parent=parent, child=[], stitchList=copy.deepcopy(stitchList), id=id, boundaries=boundaries)
+            #NODE = copy.deepcopy(node)
 
-            parent.child.append(NODE)
-            Vtree.vNodeList.append(NODE)
+            parent.child.append(node)
+            Vtree.vNodeList.append(node)
 
         '''
         Flag=0
@@ -2358,7 +2358,7 @@ class Hnode(Node):
                     # RECT=rect
                     #print "bound",rect.cell.x,rect.cell.y,rect.getWidth()
                     #boundaries.append(copyrect)
-                    boundaries.append(rect)
+                    boundaries.append(copy.copy(rect))
 
             # update the pointer on new layer
             #print map
@@ -2382,10 +2382,13 @@ class Hnode(Node):
                 print "after",cprect.NORTH, cprect.SOUTH, cprect.EAST, cprect.WEST
             '''
 
-            node = Hnode(parent=ParentH, child=[], stitchList=stitchList, id=id, boundaries=boundaries)
-            NODE=copy.deepcopy(node)
-            parent.child.append(NODE)
-            Htree.hNodeList.append(NODE)
+            #node = Hnode(parent=ParentH, child=[], stitchList=stitchList, id=id, boundaries=boundaries)
+            #NODE=copy.deepcopy(node)
+            #parent.child.append(NODE)
+            #Htree.hNodeList.append(NODE)
+            node = Hnode(parent=ParentH, child=[], stitchList=copy.deepcopy(stitchList), id=id, boundaries=boundaries)
+            parent.child.append(node)
+            Htree.hNodeList.append(node)
         if Flag == 0:
             stitchList = []
             boundaries = []
@@ -2402,12 +2405,14 @@ class Hnode(Node):
                     # RECT = copy.copy(rect)
                     # RECT=rect
                     # boundaries.append(copy.deepcopy(rect))
-                    boundaries.append(rect)
+                    boundaries.append(copy.copy(rect))
 
-            node = Hnode(parent=ParentH, child=[], stitchList=stitchList, id=id, boundaries=boundaries)
-            NODE = copy.deepcopy(node)
-            parent.child.append(NODE)
-            Htree.hNodeList.append(NODE)
+            node = Hnode(parent=ParentH, child=[], stitchList=copy.deepcopy(stitchList), id=id, boundaries=boundaries)
+            #NODE = copy.deepcopy(node)
+            #parent.child.append(NODE)
+            #Htree.hNodeList.append(NODE)
+            parent.child.append(node)
+            Htree.hNodeList.append(node)
 
         '''
         if Flag==1:
@@ -2504,9 +2509,9 @@ class Hnode(Node):
         j = 1
         while j < len(changeSet) and i < len(changeSet):  # merge all cells with the same width along the eastern side
             topCell = changeSet[i]
-            topCell.cell.printCell(True, True)
+            #topCell.cell.printCell(True, True)
             lowerCell = changeSet[j]
-            lowerCell.cell.printCell(True, True)
+            #lowerCell.cell.printCell(True, True)
             #if topCell.WEST == lowerCell.WEST:
             #if topCell.EAST == lowerCell.EAST:
             mergedCell = self.merge(topCell, lowerCell)
@@ -2720,6 +2725,7 @@ if __name__ == '__main__':
                     ParentH = i
                     break
             CHILDH=ParentH
+
             #CHILDH=copy.copy(ParentH)
             #CHILDH=Hnode(boundaries =ParentH.boundaries, child = ParentH.child, stitchList =ParentH.stitchList , parent =ParentH.parent, id = ParentH.id)
             CHILDH.insert(int(inp[1]), int(inp[2]), int(inp[3]), int(inp[4]), inp[5])
@@ -2733,6 +2739,7 @@ if __name__ == '__main__':
                     Parent = i
                     break
             CHILD=Parent
+
             #CHILD=Vnode(boundaries =Parent.boundaries, child = Parent.child, stitchList = Parent.stitchList, parent =Parent.parent, id = Parent.id)
             CHILD.insert(int(inp[1]), int(inp[2]), int(inp[3]), int(inp[4]), inp[5])
 
@@ -2786,7 +2793,7 @@ if __name__ == '__main__':
 
     for i in Htree.hNodeList:
 
-        print i.id,i
+        print i.id,i,len(i.stitchList)
         print >> f1, i,i.id
     #i=Htree.hNodeList[0]
         for j in i.stitchList:
@@ -2842,6 +2849,9 @@ if __name__ == '__main__':
                         colour='red'
                     elif cell.cell.type=="Type_3":
                         colour='blue'
+                    elif cell.cell.type=="Type_4":
+                        colour='black'
+
                     ax4.add_patch(
                         matplotlib.patches.Rectangle(
                             (cell.cell.x, cell.cell.y),  # (x,y)
@@ -2914,6 +2924,8 @@ if __name__ == '__main__':
                         colour = 'red'
                     elif cell.cell.type == "Type_3":
                         colour = 'blue'
+                    elif cell.cell.type=="Type_4":
+                        colour='black'
                     ax2.add_patch(
                         matplotlib.patches.Rectangle(
                             (cell.cell.x, cell.cell.y),  # (x,y)
@@ -3087,6 +3099,8 @@ if __name__ == '__main__':
                         colour = 'red'
                     elif cell.cell.type == "Type_3":
                         colour = 'blue'
+                    elif cell.cell.type=="Type_4":
+                        colour='black'
                     ax3.add_patch(
                         matplotlib.patches.Rectangle(
                             (cell.cell.x, cell.cell.y),  # (x,y)
@@ -3222,6 +3236,108 @@ if __name__ == '__main__':
     #color=['black','red','green','blue']
     #for i in range(len(Vtree.vNodeList)):
         #drawLayer2(Vtree.vNodeList[i],color[i])
+    def drawLayer_11( truePointer=False):
+        """
+        Draw all cells in this cornerStitch with stitches pointing to their stitch neighbors
+        TODO:
+         Also should probably change the dimensions of the object window depending on the cornerStitch size.
+        """
+
+        # fig2 = matplotlib.pyplot.figure()
+        #node=nodelist[0]
+        fig2, ax4 = plt.subplots()
+        #for node in nodelist:
+        #for i in range(len(Htree.hNodeList)):
+        i = 0
+        node=Htree.hNodeList[i]
+
+        #print "LEN",len(node.stitchList)
+        for cell in node.stitchList:
+            #print cell.cell.x
+
+
+            # ax4 = fig2.add_subplot(111, aspect='equal')
+            if not cell.cell.type == "EMPTY":
+                pattern = '\\'
+                '''
+                if cell.cell.type == "Type_1":
+                    colour = 'green'
+                elif cell.cell.type == "Type_2":
+                    colour = 'red'
+                elif cell.cell.type == "Type_3":
+                    colour = 'blue'
+                elif cell.cell.type == "Type_4":
+                    colour = 'black'
+                '''
+
+                ax4.add_patch(
+                    matplotlib.patches.Rectangle(
+                        (cell.cell.x, cell.cell.y),  # (x,y)
+                        cell.getWidth(),  # width
+                        cell.getHeight(),  # height
+                        hatch=pattern,
+                        Fill=False
+
+
+                    )
+                )
+            else:
+                pattern=' '
+                ax4.add_patch(
+                    matplotlib.patches.Rectangle(
+                        (cell.cell.x, cell.cell.y),  # (x,y)
+                        cell.getWidth(),  # width
+                        cell.getHeight(),  # height
+                        hatch=pattern,
+                        Fill=False
+
+                    )
+                )
+        '''
+        for cell in node.boundaries:
+            #print cell.cell.x
+
+
+            # ax4 = fig2.add_subplot(111, aspect='equal')
+            if not cell.cell.type == "EMPTY":
+                pattern = '//'
+
+
+
+
+                ax4.add_patch(
+                    matplotlib.patches.Rectangle(
+                        (cell.cell.x, cell.cell.y),  # (x,y)
+                        cell.getWidth(),  # width
+                        cell.getHeight(),  # height
+                        hatch=pattern,
+                        Fill=False
+
+
+                    )
+                )
+            else:
+                pattern='//'
+
+                ax4.add_patch(
+                    matplotlib.patches.Rectangle(
+                        (cell.cell.x, cell.cell.y),  # (x,y)
+                        cell.getWidth(),  # width
+                        cell.getHeight(),  # height
+                        hatch=pattern,
+                        Fill=False))
+            '''
+
+
+
+        plt.xlim(0, 60)
+        plt.ylim(0, 60)
+        fig2.savefig(testdir+'/'+testbase+"node-"+str(i)+".png")
+        #fig2.show()
+        plt.close()
+
+
+    #drawLayer_11()
 
 ########################################################################################################################
 class vLayer(cornerStitch):
