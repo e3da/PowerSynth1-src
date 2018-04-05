@@ -1231,22 +1231,27 @@ class Vnode(Node):
             cc = cc.SOUTH
             while cc not in self.boundaries and cc.cell.x + cc.getWidth() <= x1:
                 cc = cc.EAST
-
+        print"in",cc.cell.x,cc.cell.y
         # if cc.cell.type == "SOLID" and cc.cell.y+cc.getHeight() == y2 or bl.cell.type == "SOLID":
         if cc.cell.type == type and cc.cell.y + cc.getHeight() == y2 or bl.cell.type == type:
-            if cc not in splitList and cc not in self.boundaries and cc.cell.type!=type:
+            if cc not in splitList and cc not in self.boundaries:
+
                 splitList.append(cc)
             # if cc.cell.type=="SOLID" and cc.cell.y+cc.getHeight() == y2:
-            if cc.cell.type == type and cc.cell.y + cc.getHeight() == y2:
+            '''
+            if cc.cell.type == type and cc.cell.y + cc.getHeight() == y2 :
                 if cc.SOUTH not in self.boundaries:
                     cc = cc.SOUTH
                 while cc.cell.x + cc.getWidth() <= x1:
                     cc = cc.EAST
                 splitList.append(cc)
+            '''
 
-        #print"splitListx1=", len(splitList)
+        print"splitListx1=", len(splitList)
         for rect in splitList:
+
             if x1 != rect.cell.x and x1 != rect.EAST.cell.x:
+                print"1", rect.printTile()
                 self.vSplit(rect, x1)
 
         ### Horizontal split
@@ -2781,7 +2786,17 @@ if __name__ == '__main__':
             #print"HL", len(ParentH.stitchList)
             ParentH.insert(int(inp[0]), int(inp[1]), int(inp[2]), int(inp[3]), inp[4])
 
+    '''
+    CG = cg.constraintGraph(testdir + '/' + testbase, testdir + '/' + testbase)
+    CG.cgToGraph_h(testdir + '/' + testbase + 'edgeh.txt')
+    CG.cgToGraph_v(testdir + '/' + testbase + 'edgev.txt')
+    CSCG = CSCG.CSCG(Htree.hNodeList, Vtree.vNodeList, CG, testdir + '/' + testbase, testdir + '/' + testbase)
 
+    CSCG.findGraphEdges_h()
+    CSCG.drawLayer1()
+    CSCG.findGraphEdges_v()
+    CSCG.drawLayer2()
+    '''
 
     print "Result"
     Htree.setNodeId(Htree.hNodeList)
@@ -3231,8 +3246,8 @@ if __name__ == '__main__':
             plt.close()
         # pylab.pause(11000)
     drawLayer1(Vtree.vNodeList)
-    drawLayer2(Htree.hNodeList)
-    drawLayer(Htree.hNodeList)
+    #drawLayer2(Htree.hNodeList)
+    #drawLayer(Htree.hNodeList)
     #color=['black','red','green','blue']
     #for i in range(len(Vtree.vNodeList)):
         #drawLayer2(Vtree.vNodeList[i],color[i])
@@ -3245,99 +3260,101 @@ if __name__ == '__main__':
 
         # fig2 = matplotlib.pyplot.figure()
         #node=nodelist[0]
-        fig2, ax4 = plt.subplots()
+
         #for node in nodelist:
         #for i in range(len(Htree.hNodeList)):
         i = 0
-        node=Htree.hNodeList[i]
+        for i in range(len(Vtree.vNodeList)):
+            fig2, ax4 = plt.subplots()
+            node=Vtree.vNodeList[i]
 
-        #print "LEN",len(node.stitchList)
-        for cell in node.stitchList:
-            #print cell.cell.x
-
-
-            # ax4 = fig2.add_subplot(111, aspect='equal')
-            if not cell.cell.type == "EMPTY":
-                pattern = '\\'
-                '''
-                if cell.cell.type == "Type_1":
-                    colour = 'green'
-                elif cell.cell.type == "Type_2":
-                    colour = 'red'
-                elif cell.cell.type == "Type_3":
-                    colour = 'blue'
-                elif cell.cell.type == "Type_4":
-                    colour = 'black'
-                '''
-
-                ax4.add_patch(
-                    matplotlib.patches.Rectangle(
-                        (cell.cell.x, cell.cell.y),  # (x,y)
-                        cell.getWidth(),  # width
-                        cell.getHeight(),  # height
-                        hatch=pattern,
-                        Fill=False
+            #print "LEN",len(node.stitchList)
+            for cell in node.stitchList:
+                #print cell.cell.x
 
 
+                # ax4 = fig2.add_subplot(111, aspect='equal')
+                if not cell.cell.type == "EMPTY":
+                    pattern = '\\'
+                    '''
+                    if cell.cell.type == "Type_1":
+                        colour = 'green'
+                    elif cell.cell.type == "Type_2":
+                        colour = 'red'
+                    elif cell.cell.type == "Type_3":
+                        colour = 'blue'
+                    elif cell.cell.type == "Type_4":
+                        colour = 'black'
+                    '''
+
+                    ax4.add_patch(
+                        matplotlib.patches.Rectangle(
+                            (cell.cell.x, cell.cell.y),  # (x,y)
+                            cell.getWidth(),  # width
+                            cell.getHeight(),  # height
+                            hatch=pattern,
+                            Fill=False
+
+
+                        )
                     )
-                )
-            else:
-                pattern=' '
-                ax4.add_patch(
-                    matplotlib.patches.Rectangle(
-                        (cell.cell.x, cell.cell.y),  # (x,y)
-                        cell.getWidth(),  # width
-                        cell.getHeight(),  # height
-                        hatch=pattern,
-                        Fill=False
+                else:
+                    pattern=' '
+                    ax4.add_patch(
+                        matplotlib.patches.Rectangle(
+                            (cell.cell.x, cell.cell.y),  # (x,y)
+                            cell.getWidth(),  # width
+                            cell.getHeight(),  # height
+                            hatch=pattern,
+                            Fill=False
 
+                        )
                     )
-                )
-        '''
-        for cell in node.boundaries:
-            #print cell.cell.x
-
-
-            # ax4 = fig2.add_subplot(111, aspect='equal')
-            if not cell.cell.type == "EMPTY":
-                pattern = '//'
-
-
-
-
-                ax4.add_patch(
-                    matplotlib.patches.Rectangle(
-                        (cell.cell.x, cell.cell.y),  # (x,y)
-                        cell.getWidth(),  # width
-                        cell.getHeight(),  # height
-                        hatch=pattern,
-                        Fill=False
-
-
-                    )
-                )
-            else:
-                pattern='//'
-
-                ax4.add_patch(
-                    matplotlib.patches.Rectangle(
-                        (cell.cell.x, cell.cell.y),  # (x,y)
-                        cell.getWidth(),  # width
-                        cell.getHeight(),  # height
-                        hatch=pattern,
-                        Fill=False))
             '''
+            for cell in node.boundaries:
+                #print cell.cell.x
+    
+    
+                # ax4 = fig2.add_subplot(111, aspect='equal')
+                if not cell.cell.type == "EMPTY":
+                    pattern = '//'
+    
+    
+    
+    
+                    ax4.add_patch(
+                        matplotlib.patches.Rectangle(
+                            (cell.cell.x, cell.cell.y),  # (x,y)
+                            cell.getWidth(),  # width
+                            cell.getHeight(),  # height
+                            hatch=pattern,
+                            Fill=False
+    
+    
+                        )
+                    )
+                else:
+                    pattern='//'
+    
+                    ax4.add_patch(
+                        matplotlib.patches.Rectangle(
+                            (cell.cell.x, cell.cell.y),  # (x,y)
+                            cell.getWidth(),  # width
+                            cell.getHeight(),  # height
+                            hatch=pattern,
+                            Fill=False))
+                '''
 
 
 
-        plt.xlim(0, 60)
-        plt.ylim(0, 60)
-        fig2.savefig(testdir+'/'+testbase+"node-"+str(i)+".png")
-        #fig2.show()
-        plt.close()
+            plt.xlim(0, 60)
+            plt.ylim(0, 60)
+            fig2.savefig(testdir+'/'+testbase+"node-"+str(i)+".png",bbox_inches='tight')
+            #fig2.show()
+            plt.close()
 
 
-    #drawLayer_11()
+    drawLayer_11()
 
 ########################################################################################################################
 class vLayer(cornerStitch):
