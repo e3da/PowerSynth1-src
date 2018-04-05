@@ -1109,7 +1109,66 @@ class Vnode(Node):
         self.child=[]
         self.parent=parent
         self.id=id
+    def Final_Merge(self):
+        #for node in nodelist:
+        changeList = []
+        # for cell in self.stitchList:
 
+        for rect in self.stitchList:
+
+            #if rect.cell.type == "Type_1":
+            if rect.cell.type!="EMPTY":
+                changeList.append(rect)
+        list_len = len(changeList)
+        c = 0
+        #print"LEN",list_len
+        #for i in changeList:
+            #print "R",i.printTile()
+        while (len(changeList) > 1):
+            i = 0
+            c += 1
+
+            while i < len(changeList) - 1:
+                # print"i=", i, len(changeList)
+                j = 0
+                while j < len(changeList):
+                    # j=i+1
+                    # print"j=", j
+
+                    top = changeList[j]
+                    low = changeList[i]
+                    # top.cell.type = type
+                    # low.cell.type = type
+                    # print"topx=", top.cell.x, top.cell.y
+                    # print"lowx=", low.cell.x, low.cell.y
+                    mergedcell = self.merge(top, low)
+                    if mergedcell == "Tiles are not alligned":
+                        if j < len(changeList):
+                            j += 1
+
+                    else:
+
+                        del changeList[j]
+                        if i > j:
+                            del changeList[i - 1]
+                        else:
+                            del changeList[i]
+                        x = min(i, j)
+                        # print"x=",x
+                        mergedcell.type = 'Type_1'
+                        changeList.insert(x, mergedcell)
+                        #self.rectifyShadow(changeList[x])
+                        # if j<len(changeList):
+                        # j+=1
+                i += 1
+
+            if c == list_len:
+                break
+        #print"len_1", len(changeList)
+        #for i in range(len(changeList)):
+            #print"Rect", changeList[i].printTile()
+            #self.rectifyShadow(changeList[i])
+        return self.stitchList
     def insert(self, x1, y1, x2, y2, type):
         """
         insert a new solid cell into the rectangle defined by the top left corner(x1, y1) and the bottom right corner
@@ -1231,7 +1290,7 @@ class Vnode(Node):
             cc = cc.SOUTH
             while cc not in self.boundaries and cc.cell.x + cc.getWidth() <= x1:
                 cc = cc.EAST
-        print"in",cc.cell.x,cc.cell.y
+        #print"in",cc.cell.x,cc.cell.y
         # if cc.cell.type == "SOLID" and cc.cell.y+cc.getHeight() == y2 or bl.cell.type == "SOLID":
         if cc.cell.type == type and cc.cell.y + cc.getHeight() == y2 or bl.cell.type == type:
             if cc not in splitList and cc not in self.boundaries:
@@ -1247,11 +1306,11 @@ class Vnode(Node):
                 splitList.append(cc)
             '''
 
-        print"splitListx1=", len(splitList)
+        #print"splitListx1=", len(splitList)
         for rect in splitList:
 
             if x1 != rect.cell.x and x1 != rect.EAST.cell.x:
-                print"1", rect.printTile()
+                #print"1", rect.printTile()
                 self.vSplit(rect, x1)
 
         ### Horizontal split
@@ -1663,7 +1722,7 @@ class Vnode(Node):
             # if cc.NORTH==self.northBoundary or cc.NORTH.cell.type=="EMPTY":
             changeSet.append(cc)
             cc = cc.WEST
-        # print "len=", len(changeSet)
+        #print "len=", len(changeSet)
         i = 0
         j = 1
         while j < len(changeSet):  # merge all cells with the same width along the northern side
@@ -1787,60 +1846,7 @@ class Vnode(Node):
             cc = cc.EAST
         return False
 
-    def Final_Merge(self):
-        changeList = []
-        # for cell in self.stitchList:
 
-        for rect in self.stitchList:
-            if rect.cell.type == type:
-                changeList.append(rect)
-        list_len = len(changeList)
-        c = 0
-
-        while (len(changeList) > 1):
-            i = 0
-            c += 1
-
-            while i < len(changeList) - 1:
-                # print"i=", i, len(changeList)
-                j = 0
-                while j < len(changeList):
-                    # j=i+1
-                    # print"j=", j
-
-                    top = changeList[j]
-                    low = changeList[i]
-                    # top.cell.type = type
-                    # low.cell.type = type
-                    # print"topx=", top.cell.x, top.cell.y
-                    # print"lowx=", low.cell.x, low.cell.y
-                    mergedcell = self.merge(top, low)
-                    if mergedcell == "Tiles are not alligned":
-                        if j < len(changeList):
-                            j += 1
-
-                    else:
-
-                        del changeList[j]
-                        if i > j:
-                            del changeList[i - 1]
-                        else:
-                            del changeList[i]
-                        x = min(i, j)
-                        # print"x=",x
-                        mergedcell.type = 'Type_1'
-                        changeList.insert(x, mergedcell)
-                        self.rectifyShadow(changeList[x])
-                        # if j<len(changeList):
-                        # j+=1
-                i += 1
-
-            if c == list_len:
-                break
-        # print"len_1", len(changeList)
-        for i in range(len(changeList)):
-            self.rectifyShadow(changeList[i])
-        return self.stitchList
 
     def set_id_V(self):  ########## Setting id for all type 1 blocks
         global VID
@@ -2567,7 +2573,8 @@ class Hnode(Node):
         # for cell in self.stitchList:
 
         for rect in self.stitchList:
-            if rect.cell.type == type:
+            #if rect.cell.type == "Type_1":
+            if rect.cell.type !="EMPTY":
                 changeList.append(rect)
         # print len(changeList)
         list_len = len(changeList)
@@ -2606,8 +2613,8 @@ class Hnode(Node):
                 break
         # print"len_1",len(changeList)
 
-        for i in range(len(changeList)):
-            self.rectifyShadow(changeList[i])
+        #for i in range(len(changeList)):
+            #self.rectifyShadow(changeList[i])
         return
 
     def set_id(self):  ########## Setting id for all type 1 blocks
@@ -2634,6 +2641,8 @@ class Tree():
                 rect.nodeId=node.id
             for rect in node.boundaries:
                 rect.nodeId=node.id
+
+
 
 
 ########################################################################################################################
@@ -2782,9 +2791,11 @@ if __name__ == '__main__':
             Parent.insert(int(inp[0]), int(inp[1]), int(inp[2]), int(inp[3]), inp[4])
 
 
+
             ParentH = Htree.hNodeList[0]
             #print"HL", len(ParentH.stitchList)
             ParentH.insert(int(inp[0]), int(inp[1]), int(inp[2]), int(inp[3]), inp[4])
+
 
     '''
     CG = cg.constraintGraph(testdir + '/' + testbase, testdir + '/' + testbase)
@@ -2799,6 +2810,13 @@ if __name__ == '__main__':
     '''
 
     print "Result"
+
+    #Htree.Final_Merge(Htree.hNodeList[0])
+    #Vnode.Final_Merge(Vtree.vNodeList[0])
+    for node in Htree.hNodeList:
+        node.Final_Merge()
+    for node in Vtree.vNodeList:
+        node.Final_Merge()
     Htree.setNodeId(Htree.hNodeList)
     Vtree.setNodeId(Vtree.vNodeList)
     print Htree.hNodeList
@@ -2858,6 +2876,7 @@ if __name__ == '__main__':
                 # ax4 = fig2.add_subplot(111, aspect='equal')
                 if not cell.cell.type == "EMPTY":
                     pattern = '\\'
+                    '''
                     if cell.cell.type=="Type_1":
                         colour='green'
                     elif cell.cell.type=="Type_2":
@@ -2866,6 +2885,7 @@ if __name__ == '__main__':
                         colour='blue'
                     elif cell.cell.type=="Type_4":
                         colour='black'
+                    '''
 
                     ax4.add_patch(
                         matplotlib.patches.Rectangle(
@@ -2873,7 +2893,7 @@ if __name__ == '__main__':
                             cell.getWidth(),  # width
                             cell.getHeight(),  # height
                             hatch=pattern,
-                            color=colour
+                            Fill=False
                         )
                     )
                 else:
@@ -2933,6 +2953,7 @@ if __name__ == '__main__':
             for cell in node.stitchList:
                 if not cell.cell.type == "EMPTY":
                     pattern = '\\'
+                    '''
                     if cell.cell.type == "Type_1":
                         colour = 'green'
                     elif cell.cell.type == "Type_2":
@@ -2941,13 +2962,14 @@ if __name__ == '__main__':
                         colour = 'blue'
                     elif cell.cell.type=="Type_4":
                         colour='black'
+                        '''
                     ax2.add_patch(
                         matplotlib.patches.Rectangle(
                             (cell.cell.x, cell.cell.y),  # (x,y)
                             cell.getWidth(),  # width
                             cell.getHeight(),  # height
                             hatch=pattern,
-                            color=colour
+                            Fill=False
                         )
                     )
                 else:
@@ -3108,6 +3130,7 @@ if __name__ == '__main__':
             for cell in node.stitchList:
                 if not cell.cell.type == "EMPTY":
                     pattern = '//'
+                    '''
                     if cell.cell.type == "Type_1":
                         colour = 'green'
                     elif cell.cell.type == "Type_2":
@@ -3116,13 +3139,14 @@ if __name__ == '__main__':
                         colour = 'blue'
                     elif cell.cell.type=="Type_4":
                         colour='black'
+                        '''
                     ax3.add_patch(
                         matplotlib.patches.Rectangle(
                             (cell.cell.x, cell.cell.y),  # (x,y)
                             cell.getWidth(),  # width
                             cell.getHeight(),  # height
                             hatch=pattern,
-                            color=colour
+                            Fill=False
 
                         )
                     )
@@ -3246,8 +3270,8 @@ if __name__ == '__main__':
             plt.close()
         # pylab.pause(11000)
     drawLayer1(Vtree.vNodeList)
-    #drawLayer2(Htree.hNodeList)
-    #drawLayer(Htree.hNodeList)
+    drawLayer2(Htree.hNodeList)
+    drawLayer(Htree.hNodeList)
     #color=['black','red','green','blue']
     #for i in range(len(Vtree.vNodeList)):
         #drawLayer2(Vtree.vNodeList[i],color[i])
@@ -3354,7 +3378,7 @@ if __name__ == '__main__':
             plt.close()
 
 
-    drawLayer_11()
+    #drawLayer_11()
 
 ########################################################################################################################
 class vLayer(cornerStitch):
