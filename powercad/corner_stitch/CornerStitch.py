@@ -1121,10 +1121,10 @@ class Vnode(Node):
         for rect in self.stitchList:
 
             #if rect.cell.type == "Type_1":
-            if rect.cell.type!="EMPTY":
+            if rect.cell.type=="EMPTY":
                 changeList.append(rect)
-            else:
-                changeList1.append(rect)
+            #else:
+                #changeList1.append(rect)
 
         list_len = len(changeList)
         c = 0
@@ -1171,6 +1171,7 @@ class Vnode(Node):
 
             if c == list_len:
                 break
+                '''
         list_len1= len(changeList1)
         c = 0
         # print"LEN",list_len
@@ -1220,6 +1221,7 @@ class Vnode(Node):
         #for i in range(len(changeList)):
             #print"Rect", changeList[i].printTile()
             #self.rectifyShadow(changeList[i])
+            '''
         return self.stitchList
     def insert(self, x1, y1, x2, y2, type):
         """
@@ -1238,8 +1240,9 @@ class Vnode(Node):
         y1 = foo[1]
         x2 = foo[2]
         y2 = foo[3]
-
-        # if self.areaSearch(x1, y1, x2, y2):#check to ensure that the area is empty
+        RESP=0
+        if self.areaSearch(x1, y1, x2, y2):#check to ensure that the area is empty
+            RESP=1
         # return "Area is not empty"
 
         """
@@ -1529,6 +1532,13 @@ class Vnode(Node):
             while cc1.cell.y > y2:
                 cc1 = cc1.SOUTH
         #print"arealist=", len(changeList)
+        for i in changeList:
+            #print"i",i.cell.x,i.cell.y,i.getHeight(),i.getWidth()
+            N=i.findNeighbors()
+            for j in N:
+                if j.cell.type==type and j not in changeList:
+                    RESP=1
+                    changeList.append(j)
         changeList.sort(key=lambda cc: cc.cell.x)
 
         ##### Merge Algorithm:
@@ -1629,13 +1639,13 @@ class Vnode(Node):
                                 tile_list.append(j)
                     if i not in tile_list:
                         tile_list.append(i)
-            #for rect in tile_list:
-                #print "i",rect.cell.printCell(True,True,True),rect.nodeId
-            self.addChild(tile_list,Parent,type)
+            for rect in tile_list:
+                print "iv",rect.cell.printCell(True,True,True),rect.nodeId
+            self.addChild(tile_list,Parent,type,RESP)
 
         return self.stitchList
 
-    def addChild(self, tile_list, parent, type):
+    def addChild(self, tile_list, parent, type,RESP):
 
         Flag = 0
         Flag2 = 0
@@ -1648,7 +1658,7 @@ class Vnode(Node):
                 if rect.nodeId > ID:
                     ID = rect.nodeId
 
-        if counter > 1:
+        if counter > 1 or RESP==1:
             Flag = 1
 
         if Flag == 1:
@@ -1658,7 +1668,7 @@ class Vnode(Node):
                     if N.id == ID:
                         node = N
                         Flag2 = 1
-
+        #print "F",Flag,Flag2
         if Flag2 == 1:
 
             #Htree.hNodeList.remove(node)
@@ -1672,6 +1682,7 @@ class Vnode(Node):
             for rect in stitchList:
                 if rect not in self.stitchList:
                     stitchList.remove(rect)
+
 
             for rect in tile_list:
 
@@ -2013,16 +2024,16 @@ class Hnode(Node):
     def Final_Merge(self):
         #for node in nodelist:
         changeList = []
-        changeList1=[]
+        #changeList1=[]
         # for cell in self.stitchList:
 
         for rect in self.stitchList:
 
             #if rect.cell.type == "Type_1":
-            if rect.cell.type!="EMPTY":
+            if rect.cell.type=="EMPTY":
                 changeList.append(rect)
-            else:
-                changeList1.append(rect)
+            #else:
+                #changeList1.append(rect)
 
         list_len = len(changeList)
         c = 0
@@ -2034,18 +2045,19 @@ class Hnode(Node):
             c += 1
 
             while i < len(changeList) - 1:
-                # print"i=", i, len(changeList)
+                print"i=", i, len(changeList)
                 j = 0
                 while j < len(changeList):
                     # j=i+1
-                    # print"j=", j
+                    print"j=", j
 
                     top = changeList[j]
-                    low = changeList[i]
+                    if changeList[i] !=None:
+                        low = changeList[i]
                     # top.cell.type = type
                     # low.cell.type = type
-                    # print"topx=", top.cell.x, top.cell.y
-                    # print"lowx=", low.cell.x, low.cell.y
+                    print"topx=", top.cell.x, top.cell.y
+                    print"lowx=", low.cell.x, low.cell.y
                     mergedcell = self.merge(top, low)
                     if mergedcell == "Tiles are not alligned":
                         if j < len(changeList):
@@ -2059,16 +2071,19 @@ class Hnode(Node):
                         else:
                             del changeList[i]
                         x = min(i, j)
-                        # print"x=",x
+                        #print"x=",x
                         mergedcell.type = 'Type_1'
+                        #print"11"
                         changeList.insert(x, mergedcell)
                         #self.rectifyShadow(changeList[x])
                         # if j<len(changeList):
                         # j+=1
+
                 i += 1
 
             if c == list_len:
                 break
+        '''
         list_len1= len(changeList1)
         c = 0
         # print"LEN",list_len
@@ -2118,6 +2133,7 @@ class Hnode(Node):
         #for i in range(len(changeList)):
             #print"Rect", changeList[i].printTile()
             #self.rectifyShadow(changeList[i])
+            '''
         return self.stitchList
 
     def insert(self, x1, y1, x2, y2, type):
@@ -2137,9 +2153,10 @@ class Hnode(Node):
         y1 = foo[1]
         x2 = foo[2]
         y2 = foo[3]
+        RESP = 0
+        if self.areaSearch(x1, y1, x2, y2): #check to ensure that the area is empty
+            RESP=1
 
-        # if self.areaSearch(x1, y1, x2, y2): #check to ensure that the area is empty
-        # return "Area is not empty"
 
         # step 1: hsplit y1 and y2
         #print "IN",x1,y1,x2,y2
@@ -2323,7 +2340,7 @@ class Hnode(Node):
         ### Re-Splitting for overlapping cases
 
         cc = self.findPoint(x2, y2, self.stitchList[0]).WEST  ##There was topLeft.SOUTH
-
+        #
         while cc not in self.boundaries and cc.cell.y + cc.getHeight() <= y1:
             cc1 = cc
             #print"resplitsouth=", cc.cell.x, cc.cell.y
@@ -2349,10 +2366,12 @@ class Hnode(Node):
 
             if len(resplit) > 1:
                 for foo in resplit:
+                    #print"foo", foo.cell.x,foo.cell.y
                     if foo.cell.y + foo.getHeight() > min_y:
                         # if foo.cell.y+foo.getHeight()!= min_y:
                         #print"split"
                         if min_y != foo.cell.y and min_y != foo.NORTH.cell.y:
+                            RESP=1
                             k=self.stitchList.index(foo)
                             self.hSplit(k, min_y)
             #print cc.cell.x,cc.cell.y
@@ -2418,8 +2437,14 @@ class Hnode(Node):
                     t = t.WEST
                 if t not in changeList:
                     changeList.append(t)
-        #print "arealist=", len(changeList)
-
+        print "arealist=", len(changeList)
+        for i in changeList:
+            print"i",i.cell.x,i.cell.y,i.getHeight(),i.getWidth()
+            N=i.findNeighbors()
+            for j in N:
+                if j.cell.type==type and j not in changeList:
+                    RESP=1
+                    changeList.append(j)
 
         ## New Merge Algorithm v2
 
@@ -2449,7 +2474,7 @@ class Hnode(Node):
                 i += 1
 
         list_len = len(changeList)
-        # print"len=",list_len
+        #print"len=",list_len
         c = 0
 
         while (len(changeList) > 1):
@@ -2490,7 +2515,7 @@ class Hnode(Node):
 
             if c == list_len:
                 break
-        # print"len_1",len(changeList)
+        #print"len_1",len(changeList)
 
         ######
         i = 0
@@ -2498,8 +2523,8 @@ class Hnode(Node):
 
             top = changeList[i + 1]
             low = changeList[i]
-            # print"topx=", top.cell.x, top.cell.y
-            # print"lowx=", low.cell.x, low.cell.y
+            #print"topx=", top.cell.x, top.cell.y
+            #print"lowx=", low.cell.x, low.cell.y
             # if top.cell.x == low.cell.x + low.getWidth() or top.cell.x + top.getWidth() == low.cell.x:
             top.cell.type = type
             low.cell.type = type
@@ -2516,8 +2541,8 @@ class Hnode(Node):
                     changeList.insert(i, mergedcell)
                 self.rectifyShadow(changeList[i])
 
-        # for foo in changeList:
-        # foo.cell.printCell(True, True)
+        #for foo in changeList:
+            #foo.cell.printCell(True, True)
         for x in range(0, len(changeList)):
             changeList[x].cell.type = type
             # print"x=", changeList[x].cell.x, changeList[x].cell.y
@@ -2545,14 +2570,16 @@ class Hnode(Node):
                                 tile_list.append(j)
                     if i not in tile_list:
                         tile_list.append(i)
+            #for i in tile_list:
+                #print"i", i.cell.x, i.cell.y, i.getHeight(), i.getWidth(),i.cell.type
 
-            self.addChild(tile_list, ParentH, type)
+            self.addChild(tile_list, ParentH, type,RESP)
 
 
 
         return self.stitchList
 
-    def addChild(self, tile_list, parent, type):
+    def addChild(self, tile_list, parent, type,RESP):
 
         Flag = 0
         Flag2 = 0
@@ -2565,8 +2592,8 @@ class Hnode(Node):
                 counter += 1
                 if rect.nodeId > ID:
                     ID = rect.nodeId
-
-        if counter > 1:
+        #print "RES",RESP
+        if counter > 1 or RESP==1:
             Flag = 1
 
         if Flag == 1:
