@@ -763,7 +763,10 @@ class Node(object):
             #reassign the newly merged tile's neighbors. We're using the leftMost of the tiles as the basis tile.
             basis.NORTH = eastMost.NORTH
             basis.EAST = eastMost.EAST
-
+            if basis.cell.id == None:
+                basis.cell.id = eastMost.cell.id
+            if basis.nodeId == None:
+                basis.nodeId = eastMost.nodeId
 
 
             #reasign the neighboring tile's directional pointers
@@ -2555,9 +2558,10 @@ class Hnode(Node):
         Flag2 = 0
         counter = 0
         ID = 0
-        # print "LEN",len(tile_list)
+        #print "LEN",len(tile_list)
         for rect in tile_list:
             if rect.cell.type == type:
+                print "R",rect.cell.x,rect.cell.y
                 counter += 1
                 if rect.nodeId > ID:
                     ID = rect.nodeId
@@ -2572,7 +2576,7 @@ class Hnode(Node):
                     if N.id == ID:
                         node = N
                         Flag2 = 1
-
+        print "F",Flag,Flag2
         if Flag2 == 1:
 
             #Htree.hNodeList.remove(node)
