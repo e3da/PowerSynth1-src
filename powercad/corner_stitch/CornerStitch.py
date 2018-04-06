@@ -1241,7 +1241,7 @@ class Vnode(Node):
         x2 = foo[2]
         y2 = foo[3]
         RESP=0
-        if self.areaSearch(x1, y1, x2, y2):#check to ensure that the area is empty
+        if self.areaSearch(x1, y1, x2, y2,type):#check to ensure that the area is empty
             RESP=1
         # return "Area is not empty"
 
@@ -1540,7 +1540,7 @@ class Vnode(Node):
                     RESP=1
                     changeList.append(j)
         changeList.sort(key=lambda cc: cc.cell.x)
-
+        #print "RESP",RESP
         ##### Merge Algorithm:
 
         i = 0
@@ -1668,7 +1668,7 @@ class Vnode(Node):
                     if N.id == ID:
                         node = N
                         Flag2 = 1
-        #print "F",Flag,Flag2
+        print "F",Flag,Flag2
         if Flag2 == 1:
 
             #Htree.hNodeList.remove(node)
@@ -1972,16 +1972,20 @@ class Vnode(Node):
     """
 
     ### NEW AREA SEARCH
-    def areaSearch(self, x1, y1, x2, y2):
+    def areaSearch(self, x1, y1, x2, y2,type):
         cc = self.findPoint(x1, y1, self.stitchList[0])  # the tile that contains the first corner point
+
         sc = self.findPoint(x2, y2, self.stitchList[0])  # the tile that contains the second(bottom right) corner
         if cc.cell.y == y1:
             cc = cc.SOUTH
+
             while cc.cell.x + cc.getWidth() < x1:  # and cc.cell.type=="SOLID"
                 cc = cc.EAST
-
+        #print "CC", cc.cell.x, cc.cell.y, cc.cell.type
         # if cc.cell.type == "SOLID":
         if cc.cell.type == type:
+
+            #print"TR"
             return True  # the bottom left corner is in a solid cell
         elif cc.cell.y > y2:
             return True  # the corner cell is empty but touches a solid cell within the search area
@@ -2045,19 +2049,19 @@ class Hnode(Node):
             c += 1
 
             while i < len(changeList) - 1:
-                print"i=", i, len(changeList)
+                #print"i=", i, len(changeList)
                 j = 0
                 while j < len(changeList):
                     # j=i+1
-                    print"j=", j
+                    #print"j=", j
 
                     top = changeList[j]
                     if changeList[i] !=None:
                         low = changeList[i]
                     # top.cell.type = type
                     # low.cell.type = type
-                    print"topx=", top.cell.x, top.cell.y
-                    print"lowx=", low.cell.x, low.cell.y
+                    #print"topx=", top.cell.x, top.cell.y
+                    #print"lowx=", low.cell.x, low.cell.y
                     mergedcell = self.merge(top, low)
                     if mergedcell == "Tiles are not alligned":
                         if j < len(changeList):
@@ -2154,7 +2158,7 @@ class Hnode(Node):
         x2 = foo[2]
         y2 = foo[3]
         RESP = 0
-        if self.areaSearch(x1, y1, x2, y2): #check to ensure that the area is empty
+        if self.areaSearch(x1, y1, x2, y2,type): #check to ensure that the area is empty
             RESP=1
 
 
@@ -2809,7 +2813,7 @@ class Hnode(Node):
 
         return
 
-    def areaSearch(self, x1, y1, x2, y2):
+    def areaSearch(self, x1, y1, x2, y2,type):
 
         cc = self.findPoint(x1, y1, self.stitchList[0])  # the tile that contains the first corner point
         secondCorner = self.findPoint(x2, y2,self.stitchList[0])  # the tile that contains the second(bottom right)corner
