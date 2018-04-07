@@ -1531,7 +1531,7 @@ class Vnode(Node):
             cc1 = cc1.EAST
             while cc1.cell.y > y2:
                 cc1 = cc1.SOUTH
-        #print"arealist=", len(changeList)
+        #print"arealistv=", len(changeList)
         for i in changeList:
             #print"i",i.cell.x,i.cell.y,i.getHeight(),i.getWidth()
             N=i.findNeighbors()
@@ -1539,6 +1539,8 @@ class Vnode(Node):
                 if j.cell.type==type and j not in changeList:
                     RESP=1
                     changeList.append(j)
+                elif j.nodeId!=0 and j.cell.type==type:
+                    RESP=1
         changeList.sort(key=lambda cc: cc.cell.x)
         #print "RESP",RESP
         ##### Merge Algorithm:
@@ -1641,6 +1643,9 @@ class Vnode(Node):
                         tile_list.append(i)
             for rect in tile_list:
                 print "iv",rect.cell.printCell(True,True,True),rect.nodeId
+
+
+
             self.addChild(tile_list,Parent,type,RESP)
 
         return self.stitchList
@@ -1657,6 +1662,7 @@ class Vnode(Node):
                 counter += 1
                 if rect.nodeId > ID:
                     ID = rect.nodeId
+
 
         if counter > 1 or RESP==1:
             Flag = 1
@@ -2449,6 +2455,8 @@ class Hnode(Node):
                 if j.cell.type==type and j not in changeList:
                     RESP=1
                     changeList.append(j)
+                elif j.nodeId!=0 and j.cell.type==type:
+                    RESP=1
 
         ## New Merge Algorithm v2
 
