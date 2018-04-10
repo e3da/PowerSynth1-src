@@ -975,8 +975,11 @@ class Node(object):
         if x < splitCell.cell.x or x > splitCell.cell.x + splitCell.getWidth():
             print "out of bounds, x = ", x
             return
-
-        newCell = tile(None, None, None, None, None,cell(x, splitCell.cell.y, splitCell.cell.type, id=splitCell.cell.id))
+        if splitCell.cell.type!="EMPTY":
+            newCell = tile(None, None, None, None, None,cell(x, splitCell.cell.y, splitCell.cell.type, id=splitCell.cell.id),nodeId=splitCell.nodeId)
+        else:
+            newCell = tile(None, None, None, None, None,
+                           cell(x, splitCell.cell.y, splitCell.cell.type, id=splitCell.cell.id))
         self.stitchList.append(newCell)
           # figure out how to fix this and pass in by reference*
         #assign newCell neighbors
@@ -1041,8 +1044,11 @@ class Node(object):
         if y < splitCell.cell.y or y > splitCell.cell.y + splitCell.getHeight():
             # print "out of bounds, y = ", y
             return
-
-        newCell = tile(None, None, None, None, None,cell(splitCell.cell.x, y, splitCell.cell.type, id=splitCell.cell.id))
+        if splitCell.cell.type!="EMPTY":
+            newCell = tile(None, None, None, None, None,cell(splitCell.cell.x, y, splitCell.cell.type, id=splitCell.cell.id),nodeId=splitCell.nodeId)
+        else:
+            newCell = tile(None, None, None, None, None,
+                           cell(splitCell.cell.x, y, splitCell.cell.type, id=splitCell.cell.id))
 
         self.stitchList.append(newCell)
 
@@ -1640,6 +1646,8 @@ class Vnode(Node):
             #print "l", len(changeList)
 
             changeList[0].cell.type = type
+            if len(changeList)==1:
+                changeList[0].nodeId=None
             self.rectifyShadow(changeList[0])
 
             self.set_id_V()
@@ -2679,7 +2687,9 @@ class Hnode(Node):
                     t = t.WEST
                 if t not in changeList:
                     changeList.append(t)
-        #print "arealist=", len(changeList),type
+        print "arealist=", len(changeList)
+        for foo in changeList:
+            print "fpp",foo.cell.x,foo.cell.y,foo.cell.type
         if start!='/':
             for i in changeList:
                 #print"i",i.cell.x,i.cell.y,i.getHeight(),i.getWidth(),i.cell.type
@@ -2797,6 +2807,10 @@ class Hnode(Node):
         if len(changeList) > 0:
 
             changeList[0].cell.type = type
+            #if start!='/':
+            if len(changeList)==1:
+                changeList[0].nodeId = None
+            #changeList[0].nodeId=None
             #print changeList[0].cell.x
             self.rectifyShadow(changeList[0])
             self.set_id()
@@ -2846,7 +2860,8 @@ class Hnode(Node):
 
     def addChild(self,start, tile_list, parent, type,RESP,end):
 
-        #if parent ==Htree.hNodeList[0]:
+        #for i in tile_list:
+            #print "i", i.cell.printCell(True,True,True),i.nodeId
         if start=='/' and end =='/':
             stitchList = []
             boundaries = []
@@ -3750,7 +3765,10 @@ if __name__ == '__main__':
 
 
         # arrowList2=[]
+        fig5= plt.figure()
+        ax5 = plt.axes(xlim=(0, 60), ylim=(0, 60))
         for node in nodelist:
+
 
             if node.id==1:
                 fig4=plt.figure()
@@ -3791,6 +3809,15 @@ if __name__ == '__main__':
                                 fill=False
                             )
                         )
+                        ax5.add_patch(
+                            matplotlib.patches.Rectangle(
+                                (cell.cell.x, cell.cell.y),  # (x,y)
+                                cell.getWidth(),  # width
+                                cell.getHeight(),  # height
+                                hatch=pattern,
+                                fill=False
+                            )
+                        )
             fig3, ax2 = plt.subplots()
 
             if node.parent==nodelist[0] and node.child==[]:
@@ -3819,6 +3846,17 @@ if __name__ == '__main__':
 
                             )
                         )
+                        ax5.add_patch(
+                            matplotlib.patches.Rectangle(
+                                (cell.cell.x, cell.cell.y),  # (x,y)
+                                cell.getWidth(),  # width
+                                cell.getHeight(),  # height
+
+                                facecolor=colour,
+                                edgecolor='blue'
+
+                            )
+                        )
                     else:
                         pattern = ''
 
@@ -3829,6 +3867,15 @@ if __name__ == '__main__':
                                 cell.getHeight(),  # height
                                 hatch=pattern,
                                 fill=False
+                            )
+                        )
+                        ax5.add_patch(
+                            matplotlib.patches.Rectangle(
+                                (cell.cell.x, cell.cell.y),  # (x,y)
+                                cell.getWidth(),  # width
+                                cell.getHeight(),  # height
+                                hatch=pattern,
+                                edgecolor='red'
                             )
                         )
             elif node.id in KEYS:
@@ -3859,6 +3906,17 @@ if __name__ == '__main__':
 
                             )
                         )
+                        ax5.add_patch(
+                            matplotlib.patches.Rectangle(
+                                (cell.cell.x, cell.cell.y),  # (x,y)
+                                cell.getWidth(),  # width
+                                cell.getHeight(),  # height
+
+                                facecolor=colour,
+                                edgecolor='blue'
+
+                            )
+                        )
                     else:
                         pattern = ''
 
@@ -3868,7 +3926,16 @@ if __name__ == '__main__':
                                 cell.getWidth(),  # width
                                 cell.getHeight(),  # height
                                 hatch=pattern,
-                                fill=False
+
+                            )
+                        )
+                        ax5.add_patch(
+                            matplotlib.patches.Rectangle(
+                                (cell.cell.x, cell.cell.y),  # (x,y)
+                                cell.getWidth(),  # width
+                                cell.getHeight(),  # height
+                                hatch=pattern,
+                                edgecolor='red'
                             )
                         )
             else:
@@ -3898,9 +3965,11 @@ if __name__ == '__main__':
             i=node.id
             plt.xlim(0, 60)
             plt.ylim(0, 60)
+
             fig4.savefig(testdir + '/' + testbase +'1'+ "H.png")
             fig3.savefig(testdir + '/' + testbase +str(i)+ "H.png")
             #plt.close()
+        fig5.savefig(testdir + '/' + testbase + "H.png")
 
 
 
@@ -3979,6 +4048,8 @@ if __name__ == '__main__':
 
 
         # arrowList2=[]
+        fig6 = plt.figure()
+        ax6 = plt.axes(xlim=(0, 60), ylim=(0, 60))
         for node in nodelist:
 
             if node.id==1:
@@ -4019,6 +4090,17 @@ if __name__ == '__main__':
                                 fill=False
                             )
                         )
+                        pattern = ''
+
+                        ax6.add_patch(
+                            matplotlib.patches.Rectangle(
+                                (cell.cell.x, cell.cell.y),  # (x,y)
+                                cell.getWidth(),  # width
+                                cell.getHeight(),  # height
+                                hatch=pattern,
+                                fill=False
+                            )
+                        )
             fig3, ax3 = plt.subplots()
             if node.parent == nodelist[0] and node.child == []:
                 #print"!!!!!!",node.id
@@ -4045,6 +4127,16 @@ if __name__ == '__main__':
 
                             )
                         )
+                        ax6.add_patch(
+                            matplotlib.patches.Rectangle(
+                                (cell.cell.x, cell.cell.y),  # (x,y)
+                                cell.getWidth(),  # width
+                                cell.getHeight(),  # height
+
+                                facecolor=colour,edgecolor='blue'
+
+                            )
+                        )
                     else:
                         pattern = ''
 
@@ -4055,6 +4147,15 @@ if __name__ == '__main__':
                                 cell.getHeight(),  # height
                                 hatch=pattern,
                                 fill=False
+                            )
+                        )
+                        ax6.add_patch(
+                            matplotlib.patches.Rectangle(
+                                (cell.cell.x, cell.cell.y),  # (x,y)
+                                cell.getWidth(),  # width
+                                cell.getHeight(),  # height
+                                hatch=pattern,
+                                edgecolor='blue'
                             )
                         )
             elif node.id in KEYS:
@@ -4084,6 +4185,16 @@ if __name__ == '__main__':
 
                             )
                         )
+                        ax6.add_patch(
+                            matplotlib.patches.Rectangle(
+                                (cell.cell.x, cell.cell.y),  # (x,y)
+                                cell.getWidth(),  # width
+                                cell.getHeight(),  # height
+
+                                facecolor=colour,edgecolor='blue'
+
+                            )
+                        )
                     else:
                         pattern = ''
 
@@ -4094,6 +4205,15 @@ if __name__ == '__main__':
                                 cell.getHeight(),  # height
                                 hatch=pattern,
                                 fill=False
+                            )
+                        )
+                        ax6.add_patch(
+                            matplotlib.patches.Rectangle(
+                                (cell.cell.x, cell.cell.y),  # (x,y)
+                                cell.getWidth(),  # width
+                                cell.getHeight(),  # height
+                                hatch=pattern,
+                                edgecolor='blue'
                             )
                         )
             else:
@@ -4122,7 +4242,7 @@ if __name__ == '__main__':
             plt.ylim(0, 60)
             fig4.savefig(testdir + '/' + testbase +'1'+ "V.png")
             fig3.savefig(testdir + '/' + testbase +str(i)+ "V.png")
-        #fig3.savefig(testdir + '/' + testbase + "V.png")
+        fig6.savefig(testdir + '/' + testbase + "V.png")
         #plt.close()
         # pylab.pause(11000)
     drawLayer1(Vtree.vNodeList)
