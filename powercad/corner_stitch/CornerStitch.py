@@ -1131,8 +1131,8 @@ class Vnode(Node):
         for rect in self.stitchList:
 
             #if rect.cell.type == "Type_1":
-            if rect.cell.type=="EMPTY":
-                changeList.append(rect)
+            #if rect.cell.type=="EMPTY":
+            changeList.append(rect)
             #else:
                 #changeList1.append(rect)
 
@@ -1233,7 +1233,7 @@ class Vnode(Node):
             #self.rectifyShadow(changeList[i])
             '''
         return self.stitchList
-    def insert(self, x1, y1, x2, y2, type,end):
+    def insert(self, start,x1, y1, x2, y2, type,end):
         """
         insert a new solid cell into the rectangle defined by the top left corner(x1, y1) and the bottom right corner
         (x2, y2) and adds the new cell to the cornerStitch's stitchList, then corrects empty space vertically
@@ -1290,43 +1290,45 @@ class Vnode(Node):
         splitList.append(bottomRight)
         # print"x=",bottomRight.cell.x, bottomRight.cell.y
         # if bottomRight.SOUTH != self.southBoundary and bottomRight.SOUTH.cell.type == "SOLID" and bottomRight.SOUTH.cell.y+bottomRight.SOUTH.getHeight() == y2 or bottomRight.cell.type=="SOLID":
-        if bottomRight.SOUTH not in self.boundaries and bottomRight.SOUTH.cell.type == type and bottomRight.SOUTH.cell.y + bottomRight.SOUTH.getHeight() == y2 or bottomRight.cell.type == type:
-            cc1 = bottomRight.SOUTH
-            while cc1.cell.x + cc1.getWidth() < x2:
-                cc1 = cc1.EAST
-            if cc1 not in splitList:
-                splitList.append(cc1)
-            # if cc1.cell.type == "SOLID" and cc1.cell.y+cc1.getHeight() == y2:
-            if cc1.cell.type == type and cc1.cell.y + cc1.getHeight() == y2:
-                cc2 = cc1.SOUTH
-                while cc2.cell.x + cc2.getWidth() < x2:
-                    cc2 = cc2.EAST
-                if cc2 not in splitList :#and cc2.cell.type==type
-                    splitList.append(cc2)
+        if start!='/':
+            if bottomRight.SOUTH not in self.boundaries and bottomRight.SOUTH.cell.type == type and bottomRight.SOUTH.cell.y + bottomRight.SOUTH.getHeight() == y2 or bottomRight.cell.type == type:
+                cc1 = bottomRight.SOUTH
+                while cc1.cell.x + cc1.getWidth() < x2:
+                    cc1 = cc1.EAST
+                if cc1 not in splitList:
+                    splitList.append(cc1)
+                # if cc1.cell.type == "SOLID" and cc1.cell.y+cc1.getHeight() == y2:
+                if cc1.cell.type == type and cc1.cell.y + cc1.getHeight() == y2:
+                    cc2 = cc1.SOUTH
+                    while cc2.cell.x + cc2.getWidth() < x2:
+                        cc2 = cc2.EAST
+                    if cc2 not in splitList and cc2.cell.type=="EMPTY" :#and cc2.cell.type==type
+                        splitList.append(cc2)
 
 
-        cc = bottomRight.NORTH
+            cc = bottomRight.NORTH
 
-        while cc.cell.y <= tr.cell.y and cc not in self.boundaries:  # has been added
-            # print"1"
+            while cc.cell.y <= tr.cell.y and cc not in self.boundaries:  # has been added
+                # print"1"
 
-            if cc not in splitList:
-                splitList.append(cc)
-            cc = cc.NORTH
-            while cc.cell.x >= x2:
-                cc = cc.WEST
-        # if cc.cell.type=="SOLID" and cc.cell.y==y1 or tr.cell.type=="SOLID"  :
-        if cc.cell.type == type and cc.cell.y == y1 or tr.cell.type == type:
-            if cc not in splitList and cc not in self.boundaries:
-                splitList.append(cc)
-            if cc not in self.boundaries:
-                cc = cc.NORTH
-                while cc.cell.x > x2:
-                    cc = cc.WEST
-                if cc not in self.boundaries :#and cc.cell.type==type
+                if cc not in splitList:
                     splitList.append(cc)
+                cc = cc.NORTH
+                while cc.cell.x >= x2:
+                    cc = cc.WEST
+            #print"splitListx2=", len(splitList)
+            # if cc.cell.type=="SOLID" and cc.cell.y==y1 or tr.cell.type=="SOLID"  :
+            if cc.cell.type == type and cc.cell.y == y1 or tr.cell.type == type:
+                if cc not in splitList and cc not in self.boundaries:
+                    splitList.append(cc)
+                if cc not in self.boundaries:
+                    cc = cc.NORTH
+                    while cc.cell.x > x2:
+                        cc = cc.WEST
+                    if cc not in self.boundaries and cc.cell.type=="EMPTY":
+                        splitList.append(cc)
 
-        #print"splitListx2=", len(splitList)
+
 
         for rect in splitList:
             #print rect.cell.x,rect.cell.y
@@ -1336,44 +1338,47 @@ class Vnode(Node):
 
         splitList = []
         splitList.append(topLeft)
-
+        #print "TP",topLeft.cell.y,topLeft.cell.type
         # if topLeft.NORTH != self.northBoundary and topLeft.NORTH.cell.type == "SOLID" and topLeft.NORTH.cell.y == y1 or topLeft.cell.type=="SOLID":
-        if topLeft.NORTH not in self.boundaries and topLeft.NORTH.cell.type == type and topLeft.NORTH.cell.y == y1 or topLeft.cell.type == type:
-            cc = topLeft.NORTH
-            while cc.cell.x > x1:
-                cc = cc.WEST
-            splitList.append(cc)
-
-            # if cc.cell.type == "SOLID" and cc.cell.y == y1:
-            if cc.cell.type == type and cc.cell.y == y1:
-                cc1 = cc.NORTH
-                while cc1.cell.x > x1:
-                    cc1 = cc1.WEST
-                if cc1 not in splitList and cc not in self.boundaries:
-                    splitList.append(cc1)
-        cc = topLeft
-        while cc not in self.boundaries and cc.cell.y + cc.getHeight() > y2:
-            if cc not in splitList:
+        if start!='/':
+            if topLeft.NORTH not in self.boundaries and topLeft.NORTH.cell.type == type and topLeft.NORTH.cell.y == y1 or topLeft.cell.type == type:
+                cc = topLeft.NORTH
+                while cc.cell.x > x1:
+                    cc = cc.WEST
+                #if cc.cell.type==type or cc.cell.type=="EMPTY":
                 splitList.append(cc)
 
-            cc = cc.SOUTH
-            while cc not in self.boundaries and cc.cell.x + cc.getWidth() <= x1:
-                cc = cc.EAST
-        #print"in",cc.cell.x,cc.cell.y
-        # if cc.cell.type == "SOLID" and cc.cell.y+cc.getHeight() == y2 or bl.cell.type == "SOLID":
-        if cc.cell.type == type and cc.cell.y + cc.getHeight() == y2 or bl.cell.type == type:
-            if cc not in splitList and cc not in self.boundaries:
+                # if cc.cell.type == "SOLID" and cc.cell.y == y1:
+                if cc.cell.type == type and cc.cell.y == y1:
+                    cc1 = cc.NORTH
+                    while cc1.cell.x > x1:
+                        cc1 = cc1.WEST
+                    if cc1 not in splitList and cc not in self.boundaries and cc1.cell.type=="EMPTY":
+                        splitList.append(cc1)
+            cc = topLeft
+            while cc not in self.boundaries and cc.cell.y + cc.getHeight() > y2:
+                if cc not in splitList:
+                    splitList.append(cc)
 
-                splitList.append(cc)
-            # if cc.cell.type=="SOLID" and cc.cell.y+cc.getHeight() == y2:
-
-            if cc.cell.type == type and cc.cell.y + cc.getHeight() == y2 :
-                if cc.SOUTH not in self.boundaries:
-                    cc = cc.SOUTH
-                while cc.cell.x + cc.getWidth() <= x1:
+                cc = cc.SOUTH
+                while cc not in self.boundaries and cc.cell.x + cc.getWidth() <= x1:
                     cc = cc.EAST
-                #if cc.cell.type==type:
-                splitList.append(cc)
+            #print"in",cc.cell.x,cc.cell.y
+            #print"splitListx1=", len(splitList)
+            # if cc.cell.type == "SOLID" and cc.cell.y+cc.getHeight() == y2 or bl.cell.type == "SOLID":
+            if cc.cell.type == type and cc.cell.y + cc.getHeight() == y2 or bl.cell.type == type:
+                if cc not in splitList and cc not in self.boundaries:
+
+                    splitList.append(cc)
+                # if cc.cell.type=="SOLID" and cc.cell.y+cc.getHeight() == y2:
+
+                if cc.cell.type == type and cc.cell.y + cc.getHeight() == y2 :
+                    if cc.SOUTH not in self.boundaries:
+                        cc = cc.SOUTH
+                    while cc.cell.x + cc.getWidth() <= x1:
+                        cc = cc.EAST
+                    if cc.cell.type=="EMPTY":
+                        splitList.append(cc)
 
 
         #print"splitListx1=", len(splitList)
@@ -1415,64 +1420,64 @@ class Vnode(Node):
                 #print rect.cell.x, rect.cell.y
                 self.hSplit(i, y2) # order is vital, again
 
+        if start!='/':
+            cc = self.findPoint(x1, y1, self.stitchList[0]).SOUTH
+            while cc not in self.boundaries and cc.cell.x < x1:
+                cc = cc.EAST
 
-        cc = self.findPoint(x1, y1, self.stitchList[0]).SOUTH
-        while cc not in self.boundaries and cc.cell.x < x1:
-            cc = cc.EAST
+            ## Re-splitting for overlapping cases
 
-        ## Re-splitting for overlapping cases
-
-        while cc.cell.x < x2:
-            cc1 = cc
+            while cc.cell.x < x2:
+                cc1 = cc
+                resplit = []
+                min_x = 1000000
+                while cc1.cell.y >= y2:
+                    if cc1.cell.x + cc1.getWidth() < min_x:
+                        min_x = cc1.cell.x + cc1.getWidth()
+                    resplit.append(cc1)
+                    cc1 = cc1.SOUTH
+                if len(resplit) > 1:
+                    for foo in resplit:
+                        if foo.cell.x + foo.getWidth() > min_x:
+                            if foo.cell.x != min_x:
+                                self.vSplit(foo, min_x)
+                cc = cc.EAST
+            #####
             resplit = []
-            min_x = 1000000
-            while cc1.cell.y >= y2:
-                if cc1.cell.x + cc1.getWidth() < min_x:
-                    min_x = cc1.cell.x + cc1.getWidth()
-                resplit.append(cc1)
-                cc1 = cc1.SOUTH
-            if len(resplit) > 1:
-                for foo in resplit:
-                    if foo.cell.x + foo.getWidth() > min_x:
-                        if foo.cell.x != min_x:
-                            self.vSplit(foo, min_x)
-            cc = cc.EAST
-        #####
-        resplit = []
-        # cc = self.findPoint(x1, y1, self.stitchList[0]).SOUTH
-        cc = self.findPoint(x1, y2, self.stitchList[0])
-        # print"resplit1=", cc.cell.x, cc.cell.y, cc.cell.x+cc.getWidth()
-        while cc.cell.x + cc.getWidth() <= x2:
-            # if cc.SOUTH.cell.type == "SOLID" and cc.SOUTH.cell.y + cc.SOUTH.getHeight() == y2 and cc.SOUTH != self.southBoundary and cc.SOUTH.cell.x+cc.SOUTH.getWidth() != cc.cell.x+cc.getWidth():
-            if cc.SOUTH.cell.type == type and cc.SOUTH.cell.y + cc.SOUTH.getHeight() == y2 and cc.SOUTH not in self.boundaries and cc.SOUTH.cell.x + cc.SOUTH.getWidth() != cc.cell.x + cc.getWidth():
-                resplit.append(cc.SOUTH)
-                resplit.append(cc.SOUTH.SOUTH)
-
-            for rect in resplit:
-                # flag = True
-                self.vSplit(rect, cc.cell.x + cc.getWidth())
-            cc = cc.EAST
-
-        resplit = []
-        cc = self.findPoint(x1, y1, self.stitchList[0]).SOUTH
-        while cc.cell.x + cc.getWidth() <= x2:
-            # if cc.NORTH.cell.type == "SOLID" and cc.NORTH.cell.y == y1 and cc.NORTH != self.northBoundary and cc.NORTH.cell.x+cc.NORTH.getWidth() != cc.cell.x+cc.getWidth():
-            if cc.NORTH.cell.type == type and cc.NORTH.cell.y == y1 and cc.NORTH not in self.boundaries and cc.NORTH.cell.x + cc.NORTH.getWidth() != cc.cell.x + cc.getWidth():
-                resplit.append(cc.NORTH)
-                resplit.append(cc.NORTH.NORTH)
+            # cc = self.findPoint(x1, y1, self.stitchList[0]).SOUTH
+            cc = self.findPoint(x1, y2, self.stitchList[0])
+            # print"resplit1=", cc.cell.x, cc.cell.y, cc.cell.x+cc.getWidth()
+            while cc.cell.x + cc.getWidth() <= x2:
+                # if cc.SOUTH.cell.type == "SOLID" and cc.SOUTH.cell.y + cc.SOUTH.getHeight() == y2 and cc.SOUTH != self.southBoundary and cc.SOUTH.cell.x+cc.SOUTH.getWidth() != cc.cell.x+cc.getWidth():
+                if cc.SOUTH.cell.type == type and cc.SOUTH.cell.y + cc.SOUTH.getHeight() == y2 and cc.SOUTH not in self.boundaries and cc.SOUTH.cell.x + cc.SOUTH.getWidth() != cc.cell.x + cc.getWidth():
+                    resplit.append(cc.SOUTH)
+                    resplit.append(cc.SOUTH.SOUTH)
 
                 for rect in resplit:
                     # flag = True
-
                     self.vSplit(rect, cc.cell.x + cc.getWidth())
-            cc = cc.EAST
+                cc = cc.EAST
+
+            resplit = []
+            cc = self.findPoint(x1, y1, self.stitchList[0]).SOUTH
+            while cc.cell.x + cc.getWidth() <= x2:
+                # if cc.NORTH.cell.type == "SOLID" and cc.NORTH.cell.y == y1 and cc.NORTH != self.northBoundary and cc.NORTH.cell.x+cc.NORTH.getWidth() != cc.cell.x+cc.getWidth():
+                if cc.NORTH.cell.type == type and cc.NORTH.cell.y == y1 and cc.NORTH not in self.boundaries and cc.NORTH.cell.x + cc.NORTH.getWidth() != cc.cell.x + cc.getWidth():
+                    resplit.append(cc.NORTH)
+                    resplit.append(cc.NORTH.NORTH)
+
+                    for rect in resplit:
+                        # flag = True
+
+                        self.vSplit(rect, cc.cell.x + cc.getWidth())
+                cc = cc.EAST
 
         changeList = []
         cc = self.findPoint(x1, y1, self.stitchList[0]).SOUTH
         # print "xco2=", cc.cell.x
         while cc.cell.x + cc.getWidth() <= x2:
             # if cc.NORTH.cell.type == "SOLID" and cc.NORTH.cell.y == y1:
-            if cc.NORTH.cell.type == type and cc.NORTH.cell.y == y1:
+            if cc.NORTH.cell.type == type and cc.NORTH.cell.y == y1 and start!='/':
                 changeList.append(cc.NORTH)
             cc = cc.EAST
             while cc.cell.y >= y1:
@@ -1536,21 +1541,22 @@ class Vnode(Node):
         #print "cc",cc1.cell.x,cc1.cell.y
         while cc1.cell.x + cc1.getWidth() <= x2:
             # if cc1.SOUTH.cell.type == "SOLID" and cc1.SOUTH.cell.y +cc1.SOUTH.getHeight()== y2:
-            if cc1.SOUTH.cell.type == type and cc1.SOUTH.cell.y + cc1.SOUTH.getHeight() == y2:
+            if cc1.SOUTH.cell.type == type and cc1.SOUTH.cell.y + cc1.SOUTH.getHeight() == y2 and start!='/':
                 changeList.append(cc1.SOUTH)
             cc1 = cc1.EAST
             while cc1.cell.y > y2:
                 cc1 = cc1.SOUTH
         #print"arealistv=", len(changeList)
-        for i in changeList:
-            #print"i",i.cell.x,i.cell.y,i.getHeight(),i.getWidth()
-            N=i.findNeighbors()
-            for j in N:
-                if j.cell.type==type and j not in changeList:
-                    RESP=1
-                    changeList.append(j)
-                elif j.nodeId!=0 and j.cell.type==type:
-                    RESP=1
+        if start != '/':
+            for i in changeList:
+                #print"i",i.cell.x,i.cell.y,i.getHeight(),i.getWidth()
+                N=i.findNeighbors()
+                for j in N:
+                    if j.cell.type==type and j not in changeList:
+                        RESP=1
+                        changeList.append(j)
+                    elif j.nodeId!=0 and j.cell.type==type:
+                        RESP=1
         changeList.sort(key=lambda cc: cc.cell.x)
         #print "RESP",RESP
         ##### Merge Algorithm:
@@ -1640,25 +1646,228 @@ class Vnode(Node):
 
             tile_list=[]
             tile_list.append(changeList[0])
-            for rect in changeList:
-                N = rect.findNeighbors()
-                for i in N:
-                    if i.cell.type == type:
-                        #print "1",i.nodeId
-                        N2 = i.findNeighbors()
-                        for j in N2:
-                            if j not in tile_list:
-                                tile_list.append(j)
-                    if i not in tile_list:
-                        tile_list.append(i)
+            if start=='/' and end =='/':
+                for rect in changeList:
+                    N = rect.findNeighbors()
+                    for i in N:
+                        if i not in tile_list:
+                            tile_list.append(i)
+            else:
+                for rect in changeList:
+                    N = rect.findNeighbors()
+                    for i in N:
+                        if i.cell.type == type:
+                            #print "1",i.nodeId
+                            N2 = i.findNeighbors()
+                            for j in N2:
+                                if j not in tile_list:
+                                    tile_list.append(j)
+                        if i not in tile_list:
+                            tile_list.append(i)
             #for rect in tile_list:
                 #print "iv",rect.cell.printCell(True,True,True),rect.nodeId
 
 
 
-            self.addChild(tile_list,Parent,type,RESP,end)
+            self.addChild(start,tile_list,Parent,type,RESP,end)
 
         return self.stitchList
+    def addChild(self,start, tile_list, parent, type,RESP,end):
+
+        #if parent==Vtree.vNodeList[0]:
+        if start=='/' and end =='/':
+            stitchList = []
+            boundaries = []
+            id = len(Vtree.vNodeList) + 1
+            for rect in tile_list:
+                #print "R", rect.cell.x, rect.cell.y
+
+                if rect.cell.type == type and rect.nodeId==None:
+                    rect.nodeId = id
+
+                    stitchList.append(rect)
+                else:
+
+                    boundaries.append(copy.copy(rect))
+
+            node = Vnode(parent=Parent, child=[], stitchList=copy.deepcopy(stitchList), id=id, boundaries=boundaries)
+
+            parent.child.append(node)
+            Vtree.vNodeList.append(node)
+        elif start == '/' and end != '/':
+            stitchList = []
+            boundaries = []
+            id = len(Vtree.vNodeList) + 1
+            for rect in tile_list:
+                # print "R", rect.cell.x, rect.cell.y
+
+                if rect.cell.type == type and rect.nodeId==None:
+                    rect.nodeId = id
+
+                    stitchList.append(rect)
+                else:
+
+                    boundaries.append(copy.copy(rect))
+
+            node = Vnode(parent=Parent, child=[], stitchList=copy.deepcopy(stitchList), id=id, boundaries=boundaries)
+
+            parent.child.append(node)
+            Vtree.vNodeList.append(node)
+        elif start!='/' and end !='/':
+            ID = 0
+            for rect in tile_list:
+                # if rect.cell.type == type:
+                if rect.cell.type != "EMPTY":
+                    if rect.nodeId > ID:
+                        ID = rect.nodeId
+            #print ID
+            for N in Vtree.vNodeList:
+
+                if N.id == ID:
+                    #print "N",ID
+                    node = N
+            id = node.id
+            stitchList = node.stitchList
+            boundaries = node.boundaries
+            for rect in boundaries:
+                if rect not in self.boundaries or rect.cell.type == type:
+                    boundaries.remove(rect)
+            for rect in stitchList:
+                if rect not in self.stitchList:
+                    stitchList.remove(rect)
+            for rect in tile_list:
+                # print "T",rect.cell.type
+                if rect.cell.type == type:
+                    rect.nodeId = id
+            for rect in tile_list:
+                # print "T",rect.cell.type
+
+                # if rect.cell.type == type and rect not in stitchList:
+                if rect not in stitchList and rect.nodeId == id:
+                    rect.nodeId = id
+
+                    stitchList.append(rect)
+                else:
+                    # if rect not in boundaries and rect.cell.type!=type:
+                    if rect not in boundaries :
+                        boundaries.append(copy.copy(rect))
+        elif start != '/' and end == '/':
+            ID = 0
+            for rect in tile_list:
+                # if rect.cell.type == type:
+                if rect.cell.type != "EMPTY":
+                    if rect.nodeId > ID:
+                        ID = rect.nodeId
+            for N in Vtree.vNodeList:
+
+                if N.id == ID:
+                    node = N
+            id = node.id
+            stitchList = node.stitchList
+            boundaries = node.boundaries
+            for rect in boundaries:
+                if rect not in self.boundaries or rect.cell.type == type:
+                    boundaries.remove(rect)
+            for rect in stitchList:
+                if rect not in self.stitchList:
+                    stitchList.remove(rect)
+            for rect in tile_list:
+                # print "T",rect.cell.type
+                if rect.cell.type == type:
+                    rect.nodeId = id
+            for rect in tile_list:
+                # print "T",rect.cell.type
+
+                # if rect.cell.type == type and rect not in stitchList:
+                if rect not in stitchList and rect.nodeId==id:
+                    rect.nodeId = id
+
+                    stitchList.append(rect)
+                else:
+                    # if rect not in boundaries and rect.cell.type!=type:
+                    if rect not in boundaries :
+                        boundaries.append(copy.copy(rect))
+            Vtree.vNodeList.remove(node)
+            Node = Vnode(parent=Parent, child=[], stitchList=copy.deepcopy(stitchList), id=id, boundaries=boundaries)
+            parent.child.append(Node)
+            Vtree.vNodeList.append(Node)
+        '''
+        else:
+            Flag = 0
+            Flag2 = 0
+            counter = 0
+            ID = 0
+            # print "LEN",len(tile_list)
+            for rect in tile_list:
+                if rect.cell.type == type:
+                    counter += 1
+                    if rect.nodeId > ID:
+                        ID = rect.nodeId
+
+            if counter > 1 or RESP == 1:
+                Flag = 1
+
+            if Flag == 1:
+                if ID != 0:
+                    for N in Vtree.vNodeList:
+
+                        if N.id == ID:
+                            node = N
+                            Flag2 = 1
+            # print "F",Flag,Flag2
+            if Flag2 == 1:
+
+                # Htree.hNodeList.remove(node)
+
+                id = node.id
+                stitchList = node.stitchList
+                boundaries = node.boundaries
+                for rect in boundaries:
+                    if rect not in self.boundaries or rect.cell.type == type:
+                        boundaries.remove(rect)
+                for rect in stitchList:
+                    if rect not in self.stitchList:
+                        stitchList.remove(rect)
+
+                for rect in tile_list:
+
+                    if rect.cell.type == type and rect not in stitchList:
+                        rect.nodeId = id
+
+                        stitchList.append(rect)
+                    else:
+                        if rect not in boundaries and rect.cell.type != type:
+                            boundaries.append(copy.copy(rect))
+                if end == '/':
+                    Vtree.vNodeList.remove(node)
+                    Node = Vnode(parent=Parent, child=[], stitchList=copy.deepcopy(stitchList), id=id,
+                                 boundaries=boundaries)
+                    Parent.child.append(Node)
+                    Vtree.vNodeList.append(Node)
+
+                # node = Hnode(parent=ParentH, child=[], stitchList=stitchList, id=id, boundaries=boundaries)
+                # parent.child.append(node)
+                # Htree.hNodeList.append(node)
+            if Flag == 0:
+                stitchList = []
+                boundaries = []
+                id = len(Vtree.vNodeList) + 1
+                for rect in tile_list:
+
+                    if rect.cell.type == type:
+                        rect.nodeId = id
+
+                        stitchList.append(rect)
+                    else:
+
+                        boundaries.append(copy.copy(rect))
+                # node = Vnode(parent=Parent, child=[], stitchList=stitchList, id=id, boundaries=boundaries)
+                node = Vnode(parent=Parent, child=[], stitchList=copy.deepcopy(stitchList), id=id,
+                             boundaries=boundaries)
+                Parent.child.append(node)
+                Vtree.vNodeList.append(node)
+        '''
+    '''
 
     def addChild(self, tile_list, parent, type,RESP,end):
 
@@ -1736,6 +1945,7 @@ class Vnode(Node):
             node = Vnode(parent=Parent, child=[], stitchList=copy.deepcopy(stitchList), id=id, boundaries=boundaries)
             Parent.child.append(node)
             Vtree.vNodeList.append(node)
+    '''
 
     """
     def addChild(self,tile_list,parent,type):
@@ -2054,8 +2264,8 @@ class Hnode(Node):
         for rect in self.stitchList:
 
             #if rect.cell.type == "Type_1":
-            if rect.cell.type=="EMPTY":
-                changeList.append(rect)
+            #if rect.cell.type=="EMPTY":
+            changeList.append(rect)
             #else:
                 #changeList1.append(rect)
 
@@ -2160,7 +2370,7 @@ class Hnode(Node):
             '''
         return self.stitchList
 
-    def insert(self, x1, y1, x2, y2, type,end):
+    def insert(self,start, x1, y1, x2, y2, type,end):
 
         """
         insert a new solid cell into the rectangle defined by the top left corner(x1, y1) and the bottom right corner
@@ -2185,7 +2395,7 @@ class Hnode(Node):
 
         # step 1: hsplit y1 and y2
         #print "IN",x1,y1,x2,y2
-
+        #print "start",start
         topLeft = self.findPoint(x1, y1, self.stitchList[0])
 
 
@@ -2217,54 +2427,49 @@ class Hnode(Node):
         cc = topLeft
 
         # if cc.WEST != self.westBoundary and cc.WEST.cell.type=="SOLID" and cc.WEST.cell.x+cc.WEST.getWidth()==x1 or cc.cell.type=="SOLID":
-        if cc.WEST not in self.boundaries and cc.WEST.cell.type == type and cc.WEST.cell.x + cc.WEST.getWidth() == x1 or cc.cell.type == type:
-            cc1 = cc.WEST
-            while cc1.cell.y + cc1.getHeight() < y1:
-                cc1 = cc1.NORTH
-            # print "testwx", cc1.cell.x
-            splitList.append(cc1)
-            # if cc1.cell.type=="SOLID" and cc1.cell.x+cc1.getWidth()==x1:
-            cc2 = cc1.WEST
-            # print"cc2=",cc2.cell.y+cc2.getHeight()
-            while cc2 not in self.boundaries and cc2.cell.y + cc2.getHeight() < y1:
-                cc2 = cc2.NORTH
-            if cc2 not in self.boundaries:
-                splitList.append(cc2)
+        if start!='/':
+            if cc.WEST not in self.boundaries and cc.WEST.cell.type == type and cc.WEST.cell.x + cc.WEST.getWidth() == x1 or cc.cell.type == type:
+                cc1 = cc.WEST
+                while cc1.cell.y + cc1.getHeight() < y1:
+                    cc1 = cc1.NORTH
+                # print "testwx", cc1.cell.x
+                splitList.append(cc1)
+                # if cc1.cell.type=="SOLID" and cc1.cell.x+cc1.getWidth()==x1:
+                cc2 = cc1.WEST
+                # print"cc2=",cc2.cell.y+cc2.getHeight()
+                while cc2 not in self.boundaries and cc2.cell.y + cc2.getHeight() < y1:
+                    cc2 = cc2.NORTH
+                if cc2 not in self.boundaries:
+                    splitList.append(cc2)
         # print"cc.x",cc.cell.x
 
-        while cc.cell.x <= tr.cell.x and cc not in self.boundaries:  # it was only <x2
-            if cc not in splitList:
-                # print "testx",cc.cell.x+cc.getWidth()
-                splitList.append(cc)
+            while cc.cell.x <= tr.cell.x and cc not in self.boundaries:  # it was only <x2
+                if cc not in splitList:
+                    # print "testx",cc.cell.x+cc.getWidth()
+                    splitList.append(cc)
 
-            cc = cc.EAST
-            # print"cc.x2", cc.cell.y
-            while cc.cell.y >= y1 and cc not in self.boundaries:  # previously it was >y1
-                cc = cc.SOUTH
+                cc = cc.EAST
+                # print"cc.x2", cc.cell.y
+                while cc.cell.y >= y1 and cc not in self.boundaries:  # previously it was >y1
+                    cc = cc.SOUTH
         #print"splitListy1=", len(splitList),splitList[0].cell.x,splitList[0].cell.y
         # if cc.cell.type=="SOLID" and cc.cell.x==x2 and cc!=self.eastBoundary or tr.cell.type=="SOLID" :##and tr.cell.y!=y1 and cc!=self.eastBoundary)
-        if cc.cell.type == type and cc.cell.x == x2 and cc not in self.boundaries or tr.cell.type == type:  ##and tr.cell.y!=y1 and cc!=self.eastBoundary)
-            # print "testex", cc.cell.x
-            splitList.append(cc)
-
-            if cc.EAST not in self.boundaries:
-                cc = cc.EAST
-
-                while cc.cell.y >= y1:  # previously it was >y1
-                    cc = cc.SOUTH
-                
+            if cc.cell.type == type and cc.cell.x == x2 and cc not in self.boundaries or tr.cell.type == type:  ##and tr.cell.y!=y1 and cc!=self.eastBoundary)
+                # print "testex", cc.cell.x
                 splitList.append(cc)
 
+                if cc.EAST not in self.boundaries:
+                    cc = cc.EAST
 
-        #print"splitListy1=",len(splitList),splitList[0].cell.x,splitList[0].cell.y
-        '''
-        for rect in splitList:
-            # print "height=",rect.cell.y+rect.getHeight()
-            if y1 != rect.cell.y and y1 != rect.NORTH.cell.y:self.hSplit(rect, y1)
-        '''
+                    while cc.cell.y >= y1:  # previously it was >y1
+                        cc = cc.SOUTH
+
+                    splitList.append(cc)
+
+
 
         for rect in splitList:
-            #print rect.cell.y
+            #print "y",rect.cell.y
             i = self.stitchList.index(rect)
             if y1 != rect.cell.y and y1 != rect.NORTH.cell.y: self.hSplit(i, y1)
 
@@ -2279,39 +2484,40 @@ class Hnode(Node):
         splitList = []
         splitList.append(bottomRight)
         cc = bottomRight
+        if start!='/':
         # if cc.EAST!= self.eastBoundary and cc.EAST.cell.type=="SOLID" and cc.EAST.cell.x==x2 or cc.cell.type=="SOLID":
-        if cc.EAST not in self.boundaries and cc.EAST.cell.type == type and cc.EAST.cell.x == x2 or cc.cell.type == type:
-            cc1 = cc.EAST
-            while cc1.cell.y > y2:
-                cc1 = cc1.SOUTH
-            splitList.append(cc1)
-            # if cc1.cell.type=="SOLID" and cc1.cell.x==x2:
-            if cc1.cell.type == type and cc1.cell.x == x2:
-                cc2 = cc1.EAST
-                while cc2.cell.y > y2:
-                    cc2 = cc2.SOUTH
-                splitList.append(cc2)
+            if cc.EAST not in self.boundaries and cc.EAST.cell.type == type and cc.EAST.cell.x == x2 or cc.cell.type == type:
+                cc1 = cc.EAST
+                while cc1.cell.y > y2:
+                    cc1 = cc1.SOUTH
+                splitList.append(cc1)
+                # if cc1.cell.type=="SOLID" and cc1.cell.x==x2:
+                if cc1.cell.type == type and cc1.cell.x == x2:
+                    cc2 = cc1.EAST
+                    while cc2.cell.y > y2:
+                        cc2 = cc2.SOUTH
+                    splitList.append(cc2)
 
-        while cc.cell.x >= x1 and cc not in self.boundaries:  # it was cc.WEST!= (previously >x1)
-            cc = cc.WEST
+            while cc.cell.x >= x1 and cc not in self.boundaries:  # it was cc.WEST!= (previously >x1)
+                cc = cc.WEST
 
-            if cc not in self.boundaries:
-                while cc.cell.y + cc.getHeight() <= y2:  # previously it was <y2
-                    cc = cc.NORTH
-            if cc not in splitList and cc.cell.type==type: ########################### added  and cc.cell.type==type
-                splitList.append(cc)
+                if cc not in self.boundaries:
+                    while cc.cell.y + cc.getHeight() <= y2:  # previously it was <y2
+                        cc = cc.NORTH
+                if cc not in splitList and cc.cell.type==type: ########################### added  and cc.cell.type==type
+                    splitList.append(cc)
         #print "L", len(splitList)
         #print"cc2.x", cc.cell.x
         # if cc.cell.type=="SOLID" and cc.cell.x+cc.getWidth()>=x1 or bl.cell.type=="SOLID"   :#previously it was ==x1 or bl.cell.x+bl.getWidth()>x1
-        if cc.cell.type == type and cc.cell.x + cc.getWidth() >= x1 or bl.cell.type == type:  # previously it was ==x1 or bl.cell.x+bl.getWidth()>x1
-            if cc not in splitList:
-                splitList.append(cc)
+            if cc.cell.type == type and cc.cell.x + cc.getWidth() >= x1 or bl.cell.type == type:  # previously it was ==x1 or bl.cell.x+bl.getWidth()>x1
+                if cc not in splitList:
+                    splitList.append(cc)
 
-            if cc.WEST not in self.boundaries:
-                cc1 = cc.WEST
-                while cc1.cell.y + cc1.getHeight() <= y2:  # previously it was <y2
-                    cc1 = cc1.NORTH
-                splitList.append(cc1)
+                if cc.WEST not in self.boundaries:
+                    cc1 = cc.WEST
+                    while cc1.cell.y + cc1.getHeight() <= y2:  # previously it was <y2
+                        cc1 = cc1.NORTH
+                    splitList.append(cc1)
 
 
         #print"splitListy2=", len(splitList),splitList[0].cell.x,splitList[0].cell.y
@@ -2360,7 +2566,7 @@ class Hnode(Node):
         #print"vlistx2=", len(changeList),changeList[0].cell.x,changeList[0].cell.y,changeList[0].getWidth(),changeList[0].getHeight()
 
         for rect in changeList:  # split vertically
-            print rect.cell.x, rect.cell.y, rect.getHeight(), rect.getWidth()
+            #print rect.cell.x, rect.cell.y, rect.getHeight(), rect.getWidth()
             if not rect.EAST.cell.x == x2: self.vSplit(rect, x2)  # do not reorder these lines
 
             #print len(self.stitchList)
@@ -2373,48 +2579,49 @@ class Hnode(Node):
         #for foo in self.stitchList:
             #if foo.cell.type!="EMPTY":
                 #print "foo",foo.cell.x,foo.cell.y,foo.getWidth(),foo.getHeight()
-        cc = self.findPoint(x2, y2, self.stitchList[0]).WEST  ##There was topLeft.SOUTH
-        #
-        #print "CC", cc.cell.x,cc.cell.y+cc.getHeight(),y1
-        while cc not in self.boundaries and cc.cell.y + cc.getHeight() <= y1:
-            cc1 = cc
-            #print"resplitsouth=", cc.cell.x, cc.cell.y
-            resplit = []
-            min_y = 100000
-            while cc1 not in self.boundaries and cc1.cell.x >= x1:
-                if cc1.cell.y + cc1.getHeight() < min_y:
-                    min_y = cc1.cell.y + cc1.getHeight()
-                resplit.append(cc1)
-                if cc1.cell.x == x1 and cc1.WEST.cell.type==type :##########3and cc1.WEST.cell.type==type added
-                    resplit.append(cc1.WEST)
-                    # if cc1.WEST.cell.type=="SOLID":
-                    if cc1.WEST.cell.type == type:
-                        resplit.append(cc1.WEST.WEST)
-                if cc1.EAST.cell.x == x2 :#####and cc1.EAST.cell.type==type
-                    resplit.append(cc1.EAST)
-                    # if cc1.EAST.cell.type=="SOLID":
-                    if cc1.EAST.cell.type == type:
-                        resplit.append(cc1.EAST.EAST)
+        if start!='/':
+            cc = self.findPoint(x2, y2, self.stitchList[0]).WEST  ##There was topLeft.SOUTH
+            #
+            #print "CC", cc.cell.x,cc.cell.y+cc.getHeight(),y1
+            while cc not in self.boundaries and cc.cell.y + cc.getHeight() <= y1:
+                cc1 = cc
+                #print"resplitsouth=", cc.cell.x, cc.cell.y
+                resplit = []
+                min_y = 100000
+                while cc1 not in self.boundaries and cc1.cell.x >= x1:
+                    if cc1.cell.y + cc1.getHeight() < min_y:
+                        min_y = cc1.cell.y + cc1.getHeight()
+                    resplit.append(cc1)
+                    if cc1.cell.x == x1 and cc1.WEST.cell.type==type :##########3and cc1.WEST.cell.type==type added
+                        resplit.append(cc1.WEST)
+                        # if cc1.WEST.cell.type=="SOLID":
+                        if cc1.WEST.cell.type == type:
+                            resplit.append(cc1.WEST.WEST)
+                    if cc1.EAST.cell.x == x2 :#####and cc1.EAST.cell.type==type
+                        resplit.append(cc1.EAST)
+                        # if cc1.EAST.cell.type=="SOLID":
+                        if cc1.EAST.cell.type == type:
+                            resplit.append(cc1.EAST.EAST)
 
-                cc1 = cc1.WEST
+                    cc1 = cc1.WEST
 
 
-            if len(resplit) > 1:
-                for foo in resplit:
-                    #print"foo", foo.cell.x,foo.cell.y
-                    if foo.cell.y + foo.getHeight() > min_y:
-                        # if foo.cell.y+foo.getHeight()!= min_y:
-                        #print"split"
-                        if min_y != foo.cell.y and min_y != foo.NORTH.cell.y:
-                            #RESP=1
-                            k=self.stitchList.index(foo)
-                            self.hSplit(k, min_y)
-            #print cc.cell.x,cc.cell.y
-            if cc.NORTH not in self.boundaries:
-                cc = cc.NORTH
-                 #print"1"
-            else:
-                break
+                if len(resplit) > 1:
+                    for foo in resplit:
+                        #print"foo", foo.cell.x,foo.cell.y
+                        if foo.cell.y + foo.getHeight() > min_y:
+                            # if foo.cell.y+foo.getHeight()!= min_y:
+                            #print"split"
+                            if min_y != foo.cell.y and min_y != foo.NORTH.cell.y:
+                                #RESP=1
+                                k=self.stitchList.index(foo)
+                                self.hSplit(k, min_y)
+                #print cc.cell.x,cc.cell.y
+                if cc.NORTH not in self.boundaries:
+                    cc = cc.NORTH
+                     #print"1"
+                else:
+                    break
 
         # changeList = []
 
@@ -2455,7 +2662,7 @@ class Hnode(Node):
                         while t.cell.x + t.getWidth() <= x1:
                             t = t.EAST
                         # if t.WEST.cell.type == "SOLID" and t.WEST.cell.x + t.WEST.getWidth() == x1:
-                        if t.WEST.cell.type == type and t.WEST.cell.x + t.WEST.getWidth() == x1:
+                        if t.WEST.cell.type == type and t.WEST.cell.x + t.WEST.getWidth() == x1 and start!='/':
                             changeList.append(t.WEST)
                         dirn = 1
                     elif t.cell.x + t.getWidth() < x2:  # it was <=
@@ -2473,15 +2680,16 @@ class Hnode(Node):
                 if t not in changeList:
                     changeList.append(t)
         #print "arealist=", len(changeList),type
-        for i in changeList:
-            #print"i",i.cell.x,i.cell.y,i.getHeight(),i.getWidth(),i.cell.type
-            N=i.findNeighbors()
-            for j in N:
-                if j.cell.type==type and j not in changeList:
-                    RESP=1
-                    changeList.append(j)
-                elif j.nodeId!=0 and j.cell.type==type:
-                    RESP=1
+        if start!='/':
+            for i in changeList:
+                #print"i",i.cell.x,i.cell.y,i.getHeight(),i.getWidth(),i.cell.type
+                N=i.findNeighbors()
+                for j in N:
+                    if j.cell.type==type and j not in changeList:
+                        RESP=1
+                        changeList.append(j)
+                    elif j.nodeId!=0 and j.cell.type==type:
+                        RESP=1
 
         ## New Merge Algorithm v2
 
@@ -2596,6 +2804,25 @@ class Hnode(Node):
 
             tile_list = []
             tile_list.append(changeList[0])
+            if start == '/' and end == '/':
+                for rect in changeList:
+                    N = rect.findNeighbors()
+                    for i in N:
+                        if i not in tile_list:
+                            tile_list.append(i)
+            else:
+                for rect in changeList:
+                    N = rect.findNeighbors()
+                    for i in N:
+                        if i.cell.type == type:
+                            # print "1",i.nodeId
+                            N2 = i.findNeighbors()
+                            for j in N2:
+                                if j not in tile_list:
+                                    tile_list.append(j)
+                        if i not in tile_list:
+                            tile_list.append(i)
+            '''
             for rect in changeList:
                 N = rect.findNeighbors()
                 for i in N:
@@ -2607,18 +2834,227 @@ class Hnode(Node):
                                 tile_list.append(j)
                     if i not in tile_list:
                         tile_list.append(i)
+            '''
             #for i in tile_list:
                 #print"i", i.cell.x, i.cell.y, i.getHeight(), i.getWidth(),i.cell.type
 
-            self.addChild(tile_list, ParentH, type,RESP,end)
+            self.addChild(start,tile_list, ParentH, type,RESP,end)
 
 
 
         return self.stitchList
 
-    def addChild(self, tile_list, parent, type,RESP,end):
+    def addChild(self,start, tile_list, parent, type,RESP,end):
 
-        Flag = 0
+        #if parent ==Htree.hNodeList[0]:
+        if start=='/' and end =='/':
+            stitchList = []
+            boundaries = []
+            id = len(Htree.hNodeList) + 1
+            for rect in tile_list:
+                #print "R", rect.cell.x, rect.cell.y
+
+                if rect.cell.type == type and rect.nodeId==None:
+                    rect.nodeId = id
+
+                    stitchList.append(rect)
+                else:
+
+                    boundaries.append(copy.copy(rect))
+
+            node = Hnode(parent=ParentH, child=[], stitchList=copy.deepcopy(stitchList), id=id, boundaries=boundaries)
+
+            parent.child.append(node)
+            Htree.hNodeList.append(node)
+        elif start == '/' and end != '/':
+            stitchList = []
+            boundaries = []
+            id = len(Htree.hNodeList) + 1
+            for rect in tile_list:
+                # print "R", rect.cell.x, rect.cell.y
+
+                if rect.cell.type == type and rect.nodeId==None:
+                    rect.nodeId = id
+
+                    stitchList.append(rect)
+                else:
+
+                    boundaries.append(copy.copy(rect))
+
+            node = Hnode(parent=ParentH, child=[], stitchList=copy.deepcopy(stitchList), id=id, boundaries=boundaries)
+
+            parent.child.append(node)
+            Htree.hNodeList.append(node)
+        elif start!='/' and end !='/':
+            ID = 0
+            for rect in tile_list:
+                # if rect.cell.type == type:
+                if rect.cell.type != "EMPTY":
+                    if rect.nodeId > ID:
+                        ID = rect.nodeId
+
+            for N in Htree.hNodeList:
+
+                if N.id == ID:
+                    node = N
+            id = node.id
+            stitchList = node.stitchList
+            boundaries = node.boundaries
+            for rect in boundaries:
+                if rect not in self.boundaries:
+                    boundaries.remove(rect)
+            for rect in stitchList:
+                if rect not in self.stitchList:
+                    stitchList.remove(rect)
+
+            for rect in tile_list:
+                # print "T",rect.cell.type
+                if rect.cell.type == type:
+                    rect.nodeId = id
+                # if rect.cell.type == type and rect not in stitchList:
+                if rect not in stitchList and rect.nodeId == id:
+                    # rect.nodeId = id
+
+                    stitchList.append(rect)
+                else:
+                    # if rect not in boundaries and rect.cell.type!=type:
+                    if rect not in boundaries:
+                        boundaries.append(copy.copy(rect))
+        elif start != '/' and end == '/':
+            ID=0
+            for rect in tile_list:
+                # if rect.cell.type == type:
+                if rect.cell.type != "EMPTY":
+                    if rect.nodeId>ID:
+                        ID=rect.nodeId
+
+
+            for N in Htree.hNodeList:
+
+                if N.id == ID:
+                    node = N
+            id = node.id
+            stitchList = node.stitchList
+            boundaries = node.boundaries
+            for rect in boundaries:
+                if rect not in self.boundaries :
+                    boundaries.remove(rect)
+            for rect in stitchList:
+                if rect not in self.stitchList:
+                    stitchList.remove(rect)
+
+            for rect in tile_list:
+                # print "T",rect.cell.type
+                if rect.cell.type==type:
+                    rect.nodeId=id
+                # if rect.cell.type == type and rect not in stitchList:
+                if rect not in stitchList and rect.nodeId==id:
+                    #rect.nodeId = id
+
+                    stitchList.append(rect)
+                else:
+                    # if rect not in boundaries and rect.cell.type!=type:
+                    if rect not in boundaries :
+                        boundaries.append(copy.copy(rect))
+            Htree.hNodeList.remove(node)
+            Node = Hnode(parent=ParentH, child=[], stitchList=copy.deepcopy(stitchList), id=id, boundaries=boundaries)
+            parent.child.append(Node)
+            Htree.hNodeList.append(Node)
+        '''
+        else:
+            Flag = 0
+            Flag2 = 0
+            counter = 0
+            ID = 0
+            # print "LEN",len(tile_list)
+
+            for rect in tile_list:
+                if rect.cell.type == type:
+                    # if rect.cell.type !="EMPTY":
+                    # print "R",rect.cell.x,rect.cell.y
+                    counter += 1
+                    if rect.nodeId > ID:
+                        ID = rect.nodeId
+            # print "RES",RESP
+            if counter > 1 or RESP == 1:
+                # if counter > 1 or end!='/':
+                Flag = 1
+
+            if Flag == 1:
+                if ID != 0:
+                    for N in Htree.hNodeList:
+
+                        if N.id == ID:
+                            node = N
+                            Flag2 = 1
+            # print "F",Flag,Flag2
+
+            # if end!=None:
+            if Flag2 == 1:
+                # i=Htree.hNodeList.index(node)
+                # Htree.hNodeList.remove(node)
+
+                id = node.id
+                stitchList = node.stitchList
+                boundaries = node.boundaries
+                for rect in boundaries:
+                    if rect not in self.boundaries or rect.cell.type == type:
+                        boundaries.remove(rect)
+                for rect in stitchList:
+                    if rect not in self.stitchList:
+                        stitchList.remove(rect)
+
+                for rect in tile_list:
+                    # print "T",rect.cell.type
+
+                    # if rect.cell.type == type and rect not in stitchList:
+                    if rect not in stitchList and rect.cell.type != "EMPTY":
+                        rect.nodeId = id
+
+                        stitchList.append(rect)
+                    else:
+                        # if rect not in boundaries and rect.cell.type!=type:
+                        if rect not in boundaries and rect.cell.type != type:
+                            boundaries.append(copy.copy(rect))
+                if end == '/':
+                    Htree.hNodeList.remove(node)
+                    Node = Hnode(parent=ParentH, child=[], stitchList=copy.deepcopy(stitchList), id=id,
+                                 boundaries=boundaries)
+                    parent.child.append(Node)
+                    Htree.hNodeList.append(Node)
+
+                # node = Hnode(parent=ParentH, child=[], stitchList=copy.deepcopy(stitchList), id=id, boundaries=boundaries)
+                # parent.child.append(node)
+                # Htree.hNodeList.insert(i,node)
+            if Flag == 0:
+                stitchList = []
+                boundaries = []
+                id = len(Htree.hNodeList) + 1
+                for rect in tile_list:
+                    print "R", rect.cell.x, rect.cell.y
+
+                    if rect.cell.type == type:
+                        rect.nodeId = id
+
+                        stitchList.append(rect)
+                    else:
+
+                        boundaries.append(copy.copy(rect))
+
+                node = Hnode(parent=ParentH, child=[], stitchList=copy.deepcopy(stitchList), id=id,
+                             boundaries=boundaries)
+
+                parent.child.append(node)
+                Htree.hNodeList.append(node)
+        '''
+
+
+
+
+
+    '''
+    def addChild(self, tile_list, parent, type):
+            Flag = 0
         Flag2 = 0
         counter = 0
         ID = 0
@@ -2702,8 +3138,7 @@ class Hnode(Node):
 
             parent.child.append(node)
             Htree.hNodeList.append(node)
-    '''
-    def addChild(self, tile_list, parent, type):
+        ################################################################################################################
 
 
         Flag = 0
@@ -3047,7 +3482,7 @@ if __name__ == '__main__':
 
         print inp
 
-        if inp[0] == "." and inp[1]!=".":
+        if inp[1] == "." and inp[2]!=".":
 
             for i in reversed(Htree.hNodeList):
                 if i.parent.id==1:
@@ -3055,11 +3490,11 @@ if __name__ == '__main__':
                     ParentH = i
                     break
             CHILDH=ParentH
-            print "PAR",CHILDH.id,len(CHILDH.stitchList)
+            #print "PAR",CHILDH.id,len(CHILDH.stitchList)
 
             #CHILDH=copy.copy(ParentH)
             #CHILDH=Hnode(boundaries =ParentH.boundaries, child = ParentH.child, stitchList =ParentH.stitchList , parent =ParentH.parent, id = ParentH.id)
-            CHILDH.insert(int(inp[1]), int(inp[2]), int(inp[3]), int(inp[4]), inp[5],inp[6])
+            CHILDH.insert(inp[0],int(inp[2]), int(inp[3]), int(inp[4]), int(inp[5]), inp[6],inp[7])
 
             #L = len(Vtree.vNodeList)
             #print int(inp[1]), int(inp[2]), int(inp[3]), int(inp[4]), inp[5]
@@ -3072,9 +3507,9 @@ if __name__ == '__main__':
             CHILD=Parent
             #print "PAR",Parent.id
             #CHILD=Vnode(boundaries =Parent.boundaries, child = Parent.child, stitchList = Parent.stitchList, parent =Parent.parent, id = Parent.id)
-            CHILD.insert(int(inp[1]), int(inp[2]), int(inp[3]), int(inp[4]), inp[5],inp[6])
+            CHILD.insert(inp[0],int(inp[2]), int(inp[3]), int(inp[4]), int(inp[5]), inp[6],inp[7])
 
-        if inp[0] == "." and inp[1]==".":
+        if inp[1] == "." and inp[2]==".":
 
             #L = len(Vtree.vNodeList)
             #print int(inp[2]), int(inp[2]), int(inp[3]), int(inp[4]), inp[5]
@@ -3088,7 +3523,7 @@ if __name__ == '__main__':
             CHILDH=ParentH
             #CHILDH = copy.copy(ParentH)
             #CHILDH=Hnode(boundaries =ParentH.boundaries[:], child = ParentH.child[:], stitchList = ParentH.stitchList[:], parent =ParentH.parent, id =ParentH.id+1)
-            CHILDH.insert(int(inp[2]), int(inp[3]), int(inp[4]), int(inp[5]), inp[6],inp[7])
+            CHILDH.insert(inp[0],int(inp[3]), int(inp[4]), int(inp[5]), int(inp[6]), inp[7],inp[8])
 
             for i in reversed(Vtree.vNodeList):
                 if i.parent.id==1:
@@ -3099,20 +3534,22 @@ if __name__ == '__main__':
             Parent=med.child[-1]
             CHILD=Parent
             #CHILD=Vnode(boundaries =copy.copy(Parent.boundaries), child = copy.copy(Parent.child), stitchList = copy.copy(Parent.stitchList), parent =copy.copy(Parent.parent), id =Parent.id)
-            CHILD.insert(int(inp[2]), int(inp[3]), int(inp[4]), int(inp[5]), inp[6],inp[7])
+            CHILD.insert(inp[0],int(inp[3]), int(inp[4]), int(inp[5]), int(inp[6]), inp[7],inp[8])
 
-        if inp[0]!=".":
+        if inp[1]!=".":
+            start = inp[0]
             Parent = Vtree.vNodeList[0]
             #for i in Parent:
             #print"VL", len(Parent.stitchList)
-            Parent.insert(int(inp[0]), int(inp[1]), int(inp[2]), int(inp[3]), inp[4],inp[5])
 
+            #Parent.insert(int(inp[0]), int(inp[1]), int(inp[2]), int(inp[3]), inp[4],inp[5])
+            Parent.insert(start,int(inp[1]), int(inp[2]), int(inp[3]), int(inp[4]), inp[5], inp[6])
 
 
             ParentH = Htree.hNodeList[0]
             #print"HL", len(ParentH.stitchList)
-            ParentH.insert(int(inp[0]), int(inp[1]), int(inp[2]), int(inp[3]), inp[4],inp[5])
-
+            #ParentH.insert(int(inp[0]), int(inp[1]), int(inp[2]), int(inp[3]), inp[4],inp[5])
+            ParentH.insert(start, int(inp[1]), int(inp[2]), int(inp[3]), int(inp[4]), inp[5], inp[6])
 
     '''
     CG = cg.constraintGraph(testdir + '/' + testbase, testdir + '/' + testbase)
@@ -3127,9 +3564,11 @@ if __name__ == '__main__':
     '''
 
     print "Result"
-
-    Hnode.Final_Merge(Htree.hNodeList[0])
-    Vnode.Final_Merge(Vtree.vNodeList[0])
+    for node in Htree.hNodeList:
+        Hnode.Final_Merge(node)
+    #Hnode.Final_Merge(Htree.hNodeList[0])
+    for node in Vtree.vNodeList:
+        Vnode.Final_Merge(node)
     #for node in Htree.hNodeList:
         #node.Final_Merge()
     #for node in Vtree.vNodeList:
@@ -3244,166 +3683,208 @@ if __name__ == '__main__':
         # edgeList = copy.deepcopy(getattr(self.CG, "edgesv"))
         # print "EDGE=",edgeList
         arrowList1 = []
+
         for node in nodeList:
             for cell in node.stitchList:
                 #for rect in self.Newcornerstitch_v.stitchList:
                 # rect.cell.printCell(True,True)
                 if cell.cell.type != "EMPTY":
                     color = "blue"
-                    arrowList1.append((cell.cell.getX(), cell.cell.getY() , 0,cell.getHeight(), color))
+                    arrowList1.append((cell.cell.getX(), cell.cell.getY() ,0,cell.getHeight(), color))
+
 
                 elif cell.cell.type == "EMPTY":
                     color = "red"
-                    arrowList1.append((cell.cell.getX(), cell.cell.getY(),cell.getWidth(), 0,  color))
+                    arrowList1.append((cell.cell.getX(), cell.cell.getY(),cell.getWidth(),0,  color))
+
                 # for foo in arrowList:
                 # print foo
         return arrowList1
+    def findGraphEdges3(nodeList):
+        # matrixCopy = np.copy(self.CG.getVertexMatrixv())
+        # print matrixCopy[0][1]
+        # edgeList = copy.deepcopy(getattr(self.CG, "edgesv"))
+        # print "EDGE=",edgeList
+
+        arrowList2=[]
+        for node in nodeList:
+            for cell in node.stitchList:
+                #for rect in self.Newcornerstitch_v.stitchList:
+                # rect.cell.printCell(True,True)
+                if cell.cell.type != "EMPTY":
+                    color = "blue"
+
+                    arrowList2.append((cell.cell.getX(), cell.cell.getY(), cell.getWidth(),0, color))
+
+                elif cell.cell.type == "EMPTY":
+                    color = "red"
+
+                    arrowList2.append((cell.cell.getX(), cell.cell.getY(), 0, cell.getHeight(), color))
+                # for foo in arrowList:
+                # print foo
+        return arrowList2
+
+
     def drawLayer2(nodelist, truePointer=False):
         """
         Draw all cells in this cornerStitch with stitches pointing to their stitch neighbors
         TODO:
          Also should probably change the dimensions of the object window depending on the cornerStitch size.
         """
+        NODE=[]
+        for node in nodelist:
+            N={}
+            key=node.id
+            N.setdefault(key,[])
+            if node.child!=[]:
+                for i in node.child :
+                    if  i.id not in N[key]:
+                        N[key].append(i.id)
+                NODE.append(N)
+        print NODE
+        KEYS=[]
+        for i in NODE:
+            KEYS.append(i.keys()[0])
 
-        # fig2 = matplotlib.pyplot.figure()
-        # node=nodelist[0]
-        fig3, ax2= plt.subplots()
-        #arrowList2=[]
+        print KEYS
+
+
+        # arrowList2=[]
         for node in nodelist:
 
+            if node.id==1:
+                fig4=plt.figure()
+                ax4 = plt.axes(xlim=(0, 60), ylim=(0, 60))
+                for cell in node.stitchList:
 
-            # ax4 = fig2.add_subplot(111, aspect='equal')
-            for cell in node.stitchList:
-                if not cell.cell.type == "EMPTY":
-                    if cell.cell.type=="Type_1":
-                        #colour='green'
-                        pattern = '\\'
-                    elif cell.cell.type=="Type_2":
-                        #colour='red'
-                        pattern='+'
-                    elif cell.cell.type=="Type_3":
-                        #colour='blue'
-                        pattern = '..'
-                    elif cell.cell.type=="Type_4":
-                        #colour='black'
-                        pattern = '*'
-                    '''
-                    if cell.cell.type == "Type_1":
-                        colour = 'green'
-                    elif cell.cell.type == "Type_2":
-                        colour = 'red'
-                    elif cell.cell.type == "Type_3":
-                        colour = 'blue'
-                    elif cell.cell.type=="Type_4":
-                        colour='black'
-                        '''
-                    ax2.add_patch(
-                        matplotlib.patches.Rectangle(
-                            (cell.cell.x, cell.cell.y),  # (x,y)
-                            cell.getWidth(),  # width
-                            cell.getHeight(),  # height
-                            hatch=pattern,
-                            fill=False
+                    if not cell.cell.type == "EMPTY":
 
+                        if cell.cell.type == "Type_1":
+                            colour = 'green'
+                        elif cell.cell.type == "Type_2":
+                            colour = 'red'
+                        elif cell.cell.type == "Type_3":
+                            colour = 'blue'
+                        elif cell.cell.type == "Type_4":
+                            colour = 'black'
+
+                        ax4.add_patch(
+                            matplotlib.patches.Rectangle(
+                                (cell.cell.x, cell.cell.y),  # (x,y)
+                                cell.getWidth(),  # width
+                                cell.getHeight(),  # height
+
+                                facecolor=colour,edgecolor='blue'
+
+
+                            )
                         )
-                    )
-                else:
-                    pattern = ''
+                    else:
+                        pattern = ''
 
-
-                    ax2.add_patch(
-                        matplotlib.patches.Rectangle(
-                            (cell.cell.x, cell.cell.y),  # (x,y)
-                            cell.getWidth(),  # width
-                            cell.getHeight(),  # height
-                            hatch=pattern,
-                            fill=False
+                        ax4.add_patch(
+                            matplotlib.patches.Rectangle(
+                                (cell.cell.x, cell.cell.y),  # (x,y)
+                                cell.getWidth(),  # width
+                                cell.getHeight(),  # height
+                                hatch=pattern,
+                                fill=False
+                            )
                         )
-                    )
+            fig3, ax2 = plt.subplots()
+
+            if node.parent==nodelist[0] and node.child==[]:
+                #print"!!!!!!",node.id
+                for cell in node.stitchList:
+
+                    if not cell.cell.type == "EMPTY":
+                       
+                        if cell.cell.type == "Type_1":
+                            colour = 'green'
+                        elif cell.cell.type == "Type_2":
+                            colour = 'red'
+                        elif cell.cell.type == "Type_3":
+                            colour = 'blue'
+                        elif cell.cell.type=="Type_4":
+                            colour='black'
+
+                        ax2.add_patch(
+                            matplotlib.patches.Rectangle(
+                                (cell.cell.x, cell.cell.y),  # (x,y)
+                                cell.getWidth(),  # width
+                                cell.getHeight(),  # height
+
+                                color=colour,
 
 
-                # NORTH pointer
-                if cell.getNorth() in node.boundaries:
-                    dx = 0
-                    dy = 0
-                elif truePointer:
-                    dx = cell.getNorth().cell.x + (.5 * cell.getNorth().getWidth()) - (cell.cell.x + cell.getWidth()) + .5
-                    dy = cell.getNorth().cell.y + (.5 * cell.getNorth().getHeight()) - (cell.cell.y + cell.getHeight()) + .5
-                else:
-                    dx = 0
-                    dy = .75
+                            )
+                        )
+                    else:
+                        pattern = ''
 
-                ax2.arrow((cell.cell.x + cell.getWidth() - .5),
-                          (cell.cell.y + cell.getHeight() - .5),
-                          dx,
-                          dy,
-                          head_width=.25,
-                          head_length=.25,
-                          fc='k',
-                          ec='k'
-                          )
-                # EAST pointer
-                if cell.getEast() in node.boundaries:
-                    dx = 0
-                    dy = 0
-                elif truePointer:
-                    dx = cell.getEast().cell.x + (.5 * cell.getEast().getWidth()) - (cell.cell.x + cell.getWidth()) + .5
-                    dy = cell.getEast().cell.y + (.5 * cell.getEast().getHeight()) - (cell.cell.y + cell.getHeight()) + .5
-                else:
-                    dx = .75
-                    dy = 0
-                ax2.arrow((cell.cell.x + cell.getWidth() - .5),
-                          (cell.cell.y + cell.getHeight() - .5),
-                          dx,
-                          dy,
-                          head_width=.25,
-                          head_length=.25,
-                          fc='k',
-                          ec='k'
-                          )
-                # SOUTH pointer
-                if cell.getSouth() in node.boundaries:
-                    dx = 0
-                    dy = 0
-                elif truePointer:
-                    dx = cell.getSouth().cell.x + (.5 * cell.getSouth().getWidth()) - (cell.cell.x + .5)
-                    dy = cell.getSouth().cell.y + (.5 * cell.getSouth().getHeight()) - (cell.cell.y + .5)
-                else:
-                    dx = 0
-                    dy = -.5
-                ax2.arrow((cell.cell.x + .5),
-                          (cell.cell.y + .5),
-                          dx,
-                          dy,
-                          head_width=.25,
-                          head_length=.25,
-                          fc='k',
-                          ec='k'
-                          )
-                # WEST pointer
-                if cell.getWest() in node.boundaries:
-                    dx = 0
-                    dy = 0
-                elif truePointer:
-                    dx = cell.getWest().cell.x + (.5 * cell.getWest().getWidth()) - (cell.cell.x + .5)
-                    dy = cell.getWest().cell.y + (.5 * cell.getWest().getHeight()) - (cell.cell.y + .5)
-                else:
-                    dx = -.5
-                    dy = 0
-                ax2.arrow((cell.cell.x + .5),
-                          (cell.cell.y + .5),
-                          dx,
-                          dy,
-                          head_width=.25,
-                          head_length=.25,
-                          fc='k',
-                          ec='k'
-                          )
+                        ax2.add_patch(
+                            matplotlib.patches.Rectangle(
+                                (cell.cell.x, cell.cell.y),  # (x,y)
+                                cell.getWidth(),  # width
+                                cell.getHeight(),  # height
+                                hatch=pattern,
+                                fill=False
+                            )
+                        )
+            elif node.id in KEYS:
 
-            for arr in findGraphEdges2(nodelist):
-                ax2.arrow(arr[0], arr[1], arr[2], arr[3], head_width=.09, head_length=.09, color=arr[4])  #
-        # p = PatchCollection(self.drawZeroDimsVertices2())
-        # ax4.add_collection(p)
+
+                if node==nodelist[0]: continue
+                #print "I",node.id
+                for cell in node.stitchList:
+
+                    if not cell.cell.type == "EMPTY":
+
+                        if cell.cell.type == "Type_1":
+                            colour = 'green'
+                        elif cell.cell.type == "Type_2":
+                            colour = 'red'
+                        elif cell.cell.type == "Type_3":
+                            colour = 'blue'
+                        elif cell.cell.type == "Type_4":
+                            colour = 'black'
+
+                        ax2.add_patch(
+                            matplotlib.patches.Rectangle(
+                                (cell.cell.x, cell.cell.y),  # (x,y)
+                                cell.getWidth(),  # width
+                                cell.getHeight(),  # height
+
+                                color=colour
+
+                            )
+                        )
+                    else:
+                        pattern = ''
+
+                        ax2.add_patch(
+                            matplotlib.patches.Rectangle(
+                                (cell.cell.x, cell.cell.y),  # (x,y)
+                                cell.getWidth(),  # width
+                                cell.getHeight(),  # height
+                                hatch=pattern,
+                                fill=False
+                            )
+                        )
+            else:
+                continue
+
+                   
+
+            for arr1 in findGraphEdges2(nodelist):
+                ax2.arrow(arr1[0], arr1[1], arr1[2], arr1[3], head_width=.09, head_length=.09, color=arr1[4])
+                #ax2.arrow(arr2[0], arr2[1], arr2[2], arr2[3], head_width=.09, head_length=.09, color=arr2[4])#
+
+            for arr2 in findGraphEdges3(nodelist):
+                #ax2.arrow(arr1[0], arr1[1], arr1[2], arr1[3], head_width=.09, head_length=.09, color=arr1[4])
+                ax2.arrow(arr2[0], arr2[1], arr2[2], arr2[3], head_width=.09, head_length=.09, color=arr2[4])#
+            # p = PatchCollection(self.drawZeroDimsVertices2())
+            # ax4.add_collection(p)
 
             # handle relative spacing from orientation to orientation-n (X0-Xn, Y0-Yn). Remove if refactoring to
             # automatically handle orientation
@@ -3413,18 +3894,18 @@ if __name__ == '__main__':
             # ax4.arrow(arr[0], arr[1], arr[2], arr[3], head_width=.30, head_length=.3, color=arr[4])  #
 
             ####Setting axis labels(begin)
-            '''
-            font = {'family': 'normal',
-                    'weight': 'bold',
-                    'size': 20}
-
-            matplotlib.rc('font', **font)
-            '''
+        #print "LEN", len(ax2.patches)
+            i=node.id
             plt.xlim(0, 60)
             plt.ylim(0, 60)
-            #fig3.show()
-            fig3.savefig(testdir + '/' + testbase + "H.png")
-            plt.close()
+            fig4.savefig(testdir + '/' + testbase +'1'+ "H.png")
+            fig3.savefig(testdir + '/' + testbase +str(i)+ "H.png")
+            #plt.close()
+
+
+
+
+
 
     def findGraphEdges1(nodeList):
         # matrixCopy = np.copy(self.CG.getVertexMatrixv())
@@ -3447,6 +3928,31 @@ if __name__ == '__main__':
                 # print foo
         return arrowList2
 
+
+    def findGraphEdges4(nodeList):
+        # matrixCopy = np.copy(self.CG.getVertexMatrixv())
+        # print matrixCopy[0][1]
+        # edgeList = copy.deepcopy(getattr(self.CG, "edgesv"))
+        # print "EDGE=",edgeList
+
+        arrowList2 = []
+        for node in nodeList:
+            for cell in node.stitchList:
+                # for rect in self.Newcornerstitch_v.stitchList:
+                # rect.cell.printCell(True,True)
+                if cell.cell.type != "EMPTY":
+                    color = "blue"
+
+                    arrowList2.append((cell.cell.getX(), cell.cell.getY(), 0,cell.getHeight(), color))
+
+                elif cell.cell.type == "EMPTY":
+                    color = "red"
+
+                    arrowList2.append((cell.cell.getX(), cell.cell.getY(), cell.getWidth(),0 , color))
+                # for foo in arrowList:
+                # print foo
+        return arrowList2
+
     def drawLayer1(nodelist, truePointer=False):
         """
         Draw all cells in this cornerStitch with stitches pointing to their stitch neighbors
@@ -3454,146 +3960,154 @@ if __name__ == '__main__':
          Also should probably change the dimensions of the object window depending on the cornerStitch size.
         """
 
-        # fig2 = matplotlib.pyplot.figure()
-        # node=nodelist[0]
-        fig3, ax3= plt.subplots()
-        #arrowList2=[]
+        NODE = []
+        for node in nodelist:
+            N = {}
+            key = node.id
+            N.setdefault(key, [])
+            if node.child != []:
+                for i in node.child:
+                    if i.id not in N[key]:
+                        N[key].append(i.id)
+                NODE.append(N)
+        print NODE
+        KEYS = []
+        for i in NODE:
+            KEYS.append(i.keys()[0])
+
+        print KEYS
+
+
+        # arrowList2=[]
         for node in nodelist:
 
+            if node.id==1:
+                fig4=plt.figure()
+                ax4= plt.axes(xlim=(0, 60), ylim=(0, 60))
+                for cell in node.stitchList:
 
-            # ax4 = fig2.add_subplot(111, aspect='equal')
-            for cell in node.stitchList:
-                if not cell.cell.type == "EMPTY":
-                    if cell.cell.type=="Type_1":
-                        #colour='green'
-                        pattern = '\\'
-                    elif cell.cell.type=="Type_2":
-                        #colour='red'
-                        pattern='+'
-                    elif cell.cell.type=="Type_3":
-                        #colour='blue'
-                        pattern = '..'
-                    elif cell.cell.type=="Type_4":
-                        #colour='black'
-                        pattern = '*'
-                    '''
-                    if cell.cell.type == "Type_1":
-                        colour = 'green'
-                    elif cell.cell.type == "Type_2":
-                        colour = 'red'
-                    elif cell.cell.type == "Type_3":
-                        colour = 'blue'
-                    elif cell.cell.type=="Type_4":
-                        colour='black'
-                        '''
-                    ax3.add_patch(
-                        matplotlib.patches.Rectangle(
-                            (cell.cell.x, cell.cell.y),  # (x,y)
-                            cell.getWidth(),  # width
-                            cell.getHeight(),  # height
-                            hatch=pattern,
-                            fill=False
+                    if not cell.cell.type == "EMPTY":
 
+                        if cell.cell.type == "Type_1":
+                            colour = 'green'
+                        elif cell.cell.type == "Type_2":
+                            colour = 'red'
+                        elif cell.cell.type == "Type_3":
+                            colour = 'blue'
+                        elif cell.cell.type == "Type_4":
+                            colour = 'black'
 
+                        ax4.add_patch(
+                            matplotlib.patches.Rectangle(
+                                (cell.cell.x, cell.cell.y),  # (x,y)
+                                cell.getWidth(),  # width
+                                cell.getHeight(),  # height
+                                facecolor=colour,
+                                edgecolor='blue'
+
+                            )
                         )
-                    )
-                else:
-                    pattern = ''
+                    else:
+                        pattern = ''
 
-
-                    ax3.add_patch(
-                        matplotlib.patches.Rectangle(
-                            (cell.cell.x, cell.cell.y),  # (x,y)
-                            cell.getWidth(),  # width
-                            cell.getHeight(),  # height
-                            hatch=pattern,
-                            fill=False
+                        ax4.add_patch(
+                            matplotlib.patches.Rectangle(
+                                (cell.cell.x, cell.cell.y),  # (x,y)
+                                cell.getWidth(),  # width
+                                cell.getHeight(),  # height
+                                hatch=pattern,
+                                fill=False
+                            )
                         )
-                    )
+            fig3, ax3 = plt.subplots()
+            if node.parent == nodelist[0] and node.child == []:
+                #print"!!!!!!",node.id
+                for cell in node.stitchList:
 
-                # NORTH pointer
+                    if not cell.cell.type == "EMPTY":
 
-                if cell.getNorth() in node.boundaries:
-                    dx = 0
-                    dy = 0
-                elif truePointer:
-                    dx = cell.getNorth().cell.x + (.5 * cell.getNorth().getWidth()) - (cell.cell.x + cell.getWidth()) + .5
-                    dy = cell.getNorth().cell.y + (.5 * cell.getNorth().getHeight()) - (cell.cell.y + cell.getHeight()) + .5
-                else:
-                    dx = 0
-                    dy = .75
+                        if cell.cell.type == "Type_1":
+                            colour = 'green'
+                        elif cell.cell.type == "Type_2":
+                            colour = 'red'
+                        elif cell.cell.type == "Type_3":
+                            colour = 'blue'
+                        elif cell.cell.type == "Type_4":
+                            colour = 'black'
 
-                ax3.arrow((cell.cell.x + cell.getWidth() - .5),
-                          (cell.cell.y + cell.getHeight() - .5),
-                          dx,
-                          dy,
-                          head_width=.25,
-                          head_length=.25,
-                          fc='k',
-                          ec='k'
-                          )
-                # EAST pointer
-                if cell.getEast() in node.boundaries:
-                    dx = 0
-                    dy = 0
-                elif truePointer:
-                    dx = cell.getEast().cell.x + (.5 * cell.getEast().getWidth()) - (cell.cell.x + cell.getWidth()) + .5
-                    dy = cell.getEast().cell.y + (.5 * cell.getEast().getHeight()) - (cell.cell.y + cell.getHeight()) + .5
-                else:
-                    dx = .75
-                    dy = 0
-                ax3.arrow((cell.cell.x + cell.getWidth() - .5),
-                          (cell.cell.y + cell.getHeight() - .5),
-                          dx,
-                          dy,
-                          head_width=.25,
-                          head_length=.25,
-                          fc='k',
-                          ec='k'
-                          )
-                # SOUTH pointer
-                if cell.getSouth() in node.boundaries:
-                    dx = 0
-                    dy = 0
-                elif truePointer:
-                    dx = cell.getSouth().cell.x + (.5 * cell.getSouth().getWidth()) - (cell.cell.x + .5)
-                    dy = cell.getSouth().cell.y + (.5 * cell.getSouth().getHeight()) - (cell.cell.y + .5)
-                else:
-                    dx = 0
-                    dy = -.5
-                ax3.arrow((cell.cell.x + .5),
-                          (cell.cell.y + .5),
-                          dx,
-                          dy,
-                          head_width=.25,
-                          head_length=.25,
-                          fc='k',
-                          ec='k'
-                          )
-                # WEST pointer
-                if cell.getWest() in node.boundaries:
-                    dx = 0
-                    dy = 0
-                elif truePointer:
-                    dx = cell.getWest().cell.x + (.5 * cell.getWest().getWidth()) - (cell.cell.x + .5)
-                    dy = cell.getWest().cell.y + (.5 * cell.getWest().getHeight()) - (cell.cell.y + .5)
-                else:
-                    dx = -.5
-                    dy = 0
-                ax3.arrow((cell.cell.x + .5),
-                          (cell.cell.y + .5),
-                          dx,
-                          dy,
-                          head_width=.25,
-                          head_length=.25,
-                          fc='k',
-                          ec='k'
-                          )
+                        ax3.add_patch(
+                            matplotlib.patches.Rectangle(
+                                (cell.cell.x, cell.cell.y),  # (x,y)
+                                cell.getWidth(),  # width
+                                cell.getHeight(),  # height
 
-            for arr in findGraphEdges1(nodelist):
-                ax3.arrow(arr[0], arr[1], arr[2], arr[3], head_width=.09, head_length=.09, color=arr[4])  #
-        # p = PatchCollection(self.drawZeroDimsVertices2())
-        # ax4.add_collection(p)
+                                color=colour
+
+                            )
+                        )
+                    else:
+                        pattern = ''
+
+                        ax3.add_patch(
+                            matplotlib.patches.Rectangle(
+                                (cell.cell.x, cell.cell.y),  # (x,y)
+                                cell.getWidth(),  # width
+                                cell.getHeight(),  # height
+                                hatch=pattern,
+                                fill=False
+                            )
+                        )
+            elif node.id in KEYS:
+
+                if node == nodelist[0]: continue
+                #print "IV",node.id
+                for cell in node.stitchList:
+
+                    if not cell.cell.type == "EMPTY":
+
+                        if cell.cell.type == "Type_1":
+                            colour = 'green'
+                        elif cell.cell.type == "Type_2":
+                            colour = 'red'
+                        elif cell.cell.type == "Type_3":
+                            colour = 'blue'
+                        elif cell.cell.type == "Type_4":
+                            colour = 'black'
+
+                        ax3.add_patch(
+                            matplotlib.patches.Rectangle(
+                                (cell.cell.x, cell.cell.y),  # (x,y)
+                                cell.getWidth(),  # width
+                                cell.getHeight(),  # height
+
+                                color=colour
+
+                            )
+                        )
+                    else:
+                        pattern = ''
+
+                        ax3.add_patch(
+                            matplotlib.patches.Rectangle(
+                                (cell.cell.x, cell.cell.y),  # (x,y)
+                                cell.getWidth(),  # width
+                                cell.getHeight(),  # height
+                                hatch=pattern,
+                                fill=False
+                            )
+                        )
+            else:
+                continue
+
+            for arr1 in findGraphEdges1(nodelist):
+                ax3.arrow(arr1[0], arr1[1], arr1[2], arr1[3], head_width=.09, head_length=.09, color=arr1[4])
+                # ax2.arrow(arr2[0], arr2[1], arr2[2], arr2[3], head_width=.09, head_length=.09, color=arr2[4])#
+
+            for arr2 in findGraphEdges4(nodelist):
+                # ax2.arrow(arr1[0], arr1[1], arr1[2], arr1[3], head_width=.09, head_length=.09, color=arr1[4])
+                ax3.arrow(arr2[0], arr2[1], arr2[2], arr2[3], head_width=.09, head_length=.09, color=arr2[4])  #
+            # p = PatchCollection(self.drawZeroDimsVertices2())
+            # ax4.add_collection(p)
 
             # handle relative spacing from orientation to orientation-n (X0-Xn, Y0-Yn). Remove if refactoring to
             # automatically handle orientation
@@ -3603,18 +4117,13 @@ if __name__ == '__main__':
             # ax4.arrow(arr[0], arr[1], arr[2], arr[3], head_width=.30, head_length=.3, color=arr[4])  #
 
             ####Setting axis labels(begin)
-            '''
-            font = {'family': 'normal',
-                    'weight': 'bold',
-                    'size': 20}
-
-            matplotlib.rc('font', **font)
-            '''
+            i=node.id
             plt.xlim(0, 60)
             plt.ylim(0, 60)
-            #fig3.show()
-            fig3.savefig(testdir + '/' + testbase + "V.png")
-            plt.close()
+            fig4.savefig(testdir + '/' + testbase +'1'+ "V.png")
+            fig3.savefig(testdir + '/' + testbase +str(i)+ "V.png")
+        #fig3.savefig(testdir + '/' + testbase + "V.png")
+        #plt.close()
         # pylab.pause(11000)
     drawLayer1(Vtree.vNodeList)
     drawLayer2(Htree.hNodeList)
