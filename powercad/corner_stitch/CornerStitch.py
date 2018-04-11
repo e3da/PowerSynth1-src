@@ -1646,7 +1646,7 @@ class Vnode(Node):
             #print "l", len(changeList)
 
             changeList[0].cell.type = type
-            if len(changeList)==1:
+            if len(changeList)==1 and RESP==0:
                 changeList[0].nodeId=None
             self.rectifyShadow(changeList[0])
 
@@ -2808,7 +2808,7 @@ class Hnode(Node):
 
             changeList[0].cell.type = type
             #if start!='/':
-            if len(changeList)==1:
+            if len(changeList)==1 and RESP==0:
                 changeList[0].nodeId = None
             #changeList[0].nodeId=None
             #print changeList[0].cell.x
@@ -2860,8 +2860,8 @@ class Hnode(Node):
 
     def addChild(self,start, tile_list, parent, type,RESP,end):
 
-        #for i in tile_list:
-            #print "i", i.cell.printCell(True,True,True),i.nodeId
+        for i in tile_list:
+            print "i", i.cell.printCell(True,True,True),i.nodeId
         if start=='/' and end =='/':
             stitchList = []
             boundaries = []
@@ -2943,7 +2943,7 @@ class Hnode(Node):
                     if rect.nodeId>ID:
                         ID=rect.nodeId
 
-
+            print ID
             for N in Htree.hNodeList:
 
                 if N.id == ID:
