@@ -10,8 +10,7 @@ import copy
 import random
 import scipy as sp
 
-
-
+##########################################################################################################################
 class constraintGraph:
     """
     the graph representation of constraints pertaining to cells and variables, informed by several different
@@ -2417,10 +2416,10 @@ class constraintGraph:
 
 
 class multiCG():
-    """
+    '''
     Same as a constraint graph class, except this allows for multiple edges between nodes. Necessary for
     inserting custom constraints. 
-    """
+    '''
 
     def __init__(self, sourceGraph):
         """
