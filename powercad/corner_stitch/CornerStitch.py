@@ -95,26 +95,30 @@ class tile:
 
     def northWest(self, center):
         cc = center.WEST
-        while cc.cell.y + cc.getHeight() < center.cell.y + center.getHeight():
-            cc = cc.NORTH
+        if cc.cell.type != None:
+            while cc.cell.y + cc.getHeight() < center.cell.y + center.getHeight():
+                cc = cc.NORTH
         return cc
 
     def westNorth(self, center):
         cc = center.NORTH
-        while cc.cell.x > center.cell.x :#+ center.getWidth():
-            cc = cc.WEST
+        if cc.cell.type != None:
+            while cc.cell.x > center.cell.x :#+ center.getWidth():
+                cc = cc.WEST
         return cc
 
     def southEast(self, center):
         cc = center.EAST
-        while cc.cell.y > center.cell.y:
-            cc = cc.SOUTH
+        if cc.cell.type != None:
+            while cc.cell.y > center.cell.y:
+                cc = cc.SOUTH
         return cc
 
     def eastSouth(self, center):
         cc = center.SOUTH
-        while cc.cell.x + cc.getWidth() < center.cell.x + center.getWidth():
-            cc = cc.EAST
+        if cc.cell.type!=None:
+            while cc.cell.x + cc.getWidth() < center.cell.x + center.getWidth():
+                cc = cc.EAST
         return cc
 
     def getNorth(self):
@@ -3586,8 +3590,8 @@ if __name__ == '__main__':
     CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList)
     MIN_X,MIN_Y=CG.minValueCalculation(Htree.hNodeList, Vtree.vNodeList)
 
-    #print "minX", MIN_X
-    #print "minY",MIN_Y
+    print "minX", MIN_X
+    print "minY",MIN_Y
 
     #print "Result"
     for node in Htree.hNodeList:
@@ -3942,7 +3946,7 @@ if __name__ == '__main__':
         plt.close()
 
 
-    def plotrectH_new(Rect_H):
+    def plotrectH_new(Rect1_H):
         """
         Draw all cells in this cornerStitch with stitches pointing to their stitch neighbors
         TODO:
@@ -3954,15 +3958,16 @@ if __name__ == '__main__':
 
         #print"H", Rect_H
         #fig8, ax6 = plt.subplots()
-        fig8 = matplotlib.pyplot.figure()
-        ax6 = fig8.add_subplot(111, aspect='equal')
-        #ax6 = plt.axes(xlim=(0, 60), ylim=(0, 60))
-        #Rect_H=Rect_H.reverse()
-        for j in range(len(Rect_H)):
+        for j in range(len(Rect1_H)):
+            Rect_H=Rect1_H[j]
+            fig8 = matplotlib.pyplot.figure()
+            ax6 = fig8.add_subplot(111, aspect='equal')
+            #ax6 = plt.axes(xlim=(0, 60), ylim=(0, 60))
+            #Rect_H=Rect_H.reverse()
 
+            #print Rect_H
+            for i in Rect_H:
 
-
-            for i in Rect_H[j]:
 
 
                 # ax4 = fig2.add_subplot(111, aspect='equal')
@@ -4006,13 +4011,13 @@ if __name__ == '__main__':
                         )
                     )
 
-        plt.xlim(0, 160)
-        plt.ylim(0, 160)
-        # fig10.show()
-        # return fig10
-        fig8.savefig(testdir + '/' +testbase+ "new-H.png")
-        plt.close()
-    def plotrectV_new(Rect_V):
+            plt.xlim(0, 210)
+            plt.ylim(0, 210)
+            # fig10.show()
+            # return fig10
+            fig8.savefig(testdir + '/' +testbase+ str(j)+"new-H.png")
+            plt.close()
+    def plotrectV_new(Rect1_V):
         """
         Draw all cells in this cornerStitch with stitches pointing to their stitch neighbors
         TODO:
@@ -4024,15 +4029,14 @@ if __name__ == '__main__':
 
         #print"H", Rect_H
         #fig8, ax6 = plt.subplots()
-        fig7 = matplotlib.pyplot.figure()
-        ax7 = fig7.add_subplot(111, aspect='equal')
-        #ax6 = plt.axes(xlim=(0, 60), ylim=(0, 60))
-        #Rect_H=Rect_H.reverse()
-        for j in range(len(Rect_V)):
+        for j in range(len(Rect1_V)):
+            fig7 = matplotlib.pyplot.figure()
+            ax7 = fig7.add_subplot(111, aspect='equal')
+            #ax6 = plt.axes(xlim=(0, 60), ylim=(0, 60))
+            #Rect_H=Rect_H.reverse()
+            Rect_V=Rect1_V[j]
 
-
-
-            for i in Rect_V[j]:
+            for i in Rect_V:
 
 
                 # ax4 = fig2.add_subplot(111, aspect='equal')
@@ -4076,14 +4080,14 @@ if __name__ == '__main__':
                         )
                     )
 
-        plt.xlim(0, 160)
-        plt.ylim(0, 160)
-        # fig10.show()
-        # return fig10
-        fig7.savefig(testdir + '/' +testbase+ "new-V.png")
-        plt.close()
+            plt.xlim(0, 210)
+            plt.ylim(0, 210)
+            # fig10.show()
+            # return fig10
+            fig7.savefig(testdir + '/' +testbase+str(j)+ "new-V.png")
+            plt.close()
 
-
+    '''
 
     def UPDATE(MINX,MINY):
         Recatngles_H={}
@@ -4152,6 +4156,67 @@ if __name__ == '__main__':
             #print k
             Total_V.append(v)
         plotrectV_new(Total_V)
+    '''
+
+    def UPDATE(MINX,MINY):
+        MIN_X=MINX.values()[0]
+        #print MIN_X
+        MIN_Y=MINY.values()[0]
+        DIM = []
+        Recatngles_H={}
+        key=MINX.keys()[0]
+        Recatngles_H.setdefault(key,[])
+        for j in Htree.hNodeList[0].stitchList:
+            k = [j.cell.x, j.cell.y, j.EAST.cell.x, j.NORTH.cell.y,j.cell.type]
+            DIM.append(k)
+        #print DIM
+        for i in range(len(MIN_X)):
+            Dimensions = []
+            for j in range(len(DIM)):
+
+                k=DIM[j]
+                if k[0] in MIN_X[i].keys() and k[1] in MIN_Y[i].keys() and k[2] in MIN_X[i].keys() and k[3] in MIN_Y[i].keys():
+                    rect = [MIN_X[i][k[0]], MIN_Y[i][k[1]], MIN_X[i][k[2]] - MIN_X[i][k[0]],MIN_Y[i][k[3]] - MIN_Y[i][k[1]],k[4]]
+                    Dimensions.append(rect)
+            Recatngles_H[key].append(Dimensions)
+        #print Recatngles_H
+
+        DIM = []
+        Recatngles_V = {}
+        key = MINX.keys()[0]
+        Recatngles_V.setdefault(key, [])
+        for j in Vtree.vNodeList[0].stitchList:
+            k = [j.cell.x, j.cell.y, j.EAST.cell.x, j.NORTH.cell.y,j.cell.type]
+            DIM.append(k)
+        #print DIM
+        for i in range(len(MIN_X)):
+            Dimensions = []
+            for j in range(len(DIM)):
+
+                k=DIM[j]
+                if k[0] in MIN_X[i].keys() and k[1] in MIN_Y[i].keys() and k[2] in MIN_X[i].keys() and k[3] in MIN_Y[i].keys():
+                    rect = [MIN_X[i][k[0]], MIN_Y[i][k[1]], MIN_X[i][k[2]] - MIN_X[i][k[0]],MIN_Y[i][k[3]] - MIN_Y[i][k[1]],k[4]]
+                    Dimensions.append(rect)
+            Recatngles_V[key].append(Dimensions)
+        #print Recatngles_V
+        Total_H = []
+        #Recatngles_H = collections.OrderedDict(sorted(Recatngles_H.items()))
+        # print Recatngles_H
+        for k, v in Recatngles_H.items():
+            # print k
+            Total_H=v
+        plotrectH_new(Total_H)
+
+
+        Total_V = []
+        Recatngles_V = collections.OrderedDict(sorted(Recatngles_V.items()))
+        # print Recatngles_H
+        for k, v in Recatngles_V.items():
+            # print k
+            Total_V=v
+        plotrectV_new(Total_V)
+
+
 
 
     UPDATE(MIN_X, MIN_Y)

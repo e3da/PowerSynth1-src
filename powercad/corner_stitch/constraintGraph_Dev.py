@@ -72,8 +72,8 @@ class constraintGraph:
         self.Y = []
         self.Loc_X = {}
         self.Loc_Y = {}
-        self.W_T = 120
-        self.H_T = 120
+        self.W_T = [160,165,170,175,180,185,190,195,200,205]
+        self.H_T =[105,110,120,130,140,150,160,170,180,190]
 
         ############################
 
@@ -253,6 +253,26 @@ class constraintGraph:
         Y.sort()
         print "Y",Y
         '''
+    '''
+    def minValueCalculation(self,hNodeList,vNodeList):
+        for node in hNodeList:
+            if node.parent==None:
+                self.minX[node.id]=self.minLocationH[node.id]
+
+            else:
+                self.set_minX(node)
+
+        for node in vNodeList:
+            if node.parent == None:
+                self.minY[node.id] = self.minLocationV[node.id]
+
+            else:
+                self.set_minY(node)
+        #print "minX",self.minX
+        #print "minY",self.minY
+        return self.minX,self.minY
+    '''
+    ##### for single node
     def minValueCalculation(self,hNodeList,vNodeList):
         for node in hNodeList:
             if node.parent==None:
@@ -413,7 +433,7 @@ class constraintGraph:
                 origin = self.ZDL_H[ID].index(rect.cell.x)
                 dest =  self.ZDL_H[ID].index(rect.getEast().cell.x)
                 id = rect.cell.id
-                '''
+
                 if rect.getEast().nodeId==rect.nodeId:
                     East = rect.getEast().cell.id
                 else:
@@ -430,16 +450,16 @@ class constraintGraph:
                     southEast = rect.southEast(rect).cell.id
                 else:
                     southEast=None
-                '''
+
 
                 # print id,East,West,rect.cell.x,rect.cell.y
                 c=constraint.constraint(0)
                 index=0
                 value=constraint.constraint.getConstraintVal(c,type=rect.cell.type)
-                #e = Edge(origin, dest, value, str(constraint.constraint.Type.index(rect.cell.type)), id, East, West,northWest, southEast)
-                e = Edge(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id)
-                #edgesh.append(Edge(origin, dest, value, str(constraint.constraint.Type.index(rect.cell.type)), id, East, West,northWest, southEast))
-                edgesh.append(Edge(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id))
+                e = Edge(origin, dest, value, str(constraint.constraint.Type.index(rect.cell.type)), id, East, West,northWest, southEast)
+                #e = Edge(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id)
+                edgesh.append(Edge(origin, dest, value, str(constraint.constraint.Type.index(rect.cell.type)), id, East, West,northWest, southEast))
+                #edgesh.append(Edge(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id))
                 # self.vertexMatrixh[origin][dest].append((rect.getWidth()))
                 self.vertexMatrixh[ID][origin][dest].append(Edge.getEdgeWeight(e, origin, dest))
 
@@ -449,7 +469,7 @@ class constraintGraph:
                 origin = self.ZDL_V[ID].index(rect.cell.y)
                 dest = self.ZDL_V[ID].index(rect.getNorth().cell.y)
                 id = rect.cell.id
-                '''
+
                 if rect.getNorth().nodeId == rect.nodeId:
                     North = rect.getNorth().cell.id
                 else:
@@ -466,7 +486,7 @@ class constraintGraph:
                     eastSouth = rect.eastSouth(rect).cell.id
                 else:
                     eastSouth = None
-                '''
+
 
                 if rect.NORTH.nodeId!=ID and rect.SOUTH.nodeId!=ID and rect.NORTH  in cornerStitch_v.stitchList and rect.SOUTH in cornerStitch_v.stitchList :
                     t2=constraint.constraint.Type.index(rect.NORTH.cell.type)
@@ -475,11 +495,11 @@ class constraintGraph:
                     index=1
                     value = constraint.constraint.getConstraintVal(c,source=t1,dest=t2)
 
-                    #e = Edge(origin, dest, value, str(constraint.constraint.Type.index(rect.cell.type)), id, North,South ,westNorth, eastSouth)
-                    e = Edge(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id)
+                    e = Edge(origin, dest, value, str(constraint.constraint.Type.index(rect.cell.type)), id, North,South ,westNorth, eastSouth)
+                    #e = Edge(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id)
 
-                    #edgesv.append(Edge(origin, dest, value, str(constraint.constraint.Type.index(rect.cell.type)), id, North,South ,westNorth, eastSouth))
-                    edgesv.append(Edge(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id))
+                    edgesv.append(Edge(origin, dest, value, str(constraint.constraint.Type.index(rect.cell.type)), id, North,South ,westNorth, eastSouth))
+                    #edgesv.append(Edge(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id))
                     self.vertexMatrixv[ID][origin][dest].append(Edge.getEdgeWeight(e, origin, dest))
                 elif rect.NORTH.nodeId!=ID and rect.SOUTH not in cornerStitch_v.stitchList and rect.NORTH in cornerStitch_v.stitchList:
                     t2 = constraint.constraint.Type.index(rect.NORTH.cell.type)
@@ -488,12 +508,12 @@ class constraintGraph:
                     #print t1,t2
                     index=2
                     value = constraint.constraint.getConstraintVal(c,source=t1, dest=t2)
-                    #e = Edge(origin, dest, value, str(constraint.constraint.Type.index(rect.cell.type)), id, North,South, westNorth, eastSouth)
+                    e = Edge(origin, dest, value, str(constraint.constraint.Type.index(rect.cell.type)), id, North,South, westNorth, eastSouth)
 
-                    #edgesv.append(Edge(origin, dest, value, str(constraint.constraint.Type.index(rect.cell.type)), id, North,South, westNorth, eastSouth))
-                    e = Edge(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id)
+                    edgesv.append(Edge(origin, dest, value, str(constraint.constraint.Type.index(rect.cell.type)), id, North,South, westNorth, eastSouth))
+                    #e = Edge(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id)
 
-                    edgesv.append(Edge(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id))
+                    #edgesv.append(Edge(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id))
                     self.vertexMatrixv[ID][origin][dest].append(Edge.getEdgeWeight(e, origin, dest))
                 elif rect.SOUTH.nodeId!=ID and rect.NORTH not in cornerStitch_v.stitchList and rect.SOUTH in cornerStitch_v.stitchList:
                     t2 = constraint.constraint.Type.index(rect.SOUTH.cell.type)
@@ -501,23 +521,23 @@ class constraintGraph:
                     c=constraint.constraint(2)
                     index=2
                     value = constraint.constraint.getConstraintVal(c,source=t1, dest=t2)
-                    #e = Edge(origin, dest, value, str(constraint.constraint.Type.index(rect.cell.type)), id, North,South, westNorth, eastSouth)
+                    e = Edge(origin, dest, value, str(constraint.constraint.Type.index(rect.cell.type)), id, North,South, westNorth, eastSouth)
 
-                    #edgesv.append(Edge(origin, dest, value, str(constraint.constraint.Type.index(rect.cell.type)), id, North,South, westNorth, eastSouth))
-                    e = Edge(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id)
+                    edgesv.append(Edge(origin, dest, value, str(constraint.constraint.Type.index(rect.cell.type)), id, North,South, westNorth, eastSouth))
+                    #e = Edge(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id)
 
-                    edgesv.append(Edge(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id))
+                    #edgesv.append(Edge(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id))
                     self.vertexMatrixv[ID][origin][dest].append(Edge.getEdgeWeight(e, origin, dest))
                 elif rect.NORTH not in cornerStitch_v.stitchList and rect.SOUTH not in  cornerStitch_v.stitchList:
                     c=constraint.constraint(0)
                     index=0
                     value = constraint.constraint.getConstraintVal(c,type=rect.cell.type)
-                    #e = Edge(origin, dest, value, str(constraint.constraint.Type.index(rect.cell.type)), id, North,South, westNorth, eastSouth)
+                    e = Edge(origin, dest, value, str(constraint.constraint.Type.index(rect.cell.type)), id, North,South, westNorth, eastSouth)
 
-                    #edgesv.append(Edge(origin, dest, value, str(constraint.constraint.Type.index(rect.cell.type)), id, North,South, westNorth, eastSouth))
-                    e = Edge(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id)
+                    edgesv.append(Edge(origin, dest, value, str(constraint.constraint.Type.index(rect.cell.type)), id, North,South, westNorth, eastSouth))
+                    #e = Edge(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id)
 
-                    edgesv.append(Edge(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id))
+                    #edgesv.append(Edge(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id))
                     self.vertexMatrixv[ID][origin][dest].append(Edge.getEdgeWeight(e, origin, dest))
 
         for rect in cornerStitch_h.stitchList:
@@ -550,10 +570,10 @@ class constraintGraph:
                 c=constraint.constraint(0)
                 index=0
                 value = constraint.constraint.getConstraintVal(c,type=rect.cell.type)
-                #e = Edge(origin, dest, value, str(constraint.constraint.Type.index(rect.cell.type)), id, North, South,westNorth, eastSouth)
+                e = Edge(origin, dest, value, str(constraint.constraint.Type.index(rect.cell.type)), id, North, South,westNorth, eastSouth)
 
-                #edgesv.append(Edge(origin, dest, value, str(constraint.constraint.Type.index(rect.cell.type)), id, North, South,westNorth, eastSouth))
-                e = Edge(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id)
+                edgesv.append(Edge(origin, dest, value, str(constraint.constraint.Type.index(rect.cell.type)), id, North, South,westNorth, eastSouth))
+                #e = Edge(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id)
 
                 edgesv.append(Edge(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id))
                 self.vertexMatrixv[ID][origin][dest].append(Edge.getEdgeWeight(e, origin, dest))
@@ -563,7 +583,7 @@ class constraintGraph:
                 origin = self.ZDL_H[ID].index(rect.cell.x)
                 dest = self.ZDL_H[ID].index(rect.getEast().cell.x)
                 id = rect.cell.id
-                '''
+
                 if rect.getEast().nodeId == rect.nodeId:
                     East = rect.getEast().cell.id
                 else:
@@ -580,7 +600,7 @@ class constraintGraph:
                     southEast = rect.southEast(rect).cell.id
                 else:
                     southEast = None
-                '''
+
                 if rect.EAST.nodeId != ID and rect.WEST.nodeId != ID and rect.EAST in cornerStitch_h.stitchList and rect.WEST in cornerStitch_h.stitchList:
                     t2 = constraint.constraint.Type.index(rect.EAST.cell.type)
                     t1 = constraint.constraint.Type.index(rect.WEST.cell.type)
@@ -588,12 +608,12 @@ class constraintGraph:
                     index=1
                     value = constraint.constraint.getConstraintVal(c,source=t1, dest=t2)
 
-                    #e = Edge(origin, dest, value, str(constraint.constraint.Type.index(rect.cell.type)), id,East, West,northWest, southEast)
+                    e = Edge(origin, dest, value, str(constraint.constraint.Type.index(rect.cell.type)), id,East, West,northWest, southEast)
 
-                    #edgesh.append(Edge(origin, dest, value, str(constraint.constraint.Type.index(rect.cell.type)), id, East, West,northWest, southEast))
-                    e = Edge(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id)
+                    edgesh.append(Edge(origin, dest, value, str(constraint.constraint.Type.index(rect.cell.type)), id, East, West,northWest, southEast))
+                    #e = Edge(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id)
 
-                    edgesh.append(Edge(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id))
+                    #edgesh.append(Edge(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id))
                     self.vertexMatrixh[ID][origin][dest].append(Edge.getEdgeWeight(e, origin, dest))
                 elif rect.EAST.nodeId != ID and rect.WEST not in cornerStitch_h.stitchList and rect.EAST in cornerStitch_h.stitchList:
                     t2 = constraint.constraint.Type.index(rect.EAST.cell.type)
@@ -601,12 +621,12 @@ class constraintGraph:
                     c=constraint.constraint(2)
                     index=2
                     value = constraint.constraint.getConstraintVal(c,source=t1, dest=t2)
-                    #e = Edge(origin, dest, value, str(constraint.constraint.Type.index(rect.cell.type)), id, East, West,northWest, southEast)
+                    e = Edge(origin, dest, value, str(constraint.constraint.Type.index(rect.cell.type)), id, East, West,northWest, southEast)
 
-                    #edgesh.append(Edge(origin, dest, value, str(constraint.constraint.Type.index(rect.cell.type)), id, East, West,northWest, southEast))
-                    e = Edge(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id)
+                    edgesh.append(Edge(origin, dest, value, str(constraint.constraint.Type.index(rect.cell.type)), id, East, West,northWest, southEast))
+                    #e = Edge(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id)
 
-                    edgesh.append(Edge(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id))
+                    #edgesh.append(Edge(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id))
                     self.vertexMatrixh[ID][origin][dest].append(Edge.getEdgeWeight(e, origin, dest))
                 elif rect.WEST.nodeId != ID and rect.EAST not in cornerStitch_h.stitchList and rect.WEST in cornerStitch_h.stitchList:
                     t2 = constraint.constraint.Type.index(rect.WEST.cell.type)
@@ -616,12 +636,12 @@ class constraintGraph:
                     index=2
                     value = constraint.constraint.getConstraintVal(c,source=t1, dest=t2)
                     #print "val", value
-                    #e = Edge(origin, dest, value, str(constraint.constraint.Type.index(rect.cell.type)), id, East, West,northWest, southEast)
+                    e = Edge(origin, dest, value, str(constraint.constraint.Type.index(rect.cell.type)), id, East, West,northWest, southEast)
 
-                    #edgesh.append(Edge(origin, dest, value, str(constraint.constraint.Type.index(rect.cell.type)), id, East, West,northWest, southEast))
-                    e = Edge(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id)
+                    edgesh.append(Edge(origin, dest, value, str(constraint.constraint.Type.index(rect.cell.type)), id, East, West,northWest, southEast))
+                    #e = Edge(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id)
 
-                    edgesh.append(Edge(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id))
+                    #edgesh.append(Edge(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id))
                     self.vertexMatrixh[ID][origin][dest].append(Edge.getEdgeWeight(e, origin, dest))
                 elif rect.EAST not in cornerStitch_h.stitchList and rect.WEST not in cornerStitch_h.stitchList:
 
@@ -629,12 +649,12 @@ class constraintGraph:
                     index=0
                     value = constraint.constraint.getConstraintVal(c,type=rect.cell.type)
                     #print "val",value
-                    #e = Edge(origin, dest, value, str(constraint.constraint.Type.index(rect.cell.type)), id, East, West,northWest, southEast)
+                    e = Edge(origin, dest, value, str(constraint.constraint.Type.index(rect.cell.type)), id, East, West,northWest, southEast)
 
-                    #edgesh.append(Edge(origin, dest, value, str(constraint.constraint.Type.index(rect.cell.type)), id, East, West,northWest, southEast))
-                    e = Edge(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id)
+                    edgesh.append(Edge(origin, dest, value, str(constraint.constraint.Type.index(rect.cell.type)), id, East, West,northWest, southEast))
+                    #e = Edge(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id)
 
-                    edgesh.append(Edge(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id))
+                    #edgesh.append(Edge(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id))
                     self.vertexMatrixh[ID][origin][dest].append(Edge.getEdgeWeight(e, origin, dest))
         dictList1 = []
 
@@ -660,8 +680,8 @@ class constraintGraph:
                         t2 = constraint.constraint.type.index(edge.type)
                 c = constraint.constraint(1)
                 index = 1
-                value = int(constraint.constraint.getConstraintVal(c, source=t1, dest=t2)/(2**0.5))
-
+                #value = int(constraint.constraint.getConstraintVal(c, source=t1, dest=t2)/(2**0.5))
+                value = 1
                 #e = Edge(origin, dest, value, index,type=None, id=None)
                 edgesh_new.append(Edge(source,destination, value, index,type=None, id=None))
         dictList2 = []
@@ -686,7 +706,8 @@ class constraintGraph:
                         t2 = constraint.constraint.type.index(edge.type)
                 c = constraint.constraint(1)
                 index = 1
-                value = int(constraint.constraint.getConstraintVal(c, source=t1, dest=t2) / (2 ** 0.5))
+                #value = int(constraint.constraint.getConstraintVal(c, source=t1, dest=t2) / (2 ** 0.5))
+                value = 1
                 #print value
                 # e = Edge(origin, dest, value, index,type=None, id=None)
                 edgesv_new.append(Edge(source, destination, value, index, type=None, id=None))
@@ -776,6 +797,41 @@ class constraintGraph:
         for k, v in X.items():
             H.append((k[0], k[1], v))
         #print "H",H
+
+        loct = []
+        for i in range(10):
+            G = nx.MultiDiGraph()
+            n = list(G2.nodes())
+            G.add_nodes_from(n)
+            # G.add_weighted_edges_from([(0,1,2),(1,2,3),(2,3,4),(3,4,4),(4,5,3),(5,6,2),(1,4,15),(2,5,16),(1,5,20)])
+            G.add_weighted_edges_from(H)
+            # Draw(G)
+            self.Loc_X = {n[0]:0,n[-1]:self.W_T[-2]}
+            self.FUNCTION(G)
+            loct.append(self.Loc_X)
+
+        for i in loct:
+            new_x_loc = []
+            for j, k in i.items():
+                new_x_loc.append(k)
+            self.NEWXLOCATION.append(new_x_loc)
+        print  self.NEWXLOCATION
+        n = list(G2.nodes())
+        Location = {}
+        key=ID
+        Location.setdefault(key,[])
+
+        for i in range(len(self.NEWXLOCATION)):
+            loct = {}
+            for j in range(len(self.ZDL_H[ID])):
+                loct[self.ZDL_H[ID][j]]=self.NEWXLOCATION[i][j]
+            Location[ID].append(loct)
+        print Location
+        self.minLocationH=Location
+
+
+
+        '''
         G = nx.MultiDiGraph()
         n = list(G2.nodes())
         G.add_nodes_from(n)
@@ -801,7 +857,7 @@ class constraintGraph:
                 Location[n[i]]=max(val)
         #print Location
         #Graph_pos_h = []
-
+        
         dist = {}
         for node in Location:
             key = node
@@ -813,12 +869,13 @@ class constraintGraph:
         #print Graph_pos_h
         # print"LOC=",Graph_pos_h
         self.drawGraph_h_new(name, G2, edge_labels1, dist)
-
+        
         LOC_H={}
         for i in Location.keys():
             #print i,self.ZDL_H[ID][i]
             LOC_H[self.ZDL_H[ID][i]]=Location[i]
         #print LOC_H
+        
         odH = collections.OrderedDict(sorted(LOC_H.items()))
 
 
@@ -854,20 +911,9 @@ class constraintGraph:
             edgelist = self.edgesh_new[parentID]
             edgelist.append(edge)
             self.edgesh_new[parentID] = edgelist
+            '''
 
-            '''
-            source=self.ZDL_H[parentID].index(min(KEYS))
-            for k in KEYS:
-                if k in self.ZDL_H[parentID]:
-                    dest=self.ZDL_H[parentID].index(k)
-                    #print self.edgesh_new[parentID]
-                    x=self.ZDL_H[ID].index(k)
-                    edge=(Edge(source=source,dest=dest,constraint=Location[x], index=1,type=None, id=None))
-                    edgelist=self.edgesh_new[parentID]
-                    edgelist.append(edge)
-                    self.edgesh_new[parentID]=edgelist
-            #print self.edgesh_new[parentID]
-            '''
+
 
     def cgToGraph_v(self, name, ID, edgev, parentID):
 
@@ -931,6 +977,44 @@ class constraintGraph:
         for k, v in Y.items():
             V.append((k[0], k[1], v))
         # print "H",H
+
+        loct = []
+        for i in range(10):
+            G = nx.MultiDiGraph()
+            n = list(GV.nodes())
+            G.add_nodes_from(n)
+            # G.add_weighted_edges_from([(0,1,2),(1,2,3),(2,3,4),(3,4,4),(4,5,3),(5,6,2),(1,4,15),(2,5,16),(1,5,20)])
+            G.add_weighted_edges_from(V)
+            # Draw(G)
+            self.Loc_Y = {n[0]:0, n[-1]: self.H_T[-1]}
+            self.FUNCTION_V(G)
+            loct.append(self.Loc_Y)
+
+        for i in loct:
+            new_y_loc = []
+            for j, k in i.items():
+                new_y_loc.append(k)
+            self.NEWYLOCATION.append(new_y_loc)
+        print  self.NEWYLOCATION
+
+        Location = {}
+        key = ID
+        Location.setdefault(key, [])
+
+        for i in range(len(self.NEWYLOCATION)):
+            loct = {}
+            for j in range(len(self.ZDL_V[ID])):
+                loct[self.ZDL_V[ID][j]] = self.NEWYLOCATION[i][j]
+            Location[ID].append(loct)
+        print Location
+        self.minLocationV=Location
+
+
+
+
+
+
+        '''
         G = nx.MultiDiGraph()
         n = list(GV.nodes())
         G.add_nodes_from(n)
@@ -1006,20 +1090,10 @@ class constraintGraph:
             edgelist = self.edgesv_new[parentID]
             edgelist.append(edge)
             self.edgesv_new[parentID] = edgelist
-
-
             '''
-            for k in KEYS:
-                if k in self.ZDL_V[parentID]:
-                    dest=self.ZDL_V[parentID].index(k)
-                    #print self.edgesh_new[parentID]
-                    y=self.ZDL_V[ID].index(k)
-                    edge=(Edge(source=source,dest=dest,constraint=Location[y], index=1,type=None, id=None))
-                    edgelist=self.edgesv_new[parentID]
-                    edgelist.append(edge)
-                    self.edgesv_new[parentID]=edgelist
 
-            '''
+
+
 
         '''
         
@@ -1495,7 +1569,7 @@ class constraintGraph:
         A = nx.adjacency_matrix(G)
         B = A.toarray()
         # print (A.todense())
-        # print B
+        #print B
         Fixed_Node = self.Loc_X.keys()
         Fixed_Node.sort()
         # print "F", Fixed_Node
@@ -1653,8 +1727,8 @@ class constraintGraph:
             n = len(value)
             # print"n", n
             v = Range - sum(D_V_Newval)
-            # print v
-            if v != 0:
+            #print v
+            if ((v) / (n / 2))!= 0:
                 x = random.randrange(0, ((v) / (n / 2)))
             else:
                 x = 0
@@ -1677,6 +1751,15 @@ class constraintGraph:
 
                 if B[i][j] != 0:
                     X[(i, j)] = B[i][j]
+
+
+        for i in range(source, target):   ### adding missing edges between 2 fixed nodes
+            #print i, i + 1
+            j = i + 1
+            if B[i][j] == 0 and i in self.Loc_X.keys() and j in self.Loc_X.keys():
+                X[(i, i + 1)] = self.Loc_X[i + 1] - self.Loc_X[i]
+                B[i][j] = self.Loc_X[i + 1] - self.Loc_X[i]
+
         Pred = {}  ## Saves all predecessors of each node{node1:[p1,p2],node2:[p1,p2..]}
         for i in range(source, target + 1):
             j = source
@@ -1838,6 +1921,7 @@ class constraintGraph:
 
     def Location_finding(self, B, start, end, SOURCE, TARGET, flag):
 
+
         PATH, Value, Sum = self.LONGEST_PATH(B, start, end)
         if flag == True:
             self.Evaluation_connected(B, PATH, SOURCE, TARGET)
@@ -1901,15 +1985,7 @@ class constraintGraph:
 
         ###################################################################################################################
         ##### Fixed floorplan width  #################
-
-    def FUNCTION_V(self, G):
-        A = nx.adjacency_matrix(G)
-        B = A.toarray()
-        # print (A.todense())
-        # print B
-        Fixed_Node = self.Loc_Y.keys()
-        Fixed_Node.sort()
-        # print "F", Fixed_Node
+    def EDGE_SPLITTER(self,G,Fixed_Node,B):
 
         Splitlist = []
         for i, j in G.edges():
@@ -1919,7 +1995,7 @@ class constraintGraph:
                     edge = (i, j)
                     if edge not in Splitlist:
                         Splitlist.append(edge)
-        # print Splitlist
+        # print "SP", Splitlist
         med = {}
         for i in Splitlist:
             start = i[0]
@@ -1955,17 +2031,80 @@ class constraintGraph:
             for j in Fixed_Node:
                 if G.has_edge(i, j):
                     G.remove_edge(i, j)
+        return G
+
+    def FUNCTION_V(self, G):
+        A = nx.adjacency_matrix(G)
+        B = A.toarray()
+        # print (A.todense())
+        #print B
+
+        Fixed_Node = self.Loc_Y.keys()
+        Fixed_Node.sort()
+        #G=self.EDGE_SPLITTER(G,Fixed_Node,B)
+        #print "F1", Fixed_Node,self.Loc_Y
+
+        Splitlist = []
+        for i, j in G.edges():
+            # print i,j
+            for node in G.nodes():
+                if node in self.Loc_Y.keys() and node > i and node < j:
+                    edge = (i, j)
+                    if edge not in Splitlist:
+                        Splitlist.append(edge)
+        #print "SP", Splitlist
+        med = {}
+        for i in Splitlist:
+            start = i[0]
+            end = i[1]
+
+            for node in Fixed_Node:
+                if node > start and node < end:
+                    key = (start, end)
+                    med.setdefault(key, [])
+                    med[key].append(node)
+        # print med
+
+        for i, v in med.items():
+            # print i,v
+
+            start = i[0]
+            end = i[-1]
+            succ = v
+
+            # print succ
+            s = start
+            e = end
+            # print "s,e", s, e
+            # if len(succ)>1:
+            if s in Fixed_Node or e in Fixed_Node:
+                for i in range(len(succ)):
+                    self.edge_split_V(s, succ[i], e, Fixed_Node, B)
+                    if len(succ) > 1:
+                        s = succ[i]
+
+        #print B
+        for i in Fixed_Node:
+            for j in Fixed_Node:
+                if G.has_edge(i, j):
+                    #print i,j
+                    G.remove_edge(i, j)
+                    #B[i][j]=0
+
         # Draw(G)
         nodes = list(G.nodes())
+        #print "F",Fixed_Node,nodes
         Node_List = []
         for i in range(len(Fixed_Node) - 1):
             node = [Fixed_Node[i]]
             for j in nodes:
-                if j not in node and j >= Fixed_Node[i] and j <= Fixed_Node[i + 1]:
+                if j not in node and j >= Fixed_Node[i] and j <= Fixed_Node[i + 1] :
+                    #print j
                     node.append(j)
+            #print node
             if len(node) > 2:
                 Node_List.append(node)
-        # print Node_List
+        #print Node_List
 
         Connected_List = []
         for k in range(len(Node_List)):
@@ -1976,17 +2115,21 @@ class constraintGraph:
                         if i in Node_List[k] and j in Node_List[m]:
                             if i not in Node_List[m] and j not in Node_List[k]:
                                 if B[i][j] != 0:
+                                    #print i,j
                                     # LIST.append(Node_List[k])
                                     # LIST.append(Node_List[m])
+                                    #print Node_List[k],Node_List[m]
                                     LIST = Node_List[k] + Node_List[m]
                 if len(LIST) > 0:
                     Connected_List.append(list(set(LIST)))
                     # if LIST not in Connected_List:
                     # Connected_List.append(LIST)
-        # print Connected_List
+        #print Connected_List
+
 
         if len(Connected_List) > 0:
             for i in range(len(Connected_List)):
+
                 PATH = Connected_List[i]
                 # print Connected_List[0][0]
                 start = PATH[0]
@@ -1997,13 +2140,15 @@ class constraintGraph:
                     if PATH[i] in self.Loc_Y.keys():
                         SOURCE.append(PATH[i])
 
-                # print SOURCE
+                #print SOURCE
+                SOURCE.sort()
                 TARGET = []
                 for i in range(1, len(PATH)):
                     if PATH[i] in self.Loc_Y.keys():
                         TARGET.append(PATH[i])
 
-                # print TARGET
+                #print TARGET
+                TARGET.sort()
                 self.Location_finding_V(B, start, end, SOURCE, TARGET, flag=True)
                 Fixed_Node = self.Loc_Y.keys()
                 # print "FIXED", Fixed_Node
@@ -2021,10 +2166,10 @@ class constraintGraph:
             H = []
             for i in range(len(Node_List)):
                 H.append(G.subgraph(Node_List[i]))
-            # print H
+            #print H
             for graph in H:
                 Fixed_Node = self.Loc_Y.keys()
-                # print "F", Fixed_Node
+                #print "F", Fixed_Node
                 '''
                 Splitlist = []
                 for i, j in graph.edges():
@@ -2070,9 +2215,11 @@ class constraintGraph:
 
                 # Draw(G)
                 n = list(graph.nodes())
+                #print n
+                n.sort()
                 start = n[0]
                 end = n[-1]
-                # print start, end
+                #print start, end
                 self.Location_finding_V(B, start, end, SOURCE=None, TARGET=None, flag=False)
                 '''
                 for i in Fixed_Node:
@@ -2114,7 +2261,7 @@ class constraintGraph:
             # print"n", n
             v = Range - sum(D_V_Newval)
             # print v
-            if v != 0:
+            if ((v) / (n / 2))!= 0:
                 x = random.randrange(0, ((v) / (n / 2)))
             else:
                 x = 0
@@ -2137,10 +2284,24 @@ class constraintGraph:
 
                 if B[i][j] != 0:
                     X[(i, j)] = B[i][j]
+
+
+        #print"X", X
+        for i in range(source, target):
+            #print i,i+1
+            j=i+1
+            if B[i][j]==0 and i in self.Loc_Y.keys() and j in self.Loc_Y.keys():
+                X[(i, i+1)] = self.Loc_Y[i+1]-self.Loc_Y[i]
+                B[i][j]=self.Loc_Y[i+1]-self.Loc_Y[i]
+
+
         Pred = {}  ## Saves all predecessors of each node{node1:[p1,p2],node2:[p1,p2..]}
         for i in range(source, target + 1):
             j = source
+            #print "T",target
+            #print B
             while j != target:
+                #print j
                 if B[j][i] != 0:
                     # print Matrix[j][i]
                     key = i
@@ -2152,21 +2313,25 @@ class constraintGraph:
                     Pred[key].append(j)
                 j += 1
 
-        # print Pred
+        #print Pred,self.Loc_Y
         n = list(Pred.keys())  ## list of all nodes
-        # print n
+        #print n
 
         dist = {}  ## Saves each node's (cumulative maximum weight from source,predecessor) {node1:(cum weight,predecessor)}
         position = {}
 
         for j in range(source, target + 1):
-            # print j
-
+            #print"j", j,Pred[j],target
+            #if j in n:
             node = j
+            #else:
+                #continue
+
             for i in range(len(Pred[node])):
+                #print i,Pred[node]
                 pred = Pred[node][i]
 
-                # print node, pred
+                #print node, pred
 
                 if j == source:
                     dist[node] = (0, pred)
@@ -2192,8 +2357,9 @@ class constraintGraph:
                     key = node
                     position.setdefault(key, [])
                     position[key].append(pairs[0])
+                    #print position
 
-                # print "dist=", dist, position
+                #print "dist=", dist, position
 
         i = target
         path = []
@@ -2319,11 +2485,13 @@ class constraintGraph:
             TARGET.append(i)
 
     def Location_finding_V(self, B, start, end, SOURCE, TARGET, flag):
+        #print B,start,end,self.Loc_Y.keys()
 
         PATH, Value, Sum = self.LONGEST_PATH_V(B, start, end)
         if flag == True:
             self.Evaluation_connected_V(B, PATH, SOURCE, TARGET)
         else:
+            #print "s",start,end
             Max = self.Loc_Y[end] - self.Loc_Y[start]
 
             Range = Max - Sum

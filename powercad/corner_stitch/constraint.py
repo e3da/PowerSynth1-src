@@ -4,7 +4,7 @@ class constraint():
     Type=["EMPTY","Type_1", "Type_2","Type_3"]
     type=["0","1","2","3"]
     constraintIndex =['minWidth','minSpacing','minEnclosure']
-    minWidth = [2,4,5,6]
+    minWidth = [2,10,8,6]
     minSpacing = np.zeros(shape = (len(constraintIndex)-1, len(constraintIndex)-1))
     minEnclosure = np.zeros(shape=(len(constraintIndex) - 1, len(constraintIndex) - 1))
 
