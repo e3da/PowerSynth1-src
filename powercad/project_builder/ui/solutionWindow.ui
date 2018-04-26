@@ -192,13 +192,6 @@
      </property>
     </widget>
    </item>
-   <item row="3" column="1">
-    <widget class="QPushButton" name="btn_run_drc">
-     <property name="text">
-      <string>Run DRC</string>
-     </property>
-    </widget>
-   </item>
    <item row="6" column="1">
     <widget class="QPushButton" name="btn_export_spice_parasitics">
      <property name="text">
@@ -210,6 +203,20 @@
     <widget class="QPushButton" name="btn_export_spice_reduced_parasitics">
      <property name="text">
       <string>Export SPICE Electrical Reduced Parasitics Netlist</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="1">
+    <widget class="QPushButton" name="btn_run_drc">
+     <property name="text">
+      <string>Run DRC</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="1">
+    <widget class="QPushButton" name="btn_export_empro">
+     <property name="text">
+      <string>Export Solution to EMPro</string>
      </property>
     </widget>
    </item>
