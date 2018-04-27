@@ -5,20 +5,21 @@ Created on Jul 23, 2012
          Quang: adding comments and direction to Zihao's thesis + Unit testing for trace inductance and resistance models + separate the constants in functions
 '''
 
+import csv
 import math
 from math import fabs
 
 from scipy.stats.distributions import norm
 import time
 import os
-import matplotlib.pyplot as plt
-import subprocess
-import numpy as np
-import csv
 import pickle
-#from pyDOE import *
-#from sklearn.svm import SVR
-from powercad.Q3D_automate.Parasistic_Zihao_test import Generate_Zihao_Thesis_Q3D_Analysis_Resistance_and_Inductance
+import subprocess
+from math import fabs
+
+import matplotlib.pyplot as plt
+from pyDOE import *
+
+from powercad.interfaces.Q3D.Parasistic_Zihao_test import Generate_Zihao_Thesis_Q3D_Analysis_Resistance_and_Inductance
 
 LOWEST_ASPECT_RES = 1.0         # I changed it back to 1.0 Quang as stated in Brett's thesis
 LOWEST_ASPECT_IND = 1.0
@@ -40,6 +41,7 @@ def trace_resistance(f, w, l, t, h, p=1.724e-8):             # see main for unit
     # t: mm (trace thickness)
     # h: mm (height of trace above ground plane)
     # p: Ohm*meter (trace resistivity)
+    f=f*1000
     w = fabs(w)
     l = fabs(l)
     if w > l*LOWEST_ASPECT_RES:
@@ -100,6 +102,20 @@ def trace_resistance_svr(f,w,l,t,h,p=1.724e-8):       # Quang's model SVR ,KR ba
 
 def res_bound(w,a,b,c):
     return a/w**b+c
+
+
+def trace_resistance_not_released(f,w,l,t,h,p=1.724e-8):
+    [a1, b1, c1] = res_mdl[0]
+    [a2, b2, c2] = res_mdl[1]
+    lrange=res_mdl[2]
+    p_l = res_bound(w, a1, b1, c1)
+    p_h = res_bound(w, a2, b2, c2)
+    slope = (p_h - p_l) / (lrange[1] - lrange[0])
+    b = p_h - slope * lrange[1]
+    res = slope * l + b
+    if f != 300000 or p != 1.724e-8:
+        res = res * math.sqrt(f * p) / math.sqrt(300e3 * 1.724e-8)
+    return res # units: mOhms
 
 #--------------------------------------------------------------------------
 #-----------  inductance  model of traces on ground plane-- ---------------
@@ -430,19 +446,7 @@ def harvest_data_boundary_linear_approximation(height, thickness, width, length,
             args = [ipy64, FilePath]
             p = subprocess.Popen(args, shell=True, stdout=subprocess.PIPE)
             stdout, stderr = p.communicate()
+
 if __name__ == '__main__':
-    #unit_test_ind_res()
-    #havest_data_lhs_fix_DBC()
-    data_out_path='C:\Users\qmle\Desktop\Testing\Surrogate Model\Final_Test'
-    
-    #harvest_data_boundary_linear_approximation(height=0.64,thickness=0.4,width=[1,50],length=[5.0,50.0],num_of_samples=20,data_out_path,'1')
-    #havest_data()
-    '''--------------------------------------------------------------------------------------------------------------------------------------------------------------------'''           
-    '''--------------------------------------------------------------------------------------------------------------------------------------------------------------------'''           
-                            
-    
-    
-
-
-
-
+    print trace_mutual1(9,4)
+    print trace_mutual(9,9,0.2,4)

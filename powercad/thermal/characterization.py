@@ -3,17 +3,16 @@ Created on Mar 9, 2013
 
 @author: bxs003
 '''
-import pickle
 import csv
+import pickle
 
-from scipy.interpolate import griddata
-from mpl_toolkits.mplot3d import axes3d
-from matplotlib import cm
 import matplotlib.pyplot as plt
 import numpy as np
+from scipy.interpolate import griddata
 
+from powercad.general.data_struct.util import Rect
 from powercad.thermal.fast_thermal import ContourRect, DieThermalFeatures
-from powercad.util import Rect
+
 
 def load_data(filename, flip_values=False):
     with open(filename) as f:

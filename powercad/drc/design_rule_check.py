@@ -13,7 +13,7 @@ INPUT:
 
 from powercad.design.library_structures import BondWire
 from powercad.design.project_structures import DeviceInstance
-from powercad.util import distance
+from powercad.general.data_struct.util import distance
 
 class DesignRuleCheck():
     
