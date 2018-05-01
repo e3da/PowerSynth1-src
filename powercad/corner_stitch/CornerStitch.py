@@ -3584,14 +3584,14 @@ if __name__ == '__main__':
 
     Htree.setNodeId1(Htree.hNodeList[0])
     Vtree.setNodeId1(Vtree.vNodeList[0])
-
+    level=0
 
     CG = cg.constraintGraph(testdir + '/' + testbase, testdir + '/' + testbase)
-    CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList)
-    MIN_X,MIN_Y=CG.minValueCalculation(Htree.hNodeList, Vtree.vNodeList)
+    CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList,level)
+    MIN_X,MIN_Y=CG.minValueCalculation(Htree.hNodeList, Vtree.vNodeList,level)
 
-    print "minX", MIN_X
-    print "minY",MIN_Y
+    #print "minX", MIN_X
+    #print "minY",MIN_Y
 
     #print "Result"
     for node in Htree.hNodeList:
@@ -3614,7 +3614,7 @@ if __name__ == '__main__':
 
     #NLIST=copy.deepcopy( Htree.hNodeList)
     for i in Htree.hNodeList:
-   
+
         print i.id,i,len(i.stitchList)
         print >> f1, i,i.id
     #i=Htree.hNodeList[0]
@@ -3649,7 +3649,7 @@ if __name__ == '__main__':
                 print "B",i.id,k
 
 
-    def plotrectH( k,Rect_H):
+    def plotrectH( k,Rect_H): ###plotting each node after minimum location evaluation in HCS
         """
         Draw all cells in this cornerStitch with stitches pointing to their stitch neighbors
         TODO:
@@ -3690,7 +3690,7 @@ if __name__ == '__main__':
                     colour='blue'
                     #pattern = '+'
                 elif i[-1]=="Type_4":
-                    colour='yellow'
+                    colour="#00bfff"
                     #pattern = '.'
 
 
@@ -3721,9 +3721,10 @@ if __name__ == '__main__':
         plt.ylim(min_y, max_y)
         #fig10.show()
         #return fig10
-        fig10.savefig(testdir+'/'+testbase+str(k)+"H.png")
+        fig10.savefig(testdir+'/'+testbase+str(k)+"H.png",bbox_inches='tight')
+        fig10.savefig(testdir + '/' + testbase + str(k) + "H.eps",format='eps', bbox_inches='tight')
         plt.close()
-    def plotrectV( k,Rect_H):
+    def plotrectV( k,Rect_H):###plotting each node after min location evaluation in VCS
         """
         Draw all cells in this cornerStitch with stitches pointing to their stitch neighbors
         TODO:
@@ -3763,7 +3764,7 @@ if __name__ == '__main__':
                     colour='blue'
                     #pattern = '+'
                 elif i[-1]=="Type_4":
-                    colour='yellow'
+                    colour="#00bfff"
                     #pattern = '.'
 
 
@@ -3794,10 +3795,11 @@ if __name__ == '__main__':
         plt.ylim(min_y, max_y)
         #fig10.show()
         #return fig10
-        fig9.savefig(testdir+'/'+testbase+str(k)+"V.png")
+        fig9.savefig(testdir+'/'+testbase+'-'+str(k)+"V.png",bbox_inches='tight')
+        fig9.savefig(testdir + '/' + testbase + '-' + str(k) + "V.eps",format='eps', bbox_inches='tight')
         plt.close()
 
-    def plotrectH_old( k,Rect_H):
+    def plotrectH_old( k,Rect_H):###plotting each node in HCS before minimum location evaluation
         """
         Draw all cells in this cornerStitch with stitches pointing to their stitch neighbors
         TODO:
@@ -3838,7 +3840,7 @@ if __name__ == '__main__':
                     colour='blue'
                     #pattern = '+'
                 elif i[-1]=="Type_4":
-                    colour='yellow'
+                    colour="#00bfff"
                     #pattern = '.'
 
 
@@ -3867,11 +3869,12 @@ if __name__ == '__main__':
 
         plt.xlim(min_x, max_x)
         plt.ylim(min_y, max_y)
-        #fig10.show()
+        #fig10.show().eps",format='eps',
         #return fig10
-        fig10.savefig(testdir+'/'+testbase+str(k)+"init-H.png")
+        fig10.savefig(testdir+'/'+testbase+'-'+str(k)+"init-H.png",bbox_inches='tight')
+        fig10.savefig(testdir + '/' + testbase + '-' + str(k) + "init-H.eps",format='eps', bbox_inches='tight')
         plt.close()
-    def plotrectV_old( k,Rect_H):
+    def plotrectV_old( k,Rect_H):##plotting each node in VCS before minimum location evaluation
         """
         Draw all cells in this cornerStitch with stitches pointing to their stitch neighbors
         TODO:
@@ -3911,7 +3914,7 @@ if __name__ == '__main__':
                     colour='blue'
                     #pattern = '+'
                 elif i[-1]=="Type_4":
-                    colour='yellow'
+                    colour="#00bfff"
                     #pattern = '.'
 
 
@@ -3942,11 +3945,12 @@ if __name__ == '__main__':
         plt.ylim(min_y, max_y)
         #fig10.show()
         #return fig10
-        fig9.savefig(testdir+'/'+testbase+str(k)+"init-V.png")
+        fig9.savefig(testdir+'/'+testbase+'-'+str(k)+"init-V.png",bbox_inches='tight')
+        fig9.savefig(testdir + '/' + testbase + '-' + str(k) + "init-V.eps",format='eps', bbox_inches='tight')
         plt.close()
 
 
-    def plotrectH_new(Rect1_H):
+    def plotrectH_new(Rect1_H):##plotting each node in HCS for level 2 optimization
         """
         Draw all cells in this cornerStitch with stitches pointing to their stitch neighbors
         TODO:
@@ -3960,6 +3964,19 @@ if __name__ == '__main__':
         #fig8, ax6 = plt.subplots()
         for j in range(len(Rect1_H)):
             Rect_H=Rect1_H[j]
+            max_x = 0
+            max_y = 0
+            min_x = 1000
+            min_y = 1000
+            for i in Rect_H:
+                if i[0] + i[2] > max_x:
+                    max_x = i[0] + i[2]
+                if i[1] + i[3] > max_y:
+                    max_y = i[1] + i[3]
+                if i[0] < min_x:
+                    min_x = i[0]
+                if i[1] < min_y:
+                    min_y = i[1]
             fig8 = matplotlib.pyplot.figure()
             ax6 = fig8.add_subplot(111, aspect='equal')
             #ax6 = plt.axes(xlim=(0, 60), ylim=(0, 60))
@@ -3986,7 +4003,7 @@ if __name__ == '__main__':
 
                         # pattern = '+'
                     elif i[-1] == "Type_4":
-                        colour = 'yellow'
+                        colour = "#00bfff"
                         # pattern = '.'
 
                     ax6.add_patch(
@@ -4011,13 +4028,18 @@ if __name__ == '__main__':
                         )
                     )
 
-            plt.xlim(0, 210)
-            plt.ylim(0, 210)
+            #plt.xlim(0, 210)
+            #plt.ylim(0, 210)
+            plt.xlim(min_x, max_x)
+            plt.ylim(min_y, max_y)
             # fig10.show()
             # return fig10
-            fig8.savefig(testdir + '/' +testbase+ str(j)+"new-H.png")
+            #fig8.savefig(testdir + '/' +testbase+ str(j)+"new-H.eps",format='eps', dpi=1000,)
+            fig8.savefig(testdir + '/' + testbase + '-' + str(j) + "new-H.png", dpi=1000,bbox_inches='tight')
+            #fig8.savefig(testdir + '/' + testbase +'-'+ str(j) + "minH.eps", format='eps', dpi=1000,bbox_inches='tight')
+            fig8.savefig(testdir + '/' + testbase + '-' + str(j) + "new-H.eps", format='eps', dpi=1000,bbox_inches='tight')
             plt.close()
-    def plotrectV_new(Rect1_V):
+    def plotrectV_new(Rect1_V):##plotting each node in VCS for level 2 optimization
         """
         Draw all cells in this cornerStitch with stitches pointing to their stitch neighbors
         TODO:
@@ -4035,6 +4057,19 @@ if __name__ == '__main__':
             #ax6 = plt.axes(xlim=(0, 60), ylim=(0, 60))
             #Rect_H=Rect_H.reverse()
             Rect_V=Rect1_V[j]
+            max_x = 0
+            max_y = 0
+            min_x = 1000
+            min_y = 1000
+            for i in Rect_V:
+                if i[0] + i[2] > max_x:
+                    max_x = i[0] + i[2]
+                if i[1] + i[3] > max_y:
+                    max_y = i[1] + i[3]
+                if i[0] < min_x:
+                    min_x = i[0]
+                if i[1] < min_y:
+                    min_y = i[1]
 
             for i in Rect_V:
 
@@ -4055,7 +4090,7 @@ if __name__ == '__main__':
 
                         # pattern = '+'
                     elif i[-1] == "Type_4":
-                        colour = 'yellow'
+                        colour = "#00bfff"
                         # pattern = '.'
 
                     ax7.add_patch(
@@ -4080,16 +4115,205 @@ if __name__ == '__main__':
                         )
                     )
 
-            plt.xlim(0, 210)
-            plt.ylim(0, 210)
+            #plt.xlim(0, 210)
+            #plt.ylim(0, 210)
+            plt.xlim(min_x, max_x)
+            plt.ylim(min_y, max_y)
             # fig10.show()
             # return fig10
-            fig7.savefig(testdir + '/' +testbase+str(j)+ "new-V.png")
+            #plt.savefig('destination_path.eps', )
+            fig7.savefig(testdir + '/' + testbase + '-' + str(j) + "new-V.png", dpi=1000,bbox_inches='tight')
+            #fig7.savefig(testdir + '/' + testbase + '-' + str(j) + "minV.eps", format='eps', dpi=1000,bbox_inches='tight')
+            fig7.savefig(testdir + '/' +testbase+'-'+str(j)+ "new-V.eps",format='eps', dpi=1000,bbox_inches='tight')
             plt.close()
 
-    '''
 
-    def UPDATE(MINX,MINY):
+    def plotrectH_min(Rect1_H):  ##plotting each node in HCS for level 2 optimization
+        """
+        Draw all cells in this cornerStitch with stitches pointing to their stitch neighbors
+        TODO:
+         Also should probably change the dimensions of the object window depending on the cornerStitch size.
+        """
+
+        # fig2 = matplotlib.pyplot.figure()
+        # node=nodelist[0]
+
+        # print"H", Rect_H
+        # fig8, ax6 = plt.subplots()
+
+        max_x = 0
+        max_y = 0
+        min_x = 1000
+        min_y = 1000
+
+        fig8 = matplotlib.pyplot.figure()
+        ax6 = fig8.add_subplot(111, aspect='equal')
+        # ax6 = plt.axes(xlim=(0, 60), ylim=(0, 60))
+        # Rect_H=Rect_H.reverse()
+        for i in Rect1_H[0]:
+            if i[0] + i[2] > max_x:
+                max_x = i[0] + i[2]
+            if i[1] + i[3] > max_y:
+                max_y = i[1] + i[3]
+            if i[0] < min_x:
+                min_x = i[0]
+            if i[1] < min_y:
+                min_y = i[1]
+        #print Rect_H
+        for j in range(len(Rect1_H)):
+            Rect_H=Rect1_H[j]
+
+            for i in Rect_H:
+                #print"i", i
+
+                # ax4 = fig2.add_subplot(111, aspect='equal')
+                if not i[-1] == "EMPTY":
+
+                    if i[-1] == "Type_1":
+                        colour = 'green'
+                        # pattern = '\\'
+                    elif i[-1] == "Type_2":
+
+                        colour = 'red'
+                        # pattern='*'
+                    elif i[-1] == "Type_3":
+                        # print"2", i[0], i[1]
+                        colour = 'blue'
+
+                        # pattern = '+'
+                    elif i[-1] == "Type_4":
+                        colour = "#00bfff"
+                        # pattern = '.'
+
+                    ax6.add_patch(
+                        matplotlib.patches.Rectangle(
+                            (i[0], i[1]),  # (x,y)
+                            i[2],  # width
+                            i[3],  # height
+                            facecolor=colour, edgecolor='black'
+
+                        )
+                    )
+
+                else:
+                    # pattern = ''
+
+                    ax6.add_patch(
+                        matplotlib.patches.Rectangle(
+                            (i[0], i[1]),  # (x,y)
+                            i[2],  # width
+                            i[3],  # height
+                            facecolor="white", edgecolor='black'
+                        )
+                    )
+
+        # plt.xlim(0, 210)
+        # plt.ylim(0, 210)
+        plt.xlim(min_x, max_x)
+        plt.ylim(min_y, max_y)
+        # fig10.show()
+        # return fig10
+        # fig8.savefig(testdir + '/' +testbase+ str(j)+"new-H.eps",format='eps', dpi=1000,)
+        fig8.savefig(testdir + '/' + testbase + '-' +  "minH.png", dpi=1000, bbox_inches='tight')
+        fig8.savefig(testdir + '/' + testbase + '-' +  "minH.eps", format='eps', dpi=1000,
+                     bbox_inches='tight')
+        # fig8.savefig(testdir + '/' + testbase + '-' + str(j) + "new-H.eps", format='eps', dpi=1000,bbox_inches='tight')
+        plt.close()
+
+
+    def plotrectV_min(Rect1_V):  ##plotting each node in VCS for level 2 optimization
+        """
+        Draw all cells in this cornerStitch with stitches pointing to their stitch neighbors
+        TODO:
+         Also should probably change the dimensions of the object window depending on the cornerStitch size.
+        """
+
+        # fig2 = matplotlib.pyplot.figure()
+        # node=nodelist[0]
+
+        # print"H", Rect_H
+        # fig8, ax6 = plt.subplots()
+        #for j in range(len(Rect1_V)):
+
+        fig7 = matplotlib.pyplot.figure()
+        ax7 = fig7.add_subplot(111, aspect='equal')
+        # ax6 = plt.axes(xlim=(0, 60), ylim=(0, 60))
+        # Rect_H=Rect_H.reverse()
+
+        max_x = 0
+        max_y = 0
+        min_x = 1000
+        min_y = 1000
+        for i in Rect1_V[0]:
+            if i[0] + i[2] > max_x:
+                max_x = i[0] + i[2]
+            if i[1] + i[3] > max_y:
+                max_y = i[1] + i[3]
+            if i[0] < min_x:
+                min_x = i[0]
+            if i[1] < min_y:
+                min_y = i[1]
+        for j in range(len(Rect1_V)):
+            Rect_V = Rect1_V[j]
+            for i in Rect_V:
+
+                # ax4 = fig2.add_subplot(111, aspect='equal')
+                if not i[-1] == "EMPTY":
+
+                    if i[-1] == "Type_1":
+                        colour = 'green'
+                        # pattern = '\\'
+                    elif i[-1] == "Type_2":
+
+                        colour = 'red'
+                        # pattern='*'
+                    elif i[-1] == "Type_3":
+                        # print"2", i[0], i[1]
+                        colour = 'blue'
+
+                        # pattern = '+'
+                    elif i[-1] == "Type_4":
+                        colour = "#00bfff"
+                        # pattern = '.'
+
+                    ax7.add_patch(
+                        matplotlib.patches.Rectangle(
+                            (i[0], i[1]),  # (x,y)
+                            i[2],  # width
+                            i[3],  # height
+                            facecolor=colour, edgecolor='black'
+
+                        )
+                    )
+
+                else:
+                    # pattern = ''
+
+                    ax7.add_patch(
+                        matplotlib.patches.Rectangle(
+                            (i[0], i[1]),  # (x,y)
+                            i[2],  # width
+                            i[3],  # height
+                            facecolor="white", edgecolor='black'
+                        )
+                    )
+
+        # plt.xlim(0, 210)
+        # plt.ylim(0, 210)
+        plt.xlim(min_x, max_x)
+        plt.ylim(min_y, max_y)
+        # fig10.show()
+        # return fig10
+        # plt.savefig('destination_path.eps', )
+        fig7.savefig(testdir + '/' + testbase + '-' + "minV.png", dpi=1000, bbox_inches='tight')
+        fig7.savefig(testdir + '/' + testbase + '-' + "minV.eps", format='eps', dpi=1000,
+                     bbox_inches='tight')
+        # fig7.savefig(testdir + '/' +testbase+'-'+str(j)+ "new-V.eps",format='eps', dpi=1000,bbox_inches='tight')
+        plt.close()
+
+
+
+    def UPDATE_min(MINX,MINY):
         Recatngles_H={}
         RET_H={}
         for i in Htree.hNodeList:
@@ -4143,7 +4367,8 @@ if __name__ == '__main__':
         for k, v in Recatngles_H.items():
             #print k
             Total_H.append(v)
-        plotrectH_new(Total_H)
+        #plotrectH_new(Total_H)
+        plotrectH_min(Total_H)
 
         for k,v in Recatngles_V.items():
             #print k, len(v)
@@ -4155,8 +4380,9 @@ if __name__ == '__main__':
         for k, v in Recatngles_V.items():
             #print k
             Total_V.append(v)
-        plotrectV_new(Total_V)
-    '''
+        #plotrectV_new(Total_V)
+        plotrectV_min(Total_V)
+
 
     def UPDATE(MINX,MINY):
         MIN_X=MINX.values()[0]
@@ -4219,7 +4445,11 @@ if __name__ == '__main__':
 
 
 
-    UPDATE(MIN_X, MIN_Y)
+    #UPDATE(MIN_X, MIN_Y)
+    if level==0:
+        UPDATE_min(MIN_X, MIN_Y)
+    else:
+        UPDATE(MIN_X, MIN_Y)
 
 
 
@@ -4253,7 +4483,7 @@ if __name__ == '__main__':
                         colour='blue'
                         #pattern = '+'
                     elif cell.cell.type=="Type_4":
-                        colour='black'
+                        colour="#00bfff"
                         #pattern = '.'
 
 
@@ -4283,7 +4513,7 @@ if __name__ == '__main__':
 
             plt.xlim(0, 60)
             plt.ylim(0, 60)
-            fig2.savefig(testdir+'/'+testbase+".png")
+            fig2.savefig(testdir+'/'+testbase+".png",bbox_inches='tight')
             plt.close()
         #pylab.pause(11000)
     def findGraphEdges2(nodeList):
@@ -4378,20 +4608,20 @@ if __name__ == '__main__':
                         elif cell.cell.type == "Type_3":
                             colour = 'blue'
                         elif cell.cell.type == "Type_4":
-                            colour = 'black'
-                        '''
-                        ax4.add_patch(
+                            colour = "#00bfff"
+
+                        ax5.add_patch(
                             matplotlib.patches.Rectangle(
                                 (cell.cell.x, cell.cell.y),  # (x,y)
                                 cell.getWidth(),  # width
                                 cell.getHeight(),  # height
 
-                                facecolor=colour,edgecolor='blue'
+                                facecolor=colour,edgecolor='black'
 
 
                             )
                         )
-                        '''
+
 
 
                     else:
@@ -4423,7 +4653,7 @@ if __name__ == '__main__':
                 for cell in node.stitchList:
 
                     if not cell.cell.type == "EMPTY":
-                       
+
                         if cell.cell.type == "Type_1":
                             colour = 'green'
                         elif cell.cell.type == "Type_2":
@@ -4431,7 +4661,7 @@ if __name__ == '__main__':
                         elif cell.cell.type == "Type_3":
                             colour = 'blue'
                         elif cell.cell.type=="Type_4":
-                            colour='black'
+                            colour="#00bfff"
                         '''
                         ax2.add_patch(
                             matplotlib.patches.Rectangle(
@@ -4496,7 +4726,7 @@ if __name__ == '__main__':
                         elif cell.cell.type == "Type_3":
                             colour = 'blue'
                         elif cell.cell.type == "Type_4":
-                            colour = 'black'
+                            colour = "#00bfff"
                         '''
                         ax2.add_patch(
                             matplotlib.patches.Rectangle(
@@ -4547,7 +4777,7 @@ if __name__ == '__main__':
             else:
                 continue
 
-                   
+
 
             #for arr1 in findGraphEdges2(nodelist):
                 #ax2.arrow(arr1[0], arr1[1], arr1[2], arr1[3], head_width=.09, head_length=.09, color=arr1[4])
@@ -4672,19 +4902,19 @@ if __name__ == '__main__':
                         elif cell.cell.type == "Type_3":
                             colour = 'blue'
                         elif cell.cell.type == "Type_4":
-                            colour = 'black'
-                        '''
-                        ax4.add_patch(
+                            colour = "#00bfff"
+
+                        ax6.add_patch(
                             matplotlib.patches.Rectangle(
                                 (cell.cell.x, cell.cell.y),  # (x,y)
                                 cell.getWidth(),  # width
                                 cell.getHeight(),  # height
                                 facecolor=colour,
-                                edgecolor='blue'
+                                edgecolor='black'
 
                             )
                         )
-                        '''
+
                     else:
                         #pattern = ''
                         '''
@@ -4723,7 +4953,7 @@ if __name__ == '__main__':
                         elif cell.cell.type == "Type_3":
                             colour = 'blue'
                         elif cell.cell.type == "Type_4":
-                            colour = 'black'
+                            colour = "#00bfff"
                         '''
                         ax3.add_patch(
                             matplotlib.patches.Rectangle(
@@ -4785,7 +5015,7 @@ if __name__ == '__main__':
                         elif cell.cell.type == "Type_3":
                             colour = 'blue'
                         elif cell.cell.type == "Type_4":
-                            colour = 'black'
+                            colour = "#00bfff"
                         '''
                         ax3.add_patch(
                             matplotlib.patches.Rectangle(
@@ -4860,8 +5090,8 @@ if __name__ == '__main__':
             #fig3.savefig(testdir + '/' + testbase +str(i)+ "V.png")
         fig6.savefig(testdir + '/' + testbase + "V.png")
 
-    drawLayer1(Vtree.vNodeList)
-    drawLayer2(Htree.hNodeList)
+    #drawLayer1(Vtree.vNodeList)
+    #drawLayer2(Htree.hNodeList)
     drawLayer(Htree.hNodeList)
 
     def drawLayer_11( truePointer=False):
