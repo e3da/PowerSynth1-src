@@ -3584,7 +3584,7 @@ if __name__ == '__main__':
 
     Htree.setNodeId1(Htree.hNodeList[0])
     Vtree.setNodeId1(Vtree.vNodeList[0])
-    level=0
+    level=2
 
     CG = cg.constraintGraph(testdir + '/' + testbase, testdir + '/' + testbase)
     CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList,level)

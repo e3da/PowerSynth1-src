@@ -91,7 +91,7 @@ class constraintGraph:
         self.minX = {}
         self.minY = {}
         self.W_T = 300
-        self.H_T = 150
+        self.H_T = 250
 
     def getNeighbors(self, vertex):
         """
@@ -841,16 +841,16 @@ class constraintGraph:
                             if v[1] == '1':
                                 val = random.randint(10, 30)
                             elif v[1] == '2':
-                                val = random.randint(8, 20)
+                                val = random.randint(8, 30)
                                 # val = 8
                             elif v[1] == '3':
-                                val = random.randint(6, 14)
+                                val = random.randint(6, 30)
 
                             elif v[1] == '4':
-                                val = random.randint(3, 10)
+                                val = random.randint(3, 30)
 
                         elif v[2] == 1:
-                            val = random.randint(5, 10)
+                            val = random.randint(5, 30)
                         else:
                             val = 5
                     edge[(k1)] = val
@@ -982,7 +982,7 @@ class constraintGraph:
                 # G.add_weighted_edges_from([(0,1,2),(1,2,3),(2,3,4),(3,4,4),(4,5,3),(5,6,2),(1,4,15),(2,5,16),(1,5,20)])
                 G.add_weighted_edges_from(H)
                 # Draw(G)
-                self.Loc_X = {n[0]: 0, n[1]: 5, n[-2]: self.W_T - 5, n[-1]: self.W_T}
+                self.Loc_X = {n[0]: 0, n[-1]: self.W_T}
                 self.FUNCTION(G)
                 loct.append(self.Loc_X)
 
@@ -1207,15 +1207,15 @@ class constraintGraph:
                             if v[1] == '1':
                                 val = random.randint(10, 30)
                             elif v[1] == '2':
-                                val = random.randint(8, 20)
+                                val = random.randint(8, 30)
                                 # val = 8
                             elif v[1] == '3':
-                                val = random.randint(6, 14)
+                                val = random.randint(6, 30)
                             elif v[1] == '4':
-                                val = random.randint(3, 10)
+                                val = random.randint(3, 30)
 
                         elif v[2] == 1:
-                            val = random.randint(5, 10)
+                            val = random.randint(5, 30)
                         else:
                             val = 5
                     edge[(k1)] = val
@@ -1344,7 +1344,7 @@ class constraintGraph:
                 # G.add_weighted_edges_from([(0,1,2),(1,2,3),(2,3,4),(3,4,4),(4,5,3),(5,6,2),(1,4,15),(2,5,16),(1,5,20)])
                 G.add_weighted_edges_from(V)
                 # Draw(G)
-                self.Loc_Y = {n[0]: 0, n[1]: 5, n[-2]: self.H_T - 5, n[-1]: self.H_T}
+                self.Loc_Y = {n[0]: 0,  n[-1]: self.H_T}
                 self.FUNCTION_V(G)
                 loct.append(self.Loc_Y)
 

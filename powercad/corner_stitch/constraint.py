@@ -1,10 +1,10 @@
 import numpy as np
 
 class constraint():
-    Type=["EMPTY","Type_1", "Type_2","Type_3"]
-    type=["0","1","2","3"]
+    Type=["EMPTY","Type_1", "Type_2","Type_3","Type_4"]
+    type=["0","1","2","3","4"]
     constraintIndex =['minWidth','minSpacing','minEnclosure']
-    minWidth = [2,10,8,6]
+    minWidth = [2,10,8,6,3]
     minSpacing = np.zeros(shape = (len(constraintIndex)-1, len(constraintIndex)-1))
     minEnclosure = np.zeros(shape=(len(constraintIndex) - 1, len(constraintIndex) - 1))
 
@@ -20,10 +20,10 @@ class constraint():
 
 
     def setupMinSpacing(self):
-        constraint.minSpacing = ([[0,0,0,0],[0,2, 3, 4],[0,3, 2, 5],[0,4, 5, 2]])
+        constraint.minSpacing = ([[0,0,0,0,0],[0,2, 3, 4,5],[0,3, 2, 5,6],[0,4, 5, 2,8],[0,5,6,8,2]])
 
     def setupMinEnclosure(self):
-        constraint.minEnclosure=([[0,5,5,5],[0,0, 3, 4],[0,0, 0, 1],[0,0, 0, 0]])
+        constraint.minEnclosure=([[0,5,5,5,5],[0,0, 3, 4,5],[0,0, 0, 2,3],[0,0, 0, 0,1],[0,0,0,0,0]])
 
     def addConstraint(self, conName, conValue):
         self.constraintIndex.append(conName)
