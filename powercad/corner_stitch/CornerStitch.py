@@ -18,8 +18,10 @@ from matplotlib.patches import Circle, Wedge
 from matplotlib.collections import PatchCollection
 import constraintGraph_Dev as cg
 import CSCG
-import constraint
+import constraint as ct
 import collections
+import json
+import ast
 
 
 class cell:
@@ -3432,7 +3434,7 @@ if __name__ == '__main__':
     HID=0
     Tile1=tile(None, None, None, None, None, cell(0, 0, "EMPTY"),nodeId=1)
     TN=tile(None, None, None, None, None, cell(0, 60, None))
-    TE = tile(None, None, None, None, None, cell(60, 0,  None))
+    TE = tile(None, None, None, None, None, cell(70, 0,  None))
     TW= tile(None, None, None, None, None, cell(-1000, 0,  None))
     TS = tile(None, None, None, None, None, cell(0,-1000,  None))
     Tile1.NORTH=TN
@@ -3450,7 +3452,7 @@ if __name__ == '__main__':
     Vtree=Tree(hNodeList=None,vNodeList=[Vnode0])
     Tile2 = tile(None, None, None, None, None, cell(0, 0, "EMPTY"), nodeId=1)
     TN2 = tile(None, None, None, None, None, cell(0, 60, None))
-    TE2 = tile(None, None, None, None, None, cell(60, 0, None))
+    TE2 = tile(None, None, None, None, None, cell(70, 0, None))
     TW2 = tile(None, None, None, None, None, cell(-1000, 0, None))
     TS2 = tile(None, None, None, None, None, cell(0, -1000, None))
     Tile2.NORTH = TN2
@@ -3473,6 +3475,35 @@ if __name__ == '__main__':
 
     if len(sys.argv) > 1:
         testfile = sys.argv[1]  # taking input from command line
+        constraint_file=  sys.argv[2]
+        level= int(sys.argv[3])
+        if level!=0:
+
+            N=  int(sys.argv[4])
+
+            W=  int(sys.argv[5])
+
+            H=  int(sys.argv[6])
+        #print sys.argv[6]
+
+            XLoc=ast.literal_eval(sys.argv[7])
+        
+            YLoc=ast.literal_eval(sys.argv[8])
+        else:
+            N=None
+            W=None
+            H=None
+            XLoc=None
+            YLoc=None
+        #XLoc=(sys.argv[6].strip('{}').split(','))
+        #print XLoc
+        #XLoc=json.loads(sys.argv[6])
+        #YLoc=json.loads(sys.argv[7])
+
+        #constraint_file= sys.argv[4]
+        #print YLoc
+
+        #constraints=  sys.argv[4]
 
         f = open(testfile, "rb")  # opening file in binary read mode
         index_of_dot = testfile.rindex('.')  # finding the index of (.) in path
@@ -3495,16 +3526,27 @@ if __name__ == '__main__':
                 #In = [int(c[0]), int(c[1]), int(c[2]), int(c[3]), c[4]]
                 In = line.split(',')
                 Input.append(In)
-                # emptyVExample.insert(int(c[0]), int(c[1]), int(c[2]), int(c[3]), c[4])  # taking parameters of insert function (4 coordinates as integer and type of cell as string)
-                # emptyHExample.insert(int(c[0]), int(c[1]), int(c[2]), int(c[3]), c[4])
+        f2= open(constraint_file, "rb")
+        constraints=[]
+        for line in f2.read().splitlines():
+            LINE=line.split(';')
+            #print LINE
+            if LINE!=['']:
+                constraints.append([json.loads(y) for y in LINE])
 
-                #list.append(patches.Rectangle(
-                    #(int(c[0]), int(c[3])), (int(c[2]) - int(c[0])), (int(c[1]) - int(c[3])),
+                
 
-                    ##))
+
     else:
         exit(1)
     print Input
+    print constraints
+
+
+
+
+
+        #Type=
 
     while(len(Input)>0):
         inp=Input.pop(0)
@@ -3584,10 +3626,15 @@ if __name__ == '__main__':
 
     Htree.setNodeId1(Htree.hNodeList[0])
     Vtree.setNodeId1(Vtree.vNodeList[0])
-    level=2
-
-    CG = cg.constraintGraph(testdir + '/' + testbase, testdir + '/' + testbase)
-    CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList,level)
+    #level=2
+    #N=10
+    CONSTRAINT=ct.constraint()
+    for i in constraints:
+        CONSTRAINT.setupMinWidth(i[0])
+        CONSTRAINT.setupMinSpacing(i[1])
+        CONSTRAINT.setupMinEnclosure(i[2])
+    CG = cg.constraintGraph(testdir + '/' + testbase, testdir + '/' + testbase,W,H,XLoc,YLoc)
+    CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList,level,N)
     MIN_X,MIN_Y=CG.minValueCalculation(Htree.hNodeList, Vtree.vNodeList,level)
 
     #print "minX", MIN_X
@@ -4511,8 +4558,10 @@ if __name__ == '__main__':
                     )
 
 
-            plt.xlim(0, 60)
+            plt.xlim(0, 70)                     
             plt.ylim(0, 60)
+            fig2.savefig(testdir + '/' + testbase + "-input.eps", format='eps',bbox_inches='tight')
+            #fig2.savefig(testdir + '/' + testbase + "-input.emf", format='emf',bbox_inches='tight')
             fig2.savefig(testdir+'/'+testbase+".png",bbox_inches='tight')
             plt.close()
         #pylab.pause(11000)
@@ -4590,7 +4639,7 @@ if __name__ == '__main__':
 
         # arrowList2=[]
         fig5= plt.figure()
-        ax5 = plt.axes(xlim=(0, 60), ylim=(0, 60))
+        ax5 = plt.axes(xlim=(0, 70), ylim=(0, 60))
         for node in nodelist:
 
 
@@ -4799,7 +4848,7 @@ if __name__ == '__main__':
             ####Setting axis labels(begin)
         #print "LEN", len(ax2.patches)
             i=node.id
-            plt.xlim(0, 60)
+            plt.xlim(0, 70)
             plt.ylim(0, 60)
 
             #fig4.savefig(testdir + '/' + testbase +'1'+ "H.png")
@@ -4885,7 +4934,7 @@ if __name__ == '__main__':
 
         # arrowList2=[]
         fig6 = plt.figure()
-        ax6 = plt.axes(xlim=(0, 60), ylim=(0, 60))
+        ax6 = plt.axes(xlim=(0, 70), ylim=(0, 60))
         for node in nodelist:
 
             if node.id==1:
@@ -5084,7 +5133,7 @@ if __name__ == '__main__':
 
             ####Setting axis labels(begin)
             i=node.id
-            plt.xlim(0, 60)
+            plt.xlim(0, 70)
             plt.ylim(0, 60)
             #fig4.savefig(testdir + '/' + testbase +'1'+ "V.png")
             #fig3.savefig(testdir + '/' + testbase +str(i)+ "V.png")
@@ -5190,7 +5239,7 @@ if __name__ == '__main__':
 
 
 
-            plt.xlim(0, 60)
+            plt.xlim(0, 70)
             plt.ylim(0, 60)
             fig2.savefig(testdir+'/'+testbase+"node-"+str(i)+".png",bbox_inches='tight')
             #fig2.show()

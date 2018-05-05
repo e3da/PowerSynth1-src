@@ -38,7 +38,7 @@ class constraintGraph:
         self.zeroDimensionList = []
         ####################################
 
-    def __init__(self, name1, name2):
+    def __init__(self, name1, name2,W=None,H=None,XLocation=None,YLocation=None):
         """
         Default constructor
         """
@@ -90,8 +90,12 @@ class constraintGraph:
 
         self.minX = {}
         self.minY = {}
-        self.W_T = 300
-        self.H_T = 250
+        self.W_T =W #300
+        self.H_T =H#250
+        self.XLoc = XLocation
+        self.YLoc= YLocation
+        #self.Loc_X=XLocation
+        #self.Loc_Y=YLocation
 
     def getNeighbors(self, vertex):
         """
@@ -113,7 +117,7 @@ class constraintGraph:
         """
         return
 
-    def graphFromLayer(self, H_NODELIST, V_NODELIST, level):
+    def graphFromLayer(self, H_NODELIST, V_NODELIST, level,N=None):
         """
         given a cornerStitch, construct a constraint graph detailing the dependencies of
         one dimension point to another
@@ -219,7 +223,7 @@ class constraintGraph:
                         parent = i.parent.id
                     else:
                         parent = None
-            self.cgToGraph_h(name, ID, self.edgesh_new[ID], parent, level)
+            self.cgToGraph_h(name, ID, self.edgesh_new[ID], parent, level,N)
 
         for k, v in list(self.edgesv_new.iteritems())[::-1]:
 
@@ -231,7 +235,7 @@ class constraintGraph:
                 if i.id == ID:
                     if i.parent != None:
                         parent = i.parent.id
-            self.cgToGraph_v(name, ID, edgev, parent, level)
+            self.cgToGraph_v(name, ID, edgev, parent, level,N)
 
         print "min_V", self.minLocationV
         print "min_H", self.minLocationH
@@ -771,7 +775,7 @@ class constraintGraph:
         print "foo", foo.getEdgeDict()
     '''
 
-    def cgToGraph_h(self, name, ID, edgeh, parentID, level):
+    def cgToGraph_h(self, name, ID, edgeh, parentID, level,N):
         # print ID
         G2 = nx.MultiDiGraph()
         dictList1 = []
@@ -827,7 +831,7 @@ class constraintGraph:
             label4 = copy.deepcopy(label)
             # print "l3",len(label4),label4
             D = []
-            for i in range(10):
+            for i in range(N):
 
                 EDGEH = []
                 for i in range(len(label4)):
@@ -852,7 +856,7 @@ class constraintGraph:
                         elif v[2] == 1:
                             val = random.randint(5, 30)
                         else:
-                            val = 5
+                            val = random.randint(5,20)
                     edge[(k1)] = val
                     EDGEH.append(edge)
                 D.append(EDGEH)
@@ -961,8 +965,7 @@ class constraintGraph:
 
             d3 = defaultdict(list)
             for i in edge_label:
-                k, v = list(i.items())[
-                    0]  # an alternative to the single-iterating inner loop from the previous solution
+                k, v = list(i.items())[0]  # an alternative to the single-iterating inner loop from the previous solution
                 d3[k].append(v)
             # print d3
             X = {}
@@ -975,15 +978,23 @@ class constraintGraph:
             # print "H",H
 
             loct = []
-            for i in range(10):
+
+            for i in range(N):
+                self.Loc_X={}
                 G = nx.MultiDiGraph()
                 n = list(G2.nodes())
                 G.add_nodes_from(n)
                 # G.add_weighted_edges_from([(0,1,2),(1,2,3),(2,3,4),(3,4,4),(4,5,3),(5,6,2),(1,4,15),(2,5,16),(1,5,20)])
                 G.add_weighted_edges_from(H)
                 # Draw(G)
-                self.Loc_X = {n[0]: 0, n[-1]: self.W_T}
+                for k, v in self.XLoc.items():
+                    if k in n:
+                        self.Loc_X[k] = v
+                #print "LOC_X", self.Loc_X
+                #self.Loc_X = {n[0]: 0, n[-1]: self.W_T}
+                #self.Loc_X = {n[0]: 0, n[1]: 5, n[3]: 15, n[4]: 20, n[6]: 30, n[7]: 35, n[9]: 45, n[10]: 50, n[12]: 60,n[14]: 65, n[16]: 100, n[17]: 120, n[-1]: self.W_T}
                 self.FUNCTION(G)
+                #print"FINX",self.Loc_X
                 loct.append(self.Loc_X)
 
             for i in loct:
@@ -1138,7 +1149,7 @@ class constraintGraph:
         path.pop()
         visited[start] = False
 
-    def cgToGraph_v(self, name, ID, edgev, parentID, level):
+    def cgToGraph_v(self, name, ID, edgev, parentID, level,N):
 
         GV = nx.MultiDiGraph()
         dictList1 = []
@@ -1193,7 +1204,7 @@ class constraintGraph:
             label4 = copy.deepcopy(label)
             # print "l3",len(label4),label4
             D = []
-            for i in range(10):
+            for i in range(N):
 
                 EDGEV = []
                 for i in range(len(label4)):
@@ -1217,7 +1228,7 @@ class constraintGraph:
                         elif v[2] == 1:
                             val = random.randint(5, 30)
                         else:
-                            val = 5
+                            val = random.randint(5, 20)
                     edge[(k1)] = val
                     EDGEV.append(edge)
                 D.append(EDGEV)
@@ -1337,16 +1348,28 @@ class constraintGraph:
             # print "H",H
 
             loct = []
-            for i in range(10):
+
+            #self.Loc_Y = LOC_INIT
+
+            for i in range(N):
+                self.Loc_Y = {}
                 G = nx.MultiDiGraph()
                 n = list(GV.nodes())
                 G.add_nodes_from(n)
                 # G.add_weighted_edges_from([(0,1,2),(1,2,3),(2,3,4),(3,4,4),(4,5,3),(5,6,2),(1,4,15),(2,5,16),(1,5,20)])
                 G.add_weighted_edges_from(V)
                 # Draw(G)
-                self.Loc_Y = {n[0]: 0,  n[-1]: self.H_T}
+                for k, v in self.YLoc.items():
+                    if k in n:
+                        self.Loc_Y[k] = v
+                #self.Loc_Y=self.YLoc
+
+                #self.Loc_Y = {n[0]:INIT[0], n[-1]: INIT[-1]}
                 self.FUNCTION_V(G)
+                #print "FIN", self.Loc_Y
                 loct.append(self.Loc_Y)
+                #self.Loc_Y=LOC_INIT
+                #self.Loc_Y.clear()
 
             for i in loct:
                 new_y_loc = []
@@ -2204,7 +2227,7 @@ class constraintGraph:
             # print"n", n
             v = Range - sum(D_V_Newval)
             # print v
-            if ((v) / (n / 2)) != 0:
+            if ((v) / (n / 2)) >0:
                 x = random.randrange(0, ((v) / (n / 2)))
             else:
                 x = 0
