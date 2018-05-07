@@ -3477,9 +3477,10 @@ if __name__ == '__main__':
         testfile = sys.argv[1]  # taking input from command line
         constraint_file=  sys.argv[2]
         level= int(sys.argv[3])
-        if level!=0:
+        if level==1 or level==2:
 
             N=  int(sys.argv[4])
+        if level==2:
 
             W=  int(sys.argv[5])
 
