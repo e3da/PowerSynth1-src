@@ -3477,10 +3477,11 @@ if __name__ == '__main__':
         testfile = sys.argv[1]  # taking input from command line
         constraint_file=  sys.argv[2]
         level= int(sys.argv[3])
-        if level==1 or level==2:
+        if level==1 :
 
             N=  int(sys.argv[4])
-        if level==2:
+        elif level==2:
+            N=  int(sys.argv[4])
 
             W=  int(sys.argv[5])
 
@@ -3490,12 +3491,12 @@ if __name__ == '__main__':
             XLoc=ast.literal_eval(sys.argv[7])
         
             YLoc=ast.literal_eval(sys.argv[8])
-        else:
-            N=None
-            W=None
-            H=None
-            XLoc=None
-            YLoc=None
+
+
+
+
+
+
         #XLoc=(sys.argv[6].strip('{}').split(','))
         #print XLoc
         #XLoc=json.loads(sys.argv[6])
@@ -3541,7 +3542,7 @@ if __name__ == '__main__':
     else:
         exit(1)
     print Input
-    print constraints
+    #print constraints
 
 
 
@@ -3634,8 +3635,16 @@ if __name__ == '__main__':
         CONSTRAINT.setupMinWidth(i[0])
         CONSTRAINT.setupMinSpacing(i[1])
         CONSTRAINT.setupMinEnclosure(i[2])
-    CG = cg.constraintGraph(testdir + '/' + testbase, testdir + '/' + testbase,W,H,XLoc,YLoc)
-    CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList,level,N)
+    #print "N",N
+    if level==2:
+        CG = cg.constraintGraph(testdir + '/' + testbase, testdir + '/' + testbase,W,H,XLoc,YLoc)
+        CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList,level,N)
+    elif level==1:
+         CG = cg.constraintGraph(testdir + '/' + testbase, testdir + '/' + testbase,W=None,H=None,XLocation=None,YLocation=None)
+         CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList,level,N)
+    else:
+         CG = cg.constraintGraph(testdir + '/' + testbase, testdir + '/' + testbase,W=None,H=None,XLocation=None,YLocation=None)
+         CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList,level,N=None)
     MIN_X,MIN_Y=CG.minValueCalculation(Htree.hNodeList, Vtree.vNodeList,level)
 
     #print "minX", MIN_X

@@ -869,7 +869,7 @@ class constraintGraph:
             self.FindingAllPaths_h(G2, n[0], n[-1])
 
             paths = self.paths_h
-            print paths
+            #print paths
 
             D_3 = []
             for j in range(len(D)):
@@ -889,7 +889,7 @@ class constraintGraph:
 
                 D_3.append(d[j])
 
-            print len(D_3), D_3
+            #print len(D_3), D_3
 
             loct = []
             for k in range(len(D_3)):
@@ -957,7 +957,7 @@ class constraintGraph:
                 for j in range(len(self.ZDL_H[ID])):
                     loct[self.ZDL_H[ID][j]] = self.NEWXLOCATION[i][j]
                 Location[ID].append(loct)
-            print Location
+            #print Location
             self.minLocationH = Location
 
 
@@ -1241,7 +1241,7 @@ class constraintGraph:
             self.FindingAllPaths_v(GV, n[0], n[-1])
 
             paths = self.paths_v
-            print paths
+            #print paths
 
             D_3 = []
             for j in range(len(D)):
@@ -1261,7 +1261,7 @@ class constraintGraph:
 
                 D_3.append(d[j])
 
-            print len(D_3), D_3
+            #print len(D_3), D_3
 
             loct = []
             for k in range(len(D_3)):
@@ -1328,7 +1328,7 @@ class constraintGraph:
                 for j in range(len(self.ZDL_V[ID])):
                     loct[self.ZDL_V[ID][j]] = self.NEWYLOCATION[i][j]
                 Location[ID].append(loct)
-            print Location
+            #print Location
             self.minLocationV = Location
 
         elif level == 2:
