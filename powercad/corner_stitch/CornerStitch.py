@@ -22,6 +22,7 @@ import constraint as ct
 import collections
 import json
 import ast
+matplotlib.pyplot.ioff()
 
 
 class cell:
