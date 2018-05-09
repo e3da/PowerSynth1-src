@@ -8,7 +8,6 @@ import sys
 import copy
 import matplotlib
 matplotlib.use('Agg')
-matplotlib.pyplot.ioff()
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from matplotlib import pylab
