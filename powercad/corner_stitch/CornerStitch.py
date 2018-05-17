@@ -21,7 +21,7 @@ import constraintGraph_Dev as cg
 import CSCG
 import constraint as ct
 import collections
-import json
+
 import ast
 import pandas as pd
 import csv
@@ -3604,15 +3604,7 @@ if __name__ == '__main__':
                 #In = [int(c[0]), int(c[1]), int(c[2]), int(c[3]), c[4]]
                 In = line.split(',')
                 Input.append(In)
-        '''
-        f2= open(constraint_file, "rb")
-        constraints=[]
-        for line in f2.read().splitlines():
-            LINE=line.split(';')
-            #print LINE
-            if LINE!=['']:
-                constraints.append([json.loads(y) for y in LINE])
-        '''
+        
         data = pd.read_csv(constraint_file)
         #data2= data.iloc[0][1:5]
         df2 = data.set_index("Con_Name", drop = False)
