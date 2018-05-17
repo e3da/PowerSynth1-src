@@ -1078,6 +1078,7 @@ class constraintGraph:
 
             with open(csvfile, 'wb') as csv_file:
                 writer = csv.writer(csv_file)
+                writer.writerow(["Node", "Min Loc"])
                 for key, value in Location.items():
                     writer.writerow([key, value])
 
@@ -1453,6 +1454,7 @@ class constraintGraph:
 
             with open(csvfile, 'wb') as csv_file:
                 writer = csv.writer(csv_file)
+                writer.writerow(["Node", "Min Loc"])
                 for key, value in Location.items():
                     writer.writerow([key, value])
             LOC_V = {}

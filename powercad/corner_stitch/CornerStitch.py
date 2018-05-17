@@ -3485,24 +3485,24 @@ if __name__ == '__main__':
         testbase = os.path.basename(testfile[:index_of_dot])
 
         constraint_file=  sys.argv[2]
-        level= int(sys.argv[3])
-
-
+        format = sys.argv[3]
+        level= int(sys.argv[4])
         if level==1 :
 
-            N=  int(sys.argv[4])
+            N=  int(sys.argv[5])
             W = None
             H = None
             XLoc = None
             YLoc = None
         elif level==2:
-            N=  int(sys.argv[4])
+            N=  int(sys.argv[5])
 
-            W=  int(sys.argv[5])
+            W=  int(sys.argv[6])
 
-            H=  int(sys.argv[6])
-            f=open(Directory+'/'+testbase+'Min_Y_Location.csv','rb')
+            H=  int(sys.argv[7])
+            f=open(Directory+'/'+'Mode-0'+'/'+testbase+'Min_Y_Location.csv','rb')
             readFile=csv.reader(f)
+            next(readFile, None)
             NODES_V=[]
             for y in readFile:
                  NODES_V.append(y[0])
@@ -3511,8 +3511,9 @@ if __name__ == '__main__':
             #print V_NODELIST
             start_V=V_NODELIST[0]
             end_V=V_NODELIST[-1]
-            f=open(Directory+'/'+testbase+'Min_X_Location.csv','rb')
+            f=open(Directory+'/'+'Mode-0'+'/'+testbase+'Min_X_Location.csv','rb')
             readFile=csv.reader(f)
+            next(readFile, None)
             NODES_H=[]
             for y in readFile:
                  NODES_H.append(y[0])
@@ -3525,21 +3526,21 @@ if __name__ == '__main__':
             YLoc={start_V:0,end_V:H}
             
         elif level==3:
-            N=  int(sys.argv[4])
-            W=  int(sys.argv[5])
-
-            H=  int(sys.argv[6])
-            X_Location_file=sys.argv[7]
+            N=  int(sys.argv[5])
+            W=None
+            H=None
+            X_Location_file=sys.argv[6]
             f1=open(X_Location_file,'rb')
             readFile=csv.reader(f1)
+            next(readFile, None)
             NODES_H=[]
             VALUES_H=[]
             for y in readFile:
 
-                if not(not y[1]):
+                if not(not y[2]):
 
                     NODES_H.append(y[0])
-                    VALUES_H.append(y[1])
+                    VALUES_H.append(y[2])
 
             H_NODELIST=map(int, NODES_H)
             #print H_NODELIST
@@ -3547,16 +3548,17 @@ if __name__ == '__main__':
             H_VALUES=map(int, VALUES_H)
             #print "H",H_VALUES
             XLoc=dict(zip(H_NODELIST,H_VALUES))
-            Y_Location_file=sys.argv[8]
+            Y_Location_file=sys.argv[6]
             f2=open(Y_Location_file,'rb')
             readFile=csv.reader(f2)
+            next(readFile, None)
             NODES_V=[]
             VALUES_V=[]  
             for y in readFile:
-                if not(not y[1]):
+                if not(not y[5]):
                     #print y[0],y[1]
-                    NODES_V.append(y[0])
-                    VALUES_V.append(y[1])
+                    NODES_V.append(y[3])
+                    VALUES_V.append(y[5])
             #print NODES_H
             V_NODELIST=map(int, NODES_V)
             V_VALUES=map(int, VALUES_V)
@@ -3589,6 +3591,9 @@ if __name__ == '__main__':
         testbase = os.path.basename(testfile[:index_of_dot])  # extracting basename from path
         testdir = os.path.dirname(testfile)  # returns the directory name of file
         #print testbase
+        directory = testdir + '/' + 'Mode-' + str(level)
+        if not os.path.exists(directory):
+            os.makedirs(directory)
         if not len(testdir):
             testdir = '.'
 
@@ -3604,41 +3609,21 @@ if __name__ == '__main__':
                 #In = [int(c[0]), int(c[1]), int(c[2]), int(c[3]), c[4]]
                 In = line.split(',')
                 Input.append(In)
-        
-        data = pd.read_csv(constraint_file)
-        #data2= data.iloc[0][1:5]
-        df2 = data.set_index("Con_Name", drop = False)
-        #data1=data.loc["Min Width", : ]
-        #print data
-        #print "D", df2.index
 
+        data = pd.read_csv(constraint_file,header=None)
         SP=[]
         EN=[]
-        width=((df2.loc["Min Width","EMPTY":"Type_4"]).values.tolist())
+        width=((data.loc[1,1:5]).values.tolist())
+        for i in range(len(data)):
+            #print i
+            #print data.nrows[i]
+            if i>2 and i<8:
 
-
-
-        for i in range(len(df2.index)):
-            if  df2.index[i]=='Min Spacing':
-                #print  (df2.loc[[df2.index[i+1]:df2.index[i+5],:])
-                for j in range(1,6):
-                    SP.append((df2.loc[df2.index[i+j],'EMPTY':'Type_4']).values.tolist())
-            elif  df2.index[i]=='Min Enclosure':
-                for j in range(1,6):
-                    EN.append((df2.loc[df2.index[i+j],'EMPTY':'Type_4']).values.tolist())
-        SPACING=[]
-        for i in range(len(SP)):
-            #for j in range(len(SP)):
-                SPACING.append(SP[i])
-        ENCL=[]
-        for i in range(len(EN)):
-            #for j in range(len(SP)): print CON
-                ENCL.append(EN[i])
-        #print width,ENCL,SPACING
-
-
-
-
+                SP.append((data.loc[i,1:5]).values.tolist())
+            elif i>8 and i<=13:
+                EN.append((data.loc[i,1:5]).values.tolist())
+            else:
+                continue
 
     else:
         exit(1)
@@ -3735,8 +3720,8 @@ if __name__ == '__main__':
 
     #for i in range(len(constraints)):
     minWidth=map(int, width)
-    minSpacing=[map(int,i) for i in SPACING]
-    minEnclosure=[map(int,i) for i in ENCL]
+    minSpacing=[map(int,i) for i in SP]
+    minEnclosure=[map(int,i) for i in EN]
 
     #print minWidth,minSpacing,minEnclosure
    
@@ -3745,13 +3730,15 @@ if __name__ == '__main__':
     CONSTRAINT.setupMinEnclosure(minEnclosure)
     #print "N",N
     if level==2 or 3:
-        CG = cg.constraintGraph(testdir + '/'  +'Mode-'+str(level)+'/'+ testbase, testdir + '/'  +'Mode-'+str(level)+'/'+ testbase,W,H,XLoc,YLoc)
+        #CG = cg.constraintGraph(testdir + '/' + testbase, testdir +'/'+ testbase,W,H,XLoc,YLoc)
+        CG = cg.constraintGraph(directory+'/'+testbase, directory+'/'+testbase, W, H, XLoc, YLoc)
         CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList,level,N)
+
     elif level==1:
-         CG = cg.constraintGraph(testdir + '/'  +'Mode-'+str(level)+'/'+ testbase, testdir + '/'  +'Mode-'+str(level)+'/'+ testbase,W=None,H=None,XLocation=None,YLocation=None)
+         CG = cg.constraintGraph(directory+'/'+testbase, directory+'/'+testbase,W=None,H=None,XLocation=None,YLocation=None)
          CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList,level,N)
     else:
-         CG = cg.constraintGraph(testdir + '/'  +'Mode-'+str(level)+'/'+ testbase, testdir + '/'  +'Mode-'+str(level)+'/'+ testbase,W=None,H=None,XLocation=None,YLocation=None)
+         CG = cg.constraintGraph(directory+'/'+testbase, directory+'/'+testbase,W=None,H=None,XLocation=None,YLocation=None)
          CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList,level,N=None)
     MIN_X,MIN_Y=CG.minValueCalculation(Htree.hNodeList, Vtree.vNodeList,level)
 
@@ -3815,7 +3802,7 @@ if __name__ == '__main__':
     """
 
 
-    def plotrectH( k,Rect_H): ###plotting each node after minimum location evaluation in HCS
+    def plotrectH( k,Rect_H,format): ###plotting each node after minimum location evaluation in HCS
         """
         Draw all cells in this cornerStitch with stitches pointing to their stitch neighbors
         TODO:
@@ -3888,10 +3875,13 @@ if __name__ == '__main__':
         #plt.xlim(0, 60)
         #plt.ylim(0, 100)#fig10.show()
         #return fig10
-        fig10.savefig(testdir+'/' +'Mode-'+str(level)+'/'+testbase+str(k)+"H.png",bbox_inches='tight')
-        fig10.savefig(testdir + '/' +'Mode-'+str(level)+'/'+ testbase + str(k) + "H.eps",format='eps', bbox_inches='tight')
+        directory = testdir + '/' + 'Mode-' + str(level)
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+        fig10.savefig(directory+'/'+testbase+str(k)+"H"+format,bbox_inches='tight')
+        #fig10.savefig(testdir + '/' +'Mode-'+str(level)+'/'+ testbase + str(k) + "H.eps",format='eps', bbox_inches='tight')
         plt.close()
-    def plotrectV( k,Rect_H):###plotting each node after min location evaluation in VCS
+    def plotrectV( k,Rect_H,format):###plotting each node after min location evaluation in VCS
         """
         Draw all cells in this cornerStitch with stitches pointing to their stitch neighbors
         TODO:
@@ -3963,11 +3953,14 @@ if __name__ == '__main__':
         #plt.xlim(0, 60)
         #plt.ylim(0, 100)#fig10.show()
         #return fig10
-        fig9.savefig(testdir+'/' +'Mode-'+str(level)+'/'+testbase+'-'+str(k)+"V.png",bbox_inches='tight')
-        fig9.savefig(testdir + '/'  +'Mode-'+str(level)+'/'+ testbase + '-' + str(k) + "V.eps",format='eps', bbox_inches='tight')
+        #fig9.savefig(testdir+'/' +'Mode-'+str(level)+'/'+testbase+'-'+str(k)+"V.png",bbox_inches='tight')
+        directory = testdir + '/' + 'Mode-' + str(level)
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+        fig9.savefig(directory + '/' + testbase + '-' + str(k) + "V"+format, bbox_inches='tight')
         plt.close()
 
-    def plotrectH_old( k,Rect_H):###plotting each node in HCS before minimum location evaluation
+    def plotrectH_old( k,Rect_H,format):###plotting each node in HCS before minimum location evaluation
         """
         Draw all cells in this cornerStitch with stitches pointing to their stitch neighbors
         TODO:
@@ -4040,10 +4033,13 @@ if __name__ == '__main__':
         #plt.xlim(0, 60)
         #plt.ylim(0, 100)#fig10.show().eps",format='eps',
         #return fig10
-        fig10.savefig(testdir+'/' +'Mode-'+str(level)+'/'+testbase+'-'+str(k)+"init-H.png",bbox_inches='tight')
-        fig10.savefig(testdir + '/'  +'Mode-'+str(level)+'/'+ testbase + '-' + str(k) + "init-H.eps",format='eps', bbox_inches='tight')
+        directory = testdir + '/' + 'Mode-' + str(level)
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+        fig10.savefig(directory+'/' +'/'+testbase+'-'+str(k)+"init-H"+format,bbox_inches='tight')
+        #fig10.savefig(testdir + '/' +'/'+ testbase + '-' + str(k) + "init-H.eps",format='eps', bbox_inches='tight')
         plt.close()
-    def plotrectV_old( k,Rect_H):##plotting each node in VCS before minimum location evaluation
+    def plotrectV_old( k,Rect_H,format):##plotting each node in VCS before minimum location evaluation
         """
         Draw all cells in this cornerStitch with stitches pointing to their stitch neighbors
         TODO:
@@ -4114,12 +4110,15 @@ if __name__ == '__main__':
         plt.ylim(min_y, max_y)
         #fig10.show()
         #return fig10
-        fig9.savefig(testdir+'/' +'Mode-'+str(level)+'/'+testbase+'-'+str(k)+"init-V.png",bbox_inches='tight')
-        fig9.savefig(testdir + '/'  +'Mode-'+str(level)+'/'+ testbase + '-' + str(k) + "init-V.eps",format='eps', bbox_inches='tight')
+        directory = testdir + '/' + 'Mode-' + str(level)
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+        fig9.savefig(directory+'/' +'/'+testbase+'-'+str(k)+"init-V"+format,bbox_inches='tight')
+        #fig9.savefig(testdir + '/'  +'Mode-'+str(level)+'/'+ testbase + '-' + str(k) + "init-V.eps",format='eps', bbox_inches='tight')
         plt.close()
 
 
-    def plotrectH_new(Rect1_H):##plotting each node in HCS for level 2 optimization
+    def plotrectH_new(Rect1_H,format):##plotting each node in HCS for level 2 optimization
         """
         Draw all cells in this cornerStitch with stitches pointing to their stitch neighbors
         TODO:
@@ -4204,11 +4203,16 @@ if __name__ == '__main__':
             # fig10.show()
             # return fig10
             #fig8.savefig(testdir + '/' +testbase+ str(j)+"new-H.eps",format='eps', dpi=1000,)
-            fig8.savefig(testdir + '/'  +'Mode-'+str(level)+'/'+ testbase + '-' + str(j) + "new-H.png", dpi=1000,bbox_inches='tight')
+            #fig8.savefig(testdir + '/'  +'Mode-'+str(level)+'/'+ testbase + '-' + str(j) + "new-H.png", dpi=1000,bbox_inches='tight')
             #fig8.savefig(testdir + '/' + testbase +'-'+ str(j) + "minH.eps", format='eps', dpi=1000,bbox_inches='tight')
-            fig8.savefig(testdir + '/'  +'Mode-'+str(level)+'/'+ testbase + '-' + str(j) + "new-H.eps", format='eps', dpi=1000,bbox_inches='tight')
+            directory=testdir + '/' +'Mode-'+str(level)
+            if not os.path.exists(directory):
+                os.makedirs(directory)
+            #os.makedirs(os.path.dirname(filename))
+            fig8.savefig(directory+ '/' + testbase + '-' + str(j) + "new-H" + format,dpi=1000, bbox_inches='tight')
+            #fig8.savefig(testdir + '/' +'Mode-'+str(level)+'/' + testbase + '-' + str(j) + "new-H"+format, dpi=1000,bbox_inches='tight')
             plt.close()
-    def plotrectV_new(Rect1_V):##plotting each node in VCS for level 2 optimization
+    def plotrectV_new(Rect1_V,format):##plotting each node in VCS for level 2 optimization
         """
         Draw all cells in this cornerStitch with stitches pointing to their stitch neighbors
         TODO:
@@ -4291,13 +4295,16 @@ if __name__ == '__main__':
             # fig10.show()
             # return fig10
             #plt.savefig('destination_path.eps', )
-            fig7.savefig(testdir + '/'  +'Mode-'+str(level)+'/'+ testbase + '-' + str(j) + "new-V.png", dpi=1000,bbox_inches='tight')
+            #fig7.savefig(testdir + '/'  +'Mode-'+str(level)+'/'+ testbase + '-' + str(j) + "new-V.png", dpi=1000,bbox_inches='tight')
             #fig7.savefig(testdir + '/' + testbase + '-' + str(j) + "minV.eps", format='eps', dpi=1000,bbox_inches='tight')
-            fig7.savefig(testdir + '/'  +'Mode-'+str(level)+'/'+testbase+'-'+str(j)+ "new-V.eps",format='eps', dpi=1000,bbox_inches='tight')
+            directory = testdir + '/' + 'Mode-' + str(level)
+            if not os.path.exists(directory):
+                os.makedirs(directory)
+            fig7.savefig(directory+ '/' +testbase+'-'+str(j)+ "new-V"+format,bbox_inches='tight')
             plt.close()
 
 
-    def plotrectH_min(Rect1_H):  ##plotting each node in HCS for level 2 optimization
+    def plotrectH_min(Rect1_H,format):  ##plotting each node in HCS for level 2 optimization
         """
         Draw all cells in this cornerStitch with stitches pointing to their stitch neighbors
         TODO:
@@ -4383,14 +4390,16 @@ if __name__ == '__main__':
         # fig10.show()
         # return fig10
         # fig8.savefig(testdir + '/' +testbase+ str(j)+"new-H.eps",format='eps', dpi=1000,)
-        fig8.savefig(testdir + '/'  +'Mode-'+str(level)+'/'+ testbase + '-' +  "minH.png", dpi=1000, bbox_inches='tight')
-        fig8.savefig(testdir + '/'  +'Mode-'+str(level)+'/'+ testbase + '-' +  "minH.eps", format='eps', dpi=1000,
-                     bbox_inches='tight')
+        #fig8.savefig(testdir + '/'  +'Mode-'+str(level)+'/'+ testbase + '-' +  "minH.png", dpi=1000, bbox_inches='tight')
+        directory = testdir + '/' + 'Mode-' + str(level)
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+        fig8.savefig(directory + '/'  + testbase + '-' +  "minH"+format, bbox_inches='tight')
         # fig8.savefig(testdir + '/' + testbase + '-' + str(j) + "new-H.eps", format='eps', dpi=1000,bbox_inches='tight')
         plt.close()
 
 
-    def plotrectV_min(Rect1_V):  ##plotting each node in VCS for level 2 optimization
+    def plotrectV_min(Rect1_V,format):  ##plotting each node in VCS for level 2 optimization
         """
         Draw all cells in this cornerStitch with stitches pointing to their stitch neighbors
         TODO:
@@ -4474,15 +4483,17 @@ if __name__ == '__main__':
         # fig10.show()
         # return fig10
         # plt.savefig('destination_path.eps', )
-        fig7.savefig(testdir + '/' +'Mode-'+str(level)+'/'+ testbase + '-' + "minV.png", dpi=1000, bbox_inches='tight')
-        fig7.savefig(testdir + '/'  +'Mode-'+str(level)+'/'+ testbase + '-' + "minV.eps", format='eps', dpi=1000,
-                     bbox_inches='tight')
+        #fig7.savefig(testdir + '/' +'Mode-'+str(level)+'/'+ testbase + '-' + "minV.png", dpi=1000, bbox_inches='tight')
+        directory = testdir + '/' + 'Mode-' + str(level)
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+        fig7.savefig(directory + '/'  + testbase + '-' + "minV"+format, bbox_inches='tight')
         # fig7.savefig(testdir + '/' +testbase+'-'+str(j)+ "new-V.eps",format='eps', dpi=1000,bbox_inches='tight')
         plt.close()
 
 
 
-    def UPDATE_min(MINX,MINY):
+    def UPDATE_min(MINX,MINY,format):
         Recatngles_H={}
         RET_H={}
         for i in Htree.hNodeList:
@@ -4522,14 +4533,14 @@ if __name__ == '__main__':
 
         for k,v in RET_H.items():
             #print k, len(v)
-            plotrectH_old(k,v)
+            plotrectH_old(k,v,format)
         for k,v in RET_V.items():
             #print k, len(v)
-            plotrectV_old(k,v)
+            plotrectV_old(k,v,format)
 
         for k,v in Recatngles_H.items():
             #print k, len(v)
-            plotrectH(k,v)
+            plotrectH(k,v,format)
         Total_H = []
         Recatngles_H = collections.OrderedDict(sorted(Recatngles_H.items()))
         #print Recatngles_H
@@ -4537,11 +4548,11 @@ if __name__ == '__main__':
             #print k
             Total_H.append(v)
         #plotrectH_new(Total_H)
-        plotrectH_min(Total_H)
+        plotrectH_min(Total_H,format)
 
         for k,v in Recatngles_V.items():
             #print k, len(v)
-            plotrectV(k,v)
+            plotrectV(k,v,format)
 
         Total_V = []
         Recatngles_V = collections.OrderedDict(sorted(Recatngles_V.items()))
@@ -4550,10 +4561,10 @@ if __name__ == '__main__':
             #print k
             Total_V.append(v)
         #plotrectV_new(Total_V)
-        plotrectV_min(Total_V)
+        plotrectV_min(Total_V,format)
 
 
-    def UPDATE(MINX,MINY):
+    def UPDATE(MINX,MINY,format):
         MIN_X=MINX.values()[0]
         #print MIN_X
         MIN_Y=MINY.values()[0]
@@ -4600,7 +4611,7 @@ if __name__ == '__main__':
         for k, v in Recatngles_H.items():
             # print k
             Total_H=v
-        plotrectH_new(Total_H)
+        plotrectH_new(Total_H,format)
 
 
         Total_V = []
@@ -4609,22 +4620,22 @@ if __name__ == '__main__':
         for k, v in Recatngles_V.items():
             # print k
             Total_V=v
-        plotrectV_new(Total_V)
+        plotrectV_new(Total_V,format)
 
 
 
 
     #UPDATE(MIN_X, MIN_Y)
     if level==0:
-        UPDATE_min(MIN_X, MIN_Y)
+        UPDATE_min(MIN_X, MIN_Y,format)
     else:
-        UPDATE(MIN_X, MIN_Y)
+        UPDATE(MIN_X, MIN_Y,format)
 
 
 
 
 
-    def drawLayer( nodelist,truePointer=False):
+    def drawLayer( nodelist,format):
         """
         Draw all cells in this cornerStitch with stitches pointing to their stitch neighbors
         TODO:
@@ -4682,9 +4693,12 @@ if __name__ == '__main__':
 
             plt.xlim(0, 70)                     
             plt.ylim(0, 60)
-            fig2.savefig(testdir + '/' + testbase + "-input.eps", format='eps',bbox_inches='tight')
+            #fig2.savefig(testdir + '/' + testbase + "-input.eps", format='eps',bbox_inches='tight')
             #fig2.savefig(testdir + '/' + testbase + "-input.emf", format='emf',bbox_inches='tight')
-            fig2.savefig(testdir+'/'+testbase+"-input.png",bbox_inches='tight')
+            directory = testdir + '/' + 'Mode-' + str(level)
+            if not os.path.exists(directory):
+                os.makedirs(directory)
+            fig2.savefig(directory+'/'+testbase+"-input"+format,bbox_inches='tight')
             plt.close()
         #pylab.pause(11000)
     def findGraphEdges2(nodeList):
@@ -5263,7 +5277,7 @@ if __name__ == '__main__':
 
     #drawLayer1(Vtree.vNodeList)
     #drawLayer2(Htree.hNodeList)
-    drawLayer(Htree.hNodeList)
+    drawLayer(Htree.hNodeList,format)
 
     def drawLayer_11( truePointer=False):
         """
