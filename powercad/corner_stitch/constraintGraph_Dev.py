@@ -139,7 +139,7 @@ class constraintGraph:
                 continue
             else:
                 VerticalNodeList.append(node)
-        print "RESULT"
+        #print "RESULT"
         """
         print HorizontalNodeList
         for i in HorizontalNodeList:
@@ -198,8 +198,8 @@ class constraintGraph:
         self.ZDL_V = collections.OrderedDict(sorted(ZDL_V.items()))
         # self.ZDL_H[HorizontalNodeList[i].id]=k
         # self.ZDL_V[VerticalNodeList[i].id]=j
-        print "ZDL_H", self.ZDL_H
-        print "ZDL_V", self.ZDL_V
+        #print "ZDL_H", self.ZDL_H
+        #print "ZDL_V", self.ZDL_V
 
         for i in range(len(HorizontalNodeList)):
             # print HorizontalNodeList[i].id
@@ -237,9 +237,10 @@ class constraintGraph:
                     if i.parent != None:
                         parent = i.parent.id
             self.cgToGraph_v(name, ID, edgev, parent, level,N)
-
-        print "min_V", self.minLocationV
-        print "min_H", self.minLocationH
+        print "RESULT"
+        print "Y_Locations:", self.minLocationV
+        print "X_Locations:", self.minLocationH
+        print "Generating Figures"
         # print self.minLocationV[2][48]
 
         '''
@@ -962,7 +963,7 @@ class constraintGraph:
             self.minLocationH = Location
 
 
-        elif level == 2:
+        elif level == 2 or level ==3:
 
             d3 = defaultdict(list)
             for i in edge_label:
@@ -1003,7 +1004,7 @@ class constraintGraph:
                 for j, k in i.items():
                     new_x_loc.append(k)
                 self.NEWXLOCATION.append(new_x_loc)
-            print "X=", self.NEWXLOCATION
+            #print "X=", self.NEWXLOCATION
 
             n = list(G2.nodes())
             Location = {}
@@ -1015,7 +1016,7 @@ class constraintGraph:
                 for j in range(len(self.ZDL_H[ID])):
                     loct[self.ZDL_H[ID][j]] = self.NEWXLOCATION[i][j]
                 Location[ID].append(loct)
-            print Location
+            #print Location
             self.minLocationH = Location
 
 
@@ -1341,7 +1342,7 @@ class constraintGraph:
             #print Location
             self.minLocationV = Location
 
-        elif level == 2:
+        elif level == 2 or level ==3:
             d3 = defaultdict(list)
             for i in edge_label:
                 k, v = list(i.items())[
@@ -1386,7 +1387,7 @@ class constraintGraph:
                 for j, k in i.items():
                     new_y_loc.append(k)
                 self.NEWYLOCATION.append(new_y_loc)
-            print  self.NEWYLOCATION
+            #print  self.NEWYLOCATION
 
             Location = {}
             key = ID
@@ -1397,7 +1398,7 @@ class constraintGraph:
                 for j in range(len(self.ZDL_V[ID])):
                     loct[self.ZDL_V[ID][j]] = self.NEWYLOCATION[i][j]
                 Location[ID].append(loct)
-            print Location
+            #print Location
             self.minLocationV = Location
         else:
             d3 = defaultdict(list)

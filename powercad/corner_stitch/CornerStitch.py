@@ -24,6 +24,7 @@ import collections
 import json
 import ast
 import pandas as pd
+import csv
 
 
 
@@ -2955,7 +2956,7 @@ class Hnode(Node):
                     if rect.nodeId>ID:
                         ID=rect.nodeId
 
-            print ID
+            #print ID
             for N in Htree.hNodeList:
 
                 if N.id == ID:
@@ -3477,24 +3478,96 @@ if __name__ == '__main__':
 
 
     if len(sys.argv) > 1:
+
         testfile = sys.argv[1]  # taking input from command line
+        Directory= os.path.dirname(testfile)
+        index_of_dot = testfile.rindex('.')  # finding the index of (.) in path
+        testbase = os.path.basename(testfile[:index_of_dot])
+
         constraint_file=  sys.argv[2]
         level= int(sys.argv[3])
+
+
         if level==1 :
 
             N=  int(sys.argv[4])
+            W = None
+            H = None
+            XLoc = None
+            YLoc = None
         elif level==2:
             N=  int(sys.argv[4])
 
             W=  int(sys.argv[5])
 
             H=  int(sys.argv[6])
-        #print sys.argv[6]
+            f=open(Directory+'/'+testbase+'Min_Y_Location.csv','rb')
+            readFile=csv.reader(f)
+            NODES_V=[]
+            for y in readFile:
+                 NODES_V.append(y[0])
+            #print NODES_V
+            V_NODELIST=map(int, NODES_V)
+            #print V_NODELIST
+            start_V=V_NODELIST[0]
+            end_V=V_NODELIST[-1]
+            f=open(Directory+'/'+testbase+'Min_X_Location.csv','rb')
+            readFile=csv.reader(f)
+            NODES_H=[]
+            for y in readFile:
+                 NODES_H.append(y[0])
+            #print NODES_H
+            H_NODELIST=map(int, NODES_H)
+            #print H_NODELIST
+            start_H=H_NODELIST[0]
+            end_H=H_NODELIST[-1]
+            XLoc={start_H:0,end_H:W}
+            YLoc={start_V:0,end_V:H}
+            
+        elif level==3:
+            N=  int(sys.argv[4])
+            W=  int(sys.argv[5])
 
-            XLoc=ast.literal_eval(sys.argv[7])
-        
-            YLoc=ast.literal_eval(sys.argv[8])
+            H=  int(sys.argv[6])
+            X_Location_file=sys.argv[7]
+            f1=open(X_Location_file,'rb')
+            readFile=csv.reader(f1)
+            NODES_H=[]
+            VALUES_H=[]
+            for y in readFile:
 
+                if not(not y[1]):
+
+                    NODES_H.append(y[0])
+                    VALUES_H.append(y[1])
+
+            H_NODELIST=map(int, NODES_H)
+            #print H_NODELIST
+            
+            H_VALUES=map(int, VALUES_H)
+            #print "H",H_VALUES
+            XLoc=dict(zip(H_NODELIST,H_VALUES))
+            Y_Location_file=sys.argv[8]
+            f2=open(Y_Location_file,'rb')
+            readFile=csv.reader(f2)
+            NODES_V=[]
+            VALUES_V=[]  
+            for y in readFile:
+                if not(not y[1]):
+                    #print y[0],y[1]
+                    NODES_V.append(y[0])
+                    VALUES_V.append(y[1])
+            #print NODES_H
+            V_NODELIST=map(int, NODES_V)
+            V_VALUES=map(int, VALUES_V)
+            YLoc=dict(zip(V_NODELIST,V_VALUES))
+            #print XLoc,YLoc
+        else:
+            N=None
+            W=None
+            H=None
+            XLoc=None
+            YLoc=None
 
 
 
@@ -3569,7 +3642,7 @@ if __name__ == '__main__':
         for i in range(len(EN)):
             #for j in range(len(SP)): print CON
                 ENCL.append(EN[i])
-        print width,ENCL,SPACING
+        #print width,ENCL,SPACING
 
 
 
@@ -3577,7 +3650,7 @@ if __name__ == '__main__':
 
     else:
         exit(1)
-    print Input
+    #print Input
     #print constraints
 
 
@@ -3589,7 +3662,7 @@ if __name__ == '__main__':
     while(len(Input)>0):
         inp=Input.pop(0)
 
-        print inp
+        #print inp
 
         if inp[1] == "." and inp[2]!=".":
 
@@ -3673,20 +3746,20 @@ if __name__ == '__main__':
     minSpacing=[map(int,i) for i in SPACING]
     minEnclosure=[map(int,i) for i in ENCL]
 
-    print minWidth,minSpacing,minEnclosure
+    #print minWidth,minSpacing,minEnclosure
    
     CONSTRAINT.setupMinWidth(minWidth)
     CONSTRAINT.setupMinSpacing(minSpacing)
     CONSTRAINT.setupMinEnclosure(minEnclosure)
     #print "N",N
-    if level==2:
-        CG = cg.constraintGraph(testdir + '/' + testbase, testdir + '/' + testbase,W,H,XLoc,YLoc)
+    if level==2 or 3:
+        CG = cg.constraintGraph(testdir + '/'  +'Mode-'+str(level)+'/'+ testbase, testdir + '/'  +'Mode-'+str(level)+'/'+ testbase,W,H,XLoc,YLoc)
         CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList,level,N)
     elif level==1:
-         CG = cg.constraintGraph(testdir + '/' + testbase, testdir + '/' + testbase,W=None,H=None,XLocation=None,YLocation=None)
+         CG = cg.constraintGraph(testdir + '/'  +'Mode-'+str(level)+'/'+ testbase, testdir + '/'  +'Mode-'+str(level)+'/'+ testbase,W=None,H=None,XLocation=None,YLocation=None)
          CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList,level,N)
     else:
-         CG = cg.constraintGraph(testdir + '/' + testbase, testdir + '/' + testbase,W=None,H=None,XLocation=None,YLocation=None)
+         CG = cg.constraintGraph(testdir + '/'  +'Mode-'+str(level)+'/'+ testbase, testdir + '/'  +'Mode-'+str(level)+'/'+ testbase,W=None,H=None,XLocation=None,YLocation=None)
          CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList,level,N=None)
     MIN_X,MIN_Y=CG.minValueCalculation(Htree.hNodeList, Vtree.vNodeList,level)
 
@@ -3707,7 +3780,7 @@ if __name__ == '__main__':
     Vtree.setNodeId(Vtree.vNodeList)
 
 
-
+    """
     print Htree.hNodeList
     f1 = open(testdir + '/' + testbase + "hNode.txt", 'wb')
     print >> f1, Htree.hNodeList
@@ -3747,6 +3820,7 @@ if __name__ == '__main__':
             if j.cell.type!=None:
                 k = j.cell.x, j.cell.y, j.getWidth(), j.getHeight(), j.cell.id, j.cell.type, j.nodeId
                 print "B",i.id,k
+    """
 
 
     def plotrectH( k,Rect_H): ###plotting each node after minimum location evaluation in HCS
@@ -3822,8 +3896,8 @@ if __name__ == '__main__':
         #plt.xlim(0, 60)
         #plt.ylim(0, 100)#fig10.show()
         #return fig10
-        fig10.savefig(testdir+'/'+testbase+str(k)+"H.png",bbox_inches='tight')
-        fig10.savefig(testdir + '/' + testbase + str(k) + "H.eps",format='eps', bbox_inches='tight')
+        fig10.savefig(testdir+'/' +'Mode-'+str(level)+'/'+testbase+str(k)+"H.png",bbox_inches='tight')
+        fig10.savefig(testdir + '/' +'Mode-'+str(level)+'/'+ testbase + str(k) + "H.eps",format='eps', bbox_inches='tight')
         plt.close()
     def plotrectV( k,Rect_H):###plotting each node after min location evaluation in VCS
         """
@@ -3897,8 +3971,8 @@ if __name__ == '__main__':
         #plt.xlim(0, 60)
         #plt.ylim(0, 100)#fig10.show()
         #return fig10
-        fig9.savefig(testdir+'/'+testbase+'-'+str(k)+"V.png",bbox_inches='tight')
-        fig9.savefig(testdir + '/' + testbase + '-' + str(k) + "V.eps",format='eps', bbox_inches='tight')
+        fig9.savefig(testdir+'/' +'Mode-'+str(level)+'/'+testbase+'-'+str(k)+"V.png",bbox_inches='tight')
+        fig9.savefig(testdir + '/'  +'Mode-'+str(level)+'/'+ testbase + '-' + str(k) + "V.eps",format='eps', bbox_inches='tight')
         plt.close()
 
     def plotrectH_old( k,Rect_H):###plotting each node in HCS before minimum location evaluation
@@ -3974,8 +4048,8 @@ if __name__ == '__main__':
         #plt.xlim(0, 60)
         #plt.ylim(0, 100)#fig10.show().eps",format='eps',
         #return fig10
-        fig10.savefig(testdir+'/'+testbase+'-'+str(k)+"init-H.png",bbox_inches='tight')
-        fig10.savefig(testdir + '/' + testbase + '-' + str(k) + "init-H.eps",format='eps', bbox_inches='tight')
+        fig10.savefig(testdir+'/' +'Mode-'+str(level)+'/'+testbase+'-'+str(k)+"init-H.png",bbox_inches='tight')
+        fig10.savefig(testdir + '/'  +'Mode-'+str(level)+'/'+ testbase + '-' + str(k) + "init-H.eps",format='eps', bbox_inches='tight')
         plt.close()
     def plotrectV_old( k,Rect_H):##plotting each node in VCS before minimum location evaluation
         """
@@ -4048,8 +4122,8 @@ if __name__ == '__main__':
         plt.ylim(min_y, max_y)
         #fig10.show()
         #return fig10
-        fig9.savefig(testdir+'/'+testbase+'-'+str(k)+"init-V.png",bbox_inches='tight')
-        fig9.savefig(testdir + '/' + testbase + '-' + str(k) + "init-V.eps",format='eps', bbox_inches='tight')
+        fig9.savefig(testdir+'/' +'Mode-'+str(level)+'/'+testbase+'-'+str(k)+"init-V.png",bbox_inches='tight')
+        fig9.savefig(testdir + '/'  +'Mode-'+str(level)+'/'+ testbase + '-' + str(k) + "init-V.eps",format='eps', bbox_inches='tight')
         plt.close()
 
 
@@ -4138,9 +4212,9 @@ if __name__ == '__main__':
             # fig10.show()
             # return fig10
             #fig8.savefig(testdir + '/' +testbase+ str(j)+"new-H.eps",format='eps', dpi=1000,)
-            fig8.savefig(testdir + '/' + testbase + '-' + str(j) + "new-H.png", dpi=1000,bbox_inches='tight')
+            fig8.savefig(testdir + '/'  +'Mode-'+str(level)+'/'+ testbase + '-' + str(j) + "new-H.png", dpi=1000,bbox_inches='tight')
             #fig8.savefig(testdir + '/' + testbase +'-'+ str(j) + "minH.eps", format='eps', dpi=1000,bbox_inches='tight')
-            fig8.savefig(testdir + '/' + testbase + '-' + str(j) + "new-H.eps", format='eps', dpi=1000,bbox_inches='tight')
+            fig8.savefig(testdir + '/'  +'Mode-'+str(level)+'/'+ testbase + '-' + str(j) + "new-H.eps", format='eps', dpi=1000,bbox_inches='tight')
             plt.close()
     def plotrectV_new(Rect1_V):##plotting each node in VCS for level 2 optimization
         """
@@ -4225,9 +4299,9 @@ if __name__ == '__main__':
             # fig10.show()
             # return fig10
             #plt.savefig('destination_path.eps', )
-            fig7.savefig(testdir + '/' + testbase + '-' + str(j) + "new-V.png", dpi=1000,bbox_inches='tight')
+            fig7.savefig(testdir + '/'  +'Mode-'+str(level)+'/'+ testbase + '-' + str(j) + "new-V.png", dpi=1000,bbox_inches='tight')
             #fig7.savefig(testdir + '/' + testbase + '-' + str(j) + "minV.eps", format='eps', dpi=1000,bbox_inches='tight')
-            fig7.savefig(testdir + '/' +testbase+'-'+str(j)+ "new-V.eps",format='eps', dpi=1000,bbox_inches='tight')
+            fig7.savefig(testdir + '/'  +'Mode-'+str(level)+'/'+testbase+'-'+str(j)+ "new-V.eps",format='eps', dpi=1000,bbox_inches='tight')
             plt.close()
 
 
@@ -4317,8 +4391,8 @@ if __name__ == '__main__':
         # fig10.show()
         # return fig10
         # fig8.savefig(testdir + '/' +testbase+ str(j)+"new-H.eps",format='eps', dpi=1000,)
-        fig8.savefig(testdir + '/' + testbase + '-' +  "minH.png", dpi=1000, bbox_inches='tight')
-        fig8.savefig(testdir + '/' + testbase + '-' +  "minH.eps", format='eps', dpi=1000,
+        fig8.savefig(testdir + '/'  +'Mode-'+str(level)+'/'+ testbase + '-' +  "minH.png", dpi=1000, bbox_inches='tight')
+        fig8.savefig(testdir + '/'  +'Mode-'+str(level)+'/'+ testbase + '-' +  "minH.eps", format='eps', dpi=1000,
                      bbox_inches='tight')
         # fig8.savefig(testdir + '/' + testbase + '-' + str(j) + "new-H.eps", format='eps', dpi=1000,bbox_inches='tight')
         plt.close()
@@ -4408,8 +4482,8 @@ if __name__ == '__main__':
         # fig10.show()
         # return fig10
         # plt.savefig('destination_path.eps', )
-        fig7.savefig(testdir + '/' + testbase + '-' + "minV.png", dpi=1000, bbox_inches='tight')
-        fig7.savefig(testdir + '/' + testbase + '-' + "minV.eps", format='eps', dpi=1000,
+        fig7.savefig(testdir + '/' +'Mode-'+str(level)+'/'+ testbase + '-' + "minV.png", dpi=1000, bbox_inches='tight')
+        fig7.savefig(testdir + '/'  +'Mode-'+str(level)+'/'+ testbase + '-' + "minV.eps", format='eps', dpi=1000,
                      bbox_inches='tight')
         # fig7.savefig(testdir + '/' +testbase+'-'+str(j)+ "new-V.eps",format='eps', dpi=1000,bbox_inches='tight')
         plt.close()
@@ -4618,7 +4692,7 @@ if __name__ == '__main__':
             plt.ylim(0, 60)
             fig2.savefig(testdir + '/' + testbase + "-input.eps", format='eps',bbox_inches='tight')
             #fig2.savefig(testdir + '/' + testbase + "-input.emf", format='emf',bbox_inches='tight')
-            fig2.savefig(testdir+'/'+testbase+".png",bbox_inches='tight')
+            fig2.savefig(testdir+'/'+testbase+"-input.png",bbox_inches='tight')
             plt.close()
         #pylab.pause(11000)
     def findGraphEdges2(nodeList):
@@ -4910,7 +4984,7 @@ if __name__ == '__main__':
             #fig4.savefig(testdir + '/' + testbase +'1'+ "H.png")
             #fig3.savefig(testdir + '/' + testbase +str(i)+ "H.png")
             #plt.close()
-        fig5.savefig(testdir + '/' + testbase + "H.png")
+        fig5.savefig(testdir + '/'  +'Mode-'+str(level)+'/'+ testbase + "H.png")
 
 
 
@@ -5193,7 +5267,7 @@ if __name__ == '__main__':
             plt.ylim(0, 60)
             #fig4.savefig(testdir + '/' + testbase +'1'+ "V.png")
             #fig3.savefig(testdir + '/' + testbase +str(i)+ "V.png")
-        fig6.savefig(testdir + '/' + testbase + "V.png")
+        fig6.savefig(testdir + '/'  +'Mode-'+str(level)+'/'+ testbase + "V.png")
 
     #drawLayer1(Vtree.vNodeList)
     #drawLayer2(Htree.hNodeList)
