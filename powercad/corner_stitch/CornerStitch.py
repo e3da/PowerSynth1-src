@@ -23,6 +23,7 @@ import constraint as ct
 import collections
 import json
 import ast
+import pandas as pd
 
 
 
@@ -3530,6 +3531,7 @@ if __name__ == '__main__':
                 #In = [int(c[0]), int(c[1]), int(c[2]), int(c[3]), c[4]]
                 In = line.split(',')
                 Input.append(In)
+        '''
         f2= open(constraint_file, "rb")
         constraints=[]
         for line in f2.read().splitlines():
@@ -3537,8 +3539,40 @@ if __name__ == '__main__':
             #print LINE
             if LINE!=['']:
                 constraints.append([json.loads(y) for y in LINE])
+        '''
+        data = pd.read_csv(constraint_file)
+        #data2= data.iloc[0][1:5]
+        df2 = data.set_index("Con_Name", drop = False)
+        #data1=data.loc["Min Width", : ]
+        #print data
+        #print "D", df2.index
 
-                
+        SP=[]
+        EN=[]
+        width=((df2.loc["Min Width","EMPTY":"Type_4"]).values.tolist())
+
+
+
+        for i in range(len(df2.index)):
+            if  df2.index[i]=='Min Spacing':
+                #print  (df2.loc[[df2.index[i+1]:df2.index[i+5],:])
+                for j in range(1,6):
+                    SP.append((df2.loc[df2.index[i+j],'EMPTY':'Type_4']).values.tolist())
+            elif  df2.index[i]=='Min Enclosure':
+                for j in range(1,6):
+                    EN.append((df2.loc[df2.index[i+j],'EMPTY':'Type_4']).values.tolist())
+        SPACING=[]
+        for i in range(len(SP)):
+            #for j in range(len(SP)):
+                SPACING.append(SP[i])
+        ENCL=[]
+        for i in range(len(EN)):
+            #for j in range(len(SP)): print CON
+                ENCL.append(EN[i])
+        print width,ENCL,SPACING
+
+
+
 
 
     else:
@@ -3633,10 +3667,17 @@ if __name__ == '__main__':
     #level=2
     #N=10
     CONSTRAINT=ct.constraint()
-    for i in constraints:
-        CONSTRAINT.setupMinWidth(i[0])
-        CONSTRAINT.setupMinSpacing(i[1])
-        CONSTRAINT.setupMinEnclosure(i[2])
+
+    #for i in range(len(constraints)):
+    minWidth=map(int, width)
+    minSpacing=[map(int,i) for i in SPACING]
+    minEnclosure=[map(int,i) for i in ENCL]
+
+    print minWidth,minSpacing,minEnclosure
+   
+    CONSTRAINT.setupMinWidth(minWidth)
+    CONSTRAINT.setupMinSpacing(minSpacing)
+    CONSTRAINT.setupMinEnclosure(minEnclosure)
     #print "N",N
     if level==2:
         CG = cg.constraintGraph(testdir + '/' + testbase, testdir + '/' + testbase,W,H,XLoc,YLoc)
@@ -3778,7 +3819,8 @@ if __name__ == '__main__':
 
         plt.xlim(min_x, max_x)
         plt.ylim(min_y, max_y)
-        #fig10.show()
+        #plt.xlim(0, 60)
+        #plt.ylim(0, 100)#fig10.show()
         #return fig10
         fig10.savefig(testdir+'/'+testbase+str(k)+"H.png",bbox_inches='tight')
         fig10.savefig(testdir + '/' + testbase + str(k) + "H.eps",format='eps', bbox_inches='tight')
@@ -3852,7 +3894,8 @@ if __name__ == '__main__':
 
         plt.xlim(min_x, max_x)
         plt.ylim(min_y, max_y)
-        #fig10.show()
+        #plt.xlim(0, 60)
+        #plt.ylim(0, 100)#fig10.show()
         #return fig10
         fig9.savefig(testdir+'/'+testbase+'-'+str(k)+"V.png",bbox_inches='tight')
         fig9.savefig(testdir + '/' + testbase + '-' + str(k) + "V.eps",format='eps', bbox_inches='tight')
@@ -3928,7 +3971,8 @@ if __name__ == '__main__':
 
         plt.xlim(min_x, max_x)
         plt.ylim(min_y, max_y)
-        #fig10.show().eps",format='eps',
+        #plt.xlim(0, 60)
+        #plt.ylim(0, 100)#fig10.show().eps",format='eps',
         #return fig10
         fig10.savefig(testdir+'/'+testbase+'-'+str(k)+"init-H.png",bbox_inches='tight')
         fig10.savefig(testdir + '/' + testbase + '-' + str(k) + "init-H.eps",format='eps', bbox_inches='tight')
@@ -4266,8 +4310,8 @@ if __name__ == '__main__':
                         )
                     )
 
-        # plt.xlim(0, 210)
-        # plt.ylim(0, 210)
+        #plt.xlim(0, 60)
+        #plt.ylim(0, 100)
         plt.xlim(min_x, max_x)
         plt.ylim(min_y, max_y)
         # fig10.show()
@@ -4357,8 +4401,8 @@ if __name__ == '__main__':
                         )
                     )
 
-        # plt.xlim(0, 210)
-        # plt.ylim(0, 210)
+        #plt.xlim(0, 60)
+        #plt.ylim(0, 100)
         plt.xlim(min_x, max_x)
         plt.ylim(min_y, max_y)
         # fig10.show()

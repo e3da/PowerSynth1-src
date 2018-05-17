@@ -9,6 +9,7 @@ import collections
 import json
 import copy
 import random
+import csv
 import scipy as sp
 
 
@@ -843,18 +844,18 @@ class constraintGraph:
                         # print (k1),v
                         if v[2] == 0:
                             if v[1] == '1':
-                                val = random.randint(10, 30)
+                                val = random.randint(10, 40)
                             elif v[1] == '2':
                                 val = random.randint(8, 30)
                                 # val = 8
                             elif v[1] == '3':
-                                val = random.randint(6, 30)
+                                val = random.randint(6, 20)
 
                             elif v[1] == '4':
-                                val = random.randint(3, 30)
+                                val = random.randint(3, 10)
 
                         elif v[2] == 1:
-                            val = random.randint(5, 30)
+                            val = random.randint(5, 20)
                         else:
                             val = random.randint(5,20)
                     edge[(k1)] = val
@@ -946,7 +947,7 @@ class constraintGraph:
                 loct.append(loc_i)
 
                 self.NEWXLOCATION.append(new_Xlocation)
-            print"X=", self.NEWXLOCATION
+            #print"X=", self.NEWXLOCATION
             n = list(G2.nodes())
             Location = {}
             key = ID
@@ -1030,7 +1031,7 @@ class constraintGraph:
             H = []
             for i, j in d3.items():
                 X[i] = max(j)
-            # print"X", X
+            #print"X", X
             for k, v in X.items():
                 H.append((k[0], k[1], v))
             G = nx.MultiDiGraph()
@@ -1069,7 +1070,16 @@ class constraintGraph:
             # Graph_pos_h.append(dist)
             # print Graph_pos_h
             # print"LOC=",Graph_pos_h
+            #print "D",Location
+
             self.drawGraph_h_new(name, G2, edge_labels1, dist)
+            csvfile=self.name1+'Min_X_Location.csv'
+
+            with open(csvfile, 'wb') as csv_file:
+                writer = csv.writer(csv_file)
+                for key, value in Location.items():
+                    writer.writerow([key, value])
+
 
             LOC_H = {}
             for i in Location.keys():
@@ -1318,7 +1328,7 @@ class constraintGraph:
                 loct.append(loc_i)
 
                 self.NEWYLOCATION.append(new_Ylocation)
-            print"Y=", self.NEWYLOCATION
+            #print"Y=", self.NEWYLOCATION
             Location = {}
             key = ID
             Location.setdefault(key, [])
@@ -1438,7 +1448,12 @@ class constraintGraph:
             # print Graph_pos_h
             # print"LOC=",Graph_pos_h
             self.drawGraph_v_new(name, GV, edge_labels1, dist)
+            csvfile = self.name1 + 'Min_Y_Location.csv'
 
+            with open(csvfile, 'wb') as csv_file:
+                writer = csv.writer(csv_file)
+                for key, value in Location.items():
+                    writer.writerow([key, value])
             LOC_V = {}
             for i in Location.keys():
                 # print i, self.ZDL_V[ID][i]
