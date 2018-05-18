@@ -3482,12 +3482,27 @@ if __name__ == '__main__':
 
         testfile = sys.argv[1]  # taking input from command line
         Directory= os.path.dirname(testfile)
-        index_of_dot = testfile.rindex('.')  # finding the index of (.) in path
-        testbase = os.path.basename(testfile[:index_of_dot])
+        #index_of_dot = testfile.rindex('.')  # finding the index of (.) in path
+        #testbase = os.path.basename(testfile[:index_of_dot])
 
         constraint_file=  sys.argv[2]
         format = sys.argv[3]
         level= int(sys.argv[4])
+
+        index_of_dot = testfile.rindex('.')  # finding the index of (.) in path
+
+        testbase = os.path.basename(testfile[:index_of_dot])  # extracting basename from path
+        testdir = os.path.dirname(os.path.abspath(testfile))  # returns the directory name of file
+        # print testbase
+        directory = testdir + '/' + 'Mode-' + str(level)
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+        #print directory
+
+
+
+
+
         if level==1 :
 
             N=  int(sys.argv[5])
@@ -3576,15 +3591,6 @@ if __name__ == '__main__':
 
 
 
-        #XLoc=(sys.argv[6].strip('{}').split(','))
-        #print XLoc
-        #XLoc=json.loads(sys.argv[6])
-        #YLoc=json.loads(sys.argv[7])
-
-        #constraint_file= sys.argv[4]
-        #print YLoc
-
-        #constraints=  sys.argv[4]
 
         f = open(testfile, "rb")  # opening file in binary read mode
         index_of_dot = testfile.rindex('.')  # finding the index of (.) in path
@@ -3592,11 +3598,11 @@ if __name__ == '__main__':
         testbase = os.path.basename(testfile[:index_of_dot])  # extracting basename from path
         testdir = os.path.dirname(testfile)  # returns the directory name of file
         #print testbase
-        directory = testdir + '/' + 'Mode-' + str(level)
-        if not os.path.exists(directory):
-            os.makedirs(directory)
-        if not len(testdir):
-            testdir = '.'
+        #directory = testdir + '/' + 'Mode-' + str(level)
+        #if not os.path.exists(directory):
+            #os.makedirs(directory)
+        #if not len(testdir):
+            #testdir = '.'
 
         list = []
         Input = []
@@ -3876,9 +3882,7 @@ if __name__ == '__main__':
         #plt.xlim(0, 60)
         #plt.ylim(0, 100)#fig10.show()
         #return fig10
-        directory = testdir + '/' + 'Mode-' + str(level)
-        if not os.path.exists(directory):
-            os.makedirs(directory)
+
         fig10.savefig(directory+'/'+testbase+str(k)+"H"+format,bbox_inches='tight')
         #fig10.savefig(testdir + '/' +'Mode-'+str(level)+'/'+ testbase + str(k) + "H.eps",format='eps', bbox_inches='tight')
         plt.close()
@@ -3955,9 +3959,7 @@ if __name__ == '__main__':
         #plt.ylim(0, 100)#fig10.show()
         #return fig10
         #fig9.savefig(testdir+'/' +'Mode-'+str(level)+'/'+testbase+'-'+str(k)+"V.png",bbox_inches='tight')
-        directory = testdir + '/' + 'Mode-' + str(level)
-        if not os.path.exists(directory):
-            os.makedirs(directory)
+
         fig9.savefig(directory + '/' + testbase + '-' + str(k) + "V"+format, bbox_inches='tight')
         plt.close()
 
@@ -4034,9 +4036,7 @@ if __name__ == '__main__':
         #plt.xlim(0, 60)
         #plt.ylim(0, 100)#fig10.show().eps",format='eps',
         #return fig10
-        directory = testdir + '/' + 'Mode-' + str(level)
-        if not os.path.exists(directory):
-            os.makedirs(directory)
+
         fig10.savefig(directory+'/' +'/'+testbase+'-'+str(k)+"init-H"+format,bbox_inches='tight')
         #fig10.savefig(testdir + '/' +'/'+ testbase + '-' + str(k) + "init-H.eps",format='eps', bbox_inches='tight')
         plt.close()
@@ -4111,9 +4111,7 @@ if __name__ == '__main__':
         plt.ylim(min_y, max_y)
         #fig10.show()
         #return fig10
-        directory = testdir + '/' + 'Mode-' + str(level)
-        if not os.path.exists(directory):
-            os.makedirs(directory)
+
         fig9.savefig(directory+'/' +'/'+testbase+'-'+str(k)+"init-V"+format,bbox_inches='tight')
         #fig9.savefig(testdir + '/'  +'Mode-'+str(level)+'/'+ testbase + '-' + str(k) + "init-V.eps",format='eps', bbox_inches='tight')
         plt.close()
@@ -4206,9 +4204,7 @@ if __name__ == '__main__':
             #fig8.savefig(testdir + '/' +testbase+ str(j)+"new-H.eps",format='eps', dpi=1000,)
             #fig8.savefig(testdir + '/'  +'Mode-'+str(level)+'/'+ testbase + '-' + str(j) + "new-H.png", dpi=1000,bbox_inches='tight')
             #fig8.savefig(testdir + '/' + testbase +'-'+ str(j) + "minH.eps", format='eps', dpi=1000,bbox_inches='tight')
-            directory=testdir + '/' +'Mode-'+str(level)
-            if not os.path.exists(directory):
-                os.makedirs(directory)
+
             #os.makedirs(os.path.dirname(filename))
             fig8.savefig(directory+ '/' + testbase + '-' + str(j) + "new-H" + format,dpi=1000, bbox_inches='tight')
             #fig8.savefig(testdir + '/' +'Mode-'+str(level)+'/' + testbase + '-' + str(j) + "new-H"+format, dpi=1000,bbox_inches='tight')
@@ -4298,9 +4294,7 @@ if __name__ == '__main__':
             #plt.savefig('destination_path.eps', )
             #fig7.savefig(testdir + '/'  +'Mode-'+str(level)+'/'+ testbase + '-' + str(j) + "new-V.png", dpi=1000,bbox_inches='tight')
             #fig7.savefig(testdir + '/' + testbase + '-' + str(j) + "minV.eps", format='eps', dpi=1000,bbox_inches='tight')
-            directory = testdir + '/' + 'Mode-' + str(level)
-            if not os.path.exists(directory):
-                os.makedirs(directory)
+
             fig7.savefig(directory+ '/' +testbase+'-'+str(j)+ "new-V"+format,bbox_inches='tight')
             plt.close()
 
@@ -4392,9 +4386,7 @@ if __name__ == '__main__':
         # return fig10
         # fig8.savefig(testdir + '/' +testbase+ str(j)+"new-H.eps",format='eps', dpi=1000,)
         #fig8.savefig(testdir + '/'  +'Mode-'+str(level)+'/'+ testbase + '-' +  "minH.png", dpi=1000, bbox_inches='tight')
-        directory = testdir + '/' + 'Mode-' + str(level)
-        if not os.path.exists(directory):
-            os.makedirs(directory)
+
         fig8.savefig(directory + '/'  + testbase + '-' +  "minH"+format, bbox_inches='tight')
         # fig8.savefig(testdir + '/' + testbase + '-' + str(j) + "new-H.eps", format='eps', dpi=1000,bbox_inches='tight')
         plt.close()
@@ -4485,9 +4477,7 @@ if __name__ == '__main__':
         # return fig10
         # plt.savefig('destination_path.eps', )
         #fig7.savefig(testdir + '/' +'Mode-'+str(level)+'/'+ testbase + '-' + "minV.png", dpi=1000, bbox_inches='tight')
-        directory = testdir + '/' + 'Mode-' + str(level)
-        if not os.path.exists(directory):
-            os.makedirs(directory)
+
         fig7.savefig(directory + '/'  + testbase + '-' + "minV"+format, bbox_inches='tight')
         # fig7.savefig(testdir + '/' +testbase+'-'+str(j)+ "new-V.eps",format='eps', dpi=1000,bbox_inches='tight')
         plt.close()
@@ -4696,9 +4686,7 @@ if __name__ == '__main__':
             plt.ylim(0, 60)
             #fig2.savefig(testdir + '/' + testbase + "-input.eps", format='eps',bbox_inches='tight')
             #fig2.savefig(testdir + '/' + testbase + "-input.emf", format='emf',bbox_inches='tight')
-            directory = testdir + '/' + 'Mode-' + str(level)
-            if not os.path.exists(directory):
-                os.makedirs(directory)
+
             fig2.savefig(directory+'/'+testbase+"-input"+format,bbox_inches='tight')
             plt.close()
         #pylab.pause(11000)
@@ -4991,7 +4979,7 @@ if __name__ == '__main__':
             #fig4.savefig(testdir + '/' + testbase +'1'+ "H.png")
             #fig3.savefig(testdir + '/' + testbase +str(i)+ "H.png")
             #plt.close()
-        fig5.savefig(testdir + '/'  +'Mode-'+str(level)+'/'+ testbase + "H.png")
+        fig5.savefig(testdir + '/'+ testbase + "H.png")
 
 
 
@@ -5274,7 +5262,7 @@ if __name__ == '__main__':
             plt.ylim(0, 60)
             #fig4.savefig(testdir + '/' + testbase +'1'+ "V.png")
             #fig3.savefig(testdir + '/' + testbase +str(i)+ "V.png")
-        fig6.savefig(testdir + '/'  +'Mode-'+str(level)+'/'+ testbase + "V.png")
+        fig6.savefig(testdir + '/' + testbase + "V.png")
 
     #drawLayer1(Vtree.vNodeList)
     #drawLayer2(Htree.hNodeList)
