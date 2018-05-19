@@ -3481,7 +3481,8 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
 
         testfile = sys.argv[1]  # taking input from command line
-        Directory= os.path.dirname(testfile)
+        Directory= os.path.dirname(os.path.abspath(testfile))
+        #Directory = os.path.dirname((testfile))
         #index_of_dot = testfile.rindex('.')  # finding the index of (.) in path
         #testbase = os.path.basename(testfile[:index_of_dot])
 
@@ -3581,7 +3582,7 @@ if __name__ == '__main__':
                 if count > counter:
 
                     if not (not y[2]):
-                        
+
                         NODES_V.append(y[0])
                         VALUES_V.append(y[2])
                 else:
