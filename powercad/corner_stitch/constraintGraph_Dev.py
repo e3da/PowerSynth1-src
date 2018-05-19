@@ -11,6 +11,7 @@ import copy
 import random
 import csv
 import scipy as sp
+import pandas as pd
 
 
 #########################################################################################################################
@@ -1075,13 +1076,18 @@ class constraintGraph:
 
             self.drawGraph_h_new(name, G2, edge_labels1, dist)
             csvfile=self.name1+'Min_X_Location.csv'
+            location_file=self.name1 + 'Fixed_Loc.csv'
 
             with open(csvfile, 'wb') as csv_file:
                 writer = csv.writer(csv_file)
-                writer.writerow(["Node", "Min Loc"])
+                writer.writerow(["XNode", "Min Loc"])
                 for key, value in Location.items():
                     writer.writerow([key, value])
-
+            with open(location_file, 'wb') as csv_file:
+                writer = csv.writer(csv_file)
+                writer.writerow(["XNode", "Min Loc","xLoc"])
+                for key, value in Location.items():
+                    writer.writerow([key, value])
 
             LOC_H = {}
             for i in Location.keys():
@@ -1454,9 +1460,22 @@ class constraintGraph:
 
             with open(csvfile, 'wb') as csv_file:
                 writer = csv.writer(csv_file)
-                writer.writerow(["Node", "Min Loc"])
+                writer.writerow(["YNode", "Min Loc"])
                 for key, value in Location.items():
                     writer.writerow([key, value])
+            #f1 = open(self.name1 + 'Fixed_Loc.csv', "r")  # open input file for reading
+
+
+
+
+            with open(self.name1 + 'Fixed_Loc.csv', 'a') as csv_file:
+                writer = csv.writer(csv_file, lineterminator = '\n')
+                writer.writerow(["YNode", "Min Loc",'yLoc'])
+                for key, value in Location.items():
+                    writer.writerow([key, value])
+
+
+
             LOC_V = {}
             for i in Location.keys():
                 # print i, self.ZDL_V[ID][i]

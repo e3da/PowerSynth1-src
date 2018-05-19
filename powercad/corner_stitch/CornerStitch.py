@@ -3502,7 +3502,6 @@ if __name__ == '__main__':
 
 
 
-
         if level==1 :
 
             N=  int(sys.argv[5])
@@ -3547,39 +3546,51 @@ if __name__ == '__main__':
             H=None
             X_Location_file=sys.argv[6]
             f1=open(X_Location_file,'rb')
-            readFile=csv.reader(f1)
+            readFile = csv.reader(f1)
             next(readFile, None)
-            NODES_H=[]
-            VALUES_H=[]
+
+            NODES_H = []
+            VALUES_H = []
+
+            counter = 0
             for y in readFile:
+                counter += 1
+                if not (not y[2]):
 
-                if not(not y[2]):
-
+                    if y[0] == 'YNode':
+                        break
                     NODES_H.append(y[0])
                     VALUES_H.append(y[2])
 
-            H_NODELIST=map(int, NODES_H)
-            #print H_NODELIST
-            
-            H_VALUES=map(int, VALUES_H)
-            #print "H",H_VALUES
-            XLoc=dict(zip(H_NODELIST,H_VALUES))
-            Y_Location_file=sys.argv[6]
-            f2=open(Y_Location_file,'rb')
-            readFile=csv.reader(f2)
+            H_NODELIST = map(int, NODES_H)
+            # print H_NODELIST
+
+            H_VALUES = map(int, VALUES_H)
+            # print "H",H_VALUES
+            XLoc = dict(zip(H_NODELIST, H_VALUES))
+            # print XLoc,counter
+            Y_Location_file = sys.argv[6]
+            f1 = open(Y_Location_file, 'rb')
+            readFile = csv.reader(f1)
             next(readFile, None)
-            NODES_V=[]
-            VALUES_V=[]  
+            NODES_V = []
+            VALUES_V = []
+            count = 0
             for y in readFile:
-                if not(not y[5]):
-                    #print y[0],y[1]
-                    NODES_V.append(y[3])
-                    VALUES_V.append(y[5])
-            #print NODES_H
-            V_NODELIST=map(int, NODES_V)
-            V_VALUES=map(int, VALUES_V)
-            YLoc=dict(zip(V_NODELIST,V_VALUES))
-            #print XLoc,YLoc
+                count += 1
+                if count > counter:
+
+                    if not (not y[2]):
+                        
+                        NODES_V.append(y[0])
+                        VALUES_V.append(y[2])
+                else:
+                    continue
+            # print NODES_H
+            V_NODELIST = map(int, NODES_V)
+            V_VALUES = map(int, VALUES_V)
+            YLoc = dict(zip(V_NODELIST, V_VALUES))
+            print XLoc,YLoc
         else:
             N=None
             W=None
