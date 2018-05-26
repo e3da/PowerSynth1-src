@@ -985,7 +985,7 @@ class Node(object):
         """
 
         if x < splitCell.cell.x or x > splitCell.cell.x + splitCell.getWidth():
-            print "out of bounds, x = ", x
+            print "out of bounds, x = ", x,splitCell.cell.x,splitCell.cell.y
             return
         if splitCell.cell.type!="EMPTY":
             newCell = tile(None, None, None, None, None,cell(x, splitCell.cell.y, splitCell.cell.type, id=splitCell.cell.id),nodeId=splitCell.nodeId)
@@ -1350,7 +1350,7 @@ class Vnode(Node):
 
 
         for rect in splitList:
-            #print rect.cell.x,rect.cell.y
+            #print rect.cell.x,rect.cell.y,x2
             if x2 != rect.cell.x and x2 != rect.EAST.cell.x:
 
                 self.vSplit(rect, x2)
@@ -1411,8 +1411,11 @@ class Vnode(Node):
 
         changeList = []
         cc = self.findPoint(x1, y1, self.stitchList[0])
+        #print "xco2=", cc.cell.x
         if cc.cell.y == y1:
             cc = cc.SOUTH
+            while cc.cell.x+cc.getWidth()<=x1:
+                cc=cc.EAST
         # print "xco2=", cc.cell.x
         while cc.cell.x + cc.getWidth() <= x2:
             if cc not in changeList:
@@ -2160,7 +2163,7 @@ class Vnode(Node):
             # if cc.SOUTH == self.southBoundary or cc.SOUTH.cell.type == "EMPTY":
             changeSet.append(cc)
             cc = cc.EAST
-        # print "lenr=", len(changeSet)
+        #print "lenr=", len(changeSet)
 
         i = 0
         j = 1
@@ -2422,7 +2425,7 @@ class Hnode(Node):
 
 
         bottomRight = self.findPoint(x2, y2, self.stitchList[0])
-
+        #print"T", topLeft.cell.printCell(True,True,True),bottomRight.cell.printCell(True,True,True)
         tr = self.findPoint(x2, y1, self.stitchList[0])
         bl = self.findPoint(x1, y2, self.stitchList[0])
 
@@ -2474,7 +2477,7 @@ class Hnode(Node):
                 # print"cc.x2", cc.cell.y
                 while cc.cell.y >= y1 and cc not in self.boundaries:  # previously it was >y1
                     cc = cc.SOUTH
-        #print"splitListy1=", len(splitList),splitList[0].cell.x,splitList[0].cell.y
+
         # if cc.cell.type=="SOLID" and cc.cell.x==x2 and cc!=self.eastBoundary or tr.cell.type=="SOLID" :##and tr.cell.y!=y1 and cc!=self.eastBoundary)
             if cc.cell.type == type and cc.cell.x == x2 and cc not in self.boundaries or tr.cell.type == type:  ##and tr.cell.y!=y1 and cc!=self.eastBoundary)
                 # print "testex", cc.cell.x
@@ -2488,10 +2491,9 @@ class Hnode(Node):
 
                     splitList.append(cc)
 
-
-
+        #print"splitListy1=", len(splitList)
         for rect in splitList:
-            #print "y",rect.cell.y
+            #print "y",rect.cell.x,rect.cell.y
             i = self.stitchList.index(rect)
             if y1 != rect.cell.y and y1 != rect.NORTH.cell.y: self.hSplit(i, y1)
 
@@ -2526,7 +2528,7 @@ class Hnode(Node):
                 if cc not in self.boundaries:
                     while cc.cell.y + cc.getHeight() <= y2:  # previously it was <y2
                         cc = cc.NORTH
-                if cc not in splitList and cc.cell.type==type: ########################### added  and cc.cell.type==type
+                if cc not in splitList: ########################### deleted  and cc.cell.type==type
                     splitList.append(cc)
         #print "L", len(splitList)
         #print"cc2.x", cc.cell.x
@@ -2542,10 +2544,10 @@ class Hnode(Node):
                     splitList.append(cc1)
 
 
-        #print"splitListy2=", len(splitList),splitList[0].cell.x,splitList[0].cell.y
+        #print"splitListy2=", len(splitList)
         for rect in splitList:
             # print "height=",rect.cell.y+rect.getHeight()
-            #print rect.cell.x,rect.cell.y
+            #print"y", rect.cell.x,rect.cell.y
             i=self.stitchList.index(rect)
             if y2 != rect.cell.y and y2 != rect.NORTH.cell.y: self.hSplit(i, y2)
 

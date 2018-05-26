@@ -183,6 +183,7 @@ class constraintGraph:
                     k = j.cell.x, j.cell.y, j.cell.type,j.nodeId
                 print "B", i.id, k
         """
+
         Key = []
         ValueH = []
         ValueV = []
