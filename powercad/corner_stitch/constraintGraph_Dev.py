@@ -445,6 +445,10 @@ class constraintGraph:
         self.vertexMatrixv[ID] = [[[] for i in range(n2)] for j in range(n2)]
         edgesh = []
         edgesv = []
+        East_type=0
+        West_type=0
+        North_type=0
+        South_type=0
 
         # if cornerStitch_h.parent!=None:
         for rect in cornerStitch_v.stitchList:
@@ -453,14 +457,24 @@ class constraintGraph:
             if rect.nodeId != ID:
                 origin = self.ZDL_H[ID].index(rect.cell.x)
                 dest = self.ZDL_H[ID].index(rect.getEast().cell.x)
+                origin1=self.ZDL_V[ID].index(rect.cell.y)
+                dest1=self.ZDL_V[ID].index(rect.getNorth().cell.y)
                 id = rect.cell.id
 
                 if rect.getEast().nodeId == rect.nodeId:
                     East = rect.getEast().cell.id
+                    if rect.getEast().cell.type==rect.cell.type:
+                        East_type=1
+                    else:
+                        East_type=0
                 else:
                     East = None
                 if rect.getWest().nodeId == rect.nodeId:
                     West = rect.getWest().cell.id
+                    if rect.getWest().cell.type==rect.cell.type:
+                        West_type=1
+                    else:
+                        West_type=0
                 else:
                     West = None
                 if rect.northWest(rect).nodeId == rect.nodeId:
@@ -473,19 +487,35 @@ class constraintGraph:
                     southEast = None
 
                 # print id,East,West,rect.cell.x,rect.cell.y
+
                 c = constraint.constraint(0)
                 index = 0
                 value = constraint.constraint.getConstraintVal(c, type=rect.cell.type)
-                e = Edge(origin, dest, value, index, str(constraint.constraint.Type.index(rect.cell.type)), id, East,
+                e = Edge(origin1, dest1, value, index, str(constraint.constraint.Type.index(rect.cell.type)), id, East,
                          West, northWest, southEast)
                 # print "e",(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id, East, West,northWest, southEast)
                 # e = Edge(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id)
-                edgesh.append(
-                    Edge(origin, dest, value, index, str(constraint.constraint.Type.index(rect.cell.type)), id, East,
-                         West, northWest, southEast))
+                edgesv.append(Edge(origin1, dest1, value, index, str(constraint.constraint.Type.index(rect.cell.type)), id, East,West, northWest, southEast))
                 # edgesh.append(Edge(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id))
                 # self.vertexMatrixh[origin][dest].append((rect.getWidth()))
-                self.vertexMatrixh[ID][origin][dest].append(Edge.getEdgeWeight(e, origin, dest))
+                self.vertexMatrixv[ID][origin1][dest1].append(Edge.getEdgeWeight(e, origin, dest))
+
+
+                if West_type==1 or East_type==1:
+                    c = constraint.constraint(3)
+                    index = 3
+                    value = constraint.constraint.getConstraintVal(c, type=rect.cell.type)
+                    e = Edge(origin, dest, value, index, str(constraint.constraint.Type.index(rect.cell.type)), id, East,
+                             West, northWest, southEast)
+                    # print "e",(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id, East, West,northWest, southEast)
+                    # e = Edge(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id)
+                    edgesh.append(
+                        Edge(origin, dest, value, index, str(constraint.constraint.Type.index(rect.cell.type)), id, East,
+                             West, northWest, southEast))
+                    # edgesh.append(Edge(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id))
+                    # self.vertexMatrixh[origin][dest].append((rect.getWidth()))
+                    self.vertexMatrixh[ID][origin][dest].append(Edge.getEdgeWeight(e, origin, dest))
+
 
                 # self.edgesh.append(Edge(origin, dest, constraint.constraint(rect.getWidth(), origin, dest)))#
             else:
@@ -583,13 +613,23 @@ class constraintGraph:
             if rect.nodeId != ID:
                 origin = self.ZDL_V[ID].index(rect.cell.y)
                 dest = self.ZDL_V[ID].index(rect.getNorth().cell.y)
+                origin1 = self.ZDL_H[ID].index(rect.cell.x)
+                dest1 = self.ZDL_H[ID].index(rect.getEast().cell.x)
                 id = rect.cell.id
                 if rect.getNorth().nodeId == rect.nodeId:
                     North = rect.getNorth().cell.id
+                    if rect.getNorth().cell.type==rect.cell.type:
+                        North_type=1
+                    else:
+                        North_type=0
                 else:
                     North = None
                 if rect.getSouth().nodeId == rect.nodeId:
                     South = rect.getSouth().cell.id
+                    if rect.getSouth().cell.type==rect.cell.type:
+                        South_type=1
+                    else:
+                        South_type=0
                 else:
                     South = None
                 if rect.westNorth(rect).nodeId == rect.nodeId:
@@ -601,20 +641,33 @@ class constraintGraph:
                 else:
                     eastSouth = None
 
-                # print id,East,West,rect.cell.x,rect.cell.y
                 c = constraint.constraint(0)
                 index = 0
                 value = constraint.constraint.getConstraintVal(c, type=rect.cell.type)
-                e = Edge(origin, dest, value, index, str(constraint.constraint.Type.index(rect.cell.type)), id, North,
+                e = Edge(origin1, dest1, value, index, str(constraint.constraint.Type.index(rect.cell.type)), id, North,
                          South, westNorth, eastSouth)
 
-                edgesv.append(
-                    Edge(origin, dest, value, index, str(constraint.constraint.Type.index(rect.cell.type)), id, North,
-                         South, westNorth, eastSouth))
+                edgesh.append(Edge(origin1, dest1, value, index, str(constraint.constraint.Type.index(rect.cell.type)), id, North,South, westNorth, eastSouth))
                 # e = Edge(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id)
 
                 # edgesv.append(Edge(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id))
-                self.vertexMatrixv[ID][origin][dest].append(Edge.getEdgeWeight(e, origin, dest))
+                self.vertexMatrixh[ID][origin1][dest1].append(Edge.getEdgeWeight(e, origin, dest))
+
+                # print id,East,West,rect.cell.x,rect.cell.y
+                if North_type==1 or South_type==1:
+                    c = constraint.constraint(3)
+                    index = 3
+                    value = constraint.constraint.getConstraintVal(c, type=rect.cell.type)
+                    e = Edge(origin, dest, value, index, str(constraint.constraint.Type.index(rect.cell.type)), id, North,
+                             South, westNorth, eastSouth)
+
+                    edgesv.append(
+                        Edge(origin, dest, value, index, str(constraint.constraint.Type.index(rect.cell.type)), id, North,
+                             South, westNorth, eastSouth))
+                    # e = Edge(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id)
+
+                    # edgesv.append(Edge(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id))
+                    self.vertexMatrixv[ID][origin][dest].append(Edge.getEdgeWeight(e, origin, dest))
 
 
             else:
@@ -706,6 +759,10 @@ class constraintGraph:
 
                     # edgesh.append(Edge(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id))
                     self.vertexMatrixh[ID][origin][dest].append(Edge.getEdgeWeight(e, origin, dest))
+
+
+
+
         dictList1 = []
 
         edgesh_new = copy.deepcopy(edgesh)

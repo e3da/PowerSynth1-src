@@ -3635,13 +3635,15 @@ if __name__ == '__main__':
         SP=[]
         EN=[]
         width=((data.loc[1,1:5]).values.tolist())
+        extension=((data.loc[2,1:5]).values.tolist())
+        #print extension
         for i in range(len(data)):
             #print i
             #print data.nrows[i]
-            if i>2 and i<8:
+            if i>3 and i<9:
 
                 SP.append((data.loc[i,1:5]).values.tolist())
-            elif i>8 and i<=13:
+            elif i>9 and i<=14:
                 EN.append((data.loc[i,1:5]).values.tolist())
             else:
                 continue
@@ -3741,12 +3743,15 @@ if __name__ == '__main__':
 
     #for i in range(len(constraints)):
     minWidth=map(int, width)
+    minExtension=map(int,extension)
+    #print minExtension
     minSpacing=[map(int,i) for i in SP]
     minEnclosure=[map(int,i) for i in EN]
 
     #print minWidth,minSpacing,minEnclosure
    
     CONSTRAINT.setupMinWidth(minWidth)
+    CONSTRAINT.setupMinExtension(minExtension)
     CONSTRAINT.setupMinSpacing(minSpacing)
     CONSTRAINT.setupMinEnclosure(minEnclosure)
     #print "N",N
