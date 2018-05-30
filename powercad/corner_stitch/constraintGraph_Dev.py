@@ -445,14 +445,12 @@ class constraintGraph:
         self.vertexMatrixv[ID] = [[[] for i in range(n2)] for j in range(n2)]
         edgesh = []
         edgesv = []
-        East_type=0
-        West_type=0
-        North_type=0
-        South_type=0
+
+
 
         # if cornerStitch_h.parent!=None:
         for rect in cornerStitch_v.stitchList:
-
+            Extend_h = 0
             # if rect.cell.type == "SOLID":
             if rect.nodeId != ID:
                 origin = self.ZDL_H[ID].index(rect.cell.x)
@@ -463,18 +461,18 @@ class constraintGraph:
 
                 if rect.getEast().nodeId == rect.nodeId:
                     East = rect.getEast().cell.id
-                    if rect.getEast().cell.type==rect.cell.type:
-                        East_type=1
-                    else:
-                        East_type=0
+                    if rect.southEast(rect).nodeId == rect.nodeId:
+                        if rect.southEast(rect).cell==rect.getEast().cell and rect.NORTH.nodeId==ID and rect.SOUTH.nodeId==ID:
+                            Extend_h=1
+
                 else:
                     East = None
                 if rect.getWest().nodeId == rect.nodeId:
                     West = rect.getWest().cell.id
-                    if rect.getWest().cell.type==rect.cell.type:
-                        West_type=1
-                    else:
-                        West_type=0
+                    if rect.northWest(rect).nodeId == rect.nodeId:
+                        if rect.northWest(rect).cell==rect.getWest().cell and rect.NORTH.nodeId==ID and rect.SOUTH.nodeId==ID:
+                            Extend_h=1
+
                 else:
                     West = None
                 if rect.northWest(rect).nodeId == rect.nodeId:
@@ -501,7 +499,7 @@ class constraintGraph:
                 self.vertexMatrixv[ID][origin1][dest1].append(Edge.getEdgeWeight(e, origin, dest))
 
 
-                if West_type==1 or East_type==1:
+                if Extend_h==1:
                     c = constraint.constraint(3)
                     index = 3
                     value = constraint.constraint.getConstraintVal(c, type=rect.cell.type)
@@ -526,6 +524,7 @@ class constraintGraph:
 
                 if rect.getNorth().nodeId == rect.nodeId:
                     North = rect.getNorth().cell.id
+
                 else:
                     North = None
                 if rect.getSouth().nodeId == rect.nodeId:
@@ -606,6 +605,7 @@ class constraintGraph:
                     self.vertexMatrixv[ID][origin][dest].append(Edge.getEdgeWeight(e, origin, dest))
 
         for rect in cornerStitch_h.stitchList:
+            Extend_v = 0
             # if rect.cell.type == "SOLID":
             # print rect.cell.x,rect.cell.y,rect.EAST.cell.x,rect.WEST.cell.x
             # if rect.EAST not in cornerStitch_h.stitchList and rect.WEST  not in cornerStitch_h.stitchList:
@@ -618,18 +618,16 @@ class constraintGraph:
                 id = rect.cell.id
                 if rect.getNorth().nodeId == rect.nodeId:
                     North = rect.getNorth().cell.id
-                    if rect.getNorth().cell.type==rect.cell.type:
-                        North_type=1
-                    else:
-                        North_type=0
+                    if rect.westNorth(rect).nodeId == rect.nodeId:
+                        if rect.westNorth(rect).cell==rect.getNorth().cell and rect.EAST.nodeId==ID and rect.WEST.nodeId==ID:
+                            Extend_v=1
                 else:
                     North = None
                 if rect.getSouth().nodeId == rect.nodeId:
                     South = rect.getSouth().cell.id
-                    if rect.getSouth().cell.type==rect.cell.type:
-                        South_type=1
-                    else:
-                        South_type=0
+                    if rect.eastSouth(rect).nodeId == rect.nodeId:
+                        if rect.eastSouth(rect).cell==rect.getSouth().cell and rect.EAST.nodeId==ID and rect.WEST.nodeId==ID:
+                            Extend_v=1
                 else:
                     South = None
                 if rect.westNorth(rect).nodeId == rect.nodeId:
@@ -654,7 +652,7 @@ class constraintGraph:
                 self.vertexMatrixh[ID][origin1][dest1].append(Edge.getEdgeWeight(e, origin, dest))
 
                 # print id,East,West,rect.cell.x,rect.cell.y
-                if North_type==1 or South_type==1:
+                if Extend_v==1:
                     c = constraint.constraint(3)
                     index = 3
                     value = constraint.constraint.getConstraintVal(c, type=rect.cell.type)
