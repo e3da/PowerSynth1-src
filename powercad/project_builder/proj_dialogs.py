@@ -527,9 +527,9 @@ class OpenProjectDialog(QtGui.QDialog):
             prev_folder = 'C://'
         self.project_file = QFileDialog.getOpenFileName(self, "Select Project File",prev_folder,"Project Files (*.p)")
         self.ui.txt_projectLocation.setText(self.project_file[0])
-        self.parent.layout_script_dir=os.path.dirname(self.project_file[0])    
-        
-     
+        self.parent.layout_script_dir=os.path.dirname(self.project_file[0])
+
+
     def load_project(self): # loads the project selected into the main view
         try:
             self.parent.project = load_file(self.project_file[0])
