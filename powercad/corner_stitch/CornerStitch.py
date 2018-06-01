@@ -985,7 +985,7 @@ class Node(object):
         """
 
         if x < splitCell.cell.x or x > splitCell.cell.x + splitCell.getWidth():
-            print "out of bounds, x = ", x,splitCell.cell.x,splitCell.cell.y
+            #print "out of bounds, x = ", x,splitCell.cell.x,splitCell.cell.y
             return
         if splitCell.cell.type!="EMPTY":
             newCell = tile(None, None, None, None, None,cell(x, splitCell.cell.y, splitCell.cell.type, id=splitCell.cell.id),nodeId=splitCell.nodeId)
@@ -1309,7 +1309,8 @@ class Vnode(Node):
         splitList.append(bottomRight)
         # print"x=",bottomRight.cell.x, bottomRight.cell.y
         # if bottomRight.SOUTH != self.southBoundary and bottomRight.SOUTH.cell.type == "SOLID" and bottomRight.SOUTH.cell.y+bottomRight.SOUTH.getHeight() == y2 or bottomRight.cell.type=="SOLID":
-        if start!='/':
+        #if start!='/':
+        if start != Schar:
             if bottomRight.SOUTH not in self.boundaries and bottomRight.SOUTH.cell.type == type and bottomRight.SOUTH.cell.y + bottomRight.SOUTH.getHeight() == y2 or bottomRight.cell.type == type:
                 cc1 = bottomRight.SOUTH
                 while cc1.cell.x + cc1.getWidth() < x2:
@@ -1359,7 +1360,8 @@ class Vnode(Node):
         splitList.append(topLeft)
         #print "TP",topLeft.cell.y,topLeft.cell.type
         # if topLeft.NORTH != self.northBoundary and topLeft.NORTH.cell.type == "SOLID" and topLeft.NORTH.cell.y == y1 or topLeft.cell.type=="SOLID":
-        if start!='/':
+        #if start!='/':
+        if start != Schar:
             if topLeft.NORTH not in self.boundaries and topLeft.NORTH.cell.type == type and topLeft.NORTH.cell.y == y1 or topLeft.cell.type == type:
                 cc = topLeft.NORTH
                 while cc.cell.x > x1:
@@ -1442,7 +1444,8 @@ class Vnode(Node):
                 #print rect.cell.x, rect.cell.y
                 self.hSplit(i, y2) # order is vital, again
 
-        if start!='/':
+        #if start!='/':
+        if start != Schar:
             cc = self.findPoint(x1, y1, self.stitchList[0]).SOUTH
             while cc not in self.boundaries and cc.cell.x < x1:
                 cc = cc.EAST
@@ -1499,7 +1502,7 @@ class Vnode(Node):
         # print "xco2=", cc.cell.x
         while cc.cell.x + cc.getWidth() <= x2:
             # if cc.NORTH.cell.type == "SOLID" and cc.NORTH.cell.y == y1:
-            if cc.NORTH.cell.type == type and cc.NORTH.cell.y == y1 and start!='/':
+            if cc.NORTH.cell.type == type and cc.NORTH.cell.y == y1 and start!= Schar:
                 changeList.append(cc.NORTH)
             cc = cc.EAST
             while cc.cell.y >= y1:
@@ -1563,13 +1566,13 @@ class Vnode(Node):
         #print "cc",cc1.cell.x,cc1.cell.y
         while cc1.cell.x + cc1.getWidth() <= x2:
             # if cc1.SOUTH.cell.type == "SOLID" and cc1.SOUTH.cell.y +cc1.SOUTH.getHeight()== y2:
-            if cc1.SOUTH.cell.type == type and cc1.SOUTH.cell.y + cc1.SOUTH.getHeight() == y2 and start!='/':
+            if cc1.SOUTH.cell.type == type and cc1.SOUTH.cell.y + cc1.SOUTH.getHeight() == y2 and start!= Schar:
                 changeList.append(cc1.SOUTH)
             cc1 = cc1.EAST
             while cc1.cell.y > y2:
                 cc1 = cc1.SOUTH
         #print"arealistv=", len(changeList)
-        if start != '/':
+        if start != Schar:
             for i in changeList:
                 #print"i",i.cell.x,i.cell.y,i.getHeight(),i.getWidth()
                 N=i.findNeighbors()
@@ -1670,7 +1673,7 @@ class Vnode(Node):
 
             tile_list=[]
             tile_list.append(changeList[0])
-            if start=='/' and end =='/':
+            if start== Schar and end == Schar:
                 for rect in changeList:
                     N = rect.findNeighbors()
                     for i in N:
@@ -1699,7 +1702,7 @@ class Vnode(Node):
     def addChild(self,start, tile_list, parent, type,RESP,end):
 
         #if parent==Vtree.vNodeList[0]:
-        if start=='/' and end =='/':
+        if start== Schar and end == Schar:
             stitchList = []
             boundaries = []
             id = len(Vtree.vNodeList) + 1
@@ -1718,7 +1721,7 @@ class Vnode(Node):
 
             parent.child.append(node)
             Vtree.vNodeList.append(node)
-        elif start == '/' and end != '/':
+        elif start == Schar and end != Schar:
             stitchList = []
             boundaries = []
             id = len(Vtree.vNodeList) + 1
@@ -1737,7 +1740,7 @@ class Vnode(Node):
 
             parent.child.append(node)
             Vtree.vNodeList.append(node)
-        elif start!='/' and end !='/':
+        elif start!= Schar and end != Schar:
             ID = 0
             for rect in tile_list:
                 # if rect.cell.type == type:
@@ -1775,7 +1778,7 @@ class Vnode(Node):
                     # if rect not in boundaries and rect.cell.type!=type:
                     if rect not in boundaries :
                         boundaries.append(copy.copy(rect))
-        elif start != '/' and end == '/':
+        elif start != Schar and end == Schar:
             ID = 0
             for rect in tile_list:
                 # if rect.cell.type == type:
@@ -2417,7 +2420,7 @@ class Hnode(Node):
             #print"1"
             RESP=1
 
-
+        #print Schar,Cchar
         # step 1: hsplit y1 and y2
         #print "IN",x1,y1,x2,y2
         #print "start",start
@@ -2452,7 +2455,7 @@ class Hnode(Node):
         cc = topLeft
 
         # if cc.WEST != self.westBoundary and cc.WEST.cell.type=="SOLID" and cc.WEST.cell.x+cc.WEST.getWidth()==x1 or cc.cell.type=="SOLID":
-        if start!='/':
+        if start!=Schar:
             if cc.WEST not in self.boundaries and cc.WEST.cell.type == type and cc.WEST.cell.x + cc.WEST.getWidth() == x1 or cc.cell.type == type:
                 cc1 = cc.WEST
                 while cc1.cell.y + cc1.getHeight() < y1:
@@ -2508,7 +2511,7 @@ class Hnode(Node):
         splitList = []
         splitList.append(bottomRight)
         cc = bottomRight
-        if start!='/':
+        if start!=Schar:
         # if cc.EAST!= self.eastBoundary and cc.EAST.cell.type=="SOLID" and cc.EAST.cell.x==x2 or cc.cell.type=="SOLID":
             if cc.EAST not in self.boundaries and cc.EAST.cell.type == type and cc.EAST.cell.x == x2 or cc.cell.type == type:
                 cc1 = cc.EAST
@@ -2603,7 +2606,7 @@ class Hnode(Node):
         #for foo in self.stitchList:
             #if foo.cell.type!="EMPTY":
                 #print "foo",foo.cell.x,foo.cell.y,foo.getWidth(),foo.getHeight()
-        if start!='/':
+        if start!=Schar:
             cc = self.findPoint(x2, y2, self.stitchList[0]).WEST  ##There was topLeft.SOUTH
             #
             #print "CC", cc.cell.x,cc.cell.y+cc.getHeight(),y1
@@ -2659,7 +2662,7 @@ class Hnode(Node):
         while t.cell.y >= y1:
             t = t.SOUTH
         # if t.WEST.cell.type=="SOLID" and t.WEST.cell.x+t.WEST.getWidth()==x1:
-        if t.WEST.cell.type == type and t.WEST.cell.x + t.WEST.getWidth() == x1 and start!='/':
+        if t.WEST.cell.type == type and t.WEST.cell.x + t.WEST.getWidth() == x1 and start!=Schar:
             changeList.append(t.WEST)
         changeList.append(t)
         #print "L",len(changeList)
@@ -2675,7 +2678,7 @@ class Hnode(Node):
                         changeList.append(child)
                 else:
                     # if child.cell.type == "SOLID" and child.cell.x == x2:
-                    if child.cell.type == type and child.cell.x == x2 and start!='/':
+                    if child.cell.type == type and child.cell.x == x2 and start!=Schar:
                         if child not in changeList:
                             changeList.append(child)
                     dirn = 2  # to_root
@@ -2686,7 +2689,7 @@ class Hnode(Node):
                         while t.cell.x + t.getWidth() <= x1:
                             t = t.EAST
                         # if t.WEST.cell.type == "SOLID" and t.WEST.cell.x + t.WEST.getWidth() == x1:
-                        if t.WEST.cell.type == type and t.WEST.cell.x + t.WEST.getWidth() == x1 and start!='/':
+                        if t.WEST.cell.type == type and t.WEST.cell.x + t.WEST.getWidth() == x1 and start!=Schar:
                             changeList.append(t.WEST)
                         dirn = 1
                     elif t.cell.x + t.getWidth() < x2:  # it was <=
@@ -2706,7 +2709,7 @@ class Hnode(Node):
         #print "arealist=", len(changeList)
         #for foo in changeList:
             #print "fpp",foo.cell.x,foo.cell.y,foo.cell.type
-        if start!='/':
+        if start!=Schar:
             for i in changeList:
                 #print"i",i.cell.x,i.cell.y,i.getHeight(),i.getWidth(),i.cell.type
                 N=i.findNeighbors()
@@ -2834,7 +2837,7 @@ class Hnode(Node):
 
             tile_list = []
             tile_list.append(changeList[0])
-            if start == '/' and end == '/':
+            if start == Schar and end == Schar:
                 for rect in changeList:
                     N = rect.findNeighbors()
                     for i in N:
@@ -2878,7 +2881,7 @@ class Hnode(Node):
 
         #for i in tile_list:
             #print "i", i.cell.printCell(True,True,True),i.nodeId
-        if start=='/' and end =='/':
+        if start== Schar and end == Schar:
             stitchList = []
             boundaries = []
             id = len(Htree.hNodeList) + 1
@@ -2897,7 +2900,7 @@ class Hnode(Node):
 
             parent.child.append(node)
             Htree.hNodeList.append(node)
-        elif start == '/' and end != '/':
+        elif start == Schar and end != Schar:
             stitchList = []
             boundaries = []
             id = len(Htree.hNodeList) + 1
@@ -2916,7 +2919,7 @@ class Hnode(Node):
 
             parent.child.append(node)
             Htree.hNodeList.append(node)
-        elif start!='/' and end !='/':
+        elif start!= Schar and end != Schar:
             ID = 0
             for rect in tile_list:
                 # if rect.cell.type == type:
@@ -2951,7 +2954,7 @@ class Hnode(Node):
                     # if rect not in boundaries and rect.cell.type!=type:
                     if rect not in boundaries:
                         boundaries.append(copy.copy(rect))
-        elif start != '/' and end == '/':
+        elif start != Schar and end == Schar:
             ID=0
             for rect in tile_list:
                 # if rect.cell.type == type:
@@ -3436,7 +3439,9 @@ class Tree():
 
 ########################################################################################################################
 if __name__ == '__main__':
-    global VID,HID
+    global VID,HID,Schar,Cchar
+    Schar='+'
+    Cchar='-'
     VID=0
     HID=0
     Tile1=tile(None, None, None, None, None, cell(0, 0, "EMPTY"),nodeId=1)
@@ -3676,7 +3681,12 @@ if __name__ == '__main__':
 
             #CHILDH=copy.copy(ParentH)
             #CHILDH=Hnode(boundaries =ParentH.boundaries, child = ParentH.child, stitchList =ParentH.stitchList , parent =ParentH.parent, id = ParentH.id)
-            CHILDH.insert(inp[0],int(inp[2]), int(inp[3]), int(inp[4]), int(inp[5]), inp[6],inp[7])
+            x1=int(inp[2])
+            y1=int(inp[3])+int(inp[5])
+            x2=int(inp[2])+int(inp[4])
+            y2=int(inp[3])
+            CHILDH.insert(inp[0], x1, y1, x2, y2, inp[6], inp[7])
+            #CHILDH.insert(inp[0],int(inp[2]), int(inp[3]), int(inp[4]), int(inp[5]), inp[6],inp[7])
 
             #L = len(Vtree.vNodeList)
             #print int(inp[1]), int(inp[2]), int(inp[3]), int(inp[4]), inp[5]
@@ -3689,7 +3699,12 @@ if __name__ == '__main__':
             CHILD=Parent
             #print "PAR",Parent.id
             #CHILD=Vnode(boundaries =Parent.boundaries, child = Parent.child, stitchList = Parent.stitchList, parent =Parent.parent, id = Parent.id)
-            CHILD.insert(inp[0],int(inp[2]), int(inp[3]), int(inp[4]), int(inp[5]), inp[6],inp[7])
+            x1 = int(inp[2])
+            y1 = int(inp[3]) + int(inp[5])
+            x2 = int(inp[2]) + int(inp[4])
+            y2 = int(inp[3])
+            CHILD.insert(inp[0], x1, y1, x2, y2, inp[6], inp[7])
+            #CHILD.insert(inp[0],int(inp[2]), int(inp[3]), int(inp[4]), int(inp[5]), inp[6],inp[7])
 
         if inp[1] == "." and inp[2]==".":
 
@@ -3705,7 +3720,12 @@ if __name__ == '__main__':
             CHILDH=ParentH
             #CHILDH = copy.copy(ParentH)
             #CHILDH=Hnode(boundaries =ParentH.boundaries[:], child = ParentH.child[:], stitchList = ParentH.stitchList[:], parent =ParentH.parent, id =ParentH.id+1)
-            CHILDH.insert(inp[0],int(inp[3]), int(inp[4]), int(inp[5]), int(inp[6]), inp[7],inp[8])
+            x1 = int(inp[3])
+            y1 = int(inp[4]) + int(inp[6])
+            x2 = int(inp[3]) + int(inp[5])
+            y2 = int(inp[4])
+            CHILDH.insert(inp[0], x1, y1, x2, y2, inp[7], inp[8])
+            #CHILDH.insert(inp[0],int(inp[3]), int(inp[4]), int(inp[5]), int(inp[6]), inp[7],inp[8])
 
             for i in reversed(Vtree.vNodeList):
                 if i.parent.id==1:
@@ -3716,7 +3736,12 @@ if __name__ == '__main__':
             Parent=med.child[-1]
             CHILD=Parent
             #CHILD=Vnode(boundaries =copy.copy(Parent.boundaries), child = copy.copy(Parent.child), stitchList = copy.copy(Parent.stitchList), parent =copy.copy(Parent.parent), id =Parent.id)
-            CHILD.insert(inp[0],int(inp[3]), int(inp[4]), int(inp[5]), int(inp[6]), inp[7],inp[8])
+            x1 = int(inp[3])
+            y1 = int(inp[4]) + int(inp[6])
+            x2 = int(inp[3]) + int(inp[5])
+            y2 = int(inp[4])
+            CHILD.insert(inp[0], x1, y1, x2, y2, inp[7], inp[8])
+            #CHILD.insert(inp[0],int(inp[3]), int(inp[4]), int(inp[5]), int(inp[6]), inp[7],inp[8])
 
         if inp[1]!=".":
             start = inp[0]
@@ -3725,13 +3750,23 @@ if __name__ == '__main__':
             #print"VL", len(Parent.stitchList)
 
             #Parent.insert(int(inp[0]), int(inp[1]), int(inp[2]), int(inp[3]), inp[4],inp[5])
-            Parent.insert(start,int(inp[1]), int(inp[2]), int(inp[3]), int(inp[4]), inp[5], inp[6])
+            x1 = int(inp[1])
+            y1 = int(inp[2]) + int(inp[4])
+            x2 = int(inp[1]) + int(inp[3])
+            y2 = int(inp[2])
+            Parent.insert(inp[0], x1, y1, x2, y2, inp[5], inp[6])
+            #Parent.insert(start,int(inp[1]), int(inp[2]), int(inp[3]), int(inp[4]), inp[5], inp[6])
 
 
             ParentH = Htree.hNodeList[0]
             #print"HL", len(ParentH.stitchList)
             #ParentH.insert(int(inp[0]), int(inp[1]), int(inp[2]), int(inp[3]), inp[4],inp[5])
-            ParentH.insert(start, int(inp[1]), int(inp[2]), int(inp[3]), int(inp[4]), inp[5], inp[6])
+            x1 = int(inp[1])
+            y1 = int(inp[2]) + int(inp[4])
+            x2 = int(inp[1]) + int(inp[3])
+            y2 = int(inp[2])
+            ParentH.insert(inp[0], x1, y1, x2, y2, inp[5], inp[6])
+            #ParentH.insert(start, int(inp[1]), int(inp[2]), int(inp[3]), int(inp[4]), inp[5], inp[6])
 
 
 
@@ -4380,7 +4415,7 @@ if __name__ == '__main__':
                             (i[0], i[1]),  # (x,y)
                             i[2],  # width
                             i[3],  # height
-                            facecolor=colour, edgecolor='black'
+                            facecolor=colour,edgecolor='black'
 
                         )
                     )
@@ -4393,7 +4428,7 @@ if __name__ == '__main__':
                             (i[0], i[1]),  # (x,y)
                             i[2],  # width
                             i[3],  # height
-                            facecolor="white", edgecolor='black'
+                            facecolor="white",edgecolor='black'
                         )
                     )
 
@@ -4559,6 +4594,7 @@ if __name__ == '__main__':
             Total_H.append(v)
         #plotrectH_new(Total_H)
         plotrectH_min(Total_H,format)
+        plotrect_min(Total_H, format)
 
         for k,v in Recatngles_V.items():
             #print k, len(v)
@@ -4572,6 +4608,102 @@ if __name__ == '__main__':
             Total_V.append(v)
         #plotrectV_new(Total_V)
         plotrectV_min(Total_V,format)
+
+    def plotrect_min(Rect1_H,format):  ##plotting each node in HCS for level 2 optimization
+        """
+        Draw all cells in this cornerStitch with stitches pointing to their stitch neighbors
+        TODO:
+         Also should probably change the dimensions of the object window depending on the cornerStitch size.
+        """
+
+        # fig2 = matplotlib.pyplot.figure()
+        # node=nodelist[0]
+
+        # print"H", Rect_H
+        # fig8, ax6 = plt.subplots()
+
+        max_x = 0
+        max_y = 0
+        min_x = 1000
+        min_y = 1000
+
+        fig8 = matplotlib.pyplot.figure()
+        ax6 = fig8.add_subplot(111, aspect='equal')
+        # ax6 = plt.axes(xlim=(0, 60), ylim=(0, 60))
+        # Rect_H=Rect_H.reverse()
+        for i in Rect1_H[0]:
+            if i[0] + i[2] > max_x:
+                max_x = i[0] + i[2]
+            if i[1] + i[3] > max_y:
+                max_y = i[1] + i[3]
+            if i[0] < min_x:
+                min_x = i[0]
+            if i[1] < min_y:
+                min_y = i[1]
+        #print Rect_H
+        for j in range(len(Rect1_H)):
+            Rect_H=Rect1_H[j]
+
+            for i in Rect_H:
+                #print"i", i
+
+                # ax4 = fig2.add_subplot(111, aspect='equal')
+                if not i[-1] == "EMPTY":
+
+                    if i[-1] == "Type_1":
+                        colour = 'green'
+                        # pattern = '\\'
+                    elif i[-1] == "Type_2":
+
+                        colour = 'red'
+                        # pattern='*'
+                    elif i[-1] == "Type_3":
+                        # print"2", i[0], i[1]
+                        colour = 'blue'
+
+                        # pattern = '+'
+                    elif i[-1] == "Type_4":
+                        colour = "#00bfff"
+                        # pattern = '.'
+
+                    ax6.add_patch(
+                        matplotlib.patches.Rectangle(
+                            (i[0], i[1]),  # (x,y)
+                            i[2],  # width
+                            i[3],  # height
+                            facecolor=colour
+
+                        )
+                    )
+
+                else:
+                    # pattern = ''
+
+                    ax6.add_patch(
+                        matplotlib.patches.Rectangle(
+                            (i[0], i[1]),  # (x,y)
+                            i[2],  # width
+                            i[3],  # height
+                            facecolor="white"
+                        )
+                    )
+
+        #plt.xlim(0, 60)
+        #plt.ylim(0, 100)
+        plt.xlim(min_x, max_x)
+        plt.ylim(min_y, max_y)
+        # fig10.show()
+        # return fig10
+        # fig8.savefig(testdir + '/' +testbase+ str(j)+"new-H.eps",format='eps', dpi=1000,)
+        #fig8.savefig(testdir + '/'  +'Mode-'+str(level)+'/'+ testbase + '-' +  "minH.png", dpi=1000, bbox_inches='tight')
+
+        fig8.savefig(directory + '/'  + testbase + '-' +  "minresult"+format, bbox_inches='tight')
+        # fig8.savefig(testdir + '/' + testbase + '-' + str(j) + "new-H.eps", format='eps', dpi=1000,bbox_inches='tight')
+        plt.close()
+
+
+
+
 
 
     def UPDATE(MINX,MINY,format):
@@ -4621,8 +4753,10 @@ if __name__ == '__main__':
         for k, v in Recatngles_H.items():
             # print k
             Total_H=v
-        plotrectH_new(Total_H,format)
+            #print v
 
+        plotrectH_new(Total_H,format)
+        plotrect_new(Total_H, format)
 
         Total_V = []
         Recatngles_V = collections.OrderedDict(sorted(Recatngles_V.items()))
@@ -4632,7 +4766,87 @@ if __name__ == '__main__':
             Total_V=v
         plotrectV_new(Total_V,format)
 
+    def plotrect_new(Rect1_H,format):##plotting each node in HCS for level 2 optimization
+        for j in range(len(Rect1_H)):
+            Rect_H=Rect1_H[j]
+            max_x = 0
+            max_y = 0
+            min_x = 1000
+            min_y = 1000
+            for i in Rect_H:
+                if i[0] + i[2] > max_x:
+                    max_x = i[0] + i[2]
+                if i[1] + i[3] > max_y:
+                    max_y = i[1] + i[3]
+                if i[0] < min_x:
+                    min_x = i[0]
+                if i[1] < min_y:
+                    min_y = i[1]
+            fig8 = matplotlib.pyplot.figure()
+            ax6 = fig8.add_subplot(111, aspect='equal')
+            #ax6 = plt.axes(xlim=(0, 60), ylim=(0, 60))
+            #Rect_H=Rect_H.reverse()
 
+            #print Rect_H
+            for i in Rect_H:
+
+
+
+                # ax4 = fig2.add_subplot(111, aspect='equal')
+                if not i[-1] == "EMPTY":
+
+                    if i[-1] == "Type_1":
+                        colour = 'green'
+                        # pattern = '\\'
+                    elif i[-1] == "Type_2":
+
+                        colour = 'red'
+                        # pattern='*'
+                    elif i[-1] == "Type_3":
+                        #print"2", i[0], i[1]
+                        colour = 'blue'
+
+                        # pattern = '+'
+                    elif i[-1] == "Type_4":
+                        colour = "#00bfff"
+                        # pattern = '.'
+
+                    ax6.add_patch(
+                        matplotlib.patches.Rectangle(
+                            (i[0], i[1]),  # (x,y)
+                            i[2],  # width
+                            i[3],  # height
+                            facecolor=colour
+
+                        )
+                    )
+
+                else:
+                    # pattern = ''
+
+                    ax6.add_patch(
+                        matplotlib.patches.Rectangle(
+                            (i[0], i[1]),  # (x,y)
+                            i[2],  # width
+                            i[3],  # height
+                            facecolor="white"
+                        )
+                    )
+
+            #plt.xlim(0, 210)
+            #plt.ylim(0, 210)
+            plt.xlim(min_x, max_x)
+            plt.ylim(min_y, max_y)
+            # fig10.show()
+            # return fig10
+            #fig8.savefig(testdir + '/' +testbase+ str(j)+"new-H.eps",format='eps', dpi=1000,)
+            #fig8.savefig(testdir + '/'  +'Mode-'+str(level)+'/'+ testbase + '-' + str(j) + "new-H.png", dpi=1000,bbox_inches='tight')
+            #fig8.savefig(testdir + '/' + testbase +'-'+ str(j) + "minH.eps", format='eps', dpi=1000,bbox_inches='tight')
+
+            #os.makedirs(os.path.dirname(filename))
+            fig8.savefig(directory+ '/' + testbase + '-' + str(j) + "-H" + format,dpi=1000, bbox_inches='tight')
+            #fig8.savefig(testdir + '/' +'Mode-'+str(level)+'/' + testbase + '-' + str(j) + "new-H"+format, dpi=1000,bbox_inches='tight')
+            plt.close()
 
 
     #UPDATE(MIN_X, MIN_Y)

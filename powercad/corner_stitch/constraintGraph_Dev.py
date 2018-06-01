@@ -313,8 +313,9 @@ class constraintGraph:
 
                 else:
                     self.set_minY(node)
-            # print "minX",self.minX
-            # print "minY",self.minY
+            #print "minX",self.minX
+            #print "minY",self.minY
+
             return self.minX, self.minY
 
     def set_minX(self, node):
@@ -913,9 +914,6 @@ class constraintGraph:
                 EDGEH = []
                 #for i in range(len(label4)):
                 #for i in range(len(edgelabels)):
-
-
-
                 for (k1), v in edgelabels.items():
                     edge = {}
 
@@ -939,6 +937,7 @@ class constraintGraph:
                             val = int(min(20, max(3, random.gauss(10, 5))))
                             #print val,(3,20)
                             #val = random.randint(3, 10)
+
 
                     elif v[2] == 1:
                         val = int(min(20, max(5, random.gauss(8, 5))))
