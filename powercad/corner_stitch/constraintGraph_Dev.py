@@ -773,6 +773,7 @@ class constraintGraph:
 
         nodes = [x for x in range(len(self.ZDL_H[ID]))]
 
+
         for i in range(len(nodes) - 1):
             if (nodes[i], nodes[i + 1]) not in d1.keys():
                 # print (nodes[i], nodes[i + 1])
@@ -887,47 +888,71 @@ class constraintGraph:
 
         #################################################################
         if level == 1:
+            #print edge_label,len(edge_label)
             label4 = copy.deepcopy(label)
-            # print "l3",len(label4),label4
+            #print "l3",len(label4),label4
+            d3 = defaultdict(list)
+            for i in label4:
+                (k1), v = list(i.items())[0]  # an alternative to the single-iterating inner loop from the previous solution
+                d3[(k1)].append(v)
+            #print d3
+            edgelabels={}
+            for (k),v in d3.items():
+                values=[]
+                for j in range(len(v)):
+                    values.append(v[j][0])
+                value=max(values)
+                for j in range(len(v)):
+                    if v[j][0]==value:
+                        edgelabels[(k)]=v[j]
+            #print edgelabels
+
             D = []
             for i in range(N):
 
                 EDGEH = []
-                for i in range(len(label4)):
+                #for i in range(len(label4)):
+                #for i in range(len(edgelabels)):
 
+
+
+                for (k1), v in edgelabels.items():
                     edge = {}
 
-                    for (k1), v in label4[i].items():
+                    #print (k1),v
+                    if v[2] == 0:
+                        if v[1] == '1':
+                            val = int(min(40, max(10, random.gauss(20, 5))))
+                            #print val,(10,40)
+                            #val = random.randint(10, 40)
+                        elif v[1] == '2':
+                            val = int(min(30, max(8, random.gauss(20, 5))))
+                            #print val,(8,30)
+                            #val = random.randint(8, 30)
+                            # val = 8
+                        elif v[1] == '3':
+                            val = int(min(40, max(20, random.gauss(20, 5))))
+                            #print val,(20,40)
+                            #val = random.randint(20,40)
 
-                        # print (k1),v
-                        if v[2] == 0:
-                            if v[1] == '1':
-                                val = random.randint(10, 40)
-                            elif v[1] == '2':
-                                val = random.randint(8, 30)
-                                # val = 8
-                            elif v[1] == '3':
-                                val = random.randint(6, 20)
+                        elif v[1] == '4':
+                            val = int(min(20, max(3, random.gauss(10, 5))))
+                            #print val,(3,20)
+                            #val = random.randint(3, 10)
 
-                            elif v[1] == '4':
-                                val = random.randint(3, 10)
-
-                        elif v[2] == 1:
-                            val = random.randint(5, 20)
-                        else:
-                            val = random.randint(5,20)
+                    elif v[2] == 1:
+                        val = int(min(20, max(5, random.gauss(8, 5))))
+                        #print val,(5,20)
+                        #val = random.randint(5, 20)
+                    else:
+                        val = random.randint(5,20)
                     edge[(k1)] = val
                     EDGEH.append(edge)
                 D.append(EDGEH)
-                # print len(EDGEH)
-            # for i in D[0]:
-            # print i
-            # print "D",len(D)
+            #print D
 
-            n = list(G2.nodes())
-            self.FindingAllPaths_h(G2, n[0], n[-1])
 
-            paths = self.paths_h
+
             #print paths
 
             D_3 = []
@@ -949,7 +974,116 @@ class constraintGraph:
                 D_3.append(d[j])
 
             #print len(D_3), D_3
+            H_all = []
+            for i in range(len(D_3)):
+                H = []
+                for k, v in D_3[i].items():
+                    H.append((k[0],k[1],v[0]))
+                H_all.append(H)
+            #print H_all
+            G_all=[]
+            for i in range(len(H_all)):
 
+
+                G = nx.MultiDiGraph()
+                n = list(G2.nodes())
+                G.add_nodes_from(n)
+                # G.add_weighted_edges_from([(0,1,2),(1,2,3),(2,3,4),(3,4,4),(4,5,3),(5,6,2),(1,4,15),(2,5,16),(1,5,20)])
+                G.add_weighted_edges_from(H_all[i])
+                G_all.append(G)
+            #print G_all
+            loct = []
+            for i in range(len(G_all)):
+                new_Xlocation = []
+                A = nx.adjacency_matrix(G_all[i])
+                B = A.toarray()
+                source=n[0]
+                target=n[-1]
+                X = {}
+                for i in range(len(B)):
+
+                    for j in range(len(B[i])):
+                        # print B[i][j]
+
+                        if B[i][j] != 0:
+                            X[(i, j)] = B[i][j]
+
+                Pred = {}  ## Saves all predecessors of each node{node1:[p1,p2],node2:[p1,p2..]}
+                for i in range(source, target + 1):
+                    j = source
+                    while j != target:
+                        if B[j][i] != 0:
+                            # print Matrix[j][i]
+                            key = i
+                            Pred.setdefault(key, [])
+                            Pred[key].append(j)
+                        if i == source and j == source:
+                            key = i
+                            Pred.setdefault(key, [])
+                            Pred[key].append(j)
+                        j += 1
+
+                # print Pred
+                n = list(Pred.keys())  ## list of all nodes
+                # print n
+
+                dist = {}  ## Saves each node's (cumulative maximum weight from source,predecessor) {node1:(cum weight,predecessor)}
+                position = {}
+
+                for j in range(source, target + 1):
+                    # print j
+
+                    node = j
+                    for i in range(len(Pred[node])):
+                        pred = Pred[node][i]
+
+                        # print node, pred
+
+                        if j == source:
+                            dist[node] = (0, pred)
+                            key = node
+                            position.setdefault(key, [])
+                            position[key].append(0)
+                        else:
+                            pairs = (max(position[pred]) + (X[(pred, node)]), pred)
+
+                            # if dist[node][0]<pairs[0]:
+                            # print pairs[0]
+                            f = 0
+                            for x, v in dist.items():
+                                # print"x", x
+                                if node == x:
+                                    if v[0] > pairs[0]:
+                                        # print "v", v[0]
+                                        f = 1
+                            if f == 0:
+                                dist[node] = pairs
+
+                            # value_1.append(X[(pred, node)])
+                            key = node
+                            position.setdefault(key, [])
+                            position[key].append(pairs[0])
+
+                        #print "dist=", dist, position
+                loc_i = {}
+                for key in position:
+                    loc_i[key] = max(position[key])
+                    # if key==n[-2]:
+                    # loc_i[key] = 19
+                    # elif key==n[-1]:
+                    # loc_i[key] = 20
+                    new_Xlocation.append(loc_i[key])
+                loct.append(loc_i)
+                #print"LOCT",locta
+
+                self.NEWXLOCATION.append(new_Xlocation)
+
+
+            """
+            n = list(G2.nodes())
+            self.FindingAllPaths_h(G2, n[0], n[-1])
+
+            paths = self.paths_h
             loct = []
             for k in range(len(D_3)):
                 new_Xlocation = []
@@ -994,6 +1128,7 @@ class constraintGraph:
                             position_k.setdefault(key, [])
                             position_k[key].append(pairs[0])
                             # print position_k
+                #print "POS",position_k
                 loc_i = {}
                 for key in position_k:
                     loc_i[key] = max(position_k[key])
@@ -1003,8 +1138,11 @@ class constraintGraph:
                     # loc_i[key] = 20
                     new_Xlocation.append(loc_i[key])
                 loct.append(loc_i)
+                #print loct
 
                 self.NEWXLOCATION.append(new_Xlocation)
+                """
+
             #print"X=", self.NEWXLOCATION
             n = list(G2.nodes())
             Location = {}
@@ -1026,7 +1164,7 @@ class constraintGraph:
             for i in edge_label:
                 k, v = list(i.items())[0]  # an alternative to the single-iterating inner loop from the previous solution
                 d3[k].append(v)
-            # print d3
+            print d3
             X = {}
             H = []
             for i, j in d3.items():
@@ -1034,7 +1172,7 @@ class constraintGraph:
             # print"X", X
             for k, v in X.items():
                 H.append((k[0], k[1], v))
-            # print "H",H
+            print "H",H
 
             loct = []
 
@@ -1277,6 +1415,187 @@ class constraintGraph:
         if level == 1:
             label4 = copy.deepcopy(label)
             # print "l3",len(label4),label4
+
+            d3 = defaultdict(list)
+            for i in label4:
+                (k1), v = list(i.items())[0]  # an alternative to the single-iterating inner loop from the previous solution
+                d3[(k1)].append(v)
+            # print d3
+            edgelabels = {}
+            for (k), v in d3.items():
+                values = []
+                for j in range(len(v)):
+                    values.append(v[j][0])
+                value = max(values)
+                for j in range(len(v)):
+                    if v[j][0] == value:
+                        edgelabels[(k)] = v[j]
+            # print edgelabels
+
+            D = []
+            for i in range(N):
+
+                EDGEV = []
+                # for i in range(len(label4)):
+                # for i in range(len(edgelabels)):
+
+                for (k1), v in edgelabels.items():
+                    edge = {}
+
+                    # print (k1),v
+                    if v[2] == 0:
+                        if v[1] == '1':
+                            val = int(min(40, max(10, random.gauss(20, 5))))
+                            # print val,(10,40)
+                            # val = random.randint(10, 40)
+                        elif v[1] == '2':
+                            val = int(min(30, max(8, random.gauss(20, 5))))
+                            # print val,(8,30)
+                            # val = random.randint(8, 30)
+                            # val = 8
+                        elif v[1] == '3':
+                            val = int(min(40, max(20, random.gauss(20, 5))))
+                            # print val,(20,40)
+                            # val = random.randint(20,40)
+
+                        elif v[1] == '4':
+                            val = int(min(20, max(3, random.gauss(10, 5))))
+                            # print val,(3,20)
+                            # val = random.randint(3, 10)
+
+                    elif v[2] == 1:
+                        val = int(min(20, max(5, random.gauss(8, 5))))
+                        # print val,(5,20)
+                        # val = random.randint(5, 20)
+                    else:
+                        val = random.randint(5, 20)
+                    edge[(k1)] = val
+                    EDGEV.append(edge)
+                D.append(EDGEV)
+            # print D
+
+            # print paths
+
+            D_3 = []
+            for j in range(len(D)):
+                d[j] = defaultdict(list)
+                # print d[j]
+                # print"N=", new_label[j]
+                for i in D[j]:
+                    # print i
+                    # print new_label[j]
+                    k, v = list(i.items())[0]  # an alternative to the single-iterating inner loop from the previous solution
+
+                    # print k,v
+                    d[j][k].append(v)
+                # print d[j]
+                # print "d[j]",d[j]
+
+                D_3.append(d[j])
+
+            # print len(D_3), D_3
+            V_all = []
+            for i in range(len(D_3)):
+                V = []
+                for k, v in D_3[i].items():
+                    V.append((k[0], k[1], v[0]))
+                V_all.append(V)
+            # print H_all
+            GV_all = []
+            for i in range(len(V_all)):
+                G = nx.MultiDiGraph()
+                n = list(GV.nodes())
+                G.add_nodes_from(n)
+                # G.add_weighted_edges_from([(0,1,2),(1,2,3),(2,3,4),(3,4,4),(4,5,3),(5,6,2),(1,4,15),(2,5,16),(1,5,20)])
+                G.add_weighted_edges_from(V_all[i])
+                GV_all.append(G)
+            # print G_all
+            locta = []
+            for i in range(len(GV_all)):
+                new_Ylocation = []
+                A = nx.adjacency_matrix(GV_all[i])
+                B = A.toarray()
+                source = n[0]
+                target = n[-1]
+                X = {}
+                for i in range(len(B)):
+
+                    for j in range(len(B[i])):
+                        # print B[i][j]
+
+                        if B[i][j] != 0:
+                            X[(i, j)] = B[i][j]
+
+                Pred = {}  ## Saves all predecessors of each node{node1:[p1,p2],node2:[p1,p2..]}
+                for i in range(source, target + 1):
+                    j = source
+                    while j != target:
+                        if B[j][i] != 0:
+                            # print Matrix[j][i]
+                            key = i
+                            Pred.setdefault(key, [])
+                            Pred[key].append(j)
+                        if i == source and j == source:
+                            key = i
+                            Pred.setdefault(key, [])
+                            Pred[key].append(j)
+                        j += 1
+
+                # print Pred
+                n = list(Pred.keys())  ## list of all nodes
+                # print n
+
+                dist = {}  ## Saves each node's (cumulative maximum weight from source,predecessor) {node1:(cum weight,predecessor)}
+                position = {}
+
+                for j in range(source, target + 1):
+                    # print j
+
+                    node = j
+                    for i in range(len(Pred[node])):
+                        pred = Pred[node][i]
+
+                        # print node, pred
+
+                        if j == source:
+                            dist[node] = (0, pred)
+                            key = node
+                            position.setdefault(key, [])
+                            position[key].append(0)
+                        else:
+                            pairs = (max(position[pred]) + (X[(pred, node)]), pred)
+
+                            # if dist[node][0]<pairs[0]:
+                            # print pairs[0]
+                            f = 0
+                            for x, v in dist.items():
+                                # print"x", x
+                                if node == x:
+                                    if v[0] > pairs[0]:
+                                        # print "v", v[0]
+                                        f = 1
+                            if f == 0:
+                                dist[node] = pairs
+
+                            # value_1.append(X[(pred, node)])
+                            key = node
+                            position.setdefault(key, [])
+                            position[key].append(pairs[0])
+
+                        # print "dist=", dist, position
+                loc_i = {}
+                for key in position:
+                    loc_i[key] = max(position[key])
+                    # if key==n[-2]:
+                    # loc_i[key] = 19
+                    # elif key==n[-1]:
+                    # loc_i[key] = 20
+                    new_Ylocation.append(loc_i[key])
+                locta.append(loc_i)
+                #print"LOCT",locta
+
+                self.NEWYLOCATION.append(new_Ylocation)
+            """
             D = []
             for i in range(N):
 
@@ -1390,9 +1709,11 @@ class constraintGraph:
                     # loc_i[key] = 20
                     new_Ylocation.append(loc_i[key])
                 loct.append(loc_i)
+                print loct
 
                 self.NEWYLOCATION.append(new_Ylocation)
             #print"Y=", self.NEWYLOCATION
+            """
             Location = {}
             key = ID
             Location.setdefault(key, [])
