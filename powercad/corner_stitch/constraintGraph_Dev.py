@@ -197,11 +197,12 @@ class constraintGraph:
         ZDL_V = dict(zip(Key, ValueV))
         self.ZDL_H = collections.OrderedDict(sorted(ZDL_H.items()))
         # self.ZDL_H =dict(zip(Key, ValueH))
+
         self.ZDL_V = collections.OrderedDict(sorted(ZDL_V.items()))
         # self.ZDL_H[HorizontalNodeList[i].id]=k
         # self.ZDL_V[VerticalNodeList[i].id]=j
-        #print "ZDL_H", self.ZDL_H
-        #print "ZDL_V", self.ZDL_V
+        print "ZDL_H", self.ZDL_H
+        print "ZDL_V", self.ZDL_V
 
         for i in range(len(HorizontalNodeList)):
             # print HorizontalNodeList[i].id
@@ -920,31 +921,31 @@ class constraintGraph:
                     #print (k1),v
                     if v[2] == 0:
                         if v[1] == '1':
-                            val = int(min(40, max(10, random.gauss(20, 5))))
+                            #val = int(min(40, max(v[0], random.gauss(20, 5))))
                             #print val,(10,40)
-                            #val = random.randint(10, 40)
+                            val = random.randint(v[0],10*v[0])
                         elif v[1] == '2':
-                            val = int(min(30, max(8, random.gauss(20, 5))))
+                            #val = int(min(30, max(8, random.gauss(20, 5))))
                             #print val,(8,30)
-                            #val = random.randint(8, 30)
-                            # val = 8
+                            val = random.randint(v[0], 10*v[0])
+                            #val = v[0]
                         elif v[1] == '3':
-                            val = int(min(40, max(20, random.gauss(20, 5))))
+                            #val = int(min(40, max(20, random.gauss(20, 5))))
                             #print val,(20,40)
-                            #val = random.randint(20,40)
+                            val = random.randint(v[0],4*v[0])
 
                         elif v[1] == '4':
-                            val = int(min(20, max(3, random.gauss(10, 5))))
+                            #val = int(min(20, max(3, random.gauss(10, 5))))
                             #print val,(3,20)
-                            #val = random.randint(3, 10)
+                            val = random.randint(v[0], 5*v[0])
 
 
                     elif v[2] == 1:
-                        val = int(min(20, max(5, random.gauss(8, 5))))
+                        #val = int(min(20, max(5, random.gauss(8, 5))))
                         #print val,(5,20)
-                        #val = random.randint(5, 20)
+                        val = random.randint(v[0], 10*v[0])
                     else:
-                        val = random.randint(5,20)
+                        val = random.randint(v[0],10*v[0])
                     edge[(k1)] = val
                     EDGEH.append(edge)
                 D.append(EDGEH)
@@ -1171,7 +1172,7 @@ class constraintGraph:
             # print"X", X
             for k, v in X.items():
                 H.append((k[0], k[1], v))
-            print "H",H
+            #print "H",H
 
             loct = []
 
@@ -1182,7 +1183,7 @@ class constraintGraph:
                 G.add_nodes_from(n)
                 # G.add_weighted_edges_from([(0,1,2),(1,2,3),(2,3,4),(3,4,4),(4,5,3),(5,6,2),(1,4,15),(2,5,16),(1,5,20)])
                 G.add_weighted_edges_from(H)
-                # Draw(G)
+                #nx.draw(G)
                 for k, v in self.XLoc.items():
                     if k in n:
                         self.Loc_X[k] = v
@@ -1444,30 +1445,30 @@ class constraintGraph:
                     # print (k1),v
                     if v[2] == 0:
                         if v[1] == '1':
-                            val = int(min(40, max(10, random.gauss(20, 5))))
+                            #val = int(min(40, max(10, random.gauss(20, 5))))
                             # print val,(10,40)
-                            # val = random.randint(10, 40)
+                            val = random.randint(v[0],10*v[0])
                         elif v[1] == '2':
-                            val = int(min(30, max(8, random.gauss(20, 5))))
+                            #val = int(min(30, max(8, random.gauss(20, 5))))
                             # print val,(8,30)
-                            # val = random.randint(8, 30)
-                            # val = 8
+                            val = random.randint(v[0],10*v[0])
+                            #val = v[0]
                         elif v[1] == '3':
-                            val = int(min(40, max(20, random.gauss(20, 5))))
+                            #val = int(min(40, max(20, random.gauss(20, 5))))
                             # print val,(20,40)
-                            # val = random.randint(20,40)
+                            val = random.randint(v[0],4*v[0])
 
                         elif v[1] == '4':
-                            val = int(min(20, max(3, random.gauss(10, 5))))
+                            #val = int(min(20, max(3, random.gauss(10, 5))))
                             # print val,(3,20)
-                            # val = random.randint(3, 10)
+                            val = random.randint(v[0],5*v[0])
 
                     elif v[2] == 1:
-                        val = int(min(20, max(5, random.gauss(8, 5))))
+                        #val = int(min(20, max(5, random.gauss(8, 5))))
                         # print val,(5,20)
-                        # val = random.randint(5, 20)
+                        val = random.randint(v[0], 10*v[0])
                     else:
-                        val = random.randint(5, 20)
+                        val = random.randint(v[0], 10*v[0])
                     edge[(k1)] = val
                     EDGEV.append(edge)
                 D.append(EDGEV)
@@ -2632,7 +2633,16 @@ class constraintGraph:
         variable = []
         D_V_Newval = [0]
         # n=len(D_V_change)
-
+        #print "V",Range,value,Max
+        V=copy.deepcopy(value)
+        """
+        
+        Prob=[]
+        for i in V:
+            Prob.append(1/float(sum(V)))
+        print Prob
+        D_V_Newval = np.random.multinomial(Range, Prob)
+        """
         while (len(value) > 1):
             # print value
             i = 0
@@ -2640,17 +2650,29 @@ class constraintGraph:
             # print"n", n
             v = Range - sum(D_V_Newval)
             # print v
-            if ((v) / (n / 2)) >0:
-                x = random.randrange(0, ((v) / (n / 2)))
+            if ((2 * v) / n) > 0:
+                x = random.randrange(0, ((2 * v) / n))
             else:
                 x = 0
             # print "x", x
-            D_V_Newval.append(x)
             p = value.pop(i)
+
+            D_V_Newval.append(x)
+
             # print p
-            variable.append(x + p)
+            #variable.append(x + p)
             # print variable
-        variable.append(Max - sum(variable))
+        del D_V_Newval[0]
+        D_V_Newval.append(Range - sum(D_V_Newval))
+
+        random.shuffle(D_V_Newval)
+        #print V, D_V_Newval
+
+        for i in range(len(V)):
+            x=V[i]+D_V_Newval[i]
+            variable.append(x)
+
+        #variable.append(Max - sum(variable))
         # random.shuffle(variable)
         return variable
 
@@ -3162,7 +3184,13 @@ class constraintGraph:
         variable = []
         D_V_Newval = [0]
         # n=len(D_V_change)
-
+        V = copy.deepcopy(value)
+        '''
+        Prob = []
+        for i in V:
+            Prob.append(1 / float(sum(V)))
+        D_V_Newval = np.random.multinomial(Range, Prob)
+        '''
         while (len(value) > 1):
             # print value
             i = 0
@@ -3170,17 +3198,29 @@ class constraintGraph:
             # print"n", n
             v = Range - sum(D_V_Newval)
             # print v
-            if ((v) / (n / 2)) > 0:
-                x = random.randrange(0, ((v) / (n / 2)))
+            if ((2 * v) / n) > 0:
+                x = random.randrange(0, ((2 * v) / n))
             else:
                 x = 0
             # print "x", x
-            D_V_Newval.append(x)
             p = value.pop(i)
+
+            D_V_Newval.append(x)
+
             # print p
-            variable.append(x + p)
+            # variable.append(x + p)
             # print variable
-        variable.append(Max - sum(variable))
+        #del D_V_Newval[0]
+        del D_V_Newval[0]
+        D_V_Newval.append(Range - sum(D_V_Newval))
+
+        random.shuffle(D_V_Newval)
+
+        for i in range(len(V)):
+            x = V[i] + D_V_Newval[i]
+            variable.append(x)
+
+        # variable.append(Max - sum(variable))
         # random.shuffle(variable)
         return variable
 

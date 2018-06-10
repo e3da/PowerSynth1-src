@@ -3440,8 +3440,8 @@ class Tree():
 ########################################################################################################################
 if __name__ == '__main__':
     global VID,HID,Schar,Cchar
-    Schar='+'
-    Cchar='-'
+    Schar='/'
+    Cchar='%'
     VID=0
     HID=0
     Tile1=tile(None, None, None, None, None, cell(0, 0, "EMPTY"),nodeId=1)
@@ -3666,6 +3666,7 @@ if __name__ == '__main__':
 
     while(len(Input)>0):
         inp=Input.pop(0)
+        print inp
 
         #print inp
 
@@ -3685,8 +3686,8 @@ if __name__ == '__main__':
             y1=int(inp[3])+int(inp[5])
             x2=int(inp[2])+int(inp[4])
             y2=int(inp[3])
-            CHILDH.insert(inp[0], x1, y1, x2, y2, inp[6], inp[7])
-            #CHILDH.insert(inp[0],int(inp[2]), int(inp[3]), int(inp[4]), int(inp[5]), inp[6],inp[7])
+            #CHILDH.insert(inp[0], x1, y1, x2, y2, inp[6], inp[7])
+            CHILDH.insert(inp[0],int(inp[2]), int(inp[3]), int(inp[4]), int(inp[5]), inp[6],inp[7])
 
             #L = len(Vtree.vNodeList)
             #print int(inp[1]), int(inp[2]), int(inp[3]), int(inp[4]), inp[5]
@@ -3703,8 +3704,8 @@ if __name__ == '__main__':
             y1 = int(inp[3]) + int(inp[5])
             x2 = int(inp[2]) + int(inp[4])
             y2 = int(inp[3])
-            CHILD.insert(inp[0], x1, y1, x2, y2, inp[6], inp[7])
-            #CHILD.insert(inp[0],int(inp[2]), int(inp[3]), int(inp[4]), int(inp[5]), inp[6],inp[7])
+            #CHILD.insert(inp[0], x1, y1, x2, y2, inp[6], inp[7])
+            CHILD.insert(inp[0],int(inp[2]), int(inp[3]), int(inp[4]), int(inp[5]), inp[6],inp[7])
 
         if inp[1] == "." and inp[2]==".":
 
@@ -3724,8 +3725,8 @@ if __name__ == '__main__':
             y1 = int(inp[4]) + int(inp[6])
             x2 = int(inp[3]) + int(inp[5])
             y2 = int(inp[4])
-            CHILDH.insert(inp[0], x1, y1, x2, y2, inp[7], inp[8])
-            #CHILDH.insert(inp[0],int(inp[3]), int(inp[4]), int(inp[5]), int(inp[6]), inp[7],inp[8])
+            #CHILDH.insert(inp[0], x1, y1, x2, y2, inp[7], inp[8])
+            CHILDH.insert(inp[0],int(inp[3]), int(inp[4]), int(inp[5]), int(inp[6]), inp[7],inp[8])
 
             for i in reversed(Vtree.vNodeList):
                 if i.parent.id==1:
@@ -3740,8 +3741,8 @@ if __name__ == '__main__':
             y1 = int(inp[4]) + int(inp[6])
             x2 = int(inp[3]) + int(inp[5])
             y2 = int(inp[4])
-            CHILD.insert(inp[0], x1, y1, x2, y2, inp[7], inp[8])
-            #CHILD.insert(inp[0],int(inp[3]), int(inp[4]), int(inp[5]), int(inp[6]), inp[7],inp[8])
+            #CHILD.insert(inp[0], x1, y1, x2, y2, inp[7], inp[8])
+            CHILD.insert(inp[0],int(inp[3]), int(inp[4]), int(inp[5]), int(inp[6]), inp[7],inp[8])
 
         if inp[1]!=".":
             start = inp[0]
@@ -3754,8 +3755,8 @@ if __name__ == '__main__':
             y1 = int(inp[2]) + int(inp[4])
             x2 = int(inp[1]) + int(inp[3])
             y2 = int(inp[2])
-            Parent.insert(inp[0], x1, y1, x2, y2, inp[5], inp[6])
-            #Parent.insert(start,int(inp[1]), int(inp[2]), int(inp[3]), int(inp[4]), inp[5], inp[6])
+            #Parent.insert(inp[0], x1, y1, x2, y2, inp[5], inp[6])
+            Parent.insert(start,int(inp[1]), int(inp[2]), int(inp[3]), int(inp[4]), inp[5], inp[6])
 
 
             ParentH = Htree.hNodeList[0]
@@ -3765,8 +3766,8 @@ if __name__ == '__main__':
             y1 = int(inp[2]) + int(inp[4])
             x2 = int(inp[1]) + int(inp[3])
             y2 = int(inp[2])
-            ParentH.insert(inp[0], x1, y1, x2, y2, inp[5], inp[6])
-            #ParentH.insert(start, int(inp[1]), int(inp[2]), int(inp[3]), int(inp[4]), inp[5], inp[6])
+            #ParentH.insert(inp[0], x1, y1, x2, y2, inp[5], inp[6])
+            ParentH.insert(start, int(inp[1]), int(inp[2]), int(inp[3]), int(inp[4]), inp[5], inp[6])
 
 
 
