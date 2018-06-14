@@ -168,9 +168,8 @@ class DevicePage(object):
                 dev.device_type = Device.TRANSISTOR
             elif self.ui.DeviceType.currentIndex() == self.DIODE:
                 dev.device_type = Device.DIODE
-                
-            self.save_position()
-            dev.wire_landings = self.save_position()
+
+            dev.wire_landings = self.wire_landings
             dev.power_side = self.find_device_power_side(dev)
             save_file(dev,os.path.join(self.sub_dir, dev.name+".p"))
             self.load_page()
@@ -261,7 +260,8 @@ class DevicePage(object):
         
         """Save all the inputs"""    
         if not error:
-            self.wire_landings=self.get_point_data()
+            self.wire_landings.append(self.get_point_data())
+            print self.wire_landings
             self.ui.PositionList.clear()
             for landing in self.wire_landings:
                 if landing.bond_type == 1:

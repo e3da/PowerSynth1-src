@@ -71,7 +71,9 @@ Analysis_Setup='''
     # 0: frequency   -- String e.g: '100k'  # 1: save fields --True/False
     # 2: Maximum number of passes           # 3: Minimum number of passes required
     # 4: Least number of passes to converse # 5: Percentage error between 2 consecutive passes
-    # 6: Mesh refine percentage for each pass 
+    # 6: Mesh refine percentage for each pass
+    # 7: Cap: true or false
+    # 8: Add DC: True or False
 oModule = oDesign.GetModule("AnalysisSetup")
 oModule.InsertSetup("Matrix", 
     [
@@ -79,7 +81,21 @@ oModule.InsertSetup("Matrix",
         "AdaptiveFreq:="    , "{0}Hz",   # default 100 kHz
         "SaveFields:="        , {1},      # default to be False 
         "Enabled:="        , True,
+        {8}
         [
+            "NAME:AC",
+            "MaxPass:="        , {2},
+            "MinPass:="        , {3},
+            "MinConvPass:="        , {4}, # default 1
+            "PerError:="        , {5},    # default 1
+            "PerRefine:="        , {6}    # default 30
+        ]
+
+    ])
+    {7}
+'''
+Add_DC='''
+[
 			"NAME:DC",
 			"SolveResOnly:="	, False,
 			[
@@ -99,20 +115,7 @@ oModule.InsertSetup("Matrix",
 				"PerRefine:="		, 30
 			],
 			"Solution Order:="	, "Normal"
-		],
-
-        [
-            "NAME:AC",
-            "MaxPass:="        , {2},
-            "MinPass:="        , {3},
-            "MinConvPass:="        , {4}, # default 1
-            "PerError:="        , {5},    # default 1
-            "PerRefine:="        , {6}    # default 30
-        ]
-
-    ])
-    {7}
-'''
+		],'''
 Add_cap_analysis='''
 [
             "NAME:Cap",
@@ -172,7 +175,8 @@ oDesign.AnalyzeAll()
 '''
 
 Auto_identify_nets='''
-# Auto Identify nets using 
+# Auto Identify nets
+oModule = oDesign.GetModule("BoundarySetup")
 oModule.AutoIdentifyNets()
 '''  
 
@@ -331,7 +335,7 @@ oDesign.ChangeProperty(
                 "NAME:ChangedProps",
                 [
                     "NAME:{1}",
-                    "Value:="        , "{2} mm"
+                    "Value:="        , "{2} {3}"
                 ]
             ]
         ]
@@ -464,3 +468,126 @@ oEditor.CreateRegularPolyhedron(
     ])
 '''
 
+Optimetric='''
+oDesign = oProject.SetActiveDesign("Q3DDesign1")
+oModule = oDesign.GetModule("Optimetrics")
+oModule.InsertSetup("OptiParametric",
+	[
+		"NAME:{0}", # parametric setup name -- default: ParametricSetup1
+		"IsEnabled:="		, True,
+		[
+			"NAME:{1}",
+			"SaveFields:="		, False,
+			"CopyMesh:="		, False,
+			"SolveWithCopiedMeshOnly:=", True
+		],
+		[
+			"NAME:StartingPoint"
+		],
+		"Sim. Setups:="		, ["{2}"], # Setup id, default: Setup1
+		[
+			"NAME:Sweeps",
+			# Optimetric variable from add_optimetric_variable function
+			{3}
+
+		],
+		[
+			"NAME:Sweep Operations"
+		],
+		[
+			"NAME:Goals"
+		]
+	])
+oProject.Save()
+
+
+'''
+
+add_optimetric_variable='''
+
+            [
+				"NAME:SweepDefinition",
+				"Variable:="		, "{0}",
+				"Data:="		, "{5} {1}{4} {2}{4} {3}{7}",
+				"OffsetF1:="		, False,
+				"Synchronize:="		, 0
+			] {6}'''
+
+Solve_optimetric='''
+oModule = oDesign.GetModule("Optimetrics")
+oModule.SolveSetup("ParametricSetup1")
+'''
+
+Optim_export_create_report='''
+oModule = oDesign.GetModule("ReportSetup")
+oModule.CreateReport("Data Table {0}", "Matrix", "Data Table", "Setup1 : {1}",
+	[
+		"Context:="		, "Original"
+	],
+	[
+		"Freq:="		, ["All"],
+        # Optimetric Family Values here
+        {2}
+	],
+	[
+		"X Component:="		, "Freq",
+		"Y Component:="		, ["{3}({4}:{5},{4}:{5})"]
+	], [])
+
+'''
+
+Optim_export_create_cap_report='''
+oModule = oDesign.GetModule("ReportSetup")
+oModule.CreateReport("Data Table {0}", "Matrix", "Data Table", "Setup1 : {1}",
+	[
+		"Context:="		, "Original"
+	],
+	[
+		"Freq:="		, ["All"],
+        # Optimetric Family Values here
+        {2}
+	],
+	[
+		"X Component:="		, "Freq",
+		"Y Component:="		, ["{3}({4},{4})"]
+	], [])
+
+'''
+
+
+Optim_update_report='''
+oModule = oDesign.GetModule("ReportSetup")
+oModule.AddTraces("Data Table {0}", "Setup1 : {1}",
+	[
+		"Context:="		, "Original"
+	],
+	[
+		"Freq:="		, ["All"],
+        # Optimetric Family Values here
+        {2}
+	],
+	[
+		"X Component:="		, "Freq",
+		"Y Component:="		, ["{3}({4}:{5},{4}:{5})"]
+	], [])
+
+'''
+
+Optim_update_cap_report='''
+oModule = oDesign.GetModule("ReportSetup")
+oModule.AddTraces("Data Table {0}", "Setup1 : {1}",
+	[
+		"Context:="		, "Original"
+	],
+	[
+		"Freq:="		, ["All"],
+        # Optimetric Family Values here
+        {2}
+	],
+	[
+		"X Component:="		, "Freq",
+		"Y Component:="		, ["{3}({4},{4})"]
+	], [])
+'''
+Optim_family='''
+        "{0}:="		, ["{1} {2}"], # 0: Name,  1: Value: 'All', 'Nominal' or 'Value+Unit' '''

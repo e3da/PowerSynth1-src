@@ -19,10 +19,10 @@ from _sqlite3 import Row
 
 # sxm - This function is only used in svg.py's main().
 def plot_svg_objs(layout):
-    print "plot_svg_objs() started"
+    #print "plot_svg_objs() started"
     ax = plt.subplot('111', adjustable='box', aspect=1.0)
     bounds = Rect(*find_layout_bounds(layout)) #sxm edit originally: bounds = Rect(*find_layout_bounds(layout))
-    
+
     for element in layout:
         if isinstance(element, LayoutLine):
             verts = [(element.pt1), (element.pt2)]
@@ -31,12 +31,12 @@ def plot_svg_objs(layout):
             col = '#A4A3A8'
             patch = PathPatch(path, edgecolor=col, lw=10)
             ax.add_patch(patch)
-            
+
     for element in layout:
         if isinstance(element, LayoutPoint):
             patch = Circle(element.pt, radius=bounds.width()/30.0)
             ax.add_patch(patch)
-            
+
     ax.axis([bounds.left, bounds.right, bounds.bottom, bounds.top])
     plt.show()
     print "plot_svg_objs() completed."
@@ -283,7 +283,7 @@ def searchCorner(trace1, trace2, corneredTraces):
 
 def detect_corners_90(sym_layout2, ax):
     '''INNER CORNER DETECTION
-    @author: Shilpi Mukherjee 
+    @author: Shilpi Mukherjee
     @date: 30-JUN-2017
     This function detects inner corners on traces that connect orthogonally for a selected solution layout.
     It marks the corners with a fillet in the layout preview and saved solution window,
@@ -440,6 +440,9 @@ def detect_corners_90(sym_layout2, ax):
                     c = InnerCorner(i.trace1, i.trace2)  # create a new InnerCorner object so as not to overwite the previous InnerCorner object
                     addFillet(fillets, c, temp_x, temp_y, concavityQuadrant, gap)
         elif temp_y is None and temp_x is not None: # if temp_y is still None (but temp_x has been found), this is a sideways T-junction.
+            # Quang added: this must be a bug, if the logic go here, it wont know what is minGap...
+            minGap = 1 # minGap is the threshold below which fillet is not applied. It is the minimum gap between the leftmost(rightmost) edge of a horizontal trace and the leftmost(rightmost) edge of a vertical trace that forms a T-junction
+            # Quang finish adding # TODO: Shilpi makes sure and confirms this
             if (((round(i.trace1.top, 1) > round(i.trace2.bottom, 1)) & (round(i.trace1.top, 1) < round(i.trace2.top, 1)))) & (((round(i.trace1.bottom, 1) > round(i.trace2.bottom, 1)) & (round(i.trace1.bottom, 1) < round(i.trace2.top, 1)))):
                 temp_y = i.trace1.top
                 if round(temp_x, 1) == round(i.trace1.right, 1):
@@ -574,11 +577,11 @@ def detect_corners_270(sym_layout2, ax, innerFillets, supertraces):
                 continue
 
     # MARK THE OUTER CORNERS WITH FILLETS WITH CUSTOMIZED ORIENTATION AND SIZE
-    print "Outer Corners (270 degrees):"
-    print "Format: ((x, y), fillet concavity quadrant, fillet size (default=1))"
+    # "Outer Corners (270 degrees):"
+    #print "Format: ((x, y), fillet concavity quadrant, fillet size (default=1))"
     for i in outerFillets:
         i.calcOuterFilletSpecs() # Find fillet/arc specifications; modify radius if needed (based on smallest feature size)
-        print ((i.corner.x, i.corner.y), i.concavityQuadrant, i.radius)
+        #print ((i.corner.x, i.corner.y), i.concavityQuadrant, i.radius)
         a = Arc((i.centerX, i.centerY), i.radius*2, i.radius*2, theta1=i.theta1, theta2=i.theta2, facecolor='#E6E6E6', edgecolor='blue', linewidth=2)
         ax.add_patch(a) # toggle comment to enable/disable fillet markings
 

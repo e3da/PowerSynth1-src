@@ -39,7 +39,7 @@ from matplotlib import colors
 from scipy.optimize import curve_fit
 '''@PowerSynth Packages'''
 from powercad.sym_layout.plot import plot_layout
-from powercad.spice_export.thermal_netlist_graph import Module_Full_Thermal_Netlist_Graph
+from powercad.Spice_handler.spice_export.thermal_netlist_graph import Module_Full_Thermal_Netlist_Graph
 
 '''Additional Function'''
 

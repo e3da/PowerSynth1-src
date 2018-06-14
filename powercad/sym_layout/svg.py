@@ -18,21 +18,21 @@ class LayoutLine(object):
         self.path_id = path_id
         self.pt1 = pt1
         self.pt2 = pt2
-        self.vertical = vertical        
+        self.vertical = vertical
+
 class LayoutPoint(object):
     def __init__(self, path_id, pt):
         self.path_id = path_id
         self.pt = pt
-# Quang: testing input rectangle
-class LayoutRect(object):
-    def __init__(self,path_id,pt, w, l):
-        # Constructor: pt: the left high corner point of a rectangle
-        #              w, l: width and length of the rectangle  
-        self.path_id=path_id
-        self.pt = pt
-        self.w = w 
-        self.l = l 
-        
+        self.name = None
+
+
+class LayoutWire(object):
+    def __init__(self, path_id, pt1, pt2, vertical):
+        self.path_id = path_id
+        self.pt1 = pt1
+        self.pt2 = pt2
+
 def load_script(sript_path):
     # qmle added 10-18-2016
     # A specific script language for PS layout:
@@ -45,12 +45,17 @@ def load_script(sript_path):
         for line in f:               # read every line of the script 
             if line[0]=='#' or line[0]=='': # check for comments or blank lines
                 x=1                         # do nothing if so
-            else:                           # in case a line contains layout information
-                path_id=line[0:4]           # load path_id
-                type=line[5]                # check for layout type (line: l vs point: p)
+            else:
+                # in case a line contains layout information
+                data=line.strip('\r\n')
+                data=data.split(' ')
+                print data
+                path_id=data[0]           # load path_id
+                type=data[1]                # check for layout type (line: l vs point: p)
                 if type =='l':              # in case it is a line
-                    line_str=line[7:len(line)] # read the layout information
-                    dat1,dat2=line_str.split(' ')   # split out 2 points positions
+                    # split out 2 points positions
+                    dat1=data[2]
+                    dat2=data[3]
                     dat1=dat1.split('(')[1]         # split out the open bracket
                     dat1=dat1.split(')')[0]         # split out the close bracket
                     x1,y1= dat1.split(',')          # split out string information of position
@@ -63,16 +68,31 @@ def load_script(sript_path):
                         vert = True                 # set vertical = True
                     elif pt1[1]==pt2[1]:            # check if the line is horizontal (manhattan style)
                         vert = False                # set vertical = True
-                    else:                           # Non-Manhattan will be implemented later
-                        LayoutError('non-manhattan will be added later')    
                     objs.append(LayoutLine(path_id,pt1,pt2,vert)) # add obj to layout list
                 elif type=='p':                     # in case this is a point
-                    dat1=line[7:len(line)]          # read the layout information
+                    dat1=data[2]         # read the layout information
                     dat1=dat1.split('(')[1]         # split out the open bracket
                     dat1=dat1.split(')')[0]         # split out the close bracket
                     x1,y1= dat1.split(',')          # split out string information of position
                     pt=(float(x1),float(y1))        # convert to float data type
                     objs.append(LayoutPoint(path_id,pt))  # add obj to layout list
+                elif type=='bw':
+                    # split out 2 points positions
+                    dat1 = data[2]
+                    dat2 = data[3]
+                    dat1 = dat1.split('(')[1]  # split out the open bracket
+                    dat1 = dat1.split(')')[0]  # split out the close bracket
+                    x1, y1 = dat1.split(',')  # split out string information of position
+                    pt1 = (float(x1), float(y1))  # convert to float data type
+                    dat2 = dat2.split('(')[1]  # split out the open bracket
+                    dat2 = dat2.split(')')[0]  # split out the close bracket
+                    x2, y2 = dat2.split(',')  # split out string information of position
+                    pt2 = (float(x2), float(y2))  # convert to float data type
+                    if pt1[0] == pt2[0]:  # check if the line is vertical (manhattan style)
+                        vert = True  # set vertical = True
+                    elif pt1[1] == pt2[1]:  # check if the line is horizontal (manhattan style)
+                        vert = False  # set vertical = True
+                    objs.append(LayoutWire(path_id, pt1, pt2, vert))  # add obj to layout list
     if len(objs) > 0:                               # If there are objs in layout list
             for t in objs:
                 layout.append(t)                    # append obj to layout

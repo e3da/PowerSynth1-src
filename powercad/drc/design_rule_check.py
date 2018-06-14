@@ -246,7 +246,7 @@ class DesignRuleCheck():
                                     total_error += float('Inf')
             else:
                 # bondwire connects trace to trace
-                for pt in self.symb_layout.pointspoints:
+                for pt in self.symb_layout.points:
                     # check for intersection between all components
                     for bwpt in bw.start_pts+bw.end_pts:
                         rect = pt.footprint_rect.deepCopy()

@@ -1,0 +1,7 @@
+M1 DC_plus G_High Out Out NMOS
+M2 DC_plus G_High Out Out NMOS
+M3 Out G_Low DC_neg DC_neg NMOS
+M4 Out G_Low DC_neg DC_neg NMOS
+.model NMOS NMOS
+.model PMOS PMOS
+.end
