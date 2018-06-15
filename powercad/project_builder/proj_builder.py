@@ -1473,7 +1473,7 @@ class ProjectBuilder(QtGui.QMainWindow):
                 self.save_deviceTable()
                 
                 # make project directory
-                save_path = os.path.join(self.project.directory, str(self.project.name))
+                save_path = self.project.directory
                 if not os.path.exists(save_path):
                     os.makedirs(save_path)
                 
@@ -1521,6 +1521,9 @@ class ProjectBuilder(QtGui.QMainWindow):
                 QtGui.QMessageBox.about(self,"Project Saved","Project Saved")
                 self.project.directory=save_path
                 self.layout_script_dir = save_path
+                list = save_path.split("\\")
+                self.project.name = list[-1] # make new project name
+                print self.project.name
             except:
                 # Replace the original copy
                 if os.path.exists(os.path.join(save_path, "project.p.temp")):
