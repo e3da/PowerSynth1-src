@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'newProjectDialog.ui'
 #
-# Created: Tue Jun 12 10:27:45 2018
+# Created: Fri Jun 15 17:26:35 2018
 #      by: pyside-uic 0.2.15 running on PySide 1.2.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -107,7 +107,7 @@ class Ui_newProjectDialog(object):
         font.setBold(True)
         self.label_5.setFont(font)
         self.label_5.setObjectName("label_5")
-        self.gridLayout_5.addWidget(self.label_5, 1, 2, 1, 1)
+        self.gridLayout_5.addWidget(self.label_5, 1, 3, 1, 1)
         self.label_7 = QtGui.QLabel(self.groupBox)
         self.label_7.setMinimumSize(QtCore.QSize(75, 0))
         self.label_7.setMaximumSize(QtCore.QSize(75, 16777215))
@@ -128,7 +128,7 @@ class Ui_newProjectDialog(object):
         font.setBold(False)
         self.btn_symbnetfile.setFont(font)
         self.btn_symbnetfile.setObjectName("btn_symbnetfile")
-        self.gridLayout_5.addWidget(self.btn_symbnetfile, 1, 3, 1, 1)
+        self.gridLayout_5.addWidget(self.btn_symbnetfile, 1, 4, 1, 1)
         self.txt_symbnet_address = QtGui.QLineEdit(self.groupBox)
         self.txt_symbnet_address.setEnabled(True)
         palette = QtGui.QPalette()
@@ -147,7 +147,9 @@ class Ui_newProjectDialog(object):
         font.setBold(False)
         self.txt_symbnet_address.setFont(font)
         self.txt_symbnet_address.setObjectName("txt_symbnet_address")
-        self.gridLayout_5.addWidget(self.txt_symbnet_address, 1, 1, 1, 1)
+        self.gridLayout_5.addWidget(self.txt_symbnet_address, 1, 2, 1, 1)
+        spacerItem = QtGui.QSpacerItem(10, 20, QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Minimum)
+        self.gridLayout_5.addItem(spacerItem, 1, 1, 1, 1)
         self.gridLayout_2.addLayout(self.gridLayout_5, 2, 0, 1, 4)
         self.gridLayout_7 = QtGui.QGridLayout()
         self.gridLayout_7.setObjectName("gridLayout_7")
@@ -157,7 +159,7 @@ class Ui_newProjectDialog(object):
         font.setBold(False)
         self.txt_name.setFont(font)
         self.txt_name.setObjectName("txt_name")
-        self.gridLayout_7.addWidget(self.txt_name, 0, 1, 1, 1)
+        self.gridLayout_7.addWidget(self.txt_name, 0, 2, 1, 1)
         self.label_2 = QtGui.QLabel(self.groupBox)
         self.label_2.setMinimumSize(QtCore.QSize(80, 0))
         self.label_2.setMaximumSize(QtCore.QSize(80, 16777215))
@@ -167,6 +169,8 @@ class Ui_newProjectDialog(object):
         self.label_2.setFont(font)
         self.label_2.setObjectName("label_2")
         self.gridLayout_7.addWidget(self.label_2, 0, 0, 1, 1)
+        spacerItem1 = QtGui.QSpacerItem(10, 10, QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Minimum)
+        self.gridLayout_7.addItem(spacerItem1, 0, 1, 1, 1)
         self.gridLayout_2.addLayout(self.gridLayout_7, 0, 0, 1, 4)
         self.gridLayout_6 = QtGui.QGridLayout()
         self.gridLayout_6.setObjectName("gridLayout_6")
@@ -189,7 +193,7 @@ class Ui_newProjectDialog(object):
         self.txt_dir.setFont(font)
         self.txt_dir.setReadOnly(False)
         self.txt_dir.setObjectName("txt_dir")
-        self.gridLayout_6.addWidget(self.txt_dir, 0, 3, 1, 1)
+        self.gridLayout_6.addWidget(self.txt_dir, 0, 4, 1, 1)
         self.label_3 = QtGui.QLabel(self.groupBox)
         self.label_3.setMinimumSize(QtCore.QSize(80, 50))
         self.label_3.setMaximumSize(QtCore.QSize(80, 50))
@@ -210,10 +214,12 @@ class Ui_newProjectDialog(object):
         font.setBold(False)
         self.btn_openDirectory.setFont(font)
         self.btn_openDirectory.setObjectName("btn_openDirectory")
-        self.gridLayout_6.addWidget(self.btn_openDirectory, 0, 2, 1, 1)
+        self.gridLayout_6.addWidget(self.btn_openDirectory, 0, 3, 1, 1)
+        spacerItem2 = QtGui.QSpacerItem(10, 20, QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Minimum)
+        self.gridLayout_6.addItem(spacerItem2, 0, 2, 1, 1)
         self.gridLayout_2.addLayout(self.gridLayout_6, 1, 0, 1, 4)
-        spacerItem = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
-        self.gridLayout_2.addItem(spacerItem, 5, 1, 1, 1)
+        spacerItem3 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        self.gridLayout_2.addItem(spacerItem3, 5, 1, 1, 1)
         self.btn_create = QtGui.QPushButton(self.groupBox)
         self.btn_create.setEnabled(True)
         self.btn_create.setMinimumSize(QtCore.QSize(150, 0))
