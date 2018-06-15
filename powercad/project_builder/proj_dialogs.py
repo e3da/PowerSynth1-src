@@ -516,7 +516,8 @@ class NewProjectDialog(QtGui.QDialog):
         # Create project
         if netlist==None:
             Notifier(msg='You did not import a netlist, you will need to assign netname in the UI !',msg_name='Reminder')
-        return Project(self.ui.txt_name.text(), self.ui.txt_dir.text(), DEFAULT_TECH_LIB_DIR, netlist,symb_layout)
+        proj_dir =os.path.abspath(self.ui.txt_dir.text(),self.ui.txt_name.text())
+        return Project(self.ui.txt_name.text(), proj_dir, DEFAULT_TECH_LIB_DIR, netlist,symb_layout)
 
 
 class OpenProjectDialog(QtGui.QDialog):

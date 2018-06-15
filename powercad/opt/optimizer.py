@@ -5,6 +5,7 @@ Created on Jan 29, 2013
 '''
 
 import pickle
+import numpy.random as nprandom
 import random
 import array
 import math
@@ -57,9 +58,9 @@ class NSGAII_Optimizer(object):
         self.ilambda = ilambda
         self.cxpb = cxpb
         self.mutpb = mutpb
-        
         random.seed(self.seed)
-        
+        nprandom.seed(self.seed)
+
         min_weights = []
         for i in xrange(self.num_measures):
             min_weights.append(-1.0)
@@ -90,7 +91,10 @@ class NSGAII_Optimizer(object):
     def _init_individual(self, Individual):
         ind = []
         for dv in self.design_vars:
-            ind.append(random.uniform(dv.init_values[0], dv.init_values[1]))
+            random.seed(self.seed)
+            init0=dv.init_values[0]
+            init1=dv.init_values[1]
+            ind.append(random.uniform(init0, init1))
         return Individual(ind)
         
     def run(self):

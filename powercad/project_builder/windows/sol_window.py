@@ -6,13 +6,11 @@ sxm063 - added function "export_spice_reduced_parasitics()" and its correspondin
 Quang- on the solution figure, now we can see the dies are now labeled with number so users can know the whereabouts of the interested dies
 '''
 
-import copy
 import os
 import sys
 import time
 import traceback
 
-import networkx as nx
 import numpy as np
 from PySide import QtGui
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
@@ -47,7 +45,7 @@ class SolutionWindow(QtGui.QWidget):
 
         self.solution = solution
         self.sym_layout = sym_layout
-        self.default_save_dir=dir
+        self.default_save_dir=dir # This will make all save functions default to project dir
         # display objective data in table widget
         self.ui.tbl_info.setRowCount(len(solution.params))
         self.i = 0

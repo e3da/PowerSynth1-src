@@ -46,7 +46,6 @@ class E_graph():
         if sym_layout.mdl_type['E']=='RS':
             self.set_model()
     def set_model(self):
-        print  "MODEL SET CORRECTLY"
         self.LAC_mdl = self.sym_layout.LAC_mdl
         self.RAC_mdl = self.sym_layout.RAC_mdl
         self.C_mdl = self.sym_layout.C_mdl
@@ -173,8 +172,8 @@ class E_graph():
             wire_res = wire_resistance(trace_data[4], length, wire_radius, resist)
             inv_res += 1.0 / wire_res
             inv_ind += 1.0 / wire_ind
-        #self.bw_mdl = load_mdl('C://Users//qmle//Desktop//Testing//FastHenry//Fasthenry3_test_gp//WorkSpace_bw',
-        #                       mdl_name='bw.mdl')
+        self.bw_mdl = load_mdl('C://Users//qmle//Desktop//Testing//FastHenry//Fasthenry3_test_gp//WorkSpace_bw',
+                               mdl_name='bw.mdl')
         #R, L = wire_group(self.bw_mdl, D)
         '''
         print "distance",D
