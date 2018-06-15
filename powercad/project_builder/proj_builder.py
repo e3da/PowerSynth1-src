@@ -1474,6 +1474,7 @@ class ProjectBuilder(QtGui.QMainWindow):
                 
                 # make project directory
                 save_path = self.project.directory
+                print "save", save_path
                 if not os.path.exists(save_path):
                     os.makedirs(save_path)
                 
@@ -1517,13 +1518,13 @@ class ProjectBuilder(QtGui.QMainWindow):
                 
                 # Attempt to pickle the project
                 self.project.symb_layout.prepare_for_pickle() # prepare the symbolic layout object for pickling
+                self.project.directory=save_path
+                print "proj_dir",self.project.directory
                 save_file(self.project,os.path.join(save_path, "project.p"))
                 QtGui.QMessageBox.about(self,"Project Saved","Project Saved")
-                self.project.directory=save_path
                 self.layout_script_dir = save_path
                 list = save_path.split("\\")
                 self.project.name = list[-1] # make new project name
-                print self.project.name
             except:
                 # Replace the original copy
                 if os.path.exists(os.path.join(save_path, "project.p.temp")):

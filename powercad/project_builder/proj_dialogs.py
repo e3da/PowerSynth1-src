@@ -557,10 +557,7 @@ class OpenProjectDialog(QtGui.QDialog):
             # Check if project object contains tech_lib_dir field (if not add it)
             if not hasattr(self.parent.project, 'tech_lib_dir'):
                 self.parent.project.tech_lib_dir = DEFAULT_TECH_LIB_DIR
-                
-            # update project directory
-            self.parent.project.directory = os.path.split(os.path.split(self.project_file[0])[0])[0]
-            print self.parent.project.directory
+
         except:
             QtGui.QMessageBox.about(self,"Project Load Error","Error loading project -- Contact developer.")
             self.reject()
