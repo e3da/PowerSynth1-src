@@ -84,14 +84,14 @@ class Circuit():
                     self.portmap.loc[rowid, "PS_node_id"] = node[0]
                     self.portmap.loc[rowid, "Type"] = node[1]['type']
                     self.portmap.loc[rowid, "Position"] = node[1]['point']
-                    self.portmap.loc[rowid, "Net_id"] = net_id
+                    self.portmap.loc[rowid, "Net_id"] = name
                     # node map
                     self.node_df.loc[rowid, "PS_node_id"] = node[0]
-                    self.node_df.loc[rowid, "Net_id"] = net_id
+                    self.node_df.loc[rowid, "Net_id"] = name
                     self.node_df.loc[rowid, "Type"] = node[1]['type']
                     # add to component list for each port node add a port impedance
                     self.df_circuit_info.loc[rowid, 'element'] = "R_in{0}".format(net_id)
-                    self.df_circuit_info.loc[rowid, 'p node'] = net_id
+                    self.df_circuit_info.loc[rowid, 'p node'] = name
                     self.df_circuit_info.loc[rowid, 'n node'] = 0
                     self.df_circuit_info.loc[rowid, 'value'] = float(port_impedance)
                     rowid += 1
@@ -148,8 +148,8 @@ class Circuit():
                     rowid += 1
 
             RLC_id += 1
-        self.df_circuit_info.to_csv('netlist.csv')
-        self.portmap.to_csv('port.csv')
+        #self.df_circuit_info.to_csv('netlist.csv')
+        #self.portmap.to_csv('port.csv')
     def get_max_netid(self):
         return max(self.df_circuit_info['p node'].tolist()+self.df_circuit_info['n node'].tolist())
     def _graph_s_params(self,file="spara.csv",ports=None,frange=[1.5e5,3e7,100]):
@@ -185,7 +185,7 @@ class Circuit():
             self._graph_add_comp(row_id,V_name,V_id,0,1)
             self.build_current_info()
 
-            ckt_df.to_csv('netlist'+str(i)+'.csv')
+            #ckt_df.to_csv('netlist'+str(i)+'.csv')
             start=time.time()
             #self.solve_eq(mode="graph")
             env=os.path.abspath('C:\Program Files\LTC\LTspiceXVII\XVIIx64.exe')
@@ -225,7 +225,7 @@ class Circuit():
             print time.time()-start, 's'
             # after the computation is done:
             ckt_df.loc[row, "n node"] = 0
-        s_dataframe.to_csv("Spara.csv")
+        #s_dataframe.to_csv("Spara.csv")
         write_touchstone_v1(comments=['4-11-2017'],s_df=s_dataframe,file='test.s17p',N=17)
 
         print "total time", time.time()-start_all,'s'

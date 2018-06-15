@@ -13,14 +13,17 @@ from powercad.general.settings.save_and_load import save_file
 from powercad.general.data_struct.Unit import Unit
 from powercad.general.settings.Error_messages import InputError, Notifier
 from powercad.parasitics.mdl_compare import trace_cap_krige, trace_ind_krige, trace_res_krige, load_mdl
-import matplotlib.pyplot as plt
 import subprocess
-import time
 from scipy.interpolate import interp1d
 from powercad.interfaces.FastHenry.Standard_Trace_Model import Uniform_Trace, write_to_file
 from powercad.response_surface.RS_build_function import *
-from scipy.optimize import curve_fit
 from scipy.interpolate import InterpolatedUnivariateSpline
+from powercad.interfaces.FastHenry.fh_layers import  *
+from powercad.interfaces.FastHenry.Standard_Trace_Model import write_to_file
+from powercad.interfaces.FastHenry.Standard_Trace_Model import Square_corner, write_to_file
+from powercad.response_surface.RS_build_function import *
+from scipy.optimize import curve_fit
+from scipy.interpolate import interp1d
 import time
 def form_trace_model(layer_stack, Width=[1.2, 40], Length=[1.2, 40], freq=[10, 100, 10], wdir=None, savedir=None,
                      mdl_name=None
@@ -794,11 +797,7 @@ def form_fasthenry_trace_response_surface(layer_stack, Width=[1.2, 40], Length=[
 
 def form_fasthenry_corner_correction(layer_stack, Width=[1.2, 40], freq=[10, 100, 10], wdir=None, savedir=None,
                                  mdl_name=None, env=None, options=['Q3D', 'mesh', False], trace_model=None):
-    from powercad.interfaces.FastHenry.Standard_Trace_Model import Square_corner, write_to_file
-    from powercad.response_surface.RS_build_function import *
-    from scipy.optimize import curve_fit
-    from scipy.interpolate import interp1d
-    import time
+
     lac_mdl = trace_model['L']
     rac_mdl = trace_model['R']
     ls = layer_stack
@@ -1016,8 +1015,7 @@ def form_fasthenry_corner_correction(layer_stack, Width=[1.2, 40], freq=[10, 100
 
 
 def form_bondwire_group_model_JDEC(l_range,radi,num_wires,distance,height,freq,cond,env,mdl_name,wdir,savedir,view=False):
-    from powercad.interfaces.FastHenry.fh_layers import  *
-    from powercad.interfaces.FastHenry.Standard_Trace_Model import write_to_file
+
 
     print "characterizing Bondwire group"
     length=np.linspace(l_range[0],l_range[1],100)

@@ -488,7 +488,6 @@ class E_graph():
                             row_id = self.update_trace_df(row_id=row_id, trace_id=trace_id, poi_type=LONG_POI,
                                                       point=pt, data_type=superconn[0], condition="SUPER_TRACE",
                                                           node=node,i=i,j=j,side=side)
-        self.normal_trace_df.to_csv("trace_data.csv")
         return supertrace_sum,long_sum
 
 

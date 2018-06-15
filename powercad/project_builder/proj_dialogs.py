@@ -821,7 +821,7 @@ class EnvironmentSetupDialog(QtGui.QDialog):
         Notifier(msg="Update Binary complete",msg_name="Complete!")
 
 class SetupDeviceDialogs(QtGui.QDialog):
-    def __init__(self, parent):
+    def __init__(self, parent,mode=1):
         QtGui.QDialog.__init__(self, parent)
         self.ui = Ui_setup_device()
         self.ui.setupUi(self)
@@ -829,6 +829,7 @@ class SetupDeviceDialogs(QtGui.QDialog):
         self.parent = parent
         self.device=None
         # SETUP DIE ATTACH
+        self.mode=mode
         self.attach_path=os.path.join(self.parent.project.tech_lib_dir, "Device_Selection","Die_Attaches")
         self.attach_list_model=QtGui.QFileSystemModel()
         self.attach_list_model.setRootPath(self.attach_path)
@@ -868,27 +869,37 @@ class SetupDeviceDialogs(QtGui.QDialog):
             error=True
         return  error
 
-    def return_device_setup(self):
-        if not(self.check_device_error()):
-            item = self.parent.ui.lst_devices.selectionModel().selectedIndexes()[0]
-            tech_obj = load_file(self.parent.device_list_model.rootPath() + '/' + item.model().data(item))
-            heat_flow = float(self.ui.txt_device_heat_flow.text())
-            item2 = self.ui.lst_devices_att.selectionModel().selectedIndexes()[0]
-            # Load attach tech lib object
-            attch_tech_obj = load_file(self.attach_list_model.rootPath() + '/' + item2.model().data(item2))
-            attch_thick = float(self.ui.txt_devAttchThickness.text())
-            self.parent.ui.btn_addDevice.setEnabled(True)
-            # ADD NEW DEVICE TO TABLE
-            row_count = self.parent.ui.tbl_projDevices.rowCount()
-            self.parent.ui.tbl_projDevices.insertRow(row_count)
-            self.parent.ui.tbl_projDevices.setItem(row_count, 0, QtGui.QTableWidgetItem())
-            self.parent.ui.tbl_projDevices.item(row_count, 0).setBackground(QtGui.QBrush(self.parent.color_wheel[self.parent.cw1 - 1]))
-            self.parent.ui.tbl_projDevices.setItem(row_count, 1, QtGui.QTableWidgetItem())
-            self.parent.ui.tbl_projDevices.item(row_count, 1).setText('  ' + item.model().data(item))
-            self.parent.ui.tbl_projDevices.item(row_count, 1).tech = DeviceInstance(attch_thick, heat_flow, tech_obj, attch_tech_obj)
-            self.close()
-
-        print "return device and wires"
+    def return_device_setup(self,mode="ADD"):
+        if not (self.check_device_error()):
+            if self.mode ==1:
+                item = self.parent.ui.lst_devices.selectionModel().selectedIndexes()[0]
+                tech_obj = load_file(self.parent.device_list_model.rootPath() + '/' + item.model().data(item))
+                heat_flow = float(self.ui.txt_device_heat_flow.text())
+                item2 = self.ui.lst_devices_att.selectionModel().selectedIndexes()[0]
+                # Load attach tech lib object
+                attch_tech_obj = load_file(self.attach_list_model.rootPath() + '/' + item2.model().data(item2))
+                attch_thick = float(self.ui.txt_devAttchThickness.text())
+                self.parent.ui.btn_addDevice.setEnabled(True)
+                # ADD NEW DEVICE TO TABLE
+                row_count = self.parent.ui.tbl_projDevices.rowCount()
+                self.parent.ui.tbl_projDevices.insertRow(row_count)
+                self.parent.ui.tbl_projDevices.setItem(row_count, 0, QtGui.QTableWidgetItem())
+                self.parent.ui.tbl_projDevices.item(row_count, 0).setBackground(QtGui.QBrush(self.parent.color_wheel[self.parent.cw1 - 1]))
+                self.parent.ui.tbl_projDevices.setItem(row_count, 1, QtGui.QTableWidgetItem())
+                self.parent.ui.tbl_projDevices.item(row_count, 1).setText('  ' + item.model().data(item))
+                self.parent.ui.tbl_projDevices.item(row_count, 1).tech = DeviceInstance(attch_thick, heat_flow, tech_obj, attch_tech_obj)
+                self.close()
+            elif self.mode ==2:
+                """Save updated device heat flow and attach thickness by reading in the current values from the text entered by the user."""
+                selected_row = self.parent.ui.tbl_projDevices.currentRow()
+                row_item = self.parent.ui.tbl_projDevices.item(selected_row, 1)
+                if isinstance(row_item.tech, DeviceInstance):
+                    error = self._check_device_fields()
+                    if not error:
+                        row_item.tech.heat_flow = float(self.ui.txt_device_heat_flow.text())
+                        row_item.tech.attach_thickness = float(self.ui.txt_devAttchThickness.text())
+                self.close()
+            print "return device and wires"
 
 class WireConnectionDialogs(QtGui.QDialog):
     def __init__(self, parent):

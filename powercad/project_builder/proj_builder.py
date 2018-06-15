@@ -92,7 +92,7 @@ class ProjectBuilder(QtGui.QMainWindow):
         self.ui.btn_previous.pressed.connect(self.previous)
         self.ui.btn_next.pressed.connect(self.next)
         self.ui.tbl_projDevices.cellPressed.connect(self.component_pressed)
-        #self.ui.btn_modify_component.pressed.connect(self.modify_component)
+        self.ui.btn_modify.pressed.connect(self.modify_component)
         self.ui.btn_removeDevice.pressed.connect(self.remove_component)
         self.ui.btn_refresh_module_stack.pressed.connect(self.quit_layer_stack_mode)
         # Module stack page
@@ -328,8 +328,13 @@ class ProjectBuilder(QtGui.QMainWindow):
         self.user_netlist=self.load_nets()
         self.load_layout_plots(mode=1)
 
-    def open_device_setup(self):
-        device_setup=SetupDeviceDialogs(self)
+    def open_device_setup(self,mode =1):
+        '''
+
+        :param mode:  1 . ADD , 2 .MODIFY
+        :return:
+        '''
+        device_setup=SetupDeviceDialogs(self,mode)
         device_setup.exec_()
 
 
@@ -913,8 +918,6 @@ class ProjectBuilder(QtGui.QMainWindow):
                 self.cw1 = 0
             else:
                 self.cw1 += 1
-
-
             try:
                 categ = self.categ_list_model.fileName(self.ui.lst_categories.selectedIndexes()[0])
                 if categ == 'Device': # HANDLE DEVICE
@@ -942,6 +945,10 @@ class ProjectBuilder(QtGui.QMainWindow):
     def device_pick(self, event):
         """Pick event called when device selection symbolic layout is clicked"""
         # get technology from table
+        categ = self.categ_list_model.fileName(self.ui.lst_categories.selectedIndexes()[0])
+        if categ=='Bond Wire':
+            print "cant select layout in Bondwire mode, press the Wire Connect button"
+            return
         try:
             symlayout = self.project.symb_layout
             # Check if patch is already chosen.
@@ -1047,19 +1054,7 @@ class ProjectBuilder(QtGui.QMainWindow):
         self.symb_canvas[self.LAYOUT_SELECTION_PLOT].draw()
 
     def modify_component(self):
-        """Save updated device heat flow and attach thickness by reading in the current values from the text entered by the user."""
-        selected_row = self.ui.tbl_projDevices.currentRow()
-        row_item = self.ui.tbl_projDevices.item(selected_row, 1)
-        if isinstance(row_item.tech, DeviceInstance):
-            error = self._check_device_fields()
-            if not error:
-                row_item.tech.heat_flow = float(self.ui.txt_device_heat_flow.text())
-                row_item.tech.attach_thickness = float(self.ui.txt_devAttchThickness.text())
-        elif isinstance(row_item.tech, BondWire):
-            error = self._check_bondwire_fields()
-            if not error:
-                row_item.num_wires = int(self.ui.txt_bondwire_count.text())
-                row_item.wire_sep = float(self.ui.txt_bondwire_separation.text())
+        self.open_device_setup(mode=2)
 
     def save_deviceTable(self):
         self.project.deviceTable = []

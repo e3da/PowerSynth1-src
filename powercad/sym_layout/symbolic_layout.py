@@ -1758,16 +1758,16 @@ class SymbolicLayout(object):
                             coord.imag + wire.device.center_position[1])
                 if wire.trace.element.vertical:
                     if wire.dev_pt == 2:
-                        trace_x = trace_rect.right - dist
+                        trace_x = trace_rect.right + dist
                     else:
-                        trace_x = trace_rect.left + dist
+                        trace_x = trace_rect.left - dist
                     end_pt = (trace_x, start_pt[1])
                     land_pt = (trace_x, wire.device.center_position[1])
                 else:
                     if wire.dev_pt == 2:
-                        trace_y = trace_rect.top + dist
+                        trace_y = trace_rect.top - dist
                     else:
-                        trace_y = trace_rect.bottom - dist
+                        trace_y = trace_rect.bottom + dist
                     end_pt = (start_pt[0], trace_y)
                     land_pt = (wire.device.center_position[0],
                                trace_y)  # Quang: fixed a critical and ancient bug on bonding wire: center_position[1] -> center_position[0]
@@ -1810,6 +1810,10 @@ class SymbolicLayout(object):
         hwidth, hlength = (0.5*dev_tech.dimensions[0], 0.5*dev_tech.dimensions[1])
         d = 0  # wire distance
         wd = 0.5  # wire min distance
+        position = [x.position for x in dev_tech.wire_landings]
+        position.sort()
+        print position
+
         for landing in dev_tech.wire_landings:
             if landing.bond_type == wire.tech.wire_type:
                 d+=wd
@@ -1868,12 +1872,12 @@ class SymbolicLayout(object):
                         land_pt = (wire.device.center_position[0], e_y)  # ERRRRORRRRRR
                     elif start_pt[0]<mid_x:
                         e_x = trace_rect.left + dist
-                        e_y = trace_rect.top - dist -d
+                        e_y = trace_rect.top - dist
                         land_pt = (e_x,e_y)
 
                     elif start_pt[0]>mid_x:
                         e_x = trace_rect.right - dist
-                        e_y = trace_rect.top - dist -d
+                        e_y = trace_rect.top - dist
                         land_pt = (e_x,e_y)
 
 
