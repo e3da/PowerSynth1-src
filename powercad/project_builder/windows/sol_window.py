@@ -34,7 +34,7 @@ from powercad.Spice_handler.spice_export.circuit import Circuit
 
 class SolutionWindow(QtGui.QWidget):
     """Solution windows that show up in MDI area"""
-    def __init__(self, solution, sym_layout, filletFlag):
+    def __init__(self, solution=None, sym_layout=None, filletFlag=None,dir=None):
         """Set up the solution window"""
         QtGui.QWidget.__init__(self)
         self.ui = Ui_layout_form()
@@ -47,7 +47,7 @@ class SolutionWindow(QtGui.QWidget):
 
         self.solution = solution
         self.sym_layout = sym_layout
-
+        self.default_save_dir=dir
         # display objective data in table widget
         self.ui.tbl_info.setRowCount(len(solution.params))
         self.i = 0
@@ -92,7 +92,7 @@ class SolutionWindow(QtGui.QWidget):
         elif selected == 'EMPro':
             self.export_empro()
     def export_FH(self):
-        fn = QtGui.QFileDialog.getSaveFileName(self, options=QtGui.QFileDialog.ShowDirsOnly)
+        fn = QtGui.QFileDialog.getSaveFileName(self,dir=self.default_save_dir, options=QtGui.QFileDialog.ShowDirsOnly)
         outname = fn[0]
         if len(outname) > 0:
             try:
@@ -106,7 +106,7 @@ class SolutionWindow(QtGui.QWidget):
                 print traceback.format_exc()
 
     def export_empro(self):
-        fn = QtGui.QFileDialog.getSaveFileName(self, options=QtGui.QFileDialog.ShowDirsOnly)
+        fn = QtGui.QFileDialog.getSaveFileName(self, dir=self.default_save_dir,options=QtGui.QFileDialog.ShowDirsOnly)
         print fn
         outname = fn[0]
 
@@ -122,7 +122,7 @@ class SolutionWindow(QtGui.QWidget):
                 print traceback.format_exc()
 
     def export_q3d(self):
-        fn = QtGui.QFileDialog.getSaveFileName(self, options=QtGui.QFileDialog.ShowDirsOnly)
+        fn = QtGui.QFileDialog.getSaveFileName(self,dir=self.default_save_dir, options=QtGui.QFileDialog.ShowDirsOnly)
         print fn
         outname = fn[0]
 
@@ -140,7 +140,7 @@ class SolutionWindow(QtGui.QWidget):
         version=SolidworkVersionCheckDialog(self)
         if version.exec_():
             version=version.version_output()
-        fn = QtGui.QFileDialog.getSaveFileName(self, options=QtGui.QFileDialog.ShowDirsOnly)
+        fn = QtGui.QFileDialog.getSaveFileName(self, dir=self.default_save_dir,options=QtGui.QFileDialog.ShowDirsOnly)
         outname = fn[0]
 
         if len(outname) > 0:
@@ -157,7 +157,7 @@ class SolutionWindow(QtGui.QWidget):
                 print traceback.format_exc()
 
     def export_spice_parasitics(self,sym_layout):
-        fn = QtGui.QFileDialog.getSaveFileName(self, options=QtGui.QFileDialog.ShowDirsOnly)
+        fn = QtGui.QFileDialog.getSaveFileName(self,dir=self.default_save_dir, options=QtGui.QFileDialog.ShowDirsOnly)
         outname = fn[0]
 
         if len(outname) > 0:
@@ -213,7 +213,7 @@ class SolutionWindow(QtGui.QWidget):
 
 
     def export_spice_thermal(self):
-        fn = QtGui.QFileDialog.getSaveFileName(self, options=QtGui.QFileDialog.ShowDirsOnly)
+        fn = QtGui.QFileDialog.getSaveFileName(self,dir=self.default_save_dir, options=QtGui.QFileDialog.ShowDirsOnly)
         outname = fn[0]
 
         if len(outname) > 0:

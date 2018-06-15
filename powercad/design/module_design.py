@@ -62,7 +62,7 @@ class ModuleDesign(object):
             fp.translate(ledge_width, ledge_width)
             dev_sol = DeviceSolution(cpos, dev.tech, fp)
             self.devices.append(dev_sol)
-            self.dv_id.append(dev.net_name)
+            self.dv_id.append(dev.name)
 
         # Leads
         self.leads = []
@@ -73,7 +73,7 @@ class ModuleDesign(object):
             cpos = translate_pt(cpos, ledge_width, ledge_width)
             lead_sol = LeadSolution(cpos, lead.orientation, lead.tech)
             self.leads.append(lead_sol)
-            self.lead_id.append(lead.net_name)
+            self.lead_id.append(lead.name)
         # Bondwires
         self.bondwires = []
         for wire in layout.bondwires:

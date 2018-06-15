@@ -80,15 +80,17 @@ def plot_layout(sym_layout, filletFlag, ax = plt.subplot('111', adjustable='box'
         if plot:
             color = '#B6C2CF'
             rect = sym.trace_rect
-            r = Rectangle((rect.left, rect.bottom), rect.width(), rect.height(), alpha=0.5, facecolor=color, edgecolor='None')
+            r = Rectangle((rect.left, rect.bottom), rect.width(), rect.height(), alpha=1, facecolor=color, edgecolor=color)
             ax.add_patch(r)
 
     for lead in sym_layout.leads:
+        lead_label = lead.name
         rect = lead.footprint_rect
         r = Rectangle((rect.left, rect.bottom), rect.width(), rect.height(), alpha=0.5, facecolor='#4DFF64', edgecolor=color)
         ax.add_patch(r)
         patch = Circle(lead.center_position, radius=0.1)
         ax.add_patch(patch)
+        ax.text(rect.left, rect.bottom, lead_label,fontweight='bold')
     x_pos=[]
     y_pos=[]
     if len(sym_layout.devices)!=0:
@@ -96,23 +98,15 @@ def plot_layout(sym_layout, filletFlag, ax = plt.subplot('111', adjustable='box'
             dev_center=dev.center_position
             x_pos.append(dev_center[0])
             y_pos.append(dev_center[1])
-        x_num=x_pos.count(x_pos[0])
-        y_num=y_pos.count(y_pos[0])
 
-        '''
-        for row in np.arange(1,x_num,1):
-            print row
-            print enumerate(x_pos)
-        '''
         for dev in sym_layout.devices:
-            #die_label='die%s'%(sym_layout.devices[die_count].dv_index)
+            die_label=dev.name
             rect = dev.footprint_rect
             r = Rectangle((rect.left, rect.bottom), rect.width(), rect.height(), alpha=0.5, facecolor='#2A3569', edgecolor=color)
             ax.add_patch(r)
             patch = Circle(dev.center_position, radius=0.1)
             ax.add_patch(patch)
-            #ax.text(rect.left, rect.bottom,die_label)
-            #die_count+=1
+            ax.text(rect.left, rect.bottom,die_label,fontweight='bold')
     for wire in sym_layout.bondwires:
         for pt_index in xrange(len(wire.start_pts)):
             pt1 = wire.start_pts[pt_index]

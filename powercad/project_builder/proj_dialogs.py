@@ -1049,21 +1049,21 @@ class Device_states_dialog(QtGui.QDialog):
                     if dv.is_transistor():
                         # add 3 collumns:
 
-                        btn_state1 = QtGui.QRadioButton(self.ui.tbl_states)
+                        btn_state1 = QtGui.QCheckBox(self.ui.tbl_states)
                         btn_state1.setText('D-S')
 
                         self.ui.tbl_states.setCellWidget(row_count, 1, btn_state1)  # Drain to source
-                        btn_state2 = QtGui.QRadioButton(self.ui.tbl_states)
+                        btn_state2 = QtGui.QCheckBox(self.ui.tbl_states)
                         btn_state2.setText('G-S')
                         self.ui.tbl_states.setCellWidget(row_count, 2, btn_state2)
-                        btn_state3 = QtGui.QRadioButton(self.ui.tbl_states)
+                        btn_state3 = QtGui.QCheckBox(self.ui.tbl_states)
                         btn_state3.setText('G-D')
                         self.ui.tbl_states.setCellWidget(row_count, 3, btn_state3)
                         self.group.addButton(btn_state1)
                         self.group.addButton(btn_state2)
                         self.group.addButton(btn_state3)
                     elif dv.is_diode():
-                        btn_state = QtGui.QRadioButton(self.ui.tbl_states)
+                        btn_state = QtGui.QCheckBox(self.ui.tbl_states)
                         btn_state.setText('A-C')
                         self.ui.tbl_states.setCellWidget(row_count, 1, btn_state) # Drain to source
                         self.group.addButton(btn_state)

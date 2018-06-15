@@ -36,7 +36,7 @@ import numpy as np
 import pickle
 from powercad.design.library_structures import Lead
 from powercad.design.module_design import ModuleDesign
-
+from powercad.interfaces.EMPro.EMProFunctions import empro_func
 from powercad.sym_layout.testing_tools import load_symbolic_layout
 
 
@@ -155,8 +155,8 @@ class Lead(object):
         self.name = "Lead" + str(self.lead_index)
         self.sub = substrate
         self.base = baseplate
-
-        (self.width, self.length) = self.lead.lead_tech.dimensions  # FIXME: may only work for cylindrical leads
+        dim=self.lead.lead_tech.dimensions
+        (self.width, self.length) = dim[0:2]   # FIXME: may only work for cylindrical leads
         (self.x, self.y) = self.lead.position
         self.x += self.sub.isolation.x
         self.y += self.sub.isolation.y
@@ -566,7 +566,7 @@ class EMProScript(object):
 
     """
 
-    def __init__(self, module_design=None, output_filename=None, functions='../interfaces/EMPro/EMProFunctions.py'):
+    def __init__(self, module_design=None, output_filename=None):
         """
         Initialize the EMProScript from a given module design and output-path and filename.
         :param module_design: module design from pickled file as object.
@@ -575,7 +575,7 @@ class EMProScript(object):
         :param output_filename: user-specified filename for EMPro script export as string.
         """
         self.md = module_design
-        self.functions = functions
+        #self.functions = functions
         self.gd = GeometryDescriptions()
         self.output_filename = output_filename
         self.output = []  # A container for all the output to be written
@@ -613,9 +613,12 @@ class EMProScript(object):
         Writes the standard EMPro functions to the output file. Should be called first
         :return:
         """
-        with open(self.functions, 'r') as function_file:
-            for line in function_file.readlines():
-                self.output.append(line)
+
+        #with open(self.functions, 'r') as function_file:
+        #    for line in function_file.readlines():
+        #        self.output.append(line)
+
+        self.output.append(empro_func)
         self.output.append(self.gd.create_project)
 
     def generate_baseplate(self):
