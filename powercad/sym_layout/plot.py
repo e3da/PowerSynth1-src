@@ -39,10 +39,10 @@ def plot_svg_objs(layout):
 
     ax.axis([bounds.left, bounds.right, bounds.bottom, bounds.top])
     plt.show()
-    print "plot_svg_objs() completed."
+    #print "plot_svg_objs() completed."
 
 def plot_layout(sym_layout, filletFlag, ax = plt.subplot('111', adjustable='box', aspect=1.0), new_window=True, plot_row_col=False):
-    print "plot_layout() started."
+    #print "plot_layout() started."
     hlist = sym_layout.h_rowcol_list
     vlist = sym_layout.v_rowcol_list
     traces = sym_layout.all_trace_lines
@@ -475,8 +475,8 @@ def detect_corners_90(sym_layout2, ax):
                     addFillet(fillets, c, temp_x, temp_y, concavityQuadrant, gap)
 
     # OUTPUT THE fillets[] LIST AND MARK THE FILLETS ON THE LAYOUT PREVIEW AND SOLUTION WINDOW
-    print "Inner Corners (90 degrees): "
-    print "Format: (x, y), fillet concavity quadrant, fillet radius, ..."
+    #print "Inner Corners (90 degrees): "
+    #print "Format: (x, y), fillet concavity quadrant, fillet radius, ..."
     for i in fillets:
         i.calcInnerFilletSpecs() # Find fillet/arc specifications
         print (i.corner.x, i.corner.y), i.concavityQuadrant, i.radius, i.corner.trace1.top, i.corner.trace1.bottom, i.corner.trace1.left, i.corner.trace1.right, i.corner.trace2.top, i.corner.trace2.bottom, i.corner.trace2.left, i.corner.trace2.right
@@ -513,7 +513,6 @@ def findGap(oc, innerFillets):
     for i in innerFillets:
         if ((oc.x == i.corner.x) and (i.corner.y-defaultGap < oc.y < i.corner.y+defaultGap)) or ((oc.y == i.corner.y) and (i.corner.x-defaultGap < oc.x < i.corner.x+defaultGap)):
             gap = max(abs(oc.x - i.corner.x), abs(oc.y - i.corner.y)) # or radius = i.radius
-            print gap
             break
     return gap
 
