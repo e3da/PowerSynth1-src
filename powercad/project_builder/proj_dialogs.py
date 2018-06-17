@@ -31,7 +31,7 @@ from powercad.project_builder.dialogs.bondwire_setup import Ui_Bondwire_setup
 from powercad.project_builder.dialogs.layoutEditor_ui import Ui_layouteditorDialog
 from powercad.project_builder.project import Project
 from powercad.sym_layout.symbolic_layout import SymbolicLayout
-from powercad.general.settings.settings import LAST_ENTRIES_PATH, DEFAULT_TECH_LIB_DIR,EXPORT_DATA_PATH,ANSYS_IPY64,FASTHENRY_FOLDER,SETTINGS_TXT,GMSH_BIN_PATH,ELMER_BIN_PATH
+from powercad.general.settings.settings import LAST_ENTRIES_PATH, DEFAULT_TECH_LIB_DIR,EXPORT_DATA_PATH,ANSYS_IPY64,FASTHENRY_FOLDER,GMSH_BIN_PATH,ELMER_BIN_PATH
 from powercad.electro_thermal.ElectroThermal_toolbox import rdson_fit_transistor, list2float, csv_load_file,Vth_fit,fCRSS_fit
 from powercad.general.settings.save_and_load import save_file, load_file
 from powercad.project_builder.dialogs.ResponseSurface import Ui_ResponseSurface
@@ -516,7 +516,7 @@ class NewProjectDialog(QtGui.QDialog):
         # Create project
         if netlist==None:
             Notifier(msg='You did not import a netlist, you will need to assign netname in the UI !',msg_name='Reminder')
-        proj_dir =os.path.abspath(self.ui.txt_dir.text(),self.ui.txt_name.text())
+        proj_dir =os.path.join(self.ui.txt_dir.text(),self.ui.txt_name.text())
         return Project(self.ui.txt_name.text(), proj_dir, DEFAULT_TECH_LIB_DIR, netlist,symb_layout)
 
 

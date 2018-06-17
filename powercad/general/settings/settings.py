@@ -6,21 +6,20 @@ changes made by sxm063: os.path.abspath(); added CACHED_CHAR_PATH since it chang
 Updated Jmain changelog - Aug 10, 2016; 
 '''
 import os
-POWERSYNTH_RELEASE = False
+POWERSYNTH_RELEASE = True
 
 
 if POWERSYNTH_RELEASE:  # For packaged versions
     DEFAULT_TECH_LIB_DIR = os.path.abspath("tech_lib")
     LAST_ENTRIES_PATH = os.path.abspath("export_data/app_data/last_entries.p")
+    ELMER_BIN_PATH = "ELmer 8.2-Release/bin"
+    GMSH_BIN_PATH = "gmsh-2.7.0-Windows"
     TEMP_DIR = os.path.abspath("export_data/temp")
     CACHED_CHAR_PATH = os.path.abspath("export_data/cached_thermal") # sxm063
     MATERIAL_LIB_PATH = '..//..//..//tech_lib//Material//Materials.csv'
     EXPORT_DATA_PATH = os.path.abspath("../../../export_data/")
-    SETTINGS_TXT = os.path.abspath("../../../Settings.txt")
-    GMSH_BIN_PATH = ''
-    ELMER_BIN_PATH = ''
-    ANSYS_IPY64 = ''
-    FASTHENRY_FOLDER = ''
+    ANSYS_IPY64 = "C://Program Files//AnsysEM//AnsysEM18.0//Win64//common//IronPython"
+    FASTHENRY_FOLDER = '..//..//..//FastHenry'
 else:   # For debugging and running PowerSynth from Eclipse
     DEFAULT_TECH_LIB_DIR = os.path.abspath("../../../tech_lib")
     LAST_ENTRIES_PATH = os.path.abspath("../../../export_data/app_data/last_entries.p")

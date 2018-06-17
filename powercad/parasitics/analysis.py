@@ -8,10 +8,6 @@ Created on Nov 2, 2012
 
 import networkx as nx
 import numpy as np
-import time
-import matlab
-import scipy
-from scipy import io
 topology_checked = False
 def capt_analysis(lumped_graph,src_node,sink_node,node_dict,node_type=None):
     '''
@@ -58,7 +54,6 @@ def parasitic_analysis(lumped_graph, src_node, sink_node, measure_type,node_dict
     string = ''
     string += 'src node:' + str(src_node)
     string += 'sink node:' + str(sink_node)
-    print string
     if sink_node is None:
         raise Exception("No sink node was specified! Sink node is None!")
     
