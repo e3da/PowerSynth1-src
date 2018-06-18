@@ -3641,14 +3641,15 @@ if __name__ == '__main__':
         EN=[]
         width=((data.loc[1,1:5]).values.tolist())
         extension=((data.loc[2,1:5]).values.tolist())
+        height = ((data.loc[3, 1:5]).values.tolist())
         #print extension
         for i in range(len(data)):
             #print i
             #print data.nrows[i]
-            if i>3 and i<9:
+            if i>4 and i<10:
 
                 SP.append((data.loc[i,1:5]).values.tolist())
-            elif i>9 and i<=14:
+            elif i>10 and i<=15:
                 EN.append((data.loc[i,1:5]).values.tolist())
             else:
                 continue
@@ -3780,6 +3781,7 @@ if __name__ == '__main__':
     #for i in range(len(constraints)):
     minWidth=map(int, width)
     minExtension=map(int,extension)
+    minHeight = map(int, height)
     #print minExtension
     minSpacing=[map(int,i) for i in SP]
     minEnclosure=[map(int,i) for i in EN]
@@ -3787,6 +3789,7 @@ if __name__ == '__main__':
     #print minWidth,minSpacing,minEnclosure
    
     CONSTRAINT.setupMinWidth(minWidth)
+    CONSTRAINT.setupMinHeight(minHeight)
     CONSTRAINT.setupMinExtension(minExtension)
     CONSTRAINT.setupMinSpacing(minSpacing)
     CONSTRAINT.setupMinEnclosure(minEnclosure)
@@ -3821,7 +3824,7 @@ if __name__ == '__main__':
     Vtree.setNodeId(Vtree.vNodeList)
 
 
-    """
+
     print Htree.hNodeList
     f1 = open(testdir + '/' + testbase + "hNode.txt", 'wb')
     print >> f1, Htree.hNodeList
@@ -3861,7 +3864,7 @@ if __name__ == '__main__':
             if j.cell.type!=None:
                 k = j.cell.x, j.cell.y, j.getWidth(), j.getHeight(), j.cell.id, j.cell.type, j.nodeId
                 print "B",i.id,k
-    """
+
 
 
     def plotrectH( k,Rect_H,format): ###plotting each node after minimum location evaluation in HCS

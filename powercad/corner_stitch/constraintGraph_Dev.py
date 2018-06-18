@@ -201,8 +201,8 @@ class constraintGraph:
         self.ZDL_V = collections.OrderedDict(sorted(ZDL_V.items()))
         # self.ZDL_H[HorizontalNodeList[i].id]=k
         # self.ZDL_V[VerticalNodeList[i].id]=j
-        print "ZDL_H", self.ZDL_H
-        print "ZDL_V", self.ZDL_V
+        #print "ZDL_H", self.ZDL_H
+        #print "ZDL_V", self.ZDL_V
 
         for i in range(len(HorizontalNodeList)):
             # print HorizontalNodeList[i].id
@@ -488,8 +488,8 @@ class constraintGraph:
 
                 # print id,East,West,rect.cell.x,rect.cell.y
 
-                c = constraint.constraint(0)
-                index = 0
+                c = constraint.constraint(4)
+                index = 4
                 value = constraint.constraint.getConstraintVal(c, type=rect.cell.type)
                 e = Edge(origin1, dest1, value, index, str(constraint.constraint.Type.index(rect.cell.type)), id, East,
                          West, northWest, southEast)
@@ -592,8 +592,8 @@ class constraintGraph:
                     # edgesv.append(Edge(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id))
                     self.vertexMatrixv[ID][origin][dest].append(Edge.getEdgeWeight(e, origin, dest))
                 elif rect.NORTH not in cornerStitch_v.stitchList and rect.SOUTH not in cornerStitch_v.stitchList:
-                    c = constraint.constraint(0)
-                    index = 0
+                    c = constraint.constraint(4)
+                    index = 4
                     value = constraint.constraint.getConstraintVal(c, type=rect.cell.type)
                     e = Edge(origin, dest, value, index, str(constraint.constraint.Type.index(rect.cell.type)), id,
                              North, South, westNorth, eastSouth)
@@ -921,31 +921,68 @@ class constraintGraph:
                     #print (k1),v
                     if v[2] == 0:
                         if v[1] == '1':
-                            #val = int(min(40, max(v[0], random.gauss(20, 5))))
-                            #print val,(10,40)
-                            val = random.randint(v[0],10*v[0])
+                            val = int(min(4 * v[0], max(v[0], random.gauss(3*v[0], 10))))
+                            # print val,(10,40)
+                            # val = random.randint(v[0],10*v[0])
                         elif v[1] == '2':
-                            #val = int(min(30, max(8, random.gauss(20, 5))))
-                            #print val,(8,30)
-                            val = random.randint(v[0], 10*v[0])
-                            #val = v[0]
+                            val = int(min(2 * v[0], max(v[0], random.gauss(v[0], 5))))
+                            # print val,(8,30)
+                            # val = random.randint(v[0], 10*v[0])
+                            # val = v[0]
                         elif v[1] == '3':
-                            #val = int(min(40, max(20, random.gauss(20, 5))))
-                            #print val,(20,40)
-                            val = random.randint(v[0],4*v[0])
+                            val = int(min(v[0] * 2, max(v[0], random.gauss(v[0], 10))))
+                            # print val,(20,40)
+                            # val = random.randint(v[0],4*v[0])
 
                         elif v[1] == '4':
-                            #val = int(min(20, max(3, random.gauss(10, 5))))
-                            #print val,(3,20)
-                            val = random.randint(v[0], 5*v[0])
+                            val = int(min(2 * v[0], max(v[0], random.gauss(v[0], 4))))
+                            # print val,(3,20)
+                            # val = random.randint(v[0], 5*v[0])
+                        elif v[1] == '0':
+                            val = int(min(v[0] * 2, max(v[0], random.gauss(v[0], 5))))
+                        elif (isinstance(v[1], int)):
+                            # print "H",(k1),v
+                            val = int(min(4 * v[0], max(v[0], random.gauss(v[0], 10))))
 
 
                     elif v[2] == 1:
-                        #val = int(min(20, max(5, random.gauss(8, 5))))
-                        #print val,(5,20)
-                        val = random.randint(v[0], 10*v[0])
+                        if v[1] == 'missing':
+                            val = int(min(5 * v[0], max(v[0], random.gauss(v[0], 5))))
+                        else:
+                            val = int(min(10 * v[0], max(v[0], random.gauss(v[0], 5))))
+                        # print val,(5,20)
+                        # val = random.randint(v[0], 10*v[0])
                     else:
-                        val = random.randint(v[0],10*v[0])
+                        val = random.randint(v[0], 5 * v[0])
+                    """
+                    if v[2] == 0:
+                        if v[1] == '1':
+                            val = int(min(8*v[0], max(2*v[0], random.gauss(3*v[0], 5))))
+                            #print val,(10,40)
+                            #val = random.randint(v[0],10*v[0])
+                        elif v[1] == '2':
+                            val = int(min(3*v[0], max(2*v[0], random.gauss(v[0], 2))))
+                            #print val,(8,30)
+                            #val = random.randint(v[0], 10*v[0])
+                            #val = v[0]
+                        elif v[1] == '3':
+                            val = int(min(v[0]*2, max(v[0], random.gauss(v[0], 5))))
+                            #print val,(20,40)
+                            #val = random.randint(v[0],4*v[0])
+
+                        elif v[1] == '4':
+                            val = int(min(3*v[0], max(2*v[0], random.gauss(v[0], 5))))
+                            #print val,(3,20)
+                            #val = random.randint(v[0], 5*v[0])
+
+
+                    elif v[2] == 1:
+                        val = int(min(2*v[0], max(v[0], random.gauss(v[0],4))))
+                        #print val,(5,20)
+                        #val = random.randint(v[0], 10*v[0])
+                    else:
+                        val = random.randint(v[0],5*v[0])
+                    """
                     edge[(k1)] = val
                     EDGEH.append(edge)
                 D.append(EDGEH)
@@ -963,8 +1000,7 @@ class constraintGraph:
                 for i in D[j]:
                     # print i
                     # print new_label[j]
-                    k, v = list(i.items())[
-                        0]  # an alternative to the single-iterating inner loop from the previous solution
+                    k, v = list(i.items())[0]  # an alternative to the single-iterating inner loop from the previous solution
 
                     # print k,v
                     d[j][k].append(v)
@@ -980,7 +1016,7 @@ class constraintGraph:
                 for k, v in D_3[i].items():
                     H.append((k[0],k[1],v[0]))
                 H_all.append(H)
-            #print H_all
+            print H_all
             G_all=[]
             for i in range(len(H_all)):
 
@@ -1164,12 +1200,12 @@ class constraintGraph:
             for i in edge_label:
                 k, v = list(i.items())[0]  # an alternative to the single-iterating inner loop from the previous solution
                 d3[k].append(v)
-            print d3
+            #print "ED",d3
             X = {}
             H = []
             for i, j in d3.items():
                 X[i] = max(j)
-            # print"X", X
+            #print"X", X
             for k, v in X.items():
                 H.append((k[0], k[1], v))
             #print "H",H
@@ -1443,32 +1479,70 @@ class constraintGraph:
                     edge = {}
 
                     # print (k1),v
-                    if v[2] == 0:
+                    if v[2] == 4:
                         if v[1] == '1':
-                            #val = int(min(40, max(10, random.gauss(20, 5))))
+                            val = int(min(4 * v[0], max(v[0], random.gauss(3*v[0], 5))))
                             # print val,(10,40)
-                            val = random.randint(v[0],10*v[0])
+                            # val = random.randint(v[0],10*v[0])
                         elif v[1] == '2':
-                            #val = int(min(30, max(8, random.gauss(20, 5))))
+                            val = int(min(2 * v[0], max(v[0], random.gauss(v[0], 5))))
                             # print val,(8,30)
-                            val = random.randint(v[0],10*v[0])
-                            #val = v[0]
+                            # val = random.randint(v[0], 10*v[0])
+                            # val = v[0]
                         elif v[1] == '3':
-                            #val = int(min(40, max(20, random.gauss(20, 5))))
+                            val = int(min(v[0] * 2, max(v[0], random.gauss(v[0], 10))))
                             # print val,(20,40)
-                            val = random.randint(v[0],4*v[0])
+                            # val = random.randint(v[0],4*v[0])
 
                         elif v[1] == '4':
-                            #val = int(min(20, max(3, random.gauss(10, 5))))
+                            val = int(min(2 * v[0], max(v[0], random.gauss(v[0], 10))))
                             # print val,(3,20)
-                            val = random.randint(v[0],5*v[0])
+                            # val = random.randint(v[0], 5*v[0])
+                        elif v[1] == '0':
+                            val = int(min(v[0] * 2, max(v[0], random.gauss(v[0], 5))))
+                        elif (isinstance(v[1], int)):
+                            # print "H",(k1),v
+                            val = int(min(4 * v[0], max(v[0], random.gauss(v[0], 10))))
+
 
                     elif v[2] == 1:
-                        #val = int(min(20, max(5, random.gauss(8, 5))))
+                        if v[1] == 'missing':
+                            val = int(min(5 * v[0], max(v[0], random.gauss(v[0], 5))))
+                        else:
+                            val = int(min(10 * v[0], max(v[0], random.gauss(v[0], 5))))
                         # print val,(5,20)
-                        val = random.randint(v[0], 10*v[0])
+                        # val = random.randint(v[0], 10*v[0])
                     else:
-                        val = random.randint(v[0], 10*v[0])
+                        val = random.randint(v[0], 5 * v[0])
+                    """
+                    if v[2] == 4:
+                        if v[1] == '1':
+                            val = int(min(5*v[0], max(v[0], random.gauss(2*v[0], 4))))
+                            #print val,(10,40)
+                            #val = random.randint(v[0],10*v[0])
+                        elif v[1] == '2':
+                            val = int(min(2*v[0], max(v[0], random.gauss(2*v[0], 4))))
+                            #print val,(8,30)
+                            #val = random.randint(v[0], 10*v[0])
+                            #val = v[0]
+                        elif v[1] == '3':
+                            val = int(min(v[0]*2, max(v[0], random.gauss(v[0], 5))))
+                            #print val,(20,40)
+                            #val = random.randint(v[0],4*v[0])
+
+                        elif v[1] == '4':
+                            val = int(min(2*v[0], max(v[0], random.gauss(v[0], 5))))
+                            #print val,(3,20)
+                            #val = random.randint(v[0], 5*v[0])
+
+
+                    elif v[2] == 1:
+                        val = int(min(2*v[0], max(v[0], random.gauss(v[0],4))))
+                        #print val,(5,20)
+                        #val = random.randint(v[0], 10*v[0])
+                    else:
+                        val = random.randint(v[0],5*v[0])
+                    """
                     edge[(k1)] = val
                     EDGEV.append(edge)
                 D.append(EDGEV)
@@ -1500,7 +1574,7 @@ class constraintGraph:
                 for k, v in D_3[i].items():
                     V.append((k[0], k[1], v[0]))
                 V_all.append(V)
-            # print H_all
+            print V_all
             GV_all = []
             for i in range(len(V_all)):
                 G = nx.MultiDiGraph()
