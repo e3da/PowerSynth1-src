@@ -1088,7 +1088,8 @@ class Device_states_dialog(QtGui.QDialog):
                 if col ==0:
                     self.dv_df.loc[row,col]=self.ui.tbl_states.item(row, col).text()
                 else:
-                    self.dv_df.loc[row, col]= int(self.ui.tbl_states.cellWidget(row, col).isChecked()*1)
+                    if self.ui.tbl_states.cellWidget(row, col)!=None:
+                        self.dv_df.loc[row, col]= int(self.ui.tbl_states.cellWidget(row, col).isChecked()*1)
         self.per_ui.device_states_df=self.dv_df
 
         self.close()

@@ -493,7 +493,7 @@ class E_graph():
     def form_graph(self,lumped_graph,mesh_nodes,supertrace_conn,supertrace_sum,long_sum,vert_count):
         ind, res, cap = [1, 1, 1]  # initialize parasitic values to build edges
         df = self.normal_trace_df
-        debug = False # IF SET TO TRUE, the Developer can see the lumped graph building process
+        debug = True # IF SET TO TRUE, the Developer can see the lumped graph building process
         # TAKE OUT ALL CONNECTION CASES SO WE CAN SOLVE THEM CASE BY CASE
         try:
             all_devices=df.loc[df['POI_Type']==DEVICE_POI]
@@ -611,17 +611,22 @@ class E_graph():
                         elif dev_obj.is_diode(): # ADD 1 NODE
                             P_pt=[dev_pt[0]+dx,dev_pt[1]+dy] # POWER POINT LOCATION (LUMPED GRAPH)
                             attrib = {'point': P_pt, 'type': 'deviceA', 'obj': dev_obj}
+                            print dev_obj.name
                             Anode, dummy = self._add_node(lumped_graph, anode_id, attrib)
                         if wire_type == BondWire.POWER:
                             bw_type = 'bw power'
                             # SET UP CONNECTION BASED ON USER SELECTED PATH
                             if dev_obj.is_diode():
                                 if dev_obj.states[0]==1: # Condition for user select connection between Annode to Cathode
+                                    print "pins",dev_id, Anode
                                     lumped_graph.add_edge(dev_id, Anode,
                                                           {'ind': 1.0 / con_ind, 'res': 1.0 / con_res,
                                                            'cap': 1.0 / con_cap,
                                                            'type': 'Anode_to_Cathode',
                                                            'obj': None})  # We might need to define an object in the future
+                                lumped_graph.add_edge(bw_node, Anode,
+                                                      {'ind': 1.0 / ind1, 'res': 1.0 / res1, 'cap': 1.0 / cap1,
+                                                       'type': bw_type, 'obj': bondwire})
                             elif dev_obj.is_transistor():
                                 if dev_obj.states[0] == 1: # Condition for user select connection between Drain to Source
                                     lumped_graph.add_edge(dev_id, Snode,
@@ -629,10 +634,10 @@ class E_graph():
                                                            'cap': 1.0 / con_cap,
                                                            'type': 'Drain_to_Source',
                                                            'obj': None})  # We might need to define an object in the future
-                            # ADD BW Between Source/Anode node and bondwire landing
-                            lumped_graph.add_edge(bw_node, Snode,
-                                                  {'ind': 1.0 / ind1, 'res': 1.0 / res1, 'cap': 1.0 / cap1,
-                                                   'type': bw_type, 'obj': bondwire})
+                                # ADD BW Between Source/Anode node and bondwire landing
+                                lumped_graph.add_edge(bw_node, Snode,
+                                                      {'ind': 1.0 / ind1, 'res': 1.0 / res1, 'cap': 1.0 / cap1,
+                                                       'type': bw_type, 'obj': bondwire})
                             # Create an isolation between S and D -- always off
 
 
