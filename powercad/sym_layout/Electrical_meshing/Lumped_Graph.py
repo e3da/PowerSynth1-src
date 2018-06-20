@@ -493,7 +493,7 @@ class E_graph():
     def form_graph(self,lumped_graph,mesh_nodes,supertrace_conn,supertrace_sum,long_sum,vert_count):
         ind, res, cap = [1, 1, 1]  # initialize parasitic values to build edges
         df = self.normal_trace_df
-        debug = True # IF SET TO TRUE, the Developer can see the lumped graph building process
+        debug = False # IF SET TO TRUE, the Developer can see the lumped graph building process
         # TAKE OUT ALL CONNECTION CASES SO WE CAN SOLVE THEM CASE BY CASE
         try:
             all_devices=df.loc[df['POI_Type']==DEVICE_POI]
