@@ -5,14 +5,9 @@ import csv
 import os
 import time
 
-import matplotlib.pyplot as plt
-import mpmath
 import networkx as nx
 import numpy as np
 import pandas as pd
-from IPython.display import display
-from sympy import *
-
 from powercad.Spice_handler.spice_export.Touchstone import write_touchstone_v1
 from powercad.sym_layout.Recursive_test_cases.Netlist.LTSPICE import LTSPICE
 from powercad.Spice_handler.spice_export.raw_read import SimData
@@ -55,6 +50,7 @@ class Circuit():
         self.func=[]
         self.comp_mode='val' # default at symbolic mode
         self.solver=None
+
     def _graph_read(self,lumped_graph,ports_mea=False,port_impedance=50e3):
         '''
         this will be used to read lumped graph
@@ -148,10 +144,10 @@ class Circuit():
                     rowid += 1
 
             RLC_id += 1
-        #self.df_circuit_info.to_csv('netlist.csv')
-        #self.portmap.to_csv('port.csv')
+
     def get_max_netid(self):
         return max(self.df_circuit_info['p node'].tolist()+self.df_circuit_info['n node'].tolist())
+
     def _graph_s_params(self,file="spara.csv",ports=None,frange=[1.5e5,3e7,100]):
         '''
         Given an electrical parasitic netlist this code will modify the data base and add a voltage source to each port
@@ -445,11 +441,10 @@ class Circuit():
                 self.df_uk_current.loc[count, 'n node'] = self.df_circuit_info.loc[i, 'n node']
                 self.df_uk_current.loc[count, 'value'] = self.df_circuit_info.loc[i, 'value']
                 count += 1
+
+
     def form_report(self):
-        '''
-        Update data frame and form report
-        :return: print report
-        '''
+        
         # load branch info into data frame
         line_cnt = len(self.net_data)  # number of lines in the netlist
         for i in range(line_cnt):
@@ -500,12 +495,20 @@ class Circuit():
         display(self.df_circuit_info)
         print "Dataframe for Current branches info:"
         display(self.df_uk_current)
-    ''' Element stamping into matrices for solver: G, B, C'''
+    '''
+    def find_vname(self,name):
+        # need to walk through data frame and find these parameters
+        for i in range(len(self.df_uk_current)):
+            # process all the elements creating unknown currents
+            if name == self.df_uk_current.loc[i, 'element']:
+                n1 = self.df_uk_current.loc[i, 'p node']
+                n2 = self.df_uk_current.loc[i, 'n node']
+                return n1, n2, i  # n1, n2 & col_num are from the branch of the controlling element
+
+        print('failed to find matching branch element in find_vname')
+    '''
 
     def G_mat(self):
-        '''
-        update G matrix
-        '''
         # G matrix
         s = Symbol('s')  # the Laplace variable
         for i in range(len(self.df_circuit_info)):  # process each row in the data frame
@@ -515,16 +518,16 @@ class Circuit():
             cn2 = self.df_circuit_info.loc[i, 'cn node']
             # process all the passive elements, save conductance to temp value
             x = self.df_circuit_info.loc[i, 'element'][0]  # get 1st letter of element name
-            if self.comp_mode =='sym':
+            if self.comp_mode == 'sym':
                 if x == 'R':
                     g = 1 / sympify(self.df_circuit_info.loc[i, 'element'])
                 if x == 'C':
                     g = s * sympify(self.df_circuit_info.loc[i, 'element'])
                 if x == 'G':  # vccs type element
                     g = sympify(self.df_circuit_info.loc[i, 'element'].lower())  # use a symbol for gain value
-            elif self.comp_mode=='val':
+            elif self.comp_mode == 'val':
                 if x == 'R':
-                    g = float(1 /(self.df_circuit_info.loc[i, 'value']))
+                    g = float(1 / (self.df_circuit_info.loc[i, 'value']))
                 if x == 'C':
                     g = s * float(self.df_circuit_info.loc[i, 'value'])
                 if x == 'G':  # vccs type element
@@ -558,7 +561,8 @@ class Circuit():
 
                 if n2 != 0 and cn1 != 0:
                     self.G[n2 - 1, cn1 - 1] -= g
-    def B_mat(self,i_unk):
+
+    def B_mat(self, i_unk):
         # generate the B Matrix
         sn = 0  # count source number as code walks through the data frame
         for i in range(len(self.df_circuit_info)):
@@ -625,20 +629,10 @@ class Circuit():
         # check source count
         if sn != i_unk:
             print('source number, sn={:d} not equal to i_unk={:d} in matrix B'.format(sn, i_unk))
-        #print self.B
-    # find the the column position in the C and D matrix for controlled sources
-    # needs to return the node numbers and branch number of controlling branch
-    def find_vname(self,name):
-        # need to walk through data frame and find these parameters
-        for i in range(len(self.df_uk_current)):
-            # process all the elements creating unknown currents
-            if name == self.df_uk_current.loc[i, 'element']:
-                n1 = self.df_uk_current.loc[i, 'p node']
-                n2 = self.df_uk_current.loc[i, 'n node']
-                return n1, n2, i  # n1, n2 & col_num are from the branch of the controlling element
-
-        print('failed to find matching branch element in find_vname')
-
+            # print self.B
+            # find the the column position in the C and D matrix for controlled sources
+            # needs to return the node numbers and branch number of controlling branch
+    
     def C_mat(self,i_unk):
         # generate the C Matrix
         sn = 0  # count source number as code walks through the data frame
@@ -942,7 +936,6 @@ class Circuit():
         print 'A', A
         print "subs", time.time() - t, "s"
         #print 'Z', Z
-        '''
         col=[str(i+1) for i in range(A.shape[0])]
         matA=pd.DataFrame(columns=col)
         for i in range(A.shape[0]):
@@ -952,22 +945,6 @@ class Circuit():
                 except:
                     matA.loc[i+1, str(j+1)]=A[i,j]
         matA.to_csv("A.csv")
-        '''
-        #self.results=simplify(self.A.inv()*Z)
-        #self.results = (A.LUsolve(Z))
-
-        if self.comp_mode=='sym':
-            self.results=(A.LUsolve(Z))
-        elif self.comp_mode=='val':
-            #A=np.array(self.A.tolist())
-            #Z=np.array(Z.tolist())
-            t = time.time()
-            self.results = (mpmath.lu_solve(A,Z,real=True))
-            print "solve", time.time() - t, "s"
-        print self.results
-        self.results=self.results.tolist()
-        print "done !"
-
 
     def subtitude_s(self,expr,sval=2*1e5*np.pi*1j):
         sub = {}
@@ -978,12 +955,6 @@ class Circuit():
         exec code
         return M
     def subtitute(self,expr,params=None,mode="numerical",sval=1):
-        '''
-        subtitute para before evaluation for fast computation
-        :param params:list of params value (circuit elements)
-        :expr: expr to subtitute
-        :return:
-        '''
         sub={}
         if mode=="symbolic":
             s=Symbol('s')
@@ -1178,15 +1149,7 @@ def test_s_para_2ports():
     plt.show()
 
     fig, ax2 = plt.subplots(nrows=2, ncols=2)
-    '''
-    for row in range(2):
-        for col in range(2):
-            data = np.abs(Zpara[row][col])
-            ax2[row, col].plot(f_list, data)
-            ax2[row, col].title.set_text('magnitude of Z{0}{1}'.format(row + 1, col + 1))
-
-    plt.show()
-    '''
+    
 def test_s_para_nports():
     ckt=Circuit()
     file = 'edges.txt'

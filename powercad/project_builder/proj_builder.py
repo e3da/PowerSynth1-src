@@ -13,6 +13,7 @@ import traceback
 
 import psidialogs
 from PySide import QtCore, QtGui
+import webbrowser
 from PySide.QtGui import QFileDialog
 from matplotlib import colors
 
@@ -37,7 +38,7 @@ from powercad.drc.process_design_rules_editor import ProcessDesignRulesEditor
 from powercad.tech_lib.tech_lib_wiz import TechLibWizDialog
 
 from powercad.layer_stack.layer_stack_import import LayerStackImport
-
+from powercad.general.settings.settings import MANUAL
 from powercad.sym_layout.symbolic_layout import SymLine,SymPoint
 from powercad.design.library_structures import BondWire, Lead
 from powercad.sol_browser.graph_app import GrapheneWindow
@@ -117,6 +118,7 @@ class ProjectBuilder(QtGui.QMainWindow):
         self.ui.actionOpen_Layout_Editor.triggered.connect(self.open_layout_editor) # Open script
         self.ui.actionResponse_Surface_Setup.triggered.connect(self.open_response_surface_dialog)
         self.ui.actionInterface_Setup.triggered.connect(self.setup_env)
+        self.ui.actionOpen_User_Manual.triggered.connect(self.open_user_manual)
         # Disable project interfaces until a project is loaded or created
         self.enable_project_interfaces(False)
 
@@ -275,7 +277,8 @@ class ProjectBuilder(QtGui.QMainWindow):
         else:
             QtGui.QMessageBox.warning(self, "Project Needed", "A project needs to be loaded into the program first.")
 
-
+    def open_user_manual(self):
+        webbrowser.open(MANUAL)
 
     def open_response_surface_dialog(self):
         if self.ui.navigation.isEnabled():
@@ -1418,7 +1421,9 @@ class ProjectBuilder(QtGui.QMainWindow):
         
     def show_sol_doc(self, item):
         # add mdi window for viewing
+
         sol = self.project.solutions[self.ui.lst_solution.row(item)]
+        print sol.index
         self.project.symb_layout.gen_solution_layout(sol.index)
         filletFlag = self.ui.checkBox_fillet.isChecked() # Show filleted layout if fillet checkbox is checked
         m = SolutionWindow(solution=sol, sym_layout=self.project.symb_layout,filletFlag= filletFlag,dir=self.project.directory)

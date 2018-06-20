@@ -11,12 +11,9 @@ import matplotlib.pyplot as plt
 import copy
 from matplotlib.patches import Rectangle, PathPatch, Circle, Arc
 from matplotlib.path import Path
-
 from powercad.sym_layout.svg import LayoutLine, LayoutPoint, find_layout_bounds
-
 from powercad.general.data_struct.util import Rect
-from _sqlite3 import Row
-
+from pandas import factorize
 # sxm - This function is only used in svg.py's main().
 def plot_svg_objs(layout):
     #print "plot_svg_objs() started"

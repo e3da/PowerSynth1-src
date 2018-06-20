@@ -42,6 +42,7 @@ from PySide import QtCore, QtGui
 from powercad.sym_layout.symbolic_layout import SymPoint
 from powercad.response_surface.Model_Formulation import form_trace_model_optimetric,form_fasthenry_trace_response_surface
 import sys
+import psidialogs
 # CLASSES FOR DIALOG USAGE
 class GenericDeviceDialog(QtGui.QDialog):   
     # Author: quang le
@@ -725,16 +726,27 @@ class ResponseSurfaceDialog(QtGui.QDialog):
                 fstep = 10
                 f_range = [fmin, fmax, fstep]
 
-                env_dir = os.path.join(ANSYS_IPY64, 'ipy64.exe')
-                form_trace_model_optimetric(layer_stack=self.layer_stack_import, Width=w_range, Length=l_range,
-                                            freq=f_range, wdir=self.wp_dir, savedir=self.model_dir,
-                                            mdl_name=mdl_name
-                                            , env=env_dir, options=options)
-
+                env_dir = os.path.join(ANSYS_IPY64, 'ipy164.exe')
+                if os.path.isfile(env_dir):
+                    form_trace_model_optimetric(layer_stack=self.layer_stack_import, Width=w_range, Length=l_range,
+                                                freq=f_range, wdir=self.wp_dir, savedir=self.model_dir,
+                                                mdl_name=mdl_name
+                                                , env=env_dir, options=options)
+                else:
+                    env_dir=QFileDialog.getOpenFileName(caption=r"Find ANSYS Q3D IPY dir", filter="(*.exe)")
+                    print env_dir[0]
+                    env_dir=os.path.abspath(env_dir[0])
+                    version=psidialogs.ask_string("what is the ANSYS version (folder name ANSYSEM...)")
+                    print version
+                    form_trace_model_optimetric(layer_stack=self.layer_stack_import, Width=w_range, Length=l_range,
+                                                freq=f_range, wdir=self.wp_dir, savedir=self.model_dir,
+                                                mdl_name=mdl_name
+                                                , env=env_dir, options=options,version=version)
             elif self.ui.cmb_sims.currentText()=="FastHenry":
                 fstep = 100
                 f_range = [fmin, fmax, fstep]
-                env_dir=['../../../FastHenry/fasthenry.exe','../../../FastHenry/ReadOutput.exe']
+                exe=['fasthenry.exe','ReadOutput.exe']
+                env_dir=[os.path.join(FASTHENRY_FOLDER,x) for x in exe]
                 form_fasthenry_trace_response_surface(layer_stack=self.layer_stack_import,Width=w_range,Length=l_range,
                                                       freq=f_range,wdir=self.wp_dir, savedir=self.model_dir,mdl_name=mdl_name,
                                                       env=env_dir)

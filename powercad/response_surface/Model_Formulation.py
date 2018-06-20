@@ -200,7 +200,7 @@ def form_trace_model(layer_stack, Width=[1.2, 40], Length=[1.2, 40], freq=[10, 1
 
 def form_trace_model_optimetric(layer_stack, Width=[1.2, 40], Length=[1.2, 40], freq=[10, 100, 10], wdir=None,
                                 savedir=None,
-                                mdl_name=None, env=None, options=['Q3D', 'mesh', False]):
+                                mdl_name=None, env=None, options=['Q3D', 'mesh', False],version='18.2'):
     '''
     # not generic -- only works with current PowerSynth
     :param layer_stack: Layer Stack format
@@ -281,7 +281,7 @@ def form_trace_model_optimetric(layer_stack, Width=[1.2, 40], Length=[1.2, 40], 
     T1.define_trace(4, [bp_W, bp_L])  # Select trace layer
     trace_high = E4.get_z()
     if sim == 'Q3D':
-        sim_commands = Q3D_ipy_script('18.2', wdir, mdl_name, wdir)  # Initialize Script Object
+        sim_commands = Q3D_ipy_script(version, wdir, mdl_name, wdir)  # Initialize Script Object
         sim_commands.add_script(T1.get_all_elayers())  # Add Topology structure to script
         sim_commands.set_params('Width', 9, 'XSize', E4)  # Setup parameters
         sim_commands.set_params('Length', 9, 'YSize', E4)  # Setup parameters
@@ -715,6 +715,7 @@ def form_fasthenry_trace_response_surface(layer_stack, Width=[1.2, 40], Length=[
                                       metal_thick, metal_cond, nwinc, nhinc_met, fmin * 1000, fmax * 1000, 5)
         write_to_file(script=script, file_des=fname)
         ''' Run FastHenry'''
+        print fname
         args = [fasthenry_env, fasthenry_option, fname]
         p = subprocess.Popen(args, shell=False, stdout=subprocess.PIPE)
         stdout, stderr = p.communicate()
