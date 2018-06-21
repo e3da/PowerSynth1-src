@@ -54,7 +54,6 @@ def parasitic_analysis(lumped_graph, src_node, sink_node, measure_type,node_dict
     string = ''
     string += 'src node:' + str(src_node)
     string += 'sink node:' + str(sink_node)
-    print string
     if sink_node is None:
         raise Exception("No sink node was specified! Sink node is None!")
     

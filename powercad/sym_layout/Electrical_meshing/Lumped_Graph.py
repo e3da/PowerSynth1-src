@@ -611,14 +611,12 @@ class E_graph():
                         elif dev_obj.is_diode(): # ADD 1 NODE
                             P_pt=[dev_pt[0]+dx,dev_pt[1]+dy] # POWER POINT LOCATION (LUMPED GRAPH)
                             attrib = {'point': P_pt, 'type': 'deviceA', 'obj': dev_obj}
-                            print dev_obj.name
                             Anode, dummy = self._add_node(lumped_graph, anode_id, attrib)
                         if wire_type == BondWire.POWER:
                             bw_type = 'bw power'
                             # SET UP CONNECTION BASED ON USER SELECTED PATH
                             if dev_obj.is_diode():
                                 if dev_obj.states[0]==1: # Condition for user select connection between Annode to Cathode
-                                    print "pins",dev_id, Anode
                                     lumped_graph.add_edge(dev_id, Anode,
                                                           {'ind': 1.0 / con_ind, 'res': 1.0 / con_res,
                                                            'cap': 1.0 / con_cap,

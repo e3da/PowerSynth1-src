@@ -31,7 +31,7 @@ from powercad.project_builder.dialogs.bondwire_setup import Ui_Bondwire_setup
 from powercad.project_builder.dialogs.layoutEditor_ui import Ui_layouteditorDialog
 from powercad.project_builder.project import Project
 from powercad.sym_layout.symbolic_layout import SymbolicLayout
-from powercad.general.settings.settings import LAST_ENTRIES_PATH, DEFAULT_TECH_LIB_DIR,EXPORT_DATA_PATH,ANSYS_IPY64,FASTHENRY_FOLDER,GMSH_BIN_PATH,ELMER_BIN_PATH
+from powercad.general.settings.settings import DEFAULT_TECH_LIB_DIR,EXPORT_DATA_PATH,ANSYS_IPY64,FASTHENRY_FOLDER,GMSH_BIN_PATH,ELMER_BIN_PATH
 from powercad.electro_thermal.ElectroThermal_toolbox import rdson_fit_transistor, list2float, csv_load_file,Vth_fit,fCRSS_fit
 from powercad.general.settings.save_and_load import save_file, load_file
 from powercad.project_builder.dialogs.ResponseSurface import Ui_ResponseSurface
@@ -487,11 +487,6 @@ class NewProjectDialog(QtGui.QDialog):
     '''
     def create(self):
         # Save most recent entries
-        last_entries = [self.ui.txt_dir.text(), self.ui.txt_symbnet_address.text()]
-        print "last_entries:", last_entries
-        save_file(last_entries, LAST_ENTRIES_PATH)
-        print "pickle dumped."
-
         # If netlist, create symbolic layout
         if self.filetype == 'netlist':
             self.net_to_svg_file = self.convert_netlist()  # sxm- save the newly created svg file.
@@ -536,11 +531,7 @@ class OpenProjectDialog(QtGui.QDialog):
         self.ui.buttonBox.accepted.connect(self.load_project)
             
     def open_dir(self): # responds to button click by opening a file browser where the project directory can be selected
-        try:
-            last_entries = load_file(LAST_ENTRIES_PATH)
-            prev_folder = last_entries[0]
-        except:
-            prev_folder = 'C://'
+        prev_folder = 'C://'
         if not os.path.exists(prev_folder):  # check if the last entry file store a correct path
             prev_folder = 'C://'
         self.project_file = QFileDialog.getOpenFileName(self, "Select Project File",prev_folder,"Project Files (*.p)")
@@ -953,13 +944,12 @@ class WireConnectionDialogs(QtGui.QDialog):
 
     def device_pick(self,event):
         layout_obj = self.parent.patch_dict.get_layout_obj(event.artist)
-
-        if event.artist.get_hatch()=='/':
+        if event.artist.get_hatch() == '///':
             event.artist.set_hatch('')
             self.bond_conn.remove(layout_obj)
             self.event_list.remove(event.artist)
-        else:
-            event.artist.set_hatch('/')
+        elif len(self.bond_conn)<=1:
+            event.artist.set_hatch('///')
             self.event_list.append(event.artist)
             self.bond_conn.append(layout_obj)
         self.parent.symb_canvas[0].draw()

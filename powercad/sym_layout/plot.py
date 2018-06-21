@@ -75,7 +75,7 @@ def plot_layout(sym_layout, filletFlag, ax = plt.subplot('111', adjustable='box'
             plot = sym.has_rect
 
         if plot:
-            color = '#B6C2CF'
+            color = '#C0C0C0'
             rect = sym.trace_rect
             r = Rectangle((rect.left, rect.bottom), rect.width(), rect.height(), alpha=1, facecolor=color, edgecolor=color,zorder=1)
             ax.add_patch(r)

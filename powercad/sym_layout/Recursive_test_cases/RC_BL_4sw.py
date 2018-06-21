@@ -256,7 +256,57 @@ def make_netlist():
     ads_net = Netlis_export_ADS(df=df, pm=pm)
     ads_net.import_net_data(net_data)
     ads_net.export_ads('RC_BL_4sw_pos1_200.net')
-# The test goes here, moddify the path below as you wish...
-directory ='Layout//balancing_4sw.psc' # directory to layout script
-#make_test_setup2(100.0,directory)
-make_netlist()
+
+def random_layout(directory):
+    ''' Test generate layout time for WIPDA (Imam)'''
+    temp_dir = os.path.abspath(settings.TEMP_DIR)  # The directory where thermal characterization files are stored
+
+    test_file = os.path.abspath(directory)  # A layout script file, you can link this to any file you want
+
+    sym_layout = SymbolicLayout()  # initiate a symbolic layout object
+
+    sym_layout.load_layout(test_file, 'script')  # load the script
+    layout_ratio = 1.0
+    dev_mos = DeviceInstance(0.1, 5.0, get_mosfet(layout_ratio),
+                             get_dieattach())  # Create a device instance with 10 W power dissipation. Highlight + "Crtl+Shift+I" to see the definition of this object
+
+    pow_lead = get_power_lead()  # Get a power lead object
+
+    sig_lead = get_signal_lead(layout_ratio)  # Get a signal lead object
+
+    power_bw = get_power_bondwire()  # Get bondwire object
+    signal_bw = get_signal_bondwire()  # Get bondwire object
+    # This will be added into the UI later based on Tristan import
+    net_id = {'0013': 'DC_plus', '0012': 'DC_neg', '0016': 'G_High', '0015': 'G_Low', '0014': 'Out', '0010': 'M1',
+              '0011': 'M2', '0008': 'M3',
+              '0009': 'M4'}
+    map_id_net(dict=net_id, symbols=sym_layout.all_sym)
+
+    make_test_leads(symbols=sym_layout.all_sym, lead_type=sig_lead,
+                    lead_id=['0016', '0015', '0014', '0013', '0012'])
+    '''make_test_leads(symbols=sym_layout.all_sym, lead_type=pow_lead,
+                    lead_id=[])'''
+    make_test_bonds(symbols=sym_layout.all_sym, bond_type=signal_bw,
+                    bond_id=['0019', '0023', '0022', '0026'], wire_spec=[2, 10])
+    make_test_bonds(symbols=sym_layout.all_sym, bond_type=power_bw,
+                    bond_id=['0024', '0020', '0021', '0025'], wire_spec=[2, 10])
+    make_test_devices(symbols=sym_layout.all_sym, dev=dev_mos, dev_id=['0008', '0009', '0010', '0011'])
+
+    # make_test_symmetries(sym_layout) # You can assign the symmetry objects here
+
+    add_test_measures(sym_layout)  # Assign a measurement between 2 SYM-Points (using their IDs)
+
+    module = gen_test_module_data_BL(f, 100, 300.0, layout_ratio)
+    # Pepare for optimization.
+
+    sym_layout.form_design_problem(module, temp_dir)  # Collect data to user interface
+    sym_layout._map_design_vars()
+    setup_model(sym_layout)
+
+def test1():
+    # The test goes here, moddify the path below as you wish...
+    directory ='Layout//balancing_4sw.psc' # directory to layout script
+    #make_test_setup2(100.0,directory)
+    make_netlist()
+
+

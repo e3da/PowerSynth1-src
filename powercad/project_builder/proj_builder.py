@@ -47,6 +47,8 @@ from powercad.sym_layout.svg import LayoutLine, LayoutPoint
 from powercad.general.settings.save_and_load import save_file, load_file
 from powercad.general.settings.settings import *
 from powercad.general.settings.Error_messages import *
+
+
 class ProjectBuilder(QtGui.QMainWindow):
     
     # Relative paths -> use forward slashes for platform independence
@@ -494,13 +496,7 @@ class ProjectBuilder(QtGui.QMainWindow):
 # ------ Module Stack ----------------------------------------------------------------------
 
     def import_layer_stack(self):   # Import layer stack from CSV file
-        try:
-            last_entries = load_file(LAST_ENTRIES_PATH)
-            prev_folder = last_entries[0]
-            if not(os.path.exists(prev_folder)):
-                prev_folder = 'C://'
-        except:
-            prev_folder = 'C://'
+        prev_folder = 'C://'
         # Open a layer stack CSV file and extract the layer stack data from it
         try:
             layer_stack_csv_file = QFileDialog.getOpenFileName(self, "Select Layer Stack File", prev_folder, "CSV Files (*.csv)")
@@ -1362,21 +1358,18 @@ class ProjectBuilder(QtGui.QMainWindow):
                 print "proj_builder.py > start_optimization() > TEMP_DIR=", self.TEMP_DIR
                 self.project.symb_layout.form_design_problem(self.project.module_data, self.project.tbl_bondwire_connect, self.TEMP_DIR)
                 print "project.symb_layout.form_design_problem() completed."
-                self.project.symb_layout.err_report={}
                 iseed = int(self.ui.txt_numseed.text())
-                self.project.symb_layout.optimize(iseed,inum_gen = self.project.num_gen, progress_fn=self.update_opt_progress_bar)
+                ilambda=30
+                self.ui.prgbar_optimize.setMaximum(self.project.num_gen*ilambda)
+                self.project.symb_layout.optimize(iseed,inum_gen = self.project.num_gen)
                 print 'Optimization Complete'
                 print 'seed is : ', iseed
-                print self.project.symb_layout.err_report
                 print 'Runtime:',time.time()-starttime,'seconds.'
                 print 'Opening Solution Browser...'                
-                self.update_opt_progress_bar(100)
                 self.project.symb_layout.opt_progress_fn = None
                 self.sol_browser = GrapheneWindow(self)
                 self.sol_browser.show()
-                self.update_opt_progress_bar(0)
             except:
-                self.update_opt_progress_bar(0)
                 QtGui.QMessageBox.warning(self, "Optimization Error", "Failed to complete optimization process. Please check console/log.")
                 print traceback.print_exc()
                 

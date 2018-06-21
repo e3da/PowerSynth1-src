@@ -43,7 +43,7 @@ def load_script(sript_path):
     with open(sript_path, 'rb') as f: # open the directory of script code
         objs=[]                      # specified a list of objs (lines and points)
         for line in f:               # read every line of the script 
-            if line[0]=='#' or line[0]=='': # check for comments or blank lines
+            if line[0]=='#' or line[0]==' ': # check for comments or blank lines
                 x=1                         # do nothing if so
             else:
                 # in case a line contains layout information

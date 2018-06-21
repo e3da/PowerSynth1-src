@@ -1585,6 +1585,20 @@ class SymbolicLayout(object):
                 if dev.orientation == 1:
                     # On vertical trace
                     # orient device by power bonds
+                    if powerbond.trace.trace_rect.left < trace_rect.left:
+                        dev.orientation = 2  # 180 degrees from ref.
+                    else:
+                        dev.orientation = 1  # 0 degrees from ref.
+                elif dev.orientation == 3:
+                    if powerbond.trace.trace_rect.top < trace_rect.top:
+                        dev.orientation = 3  # 180 degrees from ref.
+                    else:
+                        dev.orientation = 4  # 0 degrees from ref.
+
+                ''' old code
+                if dev.orientation == 1:
+                    # On vertical trace
+                    # orient device by power bonds
                     if powerbond.dev_pt == 2:
                         dev.orientation = dev.tech.device_tech.power_side
                     else:
@@ -1605,7 +1619,7 @@ class SymbolicLayout(object):
                             dev.orientation = 3
                         else:
                             dev.orientation = 4
-
+                '''
     def _place_leads(self):
         for lead in self.leads:
             if lead.tech.shape == Lead.BUSBAR:
@@ -1663,11 +1677,11 @@ class SymbolicLayout(object):
         lead.center_position = (xpos, ypos)
 
     def _place_round_lead(self, lead):
-        if lead.center_position==None:
+        if 1:
             line = lead.parent_line
             trace_rect = line.trace_rect
             radius = 0.5*lead.tech.dimensions[0]
-            space = self.gap + radius
+            space = radius
             center = [0.0, 0.0]
 
             if line.element.vertical:
@@ -1711,7 +1725,6 @@ class SymbolicLayout(object):
             lead.footprint_rect = Rect(center[1]+radius, center[1]-radius,
                                        center[0]-radius, center[0]+radius)
             lead.center_position = center
-
     def _place_bondwires(self):
         for wire in self.bondwires:
             if wire.dev_pt is not None:
@@ -1736,6 +1749,7 @@ class SymbolicLayout(object):
         else:
             dist = self.design_rules.power_wire_trace_dist
 
+
         if wire.device.orientation == 1:
             theta = 0.0
         elif wire.device.orientation == 2:
@@ -1756,18 +1770,34 @@ class SymbolicLayout(object):
 
                 start_pt = (coord.real + wire.device.center_position[0],
                             coord.imag + wire.device.center_position[1])
+                #print wire.device.name, wire.dev_pt, wire.device.orientation
                 if wire.trace.element.vertical:
-                    if wire.dev_pt == 2:
-                        trace_x = trace_rect.right + dist
+
+                    if wire.dev_pt == 1:
+                        if wire.device.orientation==2:
+                            trace_x = trace_rect.right - dist
+                        else:
+                            trace_x = trace_rect.left + dist
                     else:
-                        trace_x = trace_rect.left - dist
+                        if wire.device.orientation==1:
+                            trace_x = trace_rect.right - dist
+                        else:
+                            trace_x = trace_rect.left + dist
                     end_pt = (trace_x, start_pt[1])
                     land_pt = (trace_x, wire.device.center_position[1])
                 else:
-                    if wire.dev_pt == 2:
-                        trace_y = trace_rect.top - dist
+                    if wire.dev_pt == 1:
+                        if wire.device.orientation==3:
+                            trace_y = trace_rect.top - dist
+                        else:
+                            trace_y = trace_rect.bottom + dist
+
                     else:
-                        trace_y = trace_rect.bottom + dist
+                        if wire.device.orientation == 4:
+                            trace_y = trace_rect.top - dist
+                        else:
+                            trace_y = trace_rect.bottom + dist
+
                     end_pt = (start_pt[0], trace_y)
                     land_pt = (wire.device.center_position[0],
                                trace_y)  # Quang: fixed a critical and ancient bug on bonding wire: center_position[1] -> center_position[0]
@@ -1812,7 +1842,6 @@ class SymbolicLayout(object):
         wd = 0.5  # wire min distance
         position = [x.position for x in dev_tech.wire_landings]
         position.sort()
-        print position
 
         for landing in dev_tech.wire_landings:
             if landing.bond_type == wire.tech.wire_type:
@@ -2005,6 +2034,7 @@ class SymbolicLayout(object):
         self.eval_count = 0
         self.eval_total = inum_gen*ilambda    # check this... this sounds not correct to me -- Quang
         self.opt_progress_fn = progress_fn
+
         self._map_design_vars()
         # When the project is saved, must save the seed also..... so that we can regenerate it
         engine_on = False
@@ -2160,10 +2190,7 @@ class SymbolicLayout(object):
             #print self.count efficiency measure
 
             print ' new solution is found *******'    # convergence case
-            parasitic_time = 0.0
-            start_time = time.time()
             #self._build_lumped_graph()
-            parasitic_time += time.time() - start_time;
             for measure in self.perf_measures:
 
                 if isinstance(measure, ElectricalMeasure):
@@ -2233,16 +2260,6 @@ class SymbolicLayout(object):
                     ret.append(val)
         # Update progress bar and eval count
         self.eval_count += 1
-        percent_done = 100.0*float(self.eval_count)/float(0.8*self.eval_total)
-        if percent_done > 100.0:
-            percent_done = 100.0
-
-
-        if hasattr(self, 'opt_progress_fn'):
-            if self.opt_progress_fn is not None:
-                self.opt_progress_fn(percent_done)
-        else:
-            print 'Eval. Count:', self.eval_count, ' %', percent_done, ' complete.'
         return ret
     '''-----------------------------------------------------------------------------------------------------------------------------------------------------'''
     def _measure_capacitance(self, measure):
@@ -2483,7 +2500,6 @@ def one_measure(symlayout):
             elif type == 'Matlab':
                 type_id = 3
             val = symlayout._thermal_analysis(measure, type_id)
-            print "all temp", val
             ret.append(val)
     return ret
 
