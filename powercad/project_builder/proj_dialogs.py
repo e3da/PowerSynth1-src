@@ -1068,9 +1068,7 @@ class Device_states_dialog(QtGui.QDialog):
                         self.ui.tbl_states.setCellWidget(row_count, 1, btn_state) # Drain to source
                         self.group.addButton(btn_state)
 
-                    if isinstance(dv.tech, DeviceInstance):
-                        print "found dv_instance", dv.tech
-        print "all devices have tech files"
+
         self.group.setExclusive(False)
     def Ok(self):
         for row in range(self.ui.tbl_states.rowCount()):

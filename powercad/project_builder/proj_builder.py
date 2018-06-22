@@ -210,6 +210,19 @@ class ProjectBuilder(QtGui.QMainWindow):
         self.sol_browser = None
         self.perf_list = PerformanceListUI(self)
         self.symmetry_ui = SymmetryListUI(self)
+        # Refresh all table
+        self.refresh_table(self.ui.tbl_performance)
+        self.refresh_table(self.ui.tbl_symmetry)
+        self.refresh_table(self.ui.tbl_projDevices)
+    def refresh_table(self,table):
+        row = 1
+        while row!=0:
+            row = table.rowCount()
+            try:
+                table.removeRow(row-1)
+            except:
+                row=0
+                print "no more row to remove"
 
     def change_stacked(self, index):
         """Keep stacked widget current with navigation"""
@@ -1360,7 +1373,6 @@ class ProjectBuilder(QtGui.QMainWindow):
                 print "project.symb_layout.form_design_problem() completed."
                 iseed = int(self.ui.txt_numseed.text())
                 ilambda=30
-                self.ui.prgbar_optimize.setMaximum(self.project.num_gen*ilambda)
                 self.project.symb_layout.optimize(iseed,inum_gen = self.project.num_gen)
                 print 'Optimization Complete'
                 print 'seed is : ', iseed

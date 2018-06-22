@@ -158,7 +158,6 @@ def wire_over_plane(r,h,l):
     Ind=0.14*math.log(h/(2*r))*l/304.8
     Ind=Ind*1000
 
-    print Ind
     return Ind
 
 def trace_res_krige1(f,w,l,t,p,mdl):

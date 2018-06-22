@@ -2260,6 +2260,7 @@ class SymbolicLayout(object):
                     ret.append(val)
         # Update progress bar and eval count
         self.eval_count += 1
+        print "Running... Current number of evaluations:", self.eval_count
         return ret
     '''-----------------------------------------------------------------------------------------------------------------------------------------------------'''
     def _measure_capacitance(self, measure):

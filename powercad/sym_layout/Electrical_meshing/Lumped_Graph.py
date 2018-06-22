@@ -324,6 +324,7 @@ class E_graph():
         for trace_id in range(len(self.all_trace_lines)):
             trace = self.all_trace_lines[trace_id]
             ta = trace.trace_rect
+
             if not trace.is_supertrace():
                 # Check for all children on a parent trace. This includes all LEADS and DEVICES
                 for child in trace.child_pts:
@@ -368,30 +369,33 @@ class E_graph():
                         poi_type = TRACE_TRACE_BW_POI
                     '''Test for Colinear BWs, this might work for any direction wirebond too '''
                     # Problem with bw connection here This assumes bw have to be perpendicular again
-                    if trace.element.vertical:
-                        # if this is vertical we have 2 options:
-                        if ta.encloses(ta.center_x(), bw.land_pt[1]):
-                            dtype = poi_type;
-                            obj = bw;
-                            point = (ta.center_x(), bw.land_pt[1])
-                        elif ta.encloses(ta.center_x(), bw.land_pt2[1]):
-                            dtype = poi_type;
-                            obj = bw;
-                            point = (ta.center_x(), bw.land_pt2[1])
-                    else:
-                        # if this is horizontal we have 2 options:
-                        if ta.encloses(bw.land_pt[0], ta.center_y()):
-                            dtype = poi_type;
-                            obj = bw;
-                            point = (bw.land_pt[0], ta.center_y())
+                    try:
+                        if trace.element.vertical:
+                            # if this is vertical we have 2 options:
+                            if ta.encloses(ta.center_x(), bw.land_pt[1]):
+                                dtype = poi_type;
+                                obj = bw;
+                                point = (ta.center_x(), bw.land_pt[1])
+                            elif ta.encloses(ta.center_x(), bw.land_pt2[1]):
+                                dtype = poi_type;
+                                obj = bw;
+                                point = (ta.center_x(), bw.land_pt2[1])
 
-                        elif ta.encloses(bw.land_pt2[0], ta.center_y()):
-                            dtype = poi_type;
-                            obj = bw;
-                            point = (bw.land_pt2[0], ta.center_y())
-                    row_id = self.update_trace_df(row_id=row_id, trace_id=trace_id, poi_type=dtype,
-                                                  point=point, data_type=obj)
+                        else:
+                            # if this is horizontal we have 2 options:
+                            if ta.encloses(bw.land_pt[0], ta.center_y()):
+                                dtype = poi_type;
+                                obj = bw;
+                                point = (bw.land_pt[0], ta.center_y())
 
+                            elif ta.encloses(bw.land_pt2[0], ta.center_y()):
+                                dtype = poi_type;
+                                obj = bw;
+                                point = (bw.land_pt2[0], ta.center_y())
+                        row_id = self.update_trace_df(row_id=row_id, trace_id=trace_id, poi_type=dtype,
+                                                      point=point, data_type=obj)
+                    except:
+                        print "wrong solution, due to packaging"
                 trace_bound=[True,True] # [TOP , BOT] or [RIGHT, LEFT] THAT DOESNT HAVE TRACE CONNECTED
                 # Trace to trace connection
                 for conn in trace.trace_connections:

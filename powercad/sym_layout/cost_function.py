@@ -34,12 +34,9 @@ class CostFunction():
         if valid:
             self.var_id=list(set(self.var_id))
             self.var=list(set(v_list))
-            print self.var
         return valid
 
     def evalfunc(self,list_of_value):
-        print len(self.var)
-        print list_of_value
         try:
             for i in range(len(self.var)):
                 variable=str(self.var[i])+'='+str(list_of_value[i])

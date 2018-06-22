@@ -26,8 +26,6 @@ else:   # For debugging and running PowerSynth from Eclipse
     CACHED_CHAR_PATH = os.path.abspath("../../../export_data/cached_thermal") # sxm063
     MATERIAL_LIB_PATH='..//..//..//tech_lib//Material//Materials.csv'
     EXPORT_DATA_PATH=os.path.abspath("../../../export_data/")
-    SETTINGS_TXT=os.path.abspath("../../../Settings.txt")
-
     GMSH_BIN_PATH = 'C:\PowerSynth\gmsh-2.7.0-Windows'
     ELMER_BIN_PATH = 'C:\PowerSynth\Elmer 8.2-Release/bin'
     ANSYS_IPY64 = os.path.abspath('C:\Program Files\AnsysEM\AnsysEM18.2\Win64\common\IronPython')
@@ -36,7 +34,6 @@ else:   # For debugging and running PowerSynth from Eclipse
 
 if __name__ == '__main__':  # Module test
     print DEFAULT_TECH_LIB_DIR
-    print LAST_ENTRIES_PATH
     print ELMER_BIN_PATH
     print GMSH_BIN_PATH
     print TEMP_DIR

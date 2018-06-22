@@ -55,7 +55,7 @@ def plot_layout(sym_layout, filletFlag, ax = plt.subplot('111', adjustable='box'
     ledge = sym_layout.module.substrate.ledge_width
     sub_rect = Rect(sub_l, 0.0, 0.0, sub_w)
     sub_rect.translate(-ledge, -ledge)
-    r = Rectangle((sub_rect.left, sub_rect.bottom), sub_rect.width(), sub_rect.height(), facecolor='#E6E6E6', edgecolor='#616161')
+    r = Rectangle((sub_rect.left, sub_rect.bottom), sub_rect.width(), sub_rect.height(), facecolor='#B87333', edgecolor='#616161')
     ax.add_patch(r)
 
     # Detect corners for filleting
@@ -83,11 +83,11 @@ def plot_layout(sym_layout, filletFlag, ax = plt.subplot('111', adjustable='box'
     for lead in sym_layout.leads:
         lead_label = lead.name
         rect = lead.footprint_rect
-        r = Rectangle((rect.left, rect.bottom), rect.width(), rect.height(), alpha=0.5, facecolor='#4DFF64', edgecolor=color,zorder=2)
+        r = Rectangle((rect.left, rect.bottom), rect.width(), rect.height(), alpha=0.5, facecolor='#00FF00', edgecolor=color,zorder=2)
         ax.add_patch(r)
         patch = Circle(lead.center_position, radius=0.1)
         ax.add_patch(patch)
-        ax.text(rect.left, rect.bottom, lead_label,fontweight='bold')
+        ax.text(rect.left, rect.bottom, lead_label,fontweight='bold',fontsize=6)
     x_pos=[]
     y_pos=[]
     if len(sym_layout.devices)!=0:
@@ -99,11 +99,11 @@ def plot_layout(sym_layout, filletFlag, ax = plt.subplot('111', adjustable='box'
         for dev in sym_layout.devices:
             die_label=dev.name
             rect = dev.footprint_rect
-            r = Rectangle((rect.left, rect.bottom), rect.width(), rect.height(), alpha=0.5, facecolor='#2A3569', edgecolor=color,zorder=2)
+            r = Rectangle((rect.left, rect.bottom), rect.width(), rect.height(), alpha=0.5, facecolor='#0000FF', edgecolor=color,zorder=2)
             ax.add_patch(r)
             patch = Circle(dev.center_position, radius=0.1)
             ax.add_patch(patch)
-            ax.text(rect.left, rect.bottom,die_label,fontweight='bold')
+            ax.text(rect.left, rect.bottom,die_label,fontweight='bold',fontsize=6)
     for wire in sym_layout.bondwires:
         for pt_index in xrange(len(wire.start_pts)):
             pt1 = wire.start_pts[pt_index]
@@ -476,7 +476,7 @@ def detect_corners_90(sym_layout2, ax):
     #print "Format: (x, y), fillet concavity quadrant, fillet radius, ..."
     for i in fillets:
         i.calcInnerFilletSpecs() # Find fillet/arc specifications
-        print (i.corner.x, i.corner.y), i.concavityQuadrant, i.radius, i.corner.trace1.top, i.corner.trace1.bottom, i.corner.trace1.left, i.corner.trace1.right, i.corner.trace2.top, i.corner.trace2.bottom, i.corner.trace2.left, i.corner.trace2.right
+        #print (i.corner.x, i.corner.y), i.concavityQuadrant, i.radius, i.corner.trace1.top, i.corner.trace1.bottom, i.corner.trace1.left, i.corner.trace1.right, i.corner.trace2.top, i.corner.trace2.bottom, i.corner.trace2.left, i.corner.trace2.right
         a = Arc((i.centerX, i.centerY), i.radius*2, i.radius*2, theta1=i.theta1, theta2=i.theta2, facecolor='#E6E6E6', edgecolor='red', linewidth=2,zorder=3)
         #ax.add_patch(r) # toggle comment to enable/disable rectangle markings
         ax.add_patch(a) # toggle comment to enable/disable fillet markings

@@ -7,7 +7,7 @@ Created on Apr 29, 2013
 from PySide import QtCore, QtGui
 from matplotlib.patches import Circle, Rectangle
 import psidialogs
-from powercad.sym_layout.symbolic_layout import ThermalMeasure, ElectricalMeasure
+from powercad.sym_layout.symbolic_layout import ThermalMeasure, ElectricalMeasure,SymLine,SymPoint
 from powercad.project_builder.proj_dialogs import Device_states_dialog
 class PerformanceItem(object):
     def __init__(self, PerfUI, measure, row_item):
@@ -38,7 +38,7 @@ class PerformanceItem(object):
 
         self.table.removeRow(self.row_index())
         self.PerfUI.perf_items.remove(self)
-        
+        self.PerfUI.refresh_window()
     def row_index(self):
         return self.table.row(self.row_item)
         
@@ -67,10 +67,44 @@ class PerformanceListUI(object):
         self.parent.symb_canvas[self.parent.MEASURES_PLOT].mpl_connect('pick_event', self.performance_pick)
         self.ui.tbl_performance.pressed.connect(self.show_performance)
 
+    def refresh_window(self):
+        all_points = self.parent.project.symb_layout.points
+        all_lines = [x for x in self.parent.project.symb_layout.all_sym if isinstance(x, SymLine)]
+        all_traces = [x for x in all_lines if not (x.wire)]
+        all_elements = all_traces+ all_points
+        for e in all_elements:
+            self.parent.patch_dict.get_patch(e, 3).set_facecolor(self.parent.default_color)
+        self.parent.symb_canvas[3].draw()
+
 
     def show_performance(self):
-        print "UPDATE LATER"
+        self.refresh_window()
+        all_measures=self.parent.project.symb_layout.perf_measures
+        all_points =self.parent.project.symb_layout.points
+        all_lines = [x for x in self.parent.project.symb_layout.all_sym if isinstance(x,SymLine)]
+        all_traces = [x for x in all_lines if not(x.wire)]
+        for i in range(len(all_measures)):
+            row = self.ui.tbl_performance.currentRow()
+            if row == i:
+                measure = all_measures[i]
 
+                if isinstance(measure,ElectricalMeasure):
+                    if measure.measure==3:
+                        all_names = [x.name for x in measure.lines if not(x.wire)]
+                        for line in all_traces:
+                            if line.name in all_names:
+                                self.parent.patch_dict.get_patch(line, 3).set_facecolor('#00FF00')
+                    else:
+                        for device in all_points:
+
+                            if device.name == measure.pt1.name or device.name==measure.pt2.name:
+                                self.parent.patch_dict.get_patch(device, 3).set_facecolor('#00FF00')
+                elif isinstance(measure,ThermalMeasure):
+                    all_names = [x.name for x in measure.devices]
+                    for device in all_points:
+                        if device.name in all_names:
+                            self.parent.patch_dict.get_patch(device, 3).set_facecolor('#00FF00')
+        self.parent.symb_canvas[3].draw()
     def open_device_state_dialog(self):
         device_state=Device_states_dialog(self.parent,self)
         device_state.exec_()
@@ -93,9 +127,13 @@ class PerformanceListUI(object):
                 print "successfully open new dialog"
 
     def populate_cmb_elec_therm(self):
+        self.refresh_window()
+        self.ui.tbl_performance.setEnabled(False)
+
         if self.ui.txt_perform_name.text() == '':
             self.ui.cmb_perform_elecTherm.clear()
             self.ui.cmb_perform_type.clear()
+            self.ui.tbl_performance.setEnabled(True)
         elif self.ui.cmb_perform_elecTherm.currentText() == "":
             self.ui.cmb_perform_elecTherm.addItem("Select..")
             self.ui.cmb_perform_elecTherm.addItem("Electrical")
@@ -341,6 +379,8 @@ class PerformanceListUI(object):
         self.ui.btn_perform_addPerformance.setEnabled(False)
         self.ui.btn_setup_device_state.setEnabled(False)
         self.ui.lbl_perform_step3.setText("Step 3:  Select Devices/Leads.")
+        self.ui.tbl_performance.setEnabled(True)
+
     def load_measures(self):
 
         for measure in self.parent.project.symb_layout.perf_measures:
