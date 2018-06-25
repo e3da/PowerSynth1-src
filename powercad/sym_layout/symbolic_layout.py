@@ -549,7 +549,6 @@ class SymbolicLayout(object):
         for sym in self.all_sym:           # go through all points and lines-> if there is no tech lib bound to a single point report the problem
             if isinstance(sym, SymPoint):
                 if sym.tech is None:
-                    #print sym.element.path_id
                     raise FormulationError('A layout point element has not been identified!')
         # Check over design rules and sub_dims, gap_width, etc. to make sure everything looks valid
         # Check number of performance objectives (should be greater than zero)
@@ -2188,7 +2187,9 @@ class SymbolicLayout(object):
             except:
                 self.count =1
             #print self.count efficiency measure
-
+            print individual
+            ax = plt.subplot('111', adjustable='box', aspect=1.0)
+            plot_layout(self,ax)
             print ' new solution is found *******'    # convergence case
             #self._build_lumped_graph()
             for measure in self.perf_measures:

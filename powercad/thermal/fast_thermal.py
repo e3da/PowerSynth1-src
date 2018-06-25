@@ -119,6 +119,7 @@ class SublayerThermalFeatures:
 def solve_TFSM(thermal_geometry, power_scale):
     # Solves a Temperature and Flux Superposition Model
     # Returns list of die temps
+    die_locations = []
     islands = thermal_geometry.trace_islands
     all_dies = thermal_geometry.all_dies
     # Begin thermal network with sublayer resistance (everything below isolation)
@@ -136,7 +137,7 @@ def solve_TFSM(thermal_geometry, power_scale):
         if die.thermal_features.self_temp is None:
             die.thermal_features.find_self_temp()
         total_iso_temp += die.thermal_features.iso_top_avg_temp
-    
+        die_locations.append(die.position)
     # Build up lumped network for each island
     Res_Node = 2
     src_nodes = []
@@ -167,6 +168,7 @@ def solve_TFSM(thermal_geometry, power_scale):
     V = np.dot(Linv, X_st)
     # Get node voltages (die temperatures)
     die_temps = []
+
     for src in src_nodes:
         die_temps.append(V[:,src[0]]-V[:,0])    
     die_temps = np.array(die_temps)+t_amb
@@ -174,6 +176,7 @@ def solve_TFSM(thermal_geometry, power_scale):
 #    print die_temps
     
     #test_plot_layout(thermal_geometry.all_traces, all_dies, (83.82, 54.61))
+    print "locations",die_locations
     return die_temps
 def eval_island(island, all_dies, total_iso_temp, metal_thickness, metal_cond):
     # Calculate trace island spread resistance (Rsp2)

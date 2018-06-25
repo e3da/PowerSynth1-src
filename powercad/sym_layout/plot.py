@@ -38,7 +38,7 @@ def plot_svg_objs(layout):
     plt.show()
     #print "plot_svg_objs() completed."
 
-def plot_layout(sym_layout, filletFlag, ax = plt.subplot('111', adjustable='box', aspect=1.0), new_window=True, plot_row_col=False):
+def plot_layout(sym_layout, filletFlag=False, ax = plt.subplot('111', adjustable='box', aspect=1.0), new_window=True, plot_row_col=False):
     #print "plot_layout() started."
     hlist = sym_layout.h_rowcol_list
     vlist = sym_layout.v_rowcol_list
@@ -103,7 +103,7 @@ def plot_layout(sym_layout, filletFlag, ax = plt.subplot('111', adjustable='box'
             ax.add_patch(r)
             patch = Circle(dev.center_position, radius=0.1)
             ax.add_patch(patch)
-            ax.text(rect.left, rect.bottom,die_label,fontweight='bold',fontsize=6)
+            ax.text(rect.left, rect.bottom,die_label,fontweight='bold',fontsize=12)
     for wire in sym_layout.bondwires:
         for pt_index in xrange(len(wire.start_pts)):
             pt1 = wire.start_pts[pt_index]

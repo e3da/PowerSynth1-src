@@ -6,7 +6,7 @@ changes made by sxm063: os.path.abspath(); added CACHED_CHAR_PATH since it chang
 Updated Jmain changelog - Aug 10, 2016; 
 '''
 import os
-POWERSYNTH_RELEASE = True
+POWERSYNTH_RELEASE = False
 
 
 if POWERSYNTH_RELEASE:  # For packaged versions

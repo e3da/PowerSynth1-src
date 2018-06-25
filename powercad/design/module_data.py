@@ -35,10 +35,10 @@ class ModuleData(object):
         if not isinstance(self.ambient_temp, float):
             raise Exception('Ambient Temperature should be supplied in floating point format!')
         
-def gen_test_module_data(freq):
+def gen_test_module_data(freq,h,tamb=0.0):
     data = ModuleData()
     # dimensions, eff_conv_coeff, baseplate_tech
-    data.baseplate = BaseplateInstance((60, 60, 5), 150, get_baseplate())
+    data.baseplate = BaseplateInstance((60, 60, 4), h, get_baseplate())
     
     # thickness, attach_tech
     data.substrate_attach = SubstrateAttachInstance(0.1, get_sub_attach())
@@ -48,7 +48,7 @@ def gen_test_module_data(freq):
     
     data.design_rules = ProcessDesignRules(2, 1.27, 0.5, 0.5, 0.8, 0.3, 0.2, 0.2)
     data.frequency = freq # 100 kHz
-    data.ambient_temp = 300.0 # 300 Kelvin
+    data.ambient_temp = tamb
     
     return data
     

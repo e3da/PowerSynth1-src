@@ -3,7 +3,7 @@
 Major Changes:
 Brett Shook - Added separate Performance Measure List system 4/29/2013
 Brett Shook - Added separate Component Selection system 3/21/2014
-            - 
+            -
 '''
 '''----------------------------------'''
 import shutil
@@ -50,39 +50,39 @@ from powercad.general.settings.Error_messages import *
 
 
 class ProjectBuilder(QtGui.QMainWindow):
-    
+
     # Relative paths -> use forward slashes for platform independence
     TEMP_DIR = os.path.abspath(TEMP_DIR)
-    
+
     LAYOUT_SELECTION_PLOT = 0
     SYMMETRY_PLOT = 1
-    CONSTRAINT_PLOT = 2 
+    CONSTRAINT_PLOT = 2
     MEASURES_PLOT = 3
-    
+
     STACK_PAGE = 0
     LAYOUT_PAGE = 1
     SYMMETRY_PAGE = 2
     CONSTRAINT_PAGE = 3
     MEASURE_PAGE = 4
     RESULTS_PAGE = 5
-    
+
     """Main Window"""
     def __init__(self):
         QtGui.QMainWindow.__init__(self, None)
         # current project
         self.project = None
         self.init()
-        
+
     def init(self):
         """Set up the main window"""
-        # set up main window GUI 
+        # set up main window GUI
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         # display logo
 #        self.ui.label_4.setPixmap(self.LOGO_PATH)
-        
+
         # display module stack image
-#        self.ui.lbl_modStackImg.setPixmap(self.STACK_IMG_PATH) 
+#        self.ui.lbl_modStackImg.setPixmap(self.STACK_IMG_PATH)
         # connect actions
         self.ui.navigation.currentChanged.connect(self.change_stacked)
         self.ui.btn_newProject.pressed.connect(self.new_project)
@@ -105,7 +105,7 @@ class ProjectBuilder(QtGui.QMainWindow):
         self.ui.txt_maxWidth.textEdited.connect(self.constraint_max_edit)
         self.ui.txt_fixedWidth.textEdited.connect(self.constraint_fixed_edit)
         self.ui.btn_remove_constraint.pressed.connect(self.constraint_remove)
-        
+
         # Menu bar items
         self.ui.actionNew_Project.triggered.connect(self.new_project)
         self.ui.actionSave_Project.triggered.connect(self.save_project)
@@ -125,7 +125,7 @@ class ProjectBuilder(QtGui.QMainWindow):
         self.enable_project_interfaces(False)
 
         # This is the current color wheel.
-        # This is a temporary fix for something that should probably be more dynamic later. 
+        # This is a temporary fix for something that should probably be more dynamic later.
         self.color_wheel = [QtGui.QColor(255, 0, 0),
                             QtGui.QColor(0, 255, 0),
                             QtGui.QColor(0, 0, 255),
@@ -141,10 +141,10 @@ class ProjectBuilder(QtGui.QMainWindow):
                             QtGui.QColor(0,128,128)]
 
         self.default_color = '#454545'
-        
+
         # setup widgets used for plotting symbolic layouts
         self.setup_layout_plots()
-        
+
         # set up table that displays added devices
         self.ui.tbl_projDevices.setColumnCount(2)
         self.ui.tbl_projDevices.setColumnWidth(0,50)
@@ -172,7 +172,7 @@ class ProjectBuilder(QtGui.QMainWindow):
         self.ui.tbl_projDevices.setRowCount(0)
         self.ui.tbl_symmetry.clear()
         self.ui.tbl_symmetry.setRowCount(0)
-        
+
     def load_nets(self):
         if self.project.netlist!=None:
             nets = self.project.netlist.graph.nodes()
@@ -228,17 +228,17 @@ class ProjectBuilder(QtGui.QMainWindow):
         """Keep stacked widget current with navigation"""
         # the stacked widget is what shows everything like the symbolic layouts.  Different pages in the stacked widget show different things
         # "navigation" is the main bar on the left
-        
+
         if index == self.CONSTRAINT_PAGE:
             self.enter_constraint_page()
-        
+
         if self.constraint_error:
             # don't move on if error in constraints
             self.ui.navigation.setCurrentIndex(self.CONSTRAINT_PAGE)
 
-        self.ui.stackedWidget.setCurrentIndex(self.ui.navigation.currentIndex()) # Ensure the content on the right frame of the window corresponds to the content on the selected tab on the left pane. 
-        
-        
+        self.ui.stackedWidget.setCurrentIndex(self.ui.navigation.currentIndex()) # Ensure the content on the right frame of the window corresponds to the content on the selected tab on the left pane.
+
+
     def new_project(self):
         """Create new project. Display prompt for necessary information"""
         # bring up new project dialog
@@ -280,7 +280,7 @@ class ProjectBuilder(QtGui.QMainWindow):
             self.symmetry_ui.load_symmetries()
             self.perf_list.load_measures()
             self.load_saved_solutions_list()
-            self.fill_material_cmbBoxes() #Quang 
+            self.fill_material_cmbBoxes() #Quang
             if self.project.module_data.design_rules is None:
                 QtGui.QMessageBox.warning(self, "Defualt Setup", "Process design rules is set to defaults got to Projects-> Design Rule to edit.")
                 self.project.module_data.design_rules = ProcessDesignRules(1.2, 1.2, 0.2, 0.1, 1.0, 0.2, 0.2, 0.2)
@@ -307,7 +307,7 @@ class ProjectBuilder(QtGui.QMainWindow):
     def open_tech_lib_editor(self):
         techlib = TechLibWizDialog(self, self.project.tech_lib_dir)
         techlib.show()
-        
+
     def generic_device_dialog(self):
         device_path = os.path.join(self.project.tech_lib_dir,'Layout_Selection\Device' )
         dev_dialog=GenericDeviceDialog(self,device_path)
@@ -317,20 +317,20 @@ class ProjectBuilder(QtGui.QMainWindow):
     def export_layout_script(self):
         # qmle 10-18-2016
         # This method will export the current layout (of the project) to script code
-        save_path= self.layout_script_dir                    # choosing the directory for the script 
+        save_path= self.layout_script_dir                    # choosing the directory for the script
         path=os.path.join(save_path,'layout.psc')            # script name = project name + extemsopn
         lines=[]                                             # list of lines to write in txt
         id=0                                                 # set a counter id
-        for obj in self.project.symb_layout.layout:          # list out obj in symbolic layout  
-            if isinstance(obj,LayoutLine):                   # check if it is a line  
+        for obj in self.project.symb_layout.layout:          # list out obj in symbolic layout
+            if isinstance(obj,LayoutLine):                   # check if it is a line
                 line_str =str(obj.path_id)+' l '+'('+str(obj.pt1[0])+','+str(obj.pt1[1])+') '+'('+str(obj.pt2[0])+','+str(obj.pt2[1])+')' # write the line into string
                 lines.append(line_str)                       # append to final list
             elif isinstance(obj, LayoutPoint):               # check if it is a point
                 line_str =str(obj.path_id) +' p '+'('+str(obj.pt[0])+','+str(obj.pt[1])+')'  # write the line into string
-                lines.append(line_str)                       # append to final list 
+                lines.append(line_str)                       # append to final list
 
         f = open(path, 'w')                                  # open text file
-        self.layout_script="\n".join(lines)                  
+        self.layout_script="\n".join(lines)
         f.write(self.layout_script)                          # write text to text file
 
 
@@ -345,7 +345,8 @@ class ProjectBuilder(QtGui.QMainWindow):
         self.project.tbl_bondwire_connect=None
         self.user_netlist=self.load_nets()
         self.load_layout_plots(mode=1)
-
+        # Refresh all table
+        self.reload_ui()
     def open_device_setup(self,mode =1):
         '''
 
@@ -369,23 +370,23 @@ class ProjectBuilder(QtGui.QMainWindow):
         if self.ui.navigation.isEnabled():
             tech_path_dialog = EditTechLibPathDialog(self)
             tech_path_dialog.exec_()
-            
+
     def previous(self):
         """Selects previous navigation section"""
         if self.ui.navigation.isEnabled():
             index = self.ui.navigation.currentIndex()
             if index > 0:
                 self.ui.navigation.setCurrentIndex(index-1)
-        
+
     def next(self):
         """Selects next navigation section"""
         if self.ui.navigation.isEnabled():
             index = self.ui.navigation.currentIndex()
             if index < (self.ui.navigation.count()-1):
                 self.ui.navigation.setCurrentIndex(index+1)
-        
+
     def setup_layout_plots(self):
-        """ Create figures, canvases, axes, and layout for each stacked widget page. 
+        """ Create figures, canvases, axes, and layout for each stacked widget page.
         Connect all symbolic layouts to their respective pick events. """
         # create figures, canvases, axes, and layout for each stacked widget page
         self.symb_fig = [Figure(),Figure(),Figure(),Figure(),Figure()]
@@ -405,7 +406,7 @@ class ProjectBuilder(QtGui.QMainWindow):
             grid_layout = QtGui.QGridLayout(self.ui.stackedWidget.widget(window+1))
             grid_layout.setContentsMargins(0,0,0,0)
             grid_layout.addWidget(self.symb_canvas[window],0,0,1,1)
-        
+
         # connect all symbolic layouts to their respective pick events
         self.select_comp=self.symb_canvas[0].mpl_connect('pick_event', self.device_pick)
         self.select_meas=self.symb_canvas[2].mpl_connect('pick_event', self.constraint_pick)
@@ -414,13 +415,13 @@ class ProjectBuilder(QtGui.QMainWindow):
         for figure in self.symb_fig:
             count+=1
             name='fig'+str(count)+'.svg'
-            figure.savefig(name)   
+            figure.savefig(name)
     def load_layout_plots(self,mode=1):
         """Load symbolic layout from svg file and draw all necessary symbolic layouts in stacked widget"""
         symlayout = self.project.symb_layout
         layout = symlayout.all_sym
         self.patch_dict = PatchDictionary()  # Dictionary to map layout objects to patches
-        
+
         # populate each matplotlib with rectangles and circles from symbolic layout
         for window in range(4):
             # only plot device circles in Device Selection and Performance identification
@@ -429,12 +430,12 @@ class ProjectBuilder(QtGui.QMainWindow):
                 plt_devices = True
             else:
                 plt_devices = False
-                
+
             # plot everything
             self.plot_sym_objects(layout, symlayout.xlen,symlayout.ylen,
                                   self.symb_fig[window],self.symb_axis[window],
                                   window, plt_devices,mode)
-            self.symb_canvas[window].draw() # sxm - displayes the symbolic layout to the user. (Until this point most of the work was happening in the backend). 
+            self.symb_canvas[window].draw() # sxm - displayes the symbolic layout to the user. (Until this point most of the work was happening in the backend).
             #self.save_layout_plots()
 
     def plot_sym_objects(self, layout_objs, xlen, ylen, figure, axis, window, plt_circles=True,mode=0):
@@ -622,29 +623,29 @@ class ProjectBuilder(QtGui.QMainWindow):
         self.baseplate_model.setFilter(QtCore.QDir.Files)
         self.baseplate_model.setNameFilters(filter)
         self.ui.cmb_baseMaterial.clearEditText()
-        
+
     def create_baseplate(self):
         error = False
-        
+
         # reset all error messages
         for lbl in [self.ui.lbl_err_baseConvection, self.ui.lbl_err_baseLength, self.ui.lbl_err_baseMaterial, self.ui.lbl_err_baseThickness, self.ui.lbl_err_baseWidth]:
             lbl.setText("")
-            
+
         # check all textbox inputs for correct type
         if(not self.ui.txt_baseConvection.text().replace(".", "", 1).replace("e", "", 1).isdigit()):
             self.ui.lbl_err_baseConvection.setText("Error: Must be a number")
             error = True
         if(not self.ui.txt_baseLength.text().replace(".", "", 1).replace("e", "", 1).isdigit()):
             self.ui.lbl_err_baseLength.setText("Error: Must be a number")
-            error = True 
+            error = True
         if(not self.ui.txt_baseThickness.text().replace(".", "", 1).replace("e", "", 1).isdigit()):
             self.ui.lbl_err_baseThickness.setText("Error: Must be a number")
             error = True
         if(not self.ui.txt_baseWidth.text().replace(".", "", 1).replace("e", "", 1).isdigit()):
             self.ui.lbl_err_baseWidth.setText("Error: Must be a number")
             error = True
-        
-        # check material properties input  
+
+        # check material properties input
         try:
             dims = (float(self.ui.txt_baseWidth.text()),float(self.ui.txt_baseLength.text()),float(self.ui.txt_baseThickness.text()))
             eff_conv_coeff = float(self.ui.txt_baseConvection.text())
@@ -655,19 +656,19 @@ class ProjectBuilder(QtGui.QMainWindow):
             self.ui.lbl_err_baseMaterial.setText("Error")
             error = True
             print traceback.print_exc()
-            
+
         if error:
             print "Error Creating Baseplate"
-       
+
         return error
-        
+
     def create_substrate(self):
         error = False
-        
+
         # reset all error messages
         for lbl in [self.ui.lbl_err_subMaterial, self.ui.lbl_err_subWidth, self.ui.lbl_err_subLength, self.ui.lbl_err_subLedge]:
             lbl.setText("")
-            
+
         # check all textbox inputs for correct type
         if(not self.ui.txt_subWidth.text().replace(".", "", 1).replace("e", "", 1).isdigit()):
             self.ui.lbl_err_subWidth.setText("Error: Must be a number")
@@ -678,19 +679,19 @@ class ProjectBuilder(QtGui.QMainWindow):
         if(not self.ui.txt_subLedge.text().replace(".", "", 1).replace("e", "", 1).isdigit()):
             self.ui.lbl_err_subLedge.setText("Error: Must be a number")
             error = True
-        
-        # check material properties input    
-        try:            
+
+        # check material properties input
+        try:
             dims = (float(self.ui.txt_subWidth.text()),float(self.ui.txt_subLength.text()))
             # Make sure baseplate dimensions are larger than substrate
             bp_dims = self.project.module_data.baseplate.dimensions
             if dims[0] > bp_dims[0]:
                 error = True
-                self.ui.lbl_err_subWidth.setText("Error: Must be smaller than baseplate") 
+                self.ui.lbl_err_subWidth.setText("Error: Must be smaller than baseplate")
             if dims[1] > bp_dims[1]:
                 error = True
                 self.ui.lbl_err_subLength.setText("Error: Must be smaller than baseplate")
-                
+
             ledge_width = float(self.ui.txt_subLedge.text())
             tech_path = os.path.join(self.project.tech_lib_dir, "Substrates", self.ui.cmb_subMaterial.currentText())
             tech_lib_obj = load_file(tech_path)
@@ -699,25 +700,25 @@ class ProjectBuilder(QtGui.QMainWindow):
             self.ui.lbl_err_subMaterial.setText("Error")
             error = True
             print traceback.print_exc()
-            
+
         if error:
             print "Error Creating Substrate"
-       
+
         return error
-        
+
     def create_substrate_attach(self):
         error = False
-        
+
         # reset all error messages
         for lbl in [self.ui.lbl_err_subAttchMaterial, self.ui.lbl_err_subAttchThickness]:
             lbl.setText("")
-            
+
         # check all textbox inputs for correct type
         if(not self.ui.txt_subAttchThickness.text().replace(".", "", 1).replace("e", "", 1).isdigit()):
             self.ui.lbl_err_subAttchThickness.setText("Error: Must be a number")
             error = True
-        
-        # check material properties input  
+
+        # check material properties input
         try:
             thickness = float(self.ui.txt_subAttchThickness.text())
             tech_path = os.path.join(self.project.tech_lib_dir, "Substrate_Attaches", self.ui.cmb_subAttchMaterial.currentText())
@@ -859,7 +860,7 @@ class ProjectBuilder(QtGui.QMainWindow):
 
 
         categ = self.categ_list_model.fileName(self.ui.lst_categories.selectedIndexes()[0])
-        
+
         if categ == 'Device' or categ=='Lead':
             self.ui.btn_addDevice.setEnabled(True)
             self.ui.btn_addDevice.setText('Add')
@@ -1144,7 +1145,7 @@ class ProjectBuilder(QtGui.QMainWindow):
 
         # De-highlight everything
         children = self.symb_axis[self.CONSTRAINT_PLOT].get_children()
-        for obj in children: 
+        for obj in children:
             obj.set_alpha(0.25)
         self.symb_canvas[self.CONSTRAINT_PLOT].draw()
 
@@ -1364,7 +1365,7 @@ class ProjectBuilder(QtGui.QMainWindow):
                 self.project.num_gen = 100
                 self.ui.txt_numGenerations.setText(str(self.project.num_gen))
                 print traceback.print_exc()
-            
+
             try:
                 print "Starting Optimization"
                 starttime = time.time()
@@ -1372,29 +1373,28 @@ class ProjectBuilder(QtGui.QMainWindow):
                 self.project.symb_layout.form_design_problem(self.project.module_data, self.project.tbl_bondwire_connect, self.TEMP_DIR)
                 print "project.symb_layout.form_design_problem() completed."
                 iseed = int(self.ui.txt_numseed.text())
-                ilambda=30
                 self.project.symb_layout.optimize(iseed,inum_gen = self.project.num_gen)
                 print 'Optimization Complete'
                 print 'seed is : ', iseed
                 print 'Runtime:',time.time()-starttime,'seconds.'
-                print 'Opening Solution Browser...'                
+                print 'Opening Solution Browser...'
                 self.project.symb_layout.opt_progress_fn = None
                 self.sol_browser = GrapheneWindow(self)
                 self.sol_browser.show()
             except:
                 QtGui.QMessageBox.warning(self, "Optimization Error", "Failed to complete optimization process. Please check console/log.")
                 print traceback.print_exc()
-                
+
         self.ui.btn_runSim.setEnabled(True)
-        
+
         # Save out newly generated solution set and then (export data to csv)--> runs when btn clicked in graphing_form.py
         #new_solution_set = self.sol_browser.solution_library.measure_data
         #new_names_units = self.sol_browser.solution_library.measure_names_units
         #py_csv(self.sol_browser.solution_library.measure_data, self.sol_browser.solution_library.measure_names_units, "no_btn01.csv")
-                
+
     def update_opt_progress_bar(self, val):
         self.ui.prgbar_optimize.setValue(int(val))
-        
+
     def open_sol_browser(self):
         if len(self.project.solutions) > 0:
             reopen = False
@@ -1405,25 +1405,25 @@ class ProjectBuilder(QtGui.QMainWindow):
             else:
                 # solutions exist, but the browser window isn't open
                 reopen = True
-                
+
             if reopen:
                 del self.sol_browser # clear any old data out
                 self.sol_browser = GrapheneWindow(self) # reopen the browser
                 self.sol_browser.show()
         else:
             QtGui.QMessageBox.warning(self, "Solution Browser", "No solutions exist.")
-        
+
     def add_solution(self, solution):
         # save solution in project
         self.project.add_solution(solution)
         self.add_to_solution_list(solution)
-        
+
     def add_to_solution_list(self, solution):
         # add solution to solution list
         self.ui.sol = QtGui.QListWidgetItem(solution.name)
         self.ui.lst_solution.addItem(self.ui.sol)
         self.show_sol_doc(self.ui.sol)
-        
+
     def show_sol_doc(self, item):
         # add mdi window for viewing
 
@@ -1434,7 +1434,7 @@ class ProjectBuilder(QtGui.QMainWindow):
         m = SolutionWindow(solution=sol, sym_layout=self.project.symb_layout,filletFlag= filletFlag,dir=self.project.directory)
         self.ui.mdiArea.addSubWindow(m)
         m.show()
-        
+
         '''
         # create hspice export netlist (test)
         from powercad.spice_export.netlist_graph import Module_SPICE_netlist_graph
@@ -1455,39 +1455,39 @@ class ProjectBuilder(QtGui.QMainWindow):
         print 'SPICE export path:', export_path
         print 'SPICE export complete.'
         '''
-        
+
     def clear_saved_solutions_ui(self):
         # close windows in the mdi area
         self.ui.mdiArea.closeAllSubWindows()
         # remove solutions from list area
         self.ui.lst_solution.clear()
-        
+
     def load_saved_solutions_list(self):
         self.clear_saved_solutions_ui()
 
         # loads the list of previously saved solutions into the list display
         for sol in self.project.solutions:
             self.add_to_solution_list(sol)
-            
+
         # display the number of generations ran in the last optimization run here
         self.ui.txt_numGenerations.setText(str(self.project.num_gen))
-        
-    
-# ------------------------------------------------------------------------------------------        
-# ------ Menu Bar --------------------------------------------------------------------------       
-        
+
+
+# ------------------------------------------------------------------------------------------
+# ------ Menu Bar --------------------------------------------------------------------------
+
     def save_project(self):
         if self.ui.navigation.isEnabled():
             try:
                 self.save_moduleStack()
                 self.save_deviceTable()
-                
+
                 # make project directory
                 save_path = self.project.directory
                 print "save", save_path
                 if not os.path.exists(save_path):
                     os.makedirs(save_path)
-                
+
                 # Make temporary copy of existing project file, if it exists
                 if os.path.exists(os.path.join(save_path, "project.p")):
                     shutil.copy(os.path.join(save_path, "project.p"), os.path.join(save_path, "project.p.temp"))
@@ -1500,10 +1500,10 @@ class ProjectBuilder(QtGui.QMainWindow):
                 if os.path.exists(os.path.join(save_path, "project.p.temp")):
                     os.remove(os.path.join(save_path, "project.p"))
                     shutil.copy(os.path.join(save_path, "project.p.temp"), os.path.join(save_path, "project.p"))
-                
+
                 QtGui.QMessageBox.warning(self, "Project Save Failed", "Your project was not saved! Please check console/log for details.")
                 print traceback.format_exc()
-            
+
     def save_project_as(self):
         if self.ui.navigation.isEnabled():
             # get new project name
@@ -1525,7 +1525,7 @@ class ProjectBuilder(QtGui.QMainWindow):
                 # Make temporary copy of existing project file, if it exists
                 if os.path.exists(os.path.join(save_path, "project.p")):
                     shutil.copy(os.path.join(save_path, "project.p"), os.path.join(save_path, "project.p.temp"))
-                
+
                 # Attempt to pickle the project
                 self.project.symb_layout.prepare_for_pickle() # prepare the symbolic layout object for pickling
                 self.project.directory=save_path
@@ -1540,10 +1540,10 @@ class ProjectBuilder(QtGui.QMainWindow):
                 if os.path.exists(os.path.join(save_path, "project.p.temp")):
                     os.remove(os.path.join(save_path, "project.p"))
                     shutil.copy(os.path.join(save_path, "project.p.temp"), os.path.join(save_path, "project.p"))
-                
+
                 QtGui.QMessageBox.warning(self, "Project Save Failed", "Your project was not saved! Please check console/log for details.")
                 print traceback.format_exc()
-                
+
     def load_symbolic_layout(self):
         QtGui.QMessageBox.warning(self, "Load Symbolic Layout", "Not implemented yet.")
         if self.ui.navigation.isEnabled():
@@ -1556,7 +1556,7 @@ class PatchDictionary(dict):
     def get_patch(self, layout_obj, window):
         patches = [patch[0] for patch in self.items() if (patch[1] == layout_obj and patch[0].window == window)]
         return patches[0]
-    
+
     def get_layout_obj(self, patch):
         return self[patch]
 
@@ -1565,13 +1565,12 @@ if __name__ == "__main__":
     main_window = ProjectBuilder()
     main_window.show()
     sys.exit(app.exec_())
-    
+
 # --------------- Bugs found/ To do --------------------
-# 
+#
 # - Optimization progress bar (graphic) pauses even though optimization is in progress (as seen on console). This is especially true for large number of generations.
-# 
+#
 # - "Open Solution Browser" button needs to be disabled while solution browser is already open, and vice versa.
 
 # test- Jul 25, 2017
 
-        
