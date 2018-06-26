@@ -1203,6 +1203,8 @@ class SymbolicLayout(object):
         self.dev_design_values = dev_design_values
         self.bondwire_design_values = bondwire_design_values
     '''-----------------------------------------------------------------------------------------------------------------------------------------------------'''
+
+
     def generate_layout(self):
         self.layout_ready = False
         self._handle_fixed_constraints()
@@ -2042,15 +2044,16 @@ class SymbolicLayout(object):
                 self.mdl_type['E']=pm.mdl
 
         self.algorithm='NSGAII'
-
+        self.running = True
         if self.algorithm=='NSGAII':
+            self.eval_count=0
             opt = NSGAII_Optimizer(self.opt_dv_list, self._opt_eval,
                                    len(self.perf_measures), seed=iseed, num_gen=inum_gen, mu=mu, ilambda=ilambda)
 
             opt.run()
             self.solutions = opt.solutions
             self.solution_lib = SolutionLibrary(self)
-
+        self.running=False
         #print self.solution_lib
     '''-----------------------------------------------------------------------------------------------------------------------------------------------------'''
     def debug_single_eval(self):
@@ -2187,9 +2190,6 @@ class SymbolicLayout(object):
             except:
                 self.count =1
             #print self.count efficiency measure
-            print individual
-            ax = plt.subplot('111', adjustable='box', aspect=1.0)
-            plot_layout(self,ax)
             print ' new solution is found *******'    # convergence case
             #self._build_lumped_graph()
             for measure in self.perf_measures:
@@ -2260,8 +2260,11 @@ class SymbolicLayout(object):
                     val = self._thermal_analysis(measure,type_id)
                     ret.append(val)
         # Update progress bar and eval count
-        self.eval_count += 1
-        print "Running... Current number of evaluations:", self.eval_count
+        if self.running==True:
+            self.eval_count += 1
+            print "Running... Current number of evaluations:", self.eval_count
+        else:
+            print "Solution loaded "
         return ret
     '''-----------------------------------------------------------------------------------------------------------------------------------------------------'''
     def _measure_capacitance(self, measure):

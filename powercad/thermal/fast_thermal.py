@@ -155,7 +155,7 @@ def solve_TFSM(thermal_geometry, power_scale):
             src_nodes.append((Res_Node, die[1]*power_scale))
             #print src_nodes
             Res_Node += 1
-    print time.time()-time1
+    #print time.time()-time1
     # Build source and sink flows
     X_st = np.zeros(len(thermal_net.nodes()))
     for src in src_nodes:
@@ -176,7 +176,6 @@ def solve_TFSM(thermal_geometry, power_scale):
 #    print die_temps
     
     #test_plot_layout(thermal_geometry.all_traces, all_dies, (83.82, 54.61))
-    print "locations",die_locations
     return die_temps
 def eval_island(island, all_dies, total_iso_temp, metal_thickness, metal_cond):
     # Calculate trace island spread resistance (Rsp2)
