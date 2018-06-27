@@ -258,7 +258,7 @@ class ProjectBuilder(QtGui.QMainWindow):
             # draws all symbolic layouts
             self.load_layout_plots(mode=1)
             if self.project.module_data.design_rules is None:
-                QtGui.QMessageBox.warning(self, "Defualt Setup", "Process design rules is set to defaults got to Projects-> Design Rule to edit.")
+                QtGui.QMessageBox.warning(self, "Defualt Setup", "Process design rules is set to defaults go to Projects-> Design Rule to edit.")
                 self.project.module_data.design_rules = ProcessDesignRules(1.2, 1.2, 0.2, 0.1, 1.0, 0.2, 0.2, 0.2)
 
     def open_project(self):

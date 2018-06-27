@@ -9,6 +9,7 @@ import os
 POWERSYNTH_RELEASE = True
 
 
+
 if POWERSYNTH_RELEASE:  # For packaged versions
     DEFAULT_TECH_LIB_DIR = os.path.abspath("tech_lib")
     ELMER_BIN_PATH = "ELmer 8.2-Release/bin"
