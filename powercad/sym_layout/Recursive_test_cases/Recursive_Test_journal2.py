@@ -207,8 +207,8 @@ def make_test_setup2(f,directory):
     test_file = os.path.abspath(directory)  # A layout script file, you can link this to any file you want
 
     results=[]
-    powers= [[5,5,5,5],[3.5,3,4.5,4],[2.5,3.0,3.0,3.5],[4.5,4.0,5.0,4.5],[1.5,2,1,1.5]]
-    h_val =[120,113.30,108.20,117.5456,95.68]
+    powers= [[1.89,1.98,1.92,1.98],[2.31,2.44,2.34,2.41],[2.83,2.93,2.844,2.938],[3.6096,3.788,3.66,3.776],[3.966,4.1004,4.033,4.1004]]
+    h_val =[102.331,105.986,110.236,115.238,117.656]
     for p,h in zip(powers,h_val):
         print "Test Case", p, h
         sym_layout = SymbolicLayout()  # initiate a symbolic layout object
@@ -246,7 +246,7 @@ def make_test_setup2(f,directory):
         add_thermal_measure(sym_layout)
 
         results.append(thermal_measure(sym_layout))
-
+        print results
     for r in results:
         print r
     ax = plt.subplot('111', adjustable='box', aspect=1.0)

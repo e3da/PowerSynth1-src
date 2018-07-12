@@ -174,7 +174,8 @@ def solve_TFSM(thermal_geometry, power_scale):
     die_temps = np.array(die_temps)+t_amb
     # addding 
 #    print die_temps
-    
+    print "die pos", die_locations
+
     #test_plot_layout(thermal_geometry.all_traces, all_dies, (83.82, 54.61))
     return die_temps
 def eval_island(island, all_dies, total_iso_temp, metal_thickness, metal_cond):

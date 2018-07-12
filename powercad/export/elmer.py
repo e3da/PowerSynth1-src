@@ -55,7 +55,7 @@ Solver 1
   Variable Dofs = 1
   Linear System Solver = "Iterative"
   Linear System Iterative Method = "TFQMR"
-  Linear System Max Iterations = 5000
+  Linear System Max Iterations = 10000
   Linear System Convergence Tolerance = {conv_tol}
   Linear System Abort Not Converged = True
   Linear System Preconditioning = "ILU0"
