@@ -26,6 +26,7 @@ import collections
 import ast
 import pandas as pd
 import csv
+import timeit
 
 
 
@@ -3486,7 +3487,7 @@ if __name__ == '__main__':
 
 
     if len(sys.argv) > 1:
-
+        start1 = timeit.default_timer()
         testfile = sys.argv[1]  # taking input from command line
         Directory= os.path.dirname(os.path.abspath(testfile))
         #Directory = os.path.dirname((testfile))
@@ -3659,15 +3660,16 @@ if __name__ == '__main__':
     #print Input
     #print constraints
 
+    stop1 = timeit.default_timer()
+    print "Input",stop1-start1
 
-
-
+    start2 = timeit.default_timer()
 
         #Type=
-
+    #start1 = timeit.default_timer()
     while(len(Input)>0):
         inp=Input.pop(0)
-        print inp
+        #print inp
 
         #print inp
 
@@ -3770,12 +3772,13 @@ if __name__ == '__main__':
             #ParentH.insert(inp[0], x1, y1, x2, y2, inp[5], inp[6])
             ParentH.insert(start, int(inp[1]), int(inp[2]), int(inp[3]), int(inp[4]), inp[5], inp[6])
 
-
-
+    stop2 = timeit.default_timer()
+    print "CS", stop2 - start2
     Htree.setNodeId1(Htree.hNodeList[0])
     Vtree.setNodeId1(Vtree.vNodeList[0])
     #level=2
     #N=10
+    start3 = timeit.default_timer()
     CONSTRAINT=ct.constraint()
 
     #for i in range(len(constraints)):
@@ -3794,18 +3797,35 @@ if __name__ == '__main__':
     CONSTRAINT.setupMinSpacing(minSpacing)
     CONSTRAINT.setupMinEnclosure(minEnclosure)
     #print "N",N
+    stop3 = timeit.default_timer()
+    print "constraint setup",stop3-start3
     if level==2 or 3:
         #CG = cg.constraintGraph(testdir + '/' + testbase, testdir +'/'+ testbase,W,H,XLoc,YLoc)
+        start4 = timeit.default_timer()
         CG = cg.constraintGraph(directory+'/'+testbase, directory+'/'+testbase, W, H, XLoc, YLoc)
+        #start1 = timeit.default_timer()
         CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList,level,N)
+        stop4 = timeit.default_timer()
+
 
     elif level==1:
+         start4 = timeit.default_timer()
          CG = cg.constraintGraph(directory+'/'+testbase, directory+'/'+testbase,W=None,H=None,XLocation=None,YLocation=None)
          CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList,level,N)
+         stop4 = timeit.default_timer()
     else:
+         start4 = timeit.default_timer()
          CG = cg.constraintGraph(directory+'/'+testbase, directory+'/'+testbase,W=None,H=None,XLocation=None,YLocation=None)
          CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList,level,N=None)
+         stop4 = timeit.default_timer()
+    #start = timeit.default_timer()
+    print "Mode Eval",stop4-start4
+    start5 = timeit.default_timer()
     MIN_X,MIN_Y=CG.minValueCalculation(Htree.hNodeList, Vtree.vNodeList,level)
+    stop5 = timeit.default_timer()
+    print"Location calculation", stop5-start5
+
+    #stop = timeit.default_timer()
 
     #print "minX", MIN_X
     #print "minY",MIN_Y
@@ -3823,7 +3843,7 @@ if __name__ == '__main__':
     Htree.setNodeId(Htree.hNodeList)
     Vtree.setNodeId(Vtree.vNodeList)
 
-
+    """
 
     print Htree.hNodeList
     f1 = open(testdir + '/' + testbase + "hNode.txt", 'wb')
@@ -3865,7 +3885,7 @@ if __name__ == '__main__':
                 k = j.cell.x, j.cell.y, j.getWidth(), j.getHeight(), j.cell.id, j.cell.type, j.nodeId
                 print "B",i.id,k
 
-
+    """
 
     def plotrectH( k,Rect_H,format): ###plotting each node after minimum location evaluation in HCS
         """
@@ -4854,10 +4874,13 @@ if __name__ == '__main__':
 
 
     #UPDATE(MIN_X, MIN_Y)
+    """
     if level==0:
         UPDATE_min(MIN_X, MIN_Y,format)
     else:
         UPDATE(MIN_X, MIN_Y,format)
+    """
+
 
 
 
