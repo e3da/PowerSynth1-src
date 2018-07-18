@@ -17,7 +17,6 @@ Successive_approximation_model=3
 MATLAB=4
 
 def perform_thermal_analysis(sym_layout, model=1):
-    ret = None
     if model == TFSM_MODEL:
         ret = tfsm_analysis(sym_layout)
     elif model == RECT_FLUX_MODEL:
@@ -180,8 +179,9 @@ def tfsm_analysis(sym_layout):
     tg.sublayer_features=sym_layout.module.sublayers_thermal
 
     res= solve_TFSM(tg, 1.0)
-    print res
     return res
+
+
 if __name__ == '__main__':
     from powercad.sym_layout.symbolic_layout import build_test_layout
     sym_layout = build_test_layout()

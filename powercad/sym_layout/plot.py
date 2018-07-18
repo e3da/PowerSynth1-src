@@ -11,18 +11,15 @@ import matplotlib.pyplot as plt
 import copy
 from matplotlib.patches import Rectangle, PathPatch, Circle, Arc
 from matplotlib.path import Path
-
 from powercad.sym_layout.svg import LayoutLine, LayoutPoint, find_layout_bounds
-
 from powercad.general.data_struct.util import Rect
-from _sqlite3 import Row
-
+from pandas import factorize
 # sxm - This function is only used in svg.py's main().
 def plot_svg_objs(layout):
-    print "plot_svg_objs() started"
+    #print "plot_svg_objs() started"
     ax = plt.subplot('111', adjustable='box', aspect=1.0)
     bounds = Rect(*find_layout_bounds(layout)) #sxm edit originally: bounds = Rect(*find_layout_bounds(layout))
-    
+
     for element in layout:
         if isinstance(element, LayoutLine):
             verts = [(element.pt1), (element.pt2)]
@@ -31,18 +28,18 @@ def plot_svg_objs(layout):
             col = '#A4A3A8'
             patch = PathPatch(path, edgecolor=col, lw=10)
             ax.add_patch(patch)
-            
+
     for element in layout:
         if isinstance(element, LayoutPoint):
             patch = Circle(element.pt, radius=bounds.width()/30.0)
             ax.add_patch(patch)
-            
+
     ax.axis([bounds.left, bounds.right, bounds.bottom, bounds.top])
     plt.show()
-    print "plot_svg_objs() completed."
+    #print "plot_svg_objs() completed."
 
 def plot_layout(sym_layout, filletFlag, ax = plt.subplot('111', adjustable='box', aspect=1.0), new_window=True, plot_row_col=False):
-    print "plot_layout() started."
+    #print "plot_layout() started."
     hlist = sym_layout.h_rowcol_list
     vlist = sym_layout.v_rowcol_list
     traces = sym_layout.all_trace_lines
@@ -58,7 +55,7 @@ def plot_layout(sym_layout, filletFlag, ax = plt.subplot('111', adjustable='box'
     ledge = sym_layout.module.substrate.ledge_width
     sub_rect = Rect(sub_l, 0.0, 0.0, sub_w)
     sub_rect.translate(-ledge, -ledge)
-    r = Rectangle((sub_rect.left, sub_rect.bottom), sub_rect.width(), sub_rect.height(), facecolor='#E6E6E6', edgecolor='#616161')
+    r = Rectangle((sub_rect.left, sub_rect.bottom), sub_rect.width(), sub_rect.height(), facecolor='#B87333', edgecolor='#616161')
     ax.add_patch(r)
 
     # Detect corners for filleting
@@ -78,17 +75,19 @@ def plot_layout(sym_layout, filletFlag, ax = plt.subplot('111', adjustable='box'
             plot = sym.has_rect
 
         if plot:
-            color = '#B6C2CF'
+            color = '#C0C0C0'
             rect = sym.trace_rect
-            r = Rectangle((rect.left, rect.bottom), rect.width(), rect.height(), alpha=0.5, facecolor=color, edgecolor='None')
+            r = Rectangle((rect.left, rect.bottom), rect.width(), rect.height(), alpha=1, facecolor=color, edgecolor=color,zorder=1)
             ax.add_patch(r)
 
     for lead in sym_layout.leads:
+        lead_label = lead.name
         rect = lead.footprint_rect
-        r = Rectangle((rect.left, rect.bottom), rect.width(), rect.height(), alpha=0.5, facecolor='#4DFF64', edgecolor=color)
+        r = Rectangle((rect.left, rect.bottom), rect.width(), rect.height(), alpha=0.5, facecolor='#00FF00', edgecolor=color,zorder=2)
         ax.add_patch(r)
         patch = Circle(lead.center_position, radius=0.1)
         ax.add_patch(patch)
+        ax.text(rect.left, rect.bottom, lead_label,fontweight='bold',fontsize=6)
     x_pos=[]
     y_pos=[]
     if len(sym_layout.devices)!=0:
@@ -96,23 +95,15 @@ def plot_layout(sym_layout, filletFlag, ax = plt.subplot('111', adjustable='box'
             dev_center=dev.center_position
             x_pos.append(dev_center[0])
             y_pos.append(dev_center[1])
-        x_num=x_pos.count(x_pos[0])
-        y_num=y_pos.count(y_pos[0])
 
-        '''
-        for row in np.arange(1,x_num,1):
-            print row
-            print enumerate(x_pos)
-        '''
         for dev in sym_layout.devices:
-            #die_label='die%s'%(sym_layout.devices[die_count].dv_index)
+            die_label=dev.name
             rect = dev.footprint_rect
-            r = Rectangle((rect.left, rect.bottom), rect.width(), rect.height(), alpha=0.5, facecolor='#2A3569', edgecolor=color)
+            r = Rectangle((rect.left, rect.bottom), rect.width(), rect.height(), alpha=0.5, facecolor='#0000FF', edgecolor=color,zorder=2)
             ax.add_patch(r)
             patch = Circle(dev.center_position, radius=0.1)
             ax.add_patch(patch)
-            #ax.text(rect.left, rect.bottom,die_label)
-            #die_count+=1
+            ax.text(rect.left, rect.bottom,die_label,fontweight='bold',fontsize=6)
     for wire in sym_layout.bondwires:
         for pt_index in xrange(len(wire.start_pts)):
             pt1 = wire.start_pts[pt_index]
@@ -121,7 +112,7 @@ def plot_layout(sym_layout, filletFlag, ax = plt.subplot('111', adjustable='box'
             codes = [Path.MOVETO, Path.LINETO]
             path = Path(verts, codes)
             col = '#FFFFBA'
-            patch = PathPatch(path, edgecolor=col, lw=2)
+            patch = PathPatch(path, edgecolor=col, lw=2,zorder=2)
             ax.add_patch(patch)
 
 #    for col in hlist:
@@ -283,7 +274,7 @@ def searchCorner(trace1, trace2, corneredTraces):
 
 def detect_corners_90(sym_layout2, ax):
     '''INNER CORNER DETECTION
-    @author: Shilpi Mukherjee 
+    @author: Shilpi Mukherjee
     @date: 30-JUN-2017
     This function detects inner corners on traces that connect orthogonally for a selected solution layout.
     It marks the corners with a fillet in the layout preview and saved solution window,
@@ -440,6 +431,9 @@ def detect_corners_90(sym_layout2, ax):
                     c = InnerCorner(i.trace1, i.trace2)  # create a new InnerCorner object so as not to overwite the previous InnerCorner object
                     addFillet(fillets, c, temp_x, temp_y, concavityQuadrant, gap)
         elif temp_y is None and temp_x is not None: # if temp_y is still None (but temp_x has been found), this is a sideways T-junction.
+            # Quang added: this must be a bug, if the logic go here, it wont know what is minGap...
+            minGap = 1 # minGap is the threshold below which fillet is not applied. It is the minimum gap between the leftmost(rightmost) edge of a horizontal trace and the leftmost(rightmost) edge of a vertical trace that forms a T-junction
+            # Quang finish adding # TODO: Shilpi makes sure and confirms this
             if (((round(i.trace1.top, 1) > round(i.trace2.bottom, 1)) & (round(i.trace1.top, 1) < round(i.trace2.top, 1)))) & (((round(i.trace1.bottom, 1) > round(i.trace2.bottom, 1)) & (round(i.trace1.bottom, 1) < round(i.trace2.top, 1)))):
                 temp_y = i.trace1.top
                 if round(temp_x, 1) == round(i.trace1.right, 1):
@@ -478,12 +472,12 @@ def detect_corners_90(sym_layout2, ax):
                     addFillet(fillets, c, temp_x, temp_y, concavityQuadrant, gap)
 
     # OUTPUT THE fillets[] LIST AND MARK THE FILLETS ON THE LAYOUT PREVIEW AND SOLUTION WINDOW
-    print "Inner Corners (90 degrees): "
-    print "Format: (x, y), fillet concavity quadrant, fillet radius, ..."
+    #print "Inner Corners (90 degrees): "
+    #print "Format: (x, y), fillet concavity quadrant, fillet radius, ..."
     for i in fillets:
         i.calcInnerFilletSpecs() # Find fillet/arc specifications
-        print (i.corner.x, i.corner.y), i.concavityQuadrant, i.radius, i.corner.trace1.top, i.corner.trace1.bottom, i.corner.trace1.left, i.corner.trace1.right, i.corner.trace2.top, i.corner.trace2.bottom, i.corner.trace2.left, i.corner.trace2.right
-        a = Arc((i.centerX, i.centerY), i.radius*2, i.radius*2, theta1=i.theta1, theta2=i.theta2, facecolor='#E6E6E6', edgecolor='red', linewidth=2)
+        #print (i.corner.x, i.corner.y), i.concavityQuadrant, i.radius, i.corner.trace1.top, i.corner.trace1.bottom, i.corner.trace1.left, i.corner.trace1.right, i.corner.trace2.top, i.corner.trace2.bottom, i.corner.trace2.left, i.corner.trace2.right
+        a = Arc((i.centerX, i.centerY), i.radius*2, i.radius*2, theta1=i.theta1, theta2=i.theta2, facecolor='#E6E6E6', edgecolor='red', linewidth=2,zorder=3)
         #ax.add_patch(r) # toggle comment to enable/disable rectangle markings
         ax.add_patch(a) # toggle comment to enable/disable fillet markings
 
@@ -516,7 +510,6 @@ def findGap(oc, innerFillets):
     for i in innerFillets:
         if ((oc.x == i.corner.x) and (i.corner.y-defaultGap < oc.y < i.corner.y+defaultGap)) or ((oc.y == i.corner.y) and (i.corner.x-defaultGap < oc.x < i.corner.x+defaultGap)):
             gap = max(abs(oc.x - i.corner.x), abs(oc.y - i.corner.y)) # or radius = i.radius
-            print gap
             break
     return gap
 
@@ -553,7 +546,7 @@ def detect_corners_270(sym_layout2, ax, innerFillets, supertraces):
     for i in sym_layout2.all_trace_lines:
         # enhances the outline of the traces (graphical purpose only)
         r2 = Rectangle((i.trace_rect.left, i.trace_rect.bottom), i.trace_rect.right - i.trace_rect.left, i.trace_rect.top - i.trace_rect.bottom, facecolor='grey',
-                      edgecolor='grey', fill=False)
+                      edgecolor='grey', fill=False,zorder=3)
         ax.add_patch(r2)
 
         oc = getOuterCorners(i) # Returns four OuterCorner objects for the given trace, i
@@ -574,12 +567,12 @@ def detect_corners_270(sym_layout2, ax, innerFillets, supertraces):
                 continue
 
     # MARK THE OUTER CORNERS WITH FILLETS WITH CUSTOMIZED ORIENTATION AND SIZE
-    print "Outer Corners (270 degrees):"
-    print "Format: ((x, y), fillet concavity quadrant, fillet size (default=1))"
+    # "Outer Corners (270 degrees):"
+    #print "Format: ((x, y), fillet concavity quadrant, fillet size (default=1))"
     for i in outerFillets:
         i.calcOuterFilletSpecs() # Find fillet/arc specifications; modify radius if needed (based on smallest feature size)
-        print ((i.corner.x, i.corner.y), i.concavityQuadrant, i.radius)
-        a = Arc((i.centerX, i.centerY), i.radius*2, i.radius*2, theta1=i.theta1, theta2=i.theta2, facecolor='#E6E6E6', edgecolor='blue', linewidth=2)
+        #print ((i.corner.x, i.corner.y), i.concavityQuadrant, i.radius)
+        a = Arc((i.centerX, i.centerY), i.radius*2, i.radius*2, theta1=i.theta1, theta2=i.theta2, facecolor='#E6E6E6', edgecolor='blue', linewidth=2,zorder=3)
         ax.add_patch(a) # toggle comment to enable/disable fillet markings
 
 ''' WORK IN PROGRESS

@@ -3,7 +3,7 @@
 import datetime
 import getpass
 import subprocess
-
+from powercad.general.settings.Error_messages import InputError
 from powercad.interfaces.Q3D.Q3DGeometry import Q3D_rect_script
 
 from powercad.interfaces.Q3D.Q3d_ipy_raw_script import *
@@ -116,7 +116,7 @@ class Q3D_ipy_script:
             add_net=Source_sink_parent.format(parent_net)
             self.script+=Source_Sink.format(sourceID,face1,sinkID,face2,add_net)
 
-    def analysis_setup(self,freq='100k',solve_field='False',max_pass=10,min_pass=10,min_conv=1,per_err=0.5,mesh_refine=30,add_C=False):
+    def analysis_setup(self,freq='100k',solve_field='False',max_pass=10,min_pass=10,min_conv=1,per_err=0.5,mesh_refine=30,add_C=False,add_DC=False):
         # set up RLC parasitic analysis with/without field extracted.
             # freq: a string value denote frequency of the setup suffixes: k,M,G....
             # solve_field: a boolean value if True, fields can be exported at the end of the analysis
@@ -126,12 +126,39 @@ class Q3D_ipy_script:
             # per_err:  percent error between 2 passes (if satisfy, it will count up number of successful passes. 
                       # The algorithm will stop if this count == min_conv
             # mesh_refine: percentage of mesh points will be added after each passes
-        if not(add_C):
-            self.script+=Analysis_Setup.format(freq,solve_field, max_pass, min_pass, min_conv, per_err, mesh_refine,'')
+        if not(add_C and add_DC):
+            self.script+=Analysis_Setup.format(freq,solve_field, max_pass, min_pass, min_conv, per_err, mesh_refine,'','')
         else:
             C_option=Add_cap_analysis.format(max_pass, min_pass, min_conv, per_err, mesh_refine)
             self.script += Analysis_Setup.format(freq, solve_field, max_pass, min_pass, min_conv, per_err, mesh_refine,C_option)
-        
+
+
+    def set_up_optimetric(self,name='ParametricSetup1',setup='Setup1',optim='ProdOptiSetupDataV2',variable_list=[],variable_bounds=[],sweep_mode='LIN',unit='mm'):
+        '''
+        :param variable_list: a string list for variable names
+        :param variable_bounds: a list of boundaries [min,max,step]
+        :param sweep_mode: LIN,LINC
+        :return:
+        '''
+        if len(variable_bounds)!=len(variable_list):
+            InputError('set up optimetric: variable bounds and variable list are mismatched')
+            return
+        variable=''
+        if sweep_mode=='LIN':
+            mode='mm'
+        else:
+            mode=''
+        for i in range(len(variable_list)):
+            bound = variable_bounds[i]
+            min, max , step = bound
+            if i != len(variable_list)-1:
+                variable += add_optimetric_variable.format(variable_list[i], min, max, step, unit, sweep_mode, ',',mode)
+            else:
+                variable += add_optimetric_variable.format(variable_list[i], min, max, step, unit, sweep_mode, '',mode)
+
+        self.script+=Optimetric.format(name,optim,setup,variable)
+    def analyze_optim(self):
+        self.script+=Solve_optimetric
     def analyze_all(self):
         # Run analysis
         self.script+=Analyze_all  
@@ -140,7 +167,7 @@ class Q3D_ipy_script:
         
         self.script+=Insert_Freq_sweep.format(start,stop,step)
         
-    def create_report(self,x_para='Freq',type='ACR',net_id='',source_id='',datatype="LastAdaptive",datatable_id=1):
+    def create_report(self,x_para='Freq',type='ACR',net_id='',source_id='',datatype="LastAdaptive",datatable_id=1,option='non-optim',param_family=[]):
         # Create a report for an analysis
             # x_para: parameter for the x component. Y components are normally analysis values
             # type: ACR ACL or C or DC values which we dont need here
@@ -148,13 +175,25 @@ class Q3D_ipy_script:
             # net_id: Name for the net_obj
             # datatype: "LastAdaptive" or "Sweep1"
             # datatable_id e.g DataTable1
-        if datatype=="LastAdaptive" or datatype == "Sweep1":
-            if type=='C':
-                self.script+=Create_Report_Cap.format(x_para,type,net_id,datatype,datatable_id)
-            else:
-                self.script+=Create_Report.format(x_para,type,net_id,source_id,datatype,datatable_id) 
-
-    def update_report(self,x_para='Freq',type='ACR',net_id='',source_id='',datatype="LastAdaptive",datatable_id=1):
+            # option: 'non-optim': not using optimetric
+            #         'optim': using optimetric
+            # param_family: list of parameter family used for optimetric only-- list element is a dict: {'name': ..., 'vaule':...}
+         if option=='non-optim':
+            if datatype=="LastAdaptive" or datatype == "Sweep1":
+                if type=='C':
+                    self.script+=Create_Report_Cap.format(x_para,type,net_id,datatype,datatable_id)
+                else:
+                    self.script+=Create_Report.format(x_para,type,net_id,source_id,datatype,datatable_id)
+         elif option=='optim':
+            if datatype=="LastAdaptive" or datatype == "Sweep1":
+                p_family=''
+                for param in param_family:
+                    p_family+=Optim_family.format(param['name'],param['value'],"mm")
+                if type=='C':
+                    self.script+=Optim_export_create_cap_report.format(datatable_id,datatype,p_family,datatype,net_id)
+                else:
+                    self.script+=Optim_export_create_report.format(datatable_id,datatype, p_family, type, net_id, source_id)
+    def update_report(self,x_para='Freq',type='ACR',net_id='',source_id='',datatype="LastAdaptive",datatable_id=1,option='non-optim',param_family=[]):
         # Add more traces to an existing report
             # x_para: parameter for the x component. Y components are normally analysis values
             # type: ACR ACL or C or DC values which we dont need here
@@ -162,17 +201,27 @@ class Q3D_ipy_script:
             # net_id: Name for the net_obj
             # datatype: "LastAdaptive" or "Sweep1"
             # datatable_id e.g DataTable1
-        if type=='C':
-            self.script+=Add_column_cap.format(x_para,type,net_id,datatype,datatable_id)
-        else:
-            self.script+=Add_column.format(x_para,type,net_id,source_id,datatype,datatable_id)        
-    
-    def export_report(self,data_name,out_path,out_name):
+        if option == 'non-optim':
+            if datatype == "LastAdaptive" or datatype == "Sweep1":
+                if type=='C':
+                    self.script+=Add_column_cap.format(x_para,type,net_id,datatype,datatable_id)
+                else:
+                    self.script+=Add_column.format(x_para,type,net_id,source_id,datatype,datatable_id)
+        elif option=='optim':
+            if datatype=="LastAdaptive" or datatype == "Sweep1":
+                p_family=''
+                for param in param_family:
+                    p_family+=Optim_family.format(param['name'],param['value'],"mm")
+                if type=='C':
+                    self.script+=Optim_update_cap_report.format(datatable_id,datatype,p_family,datatype,net_id)
+                else:
+                    self.script+=Optim_update_report.format(datatable_id,datatype, p_family, type, net_id, source_id)
+    def export_report(self,data_name=None,out_path=None,out_name=None,param_list=None,option='single'):
         # Collect data from q3d simulation for later analysis
             # data_name: Name of the created data
             # output_file: Link to output file
-        self.script+=Export_data.format(data_name,out_path,out_name)
-        
+            # outname: file's name
+            self.script+=Export_data.format(data_name,out_path,out_name)
         
     def set_params(self,name=None,value=None,choice=None,box=None,design_id=1):
         # initialize a new parameter name then set it to Q3d_Box 
@@ -202,12 +251,12 @@ class Q3D_ipy_script:
             box.z=name
             Add_params=Set_params_to_pos.format(box.obj_id,box.x,box.y,box.z)         
         self.script += Add_params    
-    def change_properties(self,name=None,value=None,design_id=1):
+    def change_properties(self,name=None,value=None,design_id=1,unit='mm'):
         # Change value of existed parameters
             # name: in string, this is the name of the parameter 
             # value: the numerical value of this parameter in mm
             # design_id: Current project e.g: Q3dDesign1
-        Change_params=Change_proprerties.format(design_id,name,value)
+        Change_params=Change_proprerties.format(design_id,name,value,unit)
         self.script +=Change_params     
 class Q3d_params:
     def __init__(self,q3d_designID,params_name,params_value,params_unit):
@@ -219,7 +268,10 @@ class Q3d_params:
 
 #-----------------------------------------
 if __name__ == '__main__':
+
+
     '''
+    # Test setup 1
     script1=Q3D_ipy_script('16.2','C:\Users\qmle\Desktop\Testing\Py_Q3D_test','test2','C:\Users\qmle\Desktop\Testing\Py_Q3D_test')
     Box1=Q3d_N_Gon_Box(20,20,0,8,1,20,'Box1')
     Box2=Q3d_N_Gon_Box(20,20,1,5,1,15,'Box2')
@@ -230,6 +282,8 @@ if __name__ == '__main__':
     script1.make()
     script1.build('C:\Users\qmle\workspace\Python_Q3d_model\IronPython\ipy64.exe')
     '''
+    '''
+    # Test setup 2
     script1 = Q3D_ipy_script('16.2', 'C:/Users/qmle/Desktop/Testing/Py_Q3D_test', 'test2',
                              'C:/Users/qmle/Desktop/Testing/Py_Q3D_test')
     Box1 = Q3d_box(0, 0, 0, 50, 60, 1, 'Box1')  # Define a box in Q3d with position + width, length ,thickness
@@ -250,3 +304,15 @@ if __name__ == '__main__':
     script1.add_script(Box5.get_script())  # Add box to Q3d project
     script1.make()  # Generate the script
     script1.build('C:/Users/qmle/workspace/Python_Q3d_model/IronPython/ipy64.exe')
+
+    '''
+
+    # Test setup 3
+
+    script1 = Q3D_ipy_script('16.2', 'C:/Users/qmle/Desktop/Testing/Py_Q3D_test', 'test2',
+                             'C:/Users/qmle/Desktop/Testing/Py_Q3D_test')
+
+    script1.set_up_optimetric(variable_list=['w1','w2'],variable_bounds=[[1,10,1],[2,5,1]])
+    param_family=[{'name':'w1','value':'10mm'},{'name':'w2','value':'10mm'}]
+    script1.create_report(net_id='test1',source_id='Source1',option='optim',param_family=param_family)
+    print script1.script

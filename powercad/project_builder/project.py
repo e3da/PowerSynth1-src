@@ -10,7 +10,7 @@ from powercad.design.module_data import ModuleData
 from powercad.general.settings.settings import DEFAULT_TECH_LIB_DIR
 
 class Project:
-    def __init__(self, name, directory, tech_lib_dir = DEFAULT_TECH_LIB_DIR, symb_layout=None):
+    def __init__(self, name, directory, tech_lib_dir = DEFAULT_TECH_LIB_DIR, netlist=None,symb_layout=None):
         """
         Keyword arguments:
             name -- project name
@@ -20,10 +20,13 @@ class Project:
             num_gen -- number of generations for optimization run
             deviceTable -- list of components in system
         """
+
+        self.netlist=netlist
         self.name = name
         self.directory = directory
         self.tech_lib_dir = tech_lib_dir
-        
+        self.tbl_bondwire_connect=None
+
         self.symb_layout = symb_layout
         self.module_data = ModuleData()
         

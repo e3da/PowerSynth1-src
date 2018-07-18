@@ -28,8 +28,9 @@ import os
 
 import networkx as nx
 
+from powercad.Spice_handler.spice_export.components import Resistor, Capacitor, Current_Source, Voltage_Source, SpiceNameError, \
+    SpiceNodeError
 from powercad.general.data_struct.util import SolveVolume
-from powercad.spice_export.components import Resistor,Capacitor, Current_Source, Voltage_Source, SpiceNameError, SpiceNodeError
 from powercad.thermal.fast_thermal import ThermalGeometry, DieThermal, TraceIsland, eval_island
 
 

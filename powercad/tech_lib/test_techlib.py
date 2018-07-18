@@ -78,8 +78,8 @@ def get_substrate():
 
 def get_substrate2():
     # name, isolation_properties, metal_properties, metal_thickness, isolation_thickness
-    isolation_props = MaterialProperties('MarkeTech AlN 160', 160.0, 740.0, 3250.0, None, 8.7, 2.8)
-    metal_props = MaterialProperties('Copper', 400.0, 386.0, 8020.0, 1.7e-8, None, None)
+    isolation_props = MaterialProperties('Al_N', 160.0, 740.0, 3250.0, None, 8.7, 2.8)
+    metal_props = MaterialProperties('copper', 400.0, 386.0, 8020.0, 1.7e-8, None, None)
     substrate = Substrate('Cu-AlN-Cu 8-25-8 mils', isolation_props, metal_props, 0.2, 0.64)
     return substrate
 
@@ -97,7 +97,7 @@ def get_sub_attach2():
 
 def get_baseplate():
     # properties
-    base_props = MaterialProperties('MarkeTech Mo70Cu Moly', 190.0, 385.0, 9700.0, 1.70e-8, None, 1.0)
+    base_props = MaterialProperties('copper', 190.0, 385.0, 9700.0, 1.70e-8, None, 1.0)
     baseplate = Baseplate(base_props)
     return baseplate
 

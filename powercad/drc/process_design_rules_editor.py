@@ -11,7 +11,6 @@ from PySide import QtGui
 from PySide.QtGui import QFileDialog
 
 from powercad.design.project_structures import ProcessDesignRules
-from powercad.general.settings.settings import LAST_ENTRIES_PATH
 from powercad.general.settings.save_and_load import load_file
 from powercad.project_builder.dialogs.process_design_rules_editor_ui import Ui_design_rule_dialog
 
@@ -54,11 +53,7 @@ class ProcessDesignRulesEditor(QtGui.QDialog):
             key.setText(str(rule_val))
             
     def import_design_rules(self):
-        try:
-            last_entries = load_file(LAST_ENTRIES_PATH)
-            prev_folder = last_entries[0]
-        except:
-            prev_folder = 'C://'
+        prev_folder = 'C://'
         # Open and parse a design rules CSV file
         design_rules_csv_file = QFileDialog.getOpenFileName(self, "Select Design Rules File", prev_folder, "CSV Files (*.csv)")
         csv_infile = open(os.path.abspath(design_rules_csv_file[0]))

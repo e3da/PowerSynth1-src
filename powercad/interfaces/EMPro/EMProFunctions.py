@@ -1,7 +1,11 @@
+
+empro_func='''
 import empro
 from empro import core, units, geometry
 from empro.core import Expression
 from empro.geometry import Vector3d
+
+
 
 """The following functions come from Keysight's EMPro Python Scripting Cookbook"""
 def makePolyLine(vertices, sketch=None, name=None):
@@ -220,7 +224,7 @@ def setRectangularSheetPort(component, width, zenith=(0,1,0)):
     """
 
     def cross(a,b):
-        '''Cross product of vectors a and b.'''
+        # Cross product of vectors a and b.
         return Vector3d(a.y * b.z - a.z * b.y,
                         a.z * b.x - a.x * b.z,
                         a.x * b.y - a.y * b.x)
@@ -241,3 +245,4 @@ def setRectangularSheetPort(component, width, zenith=(0,1,0)):
     component.extent.endPoint1Position = tail + offset
     component.extent.endPoint2Position = head + offset
     component.useExtent = True
+'''

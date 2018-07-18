@@ -24,10 +24,10 @@ class rect_q3d_box(Q3D_rect_script):
         self.set_size_xy(w, l) # in mm  
         self.dz=t # in mm     
     
-    def set_width(self,w):
+    def set_dx(self,w):
         self.dx=w # in mm
             
-    def set_length(self,l):
+    def set_dy(self,l):
         self.dy=l # in mm   
     
     def set_thickness(self,t):

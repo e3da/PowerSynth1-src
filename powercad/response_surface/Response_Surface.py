@@ -19,6 +19,8 @@ from RS_build_function import *
 from powercad.general.data_struct.Unit import Unit
 from powercad.general.settings.Error_messages import InputError,Notifier
 from powercad.parasitics.mdl_compare import trace_inductance
+from sklearn.kernel_ridge import KernelRidge
+from sklearn.svm import SVR
 from powercad.general.data_struct.Abstract_Data import *
 from powercad.general.data_struct.BasicsFunction import *
 from pyDOE import *
@@ -47,7 +49,7 @@ class RS_model:
         self.all_obj_data={} # Using object name as 
         self.all_mdl={}  # a library that links the mathematical model to each objective names
         self.opt_cond={} # This is a dictionary for all operating conditions: this includes frequency, temperature, and so on...
-        self.op_point=None # This is the selected operating point of the model. This can be used to predict  
+        self.op_point=None # This is the selected operating point of the model
         self.mode='single' # assume there is no sweeping condition at the beginning
 
     def set_mdl_info(self,info):
@@ -129,14 +131,13 @@ class RS_model:
                     doe_name+='_'+pnames+'_'+str(doe[index])
                     index+=1
                 self.generic_fnames.append(doe_name)    
-            print self.generic_fnames
         else:
             InputError('A Design of Experiment is not created yet')
     def set_obj_name(self,name):
         
         self.obj_name=name
         
-    def read_file(self,file_ext=None,mode=None,row=2,units=None,wdir=None):
+    def read_file(self,file_ext=None,mode=None,row=0,units=None,wdir=None):
         '''
         Read File to PowerSynth, assume the sweeping operating condition is on first column 
             File_ext: file extension e.g 'txt','csv',...
@@ -153,7 +154,6 @@ class RS_model:
                 all_sweep=[] 
                 keys=reader.fieldnames   # export all keys from the csv file
                 key_id, sweep_id,id =[0 for i in range(3)]
-                print sweep_id
                 for k in keys: 
                     if units[1] in k:
                         key_id=id
@@ -171,9 +171,8 @@ class RS_model:
                     all_rows.append(float(rows[col_key]))
                     all_sweep.append(float(rows[sweep_key]))
                     r1=self.unit.convert(col_pre)  # unit conversion ratio
-                    print r1
                     r2=self.sweep_unit.convert(sweep_pre) # sweep ratio
-                if mode=='single':   # Data collector will start at second row assume we only have 2 rows 
+                if mode=='single':   # Data collector will start at second row assume we only have 2 rows
                     data=all_rows[row]
                     self.op_point=all_sweep[row]*r2
                     self.input.append(data*r1) 
@@ -355,7 +354,7 @@ class RS_model:
                     if score>best_score[i]:
                         best_kernel[i]=k
                         best_score[i]=score
-                print 'score: ', best_score[i], 'best_k: ', best_kernel[i]    
+                #print 'score: ', best_score[i], 'best_k: ', best_kernel[i]
                 self.model[i]=SVR(kernel=best_kernel[i], degree=5, gamma='auto', coef0=0.0, tol=0.001, C=1000, epsilon=0.001, shrinking=True,
                                 cache_size=200, verbose=False, max_iter=-1)
                 self.model[i].fit(self.DOE,self.input[i])
@@ -381,6 +380,7 @@ class RS_model:
 
         elif mode=='Krigging':
             variogram=['linear','power','gaussian','spherical','exponential']
+            variogram=['spherical']
             best_score=[1000 for i in range(len(self.input))]    
             best_variogram=['' for i in range(len(self.input))]
             self.model=[None for i in range(len(self.input))]
@@ -399,10 +399,10 @@ class RS_model:
                             best_variogram[i]=v
                             best_score[i]=score
 
-                    print best_variogram[i]
+                    #print best_variogram[i]
                     OK=ok(data[:, 0], data[:, 1], self.input[i], variogram_model=best_variogram[i],
                          verbose=False, enable_plotting=False)
-                    print 'score: ', best_score[i], 'best_v: ', best_variogram[i]
+                    #print 'score: ', best_score[i], 'best_v: ', best_variogram[i]
 
                 else:
                     best_variogram[i]=func
@@ -418,7 +418,6 @@ class RS_model:
                 data = self.DOE
                 x,y,z=np.meshgrid(data[:, 0],data[:, 1],self.input[i])
                 f = interpolate.interp2d(x, y, z, kind= best_method)
-                print f
                 self.model[i] = f
 
 
@@ -449,7 +448,6 @@ class RS_model:
                     data= self.model[i].execute('points', row[0],row[1])
                     data=np.ma.asarray(data[0])
                     z.append(data[0])
-                print z
                 ax.scatter(self.DOE[:,0], self.DOE[:,1], z, c='r',s=10)
             elif mode=='Inter2D':
                 f=self.model[i]
@@ -475,8 +473,6 @@ class RS_model:
         title= 'width '+str(round(var[0],3))+' mm '+ ' length '+str(round(var[1],3))+' mm '
        
         # Draw predict data
-        print n_params
-        print var
         for j in range(n_params):
             params.append(np.ma.asarray((self.model[j].execute('points',var[0],var[1]))))
             #print params

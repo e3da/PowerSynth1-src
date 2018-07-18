@@ -153,13 +153,13 @@ def characterize_devices(sym_layout, temp_dir=settings.TEMP_DIR, conv_tol=1e-3):
             write_module_elmer_sif(dir_name, sif_name, data_name, mesh_name, materials,
                                    heat_flow, t_amb, bp_coeff, (dev_dim[0], dev_dim[1]), conv_tol)
             print "write_module_elmer_sif() completed; next: elmer_solve()"
-            print dir_name,sif_name,mesh_name
+            #print dir_name,sif_name,mesh_name
             elmer_solve(dir_name, sif_name, mesh_name)
             print 'Model Solved.'
             
             print 'Characterizing data...'
             data_path = os.path.join(dir_name, mesh_name, data_name+'.ep')
-            print data_path
+            #print data_path
             top_iso_z = 0.0
             found_iso = False
             for t, name in zip(ts, layer_names):
@@ -210,7 +210,7 @@ def characterize_devices(sym_layout, temp_dir=settings.TEMP_DIR, conv_tol=1e-3):
             # Write a cached copy of the characterization to file
             dims = [ws, ls, ts, lcs]
             cached_char = CachedCharacterization(sub_tf, tf, dims, materials, bp_coeff)
-            print os.path.join(settings.CACHED_CHAR_PATH,hash_id+'.p')
+            #print os.path.join(settings.CACHED_CHAR_PATH,hash_id+'.p')
             if not os.path.exists(settings.CACHED_CHAR_PATH):
                 os.makedirs(settings.CACHED_CHAR_PATH)
             f = open(os.path.join(settings.CACHED_CHAR_PATH,hash_id+'.p'), 'w')
@@ -224,7 +224,6 @@ def check_for_cached_char(data_path, hash_id):
     # Checks for cached characterization file
     # Check if any of the characterization files match
     fp = os.path.join(data_path,hash_id+'.p')
-    print fp
     if os.path.exists(fp):
         return fp
     else:
@@ -238,7 +237,6 @@ def gen_cache_hash(ws, ls, ts, materials, conv_coeff, heat_flow):
     data_string += str(materials)
     data_string += str(conv_coeff)
     data_string += str(heat_flow)
-    print data_string
     f = hashlib.sha256(data_string)
     hash = f.hexdigest()
     del f

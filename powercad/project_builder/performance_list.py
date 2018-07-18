@@ -6,9 +6,9 @@ Created on Apr 29, 2013
 
 from PySide import QtCore, QtGui
 from matplotlib.patches import Circle, Rectangle
-
-from powercad.sym_layout.symbolic_layout import ThermalMeasure, ElectricalMeasure
-
+import psidialogs
+from powercad.sym_layout.symbolic_layout import ThermalMeasure, ElectricalMeasure,SymLine,SymPoint
+from powercad.project_builder.proj_dialogs import Device_states_dialog
 class PerformanceItem(object):
     def __init__(self, PerfUI, measure, row_item):
         self.PerfUI = PerfUI
@@ -38,7 +38,7 @@ class PerformanceItem(object):
 
         self.table.removeRow(self.row_index())
         self.PerfUI.perf_items.remove(self)
-        
+        self.PerfUI.refresh_window()
     def row_index(self):
         return self.table.row(self.row_item)
         
@@ -53,16 +53,62 @@ class PerformanceListUI(object):
         self.parent = parent
         self.ui = self.parent.ui
         self.perform_devices = [] # used to temporarily store picked devices/leads
+        self.perform_devices_pins=[] # used to temporarily map to the picked devices D S or G
         self.perform_lines = [] # used to temp store picked lines
         self.perf_items = []
-        
+        self.device_states_df=None
         # Connect Actions
+        self.ui.btn_setup_device_state.pressed.connect(self.open_device_state_dialog)
         self.ui.btn_perform_addPerformance.pressed.connect(self.add_performance)
         self.ui.txt_perform_name.textChanged.connect(self.populate_cmb_elec_therm)
         self.ui.cmb_perform_elecTherm.currentIndexChanged.connect(self.populate_cmb_type)
         self.ui.cmb_perform_type.currentIndexChanged.connect(self.disp_perform_step2)
         self.ui.cmb_thermal_model.currentIndexChanged.connect(self.disp_perform_step3)
         self.parent.symb_canvas[self.parent.MEASURES_PLOT].mpl_connect('pick_event', self.performance_pick)
+        self.ui.tbl_performance.pressed.connect(self.show_performance)
+
+    def refresh_window(self):
+        all_points = self.parent.project.symb_layout.points
+        all_lines = [x for x in self.parent.project.symb_layout.all_sym if isinstance(x, SymLine)]
+        all_traces = [x for x in all_lines if not (x.wire)]
+        all_elements = all_traces+ all_points
+        for e in all_elements:
+            self.parent.patch_dict.get_patch(e, 3).set_facecolor(self.parent.default_color)
+        self.parent.symb_canvas[3].draw()
+
+
+    def show_performance(self):
+        self.refresh_window()
+        all_measures=self.parent.project.symb_layout.perf_measures
+        all_points =self.parent.project.symb_layout.points
+        all_lines = [x for x in self.parent.project.symb_layout.all_sym if isinstance(x,SymLine)]
+        all_traces = [x for x in all_lines if not(x.wire)]
+        for i in range(len(all_measures)):
+            row = self.ui.tbl_performance.currentRow()
+            if row == i:
+                measure = all_measures[i]
+
+                if isinstance(measure,ElectricalMeasure):
+                    if measure.measure==3:
+                        all_names = [x.name for x in measure.lines if not(x.wire)]
+                        for line in all_traces:
+                            if line.name in all_names:
+                                self.parent.patch_dict.get_patch(line, 3).set_facecolor('#00FF00')
+                    else:
+                        for device in all_points:
+
+                            if device.name == measure.pt1.name or device.name==measure.pt2.name:
+                                self.parent.patch_dict.get_patch(device, 3).set_facecolor('#00FF00')
+                elif isinstance(measure,ThermalMeasure):
+                    all_names = [x.name for x in measure.devices]
+                    for device in all_points:
+                        if device.name in all_names:
+                            self.parent.patch_dict.get_patch(device, 3).set_facecolor('#00FF00')
+        self.parent.symb_canvas[3].draw()
+    def open_device_state_dialog(self):
+        device_state=Device_states_dialog(self.parent,self)
+        device_state.exec_()
+        self.ui.btn_perform_addPerformance.setEnabled(True)
 
     def electrical_model_options(self):
         if self.ui.cmb_elec_model.currentText()=='Matlab':
@@ -81,9 +127,13 @@ class PerformanceListUI(object):
                 print "successfully open new dialog"
 
     def populate_cmb_elec_therm(self):
+        self.refresh_window()
+        self.ui.tbl_performance.setEnabled(False)
+
         if self.ui.txt_perform_name.text() == '':
             self.ui.cmb_perform_elecTherm.clear()
             self.ui.cmb_perform_type.clear()
+            self.ui.tbl_performance.setEnabled(True)
         elif self.ui.cmb_perform_elecTherm.currentText() == "":
             self.ui.cmb_perform_elecTherm.addItem("Select..")
             self.ui.cmb_perform_elecTherm.addItem("Electrical")
@@ -106,14 +156,15 @@ class PerformanceListUI(object):
         perf_text = self.ui.cmb_perform_type.currentText()
         if perf_text != "Select..":
             self.ui.lbl_sel_electrical_model.setEnabled(True)
+            self.ui.lbl_sel_thermal_model.setEnabled(True)
             self.ui.lbl_perform_step3.setEnabled(True)
             self.ui.cmb_thermal_model.setEnabled(True)
             self.ui.cmb_elec_model.setEnabled(True)
             if self.ui.cmb_perform_elecTherm.currentText() == "Electrical":
                 if perf_text == "Resistance" or perf_text == "Inductance":
-                    self.ui.lbl_perform_step3.setText("Step 3:Select two devices/leads on the right to define path.")
+                    self.ui.lbl_perform_step3.setText("Step 3: Select two devices/leads on the right to define path.")
                 elif perf_text == "Capacitance":
-                    self.ui.lbl_perform_step3.setText("Step 3:Select one or more traces (lines) on right for capacitance\n measurement.")
+                    self.ui.lbl_perform_step3.setText("Step 3: Select one or more traces (lines) on right for capacitance\n measurement.")
             elif self.ui.cmb_perform_elecTherm.currentText() == "Thermal":
                 self.ui.lbl_perform_step3.setText("Step 3:Select device(s) on the right to include in measurements.")
         else:
@@ -147,7 +198,7 @@ class PerformanceListUI(object):
             elif perf_desc == "Capacitance":
                 self._handle_cap(event)
             self.parent.symb_canvas[3].draw() # redraw
-                
+
     def _handle_thermal_res_ind(self, event):
         if isinstance(event.artist, Circle):
             # color the object
@@ -159,10 +210,14 @@ class PerformanceListUI(object):
                 # set back to default color
                 event.artist.set_facecolor(self.parent.default_color)
                 # remove object from performance list
+                id = self.perform_devices.index(self.parent.patch_dict.get_layout_obj(event.artist))
+                self.perform_devices_pins.remove(id)
                 self.perform_devices.remove(self.parent.patch_dict.get_layout_obj(event.artist))
+
             else:
                 layout_pt = self.parent.patch_dict.get_layout_obj(event.artist)
                 add_pt = True
+
                 # only allow devices if measuring thermal
                 if self.ui.cmb_perform_elecTherm.currentText() == "Thermal" and (not layout_pt.is_device()):
                     add_pt = False
@@ -173,6 +228,14 @@ class PerformanceListUI(object):
             
             perf_type = self.ui.cmb_perform_type.currentText()
             if perf_type == "Resistance" or perf_type == "Inductance":
+                if layout_pt.is_device():
+                    if layout_pt.is_diode():
+                        type=psidialogs.choice(choices=['Anode','Cathode'],message="Select the device pin",title="Select one choice only!!")
+                    elif layout_pt.is_transistor():
+                        type=psidialogs.choice(choices=['D','S','G'],message="Select the device pin",title="Select one choice only!!")
+                    self.perform_devices_pins.append(type)
+                else:
+                    self.perform_devices_pins.append('Lead')
                 # only keep two objects (remove first object if necessary)
                 if len(self.perform_devices) > 2:
                     self.parent.patch_dict.get_patch(self.perform_devices[0], 3).set_facecolor(self.parent.default_color)
@@ -180,22 +243,26 @@ class PerformanceListUI(object):
                 # if two are selected, move to set 3
                 elif len(self.perform_devices) == 2:
                     self.ui.lbl_perform_step3.setEnabled(True)
-                    self.ui.btn_perform_addPerformance.setEnabled(True)
+                    self.ui.btn_setup_device_state.setEnabled(True)
                 # if there are less than 2, unenable step 3
                 else:
                     self.ui.lbl_perform_step3.setEnabled(False)
+                    self.ui.btn_setup_device_state.setEnabled(False)
+
                     self.ui.btn_perform_addPerformance.setEnabled(False)
             elif self.ui.cmb_perform_elecTherm.currentText() == "Thermal":
                 # if anything is selected, move to step 3
                 if len(self.perform_devices) > 0:
                     self.ui.lbl_perform_step3.setEnabled(True)
                     self.ui.btn_perform_addPerformance.setEnabled(True)
+
                 # if nothing is selected, unenable step 3
                 else:
                     self.ui.lbl_perform_step3.setEnabled(False)
+
                     self.ui.btn_perform_addPerformance.setEnabled(False)
                     # print self.perform_devices
-    
+
     def _handle_cap(self, event):
         if isinstance(event.artist, Rectangle):
             layout_line = self.parent.patch_dict.get_layout_obj(event.artist)
@@ -249,11 +316,10 @@ class PerformanceListUI(object):
                 print "Error: Switching frequency must be greater than zero"
                 return 1
             # create performace measure
-            print model
             if measure == ElectricalMeasure.MEASURE_CAP:
                 performance_measure = ElectricalMeasure(None,None,measure,freq,self.ui.txt_perform_name.text(),self.perform_lines,model)
             else:
-                performance_measure = ElectricalMeasure(self.perform_devices[0],self.perform_devices[1],measure,freq,self.ui.txt_perform_name.text(),None,model)
+                performance_measure = ElectricalMeasure(pt1=self.perform_devices[0],pt2=self.perform_devices[1],measure=measure,freq=freq,name=self.ui.txt_perform_name.text(),lines=None,mdl=model,src_sink_type=self.perform_devices_pins,device_state=self.device_states_df)
         elif self.ui.cmb_perform_elecTherm.currentText() == "Thermal":
             # get type
             # get type
@@ -298,9 +364,22 @@ class PerformanceListUI(object):
         # uncolor everything
         for device in self.perform_devices:
             self.parent.patch_dict.get_patch(device, 3).set_facecolor(self.parent.default_color)
+            self.perform_devices=[]
         for line in self.perform_lines:
             self.parent.patch_dict.get_patch(line, 3).set_facecolor(self.parent.default_color)
+            self.perform_lines=[]
         self.parent.symb_canvas[3].draw()
+        # Reset everything
+        self.ui.lbl_perform_step3.setEnabled(False)
+        self.ui.cmb_thermal_model.setEnabled(False)
+        self.ui.cmb_elec_model.setEnabled(False)
+        self.ui.lbl_sel_electrical_model.setEnabled(False)
+        self.ui.lbl_perform_step3.setEnabled(False)
+        self.ui.lbl_perform_step4.setEnabled(False)
+        self.ui.btn_perform_addPerformance.setEnabled(False)
+        self.ui.btn_setup_device_state.setEnabled(False)
+        self.ui.lbl_perform_step3.setText("Step 3:  Select Devices/Leads.")
+        self.ui.tbl_performance.setEnabled(True)
 
     def load_measures(self):
 
@@ -317,3 +396,6 @@ class PerformanceListUI(object):
             
             perf_item = PerformanceItem(self, measure, self.ui.tbl_performance.item(row,0))
             self.perf_items.append(perf_item)
+
+    def show_selected(self):
+        print self.ui.tbl_performance

@@ -6,7 +6,7 @@ Created on Jul 23, 2012
 
 import math
 from math import fabs
-
+from scipy.interpolate import interp1d
 LOWEST_ASPECT_RES = 1
 LOWEST_ASPECT_IND = 1
 
@@ -22,10 +22,10 @@ def trace_resistance(f, w, l, t, h, p=1.724e-8):
     # p: Ohm*meter (trace resistivity)
     w = fabs(w)
     l = fabs(l)
-    '''
-    if w > l*LOWEST_ASPECT_RES:
-        w = l*LOWEST_ASPECT_RES
-    '''
+    f=f*1000
+    #if w > l*LOWEST_ASPECT_RES:
+    #   w = l*LOWEST_ASPECT_RES
+
     u0 = 1.257e-6               # permeability of vaccum;
                
     t1 = t*1e-3                 # transfer to unit in m;
@@ -40,8 +40,14 @@ def trace_resistance(f, w, l, t, h, p=1.724e-8):
     comp1 = (l1*R0)/(2.0*math.pi*math.pi*w1)
     comp2 = math.pi + math.log((4.0*math.pi*w1)/t1)
     # resistance calculation:
-    r = LR*comp1*comp2*1e3 #+#Rg # unit in mOhms
-    
+    #print 'RG',Rg
+    Rac = (LR*comp1*comp2)*1e3# unit in mOhms
+    Rdc = p*l1/w1/t1*1e3
+    Rdc_1=p/w1/t1/1e3
+    #print 'Rac',Rac,'Rdc',Rdc,'w_rdc',Rdc_1
+    #r1=math.sqrt(Rac+Rdc_1) # RAC <0 sometimes
+    r=math.sqrt(Rac**2+Rdc**2)
+    #print "r and rw",r,r1
     # Zihao's old code (this may be wrong, not sure) -Brett
     # r = LR*(1/math.pi + 1/math.pow(math.pi, 2)*math.log(4*math.pi*w1/t1))*math.sqrt(math.pi*u0*f*p)/(math.sqrt(2)*w1)*l1*1e3 # unit in mOhms
     
@@ -68,10 +74,11 @@ def trace_inductance(w, l, t, h):
     # and return a larger worst case value.
     w = fabs(w)
     l = fabs(l)
-    '''
-    if w > l*LOWEST_ASPECT_IND:
-        w = l*LOWEST_ASPECT_IND
-    '''
+    if l ==1.0:
+        l=15.0
+    #if w > l*LOWEST_ASPECT_IND:
+    #    w = l*LOWEST_ASPECT_IND
+
     w1 = w*1e-3                     # transfer to unit in m;
     h1 = h*1e-3                     # transfer to unit in m;
     t1 = t*1e-3                     # transfer to unit in m;
@@ -103,7 +110,6 @@ def trace_inductance(w, l, t, h):
         return Ind
     # averaged model for inductance calculation:
     Ind = 0.5*(Ind_0 + Ind_1)
-
     if Ind <= 0.0:
         if Ind_0 > 0.0:
             Ind = Ind_0
@@ -221,11 +227,13 @@ def wire_inductance(l, r):
     # r: mm (wire radius)
     l1 = l*1e-3
     r1 = r*1e-3
+    l2 = l/10
+    r2 = r/10
     u_0 = 4.0*math.pi*1e-7
-    
+
     Ind = u_0*l1/(2.0*math.pi)*(math.log(2.0*l1/r1) - 1.0)
     Ind *= 1e9
-    
+    Ind=4.33
     if Ind <= 0.0:
         Ind = 1e-6
     return Ind
@@ -246,9 +254,49 @@ def wire_partial_mutual_ind(l, r, d):
     
     if m <= 0.0:
         m = 0.00001
-
     return m
 
+def wire_resistance1(f, l, r, p=1.724e-8):
+    # f: Hz (frequency)
+    # l: mm (length of wires)
+    # r: mm (radius of wires)
+    # p: Ohm*meter (trace resistivity)
+    f=f*1000
+    l1 = l * 1e-3
+    r1 = r * 1e-3
+
+    u0 = 1.2566e-6  # permeability in the henries per meter;
+    s_d=math.sqrt(p/(math.pi*f*u0))
+
+    A=math.pi*r1**2
+
+    r = p* l1 / A
+    r_w=1000*r
+    #r_w=2.5
+    return r_w
+def wire_resistance2(f, l, r, p=1.724e-8):
+    # f: Hz (frequency)
+    # l: mm (length of wires)
+    # r: mm (radius of wires)
+    # p: Ohm*meter (trace resistivity)
+    f=f*1000
+    l1 = l * 1e-3
+    r1 = r * 1e-3
+
+    u0 = 1.2566e-6  # permeability in the henries per meter;
+    s_d=math.sqrt(p/(math.pi*f*u0))
+    Aeff=math.pi*r1**2-math.pi*(r1-s_d)**2
+    r_w=p*l1/Aeff
+    #r_w=1000*r
+    #r_w=0.273*math.sqrt(f/10000)*(l/5.457)
+    r=1.25143
+    #r_w=1e-6
+    return r
+
+def wire_group(mdl,l):
+    inter_R = interp1d(mdl['length'], mdl['R'], kind='linear')
+    inter_L = interp1d(mdl['length'], mdl['L'], kind='linear')
+    return inter_R(l),inter_L(l)
 #-------------------------------------------------------------
 #----------- single wire-bond resistance----------------------
 #-------------------------------------------------------------
@@ -257,6 +305,7 @@ def wire_resistance(f, l, r, p=1.724e-8):
     # l: mm (length of wires)
     # r: mm (radius of wires)
     # p: Ohm*meter (trace resistivity)
+
     f=f*1000
     #l1 = (2 + d/8 + math.sqrt(4 + math.pow((d*7/8),2)))*1e-3
     l1 = l*1e-3
@@ -272,112 +321,8 @@ def wire_resistance(f, l, r, p=1.724e-8):
     
     A_eff = math.pi*(2.0*r1*d1 - d1*d1)*(1.0 + c)
     
-    r_w = 1e3*l1/(A_eff*b) # in mOhms
-    
+    r_w = 1000*l1/(A_eff*b) # in mOhms
     if r_w <= 0.0:
         r_w = 1e-6
-    
+
     return r_w
-
-#-------------------------------------------------------------
-#----------- unit tests for Zihao's models -------------------
-#-------------------------------------------------------------
-
-# def unit_test_ind_res():
-#     ''' ---------------------------------------UNIT TESTING---------------------------------------------------------------------------------------------------------------'''
-#     ''' Quang: This is the unit test for each parasitic model... I will follow Zihao's thesis
-#         I will automate the simulation in ANSYS Q3D by using some macro script so first you need some set up to be done
-#         The script I chose is written in IronPython so if you have ANSYS on your PC navigate to this folder:  
-#         C:\Program Files\AnsysEM\AnsysEM16.2\Win64\common\IronPython for convenience you can add this to the PATH variable 
-#         The exe that we use would be ipy64.exe '''
-#     '''Note: 
-#     1. To improve the accuracy of FEM I have create a setup in Powercad->Q3D automate->Parasistic_Zihao_test oModule.InsertSetup...
-#        For 72 data points, the simulations will take approximately 12 hours to complete...
-#     2. Please read through all comments... understand how it works'''
-# 
-#     DataPath='C:\Users\sxm063\Desktop\Testing\Test_parasitic models\Analysis_Running_All'  # data export path where this analysis will be performed ... Data will also be exported into this directory
-#     ipy64='ipy64'                                                                        # name of the exe will be called in cmd... I added it to path variable 
-#     ipy64 = 'C:\Program Files\AnsysEM\AnsysEM16.2\Win64\common\IronPython\ipy64.exe'     # In the case that you dont know how to change path variable use this method
-#     '''--------------------------------------------------------------------------------------------------------------------------------------------------------------------'''    
-#     '''Material layer : Baseplate AlN , Metal: Cu, isolation: AlN---------------------------------------------------------------------------------------------------------'''
-#     user_name='sxm063'                         # PC username please change accordingly
-#     thickness_default=0.4                    # metal thickness
-#     Freq_default=300 # units= Khz            # test frequency
-#     height_encoded=0
-#     # list of traces dimension to test
-#     height_list=[0.2,0.4,0.8]                # separation from ground plane
-#     width_list=[1,4,7,10]                    # trace width 
-#     length_list=[10,20,30,40,50,60]          # trace length
-#     # initiate some blank list to draw graphs
-#     rac_q3d=[]                               # AC Resistance from Q3d
-#     rac=[]                                   # AC Resistance from models
-#     rdc_q3d=[]                               # DC Resistance from Q3d
-#     rdc=[]                                   # DC Resistance from models
-#     lac_q3d=[]                               # AC Inductance from Q3d
-#     lac=[]                                   # AC Inductance from models
-#     ldc_q3d=[]                               # DC Inductance from Q3d
-#     ldc=[]                                   # DC Inductance from models
-#     test_case=[0.8,10]                       # These are test_cases in Zihao thesis page 54... he fixes width, length and compare results at different length  
-#     test = 'ind'                             # change to res, ind or cap for different analysis and plots
-#     cl_data=False                            # Running simulation only if True, set to False to draw graph from data ... 
-#     for height in height_list:               # separation from ground plane
-#         height_encoded+=1                    # Since we cant name a file name with float number, height will be encoded from low to high 0 for 0.2 and 3 for 0.8
-#         for length in length_list:           # trace length
-#             for width in width_list:         # trace width 
-#                 proj_name='W'+str(width)+'_L'+str(length)+'_H'+str(height_encoded)+'_F'+str(Freq_default)        # encoding new project name from specs
-#                 trace_z=height+4.22                                                                              # z dim of trace--- follow zihao 's setup in thesis
-#                 FilePath=os.path.join(DataPath,proj_name+'.py')                                                  # create file name 
-#                 CSVfile=os.path.join(DataPath,proj_name+'.csv')                                                  # create csv name                                                                                  #print file name
-#                 if os.path.isfile(FilePath) and os.path.isfile(CSVfile) and not(cl_data):                                         # check if the macro script existed and run before (so that csv created too)
-#                     '''Collect data to draw graph'''
-#                     with open(CSVfile) as csv_file:                                                              # When open csv file 
-#                         reader=csv.DictReader(csv_file)                                                          # create a dictionary object
-#                         for row in reader:                                                                       # read the csv file
-#                             if height==test_case[0] and width==test_case[1] :                                    # selectively collect data for graohs 
-#                                 if test=='res':                                                                  # AC Resistance analysis
-#                                     try:
-#                                         rac_q3d.append(row['ACR(Trace:Source1,Trace:Source1) [uOhm]'])           # Read value to list
-#                                     except:
-#                                         res=float(row['ACR(Trace:Source1,Trace:Source1) [mOhm]'])*1e3            # different in unit checker
-#                                         rac_q3d.append(str(res))                                                 # add value to list                  
-#                                     rac.append(trace_resistance(300000, width, length, thickness_default, height, 2.65e-8)*1e3)
-#                                 elif test=='ind':                                                                # AC Inductance analysis   
-#                                     lac_q3d.append(row['ACL(Trace:Source1,Trace:Source1) [nH]'])                 # add simulation  data to list  
-#                                     lac.append(trace_inductance(width, length, thickness_default, height))       # add model's data to list for   
-# 
-#                             '''
-#                             rdc_q3d.append(row['DCR(Trace:Source1,Trace:Source1) [uOhm]'])    # Read value to list
-#                             lac_q3d.append(row['ACL(Trace:Source1,Trace:Source1) [nH]'])      # Read value to list
-#                             ldc_q3d.append(row['DCL(Trace:Source1,Trace:Source1) [nH]'])      # Read value to list
-#                             '''
-#                 else:                                                                                           # we need to run simulation again if the data not existed in the directory
-#                     '''ANSYS Q3D run in background if FilePath is not existed'''
-#                     Generate_Zihao_Thesis_Q3D_Analysis_Resistance_and_Inductance(user_name,proj_name,height,trace_z,width,length,thickness_default,Freq_default,DataPath) # calling ANSYS Q3D
-#                     args=[ipy64,FilePath]
-#                     p = subprocess.Popen(args, shell=True,stdout=subprocess.PIPE)
-#                     stdout, stderr = p.communicate()   
-# 
-#     if test=='res':
-#         fig=plt.figure()
-#         RL= fig.add_subplot(1,1,1)
-#         RL.plot(length_list,rac,color='green',ls='-',lw=3)         # Results from model
-#         RL.plot(length_list,rac_q3d,ls='-',color='blue',lw=3)    # Results from Q3D
-#         plt.title('h='+str(test_case[0]) + ' & w=' + str(test_case[1]))
-#         plt.ylabel('Resistance(uohm)')
-#         plt.xlabel('legnth(mm)')
-#         plt.show() 
-#     elif test=='ind':
-#         fig=plt.figure()
-#         RL= fig.add_subplot(1,1,1)
-#         RL.plot(length_list,lac,color='red',ls='-',lw=3)         # Results from model
-#         RL.plot(length_list,lac_q3d,ls='-',color='blue',lw=3)      # Results from Q3D
-#         plt.title('h='+str(test_case[0]) + ' & w=' + str(test_case[1]))
-#         plt.ylabel('Inductance(nH)')
-#         plt.xlabel('legnth(mm)')
-#         plt.show() 
-#         
-#         
-#         
-#if __name__ == "__main__":
-#     unit_test_ind_res()
-print trace_resistance(4.1659e9,2,123,0.0347,1.4986)
