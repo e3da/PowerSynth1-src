@@ -70,7 +70,7 @@ class tile:
     are explicitly defined, everything else being implicitly defined by neighbors
     """
 
-    def __init__(self, north, east, south, west, hint, cell,name=None,nodeId=None):
+    def __init__(self, north, east, south, west, hint, cell,name=None,nodeId=None,voltage=None):
         self.NORTH = north #This is the right-top pointer to the rightmost cell on top of this cell
         self.EAST = east #This is the top-right pointer to the uppermost cell to the right of this cell
         self.SOUTH = south #This is the left-bottom pointer to the leftmost cell on the bottom of this cell
@@ -78,6 +78,7 @@ class tile:
         self.HINT = hint #this is the pointer to the hint tile of where to start looking for location
         self.cell = cell
         self.nodeId=nodeId
+        self.voltage=voltage
 
     def printNeighbors(self, printX = False, printY = False, printType = False):
         if self.NORTH is not None: print "N", self.NORTH.cell.printCell(printX, printY, printType)
@@ -3436,7 +3437,26 @@ class Tree():
         for rect in node.boundaries:
             rect.nodeId=node.id
 
+###################################################
+class Rectangle():
 
+    def __init__(self,x,y,w,h,type,parent=None):
+        self.x1=x
+        self.y1=y
+        self.x2=self.x1+w
+        self.y2=self.y1+h
+        self.type=type
+        self.parent=parent
+
+    def contains(self, b):
+        return not (self.x1 > b.x2 or b.x1 > self.x2 or b.y1 > self.y2 or self.y1 > b.y2)
+
+    #self.left > rect.right or rect.left > self.right or rect.bottom > self.top or self.bottom > rect.top
+    def getParent(self):
+        return self.parent
+
+
+    ##############################################
 
 ########################################################################################################################
 if __name__ == '__main__':
@@ -3617,7 +3637,7 @@ if __name__ == '__main__':
 
         testbase = os.path.basename(testfile[:index_of_dot])  # extracting basename from path
         testdir = os.path.dirname(testfile)  # returns the directory name of file
-        #print testbase
+        #print testdir
         #directory = testdir + '/' + 'Mode-' + str(level)
         #if not os.path.exists(directory):
             #os.makedirs(directory)
@@ -3667,6 +3687,7 @@ if __name__ == '__main__':
 
         #Type=
     #start1 = timeit.default_timer()
+
     while(len(Input)>0):
         inp=Input.pop(0)
         #print inp
@@ -3772,6 +3793,7 @@ if __name__ == '__main__':
             #ParentH.insert(inp[0], x1, y1, x2, y2, inp[5], inp[6])
             ParentH.insert(start, int(inp[1]), int(inp[2]), int(inp[3]), int(inp[4]), inp[5], inp[6])
 
+
     stop2 = timeit.default_timer()
     print "CS", stop2 - start2
     Htree.setNodeId1(Htree.hNodeList[0])
@@ -3799,24 +3821,349 @@ if __name__ == '__main__':
     #print "N",N
     stop3 = timeit.default_timer()
     print "constraint setup",stop3-start3
-    if level==2 or 3:
+
+    Voltage = {}
+    #self.voltage_constraint = {}
+    with open(testdir+ '/' + 'Voltage-info.csv', 'rb') as csvfile:
+        csvreader = csv.reader(csvfile)
+
+        # extracting field names through first row
+        fields = csvreader.next()
+
+        # extracting each data row one by one
+        i = 0
+        for row in csvreader:
+            i += 1
+            if row[0] in (None, ""):
+                break
+            # if row[2]!=
+            else:
+                Voltage[(int(row[0]), int(row[1]))] = int(row[2])
+        '''
+        i += 2
+        j = 0
+        for row in csvreader:
+            # print j,i
+            j += 1
+
+            while j <= i + 1:
+                j += 1
+                continue
+            # print j,row
+
+            if row[0] == 'V':
+                continue
+
+            else:
+                #print row
+                self.voltage_constraint[int(row[0])] = int(row[1])
+            # print row[0],row[1],row[2]
+        '''
+    # print i,j,Voltage,self.voltage_constraint
+    # RECT_H=[]
+        
+        ################################################# (Finding connected components)
+        Rectangles_H = []
+        # for i in Htree.hNodeList[0]:
+        for j in Htree.hNodeList[0].stitchList:
+            # k = j.cell.x, j.cell.y, j.getWidth(), j.getHeight(), j.cell.id, j.cell.type, j.nodeId
+            if j.cell.type != "EMPTY":
+                Rect = Rectangle(j.cell.x, j.cell.y, j.getWidth(), j.getHeight(), j.cell.type)
+                if Rect not in Rectangles_H:
+                    Rectangles_H.append(Rect)
+                    # print Rect.type
+
+        #print len(Rectangles_H)
+        Rectangles_H.sort(key=lambda cc: cc.y1)
+        # Rectangles_H.reverse()
+        # Rectangles_H.sort(key=lambda cc: cc.x1)
+        for i in range(len(Rectangles_H)):
+            for j in range(len(Rectangles_H)):
+                # if Rectangles_H[i]==Rectangles_H[j]:
+                # continue
+                # else:
+                if Rectangles_H[i].contains(Rectangles_H[j]) and Rectangles_H[i].type == Rectangles_H[j].type:
+                    if Rectangles_H[i].parent == None and Rectangles_H[j].parent == None:
+                        Rectangles_H[i].parent = Rectangles_H[i]
+                        Rectangles_H[j].parent = Rectangles_H[i]
+                    elif Rectangles_H[i].parent == None and Rectangles_H[j].parent != None:
+                        Rectangles_H[i].parent = Rectangles_H[j].parent
+                    elif Rectangles_H[i].parent != None and Rectangles_H[j].parent == None:
+                        Rectangles_H[j].parent = Rectangles_H[i].parent
+                # else:
+                # Rectangles_H[i].parent = Rectangles_H[i]
+        # print len(Rectangles_H)
+
+        Parent_List = []
+        for i in range(len(Rectangles_H)):
+            if Rectangles_H[i].parent not in Parent_List:
+                Parent_List.append(Rectangles_H[i].parent)
+        #print len(Parent_List)
+        ALL_CONNECTED = {}
+        for i in range(len(Parent_List)):
+            Connected = []
+            for j in range(len(Rectangles_H)):
+                if Rectangles_H[j].parent == Parent_List[i]:
+                    Connected.append(Rectangles_H[j])
+                else:
+                    continue
+            ALL_CONNECTED[Parent_List[i]] = Connected
+        Rectangles_H.sort(key=lambda cc: cc.x1)
+        for i in range(len(Rectangles_H)):
+            for j in range(len(Rectangles_H)):
+                # if Rectangles_H[i]==Rectangles_H[j]:
+                # continue
+                # else:
+                if Rectangles_H[i].contains(Rectangles_H[j]) and Rectangles_H[i].type == Rectangles_H[j].type:
+                    if Rectangles_H[i].parent != Rectangles_H[j].parent:
+                        #print"xy", Rectangles_H[i].x1, Rectangles_H[i].y1, Rectangles_H[j].x1, Rectangles_H[j].y1
+                        for k, v in ALL_CONNECTED.items():
+                            if k == Rectangles_H[i].parent:
+                                L1 = len(v)
+                            elif k == Rectangles_H[j].parent:
+                                L2 = len(v)
+                        if L1 >= L2:
+                            for k, v in ALL_CONNECTED.items():
+                                if k == Rectangles_H[i].parent:
+                                    Rectangles_H[j].parent = Rectangles_H[i].parent
+                                    v.append(Rectangles_H[j])
+                        else:
+                            for k, v in ALL_CONNECTED.items():
+                                if k == Rectangles_H[j].parent:
+                                    Rectangles_H[i].parent = Rectangles_H[j].parent
+                                    v.append(Rectangles_H[i])
+        Rectangles_H.sort(key=lambda cc: cc.y2)
+        for i in range(len(Rectangles_H)):
+            for j in range(len(Rectangles_H)):
+                # if Rectangles_H[i]==Rectangles_H[j]:
+                # continue
+                # else:
+                if Rectangles_H[i].contains(Rectangles_H[j]) and Rectangles_H[i].type == Rectangles_H[j].type:
+                    if Rectangles_H[i].parent != Rectangles_H[j].parent:
+                        #print"xy", Rectangles_H[i].x1, Rectangles_H[i].y1, Rectangles_H[j].x1, Rectangles_H[j].y1
+                        for k, v in ALL_CONNECTED.items():
+                            if k == Rectangles_H[i].parent:
+                                L1 = len(v)
+                            elif k == Rectangles_H[j].parent:
+                                L2 = len(v)
+                        if L1 >= L2:
+                            for k, v in ALL_CONNECTED.items():
+                                if k == Rectangles_H[i].parent:
+                                    Rectangles_H[j].parent = Rectangles_H[i].parent
+                                    v.append(Rectangles_H[j])
+                        else:
+                            for k, v in ALL_CONNECTED.items():
+                                if k == Rectangles_H[j].parent:
+                                    Rectangles_H[i].parent = Rectangles_H[j].parent
+                                    v.append(Rectangles_H[i])
+        Rectangles_H.sort(key=lambda cc: cc.x2)
+        for i in range(len(Rectangles_H)):
+            for j in range(len(Rectangles_H)):
+                # if Rectangles_H[i]==Rectangles_H[j]:
+                # continue
+                # else:
+                if Rectangles_H[i].contains(Rectangles_H[j]) and Rectangles_H[i].type == Rectangles_H[j].type:
+                    if Rectangles_H[i].parent != Rectangles_H[j].parent:
+                        #print"xy", Rectangles_H[i].x1, Rectangles_H[i].y1, Rectangles_H[j].x1, Rectangles_H[j].y1
+                        for k, v in ALL_CONNECTED.items():
+                            if k == Rectangles_H[i].parent:
+                                L1 = len(v)
+                            elif k == Rectangles_H[j].parent:
+                                L2 = len(v)
+                        if L1 >= L2:
+                            for k, v in ALL_CONNECTED.items():
+                                if k == Rectangles_H[i].parent:
+                                    Rectangles_H[j].parent = Rectangles_H[i].parent
+                                    v.append(Rectangles_H[j])
+                        else:
+                            for k, v in ALL_CONNECTED.items():
+                                if k == Rectangles_H[j].parent:
+                                    Rectangles_H[i].parent = Rectangles_H[j].parent
+                                    v.append(Rectangles_H[i])
+
+        ALL_CONNECTED_H = []
+        Parent_List2 = []
+        for i in range(len(Rectangles_H)):
+            if Rectangles_H[i].parent not in Parent_List2:
+                Parent_List2.append(Rectangles_H[i].parent)
+        #print len(Parent_List2), len(Parent_List)
+        for i in range(len(Parent_List2)):
+            Connected = []
+            for j in range(len(Rectangles_H)):
+                if Rectangles_H[j].parent == Parent_List2[i]:
+                    Connected.append(Rectangles_H[j])
+                else:
+                    continue
+            ALL_CONNECTED_H.append(Connected)
+
+
+        Rectangles_V = []
+        # for i in Htree.hNodeList[0]:
+        for j in Vtree.vNodeList[0].stitchList:
+            # k = j.cell.x, j.cell.y, j.getWidth(), j.getHeight(), j.cell.id, j.cell.type, j.nodeId
+            if j.cell.type != "EMPTY":
+                Rect = Rectangle(j.cell.x, j.cell.y, j.getWidth(), j.getHeight(), j.cell.type)
+                if Rect not in Rectangles_V:
+                    Rectangles_V.append(Rect)
+                    # print Rect.type
+
+        # print"V", len(Rectangles_V)
+        Rectangles_V.sort(key=lambda cc: cc.x1)
+        # Rectangles_V.sort(key=lambda cc: cc.y1)
+        for i in range(len(Rectangles_V)):
+            for j in range(len(Rectangles_V)):
+                # if Rectangles_H[i]==Rectangles_H[j]:
+                # continue
+                # else:
+                if Rectangles_V[i].contains(Rectangles_V[j]) and Rectangles_V[i].type == Rectangles_V[j].type:
+                    if Rectangles_V[i].parent == None and Rectangles_V[j].parent == None:
+                        Rectangles_V[i].parent = Rectangles_V[i]
+                        Rectangles_V[j].parent = Rectangles_V[i]
+                    elif Rectangles_V[i].parent == None and Rectangles_V[j].parent != None:
+                        Rectangles_V[i].parent = Rectangles_V[j].parent
+                    elif Rectangles_V[i].parent != None and Rectangles_V[j].parent == None:
+                        Rectangles_V[j].parent = Rectangles_V[i].parent
+                # else:
+                # Rectangles_H[i].parent = Rectangles_H[i]
+        # print len(Rectangles_V)
+        Parent_List = []
+        for i in range(len(Rectangles_V)):
+            if Rectangles_V[i].parent not in Parent_List:
+                Parent_List.append(Rectangles_V[i].parent)
+        #print len(Parent_List)
+        ALL_CONNECTED = {}
+        for i in range(len(Parent_List)):
+            Connected = []
+            for j in range(len(Rectangles_V)):
+                if Rectangles_V[j].parent == Parent_List[i]:
+                    Connected.append(Rectangles_V[j])
+                else:
+                    continue
+            ALL_CONNECTED[Parent_List[i]] = Connected
+        Rectangles_V.sort(key=lambda cc: cc.y1)
+        for i in range(len(Rectangles_V)):
+            for j in range(len(Rectangles_V)):
+                # if Rectangles_H[i]==Rectangles_H[j]:
+                # continue
+                # else:
+                if Rectangles_V[i].contains(Rectangles_V[j]) and Rectangles_V[i].type == Rectangles_V[j].type:
+                    if Rectangles_V[i].parent != Rectangles_V[j].parent:
+                        #print"xy", Rectangles_V[i].x1, Rectangles_V[i].y1, Rectangles_V[j].x1, Rectangles_V[j].y1
+                        for k, v in ALL_CONNECTED.items():
+                            if k == Rectangles_V[i].parent:
+                                L1 = len(v)
+                            elif k == Rectangles_V[j].parent:
+                                L2 = len(v)
+                        if L1 >= L2:
+                            for k, v in ALL_CONNECTED.items():
+                                if k == Rectangles_V[i].parent:
+                                    Rectangles_V[j].parent = Rectangles_V[i].parent
+                                    v.append(Rectangles_V[j])
+                        else:
+                            for k, v in ALL_CONNECTED.items():
+                                if k == Rectangles_V[j].parent:
+                                    Rectangles_V[i].parent = Rectangles_V[j].parent
+                                    v.append(Rectangles_V[i])
+        Rectangles_V.sort(key=lambda cc: cc.y2)
+        for i in range(len(Rectangles_V)):
+            for j in range(len(Rectangles_V)):
+                # if Rectangles_H[i]==Rectangles_H[j]:
+                # continue
+                # else:
+                if Rectangles_V[i].contains(Rectangles_V[j]) and Rectangles_V[i].type == Rectangles_V[j].type:
+                    if Rectangles_V[i].parent != Rectangles_V[j].parent:
+                        # print"xy", Rectangles_V[i].x1, Rectangles_V[i].y1, Rectangles_V[j].x1, Rectangles_V[j].y1
+                        for k, v in ALL_CONNECTED.items():
+                            if k == Rectangles_V[i].parent:
+                                L1 = len(v)
+                            elif k == Rectangles_V[j].parent:
+                                L2 = len(v)
+                        if L1 >= L2:
+                            for k, v in ALL_CONNECTED.items():
+                                if k == Rectangles_V[i].parent:
+                                    Rectangles_V[j].parent = Rectangles_V[i].parent
+                                    v.append(Rectangles_V[j])
+                        else:
+                            for k, v in ALL_CONNECTED.items():
+                                if k == Rectangles_V[j].parent:
+                                    Rectangles_V[i].parent = Rectangles_V[j].parent
+                                    v.append(Rectangles_V[i])
+        Rectangles_V.sort(key=lambda cc: cc.x2)
+        for i in range(len(Rectangles_V)):
+            for j in range(len(Rectangles_V)):
+                # if Rectangles_H[i]==Rectangles_H[j]:
+                # continue
+                # else:
+                if Rectangles_V[i].contains(Rectangles_V[j]) and Rectangles_V[i].type == Rectangles_V[j].type:
+                    if Rectangles_V[i].parent != Rectangles_V[j].parent:
+                        # print"xy", Rectangles_V[i].x1, Rectangles_V[i].y1, Rectangles_V[j].x1, Rectangles_V[j].y1
+                        for k, v in ALL_CONNECTED.items():
+                            if k == Rectangles_V[i].parent:
+                                L1 = len(v)
+                            elif k == Rectangles_V[j].parent:
+                                L2 = len(v)
+                        if L1 >= L2:
+                            for k, v in ALL_CONNECTED.items():
+                                if k == Rectangles_V[i].parent:
+                                    Rectangles_V[j].parent = Rectangles_V[i].parent
+                                    v.append(Rectangles_V[j])
+                        else:
+                            for k, v in ALL_CONNECTED.items():
+                                if k == Rectangles_V[j].parent:
+                                    Rectangles_V[i].parent = Rectangles_V[j].parent
+
+                                    v.append(Rectangles_V[i])
+        '''
+        for i in Rectangles_V:
+            if i.parent != None:
+                print i.x1, i.y1, i.type, i.parent.x1, i.parent.y1
+            else:
+                print i.x1, i.y1, i.type
+        '''
+
+        Parent_List_V = []
+        for i in range(len(Rectangles_V)):
+            if Rectangles_V[i].parent not in Parent_List_V:
+                Parent_List_V.append(Rectangles_V[i].parent)
+        #print len(Parent_List_V)
+        ALL_CONNECTED_V = []
+        for i in range(len(Parent_List_V)):
+            Connected = []
+            for j in range(len(Rectangles_V)):
+                if Rectangles_V[j].parent == Parent_List_V[i]:
+                    Connected.append(Rectangles_V[j])
+                else:
+                    continue
+            ALL_CONNECTED_V.append(Connected)
+
+        #print len(ALL_CONNECTED_V)
+        #for i in ALL_CONNECTED_V:
+            #print"LENGTH", len(i)
+
+        ################################################# (Finding connected components)
+
+    #ALL_CONNECTED_H=None
+    #ALL_CONNECTED_V = None
+    if level==2 or level== 3:
         #CG = cg.constraintGraph(testdir + '/' + testbase, testdir +'/'+ testbase,W,H,XLoc,YLoc)
         start4 = timeit.default_timer()
         CG = cg.constraintGraph(directory+'/'+testbase, directory+'/'+testbase, W, H, XLoc, YLoc)
         #start1 = timeit.default_timer()
-        CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList,level,N)
+        CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList,level,testdir,ALL_CONNECTED_H,ALL_CONNECTED_V,N)
         stop4 = timeit.default_timer()
 
 
     elif level==1:
          start4 = timeit.default_timer()
          CG = cg.constraintGraph(directory+'/'+testbase, directory+'/'+testbase,W=None,H=None,XLocation=None,YLocation=None)
-         CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList,level,N)
+         CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList,level,testdir,ALL_CONNECTED_H,ALL_CONNECTED_V,N)
          stop4 = timeit.default_timer()
     else:
          start4 = timeit.default_timer()
+         #print directory
          CG = cg.constraintGraph(directory+'/'+testbase, directory+'/'+testbase,W=None,H=None,XLocation=None,YLocation=None)
-         CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList,level,N=None)
+
+         CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList,level,testdir,ALL_CONNECTED_H,ALL_CONNECTED_V,N=None)
          stop4 = timeit.default_timer()
     #start = timeit.default_timer()
     print "Mode Eval",stop4-start4
@@ -3843,7 +4190,9 @@ if __name__ == '__main__':
     Htree.setNodeId(Htree.hNodeList)
     Vtree.setNodeId(Vtree.vNodeList)
 
-    """
+
+
+    '''
 
     print Htree.hNodeList
     f1 = open(testdir + '/' + testbase + "hNode.txt", 'wb')
@@ -3885,7 +4234,7 @@ if __name__ == '__main__':
                 k = j.cell.x, j.cell.y, j.getWidth(), j.getHeight(), j.cell.id, j.cell.type, j.nodeId
                 print "B",i.id,k
 
-    """
+    '''
 
     def plotrectH( k,Rect_H,format): ###plotting each node after minimum location evaluation in HCS
         """
@@ -4860,7 +5209,9 @@ if __name__ == '__main__':
             #plt.xlim(0, 210)
             #plt.ylim(0, 210)
             plt.xlim(min_x, max_x)
-            plt.ylim(min_y, max_y)
+            plt.ylim(min_y, max_y,)
+            plt.xticks(np.arange(min_x, max_x + 10, 10))
+            plt.yticks(np.arange(min_y, max_y + 10, 10))
             # fig10.show()
             # return fig10
             #fig8.savefig(testdir + '/' +testbase+ str(j)+"new-H.eps",format='eps', dpi=1000,)
@@ -4874,12 +5225,12 @@ if __name__ == '__main__':
 
 
     #UPDATE(MIN_X, MIN_Y)
-    """
+
     if level==0:
         UPDATE_min(MIN_X, MIN_Y,format)
     else:
         UPDATE(MIN_X, MIN_Y,format)
-    """
+
 
 
 
