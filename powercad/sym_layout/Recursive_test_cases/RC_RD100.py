@@ -17,53 +17,99 @@ from powercad.sym_layout.symbolic_layout import SymbolicLayout, DeviceInstance, 
 from powercad.tech_lib.test_techlib import get_dieattach, get_mosfet
 from powercad.tech_lib.test_techlib import get_power_bondwire, get_signal_bondwire
 from powercad.tech_lib.test_techlib import get_signal_lead, get_power_lead
+import matplotlib.pyplot as plt
+import pandas as pd
+from powercad.interfaces.Q3D.Q3D import output_q3d_vbscript
+from powercad.design.module_design import ModuleDesign
 
 
 def make_test_symmetries(sym_layout):
     symm1 = []
     symm2 = []
+    symm3 = []
+    symm4 = []
+    symm5 = []
 
     for obj in sym_layout.all_sym:
-        if obj.element.path_id == '0009' or obj.element.path_id == '0010':
+        if obj.element.path_id in ['Tg','Ti','Ts','Tc']:
             symm1.append(obj)
-        if obj.element.path_id == '0000' or obj.element.path_id == '0001':
+        if obj.element.path_id == 'Tl' or obj.element.path_id == 'Tb':
             symm2.append(obj)
-
+        if obj.element.path_id == 'Tr' or obj.element.path_id == 'Tf':
+            symm3.append(obj)
+        if obj.element.path_id == 'Te' or obj.element.path_id == 'Tn':
+            symm4.append(obj)
+        if obj.element.path_id == 'Tt' or obj.element.path_id == 'Tj':
+            symm5.append(obj)
     sym_layout.symmetries.append(symm1)
     sym_layout.symmetries.append(symm2)
+    sym_layout.symmetries.append(symm3)
+    sym_layout.symmetries.append(symm4)
+    sym_layout.symmetries.append(symm5)
 
 
-def make_test_constraints(symbols):
-    for obj in symbols:
-        if obj.element.path_id.count('c1') > 0:
-            obj.constraint = (None, None, 1.27)
-        if obj.element.path_id.count('c2') > 0:
-            obj.constraint = (4.8, 10.0, None)
+def make_test_constraints(sym_layout):
+    for obj in sym_layout.all_sym:
+        if obj.element.path_id == 'Tr' or obj.element.path_id == 'Tf':
+            obj.constraint = (None, None, 2)
 
 
-def make_test_devices(symbols, dev,dev_id):
+
+def make_test_devices(symbols, dev=None,dev_dict=None):
     # symbols list of all SymLine and SymPoints in a loaded layout (sym_layout.all_sym)
+    if dev_dict == None: # Apply same powers
+        for obj in symbols:
+                if 'M' in obj.name:
+                    obj.tech = dev
+    else:
+        for obj in symbols:
+                if obj.name in dev_dict.keys():
+                    obj.tech = dev_dict[obj.name]
+
+
+
+
+def make_test_leads(symbols, pow_lead, sig_lead):
     for obj in symbols:
-        for id in dev_id:
-            if obj.element.path_id == id:
-                obj.tech = dev
+        if obj.name == 'DC_neg' or obj.name== 'DC_plus' or obj.name == 'Out':
+            obj.tech = pow_lead
+        elif obj.name == 'G_low' or obj.name == 'G_high':
+            obj.tech = sig_lead
 
+def make_test_bonds(df, bw_sig, bw_power):
+    bw_data = [['POWER', 'M1', 'Tc', 'a', bw_power],
+               ['POWER', 'M2', 'Tc', 'a', bw_power],
+               ['POWER', 'M3', 'Tc', 'a', bw_power],
+               ['POWER', 'M4', 'Tp', 'a', bw_power],
+               ['POWER', 'M5', 'Tp', 'a', bw_power],
+               ['POWER', 'M6', 'Tp', 'a', bw_power],
+               ['POWER', 'M7', 'Tk', 'a', bw_power],
+               ['POWER', 'M8', 'Tk', 'a', bw_power],
+               ['POWER', 'M9', 'Tk', 'a', bw_power],
+               ['POWER', 'M10', 'Ti', 'a', bw_power],
+               ['POWER', 'M11', 'Ti', 'a', bw_power],
+               ['POWER', 'M12', 'Ti', 'a', bw_power],
+               ['SIGNAL', 'M1', 'Tr', 'a', bw_sig],
+               ['SIGNAL', 'M2', 'Tr', 'a', bw_sig],
+               ['SIGNAL', 'M3', 'Tr', 'a', bw_sig],
+               ['SIGNAL', 'M4', 'Tr', 'a', bw_sig],
+               ['SIGNAL', 'M5', 'Tr', 'a', bw_sig],
+               ['SIGNAL', 'M6', 'Tr', 'a', bw_sig],
+               ['SIGNAL', 'M7', 'Tf', 'a', bw_sig],
+               ['SIGNAL', 'M8', 'Tf', 'a', bw_sig],
+               ['SIGNAL', 'M9', 'Tf', 'a', bw_sig],
+               ['SIGNAL', 'M10', 'Tf', 'a', bw_sig],
+               ['SIGNAL', 'M11', 'Tf', 'a', bw_sig],
+               ['SIGNAL', 'M12', 'Tf', 'a', bw_sig],
+               ]
 
-def make_test_leads(symbols, lead_type,lead_id):
-    for obj in symbols:
-        for id in lead_id:
-            if obj.element.path_id == id:
-                obj.tech = lead_type
-
-
-def make_test_bonds(symbols, bond_type, bond_id,wire_spec):
-    for obj in symbols:
-        for id in bond_id:
-            if obj.element.path_id == id:
-                obj.make_bondwire(bond_type)
-                obj.wire_sep = wire_spec[0]
-                obj.num_wires = wire_spec[1]
-
+    cols = ['bw_type', 'start', 'stop', 'obj']
+    for row in range(24):
+        for col in range(5):
+            df.loc[row, col] = bw_data[row][col]
+    print df
+    print df.iloc[0, 0]
+    return df
 
 def make_test_design_values(sym_layout, dimlist, default):
     hdv = []
@@ -98,25 +144,45 @@ def make_test_design_values(sym_layout, dimlist, default):
 
 def add_test_measures(sym_layout):
     pts = []
+    lns = []
     for sym in sym_layout.all_sym:
-        if sym.element.path_id == '0042':
+        if sym.element.path_id == 'DC_plus':
             pts.append(sym)
-        if sym.element.path_id == '0043':
+        if sym.element.path_id == 'DC_neg':
             pts.append(sym)
+
         if len(pts) > 1:
             break
+    row =0
+    dev_states = pd.DataFrame()
+
+    for sym in sym_layout.all_sym:
+        if isinstance(sym, SymPoint) and isinstance(sym.tech, DeviceInstance):
+            for col in range(4):
+                if col == 0:
+                    dev_states.loc[row, col]=sym.name
+                elif col ==1:
+                    dev_states.loc[row, col] = 1
+                else:
+                    dev_states.loc[row, col] = 0
+            row+=1
+        elif isinstance(sym, SymLine):
+            lns.append(sym)
 
     if len(pts) == 2:
-        m1 = ElectricalMeasure(pts[0], pts[1], ElectricalMeasure.MEASURE_IND, 100, "Loop Inductance", None, 'MS')
+        m1 = ElectricalMeasure(pts[0], pts[1], ElectricalMeasure.MEASURE_IND, 100, "Loop Inductance", None, 'MS',device_state=dev_states)
         sym_layout.perf_measures.append(m1)
-        m2 = ElectricalMeasure(pts[0], pts[1], ElectricalMeasure.MEASURE_RES, 100, "Loop Resistance", None, 'MS')
+        m2 = ElectricalMeasure(pts[0], pts[1], ElectricalMeasure.MEASURE_RES, 100, "Loop Resistance", None, 'MS',
+                               device_state=dev_states)
         sym_layout.perf_measures.append(m2)
 
+    m3 = ElectricalMeasure(lines=lns,measure= ElectricalMeasure.MEASURE_CAP, freq=100, name="Total cap", mdl='MS',
+                           device_state=dev_states)
     devices = []
     for sym in sym_layout.all_sym:
         devices.append(sym)
 
-    m3 = ThermalMeasure(ThermalMeasure.FIND_MAX, devices, "Max Temp.", 'TFSM_MODEL')
+    #m3 = ThermalMeasure(ThermalMeasure.FIND_MAX, devices, "Max Temp.", 'TFSM_MODEL')
     sym_layout.perf_measures.append(m3)
     print "perf", sym_layout.perf_measures
 
@@ -166,6 +232,18 @@ def one_measure(symlayout):
             val = symlayout._thermal_analysis(measure, type_id)
             ret.append(val)
     return ret
+
+def add_thermal_measure(sym_layout):
+    devices = []
+    for sym in sym_layout.all_sym:
+        if isinstance(sym,SymPoint) and 'M' in sym.name:
+            devices.append(sym)
+    m1 = ThermalMeasure(ThermalMeasure.Find_All, devices, "All Temp", 'TFSM_MODEL')
+    sym_layout.perf_measures.append(m1)
+def thermal_measure(sym_layout):
+    for measure in sym_layout.perf_measures:
+        val = sym_layout._thermal_analysis(measure, 'TFSM_MODEL')
+    return val
 def plot_lumped_graph(sym_layout):
     pos = {}
     for n in sym_layout.lumped_graph.nodes():
@@ -185,7 +263,7 @@ def make_test_setup2(f,directory):
     sym_layout.load_layout(test_file, 'script')  # load the script
     name_file=None
     #sym_layout.assign_name(name_file)
-    dev_mos = DeviceInstance(0.1, 1.0, get_mosfet(),get_dieattach())  # Create a device instance with 10 W power dissipation. Highlight + "Crtl+Shift+I" to see the definition of this object
+    dev_mos = DeviceInstance(0.1, 5.0, get_mosfet(),get_dieattach())  # Create a device instance with 10 W power dissipation. Highlight + "Crtl+Shift+I" to see the definition of this object
 
     pow_lead = get_power_lead()  # Get a power lead object
 
@@ -193,57 +271,42 @@ def make_test_setup2(f,directory):
 
     power_bw = get_power_bondwire()  # Get bondwire object
     signal_bw = get_signal_bondwire()  # Get bondwire object
-    net_id = {'0035': 'DC_plus', '0037': 'DC_neg', '0042': 'G_High', '0043': 'G_Low', '0036': 'Out', '0038': 'M1',
-              '0039': 'M2', '0040': 'M3',
-              '0041': 'M4'}
-    map_id_net(dict=net_id, symbols=sym_layout.all_sym)
-    make_test_leads(symbols=sym_layout.all_sym, lead_type=sig_lead,
-                    lead_id=['0042','0043'])
-    make_test_leads(symbols=sym_layout.all_sym, lead_type=pow_lead,
-                lead_id=['0035', '0037','0036'])
-    make_test_bonds(symbols=sym_layout.all_sym, bond_type=signal_bw,
-                    bond_id=['0009','0010','0017','0018'], wire_spec=[1, 1])
-    make_test_bonds(symbols=sym_layout.all_sym, bond_type=power_bw,
-                    bond_id=['0008','0011','0016','0019'], wire_spec=[1, 1])
-    make_test_devices(symbols=sym_layout.all_sym,dev=dev_mos,dev_id=['0038','0039','0040','0041'])
 
-    # make_test_symmetries(sym_layout) # You can assign the symmetry objects here
+    table_df = pd.DataFrame()
+    table_df=make_test_bonds(table_df,signal_bw,power_bw)
 
+    make_test_leads(sym_layout.all_sym, pow_lead,sig_lead)  # Depends on the layout script you have, you can assign the lead object to a SYM-POINT using the id of the object
+    make_test_devices(sym_layout.all_sym,dev_dict={'M1': dev_mos,'M2': dev_mos,'M3': dev_mos,'M4': dev_mos,
+                                                   'M5': dev_mos, 'M6': dev_mos, 'M7': dev_mos, 'M8': dev_mos,
+                                                   'M9': dev_mos, 'M10': dev_mos, 'M11': dev_mos, 'M12': dev_mos,})  # Depends on the layout script you have, you can assign the device object to a SYM-POINT using the id of the object
+    make_test_symmetries(sym_layout) # You can assign the symmetry objects here
+    make_test_constraints(sym_layout)
     add_test_measures(sym_layout)  # Assign a measurement between 2 SYM-Points (using their IDs)
 
     module = gen_test_module_data_RD100(f,100,300.0)
 
     # Pepare for optimization.
-
-    sym_layout.form_design_problem(module, temp_dir) # Collect data to user interface
+    sym_layout.form_design_problem(module,table_df, temp_dir) # Collect data to user interface
     sym_layout._map_design_vars()
     setup_model(sym_layout)
-    individual=[8.84742407213129, 8.84742407213129, 8.84742407213129, 8.84742407213129, 8.84742407213129, 8.84742407213129, 8.84742407213129, 8.84742407213129, 8.84742407213129, 8.84742407213129, 8.84742407213129, 8.84742407213129, 9.830471191256986, 9.830471191256986, 9.830471191256986, 9.830471191256986, 9.830471191256986, 9.830471191256986, 9.830471191256986, 9.830471191256986, 0.4745706786885481, 0.4745706786885481, 0.4745706786885481, 0.4745706786885481]
+    individual= [6.6792689017536055, 8.520954191778017, 7.681592868581593, 6.202692454990171, 10.89284111447856,
+                 4.6782082887774425, 8.241788783730751, 9.564268711545886, 0.2, 8.617059202394898, 18.90822975209389,
+                 11.493503127654577, 6.801037223656925, 0.8, 0.3, 0.1, 0.3,
+                 0.8, 0.1, 0.1, 0.8, 0.3,
+                 0.3, 0.8, 0.1]
     print 'individual', individual
     print "opt_to_sym_index", sym_layout.opt_to_sym_index
-    sym_layout.optimize()
+    #sym_layout.optimize()
+    sym_layout.running=False
     sym_layout.rev_map_design_vars(individual)
     sym_layout.generate_layout()
     plot_layout(sym_layout)
+    plt.show()
+    md = ModuleDesign(sym_layout)
 
-    sym_layout._build_lumped_graph()
-    sym_layout.E_graph.export_graph_to_file(sym_layout.lumped_graph)
+    output_q3d_vbscript(md=md, filename='big_gap')
 
-    netlist = Netlist('Netlist//H_bridge4sw.txt')
-    netlist.form_assignment_list_fh()
-    external = netlist.get_external_list_fh()
-
-    output_fh_script(sym_layout,"C:\Users\qmle\Desktop\Balancing\Mutual_test\layout cases//RD100",external=external)
-
-
-    net_data = read_result("C:\Users\qmle\Desktop\Balancing\Mutual_test\layout cases//RD100.inp.M.txt")
-    
-    df, pm = netlist.get_assign_df()
-    ads_net = Netlis_export_ADS(df=df, pm=pm)
-    ads_net.import_net_data(net_data)
-    ads_net.export_ads('rd100_4sw.net')
-    plot_lumped_graph(sym_layout)
-    print one_measure(sym_layout)
+    print sym_layout._opt_eval(individual)
 # The test goes here, moddify the path below as you wish...
-directory ='Layout//RD100Layout2sw.psc' # directory to layout script
+directory ='Layout//RD100_12sw.psc' # directory to layout script
 make_test_setup2(100.0,directory)

@@ -118,7 +118,7 @@ class ElectricalMeasure(object):
     UNIT_IND = ('nH', 'nanoHenry')
     UNIT_CAP = ('pF', 'picoFarad')
 
-    def __init__(self, pt1, pt2, measure, freq, name, lines, mdl,src_sink_type=[None,None],device_state=None):
+    def __init__(self, pt1=None, pt2=None, measure=None, freq=10, name=None, lines=[], mdl=None,src_sink_type=[None,None],device_state=[1,0,0]):
         """
         Electrical parasitic measure object
 
@@ -491,10 +491,10 @@ class SymbolicLayout(object):
         self.bondwire_design_values = [None]*len(self.bondwire_dv_list)
 
         # Check Device Thermal Characterizations (checks for cached characterizations)
-        dev_char_dict, sub_tf = characterize_devices(self, temp_dir)
-        self.module.sublayers_thermal = sub_tf
-        for dev in self.devices:
-            dev.tech.thermal_features = dev_char_dict[dev.tech]
+        #dev_char_dict, sub_tf = characterize_devices(self, temp_dir)
+        #self.module.sublayers_thermal = sub_tf
+        #for dev in self.devices:
+        #    dev.tech.thermal_features = dev_char_dict[dev.tech]
 
     def clear_bondwire_data(self):
         for sym in self.all_sym:
@@ -2177,7 +2177,7 @@ class SymbolicLayout(object):
         self.generate_layout()
         ret = []
         drc = DesignRuleCheck(self)
-        drc_count = drc.count_drc_errors(False)
+        drc_count = drc.count_drc_errors(True)
 
         if drc_count > 0:   # Non-convergence case
             #Brett's method
@@ -2185,6 +2185,10 @@ class SymbolicLayout(object):
                 ret.append(drc_count+10000)
             return ret
         else:
+            ax = plt.subplot('111', adjustable='box', aspect=1.0)
+            print individual
+            plot_layout(self,ax=ax)
+            plt.show()
             try:
                 self.count+=1
             except:
@@ -2205,6 +2209,7 @@ class SymbolicLayout(object):
 
                         # load device states table
                         tbl_states=measure.dev_state
+                        print tbl_states
                         for row in range(len(tbl_states.axes[0])):
                             dev_name=tbl_states.loc[row,0]
                             for dev in self.devices:
