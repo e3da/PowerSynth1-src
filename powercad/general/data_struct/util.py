@@ -16,6 +16,13 @@ import math
 from numpy import sign
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+
+
+class Point():
+    def __init__(self, pos):
+        self.pos = pos
+
+
 class Circle: # Todo: do this later
     '''
     A Filled Circle object mainly used for contours, most functions are used to interact with RECT
@@ -86,9 +93,70 @@ class Circle: # Todo: do this later
 
 
 class Line:
-    def __init__(self,x1,y1,x2,y2):
-        self.pt1=[x1,y1]
-        self.pt2=[x2,y2]
+    def __init__(self,pt1,pt2):
+        self.pt1=pt1
+        self.pt2=pt2
+
+    def __str__(self):
+        return str(self.pt1) + ', ' + str(self.pt2)
+
+    def find_line(self):
+        pt1=self.pt1
+        pt2=self.pt2
+        if pt1[0] == pt2[0] or pt1[1] == pt2[1]:
+            self.alpha = None
+        else:
+            self.alpha = float((pt2[1] - pt1[1]) / (pt2[0] - pt1[0]))
+        if self.alpha != None:
+            self.beta = pt1[1] - self.alpha * pt1[0]
+    def include(self,point):
+        xs = [self.pt1[0],self.pt2[0]]
+        ys = [self.pt1[1], self.pt2[1]]
+        xs.sort(),ys.sort()
+        # check if point is on the line
+        self.find_line()
+        if self.alpha!=None: # Diagonal line
+            if self.alpha*point[0]+self.beta == point[1]:
+                if point[0]>=xs[0] and point[0] <= xs[1]:
+                    return True
+                else:
+                    return False
+            else:
+                return False
+        else: # Horizontal or Vertical case
+            if point[0] == xs[0] and point[0] == xs [1]:
+                if point[1] >= ys[0] and point[1] <= ys[1]:
+                    return True
+                else:
+                    return False
+            elif point[1] == ys[0] and point[1] == ys[1]:
+                if point[0] >= xs[0] and point[0] <= xs[1]:
+                    return True
+                else:
+                    return False
+            else:
+                return False
+    def split(self,points):
+        all_line =[]
+        all_points =[self.pt1,self.pt2]
+        for p in points:
+            if self.include(p):
+                all_points.append(p)
+            else:
+                print ("some pts not online")
+                return None
+        points = list(set(all_points))
+        points.sort()
+        for i in range(len(points)-1):
+            all_line.append(Line(points[i], points[i + 1]))
+        return all_line
+    def equal(self,line):
+        if (self.pt1 == line.pt1 and self.pt2 == line.pt2) or (self.pt2 == line.pt1 and self.pt1 == line.pt2):
+            return True
+        else:
+            return False
+
+
 class Rect:
     TOP_SIDE = 1
     BOTTOM_SIDE = 2
@@ -208,6 +276,16 @@ class Rect:
             hside = self.LEFT_SIDE
         return hside, vside
 
+    def get_all_corners(self):
+        return [(self.left,self.bottom),(self.left,self.top),(self.right,self.bottom),(self.right,self.top)]
+
+    def get_all_lines(self):
+        l1 = Line((self.left, self.bottom), (self.left, self.top))
+        l2 = Line((self.left, self.bottom), (self.right, self.bottom))
+        l3 = Line((self.left, self.top), (self.right, self.top))
+        l4 = Line((self.right, self.bottom), (self.right, self.top))
+        return [l1,l2,l3,l4]
+
     def deepCopy(self):
         rect = Rect(self.top, self.bottom, self.left, self.right)
         return rect
@@ -220,8 +298,7 @@ def seed_rand(num):
 def rand(num_range):
     return random.uniform(num_range[0], num_range[1])
 def SolveVolume(dims):
-        #mm -> m
-        return dims[0]*dims[1]*dims[2]*1e-9
+    return dims[0]*dims[1]*dims[2]*1e-9
 def distance(x1, x2):
     dist = 0
     for i in range(len(x1)):
@@ -252,10 +329,9 @@ def draw_rect_list(rectlist,ax,color,pattern):
     patch=[]
     for r in rectlist:
         p = patches.Rectangle((r.left, r.bottom), r.width(), r.height(),fill=True,
-            edgecolor='black',facecolor=color,hatch=pattern)
+            edgecolor='black',facecolor=color,hatch=pattern,linewidth=4)
         patch.append(p)
         ax.add_patch(p)
-    #ax1.autoscale_view(tight=True)
     plt.xlim(0,60)
     plt.ylim(0, 60)
     plt.gca().set_aspect('equal', adjustable='box')
@@ -263,20 +339,10 @@ def draw_rect_list(rectlist,ax,color,pattern):
 
 if __name__ == '__main__':
 
-    l1=Line(1,3,2,2)
-    c1=Circle(2,2,2)
-    print c1.encloses([2,3])
-    print c1.move_frame([0, 0])
-    print c1.move_frame([5, 3])
-    print c1.inter_line(l1)
+    l1=Line((1,1),(1,5))
+    pts= [(1,2),(1,3),(1,4)]
+    new_set=l1.split(pts)
+    for l in new_set:
+        print l.pt1,l.pt2
 
 
-    '''
-    rect = Rect(2.0, 0.0, 0.0, 2.0)
-    rect2 = Rect(2.0, 0.0, 0.0, 2.0)
-    inter = rect.intersection(rect2)
-    if inter is not None:
-        print inter.area()
-    else:
-        print 'weird'
-    '''

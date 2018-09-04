@@ -4,6 +4,27 @@ def write_to_file(script,file_des):
     text_file.write(script)
     text_file.close()
 
+Element = '''
+* This is a single element in FASTHENRY. 
+* This will be used to build adaptive mesh for internal and external models in PS 
+.units mm
+*////////////////////
+* Plane A
+NA1s x=0 y=-{0} z={1}
+NA1e x=0 y={0} z={1}
+EA1 NA1s NA1e w={2} h={3} sigma={4}
++ nwinc={5} nhinc={6}
+*////////////////////
+'''
+
+
+Run='''
+.external {0} {1}
+.freq fmin={2} fmax={3} ndec={4}
+.end
+
+'''
+
 
 Uniform_Trace= '''
 * This is not a generic code for now, just to test the standard PowerSynth topology
@@ -37,18 +58,20 @@ Uniform_Trace= '''
 * 20: num of decade
 * BasePlate
 * Plane BP
-g_BP x1=-{0} y1=-{1} z1=0 x2={0} y2=-{1} z2=0 x3={0} y3={1} z3=0
-+ file=NONE thick={2}
-+ contact decay_rect (0,-{11},0,10.0,10.0,5.0,5.0,{13},{13})
-+ contact decay_rect (0,{11},0,10.0,10.0,5.0,5.0,{13},{13})
-+ sigma={3}
-+ nhinc={4} 
+*g_BP x1=-{0} y1=-{1} z1=0 x2={0} y2=-{1} z2=0 x3={0} y3={1} z3=0
+*+ file=NONE thick={2}
+*+ contact decay_rect (0,-{11},0,10.0,10.0,5.0,5.0,{13},{13})
+*+ contact decay_rect (0,{11},0,10.0,10.0,5.0,5.0,{13},{13})
+*+ sigma={3}
+*+ nhinc={4} 
 
 g_M1 x1=-{5} y1=-{6} z1={7} x2={5} y2=-{6} z2={7} x3={5} y3={6} z3={7}
-+ file=NONE thick={8}
+*+ file=NONE thick={8}
++ thick={8}
++ seg1=10 seg2=10
 + sigma={9}
-+ contact decay_rect (0,-{11},{7},10.0,10.0,5.0,5.0,{13},{13})
-+ contact decay_rect (0,{11},{7},10.0,10.0,5.0,5.0,{13},{13})
+*+ contact decay_rect (0,-{11},{7},10.0,10.0,5.0,5.0,{13},{13})
+*+ contact decay_rect (0,{11},{7},10.0,10.0,5.0,5.0,{13},{13})
 + nhinc={10} 
 
 * Plane A

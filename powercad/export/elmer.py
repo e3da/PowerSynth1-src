@@ -8,7 +8,7 @@ import os
 import subprocess
 
 import numpy as np
-
+import math
 from powercad.general.settings.settings import ELMER_BIN_PATH
 
 elmer_sif = """
@@ -24,8 +24,7 @@ Simulation
   Output Caller = True
 
   Coordinate System = "Cartesian 3D"
-  Coordinate Mapping(3) = 1 2 3
-
+  Coordinate Mapping(3) = 1 2 3 
   Simulation Type = "Steady State"
   Steady State Max Iterations = 10
   Steady State Min Iterations = 5
@@ -167,7 +166,7 @@ def elmer_solve(directory, sif_fn, mesh_fn):
     # Run ElmerGrid on msh file
     print 'Run ElmerGrid'
     exec_path = os.path.join(ELMER_BIN_PATH, "ElmerGrid").replace("/","\\")
-    
+
     print "exec_path= ", exec_path
     args = [exec_path, "14", "2", mesh_fn] 
     print "Popen", args, subprocess.PIPE, directory
@@ -226,6 +225,8 @@ def get_nodes_near_z_value(data_path, z_value, tol):
             
     # Read data
     t_temp = []
+    t_x_flux = []
+    t_y_flux = []
     t_z_flux = []
     for i in xrange(0,total_nodes):
         line_split = f.readline().split()
@@ -233,17 +234,26 @@ def get_nodes_near_z_value(data_path, z_value, tol):
         t_temp.append(temp)
         flux_z = float(line_split[3])
         t_z_flux.append(flux_z)
-    
+        flux_x = float(line_split[1])
+        flux_y = float(line_split[2])
+        t_x_flux.append(flux_x)
+        t_y_flux.append(flux_y)
+    t_xy_flux_imag=np.vectorize(complex)(t_x_flux,t_y_flux)
+    t_xy_flux_mag=np.abs(t_xy_flux_imag)
+    t_xy_flux_ang=np.angle(t_xy_flux_imag)/(math.pi)*180
     f.close()
     
     # Filter data
     temp = []
     z_flux = []
+    xy_mag=[]
+    xy_ang=[]
     for node in nodes:
         temp.append(t_temp[node])
         z_flux.append(t_z_flux[node])
-    
-    return np.array(xs), np.array(ys), np.array(temp), np.array(z_flux)
+        xy_mag.append(t_xy_flux_mag[node])
+        xy_ang.append((t_xy_flux_ang[node]))
+    return np.array(xs), np.array(ys), np.array(temp), np.array(z_flux)#,np.array(xy_mag),np.array(xy_ang)
 
 if __name__ == '__main__':
     mesh_name = 'thermal_char'

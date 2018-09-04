@@ -15,7 +15,7 @@ class ModuleDesignError(Exception):
         self.args = [msg]
         
 class ModuleDesign(object):
-    def __init__(self, sym_layout):
+    def __init__(self, sym_layout=None):
         """Holds all of the design geometry information for a specific layout.
         
         Public Access Properties
@@ -37,7 +37,8 @@ class ModuleDesign(object):
         self.baseplate = None
         
         self.sym_layout = sym_layout # reference of symbolic layout object
-        self._symbolic_layout_to_design() # convert layout to full design object
+        if sym_layout!=None:
+            self._symbolic_layout_to_design() # convert layout to full design object
         
     def _symbolic_layout_to_design(self):
         layout = self.sym_layout

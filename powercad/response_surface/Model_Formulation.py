@@ -712,14 +712,14 @@ def form_fasthenry_trace_response_surface(layer_stack, Width=[1.2, 40], Length=[
             half_dim[i] = h.replace('.0','')
         script = Uniform_Trace.format(half_dim[0], half_dim[1], bp_t, bp_cond, nhinc_bp, half_dim[2],
                                       half_dim[3], met_z, metal_thick, metal_cond, nhinc_met, l / 2, trace_z, w,
-                                      metal_thick, metal_cond, nwinc, nhinc_met, fmin * 1000, fmax * 1000, 5)
+                                      metal_thick, metal_cond, nwinc, nhinc_met, fmin * 1000, fmax * 1000, 10)
         write_to_file(script=script, file_des=fname)
         ''' Run FastHenry'''
         print fname
         args = [fasthenry_env, fasthenry_option, fname]
-        #p = subprocess.Popen(args, shell=False, stdout=subprocess.PIPE)
-        #stdout, stderr = p.communicate()
-        #print stdout,stderr
+        p = subprocess.Popen(args, shell=False, stdout=subprocess.PIPE)
+        stdout, stderr = p.communicate()
+        print stdout,stderr
         ''' Output Path'''
         outname=os.path.join(os.getcwd(), 'Zc.mat')
         print "run_time",time.time()-start
@@ -752,39 +752,37 @@ def form_fasthenry_trace_response_surface(layer_stack, Width=[1.2, 40], Length=[
         ''' New list with more data points'''
         r_raw=r_list
         l_raw=l_list
-        plt.plot(f_list,r_raw,'o')
+        #plt.plot(f_list,r_raw,'o')
+
+
         l_list1=[]
         r_list1=[]
-
+        #print fmin , fmax ,fstep
         frange=range(fmin,fmax,fstep)
         for f in range(fmin,fmax,fstep):
             l_list1.append(l_f(f))
             r_list1.append(r_f(f))
-        plt.plot(frange,r_list1)
 
-        #with open(datafile, 'wb') as csvfile:  # open filepath
-        #    fieldnames = [F_key, R_key, L_key]
-        #    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-        #    writer.writeheader()
-        #    for i in range(len(frange)):
-        #        writer.writerow({F_key: frange[i], R_key: r_list1[i], L_key: l_list1[i]})
-
-    #print model_input.generic_fnames
+        #plt.plot(frange,r_list1)
+        #plt.autoscale(True,'y')
+        #plt.title(str(w)+'_'+str(l))
+        #plt.show()
+        with open(datafile, 'wb') as csvfile:  # open filepath
+            fieldnames = [F_key, R_key, L_key]
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer.writeheader()
+            for i in range(len(frange)):
+                writer.writerow({F_key: frange[i], R_key: r_list1[i], L_key: l_list1[i]})
+    print model_input.generic_fnames
     LAC_model = []
-    print "building L model"
     for i in range(len(frange)):
-        print "frequency", frange[i],'kHZ'
         LAC_input = RS_model()
         LAC_input = deepcopy(model_input)
         LAC_input.set_unit('n', 'H')
         LAC_input.set_sweep_unit('k', 'Hz')
-        print "row",i*100
-        row = i * 100
-
-        LAC_input.read_file(file_ext='csv', mode='single', row=row, units=('Hz', 'H'), wdir=wdir)
+        LAC_input.read_file(file_ext='csv', mode='single', row=i, units=('Hz', 'H'), wdir=wdir)
         LAC_input.build_RS_mdl('Krigging')
         LAC_model.append({'f': frange[i], 'mdl': LAC_input})
-    print "building R model"
 
     RAC_model = []
     for i in range(len(frange)):
@@ -792,9 +790,7 @@ def form_fasthenry_trace_response_surface(layer_stack, Width=[1.2, 40], Length=[
         RAC_input = deepcopy(model_input)
         RAC_input.set_unit('m', 'Ohm')
         RAC_input.set_sweep_unit('k', 'Hz')
-        row = i * 100
-
-        RAC_input.read_file(file_ext='csv', mode='single', row=row, units=('Hz', 'Ohm'), wdir=wdir)
+        RAC_input.read_file(file_ext='csv', mode='single', row=i, units=('Hz', 'Ohm'), wdir=wdir)
         RAC_input.build_RS_mdl('Krigging')
         RAC_model.append({'f': frange[i], 'mdl': RAC_input})
     package = {'L': LAC_model, 'R': RAC_model, 'C': None ,'opt_points': frange}
@@ -1117,17 +1113,17 @@ def test_build_trace_model_fh():
     fh_env_dir = "C://Users//qmle//Desktop//Testing//FastHenry//Fasthenry3_test_gp//WorkSpace//fasthenry.exe"
     read_output_dir = "C://Users//qmle//Desktop//Testing//FastHenry//Fasthenry3_test_gp//ReadOutput.exe"
     env = [fh_env_dir, read_output_dir]
-    mdk_dir = "Test_MDK//MDK_BL_TE.csv"
-    w_dir = "C://Users//qmle//Desktop//Testing//FastHenry//Fasthenry3_test_gp//WorkSpace"
+    mdk_dir = "C:\Users\qmle\Desktop\Documents\Conferences\IWIPP\Model\MDK_2D.csv"
+    w_dir = "C:\Users\qmle\Desktop\Documents\Conferences\IWIPP\Model\workspace"
     dir = os.path.abspath(mdk_dir)
     ls = LayerStackImport(dir)
     ls.import_csv()
-    Width = [2, 20]
-    Length = [2, 20]
-    freq = [100, 30000, 1000]
+    Width = [0.25, 2]
+    Length = [0.5, 4]
+    freq = [1, 1500, 10] # in kHz
     form_fasthenry_trace_response_surface(layer_stack=ls, Width=Width, Length=Length, freq=freq, wdir=w_dir,
                                           savedir=w_dir
-                                          , mdl_name='high_f_bl', env=env, doe_mode=2)
+                                          , mdl_name='test2d', env=env, doe_mode=2)
 
 
 def test_build_trace_cornermodel_fh():
@@ -1196,6 +1192,7 @@ def test_continuous(w, l1, l2, f):
     mdl = rs_mdl['L']
     print trace_ind_krige(f, w, l1 + l2, mdl) - trace_ind_krige(f, w, l2, mdl) - trace_ind_krige(f, w, l1, mdl)
 
+
 if __name__ == "__main__":
     #test_corner_ind_correction(10, 4, 4)
     #test_corner_ind_correction(10, 4, 10)
@@ -1204,6 +1201,7 @@ if __name__ == "__main__":
     test_build_trace_model_fh()
     #test_build_trace_cornermodel_fh()
     f=100
+    print range(1)
     #test_corner_ind_correction_fh(f,8,8)
     #test_corner_ind_correction_fh(f, 4,10)
     #test_corner_ind_correction_fh(f, 10, 4)

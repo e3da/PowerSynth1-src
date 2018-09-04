@@ -71,8 +71,8 @@ def trace_inductance(w, l, t, h):
     # and return a larger worst case value.
     w = fabs(w)
     l = fabs(l)
-    if w > l * LOWEST_ASPECT_IND:
-        w = l * LOWEST_ASPECT_IND
+    #if w > l * LOWEST_ASPECT_IND:
+    #    w = l * LOWEST_ASPECT_IND
 
     w1 = w * 1e-3  # transfer to unit in m;
     h1 = h * 1e-3  # transfer to unit in m;

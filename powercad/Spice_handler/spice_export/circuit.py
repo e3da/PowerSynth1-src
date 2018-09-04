@@ -11,8 +11,10 @@ import pandas as pd
 from powercad.Spice_handler.spice_export.Touchstone import write_touchstone_v1
 from powercad.sym_layout.Recursive_test_cases.Netlist.LTSPICE import LTSPICE
 from powercad.Spice_handler.spice_export.raw_read import SimData
-
-
+from sympy import *
+from IPython.display import display
+import mpmath
+import matplotlib.pyplot as plt
 class Circuit():
     def __init__(self):
         self.num_rlc=0 # number of RLC elements
@@ -48,7 +50,7 @@ class Circuit():
         # List of circuit equations:
         self.equ=None
         self.func=[]
-        self.comp_mode='val' # default at symbolic mode
+        self.comp_mode='sym' # default at symbolic mode
         self.solver=None
 
     def _graph_read(self,lumped_graph,ports_mea=False,port_impedance=50e3):
@@ -495,7 +497,7 @@ class Circuit():
         display(self.df_circuit_info)
         print "Dataframe for Current branches info:"
         display(self.df_uk_current)
-    '''
+
     def find_vname(self,name):
         # need to walk through data frame and find these parameters
         for i in range(len(self.df_uk_current)):
@@ -506,7 +508,7 @@ class Circuit():
                 return n1, n2, i  # n1, n2 & col_num are from the branch of the controlling element
 
         print('failed to find matching branch element in find_vname')
-    '''
+
 
     def G_mat(self):
         # G matrix
@@ -929,13 +931,14 @@ class Circuit():
         self.equ = zeros(m + n, 1)  # initialize the array to hold the equations
         print "solving ..."
         Z=Matrix(self.Z)
-        #print 'X',self.X
-        #print 'A',self.A
+        print 'X',self.X
+        print 'A',self.A
+        A=self.A
         t = time.time()
-        A=self.subtitude_s(expr=self.A)
+        #A=self.subtitude_s(expr=self.A)
         print 'A', A
         print "subs", time.time() - t, "s"
-        #print 'Z', Z
+        print 'Z', Z
         col=[str(i+1) for i in range(A.shape[0])]
         matA=pd.DataFrame(columns=col)
         for i in range(A.shape[0]):
@@ -946,15 +949,27 @@ class Circuit():
                     matA.loc[i+1, str(j+1)]=A[i,j]
         matA.to_csv("A.csv")
 
-    def subtitude_s(self,expr,sval=2*1e5*np.pi*1j):
+        if self.comp_mode == 'sym':
+            self.results = (A.LUsolve(Z))
+        elif self.comp_mode == 'val':
+            # A=np.array(self.A.tolist())
+            # Z=np.array(Z.tolist())
+            t = time.time()
+            self.results = (mpmath.lu_solve(A, Z, real=True))
+            print "solve", time.time() - t, "s"
+        print self.results
+        self.results = self.results.tolist()
+        print "done !"
+    def subtitude_s(self, expr, sval=2 * 1e5 * np.pi * 1j):
         sub = {}
         sub['s'] = sval
         M = expr
-        #print sub
+        # print sub
         code = "M=M.subs({0})".format(sub)
         exec code
         return M
-    def subtitute(self,expr,params=None,mode="numerical",sval=1):
+
+    def subtitute(self,expr,params=None,mode="symbolic",sval=1):
         sub={}
         if mode=="symbolic":
             s=Symbol('s')
@@ -1120,10 +1135,10 @@ def test_s_para_2ports():
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         for i in range(len(f_list)):
-            s11=20*np.log10(abs(S11[0][i]))
-            s12 = 20 * np.log10(abs(S12[0][i]))
-            s21 = 20 * np.log10(abs(S21[0][i]))
-            s22 = 20 * np.log10(abs(S22[0][i]))
+            s11=20*np.log10(S11[0][i])
+            s12 = 20 * np.log10(S12[0][i])
+            s21 = 20 * np.log10(S21[0][i])
+            s22 = 20 * np.log10(S22[0][i])
             ps11 = 180/np.pi * np.angle(S11[0][i])
             ps12 = 180/np.pi  * np.angle(S12[0][i])
             ps21 = 180/np.pi  * np.angle(S21[0][i])
