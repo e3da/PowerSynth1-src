@@ -216,7 +216,7 @@ def characterize_dist(xs, zs, values, ambient, dev_dim, flux, contours=10, integ
         
         out = (cur_val*cur_area - prev_val*prev_area)/(cur_area-prev_area)
         if flux: eff_power = cur_val*cur_area*1.0e-6
-        print out
+        #print out
         
         prev_area = cur_area
         prev_val = cur_val

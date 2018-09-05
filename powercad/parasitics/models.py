@@ -94,7 +94,6 @@ def trace_resistance_svr(f,w,l,t,h,p=1.724e-8):       # Quang's model SVR ,KR ba
     if f != 300000 or p != 1.724e-8:
         Y = Y*math.sqrt(f*p)/math.sqrt(300e3*1.724e-8)
         if Y[0] < 0:
-            print X
             Y[0]=0
     return Y[0]
 
@@ -420,7 +419,6 @@ def harvest_data_boundary_linear_approximation(height, thickness, width, length,
     os.makedirs(data_out_path)
     dims_file_dir = data_out_path + '\dimension.txt'         # dimension file directory
     width_step = float(width[1]-width[0])/(num_of_samples)   # compute the step
-    print width_step
     text_file = open(dims_file_dir, 'w')                     # open a text_file
     # prepare a textfile so we can read it later to extract the csv data
     dims = []
@@ -434,7 +432,6 @@ def harvest_data_boundary_linear_approximation(height, thickness, width, length,
         [width, length] = row
         proj_name = 'W' + str(width) + '_L' + str(length) + '_H' + str(height) + '_T' + str(
             thickness)  # encoding new project name from specs
-        print proj_name
         iso_z=3.81+thickness
         trace_z = height + iso_z  # z dim of trace--- follow zihao 's setup in thesis
         FilePath = os.path.join(data_out_path, proj_name + '.py')  # create file name
@@ -448,5 +445,6 @@ def harvest_data_boundary_linear_approximation(height, thickness, width, length,
             stdout, stderr = p.communicate()
 
 if __name__ == '__main__':
+    pri
     print trace_mutual1(9,4)
     print trace_mutual(9,9,0.2,4)

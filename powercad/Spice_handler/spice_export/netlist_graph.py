@@ -28,13 +28,12 @@ Added documentation comments - jhmain 7-1-16
 
 import os
 import re
-import networkx as nx
+
 import matplotlib.pyplot as plt
-from powercad.design.library_structures import Device
-from powercad.spice_export.components import *
-from powercad.sym_layout.plot import plot_layout
-from pprint import pprint #sxm test; delete later
 from numpy import add
+
+from powercad.sym_layout.plot import plot_layout
+
 
 class Module_SPICE_lumped_graph():
     
@@ -111,7 +110,7 @@ class Module_SPICE_netlist_graph_v2():
         self.sym_layout = sym_layout
         self.sym_layout.gen_solution_layout(solution_index)
         if template_graph is None:
-            template_graph = self.sym_layout.lumped_graph[1]
+            template_graph = self.sym_layout.lumped_graph[0]
 
         # ensure every node has a type
         self._check_node_types(template_graph)

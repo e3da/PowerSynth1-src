@@ -20,22 +20,6 @@
    <string>Form</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="0" column="4" rowspan="10">
-    <widget class="QGraphicsView" name="grfx_layout">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="minimumSize">
-      <size>
-       <width>100</width>
-       <height>100</height>
-      </size>
-     </property>
-    </widget>
-   </item>
    <item row="0" column="1">
     <widget class="QTableWidget" name="tbl_info">
      <property name="sizePolicy">
@@ -152,57 +136,39 @@
      <column/>
     </widget>
    </item>
-   <item row="8" column="1">
-    <widget class="QPushButton" name="btn_export_spice_reduced_parasitics">
+   <item row="6" column="1">
+    <widget class="QPushButton" name="btn_export_selected">
+     <property name="maximumSize">
+      <size>
+       <width>300</width>
+       <height>16777215</height>
+      </size>
+     </property>
      <property name="text">
-      <string>Export SPICE Electrical Reduced Parasitics Netlist</string>
+      <string>Export Script</string>
      </property>
     </widget>
    </item>
-   <item row="0" column="2" rowspan="10">
+   <item row="0" column="2" rowspan="8">
     <widget class="Line" name="line">
      <property name="orientation">
       <enum>Qt::Vertical</enum>
      </property>
     </widget>
    </item>
-   <item row="6" column="1">
-    <widget class="QPushButton" name="btn_export_spice_parasitics">
-     <property name="text">
-      <string>Export SPICE Electrical Parasitics Netlist</string>
+   <item row="0" column="4" rowspan="8">
+    <widget class="QGraphicsView" name="grfx_layout">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
      </property>
-    </widget>
-   </item>
-   <item row="7" column="1">
-    <widget class="QPushButton" name="btn_export_spice_thermal">
-     <property name="text">
-      <string>Export SPICE Thermal Netlist</string>
-     </property>
-    </widget>
-   </item>
-   <item row="5" column="1">
-    <widget class="QPushButton" name="btn_export_solidworks">
-     <property name="maximumSize">
+     <property name="minimumSize">
       <size>
-       <width>300</width>
-       <height>16777215</height>
+       <width>100</width>
+       <height>100</height>
       </size>
-     </property>
-     <property name="text">
-      <string>Export Solution to SolidWorks</string>
-     </property>
-    </widget>
-   </item>
-   <item row="4" column="1">
-    <widget class="QPushButton" name="btn_export_q3d">
-     <property name="maximumSize">
-      <size>
-       <width>300</width>
-       <height>16777215</height>
-      </size>
-     </property>
-     <property name="text">
-      <string>Export Solution to Q3D</string>
      </property>
     </widget>
    </item>
@@ -210,6 +176,52 @@
     <widget class="QPushButton" name="btn_run_drc">
      <property name="text">
       <string>Run DRC</string>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="1">
+    <widget class="QComboBox" name="cmbox_export_option">
+     <item>
+      <property name="text">
+       <string>Q3D</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Solidworks</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Electrical netlist </string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Thermal netlist</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>FastHenry</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>EMPro</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string/>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item row="4" column="1">
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string>Export options</string>
      </property>
     </widget>
    </item>

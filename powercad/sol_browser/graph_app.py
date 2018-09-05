@@ -22,7 +22,7 @@ matplotlib.rcParams['backend.qt4']='PySide'
 
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg as NavigationToolbar
+from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT  as NavigationToolbar
 
 from mpl_toolkits.mplot3d import Axes3D
 
@@ -33,7 +33,7 @@ from powercad.sol_browser.solution_lib import SolutionLibrary
 
 from powercad.sym_layout.plot import plot_layout
 from powercad.electro_thermal.ElectroThermal_toolbox import ET_analysis
-from powercad.spice_export.thermal_netlist_graph import Module_Full_Thermal_Netlist_Graph
+from powercad.Spice_handler.spice_export.thermal_netlist_graph import Module_Full_Thermal_Netlist_Graph
 from powercad.export.py_csv import py_csv 
 
 class GrapheneWindow(QtGui.QMainWindow):
@@ -393,7 +393,8 @@ class GrapheneWindow(QtGui.QMainWindow):
             # plot layout
             self.preview_figure.clear()
             self.preview_axes = self.preview_figure.add_subplot(1,1,1, aspect=1.0)
-            plot_layout(self.sym_layout, self.preview_axes, new_window=False)
+            filletFlag = False
+            plot_layout(self.sym_layout, filletFlag, self.preview_axes, new_window=False)
             self.preview_canvas.draw()
         
     def save_solution(self):

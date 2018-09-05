@@ -71,7 +71,6 @@ def trace_inductance(w, l, t, h):
     # and return a larger worst case value.
     w = fabs(w)
     l = fabs(l)
-
     if w > l * LOWEST_ASPECT_IND:
         w = l * LOWEST_ASPECT_IND
 
@@ -151,26 +150,89 @@ def trace_capacitance(w, l, t, h, k=8.8):
 
     return c
 
-def load_mdl(dir=None,mdl_name=None,type=None):
+def load_mdl(dir=None,mdl_name=None):
     mdl=load_file(os.path.join(dir,mdl_name))
     return mdl
 
-def trace_res_krige(f,w,l,mdl):
+def wire_over_plane(r,h,l):
+    Ind=0.14*math.log(h/(2*r))*l/304.8
+    Ind=Ind*1000
+
+    return Ind
+
+def trace_res_krige1(f,w,l,t,p,mdl):
     model = mdl.model[0]
     op_freq=mdl.op_point
     r=model.execute('points',[w],[l])
     r=np.ma.asarray(r[0])
-    r=r/1000 # report in m ohm
-    return r*m.sqrt(f/op_freq)
+    #print "rat",f/op_freq
+    t1=t*1e-3
+    rdc=[]
+    for w1,l1 in zip(w,l):
+        w1=w1*1e-3
+        l1=l1*1e-3
+        rdc.append(p*l1/(w1*t1)*1000)
+    rac=r*m.sqrt(f/op_freq)
+    #reff=np.sqrt(math.pow(rac,2)+rdc**2)
 
-def trace_ind_krige(f,w,l,mdl):
+    #print rac
+
+    return rac
+
+def trace_res_krige(f,w,l,t,p,mdl):
+    # unit is mOhm
+    # f in kHz
+    # Select a model for the closest frequency point
+    frange=[]
+    for m in mdl:
+       frange.append(m['f'])
+    ferr=[f for i in range(len(frange))]
+    ferr=(abs(np.array(frange)-np.array(ferr))).tolist()
+    f_index=ferr.index(min(ferr))
+    fselect= mdl[f_index]['f']
+    #print 'f',fselect
+    m_sel=mdl[f_index]['mdl']
+    model = m_sel.model[0]
+    r=model.execute('points',w,l)
+    r = np.ma.asarray(r[0])
+
+    if isinstance(r,np.ma.masked_array) and isinstance(w,float):
+        return r[0]
+    else:
+        return r
+
+def trace_ind_krige1(f,w,l,mdl):
     # unit is nH
+
     n_params=len(mdl.input)
     params=[]
     for i in range(n_params):
         params.append(np.ma.asarray((mdl.model[i].execute('points',w,l)))[0])
     l=mdl.sweep_function(f,params[0],params[1])
     return l
+
+def trace_ind_krige(f,w,l,mdl):
+    # unit is nH
+    # f in kHz
+    # Select a model for the closest frequency point
+    #w=[8.0, 10.0, 2.0, 4.0, 4.0, 2.0, 10.0, 4.0]
+    #l=[9.135000000000002, 16.865, 0.13500000000000156, 9.0, 11.0, 2.264999999999997, 11.264999999999997, 16.735000000000003]
+    frange=[]
+    for m in mdl:
+        frange.append(m['f'])
+    ferr=[f for i in range(len(frange))]
+    ferr=(abs(np.array(frange)-np.array(ferr))).tolist()
+    f_index=ferr.index(min(ferr))
+    m_sel=mdl[f_index]['mdl']
+    model = m_sel.model[0]
+    #print "width,length", w, l
+    l=model.execute('points',w,l)
+    l = np.ma.asarray(l[0])
+
+    if isinstance(l,np.ma.masked_array) and isinstance(w,float):
+        return l[0]
+    else:
+        return l
 
 def trace_cap_krige(w,l,mdl):
     # unit is pF
@@ -179,6 +241,28 @@ def trace_cap_krige(w,l,mdl):
     c=np.ma.asarray(c[0])
 
     return c
+
+def trace_90_corner_ind(f,w1,w2,mdl):
+    # unit is nH
+    # f in kHz
+    # Select a model for the closest frequency point
+    frange = []
+    # print 'freq', f
+    for m in mdl:
+        frange.append(m['f'])
+    ferr = [f for i in range(len(frange))]
+    ferr = (abs(np.array(frange) - np.array(ferr))).tolist()
+    f_index = ferr.index(min(ferr))
+    # print 'selected f', frange[f_index]
+    m_sel = mdl[f_index]['mdl']
+    model = m_sel.model[0]
+    l = model.execute('points', w1, w2)
+    l = np.ma.asarray(l[0])
+
+    if isinstance(l, np.ma.masked_array) and isinstance(w1, float):
+        return l[0]
+    else:
+        return l
 
 if __name__ == '__main__':
     mdl_dir='D:\Testing\Py_Q3D_test\All rs models'

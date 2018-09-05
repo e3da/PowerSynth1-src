@@ -53,6 +53,7 @@ class ModuleDesign(object):
         
         # Devices
         self.devices = []
+        self.dv_id=[]
         for dev in layout.devices:
             cpos = dev.center_position
             # Translate points over by ledge_width (reference to substrate corner)
@@ -61,16 +62,18 @@ class ModuleDesign(object):
             fp.translate(ledge_width, ledge_width)
             dev_sol = DeviceSolution(cpos, dev.tech, fp)
             self.devices.append(dev_sol)
-            
+            self.dv_id.append(dev.name)
+
         # Leads
         self.leads = []
+        self.lead_id=[]
         for lead in layout.leads:
             cpos = lead.center_position
             # Translate points over by ledge_width (reference to substrate corner)
             cpos = translate_pt(cpos, ledge_width, ledge_width)
             lead_sol = LeadSolution(cpos, lead.orientation, lead.tech)
             self.leads.append(lead_sol)
-            
+            self.lead_id.append(lead.name)
         # Bondwires
         self.bondwires = []
         for wire in layout.bondwires:
@@ -96,17 +99,21 @@ class ModuleDesign(object):
         
         # Traces
         self.traces = []
+        self.orient=[]
         for line in layout.all_trace_lines:
             if line.intersecting_trace is None:
                 rect = copy(line.trace_rect)
                 rect.translate(ledge_width, ledge_width)
                 self.traces.append(rect)
+                self.orient.append(line.element.vertical)
             else:
                 if line.has_rect:
                     rect = copy(line.trace_rect)
                     rect.translate(ledge_width, ledge_width)
                     self.traces.append(rect)
-    
+                    self.orient.append(line.element.vertical)
+
+
 if __name__ == '__main__':
     sym_layout = build_test_layout()
     md = ModuleDesign(sym_layout)

@@ -30,7 +30,6 @@ class ThermalProperties:
         index=0
         for names in self.layers_names:
             if names==name:
-                print index
                 return self.properties[index]
                 
             else:
@@ -38,10 +37,8 @@ class ThermalProperties:
     def get_dims(self,name):
         index=0   
         for names in self.layers_names:
-            print names
             if names==name:
                 return self.dimensions[index]
-                print index
             else:
                 index+=1     
 #quang/:
