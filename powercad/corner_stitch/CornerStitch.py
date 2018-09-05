@@ -3468,7 +3468,7 @@ if __name__ == '__main__':
     HID=0
     Tile1=tile(None, None, None, None, None, cell(0, 0, "EMPTY"),nodeId=1)
     TN=tile(None, None, None, None, None, cell(0, 60, None))
-    TE = tile(None, None, None, None, None, cell(70, 0,  None))
+    TE = tile(None, None, None, None, None, cell(50, 0,  None))
     TW= tile(None, None, None, None, None, cell(-1000, 0,  None))
     TS = tile(None, None, None, None, None, cell(0,-1000,  None))
     Tile1.NORTH=TN
@@ -3486,7 +3486,7 @@ if __name__ == '__main__':
     Vtree=Tree(hNodeList=None,vNodeList=[Vnode0])
     Tile2 = tile(None, None, None, None, None, cell(0, 0, "EMPTY"), nodeId=1)
     TN2 = tile(None, None, None, None, None, cell(0, 60, None))
-    TE2 = tile(None, None, None, None, None, cell(70, 0, None))
+    TE2 = tile(None, None, None, None, None, cell(50, 0, None))
     TW2 = tile(None, None, None, None, None, cell(-1000, 0, None))
     TS2 = tile(None, None, None, None, None, cell(0, -1000, None))
     Tile2.NORTH = TN2
@@ -4434,13 +4434,22 @@ if __name__ == '__main__':
             if i[1]<min_y:
                 min_y=i[1]
         #print max_x,max_y
+        Type=["EMPTY","Type_1","Type_2","Type_3","Type_4","Type_5","Type_6","Type_7"]
+        Color=[	"#FFFFFF",'#008000','#FF0000',"#0000FF","#00bfff","	#A52A2A",'#00EEEE','#EE82EE'] #[White,green,red,blue,light blue,brown,cyan,violet]
         fig10, ax5 = plt.subplots()
+
+        c=0
+
         for i in Rect_H:
 
                 # ax4 = fig2.add_subplot(111, aspect='equal')
             if not i[-1] == "EMPTY":
-
-
+                c+=1
+                for j in Type:
+                    if i[-1]==j:
+                        ind=Type.index(j)
+                        colour=Color[ind]
+                '''
                 if i[-1]=="Type_1":
                     colour='green'
                     #pattern = '\\'
@@ -4454,7 +4463,7 @@ if __name__ == '__main__':
                     colour="#00bfff"
                     #pattern = '.'
 
-
+                '''
                 ax5.add_patch(
                     matplotlib.patches.Rectangle(
                         (i[0], i[1]),  # (x,y)
@@ -4476,7 +4485,90 @@ if __name__ == '__main__':
                         facecolor="white", edgecolor='black'
                     )
                 )
+        plt.xlim(min_x, max_x)
+        plt.ylim(min_y, max_y)
+        # plt.xlim(0, 60)
+        # plt.ylim(0, 100)#fig10.show().eps",format='eps',
+        # return fig10
+        print"C",c
+        fig10.savefig(directory + '/' + '/' + testbase + '-' + str(k) + "init-H" + format, bbox_inches='tight')
+        plt.close()
 
+    def plotrectH_Volt( k,Rect_H,format):###plotting each node in HCS before minimum location evaluation
+        """
+        Draw all cells in this cornerStitch with stitches pointing to their stitch neighbors
+        TODO:
+         Also should probably change the dimensions of the object window depending on the cornerStitch size.
+        """
+
+        # fig2 = matplotlib.pyplot.figure()
+        #node=nodelist[0]
+
+        max_x=0
+        max_y=0
+        min_x=10000
+        min_y=10000
+        for i in Rect_H:
+            if i[0]+i[2]>max_x:
+                max_x=i[0]+i[2]
+            if i[1]+i[3]>max_y:
+                max_y=i[1]+i[3]
+            if i[0]<min_x:
+                min_x=i[0]
+            if i[1]<min_y:
+                min_y=i[1]
+        #print max_x,max_y
+        Type=["EMPTY","Type_1","Type_2","Type_3","Type_4","Type_5","Type_6","Type_7"]
+        Color=[	"#FFFFFF",'#008000','#FF0000',"#0000FF","#00bfff","	#A52A2A",'#00EEEE','#EE82EE'] #[White,green,red,blue,light blue,brown,cyan,violet]
+        #fig10, ax5 = plt.subplots()
+        fig11,ax11=plt.subplots()
+        Voltages=[]
+
+        for i in Rect_H:
+            if i[-3]!=None:
+                Voltages.append(i[-3])
+
+        #print len(Voltages)
+        voltages=set(Voltages)
+        Voltages= [k for k in voltages]
+        Voltages.sort()
+        #print Voltages
+        for i in Rect_H:
+            if i[-1]!="EMPTY":
+                colour=None
+                for j in Voltages:
+                    if i[-3] == j:
+                        #print "yes",i[-3]
+                        ind = Voltages.index(j)
+                        colour = Color[ind+1]
+                        #print colour
+
+
+                    #else:
+                        #colour=Color[0]
+                        #print colour
+                if colour==None:
+                    colour=Color[-1]
+                ax11.add_patch(
+                    matplotlib.patches.Rectangle(
+                        (i[0], i[1]),  # (x,y)
+                        i[2],  # width
+                        i[3],  # height
+                        facecolor=colour, edgecolor='black'
+
+                    )
+                )
+            else:
+                colour = Color[0]
+                ax11.add_patch(
+                    matplotlib.patches.Rectangle(
+                        (i[0], i[1]),  # (x,y)
+                        i[2],  # width
+                        i[3],  # height
+                        facecolor=colour, edgecolor='black'
+
+                    )
+                )
 
         plt.xlim(min_x, max_x)
         plt.ylim(min_y, max_y)
@@ -4484,7 +4576,8 @@ if __name__ == '__main__':
         #plt.ylim(0, 100)#fig10.show().eps",format='eps',
         #return fig10
 
-        fig10.savefig(directory+'/' +'/'+testbase+'-'+str(k)+"init-H"+format,bbox_inches='tight')
+        #fig10.savefig(directory+'/' +'/'+testbase+'-'+str(k)+"init-H"+format,bbox_inches='tight')
+        fig11.savefig(directory + '/' + '/' + testbase + '-'  + "voltage-H" + format, bbox_inches='tight')
         #fig10.savefig(testdir + '/' +'/'+ testbase + '-' + str(k) + "init-H.eps",format='eps', bbox_inches='tight')
         plt.close()
     def plotrectV_old( k,Rect_H,format):##plotting each node in VCS before minimum location evaluation
@@ -4563,6 +4656,90 @@ if __name__ == '__main__':
         #fig9.savefig(testdir + '/'  +'Mode-'+str(level)+'/'+ testbase + '-' + str(k) + "init-V.eps",format='eps', bbox_inches='tight')
         plt.close()
 
+    def plotrectV_Volt( k,Rect_H,format):##plotting each node in VCS before minimum location evaluation
+        """
+        Draw all cells in this cornerStitch with stitches pointing to their stitch neighbors
+        TODO:
+         Also should probably change the dimensions of the object window depending on the cornerStitch size.
+        """
+        #print Rect_H
+        # fig2 = matplotlib.pyplot.figure()
+        #node=nodelist[0]
+        max_x=0
+        max_y=0
+        min_x=10000
+        min_y=10000
+        for i in Rect_H:
+            if i[0]+i[2]>max_x:
+                max_x=i[0]+i[2]
+            if i[1]+i[3]>max_y:
+                max_y=i[1]+i[3]
+            if i[0]<min_x:
+                min_x=i[0]
+            if i[1]<min_y:
+                min_y=i[1]
+        #print max_x,max_y
+        fig12, ax12 = plt.subplots()
+        Color = ["#FFFFFF", '#008000', '#FF0000', "#0000FF", "#00bfff", "	#A52A2A", '#00EEEE',
+                 '#EE82EE']  # [White,green,red,blue,light blue,brown,cyan,violet]
+        # fig10, ax5 = plt.subplots()
+        #fig11, ax11 = plt.subplots()
+        Voltages = []
+
+        for i in Rect_H:
+            if i[-3] != None:
+                Voltages.append(i[-3])
+
+        # print len(Voltages)
+        voltages = set(Voltages)
+        Voltages = [k for k in voltages]
+        Voltages.sort()
+        # print Voltages
+        for i in Rect_H:
+            if i[-1]!="EMPTY":
+                colour = None
+                for j in Voltages:
+                    if i[-3] == j:
+                        # print "yes",i[-3]
+                        ind = Voltages.index(j)
+                        colour = Color[ind + 1]
+                        # print colour
+
+                    # else:
+                    # colour=Color[0]
+                    # print colour
+                if colour == None:
+                    colour = Color[-1]
+                ax12.add_patch(
+                    matplotlib.patches.Rectangle(
+                        (i[0], i[1]),  # (x,y)
+                        i[2],  # width
+                        i[3],  # height
+                        facecolor=colour, edgecolor='black'
+
+                    )
+                )
+            else:
+                colour=Color[0]
+                ax12.add_patch(
+                    matplotlib.patches.Rectangle(
+                        (i[0], i[1]),  # (x,y)
+                        i[2],  # width
+                        i[3],  # height
+                        facecolor=colour, edgecolor='black'
+
+                    )
+                )
+
+        plt.xlim(min_x, max_x)
+        plt.ylim(min_y, max_y)
+        # plt.xlim(0, 60)
+        #fig10.show()
+        #return fig10
+
+        fig12.savefig(directory+'/' +'/'+testbase+'-'+str(k)+"Voltage-V"+format,bbox_inches='tight')
+        #fig9.savefig(testdir + '/'  +'Mode-'+str(level)+'/'+ testbase + '-' + str(k) + "init-V.eps",format='eps', bbox_inches='tight')
+        plt.close()
 
     def plotrectH_new(Rect1_H,format):##plotting each node in HCS for level 2 optimization
         """
@@ -4829,6 +5006,8 @@ if __name__ == '__main__':
         #plt.ylim(0, 100)
         plt.xlim(min_x, max_x)
         plt.ylim(min_y, max_y)
+        plt.xticks(np.arange(min_x,  max_x+2, 2.0))
+        plt.yticks(np.arange(min_y,  max_y+2, 2.0))
         # fig10.show()
         # return fig10
         # fig8.savefig(testdir + '/' +testbase+ str(j)+"new-H.eps",format='eps', dpi=1000,)
@@ -4940,10 +5119,12 @@ if __name__ == '__main__':
                 DIM=[]
                 #for rect in i.stitchList:
                 for j in i.stitchList:
-                    p=[j.cell.x, j.cell.y, j.getWidth(),j.getHeight(),j.cell.type]
+                    p=[j.cell.x, j.cell.y, j.getWidth(),j.getHeight(),j.voltage,j.current,j.cell.type]
+                    #print p
                     DIM.append(p)
 
-                    k = [j.cell.x, j.cell.y, j.EAST.cell.x, j.NORTH.cell.y]
+                    k = [j.cell.x, j.cell.y, j.EAST.cell.x, j.NORTH.cell.y,j.voltage,j.current]
+                    #print k
                     if k[0] in MINX[i.id].keys() and k[1] in MINY[i.id].keys() and k[2] in MINX[i.id].keys() and k[3] in MINY[i.id].keys():
                         rect=[MINX[i.id][k[0]],MINY[i.id][k[1]],MINX[i.id][k[2]]-MINX[i.id][k[0]],MINY[i.id][k[3]]-MINY[i.id][k[1]],j.cell.type]
                     Dimensions.append(rect)
@@ -4959,7 +5140,7 @@ if __name__ == '__main__':
                 DIM_V=[]
                 #for rect in i.stitchList:
                 for j in i.stitchList:
-                    p = [j.cell.x, j.cell.y, j.getWidth(), j.getHeight(), j.cell.type]
+                    p = [j.cell.x, j.cell.y, j.getWidth(), j.getHeight(),j.voltage,j.current, j.cell.type]
                     DIM_V.append(p)
                     k = [j.cell.x, j.cell.y, j.EAST.cell.x, j.NORTH.cell.y]
                     if k[0] in MINX[i.id].keys() and k[1] in MINY[i.id].keys() and k[2] in MINX[i.id].keys() and k[3] in MINY[i.id].keys():
@@ -4972,10 +5153,11 @@ if __name__ == '__main__':
         for k,v in RET_H.items():
             #print k, len(v)
             plotrectH_old(k,v,format)
+            #plotrectH_Volt(k,v,format)
         for k,v in RET_V.items():
             #print k, len(v)
             plotrectV_old(k,v,format)
-
+            #plotrectV_Volt(k, v, format)
         for k,v in Recatngles_H.items():
             #print k, len(v)
             plotrectH(k,v,format)
@@ -4999,8 +5181,10 @@ if __name__ == '__main__':
         for k, v in Recatngles_V.items():
             #print k
             Total_V.append(v)
+            print "VTile",len(v)
         #plotrectV_new(Total_V)
         plotrectV_min(Total_V,format)
+
 
     def plotrect_min(Rect1_H,format):  ##plotting each node in HCS for level 2 optimization
         """
@@ -5108,7 +5292,8 @@ if __name__ == '__main__':
         key=MINX.keys()[0]
         Recatngles_H.setdefault(key,[])
         for j in Htree.hNodeList[0].stitchList:
-            k = [j.cell.x, j.cell.y, j.EAST.cell.x, j.NORTH.cell.y,j.cell.type]
+            k = [j.cell.x, j.cell.y, j.EAST.cell.x, j.NORTH.cell.y,j.cell.type,j.voltage,j.current]
+            #print k
             DIM.append(k)
         #print DIM
         for i in range(len(MIN_X)):
@@ -5251,11 +5436,123 @@ if __name__ == '__main__':
     else:
         UPDATE(MIN_X, MIN_Y,format)
 
+    """
+    def design_string(HCS,VCS):
+        #print "HCS",HCS
+
+        Design_string=[]
+        D=[]
+        Sample={}
+        for i,j in VCS.items():
+            #if i==1:
+            for rect in j:
+                if rect[4]=="Type_1" or rect[4]=="Type_3":
+                    #if rect[2]<rect[3]:
+                        #print rect[0],rect[1]
+                    Sample[(rect[0],rect[1])]=int(rect[3])
+                        #Design_string.append(int(rect[2]))
+                    #else:
+                        #Sample[(rect[0], rect[1])]=int(rect[3])
+                        #Design_string.append(int(rect[3]))
+        od = collections.OrderedDict(sorted(Sample.items()))
+        print "OD",od
+        Sample_H={}
+        for i,j in VCS.items():
+            #if i==1:
+            for rect in j:
+                if rect[4]=="Type_1":
+                    #if rect[2]<rect[3]:
+                        #print rect[0],rect[1]
+                    Sample_H[(rect[0],rect[1])]=int(rect[2])
+                        #Design_string.append(int(rect[2]))
+        od_H = collections.OrderedDict(sorted(Sample_H.items()))
+        print od_H
+        Values_H=od_H.values()
+        KEYS=od.keys()
+        Values=od.values()
+        Min=2
+        for i,j in VCS.items():
+            #if i==1:
+            for rect in j:
+                if rect[4]=="EMPTY":
+                    if rect[2]>Min:
+                        D.append(int(rect[2]))
+
+
+        #Design_string.remove(max(Design_string))
+        D=set(D)
+        DEV = []
+        for i, j in VCS.items():
+            # if i==1:
+            for rect in j:
+                if rect[4] == "Type_2":
+                    # if rect[2]>Min:
+                    DEV.append(rect[0] - 2)
+        Design_string.append(Values_H[-1])
+        for i in range(1,6):
+            Design_string.append(Values[i])
+        Design_string.append((min(DEV)/float(max(D))))
+        Design_string.append((max(DEV)/float(min(D))))
+
+        print "DES",Design_string,od,Values,D
+        #Sorted_string=[Design_string[0],Design_string[3],Design_string[5],Design_string[1],Design_string[2],Design_string[6],Design_string[4],Design_string[-2],Design_string[-1]]
+
+        #for i in range(len(Design_string)):
+
+        #print"design",Sorted_string
+        return Design_string
+    def call_pick(object1, object2):
+        objects = []
+        with (open(directory + '/' + testbase + "Verticaldata.pickle", "rb")) as openfile:
+            while True:
+                try:
+                    objects.append(pickle.load(openfile))
+                except EOFError:
+                    break
+        print objects
+
+        pickle_out1 = open(directory + '/' + testbase + "Horizontaldata.pickle", "wb")
+        pickle.dump(object1, pickle_out1)
+        pickle_out1.close()
+        pickle_out2 = open(directory + '/' + testbase + "Verticaldata.pickle", "wb")
+        pickle.dump(object2, pickle_out2)
+        pickle_out2.close()
+        All_data = open(directory + '/' + testbase + "all_data.txt", "wb")
+        All_data.write(json.dumps(object1))
+        All_data.write(json.dumps(object2))
+        # pickle.dump(object, open(file, 'wb'))
+
+
+    def save_file(HCS, VCS):
+        RECTH = {}
+        RECTV = {}
+        # for l in range(len(HCS)):
+        for i, j in HCS.items():
+            key = i
+            RECTH.setdefault(key, [])
+            RECT_H = []
+
+            for k in j:
+                rectangle = [k[1] + k[3], k[1], k[0], k[0] + k[2], k[4], k[5]]
+                RECT_H.append(rectangle)
+            RECTH[key].append(RECT_H)
+        # for l in range(len(VCS)):
+        for i, j in VCS.items():
+            key = i
+            RECTV.setdefault(key, [])
+            RECT_V = []
+            for k in j:
+                rectangle = [k[1] + k[3], k[1], k[0], k[0] + k[2], k[4], k[5]]
+                RECT_V.append(rectangle)
+            RECTV[key].append(RECT_V)
+        print RECTH
+        print RECTV
+        call_pick(RECTH, RECTV)
 
 
 
 
-
+    """
 
     def drawLayer( nodelist,format):
         """
@@ -5313,7 +5610,7 @@ if __name__ == '__main__':
                     )
 
 
-            plt.xlim(0, 70)                     
+            plt.xlim(0, 50)
             plt.ylim(0, 60)
             #fig2.savefig(testdir + '/' + testbase + "-input.eps", format='eps',bbox_inches='tight')
             #fig2.savefig(testdir + '/' + testbase + "-input.emf", format='emf',bbox_inches='tight')

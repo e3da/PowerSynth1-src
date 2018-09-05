@@ -225,31 +225,59 @@ class constraintGraph:
                     if coord==k:
                         rect.voltage=v
                         RECTS.append(rect)
-        #RECTS_C = []
+        RECTS_C = []
+        #print "R",RECTS
         for node in HorizontalNodeList:
             for rect in node.stitchList:
                 coord = (rect.cell.x, rect.cell.y)
                 for k, v in Current.items():
                     if coord == k:
                         rect.current = v
-                        #RECTS_C.append(rect)
+                        RECTS_C.append(rect)
         VOLTAGE={}
+        CURRENT={}
         for i in range(len(CONNECTED_H)):
             #print CONNECTED_H[i]
             for j in CONNECTED_H[i]:
                 for RECT in RECTS:
                     if j.x1==RECT.cell.x and j.y1==RECT.cell.y and j.type==RECT.cell.type:
-                        VOLTAGE[RECT.voltage]=CONNECTED_H[i]
+                        #print"1"
+                        key=RECT.voltage
+                        #k2=RECT.current
+                        VOLTAGE.setdefault(key,[])
+                        #CURRENT.setdefault(k2, [])
+                        VOLTAGE[RECT.voltage].append(CONNECTED_H[i])
+                        #CURRENT[RECT.current].append(CONNECTED_H[i])
 
         #print VOLTAGE
+        for i in range(len(CONNECTED_H)):
+            #print CONNECTED_H[i]
+            for j in CONNECTED_H[i]:
+                for RECT in RECTS_C:
+                    if j.x1==RECT.cell.x and j.y1==RECT.cell.y and j.type==RECT.cell.type:
+                        #print"1"
+                        #key=RECT.voltage
+                        k2=RECT.current
+                        #VOLTAGE.setdefault(key,[])
+                        CURRENT.setdefault(k2, [])
+                        #VOLTAGE[RECT.voltage].append(CONNECTED_H[i])
+                        CURRENT[RECT.current].append(CONNECTED_H[i])
         for node in HorizontalNodeList:
             for rect in node.stitchList:
                 for k,v in VOLTAGE.items():
-                    for j in v:
-                        if rect.cell.x==j.x1 and rect.cell.y==j.y1 and rect.cell.type==j.type:
-                            if rect.voltage==None:
-                                rect.voltage=k
+                    for m in v:
+                        for j in m:
+                            if rect.cell.x==j.x1 and rect.cell.y==j.y1 and rect.cell.type==j.type:
+                                if rect.voltage==None:
 
+                                    rect.voltage=k
+                for k,v in CURRENT.items():
+                    for m in v:
+                        for j in m:
+                            if rect.cell.x==j.x1 and rect.cell.y==j.y1 and rect.cell.type==j.type:
+                                if rect.current==None:
+
+                                    rect.current=k
 
 
         RECTS_V=[]
@@ -261,28 +289,54 @@ class constraintGraph:
                         rect.voltage=v
                         #print"VO",rect.cell.x,rect.cell.y
                         RECTS_V.append(rect)
+        RECTS_C=[]
         for node in VerticalNodeList:
             for rect in node.stitchList:
                 coord=(rect.cell.x,rect.cell.y)
                 for k,v in Current.items():
                     if coord==k:
                         rect.current=v
-                        #print rect.cell.x,rect.cell.y
+                        RECTS_C.append(rect)
+                        #print rect.cell.x,rect.cell.y,rect.current
         VOLTAGE_V = {}
+        CURRENT_V={}
         for i in range(len(CONNECTED_V)):
             #print CONNECTED_V[i]
             for j in CONNECTED_V[i]:
                 for RECT_V in RECTS_V:
                     if j.x1 == RECT_V.cell.x and j.y1 == RECT_V.cell.y and j.type == RECT_V.cell.type:
-                        VOLTAGE_V[RECT_V.voltage] = CONNECTED_V[i]
+                        key=RECT_V.voltage
+                        #k2=RECT_V.current
+                        VOLTAGE_V.setdefault(key,[])
+                        #CURRENT_V.setdefault(k2, [])
+                        VOLTAGE_V[RECT_V.voltage].append(CONNECTED_V[i])
+                        #CURRENT_V[RECT_V.current].append(CONNECTED_V[i])
         #print VOLTAGE_V
+        for i in range(len(CONNECTED_V)):
+            #print CONNECTED_V[i]
+            for j in CONNECTED_V[i]:
+                for RECT_V in RECTS_C:
+                    if j.x1 == RECT_V.cell.x and j.y1 == RECT_V.cell.y and j.type == RECT_V.cell.type:
+                        #key=RECT_V.voltage
+                        k2=RECT_V.current
+                        #VOLTAGE_V.setdefault(key,[])
+                        CURRENT_V.setdefault(k2, [])
+                        #VOLTAGE_V[RECT_V.voltage].append(CONNECTED_V[i])
+                        CURRENT_V[RECT_V.current].append(CONNECTED_V[i])
         for node in VerticalNodeList:
             for rect in node.stitchList:
                 for k, v in VOLTAGE_V.items():
-                    for j in v:
-                        if rect.cell.x == j.x1 and rect.cell.y == j.y1 and rect.cell.type == j.type:
-                            if rect.voltage == None:
-                               rect.voltage = k
+                    for m in v:
+                        for j in m:
+                            if rect.cell.x == j.x1 and rect.cell.y == j.y1 and rect.cell.type == j.type:
+                                if rect.voltage == None:
+                                   rect.voltage = k
+                for k, v in CURRENT_V.items():
+                    for m in v:
+                        for j in m:
+                            if rect.cell.x == j.x1 and rect.cell.y == j.y1 and rect.cell.type == j.type:
+                                if rect.current == None:
+                                   rect.current = k
 
 
         '''
@@ -363,6 +417,7 @@ class constraintGraph:
         self.edgesh_new = collections.OrderedDict(sorted(self.edgesh_new.items()))
         self.edgesv_new = collections.OrderedDict(sorted(self.edgesv_new.items()))
         # print "K",self.edgesh_new.keys()
+
         for k, v in list(self.edgesh_new.iteritems())[::-1]:
 
             ID, edgeh = k, v
@@ -592,7 +647,7 @@ class constraintGraph:
         setToList_h.sort()
         # self.zeroDimensionListh = setToList_h
         return setToList_h, setToList_v
-
+    '''
     def round(self,n):
 
         # Smaller multiple
@@ -600,7 +655,7 @@ class constraintGraph:
 
         # Larger multiple
         b = a + 10
-
+        #print a,b
         # Return of closest of two
         return (b if n - a > b - n else a)
 
@@ -617,6 +672,7 @@ class constraintGraph:
                 min = m + 1
             else:
                 max = m - 1
+    '''
 
     def setEdgesFromLayer(self, cornerStitch_h, cornerStitch_v):
         # self.vertexMatrixh=defaultdict(lambda: defaultdict(list))
@@ -764,8 +820,8 @@ class constraintGraph:
                             #print rect.cell.x,rect.cell.y,rect.voltage
                             V=abs(rect.NORTH.voltage-rect.SOUTH.voltage)
                             #print "Voltage", V
-                            V=self.round(V)
-
+                            #V=self.round(V)
+                            #print "Voltage1", V
                             sequence=self.voltage_constraint.keys()
                             sequence.sort()
 
@@ -778,6 +834,7 @@ class constraintGraph:
                                 value2=self.voltage_constraint[V1]
                             else:
                                 value2=None
+                    #print"V", value2
                     c = constraint.constraint(1)
                     index = 1
                     value1 = constraint.constraint.getConstraintVal(c, source=t1, dest=t2)
@@ -987,7 +1044,7 @@ class constraintGraph:
                         if rect.EAST.voltage != None and rect.WEST.voltage != None:
                             # print rect.cell.x,rect.cell.y,rect.voltage
                             V = abs(rect.EAST.voltage - rect.WEST.voltage)
-                            V = self.round(V)
+                            #V = self.round(V)
                             # print "Voltage",V
                             sequence = self.voltage_constraint.keys()
                             sequence.sort()
@@ -1067,7 +1124,7 @@ class constraintGraph:
                         ind = bins.searchsorted(C)
                         # print sequence, ind, bins, V
                         C1 = seq[ind]
-                        # print "Voltage",sequence, sequence[ind]
+                        #print "Current",sequence, sequence[ind]
                         if C1 in self.current_constraint.keys():
                             value2 = self.current_constraint[C1]
                         else:
@@ -1158,6 +1215,7 @@ class constraintGraph:
 
         self.edgesh[ID] = edgesh
         self.edgesv[ID] = edgesv
+        print"EDGE", len(self.edgesh_new[ID]), len(self.edgesv_new[ID])
 
     '''
 
@@ -1219,6 +1277,7 @@ class constraintGraph:
             d[k].append(v)
         edge_labels1 = d
         stop4 = timeit.default_timer()
+        print"H_nodes",len(nodes)
         #print "HCG",stop4-start4
         #self.drawGraph_h(name, G2, edge_labels1)
 
@@ -1768,6 +1827,7 @@ class constraintGraph:
         edge_labels1 = d
         # print edge_labels1
         nodes = [x for x in range(len(self.ZDL_V[ID]))]
+        print"V_nodes",len(nodes)
         GV.add_nodes_from(nodes)
 
         label = []
