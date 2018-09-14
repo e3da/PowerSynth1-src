@@ -129,225 +129,225 @@ class constraintGraph:
         # self.matrixFromDimList()
         self.setEdgesFromLayer(cornerStitch_h, cornerStitch_v)
         """
-        HorizontalNodeList = []
-        VerticalNodeList = []
+        self.HorizontalNodeList = []
+        self.VerticalNodeList = []
         for node in H_NODELIST:
             if node.child == []:
                 continue
             else:
-                HorizontalNodeList.append(node)
+                self.HorizontalNodeList.append(node)
 
         for node in V_NODELIST:
             if node.child == []:
                 continue
             else:
-                VerticalNodeList.append(node)
+                self.VerticalNodeList.append(node)
         #print "RESULT"
 
         ## Voltage assignment
         #Voltage={(5,50):0,(5,35):100, (5,20):10}
+        if CONNECTED_H!=None:
+            Voltage={}
+            self.voltage_constraint={}
+            with open(name1+'/'+'Voltage-info.csv', 'rb') as csvfile:
+                csvreader = csv.reader(csvfile)
 
-        Voltage={}
-        self.voltage_constraint={}
-        with open(name1+'/'+'Voltage-info.csv', 'rb') as csvfile:
-            csvreader = csv.reader(csvfile)
+                # extracting field names through first row
+                fields = csvreader.next()
 
-            # extracting field names through first row
-            fields = csvreader.next()
-
-            # extracting each data row one by one
-            i=0
-            for row in csvreader:
-                i+=1
-                if row[0] in (None, ""):
-                    break
-                else:
-                    Voltage[(int(row[0]), int(row[1]))] = int(row[2])
-            i+=2
-            j=0
-            for row in csvreader:
-                #print j,i
-                j+=1
-
-                while j<=i+1:
+                # extracting each data row one by one
+                i=0
+                for row in csvreader:
+                    i+=1
+                    if row[0] in (None, ""):
+                        break
+                    else:
+                        Voltage[(int(row[0]), int(row[1]))] = int(row[2])
+                i+=2
+                j=0
+                for row in csvreader:
+                    #print j,i
                     j+=1
-                    continue
-                #print j,row
 
-                if row[0]=='V':
-                    continue
+                    while j<=i+1:
+                        j+=1
+                        continue
+                    #print j,row
 
-                else:
-                    #print row
-                    self.voltage_constraint[int(row[0])] = int(row[1])
-                #print row[0],row[1],row[2]
-        #print i,j,Voltage,self.voltage_constraint
-        #RECT_H=[]
-        Current = {}
-        self.current_constraint = {}
-        with open(name1 + '/' + 'Current-info.csv', 'rb') as csvfile:
-            csvreader = csv.reader(csvfile)
+                    if row[0]=='V':
+                        continue
 
-            # extracting field names through first row
-            fields = csvreader.next()
+                    else:
+                        #print row
+                        self.voltage_constraint[int(row[0])] = int(row[1])
+                    #print row[0],row[1],row[2]
+            #print i,j,Voltage,self.voltage_constraint
+            #RECT_H=[]
+            Current = {}
+            self.current_constraint = {}
+            with open(name1 + '/' + 'Current-info.csv', 'rb') as csvfile:
+                csvreader = csv.reader(csvfile)
 
-            # extracting each data row one by one
-            i = 0
-            for row in csvreader:
-                i += 1
-                if row[0] in (None, ""):
-                    break
-                else:
-                    Current[(int(row[0]), int(row[1]))] = int(row[2])
-            i += 2
-            j = 0
-            for row in csvreader:
-                # print j,i
-                j += 1
+                # extracting field names through first row
+                fields = csvreader.next()
 
-                while j <= i + 1:
+                # extracting each data row one by one
+                i = 0
+                for row in csvreader:
+                    i += 1
+                    if row[0] in (None, ""):
+                        break
+                    else:
+                        Current[(int(row[0]), int(row[1]))] = int(row[2])
+                i += 2
+                j = 0
+                for row in csvreader:
+                    # print j,i
                     j += 1
-                    continue
-                # print j,row
 
-                if row[0] == 'I':
-                    continue
+                    while j <= i + 1:
+                        j += 1
+                        continue
+                    # print j,row
 
-                else:
-                    # print row
-                    self.current_constraint[int(row[0])] = int(row[1])
-        #print self.current_constraint
-        RECTS=[]
-        for node in HorizontalNodeList:
-            for rect in node.stitchList:
-                coord=(rect.cell.x,rect.cell.y)
-                for k,v in Voltage.items():
-                    if coord==k:
-                        rect.voltage=v
-                        RECTS.append(rect)
-        RECTS_C = []
-        #print "R",RECTS
-        for node in HorizontalNodeList:
-            for rect in node.stitchList:
-                coord = (rect.cell.x, rect.cell.y)
-                for k, v in Current.items():
-                    if coord == k:
-                        rect.current = v
-                        RECTS_C.append(rect)
-        VOLTAGE={}
-        CURRENT={}
-        for i in range(len(CONNECTED_H)):
-            #print CONNECTED_H[i]
-            for j in CONNECTED_H[i]:
-                for RECT in RECTS:
-                    if j.x1==RECT.cell.x and j.y1==RECT.cell.y and j.type==RECT.cell.type:
-                        #print"1"
-                        key=RECT.voltage
-                        #k2=RECT.current
-                        VOLTAGE.setdefault(key,[])
-                        #CURRENT.setdefault(k2, [])
-                        VOLTAGE[RECT.voltage].append(CONNECTED_H[i])
-                        #CURRENT[RECT.current].append(CONNECTED_H[i])
+                    if row[0] == 'I':
+                        continue
 
-        #print VOLTAGE
-        for i in range(len(CONNECTED_H)):
-            #print CONNECTED_H[i]
-            for j in CONNECTED_H[i]:
-                for RECT in RECTS_C:
-                    if j.x1==RECT.cell.x and j.y1==RECT.cell.y and j.type==RECT.cell.type:
-                        #print"1"
-                        #key=RECT.voltage
-                        k2=RECT.current
-                        #VOLTAGE.setdefault(key,[])
-                        CURRENT.setdefault(k2, [])
-                        #VOLTAGE[RECT.voltage].append(CONNECTED_H[i])
-                        CURRENT[RECT.current].append(CONNECTED_H[i])
-        for node in HorizontalNodeList:
-            for rect in node.stitchList:
-                for k,v in VOLTAGE.items():
-                    for m in v:
-                        for j in m:
-                            if rect.cell.x==j.x1 and rect.cell.y==j.y1 and rect.cell.type==j.type:
-                                if rect.voltage==None:
+                    else:
+                        # print row
+                        self.current_constraint[int(row[0])] = int(row[1])
+            #print self.current_constraint
+            RECTS=[]
+            for node in HorizontalNodeList:
+                for rect in node.stitchList:
+                    coord=(rect.cell.x,rect.cell.y)
+                    for k,v in Voltage.items():
+                        if coord==k:
+                            rect.voltage=v
+                            RECTS.append(rect)
+            RECTS_C = []
+            #print "R",RECTS
+            for node in HorizontalNodeList:
+                for rect in node.stitchList:
+                    coord = (rect.cell.x, rect.cell.y)
+                    for k, v in Current.items():
+                        if coord == k:
+                            rect.current = v
+                            RECTS_C.append(rect)
+            VOLTAGE={}
+            CURRENT={}
+            for i in range(len(CONNECTED_H)):
+                #print CONNECTED_H[i]
+                for j in CONNECTED_H[i]:
+                    for RECT in RECTS:
+                        if j.x1==RECT.cell.x and j.y1==RECT.cell.y and j.type==RECT.cell.type:
+                            #print"1"
+                            key=RECT.voltage
+                            #k2=RECT.current
+                            VOLTAGE.setdefault(key,[])
+                            #CURRENT.setdefault(k2, [])
+                            VOLTAGE[RECT.voltage].append(CONNECTED_H[i])
+                            #CURRENT[RECT.current].append(CONNECTED_H[i])
 
-                                    rect.voltage=k
-                for k,v in CURRENT.items():
-                    for m in v:
-                        for j in m:
-                            if rect.cell.x==j.x1 and rect.cell.y==j.y1 and rect.cell.type==j.type:
-                                if rect.current==None:
+            #print VOLTAGE
+            for i in range(len(CONNECTED_H)):
+                #print CONNECTED_H[i]
+                for j in CONNECTED_H[i]:
+                    for RECT in RECTS_C:
+                        if j.x1==RECT.cell.x and j.y1==RECT.cell.y and j.type==RECT.cell.type:
+                            #print"1"
+                            #key=RECT.voltage
+                            k2=RECT.current
+                            #VOLTAGE.setdefault(key,[])
+                            CURRENT.setdefault(k2, [])
+                            #VOLTAGE[RECT.voltage].append(CONNECTED_H[i])
+                            CURRENT[RECT.current].append(CONNECTED_H[i])
+            for node in HorizontalNodeList:
+                for rect in node.stitchList:
+                    for k,v in VOLTAGE.items():
+                        for m in v:
+                            for j in m:
+                                if rect.cell.x==j.x1 and rect.cell.y==j.y1 and rect.cell.type==j.type:
+                                    if rect.voltage==None:
 
-                                    rect.current=k
+                                        rect.voltage=k
+                    for k,v in CURRENT.items():
+                        for m in v:
+                            for j in m:
+                                if rect.cell.x==j.x1 and rect.cell.y==j.y1 and rect.cell.type==j.type:
+                                    if rect.current==None:
 
-
-        RECTS_V=[]
-        for node in VerticalNodeList:
-            for rect in node.stitchList:
-                coord=(rect.cell.x,rect.cell.y)
-                for k,v in Voltage.items():
-                    if coord==k:
-                        rect.voltage=v
-                        #print"VO",rect.cell.x,rect.cell.y
-                        RECTS_V.append(rect)
-        RECTS_C=[]
-        for node in VerticalNodeList:
-            for rect in node.stitchList:
-                coord=(rect.cell.x,rect.cell.y)
-                for k,v in Current.items():
-                    if coord==k:
-                        rect.current=v
-                        RECTS_C.append(rect)
-                        #print rect.cell.x,rect.cell.y,rect.current
-        VOLTAGE_V = {}
-        CURRENT_V={}
-        for i in range(len(CONNECTED_V)):
-            #print CONNECTED_V[i]
-            for j in CONNECTED_V[i]:
-                for RECT_V in RECTS_V:
-                    if j.x1 == RECT_V.cell.x and j.y1 == RECT_V.cell.y and j.type == RECT_V.cell.type:
-                        key=RECT_V.voltage
-                        #k2=RECT_V.current
-                        VOLTAGE_V.setdefault(key,[])
-                        #CURRENT_V.setdefault(k2, [])
-                        VOLTAGE_V[RECT_V.voltage].append(CONNECTED_V[i])
-                        #CURRENT_V[RECT_V.current].append(CONNECTED_V[i])
-        #print VOLTAGE_V
-        for i in range(len(CONNECTED_V)):
-            #print CONNECTED_V[i]
-            for j in CONNECTED_V[i]:
-                for RECT_V in RECTS_C:
-                    if j.x1 == RECT_V.cell.x and j.y1 == RECT_V.cell.y and j.type == RECT_V.cell.type:
-                        #key=RECT_V.voltage
-                        k2=RECT_V.current
-                        #VOLTAGE_V.setdefault(key,[])
-                        CURRENT_V.setdefault(k2, [])
-                        #VOLTAGE_V[RECT_V.voltage].append(CONNECTED_V[i])
-                        CURRENT_V[RECT_V.current].append(CONNECTED_V[i])
-        for node in VerticalNodeList:
-            for rect in node.stitchList:
-                for k, v in VOLTAGE_V.items():
-                    for m in v:
-                        for j in m:
-                            if rect.cell.x == j.x1 and rect.cell.y == j.y1 and rect.cell.type == j.type:
-                                if rect.voltage == None:
-                                   rect.voltage = k
-                for k, v in CURRENT_V.items():
-                    for m in v:
-                        for j in m:
-                            if rect.cell.x == j.x1 and rect.cell.y == j.y1 and rect.cell.type == j.type:
-                                if rect.current == None:
-                                   rect.current = k
+                                        rect.current=k
 
 
-        '''
-        print HorizontalNodeList
-        for i in HorizontalNodeList:
+            RECTS_V=[]
+            for node in VerticalNodeList:
+                for rect in node.stitchList:
+                    coord=(rect.cell.x,rect.cell.y)
+                    for k,v in Voltage.items():
+                        if coord==k:
+                            rect.voltage=v
+                            #print"VO",rect.cell.x,rect.cell.y
+                            RECTS_V.append(rect)
+            RECTS_C=[]
+            for node in VerticalNodeList:
+                for rect in node.stitchList:
+                    coord=(rect.cell.x,rect.cell.y)
+                    for k,v in Current.items():
+                        if coord==k:
+                            rect.current=v
+                            RECTS_C.append(rect)
+                            #print rect.cell.x,rect.cell.y,rect.current
+            VOLTAGE_V = {}
+            CURRENT_V={}
+            for i in range(len(CONNECTED_V)):
+                #print CONNECTED_V[i]
+                for j in CONNECTED_V[i]:
+                    for RECT_V in RECTS_V:
+                        if j.x1 == RECT_V.cell.x and j.y1 == RECT_V.cell.y and j.type == RECT_V.cell.type:
+                            key=RECT_V.voltage
+                            #k2=RECT_V.current
+                            VOLTAGE_V.setdefault(key,[])
+                            #CURRENT_V.setdefault(k2, [])
+                            VOLTAGE_V[RECT_V.voltage].append(CONNECTED_V[i])
+                            #CURRENT_V[RECT_V.current].append(CONNECTED_V[i])
+            #print VOLTAGE_V
+            for i in range(len(CONNECTED_V)):
+                #print CONNECTED_V[i]
+                for j in CONNECTED_V[i]:
+                    for RECT_V in RECTS_C:
+                        if j.x1 == RECT_V.cell.x and j.y1 == RECT_V.cell.y and j.type == RECT_V.cell.type:
+                            #key=RECT_V.voltage
+                            k2=RECT_V.current
+                            #VOLTAGE_V.setdefault(key,[])
+                            CURRENT_V.setdefault(k2, [])
+                            #VOLTAGE_V[RECT_V.voltage].append(CONNECTED_V[i])
+                            CURRENT_V[RECT_V.current].append(CONNECTED_V[i])
+            for node in VerticalNodeList:
+                for rect in node.stitchList:
+                    for k, v in VOLTAGE_V.items():
+                        for m in v:
+                            for j in m:
+                                if rect.cell.x == j.x1 and rect.cell.y == j.y1 and rect.cell.type == j.type:
+                                    if rect.voltage == None:
+                                       rect.voltage = k
+                    for k, v in CURRENT_V.items():
+                        for m in v:
+                            for j in m:
+                                if rect.cell.x == j.x1 and rect.cell.y == j.y1 and rect.cell.type == j.type:
+                                    if rect.current == None:
+                                       rect.current = k
+
+
+
+        #print HorizontalNodeList
+        for i in self.HorizontalNodeList:
 
             print i.id, i, len(i.stitchList)
 
             # i=Htree.hNodeList[0]
             for j in i.stitchList:
-                k = j.cell.x, j.cell.y, j.getWidth(), j.getHeight(), j.cell.id, j.cell.type, j.nodeId,j.voltage
+                k = j.cell.x, j.cell.y, j.getWidth(), j.getHeight(), j.cell.id, j.cell.type, j.nodeId,j.voltage,j.name
                 print k
 
             if i.parent == None:
@@ -362,11 +362,11 @@ class constraintGraph:
                     k=j.cell.x,j.cell.y,j.cell.type,j.nodeId
                 print "B", i.id, k
 
-        print VerticalNodeList
-        for i in VerticalNodeList:
+        #print VerticalNodeList
+        for i in self.VerticalNodeList:
             print i.id, i, len(i.stitchList)
             for j in i.stitchList:
-                k = j.cell.x, j.cell.y, j.getWidth(), j.getHeight(), j.cell.id, j.cell.type, j.nodeId,j.voltage
+                k = j.cell.x, j.cell.y, j.getWidth(), j.getHeight(), j.cell.id, j.cell.type, j.nodeId,j.voltage,j.name
                 print k
 
             if i.parent == None:
@@ -380,14 +380,14 @@ class constraintGraph:
                 else:
                     k = j.cell.x, j.cell.y, j.cell.type,j.nodeId,j.voltage
                 print "B", i.id, k
-        '''
+
         start1 = timeit.default_timer()
         Key = []
         ValueH = []
         ValueV = []
-        for i in range(len(HorizontalNodeList)):
-            Key.append(HorizontalNodeList[i].id)
-            k, j = self.dimListFromLayer(HorizontalNodeList[i], VerticalNodeList[i])
+        for i in range(len(self.HorizontalNodeList)):
+            Key.append(self.HorizontalNodeList[i].id)
+            k, j = self.dimListFromLayer(self.HorizontalNodeList[i], self.VerticalNodeList[i])
             ValueH.append(k)
             ValueV.append(j)
         # print Key,ValueH
@@ -403,12 +403,12 @@ class constraintGraph:
         #print "ZDL_H", self.ZDL_H
         #print "ZDL_V", self.ZDL_V
 
-        for i in range(len(HorizontalNodeList)):
+        for i in range(len(self.HorizontalNodeList)):
             # print HorizontalNodeList[i].id
             # for child in HorizontalNodeList[i].child:
             # print child.id
 
-            self.setEdgesFromLayer(HorizontalNodeList[i], VerticalNodeList[i])
+            self.setEdgesFromLayer(self.HorizontalNodeList[i], self.VerticalNodeList[i])
 
         stop1 = timeit.default_timer()
         print "CG",stop1-start1
@@ -424,7 +424,7 @@ class constraintGraph:
             name = "Node-" + str(ID)
             # print ID
 
-            for i in HorizontalNodeList:
+            for i in self.HorizontalNodeList:
                 if i.id == ID:
                     if i.parent != None:
                         parent = i.parent.id
@@ -442,7 +442,7 @@ class constraintGraph:
             name = "Node-" + str(ID)
             # print ID
 
-            for i in VerticalNodeList:
+            for i in self.VerticalNodeList:
                 if i.id == ID:
                     if i.parent != None:
                         parent = i.parent.id
@@ -706,6 +706,7 @@ class constraintGraph:
                         if rect.southEast(rect).cell==rect.getEast().cell and rect.NORTH.nodeId==ID and rect.SOUTH.nodeId==ID:
                             Extend_h=1
 
+
                 else:
                     East = None
                 if rect.getWest().nodeId == rect.nodeId:
@@ -759,6 +760,8 @@ class constraintGraph:
                 else:
                     value = value1
                 #print"R", rect.cell.x, rect.cell.y, value2
+                rect.vertex1 = origin1
+                rect.vertex2 = dest1
                 e = Edge(origin1, dest1, value, index, str(constraint.constraint.Type.index(rect.cell.type)), id, East,
                          West, northWest, southEast)
                 # print "e",(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id, East, West,northWest, southEast)
@@ -772,7 +775,8 @@ class constraintGraph:
                 if Extend_h==1:
                     c = constraint.constraint(3)
                     index = 3
-
+                    rect.vertex1 = origin
+                    rect.vertex2 = dest
                     value = constraint.constraint.getConstraintVal(c, type=rect.cell.type)
                     e = Edge(origin, dest, value, index, str(constraint.constraint.Type.index(rect.cell.type)), id, East,
                              West, northWest, southEast)
@@ -914,6 +918,8 @@ class constraintGraph:
                     else:
                         value = constraint.constraint.getConstraintVal(c, type=rect.cell.type)
                     #value = constraint.constraint.getConstraintVal(c, type=rect.cell.type)
+                    rect.vertex1 = origin
+                    rect.vertex2 = dest
                     e = Edge(origin, dest, value, index, str(constraint.constraint.Type.index(rect.cell.type)), id,
                              North, South, westNorth, eastSouth)
 
@@ -987,7 +993,8 @@ class constraintGraph:
                         value = value1
                 else:
                     value = constraint.constraint.getConstraintVal(c, type=rect.cell.type)
-
+                rect.vertex1 = origin1
+                rect.vertex2 = dest1
                 e = Edge(origin1, dest1, value, index, str(constraint.constraint.Type.index(rect.cell.type)), id, North,
                          South, westNorth, eastSouth)
 
@@ -1001,6 +1008,8 @@ class constraintGraph:
                 if Extend_v==1:
                     c = constraint.constraint(3)
                     index = 3
+                    rect.vertex1 = origin
+                    rect.vertex2 = dest
                     value = constraint.constraint.getConstraintVal(c, type=rect.cell.type)
                     e = Edge(origin, dest, value, index, str(constraint.constraint.Type.index(rect.cell.type)), id, North,
                              South, westNorth, eastSouth)
@@ -1139,6 +1148,8 @@ class constraintGraph:
                         value = constraint.constraint.getConstraintVal(c, type=rect.cell.type)
                     #value = constraint.constraint.getConstraintVal(c, type=rect.cell.type)
                     # print "val",value
+                    rect.vertex1 = origin
+                    rect.vertex2 = dest
                     e = Edge(origin, dest, value, index, str(constraint.constraint.Type.index(rect.cell.type)), id,
                              East, West, northWest, southEast)
 
@@ -1727,9 +1738,14 @@ class constraintGraph:
                     writer.writerow([key, value])
             with open(location_file, 'wb') as csv_file:
                 writer = csv.writer(csv_file)
-                writer.writerow(["XNode", "Min Loc","xLoc"])
-                for key, value in Location.items():
-                    writer.writerow([key, value])
+                writer.writerow(["XNode", "Min Loc","comp","xLoc"])
+                for NODE in self.HorizontalNodeList:
+                    if NODE.id==ID:
+                        for rect in NODE.stitchList:
+                            for key, value in Location.items():
+                                if rect.vertex1==key or rect.vertex2==key:
+                                    writer.writerow([key, value, rect.name])
+
 
             LOC_H = {}
             for i in Location.keys():
@@ -2338,9 +2354,18 @@ class constraintGraph:
 
             with open(self.name1 + 'Fixed_Loc.csv', 'a') as csv_file:
                 writer = csv.writer(csv_file, lineterminator = '\n')
-                writer.writerow(["YNode", "Min Loc",'yLoc'])
-                for key, value in Location.items():
-                    writer.writerow([key, value])
+                writer.writerow(["YNode", "Min Loc","comp",'yLoc'])
+
+                for NODE in self.VerticalNodeList:
+                    if NODE.id==ID:
+                        for rect in NODE.stitchList:
+                            for key, value in Location.items():
+                                if rect.vertex1==key or rect.vertex2==key:
+                                    writer.writerow([key, value, rect.name])
+
+                #for key, value in Location.items():
+                    #writer.writerow([key, value])
+
 
 
 

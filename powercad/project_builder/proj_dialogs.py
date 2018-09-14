@@ -29,6 +29,7 @@ from powercad.project_builder.dialogs.device_setup_dialog import Ui_setup_device
 from powercad.project_builder.dialogs.Env_setup import Ui_EnvSetup
 from powercad.project_builder.dialogs.bondwire_setup import Ui_Bondwire_setup
 from powercad.project_builder.dialogs.layoutEditor_ui import Ui_layouteditorDialog
+from powercad.project_builder.dialogs.CS_design_ui import Ui_CornerStitch_Dialog
 from powercad.project_builder.project import Project
 from powercad.sym_layout.symbolic_layout import SymbolicLayout
 from powercad.general.settings.settings import DEFAULT_TECH_LIB_DIR,EXPORT_DATA_PATH,ANSYS_IPY64,FASTHENRY_FOLDER,GMSH_BIN_PATH,ELMER_BIN_PATH
@@ -1081,3 +1082,24 @@ class Device_states_dialog(QtGui.QDialog):
         self.per_ui.device_states_df=self.dv_df
 
         self.close()
+class New_layout_engine_dialog(QtGui.QDialog):
+    def __init__(self,parent):
+        QtGui.QDialog.__init__(self, parent)
+        self.ui = Ui_CornerStitch_Dialog()
+        self.ui.setupUi(self)
+        self.parent = parent
+        self.cornerstitch = None
+        self.constraint=None
+        self.num_layouts=1
+
+        # add buttons
+        self.ui.btn_constraints.pressed.connect(self.add_constraints)
+        self.ui.btn_gen_layouts.pressed.connect(self.gen_layouts)
+
+    def add_constraints(self):
+        print "add constraints"
+    def gen_layouts(self):
+        if self.constraint==None:
+            print "cant generate layouts"
+        else:
+            print "generate layout"

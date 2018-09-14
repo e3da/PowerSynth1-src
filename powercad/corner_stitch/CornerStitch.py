@@ -28,7 +28,11 @@ import pandas as pd
 import csv
 import timeit
 
-
+global VID,HID,Schar,Cchar,Htree,Vtree
+Schar='/'
+Cchar='%'
+VID=0
+HID=0
 
 class cell:
     """
@@ -70,16 +74,20 @@ class tile:
     are explicitly defined, everything else being implicitly defined by neighbors
     """
 
-    def __init__(self, north, east, south, west, hint, cell,name=None,nodeId=None,voltage=None,current=None):
+    def __init__(self, north, east, south, west, hint, cell,name=None,nodeId=None,voltage=None,current=None,vertex1=None,vertex2=None):
         self.NORTH = north #This is the right-top pointer to the rightmost cell on top of this cell
         self.EAST = east #This is the top-right pointer to the uppermost cell to the right of this cell
         self.SOUTH = south #This is the left-bottom pointer to the leftmost cell on the bottom of this cell
         self.WEST = west #This is the bottom-left pointer to the bottommost cell on the left of this cell
         self.HINT = hint #this is the pointer to the hint tile of where to start looking for location
         self.cell = cell
+        self.name=name
         self.nodeId=nodeId
         self.voltage=voltage
         self.current=current
+        self.vertex1=vertex1
+        self.vertex2=vertex2
+
 
     def printNeighbors(self, printX = False, printY = False, printType = False):
         if self.NORTH is not None: print "N", self.NORTH.cell.printCell(printX, printY, printType)
@@ -1153,7 +1161,7 @@ class Vnode(Node):
 
             #if rect.cell.type == "Type_1":
             #if rect.cell.type=="EMPTY":
-            if rect.nodeId==node.id:
+            if rect.nodeId==self.id:
                 changeList.append(rect)
             #else:
                 #changeList1.append(rect)
@@ -1255,7 +1263,7 @@ class Vnode(Node):
             #self.rectifyShadow(changeList[i])
             '''
         return self.stitchList
-    def insert(self, start,x1, y1, x2, y2, type,end):
+    def insert(self, start,x1, y1, x2, y2, type,end,Htree,Vtree,Parent):
         """
         insert a new solid cell into the rectangle defined by the top left corner(x1, y1) and the bottom right corner
         (x2, y2) and adds the new cell to the cornerStitch's stitchList, then corrects empty space vertically
@@ -1284,6 +1292,7 @@ class Vnode(Node):
             #print "I",rect.nodeId
         topLeft = self.findPoint(x1, y1, self.stitchList[0])
         bottomRight = self.findPoint(x2, y2, self.stitchList[0])
+        #print "T",x1,y1,topLeft.cell.x,topLeft.cell.y,bottomRight.cell.x,bottomRight.cell.y
         tr = self.findPoint(x2, y1, self.stitchList[0])
         if tr.cell.x == x2:
             tr = tr.WEST
@@ -1333,7 +1342,8 @@ class Vnode(Node):
 
             while cc.cell.y <= tr.cell.y and cc not in self.boundaries:  # has been added
                 # print"1"
-
+                #while cc.cell.x>=x2:
+                    #cc=cc.WEST
                 if cc not in splitList:
                     splitList.append(cc)
                 cc = cc.NORTH
@@ -1352,15 +1362,18 @@ class Vnode(Node):
                         splitList.append(cc)
 
 
-
+        #print x1,y1,len(splitList),x2
         for rect in splitList:
-            #print rect.cell.x,rect.cell.y,x2
+            #print x1,y1, rect.cell.x,rect.cell.y,x2
+
             if x2 != rect.cell.x and x2 != rect.EAST.cell.x:
 
                 self.vSplit(rect, x2)
 
         splitList = []
         splitList.append(topLeft)
+
+
         #print "TP",topLeft.cell.y,topLeft.cell.type
         # if topLeft.NORTH != self.northBoundary and topLeft.NORTH.cell.type == "SOLID" and topLeft.NORTH.cell.y == y1 or topLeft.cell.type=="SOLID":
         #if start!='/':
@@ -1406,6 +1419,7 @@ class Vnode(Node):
 
 
         #print"splitListx1=", len(splitList)
+        #print x1, y1, len(splitList), x1
         for rect in splitList:
 
             if x1 != rect.cell.x and x1 != rect.EAST.cell.x:
@@ -1416,18 +1430,22 @@ class Vnode(Node):
 
         changeList = []
         cc = self.findPoint(x1, y1, self.stitchList[0])
+
         #print "xco2=", cc.cell.x
         if cc.cell.y == y1:
             cc = cc.SOUTH
             while cc.cell.x+cc.getWidth()<=x1:
                 cc=cc.EAST
         # print "xco2=", cc.cell.x
+
         while cc.cell.x + cc.getWidth() <= x2:
             if cc not in changeList:
                 changeList.append(cc)
+
             cc = cc.EAST
             while cc.cell.y >= y1:
                 cc = cc.SOUTH
+
         cc1 = self.findPoint(x1, y2, self.stitchList[0])
         while cc1.cell.x + cc1.getWidth() <= x2:
             if cc1 not in changeList:
@@ -1435,8 +1453,9 @@ class Vnode(Node):
             cc1 = cc1.EAST
             while cc1.cell.y > y2:
                 cc1 = cc1.SOUTH
-        #print"chlen=", len(changeList)
+        #print"chlen=",x1,y1, len(changeList)
         for rect in changeList:
+
 
             i = self.stitchList.index(rect)
             if not rect.NORTH.cell.y == y1:
@@ -1524,6 +1543,7 @@ class Vnode(Node):
         # changeList.append(t.NORTH)
         changeList.append(t)
 
+
         while (done == False):
             if dirn == 1:
                 child = t.EAST
@@ -1575,6 +1595,9 @@ class Vnode(Node):
             while cc1.cell.y > y2:
                 cc1 = cc1.SOUTH
         #print"arealistv=", len(changeList)
+        if x1==10 and y1==60:
+            for i in changeList:
+                print i.cell.x,i.cell.y
         if start != Schar:
             for i in changeList:
                 #print"i",i.cell.x,i.cell.y,i.getHeight(),i.getWidth()
@@ -1586,9 +1609,11 @@ class Vnode(Node):
                     elif j.nodeId!=0 and j.cell.type==type:
                         RESP=1
         changeList.sort(key=lambda cc: cc.cell.x)
+
+
         #print "RESP",RESP
         ##### Merge Algorithm:
-
+        #print x1,y1,len(changeList)
         i = 0
         while i < len(changeList) - 1:
 
@@ -1699,10 +1724,10 @@ class Vnode(Node):
 
 
 
-            self.addChild(start,tile_list,Parent,type,RESP,end)
+            self.addChild(start,tile_list,type,RESP,end,Htree,Vtree,Parent)
 
         return self.stitchList
-    def addChild(self,start, tile_list, parent, type,RESP,end):
+    def addChild(self,start, tile_list, type,RESP,end,Htree,Vtree,Parent):
 
         #if parent==Vtree.vNodeList[0]:
         if start== Schar and end == Schar:
@@ -1714,7 +1739,7 @@ class Vnode(Node):
 
                 if rect.cell.type == type and rect.nodeId==None:
                     rect.nodeId = id
-
+                    #print"R", rect.cell.x,rect.cell.y,rect.getWidth(),rect.getHeight()
                     stitchList.append(rect)
                 else:
 
@@ -1722,7 +1747,7 @@ class Vnode(Node):
 
             node = Vnode(parent=Parent, child=[], stitchList=copy.deepcopy(stitchList), id=id, boundaries=boundaries)
 
-            parent.child.append(node)
+            Parent.child.append(node)
             Vtree.vNodeList.append(node)
         elif start == Schar and end != Schar:
             stitchList = []
@@ -1741,7 +1766,7 @@ class Vnode(Node):
 
             node = Vnode(parent=Parent, child=[], stitchList=copy.deepcopy(stitchList), id=id, boundaries=boundaries)
 
-            parent.child.append(node)
+            Parent.child.append(node)
             Vtree.vNodeList.append(node)
         elif start!= Schar and end != Schar:
             ID = 0
@@ -1819,7 +1844,7 @@ class Vnode(Node):
                         boundaries.append(copy.copy(rect))
             Vtree.vNodeList.remove(node)
             Node = Vnode(parent=Parent, child=[], stitchList=copy.deepcopy(stitchList), id=id, boundaries=boundaries)
-            parent.child.append(Node)
+            Parent.child.append(Node)
             Vtree.vNodeList.append(Node)
         '''
         else:
@@ -2295,7 +2320,7 @@ class Hnode(Node):
 
             #if rect.cell.type == "Type_1":
             #if rect.cell.type=="EMPTY":
-            if rect.nodeId==node.id:
+            if rect.nodeId==self.id:
                 changeList.append(rect)
             #else:
                 #changeList1.append(rect)
@@ -2401,7 +2426,7 @@ class Hnode(Node):
             '''
         return self.stitchList
 
-    def insert(self,start, x1, y1, x2, y2, type,end):
+    def insert(self,start, x1, y1, x2, y2, type,end,Htree,Vtree,Parent):
 
         """
         insert a new solid cell into the rectangle defined by the top left corner(x1, y1) and the bottom right corner
@@ -2874,13 +2899,13 @@ class Hnode(Node):
             #for i in tile_list:
                 #print"i", i.cell.x, i.cell.y, i.getHeight(), i.getWidth(),i.cell.type
 
-            self.addChild(start,tile_list, ParentH, type,RESP,end)
+            self.addChild(start,tile_list, type,RESP,end,Htree,Vtree, Parent)
 
 
 
         return self.stitchList
 
-    def addChild(self,start, tile_list, parent, type,RESP,end):
+    def addChild(self,start, tile_list, type,RESP,end,Htree,Vtree, ParentH):
 
         #for i in tile_list:
             #print "i", i.cell.printCell(True,True,True),i.nodeId
@@ -2901,7 +2926,7 @@ class Hnode(Node):
 
             node = Hnode(parent=ParentH, child=[], stitchList=copy.deepcopy(stitchList), id=id, boundaries=boundaries)
 
-            parent.child.append(node)
+            ParentH.child.append(node)
             Htree.hNodeList.append(node)
         elif start == Schar and end != Schar:
             stitchList = []
@@ -2920,7 +2945,7 @@ class Hnode(Node):
 
             node = Hnode(parent=ParentH, child=[], stitchList=copy.deepcopy(stitchList), id=id, boundaries=boundaries)
 
-            parent.child.append(node)
+            ParentH.child.append(node)
             Htree.hNodeList.append(node)
         elif start!= Schar and end != Schar:
             ID = 0
@@ -2995,254 +3020,9 @@ class Hnode(Node):
                         boundaries.append(copy.copy(rect))
             Htree.hNodeList.remove(node)
             Node = Hnode(parent=ParentH, child=[], stitchList=copy.deepcopy(stitchList), id=id, boundaries=boundaries)
-            parent.child.append(Node)
+            ParentH.child.append(Node)
             Htree.hNodeList.append(Node)
-        '''
-        else:
-            Flag = 0
-            Flag2 = 0
-            counter = 0
-            ID = 0
-            # print "LEN",len(tile_list)
 
-            for rect in tile_list:
-                if rect.cell.type == type:
-                    # if rect.cell.type !="EMPTY":
-                    # print "R",rect.cell.x,rect.cell.y
-                    counter += 1
-                    if rect.nodeId > ID:
-                        ID = rect.nodeId
-            # print "RES",RESP
-            if counter > 1 or RESP == 1:
-                # if counter > 1 or end!='/':
-                Flag = 1
-
-            if Flag == 1:
-                if ID != 0:
-                    for N in Htree.hNodeList:
-
-                        if N.id == ID:
-                            node = N
-                            Flag2 = 1
-            # print "F",Flag,Flag2
-
-            # if end!=None:
-            if Flag2 == 1:
-                # i=Htree.hNodeList.index(node)
-                # Htree.hNodeList.remove(node)
-
-                id = node.id
-                stitchList = node.stitchList
-                boundaries = node.boundaries
-                for rect in boundaries:
-                    if rect not in self.boundaries or rect.cell.type == type:
-                        boundaries.remove(rect)
-                for rect in stitchList:
-                    if rect not in self.stitchList:
-                        stitchList.remove(rect)
-
-                for rect in tile_list:
-                    # print "T",rect.cell.type
-
-                    # if rect.cell.type == type and rect not in stitchList:
-                    if rect not in stitchList and rect.cell.type != "EMPTY":
-                        rect.nodeId = id
-
-                        stitchList.append(rect)
-                    else:
-                        # if rect not in boundaries and rect.cell.type!=type:
-                        if rect not in boundaries and rect.cell.type != type:
-                            boundaries.append(copy.copy(rect))
-                if end == '/':
-                    Htree.hNodeList.remove(node)
-                    Node = Hnode(parent=ParentH, child=[], stitchList=copy.deepcopy(stitchList), id=id,
-                                 boundaries=boundaries)
-                    parent.child.append(Node)
-                    Htree.hNodeList.append(Node)
-
-                # node = Hnode(parent=ParentH, child=[], stitchList=copy.deepcopy(stitchList), id=id, boundaries=boundaries)
-                # parent.child.append(node)
-                # Htree.hNodeList.insert(i,node)
-            if Flag == 0:
-                stitchList = []
-                boundaries = []
-                id = len(Htree.hNodeList) + 1
-                for rect in tile_list:
-                    print "R", rect.cell.x, rect.cell.y
-
-                    if rect.cell.type == type:
-                        rect.nodeId = id
-
-                        stitchList.append(rect)
-                    else:
-
-                        boundaries.append(copy.copy(rect))
-
-                node = Hnode(parent=ParentH, child=[], stitchList=copy.deepcopy(stitchList), id=id,
-                             boundaries=boundaries)
-
-                parent.child.append(node)
-                Htree.hNodeList.append(node)
-        '''
-
-
-
-
-
-    '''
-    def addChild(self, tile_list, parent, type):
-            Flag = 0
-        Flag2 = 0
-        counter = 0
-        ID = 0
-        #print "LEN",len(tile_list)
-
-        for rect in tile_list:
-            if rect.cell.type == type:
-            #if rect.cell.type !="EMPTY":
-                #print "R",rect.cell.x,rect.cell.y
-                counter += 1
-                if rect.nodeId > ID:
-                    ID = rect.nodeId
-        #print "RES",RESP
-        if counter > 1 or RESP==1:
-        #if counter > 1 or end!='/':
-            Flag = 1
-
-        if Flag == 1:
-            if ID != 0:
-                for N in Htree.hNodeList:
-
-                    if N.id == ID:
-                        node = N
-                        Flag2 = 1
-        #print "F",Flag,Flag2
-
-
-        #if end!=None:
-        if Flag2 == 1:
-            #i=Htree.hNodeList.index(node)
-            #Htree.hNodeList.remove(node)
-
-            id = node.id
-            stitchList=node.stitchList
-            boundaries=node.boundaries
-            for rect in boundaries:
-                if rect not in self.boundaries or rect.cell.type==type:
-                    boundaries.remove(rect)
-            for rect in stitchList:
-                if rect not in self.stitchList:
-                    stitchList.remove(rect)
-
-            for rect in tile_list:
-                #print "T",rect.cell.type
-
-                #if rect.cell.type == type and rect not in stitchList:
-                if rect not in stitchList and rect.cell.type!="EMPTY":
-                    rect.nodeId = id
-
-                    stitchList.append(rect)
-                else:
-                    #if rect not in boundaries and rect.cell.type!=type:
-                    if rect not in boundaries and rect.cell.type != type:
-
-                        boundaries.append(copy.copy(rect))
-            if end=='/':
-                Htree.hNodeList.remove(node)
-                Node = Hnode(parent=ParentH, child=[], stitchList=copy.deepcopy(stitchList), id=id,boundaries=boundaries)
-                parent.child.append(Node)
-                Htree.hNodeList.append(Node)
-
-            #node = Hnode(parent=ParentH, child=[], stitchList=copy.deepcopy(stitchList), id=id, boundaries=boundaries)
-            #parent.child.append(node)
-            #Htree.hNodeList.insert(i,node)
-        if Flag == 0:
-            stitchList = []
-            boundaries = []
-            id = len(Htree.hNodeList) + 1
-            for rect in tile_list:
-                print "R",rect.cell.x,rect.cell.y
-
-                if rect.cell.type == type:
-                    rect.nodeId = id
-
-                    stitchList.append(rect)
-                else:
-
-                    boundaries.append(copy.copy(rect))
-
-            node = Hnode(parent=ParentH, child=[], stitchList=copy.deepcopy(stitchList), id=id, boundaries=boundaries)
-
-            parent.child.append(node)
-            Htree.hNodeList.append(node)
-        ################################################################################################################
-
-
-        Flag = 0
-        Flag2=0
-        counter=0
-        ID=0
-        #print "LEN",len(tile_list)
-        for rect in tile_list:
-            if rect.cell.type==type:
-                counter+=1
-                if rect.nodeId>ID:
-                    ID=rect.nodeId
-
-        if counter>1:
-            Flag=1
-
-        if Flag == 1:
-            if ID != 0:
-                for N in Htree.hNodeList:
-
-                    if N.id == ID:
-                        node = N
-                        Flag2 = 1
-
-
-        if Flag2==1:
-
-            Htree.hNodeList.remove(node)
-            stitchList = []
-            boundaries = []
-            id = len(Htree.hNodeList) + 1
-            for rect in tile_list:
-                
-                if rect.cell.type == type:
-                    rect.nodeId = id
-                   
-                    stitchList.append(rect)
-                else:
-                  
-                    boundaries.append(copy.copy(rect))
-
-         
-
-           
-            node = Hnode(parent=ParentH, child=[], stitchList=copy.deepcopy(stitchList), id=id, boundaries=boundaries)
-            parent.child.append(node)
-            Htree.hNodeList.append(node)
-        if Flag == 0:
-            stitchList = []
-            boundaries = []
-            id = len(Htree.hNodeList) + 1
-            for rect in tile_list:
-
-                if rect.cell.type == type:
-                    rect.nodeId = id
-
-                    stitchList.append(rect)
-                else:
-                    
-                    boundaries.append(copy.copy(rect))
-
-            node = Hnode(parent=ParentH, child=[], stitchList=copy.deepcopy(stitchList), id=id, boundaries=boundaries)
-            
-            parent.child.append(node)
-            Htree.hNodeList.append(node)
-
-        '''
 
 
     def rectifyShadow(self, caster):
@@ -3437,6 +3217,29 @@ class Tree():
                 rect.nodeId=node.id
         for rect in node.boundaries:
             rect.nodeId=node.id
+    def setComponentName(self,nodelist):
+        T1_count = 0
+        T2_count = 0
+        T3_count = 0
+        T4_count = 0
+
+        for node in nodelist:
+
+            for rect in node.stitchList:
+                if rect.cell.type=="Type_1":
+                    T1_count+=1
+                    rect.name="T"+str(rect.nodeId)+str(T1_count)
+                elif rect.cell.type=="Type_2":
+                    T2_count+=1
+                    rect.name="M"+str(rect.nodeId)+str(T2_count)
+                elif rect.cell.type=="Type_3":
+                    T3_count+=1
+                    rect.name="L"+str(rect.nodeId)+str(T3_count)
+                elif rect.cell.type=="Type_4":
+                    T4_count+=1
+                    rect.name="D"+str(rect.nodeId)+str(T4_count)
+
+
 
 ###################################################
 class Rectangle():
@@ -3457,52 +3260,1214 @@ class Rectangle():
         return self.parent
 
 
+class Baseplate():
+    def __init__(self,w,h,type):
+        '''
+
+        Args:
+            w:
+            h:
+            type:
+        '''
+        self.w=w
+        self.h=h
+        self.type=type
+        self.Initialize()
+    def Initialize(self):
+        Tile1 = tile(None, None, None, None, None, cell(0, 0, self.type), nodeId=1)
+        TN = tile(None, None, None, None, None, cell(0, self.h, None))
+        TE = tile(None, None, None, None, None, cell(self.w, 0, None))
+        TW = tile(None, None, None, None, None, cell(-1000, 0, None))
+        TS = tile(None, None, None, None, None, cell(0, -1000, None))
+        Tile1.NORTH = TN
+        Tile1.EAST = TE
+        Tile1.WEST = TW
+        Tile1.SOUTH = TS
+        Boundaries = []
+        Stitchlist = []
+        Stitchlist.append(Tile1)
+        Boundaries.append(TN)
+        Boundaries.append(TE)
+        Boundaries.append(TW)
+        Boundaries.append(TS)
+        Vnode0 = Vnode(boundaries=Boundaries, child=None, stitchList=Stitchlist, parent=None, id=1)
+        #Vtree = Tree(hNodeList=None, vNodeList=[Vnode0])
+        Tile2 = tile(None, None, None, None, None, cell(0, 0, self.type), nodeId=1)
+        TN2 = tile(None, None, None, None, None, cell(0, self.h, None))
+        TE2 = tile(None, None, None, None, None, cell(self.w, 0, None))
+        TW2 = tile(None, None, None, None, None, cell(-1000, 0, None))
+        TS2 = tile(None, None, None, None, None, cell(0, -1000, None))
+        Tile2.NORTH = TN2
+        Tile2.EAST = TE2
+        Tile2.WEST = TW2
+        Tile2.SOUTH = TS2
+        Boundaries_H = []
+        Stitchlist_H = []
+        Stitchlist_H.append(Tile2)
+        Boundaries_H.append(TN2)
+        Boundaries_H.append(TE2)
+        Boundaries_H.append(TW2)
+        Boundaries_H.append(TS2)
+        Hnode0 = Hnode(boundaries=Boundaries_H, child=None, stitchList=Stitchlist_H, parent=None, id=1)
+        #Htree = Tree(hNodeList=[Hnode0], vNodeList=None)
+        return Hnode0, Vnode0
+
+    def I_V_Constraints(Enable=False):
+        if Enable == True:
+            Voltage = {}
+            # self.voltage_constraint = {}
+            with open(testdir + '/' + 'Voltage-info.csv', 'rb') as csvfile:
+                csvreader = csv.reader(csvfile)
+
+                # extracting field names through first row
+                fields = csvreader.next()
+
+                # extracting each data row one by one
+                i = 0
+                for row in csvreader:
+                    i += 1
+                    if row[0] in (None, ""):
+                        break
+                    # if row[2]!=
+                    else:
+                        Voltage[(int(row[0]), int(row[1]))] = int(row[2])
+
+                '''
+                i += 2
+                j = 0
+                for row in csvreader:
+                    # print j,i
+                    j += 1
+
+                    while j <= i + 1:
+                        j += 1
+                        continue
+                    # print j,row
+
+                    if row[0] == 'V':
+                        continue
+
+                    else:
+                        #print row
+                        self.voltage_constraint[int(row[0])] = int(row[1])
+                    # print row[0],row[1],row[2]
+                '''
+            Current = {}
+            # self.voltage_constraint = {}
+            with open(testdir + '/' + 'Current-info.csv', 'rb') as csvfile:
+                csvreader = csv.reader(csvfile)
+
+                # extracting field names through first row
+                fields = csvreader.next()
+
+                # extracting each data row one by one
+                i = 0
+                for row in csvreader:
+                    i += 1
+                    if row[0] in (None, ""):
+                        break
+                    # if row[2]!=
+                    else:
+                        Current[(int(row[0]), int(row[1]))] = int(row[2])
+            # print "Current", Current
+            # print i,j,Voltage,self.voltage_constraint
+            # RECT_H=[]
+
+            ################################################# (Finding connected components)
+            Rectangles_H = []
+            # for i in Htree.hNodeList[0]:
+            for j in Htree.hNodeList[0].stitchList:
+                # k = j.cell.x, j.cell.y, j.getWidth(), j.getHeight(), j.cell.id, j.cell.type, j.nodeId
+                if j.cell.type != "EMPTY":
+                    Rect = Rectangle(j.cell.x, j.cell.y, j.getWidth(), j.getHeight(), j.cell.type)
+                    if Rect not in Rectangles_H:
+                        Rectangles_H.append(Rect)
+                        # print Rect.type
+
+            # print len(Rectangles_H)
+            Rectangles_H.sort(key=lambda cc: cc.y1)
+            # Rectangles_H.reverse()
+            # Rectangles_H.sort(key=lambda cc: cc.x1)
+            for i in range(len(Rectangles_H)):
+                for j in range(len(Rectangles_H)):
+                    # if Rectangles_H[i]==Rectangles_H[j]:
+                    # continue
+                    # else:
+                    if Rectangles_H[i].contains(Rectangles_H[j]) and Rectangles_H[i].type == Rectangles_H[j].type:
+                        if Rectangles_H[i].parent == None and Rectangles_H[j].parent == None:
+                            Rectangles_H[i].parent = Rectangles_H[i]
+                            Rectangles_H[j].parent = Rectangles_H[i]
+                        elif Rectangles_H[i].parent == None and Rectangles_H[j].parent != None:
+                            Rectangles_H[i].parent = Rectangles_H[j].parent
+                        elif Rectangles_H[i].parent != None and Rectangles_H[j].parent == None:
+                            Rectangles_H[j].parent = Rectangles_H[i].parent
+                    # else:
+                    # Rectangles_H[i].parent = Rectangles_H[i]
+            # print len(Rectangles_H)
+
+            Parent_List = []
+            for i in range(len(Rectangles_H)):
+                if Rectangles_H[i].parent not in Parent_List:
+                    Parent_List.append(Rectangles_H[i].parent)
+            # print len(Parent_List)
+            ALL_CONNECTED = {}
+            for i in range(len(Parent_List)):
+                Connected = []
+                for j in range(len(Rectangles_H)):
+                    if Rectangles_H[j].parent == Parent_List[i]:
+                        Connected.append(Rectangles_H[j])
+                    else:
+                        continue
+                ALL_CONNECTED[Parent_List[i]] = Connected
+            Rectangles_H.sort(key=lambda cc: cc.x1)
+            for i in range(len(Rectangles_H)):
+                for j in range(len(Rectangles_H)):
+                    # if Rectangles_H[i]==Rectangles_H[j]:
+                    # continue
+                    # else:
+                    if Rectangles_H[i].contains(Rectangles_H[j]) and Rectangles_H[i].type == Rectangles_H[j].type:
+                        if Rectangles_H[i].parent != Rectangles_H[j].parent:
+                            # print"xy", Rectangles_H[i].x1, Rectangles_H[i].y1, Rectangles_H[j].x1, Rectangles_H[j].y1
+                            for k, v in ALL_CONNECTED.items():
+                                if k == Rectangles_H[i].parent:
+                                    L1 = len(v)
+                                elif k == Rectangles_H[j].parent:
+                                    L2 = len(v)
+                            if L1 >= L2:
+                                for k, v in ALL_CONNECTED.items():
+                                    if k == Rectangles_H[i].parent:
+                                        Rectangles_H[j].parent = Rectangles_H[i].parent
+                                        v.append(Rectangles_H[j])
+                            else:
+                                for k, v in ALL_CONNECTED.items():
+                                    if k == Rectangles_H[j].parent:
+                                        Rectangles_H[i].parent = Rectangles_H[j].parent
+                                        v.append(Rectangles_H[i])
+            Rectangles_H.sort(key=lambda cc: cc.y2)
+            for i in range(len(Rectangles_H)):
+                for j in range(len(Rectangles_H)):
+                    # if Rectangles_H[i]==Rectangles_H[j]:
+                    # continue
+                    # else:
+                    if Rectangles_H[i].contains(Rectangles_H[j]) and Rectangles_H[i].type == Rectangles_H[j].type:
+                        if Rectangles_H[i].parent != Rectangles_H[j].parent:
+                            # print"xy", Rectangles_H[i].x1, Rectangles_H[i].y1, Rectangles_H[j].x1, Rectangles_H[j].y1
+                            for k, v in ALL_CONNECTED.items():
+                                if k == Rectangles_H[i].parent:
+                                    L1 = len(v)
+                                elif k == Rectangles_H[j].parent:
+                                    L2 = len(v)
+                            if L1 >= L2:
+                                for k, v in ALL_CONNECTED.items():
+                                    if k == Rectangles_H[i].parent:
+                                        Rectangles_H[j].parent = Rectangles_H[i].parent
+                                        v.append(Rectangles_H[j])
+                            else:
+                                for k, v in ALL_CONNECTED.items():
+                                    if k == Rectangles_H[j].parent:
+                                        Rectangles_H[i].parent = Rectangles_H[j].parent
+                                        v.append(Rectangles_H[i])
+            Rectangles_H.sort(key=lambda cc: cc.x2)
+            for i in range(len(Rectangles_H)):
+                for j in range(len(Rectangles_H)):
+                    # if Rectangles_H[i]==Rectangles_H[j]:
+                    # continue
+                    # else:
+                    if Rectangles_H[i].contains(Rectangles_H[j]) and Rectangles_H[i].type == Rectangles_H[j].type:
+                        if Rectangles_H[i].parent != Rectangles_H[j].parent:
+                            # print"xy", Rectangles_H[i].x1, Rectangles_H[i].y1, Rectangles_H[j].x1, Rectangles_H[j].y1
+                            for k, v in ALL_CONNECTED.items():
+                                if k == Rectangles_H[i].parent:
+                                    L1 = len(v)
+                                elif k == Rectangles_H[j].parent:
+                                    L2 = len(v)
+                            if L1 >= L2:
+                                for k, v in ALL_CONNECTED.items():
+                                    if k == Rectangles_H[i].parent:
+                                        Rectangles_H[j].parent = Rectangles_H[i].parent
+                                        v.append(Rectangles_H[j])
+                            else:
+                                for k, v in ALL_CONNECTED.items():
+                                    if k == Rectangles_H[j].parent:
+                                        Rectangles_H[i].parent = Rectangles_H[j].parent
+                                        v.append(Rectangles_H[i])
+
+            ALL_CONNECTED_H = []
+            Parent_List2 = []
+            for i in range(len(Rectangles_H)):
+                if Rectangles_H[i].parent not in Parent_List2:
+                    Parent_List2.append(Rectangles_H[i].parent)
+            # print len(Parent_List2), len(Parent_List)
+            for i in range(len(Parent_List2)):
+                Connected = []
+                for j in range(len(Rectangles_H)):
+                    if Rectangles_H[j].parent == Parent_List2[i]:
+                        Connected.append(Rectangles_H[j])
+                    else:
+                        continue
+                ALL_CONNECTED_H.append(Connected)
+
+            Rectangles_V = []
+            # for i in Htree.hNodeList[0]:
+            for j in Vtree.vNodeList[0].stitchList:
+                # k = j.cell.x, j.cell.y, j.getWidth(), j.getHeight(), j.cell.id, j.cell.type, j.nodeId
+                if j.cell.type != "EMPTY":
+                    Rect = Rectangle(j.cell.x, j.cell.y, j.getWidth(), j.getHeight(), j.cell.type)
+                    if Rect not in Rectangles_V:
+                        Rectangles_V.append(Rect)
+                        # print Rect.type
+
+            # print"V", len(Rectangles_V)
+            Rectangles_V.sort(key=lambda cc: cc.x1)
+            # Rectangles_V.sort(key=lambda cc: cc.y1)
+            for i in range(len(Rectangles_V)):
+                for j in range(len(Rectangles_V)):
+                    # if Rectangles_H[i]==Rectangles_H[j]:
+                    # continue
+                    # else:
+                    if Rectangles_V[i].contains(Rectangles_V[j]) and Rectangles_V[i].type == Rectangles_V[j].type:
+                        if Rectangles_V[i].parent == None and Rectangles_V[j].parent == None:
+                            Rectangles_V[i].parent = Rectangles_V[i]
+                            Rectangles_V[j].parent = Rectangles_V[i]
+                        elif Rectangles_V[i].parent == None and Rectangles_V[j].parent != None:
+                            Rectangles_V[i].parent = Rectangles_V[j].parent
+                        elif Rectangles_V[i].parent != None and Rectangles_V[j].parent == None:
+                            Rectangles_V[j].parent = Rectangles_V[i].parent
+                    # else:
+                    # Rectangles_H[i].parent = Rectangles_H[i]
+            # print len(Rectangles_V)
+            Parent_List = []
+            for i in range(len(Rectangles_V)):
+                if Rectangles_V[i].parent not in Parent_List:
+                    Parent_List.append(Rectangles_V[i].parent)
+            # print len(Parent_List)
+            ALL_CONNECTED = {}
+            for i in range(len(Parent_List)):
+                Connected = []
+                for j in range(len(Rectangles_V)):
+                    if Rectangles_V[j].parent == Parent_List[i]:
+                        Connected.append(Rectangles_V[j])
+                    else:
+                        continue
+                ALL_CONNECTED[Parent_List[i]] = Connected
+            Rectangles_V.sort(key=lambda cc: cc.y1)
+            for i in range(len(Rectangles_V)):
+                for j in range(len(Rectangles_V)):
+                    # if Rectangles_H[i]==Rectangles_H[j]:
+                    # continue
+                    # else:
+                    if Rectangles_V[i].contains(Rectangles_V[j]) and Rectangles_V[i].type == Rectangles_V[j].type:
+                        if Rectangles_V[i].parent != Rectangles_V[j].parent:
+                            # print"xy", Rectangles_V[i].x1, Rectangles_V[i].y1, Rectangles_V[j].x1, Rectangles_V[j].y1
+                            for k, v in ALL_CONNECTED.items():
+                                if k == Rectangles_V[i].parent:
+                                    L1 = len(v)
+                                elif k == Rectangles_V[j].parent:
+                                    L2 = len(v)
+                            if L1 >= L2:
+                                for k, v in ALL_CONNECTED.items():
+                                    if k == Rectangles_V[i].parent:
+                                        Rectangles_V[j].parent = Rectangles_V[i].parent
+                                        v.append(Rectangles_V[j])
+                            else:
+                                for k, v in ALL_CONNECTED.items():
+                                    if k == Rectangles_V[j].parent:
+                                        Rectangles_V[i].parent = Rectangles_V[j].parent
+                                        v.append(Rectangles_V[i])
+            Rectangles_V.sort(key=lambda cc: cc.y2)
+            for i in range(len(Rectangles_V)):
+                for j in range(len(Rectangles_V)):
+                    # if Rectangles_H[i]==Rectangles_H[j]:
+                    # continue
+                    # else:
+                    if Rectangles_V[i].contains(Rectangles_V[j]) and Rectangles_V[i].type == Rectangles_V[j].type:
+                        if Rectangles_V[i].parent != Rectangles_V[j].parent:
+                            # print"xy", Rectangles_V[i].x1, Rectangles_V[i].y1, Rectangles_V[j].x1, Rectangles_V[j].y1
+                            for k, v in ALL_CONNECTED.items():
+                                if k == Rectangles_V[i].parent:
+                                    L1 = len(v)
+                                elif k == Rectangles_V[j].parent:
+                                    L2 = len(v)
+                            if L1 >= L2:
+                                for k, v in ALL_CONNECTED.items():
+                                    if k == Rectangles_V[i].parent:
+                                        Rectangles_V[j].parent = Rectangles_V[i].parent
+                                        v.append(Rectangles_V[j])
+                            else:
+                                for k, v in ALL_CONNECTED.items():
+                                    if k == Rectangles_V[j].parent:
+                                        Rectangles_V[i].parent = Rectangles_V[j].parent
+                                        v.append(Rectangles_V[i])
+            Rectangles_V.sort(key=lambda cc: cc.x2)
+            for i in range(len(Rectangles_V)):
+                for j in range(len(Rectangles_V)):
+                    # if Rectangles_H[i]==Rectangles_H[j]:
+                    # continue
+                    # else:
+                    if Rectangles_V[i].contains(Rectangles_V[j]) and Rectangles_V[i].type == Rectangles_V[j].type:
+                        if Rectangles_V[i].parent != Rectangles_V[j].parent:
+                            # print"xy", Rectangles_V[i].x1, Rectangles_V[i].y1, Rectangles_V[j].x1, Rectangles_V[j].y1
+                            for k, v in ALL_CONNECTED.items():
+                                if k == Rectangles_V[i].parent:
+                                    L1 = len(v)
+                                elif k == Rectangles_V[j].parent:
+                                    L2 = len(v)
+                            if L1 >= L2:
+                                for k, v in ALL_CONNECTED.items():
+                                    if k == Rectangles_V[i].parent:
+                                        Rectangles_V[j].parent = Rectangles_V[i].parent
+                                        v.append(Rectangles_V[j])
+                            else:
+                                for k, v in ALL_CONNECTED.items():
+                                    if k == Rectangles_V[j].parent:
+                                        Rectangles_V[i].parent = Rectangles_V[j].parent
+
+                                        v.append(Rectangles_V[i])
+            '''
+            for i in Rectangles_V:
+                if i.parent != None:
+                    print i.x1, i.y1, i.type, i.parent.x1, i.parent.y1
+                else:
+                    print i.x1, i.y1, i.type
+            '''
+
+            Parent_List_V = []
+            for i in range(len(Rectangles_V)):
+                if Rectangles_V[i].parent not in Parent_List_V:
+                    Parent_List_V.append(Rectangles_V[i].parent)
+            # print len(Parent_List_V)
+            ALL_CONNECTED_V = []
+            for i in range(len(Parent_List_V)):
+                Connected = []
+                for j in range(len(Rectangles_V)):
+                    if Rectangles_V[j].parent == Parent_List_V[i]:
+                        Connected.append(Rectangles_V[j])
+                    else:
+                        continue
+                ALL_CONNECTED_V.append(Connected)
+
+            # print len(ALL_CONNECTED_V)
+            # for i in ALL_CONNECTED_V:
+            # print"LENGTH", len(i)
+
+        ################################################# (Finding connected components)
+
+
     ##############################################
 
+class CornerStitch():
+    def __init__(self,level):
+
+        self.level=level
+
+
+
+    def read_input(self,input_mode,testfile=None,Rect_list=None):
+        if input_mode=='file':
+            f = open(testfile, "rb")  # opening file in binary read mode
+            index_of_dot = testfile.rindex('.')  # finding the index of (.) in path
+
+            testbase = os.path.basename(testfile[:index_of_dot])  # extracting basename from path
+            testdir = os.path.dirname(testfile)  # returns the directory name of file
+            Input = []
+            # a = ["blue","red","green","yellow","black","orange"]
+            i = 0
+            for line in f.read().splitlines():  # considering each line in file
+
+                c = line.split(',')  # splitting each line with (,) and inserting each string in c
+                # print"C",c
+                if len(c) > 4:
+                    # In = [int(c[0]), int(c[1]), int(c[2]), int(c[3]), c[4]]
+                    In = line.split(',')
+                    Input.append(In)
+        elif input_mode=='list':
+
+            Modified_input=[]
+            #while len(Modified_input)!= len(Rect_list):
+            for R in Rect_list:
+               Modified_input.append([R.Schar,R.x,R.y,R.width,R.height,R.type,R.Echar])
+            #for R in Modified_input:
+                #print R.Schar,R.x,R.y,R.width,R.height,R.type,R.Echar
+        return Modified_input
+
+    def getConstraints(self,constraint_file):
+        data = pd.read_csv(constraint_file, header=None)
+        SP = []
+        EN = []
+        width = ((data.loc[1, 1:5]).values.tolist())
+        extension = ((data.loc[2, 1:5]).values.tolist())
+        height = ((data.loc[3, 1:5]).values.tolist())
+        # print extension
+        for i in range(len(data)):
+            # print i
+            # print data.nrows[i]
+            if i > 4 and i < 10:
+
+                SP.append((data.loc[i, 1:5]).values.tolist())
+            elif i > 10 and i <= 15:
+                EN.append((data.loc[i, 1:5]).values.tolist())
+            else:
+                continue
+        CONSTRAINT = ct.constraint()
+
+        # for i in range(len(constraints)):
+        minWidth = map(int, width)
+        minExtension = map(int, extension)
+        minHeight = map(int, height)
+        # print minExtension
+        minSpacing = [map(int, i) for i in SP]
+        minEnclosure = [map(int, i) for i in EN]
+
+        # print minWidth,minSpacing,minEnclosure
+
+        CONSTRAINT.setupMinWidth(minWidth)
+        CONSTRAINT.setupMinHeight(minHeight)
+        CONSTRAINT.setupMinExtension(minExtension)
+        CONSTRAINT.setupMinSpacing(minSpacing)
+        CONSTRAINT.setupMinEnclosure(minEnclosure)
+
+
+
+    def draw_layout(self,Rectangles, max_x, max_y, path):
+        fig10, ax5 = plt.subplots()
+        colors = ['green', 'red', 'blue', 'yellow', 'pink']
+        type = ['Type_1', 'Type_2', 'Type_3', 'Type_4','Type_5']
+        for i in Rectangles:
+            #print i.x,i.y,i.type
+            for t in type:
+                if i[5] == t:
+                    type_ind = type.index(t)
+                    colour = colors[type_ind]
+
+
+            ax5.add_patch(
+                matplotlib.patches.Rectangle(
+                    (i[1], i[2]),  # (x,y)
+                    i[3],  # width
+                    i[4],  # height
+                    facecolor=colour,
+
+                )
+            )
+
+        plt.xlim(0, max_x)
+        plt.ylim(0, max_y)
+        # plt.xlim(0, 60)
+        # plt.ylim(0, 100)#fig10.show()
+        # return fig10
+        # plt.show()
+        fig10.savefig(path + '/' + 'layout.png', bbox_inches='tight')
+        # fig10.savefig(testdir + '/' +'Mode-'+str(level)+'/'+ testbase + str(k) + "H.eps",format='eps', bbox_inches='tight')
+        plt.close()
+
+    def plotrect_min(self,Rect1_H,format,path,name):  ##plotting each node in HCS for level 2 optimization
+        """
+        Draw all cells in this cornerStitch with stitches pointing to their stitch neighbors
+        TODO:
+         Also should probably change the dimensions of the object window depending on the cornerStitch size.
+        """
+
+        # fig2 = matplotlib.pyplot.figure()
+        # node=nodelist[0]
+
+        # print"H", Rect_H
+        # fig8, ax6 = plt.subplots()
+
+        max_x = 0
+        max_y = 0
+        min_x = 1000
+        min_y = 1000
+
+        fig8 = matplotlib.pyplot.figure()
+        ax6 = fig8.add_subplot(111, aspect='equal')
+        # ax6 = plt.axes(xlim=(0, 60), ylim=(0, 60))
+        # Rect_H=Rect_H.reverse()
+        for i in Rect1_H[0]:
+            if i[0] + i[2] > max_x:
+                max_x = i[0] + i[2]
+            if i[1] + i[3] > max_y:
+                max_y = i[1] + i[3]
+            if i[0] < min_x:
+                min_x = i[0]
+            if i[1] < min_y:
+                min_y = i[1]
+        #print Rect_H
+        for j in range(len(Rect1_H)):
+            Rect_H=Rect1_H[j]
+
+            for i in Rect_H:
+                #print"i", i
+
+                # ax4 = fig2.add_subplot(111, aspect='equal')
+                if not i[-1] == "EMPTY":
+
+                    if i[-1] == "Type_1":
+                        colour = 'green'
+                        # pattern = '\\'
+                    elif i[-1] == "Type_2":
+
+                        colour = 'red'
+                        # pattern='*'
+                    elif i[-1] == "Type_3":
+                        # print"2", i[0], i[1]
+                        colour = 'blue'
+
+                        # pattern = '+'
+                    elif i[-1] == "Type_4":
+                        colour = "yellow"
+                    elif i[-1] == "Type_5":
+                        colour = "pink"
+
+                    ax6.add_patch(
+                        matplotlib.patches.Rectangle(
+                            (i[0], i[1]),  # (x,y)
+                            i[2],  # width
+                            i[3],  # height
+                            facecolor=colour
+
+                        )
+                    )
+
+                else:
+                    # pattern = ''
+
+                    ax6.add_patch(
+                        matplotlib.patches.Rectangle(
+                            (i[0], i[1]),  # (x,y)
+                            i[2],  # width
+                            i[3],  # height
+                            facecolor="white"
+                        )
+                    )
+
+        #plt.xlim(0, 60)
+        #plt.ylim(0, 100)
+        plt.xlim(min_x, max_x)
+        plt.ylim(min_y, max_y)
+        # fig10.show()
+        # return fig10
+        # fig8.savefig(testdir + '/' +testbase+ str(j)+"new-H.eps",format='eps', dpi=1000,)
+        #fig8.savefig(testdir + '/'  +'Mode-'+str(level)+'/'+ testbase + '-' +  "minH.png", dpi=1000, bbox_inches='tight')
+
+        fig8.savefig(path + '/'+name +  "minresult"+'.png', bbox_inches='tight')
+        # fig8.savefig(testdir + '/' + testbase + '-' + str(j) + "new-H.eps", format='eps', dpi=1000,bbox_inches='tight')
+        plt.close()
+
+
+    def plotrectV_old(self, k,Rect_H,format,path,name):##plotting each node in VCS before minimum location evaluation
+        """
+        Draw all cells in this cornerStitch with stitches pointing to their stitch neighbors
+        TODO:
+         Also should probably change the dimensions of the object window depending on the cornerStitch size.
+        """
+        #print Rect_H
+        # fig2 = matplotlib.pyplot.figure()
+        #node=nodelist[0]
+        max_x=0
+        max_y=0
+        min_x=10000
+        min_y=10000
+        for i in Rect_H:
+            if i[0]+i[2]>max_x:
+                max_x=i[0]+i[2]
+            if i[1]+i[3]>max_y:
+                max_y=i[1]+i[3]
+            if i[0]<min_x:
+                min_x=i[0]
+            if i[1]<min_y:
+                min_y=i[1]
+        #print max_x,max_y
+        fig9, ax4 = plt.subplots()
+
+        for i in Rect_H:
+
+                # ax4 = fig2.add_subplot(111, aspect='equal')
+            if not i[-1] == "EMPTY":
+
+
+                if i[-1]=="Type_1":
+
+                    colour='green'
+                    #pattern = '\\'
+                elif i[-1]=="Type_2":
+                    colour='red'
+                    #pattern='*'
+                elif i[-1]=="Type_3":
+                    colour='blue'
+                    #pattern = '+'
+                elif i[-1]=="Type_4":
+                    colour="yellow"
+                elif i[-1] == "Type_4":
+                    colour = "pink"
+
+
+                ax4.add_patch(
+                    matplotlib.patches.Rectangle(
+                        (i[0], i[1]),  # (x,y)
+                        i[2],  # width
+                        i[3],  # height
+                        facecolor=colour, edgecolor='black'
+
+
+                    )
+                )
+            else:
+                pattern = ''
+
+                ax4.add_patch(
+                    matplotlib.patches.Rectangle(
+                        (i[0], i[1]),  # (x,y)
+                        i[2],  # width
+                        i[3],  # height
+                        facecolor="white", edgecolor='black'
+                    )
+                )
+
+
+        plt.xlim(min_x, max_x)
+        plt.ylim(min_y, max_y)
+        #fig10.show()
+        #return fig10
+
+        fig9.savefig(path+'/' +name+"init-V"+'.png',bbox_inches='tight')
+        #fig9.savefig(testdir + '/'  +'Mode-'+str(level)+'/'+ testbase + '-' + str(k) + "init-V.eps",format='eps', bbox_inches='tight')
+        plt.close()
+    def plotrectH_old(self,k, Rect_H, format,name,paths):  ###plotting each node in HCS before minimum location evaluation
+        """
+        Draw all cells in this cornerStitch with stitches pointing to their stitch neighbors
+        TODO:
+         Also should probably change the dimensions of the object window depending on the cornerStitch size.
+        """
+
+        # fig2 = matplotlib.pyplot.figure()
+        # node=nodelist[0]
+
+        max_x = 0
+        max_y = 0
+        min_x = 10000
+        min_y = 10000
+        for i in Rect_H:
+            if i[0] + i[2] > max_x:
+                max_x = i[0] + i[2]
+            if i[1] + i[3] > max_y:
+                max_y = i[1] + i[3]
+            if i[0] < min_x:
+                min_x = i[0]
+            if i[1] < min_y:
+                min_y = i[1]
+        # print max_x,max_y
+        Type = ["EMPTY", "Type_1", "Type_2", "Type_3", "Type_4", "Type_5", "Type_6", "Type_7"]
+        Color = ["#FFFFFF", '#008000', '#FF0000', "#0000FF", "#00bfff", "	#A52A2A", '#00EEEE',
+                 '#EE82EE']  # [White,green,red,blue,light blue,brown,cyan,violet]
+        fig15, ax15 = plt.subplots()
+
+        c = 0
+
+        for i in Rect_H:
+
+            # ax4 = fig2.add_subplot(111, aspect='equal')
+            if not i[-1] == "EMPTY":
+                c += 1
+                for j in Type:
+                    if i[-1] == j:
+                        ind = Type.index(j)
+                        colour = Color[ind]
+                '''
+                if i[-1]=="Type_1":
+                    colour='green'
+                    #pattern = '\\'
+                elif i[-1]=="Type_2":
+                    colour='red'
+                    #pattern='*'
+                elif i[-1]=="Type_3":
+                    colour='blue'
+                    #pattern = '+'
+                elif i[-1]=="Type_4":
+                    colour="#00bfff"
+                    #pattern = '.'
+
+                '''
+                ax15.add_patch(
+                    matplotlib.patches.Rectangle(
+                        (i[0], i[1]),  # (x,y)
+                        i[2],  # width
+                        i[3],  # height
+                        facecolor=colour, edgecolor='black'
+
+                    )
+                )
+            else:
+                # pattern = ''
+
+                ax15.add_patch(
+                    matplotlib.patches.Rectangle(
+                        (i[0], i[1]),  # (x,y)
+                        i[2],  # width
+                        i[3],  # height
+                        facecolor="white", edgecolor='black'
+                    )
+                )
+        plt.xlim(min_x, max_x)
+        plt.ylim(min_y, max_y)
+        # plt.xlim(0, 60)
+        # plt.ylim(0, 100)#fig10.show().eps",format='eps',
+        # return fig10
+        print"C", paths,name
+        fig15.savefig(paths + '/' +name+ '.png', bbox_inches='tight')
+        plt.close()
+
+    def UPDATE_min(self,MINX, MINY,Htree,Vtree,path,name, format='.png'):
+        Recatngles_H = {}
+        RET_H = {}
+        for i in Htree.hNodeList:
+            if i.child != []:
+                Dimensions = []
+                DIM = []
+                # for rect in i.stitchList:
+                for j in i.stitchList:
+                    p = [j.cell.x, j.cell.y, j.getWidth(), j.getHeight(), j.voltage, j.current, j.cell.type]
+                    # print p
+                    DIM.append(p)
+
+                    k = [j.cell.x, j.cell.y, j.EAST.cell.x, j.NORTH.cell.y, j.voltage, j.current]
+                    # print k
+                    if k[0] in MINX[i.id].keys() and k[1] in MINY[i.id].keys() and k[2] in MINX[i.id].keys() and k[3] in \
+                            MINY[i.id].keys():
+                        rect = [MINX[i.id][k[0]], MINY[i.id][k[1]], MINX[i.id][k[2]] - MINX[i.id][k[0]],
+                                MINY[i.id][k[3]] - MINY[i.id][k[1]], j.cell.type]
+                    Dimensions.append(rect)
+                Recatngles_H[i.id] = Dimensions
+                RET_H[i.id] = DIM
+        # print Recatngles_H
+        Recatngles_V = {}
+        RET_V = {}
+        for i in Vtree.vNodeList:
+
+            if i.child != []:
+                Dimensions = []
+                DIM_V = []
+                # for rect in i.stitchList:
+                for j in i.stitchList:
+                    p = [j.cell.x, j.cell.y, j.getWidth(), j.getHeight(), j.voltage, j.current, j.cell.type]
+                    DIM_V.append(p)
+                    k = [j.cell.x, j.cell.y, j.EAST.cell.x, j.NORTH.cell.y]
+                    if k[0] in MINX[i.id].keys() and k[1] in MINY[i.id].keys() and k[2] in MINX[i.id].keys() and k[3] in \
+                            MINY[i.id].keys():
+                        rect = [MINX[i.id][k[0]], MINY[i.id][k[1]], MINX[i.id][k[2]] - MINX[i.id][k[0]],
+                                MINY[i.id][k[3]] - MINY[i.id][k[1]], j.cell.type]
+                    Dimensions.append(rect)
+                Recatngles_V[i.id] = Dimensions
+                RET_V[i.id] = DIM_V
+        # print Recatngles_V.keys()
+
+        for k, v in RET_H.items():
+            # print k, len(v)
+            self.plotrectH_old(k, v, format,name,paths=path)
+            # plotrectH_Volt(k,v,format)
+        for k, v in RET_V.items():
+            # print k, len(v)
+            self.plotrectV_old(k, v, format,path,name)
+            # plotrectV_Volt(k, v, format)
+
+
+        Total_H = []
+        Recatngles_H = collections.OrderedDict(sorted(Recatngles_H.items()))
+        # print Recatngles_H
+        for k, v in Recatngles_H.items():
+            # print k
+            Total_H.append(v)
+        # plotrectH_new(Total_H)
+        #plotrectH_min(Total_H, format)
+        #self.plotrect_min(Total_H, format,path,name)
+
+
+        Total_V = []
+        Recatngles_V = collections.OrderedDict(sorted(Recatngles_V.items()))
+        # print Recatngles_H
+        for k, v in Recatngles_V.items():
+            # print k
+            Total_V.append(v)
+        self.plotrect_min(Total_V, format, path, name)
+            # print "VTile",len(v)
+        # plotrectV_new(Total_V)
+        #plotrectV_min(Total_V, format)
+
+    def UPDATE(MINX,MINY,format):
+        MIN_X=MINX.values()[0]
+        #print MIN_X
+        MIN_Y=MINY.values()[0]
+        DIM = []
+        Recatngles_H={}
+        key=MINX.keys()[0]
+        Recatngles_H.setdefault(key,[])
+        for j in Htree.hNodeList[0].stitchList:
+            k = [j.cell.x, j.cell.y, j.EAST.cell.x, j.NORTH.cell.y,j.cell.type,j.voltage,j.current]
+            #print k
+            DIM.append(k)
+        #print DIM
+        for i in range(len(MIN_X)):
+            Dimensions = []
+            for j in range(len(DIM)):
+
+                k=DIM[j]
+                if k[0] in MIN_X[i].keys() and k[1] in MIN_Y[i].keys() and k[2] in MIN_X[i].keys() and k[3] in MIN_Y[i].keys():
+                    rect = [MIN_X[i][k[0]], MIN_Y[i][k[1]], MIN_X[i][k[2]] - MIN_X[i][k[0]],MIN_Y[i][k[3]] - MIN_Y[i][k[1]],k[4]]
+                    Dimensions.append(rect)
+            Recatngles_H[key].append(Dimensions)
+        #print Recatngles_H
+
+        DIM = []
+        Recatngles_V = {}
+        key = MINX.keys()[0]
+        Recatngles_V.setdefault(key, [])
+        for j in Vtree.vNodeList[0].stitchList:
+            k = [j.cell.x, j.cell.y, j.EAST.cell.x, j.NORTH.cell.y,j.cell.type]
+            DIM.append(k)
+        #print DIM
+        for i in range(len(MIN_X)):
+            Dimensions = []
+            for j in range(len(DIM)):
+
+                k=DIM[j]
+                if k[0] in MIN_X[i].keys() and k[1] in MIN_Y[i].keys() and k[2] in MIN_X[i].keys() and k[3] in MIN_Y[i].keys():
+                    rect = [MIN_X[i][k[0]], MIN_Y[i][k[1]], MIN_X[i][k[2]] - MIN_X[i][k[0]],MIN_Y[i][k[3]] - MIN_Y[i][k[1]],k[4]]
+                    Dimensions.append(rect)
+            Recatngles_V[key].append(Dimensions)
+        #print Recatngles_V
+        Total_H = []
+        #Recatngles_H = collections.OrderedDict(sorted(Recatngles_H.items()))
+        # print Recatngles_H
+        for k, v in Recatngles_H.items():
+            # print k
+            Total_H=v
+            #print v
+
+        plotrectH_new(Total_H,format)
+        plotrect_new(Total_H, format)
+
+        Total_V = []
+        Recatngles_V = collections.OrderedDict(sorted(Recatngles_V.items()))
+        # print Recatngles_H
+        for k, v in Recatngles_V.items():
+            # print k
+            Total_V=v
+        plotrectV_new(Total_V,format)
+
+    def input_processing(self,Input,Base_W,Base_H,path,name):
+        Baseplate1 = Baseplate(Base_W, Base_H, "EMPTY")
+        Hnode0, Vnode0 = Baseplate1.Initialize()
+        self.draw_layout(Input,Base_W, Base_H,path)
+        Htree = Tree(hNodeList=[Hnode0], vNodeList=None)
+        Vtree = Tree(hNodeList=None, vNodeList=[Vnode0])
+        Directory=path
+        directory=path
+        testbase=name
+        while (len(Input) > 0):
+            inp=Input.pop(0)
+
+
+
+            if inp[1] == "." and inp[2] != ".":
+
+                for i in reversed(Htree.hNodeList):
+                    if i.parent.id == 1:
+                        # print"ID", i.id
+                        ParentH = i
+                        break
+                CHILDH = ParentH
+                # print "PAR",CHILDH.id,len(CHILDH.stitchList)
+
+                # CHILDH=copy.copy(ParentH)
+                # CHILDH=Hnode(boundaries =ParentH.boundaries, child = ParentH.child, stitchList =ParentH.stitchList , parent =ParentH.parent, id = ParentH.id)
+                x1 = int(inp[2])
+                y1 = int(inp[3]) + int(inp[5])
+                x2 = int(inp[2]) + int(inp[4])
+                y2 = int(inp[3])
+                # CHILDH.insert(inp[0], x1, y1, x2, y2, inp[6], inp[7])
+                CHILDH.insert(inp[0], int(inp[2]), int(inp[3]), int(inp[4]), int(inp[5]), inp[6], inp[7])
+
+                # L = len(Vtree.vNodeList)
+                # print int(inp[1]), int(inp[2]), int(inp[3]), int(inp[4]), inp[5]
+
+                for i in reversed(Vtree.vNodeList):
+                    if i.parent.id == 1:
+                        # print"ID", i.id
+                        Parent = i
+                        break
+                CHILD = Parent
+                # print "PAR",Parent.id
+                # CHILD=Vnode(boundaries =Parent.boundaries, child = Parent.child, stitchList = Parent.stitchList, parent =Parent.parent, id = Parent.id)
+                x1 = int(inp[2])
+                y1 = int(inp[3]) + int(inp[5])
+                x2 = int(inp[2]) + int(inp[4])
+                y2 = int(inp[3])
+                # CHILD.insert(inp[0], x1, y1, x2, y2, inp[6], inp[7])
+                CHILD.insert(inp[0], int(inp[2]), int(inp[3]), int(inp[4]), int(inp[5]), inp[6], inp[7])
+
+            if inp[1] == "." and inp[2] == ".":
+
+                # L = len(Vtree.vNodeList)
+                # print int(inp[2]), int(inp[2]), int(inp[3]), int(inp[4]), inp[5]
+                for i in reversed(Htree.hNodeList):
+                    if i.parent.id == 1:
+                        # print"ID", i.id
+                        med = i
+                        break
+                # print med
+                ParentH = med.child[-1]
+                CHILDH = ParentH
+                # CHILDH = copy.copy(ParentH)
+                # CHILDH=Hnode(boundaries =ParentH.boundaries[:], child = ParentH.child[:], stitchList = ParentH.stitchList[:], parent =ParentH.parent, id =ParentH.id+1)
+                x1 = int(inp[3])
+                y1 = int(inp[4]) + int(inp[6])
+                x2 = int(inp[3]) + int(inp[5])
+                y2 = int(inp[4])
+                # CHILDH.insert(inp[0], x1, y1, x2, y2, inp[7], inp[8])
+                CHILDH.insert(inp[0], int(inp[3]), int(inp[4]), int(inp[5]), int(inp[6]), inp[7], inp[8])
+
+                for i in reversed(Vtree.vNodeList):
+                    if i.parent.id == 1:
+                        # print"ID", i.id
+                        med = i
+                        break
+
+                Parent = med.child[-1]
+                CHILD = Parent
+                # CHILD=Vnode(boundaries =copy.copy(Parent.boundaries), child = copy.copy(Parent.child), stitchList = copy.copy(Parent.stitchList), parent =copy.copy(Parent.parent), id =Parent.id)
+                x1 = int(inp[3])
+                y1 = int(inp[4]) + int(inp[6])
+                x2 = int(inp[3]) + int(inp[5])
+                y2 = int(inp[4])
+                # CHILD.insert(inp[0], x1, y1, x2, y2, inp[7], inp[8])
+                CHILD.insert(inp[0], int(inp[3]), int(inp[4]), int(inp[5]), int(inp[6]), inp[7], inp[8])
+
+            if inp[1] != ".":
+
+                start = inp[0]
+                Parent = Vtree.vNodeList[0]
+                # for i in Parent:
+                # print"VL", len(Parent.stitchList)
+
+                # Parent.insert(int(inp[0]), int(inp[1]), int(inp[2]), int(inp[3]), inp[4],inp[5])
+                x1 = int(inp[1])
+                y1 = int(inp[2]) + int(inp[4])
+                x2 = int(inp[1]) + int(inp[3])
+                y2 = int(inp[2])
+                #print x1,y1,x2,y2
+                # Parent.insert(inp[0], x1, y1, x2, y2, inp[5], inp[6])
+                #Parent.insert(start, int(inp[1]), int(inp[2]), int(inp[3]), int(inp[4]), inp[5], inp[6],Htree,Vtree,Parent)
+                Parent.insert(start, x1, y1, x2, y2, inp[5],inp[6], Htree, Vtree,Parent)
+
+
+                ParentH = Htree.hNodeList[0]
+                # print"HL", len(ParentH.stitchList)
+                # ParentH.insert(int(inp[0]), int(inp[1]), int(inp[2]), int(inp[3]), inp[4],inp[5])
+                x1 = int(inp[1])
+                y1 = int(inp[2]) + int(inp[4])
+                x2 = int(inp[1]) + int(inp[3])
+                y2 = int(inp[2])
+                # ParentH.insert(inp[0], x1, y1, x2, y2, inp[5], inp[6])
+                ParentH.insert(start, x1, y1, x2, y2, inp[5],inp[6],Htree,Vtree,ParentH)
+
+        Htree.setNodeId1(Htree.hNodeList[0])
+        Vtree.setNodeId1(Vtree.vNodeList[0])
+
+        if self.level == 1:
+
+            N = int(sys.argv[5])
+            W = None
+            H = None
+            XLoc = None
+            YLoc = None
+        elif self.level == 2:
+            N = int(sys.argv[5])
+
+            W = int(sys.argv[6])
+
+            H = int(sys.argv[7])
+            f = open(Directory + '/' + 'Mode-0' + '/' + testbase + 'Min_Y_Location.csv', 'rb')
+            readFile = csv.reader(f)
+            next(readFile, None)
+            NODES_V = []
+            for y in readFile:
+                NODES_V.append(y[0])
+            # print NODES_V
+            V_NODELIST = map(int, NODES_V)
+            # print V_NODELIST
+            start_V = V_NODELIST[0]
+            end_V = V_NODELIST[-1]
+            f = open(Directory + '/' + 'Mode-0' + '/' + testbase + 'Min_X_Location.csv', 'rb')
+            readFile = csv.reader(f)
+            next(readFile, None)
+            NODES_H = []
+            for y in readFile:
+                NODES_H.append(y[0])
+            # print NODES_H
+            H_NODELIST = map(int, NODES_H)
+            # print H_NODELIST
+            start_H = H_NODELIST[0]
+            end_H = H_NODELIST[-1]
+            XLoc = {start_H: 0, end_H: W}
+            YLoc = {start_V: 0, end_V: H}
+
+        elif self.level == 3:
+            N = int(sys.argv[5])
+            W = None
+            H = None
+            X_Location_file = sys.argv[6]
+            f1 = open(X_Location_file, 'rb')
+            readFile = csv.reader(f1)
+            next(readFile, None)
+
+            NODES_H = []
+            VALUES_H = []
+
+            counter = 0
+            for y in readFile:
+                counter += 1
+                if not (not y[2]):
+
+                    if y[0] == 'YNode':
+                        break
+                    NODES_H.append(y[0])
+                    VALUES_H.append(y[2])
+
+            H_NODELIST = map(int, NODES_H)
+            # print H_NODELIST
+
+            H_VALUES = map(int, VALUES_H)
+            # print "H",H_VALUES
+            XLoc = dict(zip(H_NODELIST, H_VALUES))
+            # print XLoc,counter
+            Y_Location_file = sys.argv[6]
+            f1 = open(Y_Location_file, 'rb')
+            readFile = csv.reader(f1)
+            next(readFile, None)
+            NODES_V = []
+            VALUES_V = []
+            count = 0
+            for y in readFile:
+                count += 1
+                if count > counter:
+
+                    if not (not y[2]):
+                        NODES_V.append(y[0])
+                        VALUES_V.append(y[2])
+                else:
+                    continue
+            # print NODES_H
+            V_NODELIST = map(int, NODES_V)
+            V_VALUES = map(int, VALUES_V)
+            YLoc = dict(zip(V_NODELIST, V_VALUES))
+            print XLoc, YLoc
+        else:
+            N = None
+            W = None
+            H = None
+            XLoc = None
+            YLoc = None
+
+        ALL_CONNECTED_H = None
+        ALL_CONNECTED_V = None
+        if self.level == 2 or self.level == 3:
+            # CG = cg.constraintGraph(testdir + '/' + testbase, testdir +'/'+ testbase,W,H,XLoc,YLoc)
+            start4 = timeit.default_timer()
+            CG = cg.constraintGraph(directory + '/' + testbase, directory + '/' + testbase, W, H, XLoc, YLoc)
+            # start1 = timeit.default_timer()
+            CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList, level, testdir, ALL_CONNECTED_H, ALL_CONNECTED_V, N)
+            stop4 = timeit.default_timer()
+
+
+        elif self.level == 1:
+            start4 = timeit.default_timer()
+            CG = cg.constraintGraph(directory + '/' + testbase, directory + '/' + testbase, W=None, H=None,
+                                    XLocation=None, YLocation=None)
+            CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList, level, testdir, ALL_CONNECTED_H, ALL_CONNECTED_V, N)
+            stop4 = timeit.default_timer()
+        else:
+            start4 = timeit.default_timer()
+            # print directory
+            CG = cg.constraintGraph(directory + '/' + testbase, directory + '/' + testbase, W=None, H=None,
+                                    XLocation=None, YLocation=None)
+
+            CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList, self.level, directory, ALL_CONNECTED_H, ALL_CONNECTED_V,
+                              N=None)
+            stop4 = timeit.default_timer()
+        # start = timeit.default_timer()
+        print "Mode Eval", stop4 - start4
+        start5 = timeit.default_timer()
+        MIN_X, MIN_Y = CG.minValueCalculation(Htree.hNodeList, Vtree.vNodeList, self.level)
+
+        for node in Htree.hNodeList:
+            Hnode.Final_Merge(node)
+        # Hnode.Final_Merge(Htree.hNodeList[0])
+        for node in Vtree.vNodeList:
+            Vnode.Final_Merge(node)
+        # for node in Htree.hNodeList:
+        # node.Final_Merge()
+        # for node in Vtree.vNodeList:
+        # node.Final_Merge()
+        Htree.setNodeId(Htree.hNodeList)
+        Vtree.setNodeId(Vtree.vNodeList)
+        if self.level == 0:
+            self.UPDATE_min(MIN_X, MIN_Y,Htree,Vtree,directory,name, format)
+        else:
+            self.UPDATE(MIN_X, MIN_Y, format)
+
+
 ########################################################################################################################
+
 if __name__ == '__main__':
     global VID,HID,Schar,Cchar
     Schar='/'
     Cchar='%'
     VID=0
     HID=0
-    Tile1=tile(None, None, None, None, None, cell(0, 0, "EMPTY"),nodeId=1)
-    TN=tile(None, None, None, None, None, cell(0, 60, None))
-    TE = tile(None, None, None, None, None, cell(50, 0,  None))
-    TW= tile(None, None, None, None, None, cell(-1000, 0,  None))
-    TS = tile(None, None, None, None, None, cell(0,-1000,  None))
-    Tile1.NORTH=TN
-    Tile1.EAST=TE
-    Tile1.WEST=TW
-    Tile1.SOUTH=TS
-    Boundaries=[]
-    Stitchlist=[]
-    Stitchlist.append(Tile1)
-    Boundaries.append(TN)
-    Boundaries.append(TE)
-    Boundaries.append(TW)
-    Boundaries.append(TS)
-    Vnode0=Vnode(boundaries=Boundaries,child=None,stitchList=Stitchlist,parent=None,id=1)
-    Vtree=Tree(hNodeList=None,vNodeList=[Vnode0])
-    Tile2 = tile(None, None, None, None, None, cell(0, 0, "EMPTY"), nodeId=1)
-    TN2 = tile(None, None, None, None, None, cell(0, 60, None))
-    TE2 = tile(None, None, None, None, None, cell(50, 0, None))
-    TW2 = tile(None, None, None, None, None, cell(-1000, 0, None))
-    TS2 = tile(None, None, None, None, None, cell(0, -1000, None))
-    Tile2.NORTH = TN2
-    Tile2.EAST = TE2
-    Tile2.WEST = TW2
-    Tile2.SOUTH = TS2
-    Boundaries_H = []
-    Stitchlist_H = []
-    Stitchlist_H.append(Tile2)
-    Boundaries_H.append(TN2)
-    Boundaries_H.append(TE2)
-    Boundaries_H.append(TW2)
-    Boundaries_H.append(TS2)
-    Hnode0=Hnode(boundaries=Boundaries_H,child=None,stitchList=Stitchlist_H,parent=None,id=1)
-    Htree = Tree(hNodeList=[Hnode0],vNodeList=None)
 
+
+    Baseplate1=Baseplate(70,60,"EMPTY")
+    Hnode0,Vnode0=Baseplate1.Initialize()
+    Htree = Tree(hNodeList=[Hnode0], vNodeList=None)
+    Vtree = Tree(hNodeList=None, vNodeList=[Vnode0])
+
+
+
+
+    def getConstraints(constraint_file):
+        data = pd.read_csv(constraint_file, header=None)
+        SP = []
+        EN = []
+        width = ((data.loc[1, 1:5]).values.tolist())
+        extension = ((data.loc[2, 1:5]).values.tolist())
+        height = ((data.loc[3, 1:5]).values.tolist())
+        # print extension
+        for i in range(len(data)):
+            # print i
+            # print data.nrows[i]
+            if i > 4 and i < 10:
+
+                SP.append((data.loc[i, 1:5]).values.tolist())
+            elif i > 10 and i <= 15:
+                EN.append((data.loc[i, 1:5]).values.tolist())
+            else:
+                continue
+        CONSTRAINT = ct.constraint()
+
+        # for i in range(len(constraints)):
+        minWidth = map(int, width)
+        minExtension = map(int, extension)
+        minHeight = map(int, height)
+        # print minExtension
+        minSpacing = [map(int, i) for i in SP]
+        minEnclosure = [map(int, i) for i in EN]
+
+        # print minWidth,minSpacing,minEnclosure
+
+        CONSTRAINT.setupMinWidth(minWidth)
+        CONSTRAINT.setupMinHeight(minHeight)
+        CONSTRAINT.setupMinExtension(minExtension)
+        CONSTRAINT.setupMinSpacing(minSpacing)
+        CONSTRAINT.setupMinEnclosure(minEnclosure)
 
 
 
@@ -3529,7 +4494,7 @@ if __name__ == '__main__':
             os.makedirs(directory)
         #print directory
 
-
+        #I_V_Constraints(Enable=False)
 
 
         if level==1 :
@@ -3657,7 +4622,8 @@ if __name__ == '__main__':
                 #In = [int(c[0]), int(c[1]), int(c[2]), int(c[3]), c[4]]
                 In = line.split(',')
                 Input.append(In)
-
+        getConstraints(constraint_file)
+        '''
         data = pd.read_csv(constraint_file,header=None)
         SP=[]
         EN=[]
@@ -3675,6 +4641,7 @@ if __name__ == '__main__':
                 EN.append((data.loc[i,1:5]).values.tolist())
             else:
                 continue
+        '''
 
     else:
         exit(1)
@@ -3801,7 +4768,9 @@ if __name__ == '__main__':
     Vtree.setNodeId1(Vtree.vNodeList[0])
     #level=2
     #N=10
+
     start3 = timeit.default_timer()
+    '''
     CONSTRAINT=ct.constraint()
 
     #for i in range(len(constraints)):
@@ -3819,351 +4788,15 @@ if __name__ == '__main__':
     CONSTRAINT.setupMinExtension(minExtension)
     CONSTRAINT.setupMinSpacing(minSpacing)
     CONSTRAINT.setupMinEnclosure(minEnclosure)
+    '''
     #print "N",N
     stop3 = timeit.default_timer()
     print "constraint setup",stop3-start3
+    Htree.setComponentName(Htree.hNodeList)
+    Vtree.setComponentName(Vtree.vNodeList)
 
-    Voltage = {}
-    #self.voltage_constraint = {}
-    with open(testdir+ '/' + 'Voltage-info.csv', 'rb') as csvfile:
-        csvreader = csv.reader(csvfile)
-
-        # extracting field names through first row
-        fields = csvreader.next()
-
-        # extracting each data row one by one
-        i = 0
-        for row in csvreader:
-            i += 1
-            if row[0] in (None, ""):
-                break
-            # if row[2]!=
-            else:
-                Voltage[(int(row[0]), int(row[1]))] = int(row[2])
-
-        '''
-        i += 2
-        j = 0
-        for row in csvreader:
-            # print j,i
-            j += 1
-
-            while j <= i + 1:
-                j += 1
-                continue
-            # print j,row
-
-            if row[0] == 'V':
-                continue
-
-            else:
-                #print row
-                self.voltage_constraint[int(row[0])] = int(row[1])
-            # print row[0],row[1],row[2]
-        '''
-    Current = {}
-    # self.voltage_constraint = {}
-    with open(testdir + '/' + 'Current-info.csv', 'rb') as csvfile:
-        csvreader = csv.reader(csvfile)
-
-        # extracting field names through first row
-        fields = csvreader.next()
-
-        # extracting each data row one by one
-        i = 0
-        for row in csvreader:
-            i += 1
-            if row[0] in (None, ""):
-                break
-            # if row[2]!=
-            else:
-                Current[(int(row[0]), int(row[1]))] = int(row[2])
-    #print "Current", Current
-    # print i,j,Voltage,self.voltage_constraint
-    # RECT_H=[]
-        
-        ################################################# (Finding connected components)
-    Rectangles_H = []
-    # for i in Htree.hNodeList[0]:
-    for j in Htree.hNodeList[0].stitchList:
-        # k = j.cell.x, j.cell.y, j.getWidth(), j.getHeight(), j.cell.id, j.cell.type, j.nodeId
-        if j.cell.type != "EMPTY":
-            Rect = Rectangle(j.cell.x, j.cell.y, j.getWidth(), j.getHeight(), j.cell.type)
-            if Rect not in Rectangles_H:
-                Rectangles_H.append(Rect)
-                # print Rect.type
-
-    #print len(Rectangles_H)
-    Rectangles_H.sort(key=lambda cc: cc.y1)
-    # Rectangles_H.reverse()
-    # Rectangles_H.sort(key=lambda cc: cc.x1)
-    for i in range(len(Rectangles_H)):
-        for j in range(len(Rectangles_H)):
-            # if Rectangles_H[i]==Rectangles_H[j]:
-            # continue
-            # else:
-            if Rectangles_H[i].contains(Rectangles_H[j]) and Rectangles_H[i].type == Rectangles_H[j].type:
-                if Rectangles_H[i].parent == None and Rectangles_H[j].parent == None:
-                    Rectangles_H[i].parent = Rectangles_H[i]
-                    Rectangles_H[j].parent = Rectangles_H[i]
-                elif Rectangles_H[i].parent == None and Rectangles_H[j].parent != None:
-                    Rectangles_H[i].parent = Rectangles_H[j].parent
-                elif Rectangles_H[i].parent != None and Rectangles_H[j].parent == None:
-                    Rectangles_H[j].parent = Rectangles_H[i].parent
-            # else:
-            # Rectangles_H[i].parent = Rectangles_H[i]
-    # print len(Rectangles_H)
-
-    Parent_List = []
-    for i in range(len(Rectangles_H)):
-        if Rectangles_H[i].parent not in Parent_List:
-            Parent_List.append(Rectangles_H[i].parent)
-    #print len(Parent_List)
-    ALL_CONNECTED = {}
-    for i in range(len(Parent_List)):
-        Connected = []
-        for j in range(len(Rectangles_H)):
-            if Rectangles_H[j].parent == Parent_List[i]:
-                Connected.append(Rectangles_H[j])
-            else:
-                continue
-        ALL_CONNECTED[Parent_List[i]] = Connected
-    Rectangles_H.sort(key=lambda cc: cc.x1)
-    for i in range(len(Rectangles_H)):
-        for j in range(len(Rectangles_H)):
-            # if Rectangles_H[i]==Rectangles_H[j]:
-            # continue
-            # else:
-            if Rectangles_H[i].contains(Rectangles_H[j]) and Rectangles_H[i].type == Rectangles_H[j].type:
-                if Rectangles_H[i].parent != Rectangles_H[j].parent:
-                    #print"xy", Rectangles_H[i].x1, Rectangles_H[i].y1, Rectangles_H[j].x1, Rectangles_H[j].y1
-                    for k, v in ALL_CONNECTED.items():
-                        if k == Rectangles_H[i].parent:
-                            L1 = len(v)
-                        elif k == Rectangles_H[j].parent:
-                            L2 = len(v)
-                    if L1 >= L2:
-                        for k, v in ALL_CONNECTED.items():
-                            if k == Rectangles_H[i].parent:
-                                Rectangles_H[j].parent = Rectangles_H[i].parent
-                                v.append(Rectangles_H[j])
-                    else:
-                        for k, v in ALL_CONNECTED.items():
-                            if k == Rectangles_H[j].parent:
-                                Rectangles_H[i].parent = Rectangles_H[j].parent
-                                v.append(Rectangles_H[i])
-    Rectangles_H.sort(key=lambda cc: cc.y2)
-    for i in range(len(Rectangles_H)):
-        for j in range(len(Rectangles_H)):
-            # if Rectangles_H[i]==Rectangles_H[j]:
-            # continue
-            # else:
-            if Rectangles_H[i].contains(Rectangles_H[j]) and Rectangles_H[i].type == Rectangles_H[j].type:
-                if Rectangles_H[i].parent != Rectangles_H[j].parent:
-                    #print"xy", Rectangles_H[i].x1, Rectangles_H[i].y1, Rectangles_H[j].x1, Rectangles_H[j].y1
-                    for k, v in ALL_CONNECTED.items():
-                        if k == Rectangles_H[i].parent:
-                            L1 = len(v)
-                        elif k == Rectangles_H[j].parent:
-                            L2 = len(v)
-                    if L1 >= L2:
-                        for k, v in ALL_CONNECTED.items():
-                            if k == Rectangles_H[i].parent:
-                                Rectangles_H[j].parent = Rectangles_H[i].parent
-                                v.append(Rectangles_H[j])
-                    else:
-                        for k, v in ALL_CONNECTED.items():
-                            if k == Rectangles_H[j].parent:
-                                Rectangles_H[i].parent = Rectangles_H[j].parent
-                                v.append(Rectangles_H[i])
-    Rectangles_H.sort(key=lambda cc: cc.x2)
-    for i in range(len(Rectangles_H)):
-        for j in range(len(Rectangles_H)):
-            # if Rectangles_H[i]==Rectangles_H[j]:
-            # continue
-            # else:
-            if Rectangles_H[i].contains(Rectangles_H[j]) and Rectangles_H[i].type == Rectangles_H[j].type:
-                if Rectangles_H[i].parent != Rectangles_H[j].parent:
-                    #print"xy", Rectangles_H[i].x1, Rectangles_H[i].y1, Rectangles_H[j].x1, Rectangles_H[j].y1
-                    for k, v in ALL_CONNECTED.items():
-                        if k == Rectangles_H[i].parent:
-                            L1 = len(v)
-                        elif k == Rectangles_H[j].parent:
-                            L2 = len(v)
-                    if L1 >= L2:
-                        for k, v in ALL_CONNECTED.items():
-                            if k == Rectangles_H[i].parent:
-                                Rectangles_H[j].parent = Rectangles_H[i].parent
-                                v.append(Rectangles_H[j])
-                    else:
-                        for k, v in ALL_CONNECTED.items():
-                            if k == Rectangles_H[j].parent:
-                                Rectangles_H[i].parent = Rectangles_H[j].parent
-                                v.append(Rectangles_H[i])
-
-    ALL_CONNECTED_H = []
-    Parent_List2 = []
-    for i in range(len(Rectangles_H)):
-        if Rectangles_H[i].parent not in Parent_List2:
-            Parent_List2.append(Rectangles_H[i].parent)
-    #print len(Parent_List2), len(Parent_List)
-    for i in range(len(Parent_List2)):
-        Connected = []
-        for j in range(len(Rectangles_H)):
-            if Rectangles_H[j].parent == Parent_List2[i]:
-                Connected.append(Rectangles_H[j])
-            else:
-                continue
-        ALL_CONNECTED_H.append(Connected)
-
-
-    Rectangles_V = []
-    # for i in Htree.hNodeList[0]:
-    for j in Vtree.vNodeList[0].stitchList:
-        # k = j.cell.x, j.cell.y, j.getWidth(), j.getHeight(), j.cell.id, j.cell.type, j.nodeId
-        if j.cell.type != "EMPTY":
-            Rect = Rectangle(j.cell.x, j.cell.y, j.getWidth(), j.getHeight(), j.cell.type)
-            if Rect not in Rectangles_V:
-                Rectangles_V.append(Rect)
-                # print Rect.type
-
-    # print"V", len(Rectangles_V)
-    Rectangles_V.sort(key=lambda cc: cc.x1)
-    # Rectangles_V.sort(key=lambda cc: cc.y1)
-    for i in range(len(Rectangles_V)):
-        for j in range(len(Rectangles_V)):
-            # if Rectangles_H[i]==Rectangles_H[j]:
-            # continue
-            # else:
-            if Rectangles_V[i].contains(Rectangles_V[j]) and Rectangles_V[i].type == Rectangles_V[j].type:
-                if Rectangles_V[i].parent == None and Rectangles_V[j].parent == None:
-                    Rectangles_V[i].parent = Rectangles_V[i]
-                    Rectangles_V[j].parent = Rectangles_V[i]
-                elif Rectangles_V[i].parent == None and Rectangles_V[j].parent != None:
-                    Rectangles_V[i].parent = Rectangles_V[j].parent
-                elif Rectangles_V[i].parent != None and Rectangles_V[j].parent == None:
-                    Rectangles_V[j].parent = Rectangles_V[i].parent
-            # else:
-            # Rectangles_H[i].parent = Rectangles_H[i]
-    # print len(Rectangles_V)
-    Parent_List = []
-    for i in range(len(Rectangles_V)):
-        if Rectangles_V[i].parent not in Parent_List:
-            Parent_List.append(Rectangles_V[i].parent)
-    #print len(Parent_List)
-    ALL_CONNECTED = {}
-    for i in range(len(Parent_List)):
-        Connected = []
-        for j in range(len(Rectangles_V)):
-            if Rectangles_V[j].parent == Parent_List[i]:
-                Connected.append(Rectangles_V[j])
-            else:
-                continue
-        ALL_CONNECTED[Parent_List[i]] = Connected
-    Rectangles_V.sort(key=lambda cc: cc.y1)
-    for i in range(len(Rectangles_V)):
-        for j in range(len(Rectangles_V)):
-            # if Rectangles_H[i]==Rectangles_H[j]:
-            # continue
-            # else:
-            if Rectangles_V[i].contains(Rectangles_V[j]) and Rectangles_V[i].type == Rectangles_V[j].type:
-                if Rectangles_V[i].parent != Rectangles_V[j].parent:
-                    #print"xy", Rectangles_V[i].x1, Rectangles_V[i].y1, Rectangles_V[j].x1, Rectangles_V[j].y1
-                    for k, v in ALL_CONNECTED.items():
-                        if k == Rectangles_V[i].parent:
-                            L1 = len(v)
-                        elif k == Rectangles_V[j].parent:
-                            L2 = len(v)
-                    if L1 >= L2:
-                        for k, v in ALL_CONNECTED.items():
-                            if k == Rectangles_V[i].parent:
-                                Rectangles_V[j].parent = Rectangles_V[i].parent
-                                v.append(Rectangles_V[j])
-                    else:
-                        for k, v in ALL_CONNECTED.items():
-                            if k == Rectangles_V[j].parent:
-                                Rectangles_V[i].parent = Rectangles_V[j].parent
-                                v.append(Rectangles_V[i])
-    Rectangles_V.sort(key=lambda cc: cc.y2)
-    for i in range(len(Rectangles_V)):
-        for j in range(len(Rectangles_V)):
-            # if Rectangles_H[i]==Rectangles_H[j]:
-            # continue
-            # else:
-            if Rectangles_V[i].contains(Rectangles_V[j]) and Rectangles_V[i].type == Rectangles_V[j].type:
-                if Rectangles_V[i].parent != Rectangles_V[j].parent:
-                    # print"xy", Rectangles_V[i].x1, Rectangles_V[i].y1, Rectangles_V[j].x1, Rectangles_V[j].y1
-                    for k, v in ALL_CONNECTED.items():
-                        if k == Rectangles_V[i].parent:
-                            L1 = len(v)
-                        elif k == Rectangles_V[j].parent:
-                            L2 = len(v)
-                    if L1 >= L2:
-                        for k, v in ALL_CONNECTED.items():
-                            if k == Rectangles_V[i].parent:
-                                Rectangles_V[j].parent = Rectangles_V[i].parent
-                                v.append(Rectangles_V[j])
-                    else:
-                        for k, v in ALL_CONNECTED.items():
-                            if k == Rectangles_V[j].parent:
-                                Rectangles_V[i].parent = Rectangles_V[j].parent
-                                v.append(Rectangles_V[i])
-    Rectangles_V.sort(key=lambda cc: cc.x2)
-    for i in range(len(Rectangles_V)):
-        for j in range(len(Rectangles_V)):
-            # if Rectangles_H[i]==Rectangles_H[j]:
-            # continue
-            # else:
-            if Rectangles_V[i].contains(Rectangles_V[j]) and Rectangles_V[i].type == Rectangles_V[j].type:
-                if Rectangles_V[i].parent != Rectangles_V[j].parent:
-                    # print"xy", Rectangles_V[i].x1, Rectangles_V[i].y1, Rectangles_V[j].x1, Rectangles_V[j].y1
-                    for k, v in ALL_CONNECTED.items():
-                        if k == Rectangles_V[i].parent:
-                            L1 = len(v)
-                        elif k == Rectangles_V[j].parent:
-                            L2 = len(v)
-                    if L1 >= L2:
-                        for k, v in ALL_CONNECTED.items():
-                            if k == Rectangles_V[i].parent:
-                                Rectangles_V[j].parent = Rectangles_V[i].parent
-                                v.append(Rectangles_V[j])
-                    else:
-                        for k, v in ALL_CONNECTED.items():
-                            if k == Rectangles_V[j].parent:
-                                Rectangles_V[i].parent = Rectangles_V[j].parent
-
-                                v.append(Rectangles_V[i])
-    '''
-    for i in Rectangles_V:
-        if i.parent != None:
-            print i.x1, i.y1, i.type, i.parent.x1, i.parent.y1
-        else:
-            print i.x1, i.y1, i.type
-    '''
-
-    Parent_List_V = []
-    for i in range(len(Rectangles_V)):
-        if Rectangles_V[i].parent not in Parent_List_V:
-            Parent_List_V.append(Rectangles_V[i].parent)
-    #print len(Parent_List_V)
-    ALL_CONNECTED_V = []
-    for i in range(len(Parent_List_V)):
-        Connected = []
-        for j in range(len(Rectangles_V)):
-            if Rectangles_V[j].parent == Parent_List_V[i]:
-                Connected.append(Rectangles_V[j])
-            else:
-                continue
-        ALL_CONNECTED_V.append(Connected)
-
-        #print len(ALL_CONNECTED_V)
-        #for i in ALL_CONNECTED_V:
-            #print"LENGTH", len(i)
-
-        ################################################# (Finding connected components)
-
-    #ALL_CONNECTED_H=None
-    #ALL_CONNECTED_V = None
+    ALL_CONNECTED_H=None
+    ALL_CONNECTED_V = None
     if level==2 or level== 3:
         #CG = cg.constraintGraph(testdir + '/' + testbase, testdir +'/'+ testbase,W,H,XLoc,YLoc)
         start4 = timeit.default_timer()
@@ -4212,8 +4845,8 @@ if __name__ == '__main__':
 
 
 
-    '''
 
+    '''
     print Htree.hNodeList
     f1 = open(testdir + '/' + testbase + "hNode.txt", 'wb')
     print >> f1, Htree.hNodeList
@@ -4225,7 +4858,7 @@ if __name__ == '__main__':
         print >> f1, i,i.id
     #i=Htree.hNodeList[0]
         for j in i.stitchList:
-            k= j.cell.x, j.cell.y, j.getWidth(),j.getHeight(),j.cell.id, j.cell.type, j.nodeId
+            k= j.cell.x, j.cell.y, j.getWidth(),j.getHeight(),j.cell.id, j.cell.type, j.nodeId, j.name
             print k
             print >> f1,k
         if i.parent == None:
@@ -4242,7 +4875,7 @@ if __name__ == '__main__':
     for i in Vtree.vNodeList:
         print i.id,i,len(i.stitchList)
         for j in i.stitchList:
-            k= j.cell.x, j.cell.y, j.getWidth(),j.getHeight(),j.cell.id, j.cell.type, j.nodeId
+            k= j.cell.x, j.cell.y, j.getWidth(),j.getHeight(),j.cell.id, j.cell.type, j.nodeId,j.name
             print k
             print >> f1,k
         if i.parent == None:
@@ -4253,8 +4886,9 @@ if __name__ == '__main__':
             if j.cell.type!=None:
                 k = j.cell.x, j.cell.y, j.getWidth(), j.getHeight(), j.cell.id, j.cell.type, j.nodeId
                 print "B",i.id,k
-
     '''
+
+
 
     def plotrectH( k,Rect_H,format): ###plotting each node after minimum location evaluation in HCS
         """
@@ -5181,7 +5815,7 @@ if __name__ == '__main__':
         for k, v in Recatngles_V.items():
             #print k
             Total_V.append(v)
-            print "VTile",len(v)
+            #print "VTile",len(v)
         #plotrectV_new(Total_V)
         plotrectV_min(Total_V,format)
 
@@ -5554,7 +6188,7 @@ if __name__ == '__main__':
 
     """
 
-    def drawLayer( nodelist,format):
+    def drawLayer( nodelist,format,w,h):
         """
         Draw all cells in this cornerStitch with stitches pointing to their stitch neighbors
         TODO:
@@ -5610,8 +6244,8 @@ if __name__ == '__main__':
                     )
 
 
-            plt.xlim(0, 50)
-            plt.ylim(0, 60)
+            plt.xlim(0, w)
+            plt.ylim(0, h)
             #fig2.savefig(testdir + '/' + testbase + "-input.eps", format='eps',bbox_inches='tight')
             #fig2.savefig(testdir + '/' + testbase + "-input.emf", format='emf',bbox_inches='tight')
 
@@ -6194,7 +6828,7 @@ if __name__ == '__main__':
 
     #drawLayer1(Vtree.vNodeList)
     #drawLayer2(Htree.hNodeList)
-    drawLayer(Htree.hNodeList,format)
+    drawLayer(Htree.hNodeList,format,Baseplate1.w,Baseplate1.h)
 
     def drawLayer_11( truePointer=False):
         """

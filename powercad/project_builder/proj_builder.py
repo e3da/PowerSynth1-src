@@ -28,11 +28,11 @@ from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 
 from powercad.project_builder.symmetry_list import SymmetryListUI
 from powercad.project_builder.performance_list import PerformanceListUI
-from powercad.project_builder.windows.mainWindow_master import Ui_MainWindow
+from powercad.project_builder.windows.mainWindow_newlayoutengine import Ui_MainWindow
 from powercad.project_builder.windows.sol_window import SolutionWindow
 from powercad.project_builder.proj_dialogs import NewProjectDialog, OpenProjectDialog, EditTechLibPathDialog, \
     GenericDeviceDialog,LayoutEditorDialog, ResponseSurfaceDialog,ModelSelectionDialog,EnvironmentSetupDialog,SetupDeviceDialogs\
-    ,WireConnectionDialogs
+    ,WireConnectionDialogs,New_layout_engine_dialog
 
 from powercad.drc.process_design_rules_editor import ProcessDesignRulesEditor
 from powercad.tech_lib.tech_lib_wiz import TechLibWizDialog
@@ -98,6 +98,7 @@ class ProjectBuilder(QtGui.QMainWindow):
         self.ui.btn_modify.pressed.connect(self.modify_component)
         self.ui.btn_removeDevice.pressed.connect(self.remove_component)
         self.ui.btn_refresh_module_stack.pressed.connect(self.quit_layer_stack_mode)
+        self.ui.btn_new_layout_engine.pressed.connect(self.open_new_layout_engine)
         # Module stack page
         self.ui.btn_import_layer_stack.pressed.connect(self.import_layer_stack)
         # Constraints page
@@ -166,6 +167,8 @@ class ProjectBuilder(QtGui.QMainWindow):
         self.ui.action_open_tech_lib_editor.setEnabled(enable)
         self.ui.action_edit_tech_path.setEnabled(enable)
         self.ui.action_load_symbolic_layout.setEnabled(enable)
+        self.ui.btn_new_layout_engine.setEnabled(enable)
+
 
     def refresh_ui(self): #Quang: clear all the old project  data when new project is loaded
         self.ui.tbl_projDevices.clear()
@@ -284,6 +287,12 @@ class ProjectBuilder(QtGui.QMainWindow):
             if self.project.module_data.design_rules is None:
                 QtGui.QMessageBox.warning(self, "Defualt Setup", "Process design rules is set to defaults got to Projects-> Design Rule to edit.")
                 self.project.module_data.design_rules = ProcessDesignRules(1.2, 1.2, 0.2, 0.1, 1.0, 0.2, 0.2, 0.2)
+
+    def open_new_layout_engine(self):
+        new_layout_engine = New_layout_engine_dialog(self)
+        new_layout_engine.exec_()
+
+
     def open_design_rule_editor(self):
         # Check if a project has been opened/created
         if self.ui.navigation.isEnabled():

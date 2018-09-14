@@ -41,7 +41,9 @@ def load_script(sript_path):
     # The script is written in text form or specified by .psc (powersynth script code) 
     layout=[]    # layout is a set of LayoutLines and LayoutPoints
     with open(sript_path, 'rb') as f: # open the directory of script code
-        objs=[]                      # specified a list of objs (lines and points)
+        objs=[]    # specified a list of objs (lines and points)
+        #x_coordinates=[]             # stores x coordinates for conversion
+        #y_coordinates=[]             # stores y coordinates for conversion
         for line in f:               # read every line of the script 
             if line[0]=='#' or line[0]==' ': # check for comments or blank lines
                 x=1                         # do nothing if so
@@ -49,7 +51,7 @@ def load_script(sript_path):
                 # in case a line contains layout information
                 data=line.strip('\r\n')
                 data=data.split(' ')
-                print data
+                #print"D", data
                 path_id=data[0]           # load path_id
                 type=data[1]                # check for layout type (line: l vs point: p)
                 if type =='l':              # in case it is a line
@@ -59,10 +61,14 @@ def load_script(sript_path):
                     dat1=dat1.split('(')[1]         # split out the open bracket
                     dat1=dat1.split(')')[0]         # split out the close bracket
                     x1,y1= dat1.split(',')          # split out string information of position
+                    #x_coordinates.append(x1)   # stores x coordinates for conversion
+                    #y_coordinates.append(y1)   # stores y coordinates for conversion
                     pt1=(float(x1),float(y1))       # convert to float data type
                     dat2=dat2.split('(')[1]         # split out the open bracket
                     dat2=dat2.split(')')[0]         # split out the close bracket
                     x2,y2= dat2.split(',')          # split out string information of position
+                    #x_coordinates.append(x2)   # stores x coordinates for conversion
+                    #y_coordinates.append(y2)   # stores y coordinates for conversion
                     pt2=(float(x2),float(y2))       # convert to float data type
                     if pt1[0]==pt2[0]:              # check if the line is vertical (manhattan style)
                         vert = True                 # set vertical = True

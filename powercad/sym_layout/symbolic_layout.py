@@ -266,7 +266,7 @@ class SymLine(object):
 
 
 class SymPoint(object):
-    def __init__(self, point, raw_point):
+    def __init__(self, point=None, raw_point=None):
         self.raw_element = raw_point
 
         self.element = point
@@ -436,15 +436,22 @@ class SymbolicLayout(object):
         # Create SymLines and SymPoints
         self.all_sym = []
         self.points = []
-
+        self.all_lines=[]                   # stores all layout line objects
+        self.all_points=[]                  # stores all layout points objects
         for i in xrange(len(self.layout)): # iterate through the layout
             obj = self.layout[i]           # for each object in the layout add the normalized obj to obj list
             raw = self.raw_layout[i]       # add the raw object to object list
             if isinstance(obj, LayoutLine):# if this is a LayoutLine then make a SymLine object
                 sym = SymLine(obj, raw)    # make a SymLine object
+
+                self.all_lines.append(obj)
+
             elif isinstance(obj, LayoutPoint): # if this is a LayoutPoint then make a SymPoint object
                 sym = SymPoint(obj, raw)   # make a SymPoint object
                 self.points.append(sym)    # append this to the points list
+
+                self.all_points.append(obj)
+
             self.all_sym.append(sym)       # append the sym obj to all_sym list
     '''-----------------------------------------------------------------------------------------------------------------------------------------------------'''
 
