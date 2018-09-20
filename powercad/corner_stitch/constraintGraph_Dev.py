@@ -121,7 +121,7 @@ class constraintGraph:
         """
         return
 
-    def graphFromLayer(self, H_NODELIST, V_NODELIST, level,name1,CONNECTED_H,CONNECTED_V,N=None):
+    def graphFromLayer(self, H_NODELIST, V_NODELIST, level,path,name,N=None):
         """
         given a cornerStitch, construct a constraint graph detailing the dependencies of
         one dimension point to another
@@ -129,6 +129,7 @@ class constraintGraph:
         # self.matrixFromDimList()
         self.setEdgesFromLayer(cornerStitch_h, cornerStitch_v)
         """
+        CONNECTED_H=None
         self.HorizontalNodeList = []
         self.VerticalNodeList = []
         for node in H_NODELIST:
@@ -142,10 +143,7 @@ class constraintGraph:
                 continue
             else:
                 self.VerticalNodeList.append(node)
-        #print "RESULT"
 
-        ## Voltage assignment
-        #Voltage={(5,50):0,(5,35):100, (5,20):10}
         if CONNECTED_H!=None:
             Voltage={}
             self.voltage_constraint={}
@@ -340,48 +338,6 @@ class constraintGraph:
 
 
 
-        #print HorizontalNodeList
-        for i in self.HorizontalNodeList:
-
-            print i.id, i, len(i.stitchList)
-
-            # i=Htree.hNodeList[0]
-            for j in i.stitchList:
-                k = j.cell.x, j.cell.y, j.getWidth(), j.getHeight(), j.cell.id, j.cell.type, j.nodeId,j.voltage,j.name
-                print k
-
-            if i.parent == None:
-                print 0
-            else:
-                print i.parent.id, i.id
-            for j in i.boundaries:
-                if j.cell.type != None:
-                    k = j.cell.x, j.cell.y, j.getWidth(), j.getHeight(), j.cell.id, j.cell.type, j.nodeId,j.voltage
-
-                else:
-                    k=j.cell.x,j.cell.y,j.cell.type,j.nodeId
-                print "B", i.id, k
-
-        #print VerticalNodeList
-        for i in self.VerticalNodeList:
-            print i.id, i, len(i.stitchList)
-            for j in i.stitchList:
-                k = j.cell.x, j.cell.y, j.getWidth(), j.getHeight(), j.cell.id, j.cell.type, j.nodeId,j.voltage,j.name
-                print k
-
-            if i.parent == None:
-                print 0
-            else:
-                print i.parent.id, i.id
-            for j in i.boundaries:
-                if j.cell.type != None:
-                    k = j.cell.x, j.cell.y, j.getWidth(), j.getHeight(), j.cell.id, j.cell.type, j.nodeId,j.voltage
-
-                else:
-                    k = j.cell.x, j.cell.y, j.cell.type,j.nodeId,j.voltage
-                print "B", i.id, k
-
-        start1 = timeit.default_timer()
         Key = []
         ValueH = []
         ValueV = []
@@ -398,30 +354,23 @@ class constraintGraph:
 
         self.ZDL_V = collections.OrderedDict(sorted(ZDL_V.items()))
 
-        # self.ZDL_H[HorizontalNodeList[i].id]=k
-        # self.ZDL_V[VerticalNodeList[i].id]=j
-        #print "ZDL_H", self.ZDL_H
-        #print "ZDL_V", self.ZDL_V
+
 
         for i in range(len(self.HorizontalNodeList)):
-            # print HorizontalNodeList[i].id
-            # for child in HorizontalNodeList[i].child:
-            # print child.id
+
 
             self.setEdgesFromLayer(self.HorizontalNodeList[i], self.VerticalNodeList[i])
 
-        stop1 = timeit.default_timer()
-        print "CG",stop1-start1
-        # print self.vertexMatrixh
-        # print self.vertexMatrixh
+
+
         self.edgesh_new = collections.OrderedDict(sorted(self.edgesh_new.items()))
         self.edgesv_new = collections.OrderedDict(sorted(self.edgesv_new.items()))
-        # print "K",self.edgesh_new.keys()
+
 
         for k, v in list(self.edgesh_new.iteritems())[::-1]:
 
             ID, edgeh = k, v
-            name = "Node-" + str(ID)
+            #name1 = "Node-" + str(ID)
             # print ID
 
             for i in self.HorizontalNodeList:
@@ -430,68 +379,28 @@ class constraintGraph:
                         parent = i.parent.id
                     else:
                         parent = None
-            start2 = timeit.default_timer()
-            self.cgToGraph_h(name, ID, self.edgesh_new[ID], parent, level,N)
-            stop2 = timeit.default_timer()
-            print "cg_h", stop2 - start2
+
+            self.cgToGraph_h(path,name, ID, self.edgesh_new[ID], parent, level,N)
+
+
 
 
         for k, v in list(self.edgesv_new.iteritems())[::-1]:
 
             ID, edgev = k, v
-            name = "Node-" + str(ID)
+            #name = "Node-" + str(ID)
             # print ID
 
             for i in self.VerticalNodeList:
                 if i.id == ID:
                     if i.parent != None:
                         parent = i.parent.id
-            start3=timeit.default_timer()
-            self.cgToGraph_v(name, ID, edgev, parent, level,N)
-            stop3 = timeit.default_timer()
-            print "Cg_v", stop3 - start3
-        #print stop1-start1
-        """
-        print "RESULT"
-        print "Y_Locations:", self.minLocationV
-        print "X_Locations:", self.minLocationH
-        print "Generating Figures"
-        """
-        # print self.minLocationV[2][48]
 
-        '''
-        X=[]
-        Y=[]
-        for i in self.ZDL_H.values():
-            X.extend(i)
-        X=list(set(X))
-        X.sort()
-        for i in self.ZDL_V.values():
-            Y.extend(i)
-        Y = list(set(Y))
-        Y.sort()
-        print "Y",Y
-        '''
+            self.cgToGraph_v(path,name, ID, edgev, parent, level,N)
 
-    '''
-    def minValueCalculation(self,hNodeList,vNodeList):
-        for node in hNodeList:
-            if node.parent==None:
-                self.minX[node.id]=self.minLocationH[node.id]
 
-            else:
-                self.set_minX(node)
 
-        for node in vNodeList:
-            if node.parent == None:
-                self.minY[node.id] = self.minLocationV[node.id]
 
-            else:
-                self.set_minY(node)
-        #print "minX",self.minX
-        #print "minY",self.minY
-        return self.minX,self.minY
-    '''
 
     ##### for single node
     def minValueCalculation(self, hNodeList, vNodeList, level):
@@ -527,8 +436,7 @@ class constraintGraph:
 
                 else:
                     self.set_minY(node)
-            #print "minX",self.minX
-            #print "minY",self.minY
+
 
             return self.minX, self.minY
 
@@ -580,14 +488,12 @@ class constraintGraph:
 
     def printVM(self, name1, name2):
         f1 = open(name1, 'w')
-        # for k, v in self.vertexMatrixh.iteritems():
-        # print >>f1,k, v
+
         for i in self.vertexMatrixh:
             print >> f1, i
 
         f2 = open(name2, 'w')
-        # for k, v in self.vertexMatrixv.iteritems():
-        # print >>f2,k, v
+
         for i in self.vertexMatrixv:
             print >> f2, i
         return
@@ -647,32 +553,7 @@ class constraintGraph:
         setToList_h.sort()
         # self.zeroDimensionListh = setToList_h
         return setToList_h, setToList_v
-    '''
-    def round(self,n):
 
-        # Smaller multiple
-        a = (n // 10) * 10
-
-        # Larger multiple
-        b = a + 10
-        #print a,b
-        # Return of closest of two
-        return (b if n - a > b - n else a)
-
-    def binary_search_upper(self,seq, limit):
-        min = 0
-        max = len(seq) - 1
-        while True:
-            if max < min:
-                return -1
-            m = (min + max) / 2
-            if m == (len(seq) - 1) or (seq[m] <= limit and seq[m + 1] > limit):
-                return m
-            elif seq[m] < limit:
-                min = m + 1
-            else:
-                max = m - 1
-    '''
 
     def setEdgesFromLayer(self, cornerStitch_h, cornerStitch_v):
         # self.vertexMatrixh=defaultdict(lambda: defaultdict(list))
@@ -1226,20 +1107,9 @@ class constraintGraph:
 
         self.edgesh[ID] = edgesh
         self.edgesv[ID] = edgesv
-        print"EDGE", len(self.edgesh_new[ID]), len(self.edgesv_new[ID])
 
-    '''
 
-    print "H"
-    for foo in edgesh_new:
-        print "foo",foo.getEdgeDict()
-
-    print "V"
-    for foo in edgesv_new:
-        print "foo", foo.getEdgeDict()
-    '''
-
-    def cgToGraph_h(self, name, ID, edgeh, parentID, level,N):
+    def cgToGraph_h(self,path, name, ID, edgeh, parentID, level,N):
         # print ID
         start4 = timeit.default_timer()
         G2 = nx.MultiDiGraph()
@@ -1288,7 +1158,7 @@ class constraintGraph:
             d[k].append(v)
         edge_labels1 = d
         stop4 = timeit.default_timer()
-        print"H_nodes",len(nodes)
+        #print"H_nodes",len(nodes)
         #print "HCG",stop4-start4
         #self.drawGraph_h(name, G2, edge_labels1)
 
@@ -1331,16 +1201,13 @@ class constraintGraph:
                     #print (k1),v
                     if v[2] == 0:
                         if v[1] == '1':
-                            val = int(min(4 * v[0], max(v[0], random.gauss(3*v[0], 10))))
-                            # print val,(10,40)
-                            # val = random.randint(v[0],10*v[0])
+                            val = int(min(10* v[0], max(v[0], random.gauss(3*v[0], 5))))
+
                         elif v[1] == '2':
-                            val = int(min(2 * v[0], max(v[0], random.gauss(v[0], 5))))
-                            # print val,(8,30)
-                            # val = random.randint(v[0], 10*v[0])
-                            # val = v[0]
+                            val = int(min(2 * v[0], max(v[0], random.gauss(v[0], 4))))
+
                         elif v[1] == '3':
-                            val = int(min(v[0] * 2, max(v[0], random.gauss(v[0], 10))))
+                            val = int(min(v[0] * 2, max(v[0], random.gauss(v[0], 4))))
                             # print val,(20,40)
                             # val = random.randint(v[0],4*v[0])
 
@@ -1349,7 +1216,7 @@ class constraintGraph:
                             # print val,(3,20)
                             # val = random.randint(v[0], 5*v[0])
                         elif v[1] == '0':
-                            val = int(min(v[0] * 2, max(v[0], random.gauss(v[0], 5))))
+                            val = int(min(v[0] * 2, max(v[0], random.gauss(v[0], 2))))
                         elif (isinstance(v[1], int)):
                             # print "H",(k1),v
                             val = int(min(4 * v[0], max(v[0], random.gauss(v[0], 10))))
@@ -1364,43 +1231,13 @@ class constraintGraph:
                         # val = random.randint(v[0], 10*v[0])
                     else:
                         val = random.randint(v[0], 5 * v[0])
-                    """
-                    if v[2] == 0:
-                        if v[1] == '1':
-                            val = int(min(8*v[0], max(2*v[0], random.gauss(3*v[0], 5))))
-                            #print val,(10,40)
-                            #val = random.randint(v[0],10*v[0])
-                        elif v[1] == '2':
-                            val = int(min(3*v[0], max(2*v[0], random.gauss(v[0], 2))))
-                            #print val,(8,30)
-                            #val = random.randint(v[0], 10*v[0])
-                            #val = v[0]
-                        elif v[1] == '3':
-                            val = int(min(v[0]*2, max(v[0], random.gauss(v[0], 5))))
-                            #print val,(20,40)
-                            #val = random.randint(v[0],4*v[0])
 
-                        elif v[1] == '4':
-                            val = int(min(3*v[0], max(2*v[0], random.gauss(v[0], 5))))
-                            #print val,(3,20)
-                            #val = random.randint(v[0], 5*v[0])
-
-
-                    elif v[2] == 1:
-                        val = int(min(2*v[0], max(v[0], random.gauss(v[0],4))))
-                        #print val,(5,20)
-                        #val = random.randint(v[0], 10*v[0])
-                    else:
-                        val = random.randint(v[0],5*v[0])
-                    """
                     edge[(k1)] = val
                     EDGEH.append(edge)
 
 
                 D.append(EDGEH)
-                e6 = timeit.default_timer()
-                #print "L1-2", e6 - s6
-            #print D
+
 
 
 
@@ -1519,81 +1356,13 @@ class constraintGraph:
                 loc_i = {}
                 for key in position:
                     loc_i[key] = max(position[key])
-                    # if key==n[-2]:
-                    # loc_i[key] = 19
-                    # elif key==n[-1]:
-                    # loc_i[key] = 20
+
                     new_Xlocation.append(loc_i[key])
                 loct.append(loc_i)
-                #print"LOCT",locta
+
 
                 self.NEWXLOCATION.append(new_Xlocation)
 
-            """
-            n = list(G2.nodes())
-            self.FindingAllPaths_h(G2, n[0], n[-1])
-
-            paths = self.paths_h
-            loct = []
-            for k in range(len(D_3)):
-                new_Xlocation = []
-
-                dist = {}
-                distance = set()  ###stores (u,v,w)where u=parent,v=child,w=cumulative weight from source to child
-                location = set()  ###No use
-                position_k = {}  ## stores {node:location}
-                for i in range(len(paths)):
-                    path = paths[i]
-                    # print path
-                    for j in range(len(path)):
-                        node = path[j]
-                        # print "node=",path[-1]
-                        if j > 0:
-                            pred = path[j - 1]
-                        else:
-                            pred = node
-                        # print node, pred
-                        if node == 0:
-                            dist[node] = (0, pred)
-                            # distance.append((pred,node,0))
-                            distance.add((pred, node, 0))
-                            # location.add((node,0))
-                            key = node
-                            position_k.setdefault(key, [])
-                            position_k[key].append(0)
-                        # elif node== path[-1]:
-
-                        else:
-
-                            pairs = (dist[pred][0] + max(D_3[k][(pred, node)]), pred)
-                            # print  max(edge_labels1[(pred, node)])
-                            dist[node] = pairs
-                            # print dist[node][0]
-
-                            distance.add((pred, node, pairs[0]))
-                            # print pairs[0]
-                            # if location[node]<pairs[0]:
-                            location.add((node, pairs[0]))
-                            key = node
-                            position_k.setdefault(key, [])
-                            position_k[key].append(pairs[0])
-                            # print position_k
-                #print "POS",position_k
-                loc_i = {}
-                for key in position_k:
-                    loc_i[key] = max(position_k[key])
-                    # if key==n[-2]:
-                    # loc_i[key] = 19
-                    # elif key==n[-1]:
-                    # loc_i[key] = 20
-                    new_Xlocation.append(loc_i[key])
-                loct.append(loc_i)
-                #print loct
-
-                self.NEWXLOCATION.append(new_Xlocation)
-                """
-
-            #print"X=", self.NEWXLOCATION
             n = list(G2.nodes())
             Location = {}
             key = ID
@@ -1607,9 +1376,9 @@ class constraintGraph:
             #print Location
             self.minLocationH = Location
             stop2 = timeit.default_timer()
-            print"L1", stop2 - start2
+
             e7 = timeit.default_timer()
-            print"L1-3", e7 - s7
+
 
         elif level == 2 or level ==3:
             start2 = timeit.default_timer()
@@ -1641,17 +1410,11 @@ class constraintGraph:
                 for k, v in self.XLoc.items():
                     if k in n:
                         self.Loc_X[k] = v
-                #print "LOC_X", self.Loc_X
-                #self.Loc_X = {n[0]: 0, n[-1]: self.W_T}
-                #self.Loc_X = {n[0]: 0, n[1]: 5, n[3]: 15, n[4]: 20, n[6]: 30, n[7]: 35, n[9]: 45, n[10]: 50, n[12]: 60,n[14]: 65, n[16]: 100, n[17]: 120, n[-1]: self.W_T}
-                start2 = timeit.default_timer()
+
                 self.FUNCTION(G)
-                stop2 = timeit.default_timer()
-                #print"FINX",self.Loc_X
+
                 loct.append(self.Loc_X)
-            stop2 = timeit.default_timer()
-            print"L2", stop2 - start2
-            #print"T",  (stop2 - start2)
+
             for i in loct:
                 new_x_loc = []
                 for j, k in i.items():
@@ -1708,11 +1471,9 @@ class constraintGraph:
                             # k=B[j][i]
                             pred = j
                             val.append(Location[n[pred]] + B[j][i])
-                    # loc1=Location[n[i-1]]+X[(n[i-1],n[i])]
-                    # loc2=Location[n[pred]]+k
+
                     Location[n[i]] = max(val)
-            # print Location
-            # Graph_pos_h = []
+
 
             dist = {}
             for node in Location:
@@ -1721,15 +1482,11 @@ class constraintGraph:
                 dist.setdefault(key, [])
                 dist[node].append(node)
                 dist[node].append(Location[node])
-            # Graph_pos_h.append(dist)
-            # print Graph_pos_h
-            # print"LOC=",Graph_pos_h
-            #print "D",Location
 
             #self.drawGraph_h_new(name, G2, edge_labels1, dist)
 
-            csvfile=self.name1+'Min_X_Location.csv'
-            location_file=self.name1 + 'Fixed_Loc.csv'
+            csvfile=path+'/'+name+'Min_X_Location.csv'
+            location_file=path+'/'+name + 'Fixed_Loc.csv'
 
             with open(csvfile, 'wb') as csv_file:
                 writer = csv.writer(csv_file)
@@ -1805,16 +1562,9 @@ class constraintGraph:
         if start == end:
             saved_path = path[:]
             self.paths_h.append(saved_path)
-            # for i in edge_labels1:
-            # print >> f1, path
 
-            # self.paths_h.append(path)
-            # print "self.paths_h",self.paths_h
-
-            # paths.append(path)
         else:
-            # If current vertex is not destination
-            # Recur for all the vertices adjacent to this vertex
+
 
             for i in G.neighbors(start):
                 if visited[i] == False:
@@ -1825,7 +1575,7 @@ class constraintGraph:
         path.pop()
         visited[start] = False
 
-    def cgToGraph_v(self, name, ID, edgev, parentID, level,N):
+    def cgToGraph_v(self,path, name, ID, edgev, parentID, level,N):
 
         GV = nx.MultiDiGraph()
         dictList1 = []
@@ -1843,7 +1593,7 @@ class constraintGraph:
         edge_labels1 = d
         # print edge_labels1
         nodes = [x for x in range(len(self.ZDL_V[ID]))]
-        print"V_nodes",len(nodes)
+        #print"V_nodes",len(nodes)
         GV.add_nodes_from(nodes)
 
         label = []
@@ -1854,17 +1604,13 @@ class constraintGraph:
             data = []
 
             for internal_edge in edge_labels1[branch]:
-                # print lst_branch[0], lst_branch[1]
-                # print internal_edge
-                # if (lst_branch[0], lst_branch[1], internal_edge) not in data:
+
                 data.append((lst_branch[0], lst_branch[1], internal_edge))
                 label.append({(lst_branch[0], lst_branch[
                     1]): internal_edge})  #####{(source,dest):[weight,type,id,East cell id,West cell id]}
                 edge_label.append({(lst_branch[0], lst_branch[1]): internal_edge[0]})  ### {(source,dest):weight}
 
-                # print data,label
 
-            # print data
             GV.add_weighted_edges_from(data)
 
         d = defaultdict(list)
@@ -1878,10 +1624,8 @@ class constraintGraph:
 
         #################################################################
         if level == 1:
-            start5 = timeit.default_timer()
-            label4 = copy.deepcopy(label)
-            # print "l3",len(label4),label4
 
+            label4 = copy.deepcopy(label)
             d3 = defaultdict(list)
             for i in label4:
                 (k1), v = list(i.items())[0]  # an alternative to the single-iterating inner loop from the previous solution
@@ -1902,8 +1646,7 @@ class constraintGraph:
             for i in range(N):
 
                 EDGEV = []
-                # for i in range(len(label4)):
-                # for i in range(len(edgelabels)):
+
 
                 for (k1), v in edgelabels.items():
                     edge = {}
@@ -1911,25 +1654,25 @@ class constraintGraph:
                     # print (k1),v
                     if v[2] == 4:
                         if v[1] == '1':
-                            val = int(min(4 * v[0], max(v[0], random.gauss(3*v[0], 5))))
+                            val = int(min(10 * v[0], max(v[0], random.gauss(3*v[0], 5))))
                             # print val,(10,40)
                             # val = random.randint(v[0],10*v[0])
                         elif v[1] == '2':
-                            val = int(min(2 * v[0], max(v[0], random.gauss(v[0], 5))))
+                            val = int(min(2 * v[0], max(v[0], random.gauss(v[0], 4))))
                             # print val,(8,30)
                             # val = random.randint(v[0], 10*v[0])
                             # val = v[0]
                         elif v[1] == '3':
-                            val = int(min(v[0] * 2, max(v[0], random.gauss(v[0], 10))))
+                            val = int(min(v[0] * 2, max(v[0], random.gauss(v[0], 4))))
                             # print val,(20,40)
                             # val = random.randint(v[0],4*v[0])
 
                         elif v[1] == '4':
-                            val = int(min(2 * v[0], max(v[0], random.gauss(v[0], 10))))
+                            val = int(min(2 * v[0], max(v[0], random.gauss(v[0], 4))))
                             # print val,(3,20)
                             # val = random.randint(v[0], 5*v[0])
                         elif v[1] == '0':
-                            val = int(min(v[0] * 2, max(v[0], random.gauss(v[0], 5))))
+                            val = int(min(v[0] * 2, max(v[0], random.gauss(v[0],2))))
                         elif (isinstance(v[1], int)):
                             # print "H",(k1),v
                             val = int(min(4 * v[0], max(v[0], random.gauss(v[0], 10))))
@@ -1944,35 +1687,7 @@ class constraintGraph:
                         # val = random.randint(v[0], 10*v[0])
                     else:
                         val = random.randint(v[0], 5 * v[0])
-                    """
-                    if v[2] == 4:
-                        if v[1] == '1':
-                            val = int(min(5*v[0], max(v[0], random.gauss(2*v[0], 4))))
-                            #print val,(10,40)
-                            #val = random.randint(v[0],10*v[0])
-                        elif v[1] == '2':
-                            val = int(min(2*v[0], max(v[0], random.gauss(2*v[0], 4))))
-                            #print val,(8,30)
-                            #val = random.randint(v[0], 10*v[0])
-                            #val = v[0]
-                        elif v[1] == '3':
-                            val = int(min(v[0]*2, max(v[0], random.gauss(v[0], 5))))
-                            #print val,(20,40)
-                            #val = random.randint(v[0],4*v[0])
 
-                        elif v[1] == '4':
-                            val = int(min(2*v[0], max(v[0], random.gauss(v[0], 5))))
-                            #print val,(3,20)
-                            #val = random.randint(v[0], 5*v[0])
-
-
-                    elif v[2] == 1:
-                        val = int(min(2*v[0], max(v[0], random.gauss(v[0],4))))
-                        #print val,(5,20)
-                        #val = random.randint(v[0], 10*v[0])
-                    else:
-                        val = random.randint(v[0],5*v[0])
-                    """
                     edge[(k1)] = val
                     EDGEV.append(edge)
                 D.append(EDGEV)
@@ -2090,134 +1805,13 @@ class constraintGraph:
                 loc_i = {}
                 for key in position:
                     loc_i[key] = max(position[key])
-                    # if key==n[-2]:
-                    # loc_i[key] = 19
-                    # elif key==n[-1]:
-                    # loc_i[key] = 20
+
                     new_Ylocation.append(loc_i[key])
                 locta.append(loc_i)
                 #print"LOCT",locta
 
                 self.NEWYLOCATION.append(new_Ylocation)
-            """
-            D = []
-            for i in range(N):
 
-                EDGEV = []
-                for i in range(len(label4)):
-
-                    edge = {}
-
-                    for (k1), v in label4[i].items():
-
-                        # print (k1),v
-                        if v[2] == 0:
-                            if v[1] == '1':
-                                val = random.randint(10, 30)
-                            elif v[1] == '2':
-                                val = random.randint(8, 30)
-                                # val = 8
-                            elif v[1] == '3':
-                                val = random.randint(6, 30)
-                            elif v[1] == '4':
-                                val = random.randint(3, 30)
-
-                        elif v[2] == 1:
-                            val = random.randint(5, 30)
-                        else:
-                            val = random.randint(5, 20)
-                    edge[(k1)] = val
-                    EDGEV.append(edge)
-                D.append(EDGEV)
-                # print len(EDGEH)
-            # for i in D[0]:
-            # print i
-            # print "D",len(D)
-
-            n = list(GV.nodes())
-            self.FindingAllPaths_v(GV, n[0], n[-1])
-
-            paths = self.paths_v
-            #print paths
-
-            D_3 = []
-            for j in range(len(D)):
-                d[j] = defaultdict(list)
-                # print d[j]
-                # print"N=", new_label[j]
-                for i in D[j]:
-                    # print i
-                    # print new_label[j]
-                    k, v = list(i.items())[
-                        0]  # an alternative to the single-iterating inner loop from the previous solution
-
-                    # print k,v
-                    d[j][k].append(v)
-                # print d[j]
-                # print "d[j]",d[j]
-
-                D_3.append(d[j])
-
-            #print len(D_3), D_3
-
-            loct = []
-            for k in range(len(D_3)):
-                new_Ylocation = []
-
-                dist = {}
-                distance = set()  ###stores (u,v,w)where u=parent,v=child,w=cumulative weight from source to child
-                location = set()  ###No use
-                position_k = {}  ## stores {node:location}
-                for i in range(len(paths)):
-                    path = paths[i]
-                    # print path
-                    for j in range(len(path)):
-                        node = path[j]
-                        # print "node=",path[-1]
-                        if j > 0:
-                            pred = path[j - 1]
-                        else:
-                            pred = node
-                        # print node, pred
-                        if node == 0:
-                            dist[node] = (0, pred)
-                            # distance.append((pred,node,0))
-                            distance.add((pred, node, 0))
-                            # location.add((node,0))
-                            key = node
-                            position_k.setdefault(key, [])
-                            position_k[key].append(0)
-                        # elif node== path[-1]:
-
-                        else:
-
-                            pairs = (dist[pred][0] + max(D_3[k][(pred, node)]), pred)
-                            # print  max(edge_labels1[(pred, node)])
-                            dist[node] = pairs
-                            # print dist[node][0]
-
-                            distance.add((pred, node, pairs[0]))
-                            # print pairs[0]
-                            # if location[node]<pairs[0]:
-                            location.add((node, pairs[0]))
-                            key = node
-                            position_k.setdefault(key, [])
-                            position_k[key].append(pairs[0])
-                            # print position_k
-                loc_i = {}
-                for key in position_k:
-                    loc_i[key] = max(position_k[key])
-                    # if key==n[-2]:
-                    # loc_i[key] = 19
-                    # elif key==n[-1]:
-                    # loc_i[key] = 20
-                    new_Ylocation.append(loc_i[key])
-                loct.append(loc_i)
-                print loct
-
-                self.NEWYLOCATION.append(new_Ylocation)
-            #print"Y=", self.NEWYLOCATION
-            """
             Location = {}
             key = ID
             Location.setdefault(key, [])
@@ -2230,7 +1824,7 @@ class constraintGraph:
             #print Location
             self.minLocationV = Location
             stop5 = timeit.default_timer()
-            print"M1",stop5-start5
+
 
         elif level == 2 or level ==3:
             d3 = defaultdict(list)
@@ -2340,7 +1934,7 @@ class constraintGraph:
             # print"LOC=",Graph_pos_h
             #self.drawGraph_v_new(name, GV, edge_labels1, dist)
 
-            csvfile = self.name1 + 'Min_Y_Location.csv'
+            csvfile = path+'/'+name + 'Min_Y_Location.csv'
 
             with open(csvfile, 'wb') as csv_file:
                 writer = csv.writer(csv_file)
@@ -2352,7 +1946,7 @@ class constraintGraph:
 
 
 
-            with open(self.name1 + 'Fixed_Loc.csv', 'a') as csv_file:
+            with open(path+'/'+name + 'Fixed_Loc.csv', 'a') as csv_file:
                 writer = csv.writer(csv_file, lineterminator = '\n')
                 writer.writerow(["YNode", "Min Loc","comp",'yLoc'])
 
@@ -2425,13 +2019,7 @@ class constraintGraph:
         if start == end:
             saved_path = path[:]
             self.paths_v.append(saved_path)
-            # for i in edge_labels1:
-            # print >> f1, path
 
-            # self.paths_h.append(path)
-            # print "self.paths_h",self.paths_h
-
-            # paths.append(path)
         else:
             # If current vertex is not destination
             # Recur for all the vertices adjacent to this vertex
@@ -2445,569 +2033,17 @@ class constraintGraph:
         path.pop()
         visited[start] = False
 
-        '''
-        G = nx.MultiDiGraph()
-        n = list(GV.nodes())
-        G.add_nodes_from(n)
-        # G.add_weighted_edges_from([(0,1,2),(1,2,3),(2,3,4),(3,4,4),(4,5,3),(5,6,2),(1,4,15),(2,5,16),(1,5,20)])
-        G.add_weighted_edges_from(V)
-        A = nx.adjacency_matrix(G)
-        B = A.toarray()
-        # print B
-        Location = {}
-        for i in range(len(n)):
-            if n[i] == 0:
-                Location[n[i]] = 0
-            else:
-                k = 0
-                val = []
-                for j in range(len(B)):
-                    if B[j][i] > k:
-                        # k=B[j][i]
-                        pred = j
-                        val.append(Location[n[pred]] + B[j][i])
-                # loc1=Location[n[i-1]]+X[(n[i-1],n[i])]
-                # loc2=Location[n[pred]]+k
-                Location[n[i]] = max(val)
-        # print Location
-        dist = {}
-        for node in Location:
-            key = node
-
-            dist.setdefault(key, [])
-            dist[node].append(node)
-            dist[node].append(Location[node])
-        # Graph_pos_h.append(dist)
-        # print Graph_pos_h
-        # print"LOC=",Graph_pos_h
-        self.drawGraph_v_new(name, GV, edge_labels1, dist)
-
-
-        LOC_V = {}
-        for i in Location.keys():
-            #print i, self.ZDL_V[ID][i]
-            LOC_V[self.ZDL_V[ID][i]] = Location[i]
-        # print LOC_H
-        odV = collections.OrderedDict(sorted(LOC_V.items()))
-        self.minLocationV[ID] = odV
-
-        if parentID != None:
-            # N=len(self.ZDL_H[parentID])
-            KEYS = list(LOC_V.keys())
-            # print "KE", KEYS
-
-            parent_coord=[]
-            for k in self.ZDL_V[ID]:
-                if k in self.ZDL_V[parentID]:
-                    parent_coord.append(k)
-            #print parent_coord
-
-            for i in range(len(parent_coord)-1):
-                source=parent_coord[i]
-                destination=parent_coord[i+1]
-                y=LOC_V[destination]-LOC_V[source]
-                origin=self.ZDL_V[parentID].index(source)
-                dest=self.ZDL_V[parentID].index(destination)
-                edge = (Edge(source=origin, dest=dest, constraint=y, index=1, type=None, id=None))
-                edgelist = self.edgesv_new[parentID]
-                edgelist.append(edge)
-                self.edgesv_new[parentID] = edgelist
-
-
-            source = self.ZDL_V[parentID].index(min(KEYS))
-            dest = self.ZDL_V[parentID].index(max(KEYS))
-            # print self.edgesh_new[parentID]
-            edge = (Edge(source=source, dest=dest, constraint=Location[n[-1]], index=1, type=None, id=None))
-            edgelist = self.edgesv_new[parentID]
-            edgelist.append(edge)
-            self.edgesv_new[parentID] = edgelist
-            '''
-
-        '''
-
-
-        dist = {}
-            distance = set()  ###stores (u,v,w)where u=parent,v=child,w=cumulative weight from source to child
-            location = set()  ###No use
-            position_k = {}  ## stores {node:location}
-            for i in range(len(paths)):
-                path = paths[i]
-                # print path
-                for j in range(len(path)):
-                    node = path[j]
-                    # print "node=",path[-1]
-                    if j > 0:
-                        pred = path[j - 1]
-                    else:
-                        pred = node
-                    # print node, pred
-                    if node == 0:
-                        dist[node] = (0, pred)
-                        # distance.append((pred,node,0))
-                        distance.add((pred, node, 0))
-                        # location.add((node,0))
-                        key = node
-                        position_k.setdefault(key, [])
-                        position_k[key].append(0)
-                    # elif node== path[-1]:
-
-                    else:
-
-                        pairs = (dist[pred][0] + max(D_3[k][(pred, node)]), pred)
-                        # print  max(edge_labels1[(pred, node)])
-                        dist[node] = pairs
-                        # print dist[node][0]
-
-                        distance.add((pred, node, pairs[0]))
-                        # print pairs[0]
-                        # if location[node]<pairs[0]:
-                        location.add((node, pairs[0]))
-                        key = node
-                        position_k.setdefault(key, [])
-                        position_k[key].append(pairs[0])
-                        # print position_k
-            loc_i = {}
-            for key in position_k:
-                loc_i[key] = max(position_k[key])
-                # if key==n[-2]:
-                # loc_i[key] = 19
-                # elif key==n[-1]:
-                # loc_i[key] = 20
-                new_Xlocation.append(loc_i[key])
-            loct.append(loc_i)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        #### New graph with missing edges
-        G3 = nx.MultiDiGraph()
-        dictList3 = []
-        # print self.edgesh
-        for foo in self.edgesh_new:
-            # print foo.getEdgeDict()
-            dictList3.append(foo.getEdgeDict())
-        # print dictList1
-
-        ######
-        d3 = defaultdict(list)
-        for i in dictList3:
-            k, v = list(i.items())[0]
-            d3[k].append(v)
-        edge_labels3 = d3
-        # print d.keys()
-        # for u,v in d.keys():
-        # print u,v
-
-        nodes = [x for x in range(len(self.zeroDimensionListh))]
-        G3.add_nodes_from(nodes)
-
-        # print"label=", edge_labels1
-        label3 = []
-        label5 = []
-        for branch in edge_labels3:
-            lst_branch = list(branch)
-            data = []
-
-            for internal_edge in edge_labels3[branch]:
-                # print lst_branch[0], lst_branch[1]
-                # print internal_edge[0]
-                # if (lst_branch[0], lst_branch[1], internal_edge) not in data:
-                data.append((lst_branch[0], lst_branch[1], internal_edge))
-                label3.append({(lst_branch[0], lst_branch[
-                    1]): internal_edge})  #####{(source,dest):[weight,type,id,East cell id,West cell id]}
-                label5.append({(lst_branch[0], lst_branch[1]): internal_edge[0]})  ######{(source,dest):weight}
-
-            G3.add_weighted_edges_from(data)
-        #############################################################
-        # print label5
-
-        d3 = defaultdict(list)
-        for i in label5:
-            k, v = list(i.items())[0]  # an alternative to the single-iterating inner loop from the previous solution
-            d3[k].append(v)
-        # print d3
-        X = {}
-        for i, j in d3.items():
-            # print i,max(j)
-            X[i] = max(j)
-        # print "X=", X
-        for k, v in X.items():
-            self.X.append((k[0], k[1], v))
-        # print self.X
-
-        loct = []
-        for i in range(10):
-            G = nx.MultiDiGraph()
-            n = list(G3.nodes())
-            G.add_nodes_from(n)
-            # G.add_weighted_edges_from([(0,1,2),(1,2,3),(2,3,4),(3,4,4),(4,5,3),(5,6,2),(1,4,15),(2,5,16),(1,5,20)])
-            G.add_weighted_edges_from(self.X)
-             A = nx.adjacency_matrix(G)
-             B = A.toarray()
-            # Draw(G)
-            self.Loc_X = {n[0]: 0, n[-1]: self.W_T}
-            self.FUNCTION(G)
-            loct.append(self.Loc_X)
-
-        for i in loct:
-            new_x_loc = []
-            for j, k in i.items():
-                new_x_loc.append(k)
-            self.NEWXLOCATION.append(new_x_loc)
-        f3 = open(name + "location_x.txt", 'wb')
-
-        for i in loct:
-            # print i
-            print >> f3, i
-        print"LOC=", loct, self.NEWXLOCATION
-        Graph_pos_h = []
-        for i in range(len(loct)):
-            dist = {}
-            for node in loct[i]:
-                key = node
-
-                dist.setdefault(key, [])
-                dist[node].append(node)
-                dist[node].append(loct[i][node])
-            Graph_pos_h.append(dist)
-
-        ######## LEVEL-1OPTIMIZATION
-        """
-        #################################################################
-
-        label4 = copy.deepcopy(label3)
-        print "l3",label3
-
-        D = []
-        # print label3
-        for i in label4:
-            # print i.values()[0][1]
-            if i.values()[0][1] == "1":
-                D.append(i)
-
-        # print D, len(D)
-        W_total = []
-        for i in range(10):
-            W = []
-            for i in range(len(D)):
-                # W.append(randint(2, 10))
-                W.append(random.randint(5, 15))
-            W_total.append(W)
-        # print "W_T=",W_total
-
-        NewD = []
-        for i in range(len(D)):
-            NewD.append(D[i].keys()[0])
-        Space = []
-        for i in label4:
-            if i.values()[0][1] == "0":
-                Space.append(i)
-        # print Space
-        ############################ Varying Spacing
-        S_total = []
-        for i in range(10):
-            S = []
-            for i in range(len(Space)):
-                S.append(random.randint(2, 5))
-            S_total.append(S)
-        # print "S_T=", S_total
-        NewS = []
-        for i in range(len(Space)):
-            NewS.append(Space[i].keys()[0])
-        # print "NEWD=", NewS
-        new_labelw = []
-        for j in range(len(W_total)):
-            labelnew = []
-            for i in range(len(NewD)):
-                newdict = {NewD[i]: W_total[j][i]}
-                labelnew.append(newdict)
-                # labelnew.extend(Space)
-            new_labelw.append(labelnew)
-        # print new_labelw
-        new_labels = []
-        for j in range(len(S_total)):
-            labelnew = []
-            for i in range(len(NewS)):
-                newdict = {NewS[i]: S_total[j][i]}
-                labelnew.append(newdict)
-            new_labels.append(labelnew)
-
-        # print new_labels
-        new_label = []
-        for i in range(len(new_labels)):
-            new_labels[i].extend(new_labelw[i])
-            new_label.append(new_labels[i])
-        # new_label
-        # print "l4=", label4
-
-        for i in range(len(new_label)):
-            #
-            new_label[i].extend(label5)
-            # print new_label[i]
-
-        # print new_label
-        ################################
-
-        # print len(new_label)
-        # for i in new_label:
-        # print i
-        D_3 = []
-        for j in range(len(new_label)):
-            d[j] = defaultdict(list)
-            # print d[j]
-            # print"N=", new_label[j]
-            for i in new_label[j]:
-                # print i
-                # print new_label[j]
-                k, v = list(i.items())[0]  # an alternative to the single-iterating inner loop from the previous solution
-
-                # print k,v
-                d[j][k].append(v)
-            # print d[j]
-            # print "d[j]",d[j]
-
-
-            D_3.append(d[j])
-
-        print len(D_3),D_3
-        ###############################################################
-        d3 = defaultdict(list)
-        for i in label3:
-            k, v = list(i.items())[0]  # an alternative to the single-iterating inner loop from the previous solution
-            d3[k].append(v)
-        edge_labels3 = d3
-        # print len(edge_labels3)
-
-
-        #### Storing edge data in (u,v,w) format in a file(begin)
-        z = [(u, v, d['weight']) for u, v, d in G3.edges(data=True)]
-        f1 = open(name, 'w')
-        for i in z:
-            # print i
-            print >> f1, i
-        ######## Storing edge data in (u,v,w) format in a file(end)
-
-        ######## Finds all possible paths from start vertex to end vertex(begin)
-        n = list(G3.nodes())
-        self.FindingAllPaths_h(G3, n[0], n[-1])
-
-        paths = self.paths_h
-        print paths
-        #### (end)
-        #### finding new location of each vertex in longest paths (begin)########
-
-
-        ##############TESTING
-        # NEWXLOCATION=[]
-        loct = []
-        for k in range(len(D_3)):
-            new_Xlocation = []
-
-            dist = {}
-            distance = set()  ###stores (u,v,w)where u=parent,v=child,w=cumulative weight from source to child
-            location = set()  ###No use
-            position_k = {}  ## stores {node:location}
-            for i in range(len(paths)):
-                path = paths[i]
-                # print path
-                for j in range(len(path)):
-                    node = path[j]
-                    # print "node=",path[-1]
-                    if j > 0:
-                        pred = path[j - 1]
-                    else:
-                        pred = node
-                    # print node, pred
-                    if node == 0:
-                        dist[node] = (0, pred)
-                        # distance.append((pred,node,0))
-                        distance.add((pred, node, 0))
-                        # location.add((node,0))
-                        key = node
-                        position_k.setdefault(key, [])
-                        position_k[key].append(0)
-                    # elif node== path[-1]:
-
-                    else:
-
-                        pairs = (dist[pred][0] + max(D_3[k][(pred, node)]), pred)
-                        # print  max(edge_labels1[(pred, node)])
-                        dist[node] = pairs
-                        # print dist[node][0]
-
-                        distance.add((pred, node, pairs[0]))
-                        # print pairs[0]
-                        # if location[node]<pairs[0]:
-                        location.add((node, pairs[0]))
-                        key = node
-                        position_k.setdefault(key, [])
-                        position_k[key].append(pairs[0])
-                        # print position_k
-            loc_i = {}
-            for key in position_k:
-                loc_i[key] = max(position_k[key])
-                # if key==n[-2]:
-                # loc_i[key] = 19
-                # elif key==n[-1]:
-                # loc_i[key] = 20
-                new_Xlocation.append(loc_i[key])
-            loct.append(loc_i)
-
-            self.NEWXLOCATION.append(new_Xlocation)
-        f3 = open(name + "location_x.txt", 'wb')
-        for i in loct:
-            # print i
-            print >> f3, i
-        print"LOC=", loct, self.NEWXLOCATION
-        Graph_pos_h = []
-        for i in range(len(loct)):
-            dist = {}
-            for node in loct[i]:
-                key = node
-
-                dist.setdefault(key, [])
-                dist[node].append(node)
-                dist[node].append(loct[i][node])
-            Graph_pos_h.append(dist)
-        # print Graph_pos_h
-        # print"LOC=",Graph_pos_h
-        self.drawGraph_h_new(name, G3, D_3, Graph_pos_h)
-
-
-        #######
-        """
-
-        ######################### Handling special edges independently
-
-        special_edge_h = []  ### list of edges which are of type"1"  and in same nodes
-        # for foo in self.edgesh_new:
-        # print "Y"
-        # print foo.id,foo.type,foo.source,foo.dest
-        for i in range(len(self.edgesh_new) - 1):
-            for j in range(len(self.edgesh_new) - 1):
-                if j == i:
-                    continue
-                if self.edgesh_new[i].source == self.edgesh_new[j].source and self.edgesh_new[i].dest == \
-                        self.edgesh_new[j].dest and self.edgesh_new[i].type == self.edgesh_new[j].type == '1':
-                    if self.edgesh_new[i] not in special_edge_h:
-                        special_edge_h.append(self.edgesh_new[i])
-                    if self.edgesh_new[j] not in special_edge_h:
-                        special_edge_h.append(self.edgesh_new[j])
-
-                        # print special_edge_h
-                        # for foo in special_edge_h:
-                        # print "hfo", foo.getEdgeDict()
-        # for foo in special_edge_h:
-        # print "hfo", foo.getEdgeDict(),foo.id,foo.East,foo.West
-        ######## Removing all of those edges which have connected neighbor edges of type 1 incoming to source or outgoing of dest
-        EAST = []
-        WEST = []
-        NORTHWEST = []
-        SOUTHEAST = []
-        for edge in special_edge_h:
-            EAST.append(edge.East)
-            WEST.append(edge.West)
-            NORTHWEST.append(edge.northWest)
-            SOUTHEAST.append(edge.southEast)
-        # print"E=", EAST,WEST
-        for edge in special_edge_h:
-            if edge.West != None or edge.id in EAST or edge.id in WEST:
-                special_edge_h = [x for x in special_edge_h if x != edge]
-            elif edge.East != None or edge.id in EAST or edge.id in WEST:
-                special_edge_h = [x for x in special_edge_h if x != edge]
-            elif edge.northWest != None or edge.id in NORTHWEST or edge.id in SOUTHEAST:
-                special_edge_h = [x for x in special_edge_h if x != edge]
-            elif edge.southEast != None or edge.id in NORTHWEST or edge.id in SOUTHEAST:
-                special_edge_h = [x for x in special_edge_h if x != edge]
-
-        # print "len=", len(special_edge_h)
-        # for edge in special_edge_h:
-        # print edge.source,edge.dest,edge.id,edge.type
-        # self.special_edgeh = copy.deepcopy(special_edge_h)
-        self.special_edgeh = copy.deepcopy(special_edge_h)
-        for i in range(len(special_edge_h)):
-            self.special_cell_id_h.append(special_edge_h[i].id)
-
-        if len(special_edge_h) > 0:
-            # W_max = []
-            # OFFSET=[]
-
-            for i in range(len(loct)):
-                ######### Calculating offset values and determining new location of edge's source and dest node
-                # for i in loct[i]:
-                # print loct[i]
-                special_location_x = []
-                Wmax = []
-                for edge in special_edge_h:
-                    w = loct[i][edge.dest] - loct[i][edge.source]
-                    # print w
-                    Wmax.append(w)
-                min = constraint.constraint.minWidth[1]
-                offset1 = []
-                offset2 = []
-                for j in range(len(Wmax)):
-                    # print Wmax[j]
-                    if Wmax[j] > min:
-                        offset_1 = random.randrange(0, (Wmax[j] - min) / (3 / 2))
-                        offset_2 = random.randrange(0, (Wmax[j] - offset_1 - min))
-                    else:
-                        offset_1 = 0
-                        offset_2 = 0
-
-
-
-                    offset1.append(offset_1)
-                    offset2.append(offset_2)
-
-                # print offset1, offset2
-                # OFFSET.append([offset1, offset2])
-                for j in range(len(special_edge_h)):
-                    location = {}
-                    key = special_edge_h[j].id
-                    location.setdefault(key, [])
-                    # print"id=",special_edge_h[j].id
-                    # print loct[i]
-                    location[key].append(loct[i][special_edge_h[j].source] + offset1[j])
-                    location[key].append(loct[i][special_edge_h[j].dest] - offset2[j])
-                    location[key].append(Wmax[j] - (offset1[j] + offset2[j]))
-                    special_location_x.append(location)
-                    # print'lo',special_location_x
-                self.special_location_x.append(
-                    special_location_x)  ######[[{special cell id_1:[x1,x2,width]},{special cell id_2:[x1,x2,width]}],[{special cell id_1:[x1,x2,width]},{special cell id_2:[x1,x2,width]},......]]
-            # print self.special_location_x
-
-        ##### Fixed floorplan width  #################
-    '''
 
     def FUNCTION(self, G):
-        #start2 = timeit.default_timer()
-        #start2 = timeit.default_timer()
+
         A = nx.adjacency_matrix(G)
-        #stop2 = timeit.default_timer()
+
 
         B = A.toarray()
-        stop2 = timeit.default_timer()
-        # print (A.todense())
-        # print B
+
         Fixed_Node = self.Loc_X.keys()
         Fixed_Node.sort()
-        # print "F", Fixed_Node
-        #start2 = timeit.default_timer()
+
         Splitlist = []
         for i, j in G.edges():
             # print i,j
@@ -3047,9 +2083,7 @@ class constraintGraph:
                     if len(succ) > 1:
                         s = succ[i]
 
-        # print B
-        #stop2 = timeit.default_timer()
-        #print stop2 - start2
+
 
         for i in Fixed_Node:
             for j in Fixed_Node:
@@ -3083,9 +2117,7 @@ class constraintGraph:
                                     LIST = Node_List[k] + Node_List[m]
                 if len(LIST) > 0:
                     Connected_List.append(list(set(LIST)))
-                    # if LIST not in Connected_List:
-                    # Connected_List.append(LIST)
-        # print Connected_List
+
         
         if len(Connected_List) > 0:
             for i in range(len(Connected_List)):
@@ -3133,17 +2165,9 @@ class constraintGraph:
                 n.sort()
                 start = n[0]
                 end = n[-1]
-                # print start, end
-                #start2 = timeit.default_timer()
-                #start2 = timeit.default_timer()
-                st3 = timeit.default_timer()
+
                 self.Location_finding(B, start, end, SOURCE=None, TARGET=None, flag=False)
-                stop3 = timeit.default_timer()
-                #print"G", (stop3 - st3)
-                #st2 = timeit.default_timer()
-                #print st2 - start2
-                #stop2 = timeit.default_timer()
-                #print stop2 - start2
+
 
             Fixed_Node = self.Loc_X.keys()
             # print "FIXED", Fixed_Node
@@ -3152,16 +2176,10 @@ class constraintGraph:
                 for j in Fixed_Node:
                     if G.has_edge(i, j):
                         G.remove_edge(i, j)
-                        # B[i][j] = 0
-            # Draw(G)
-            # print G.edges()
-            if len(G.edges()) == 0:
-                # print "Y"
 
+            if len(G.edges()) == 0:
 
                 return
-            # if (G.edges()==None):
-            # return
 
             else:
                 self.FUNCTION(G)
@@ -3176,14 +2194,7 @@ class constraintGraph:
         # n=len(D_V_change)
         #print "V",Range,value,Max
         V=copy.deepcopy(value)
-        """
-        
-        Prob=[]
-        for i in V:
-            Prob.append(1/float(sum(V)))
-        print Prob
-        D_V_Newval = np.random.multinomial(Range, Prob)
-        """
+
         while (len(value) > 1):
             # print value
             i = 0
@@ -3339,70 +2350,7 @@ class constraintGraph:
 
         return
 
-    """
 
-    def Evaluation_connected(self, B, PATH, SOURCE, TARGET):
-        # print B, PATH
-
-        Fixed = self.Loc_X.keys()
-        # print Fixed
-        UnFixed = []
-        for i in PATH:
-            if i not in Fixed:
-                UnFixed.append(i)
-        # print UnFixed
-        while (len(UnFixed)) > 0:
-            k = UnFixed.pop(0)
-            Min_val = {}
-            # Val=LONGEST_PATH(B,0,4)
-            # print "Val",Val[2]
-            for i in SOURCE:
-
-                #for j in UnFixed:
-                key = k
-                Min_val.setdefault(key, [])
-                # if B[i][j]!=0:
-                Val = self.LONGEST_PATH(B, i, k)
-                # print i,j,Val[2]
-                if Val[2] != 0:
-                    x = (self.Loc_X[i] + Val[2])
-                    Min_val[key].append(x)
-            print Min_val
-            Max_val = {}
-            #for i in UnFixed:
-
-            for j in TARGET:
-                key = k
-                Max_val.setdefault(key, [])
-                # if B[i][j]!=0:
-                Val = self.LONGEST_PATH(B, k, j)
-                # print i,j,Val[2]
-
-                if Val[2] != 0:
-                    x = (self.Loc_X[j] - Val[2])
-                    Max_val[key].append(x)
-            # print Max_val
-
-            # for i in UnFixed:
-            #i = UnFixed.pop(0)
-            v_low = max(Min_val[i])
-            # v_h1=LOC[i]
-            v_h2 = min(Max_val[i])
-            v1 = v_low
-            # v2=max(v_h1,v_h2)
-            v2 = v_h2
-            # print v_low, v2
-            # self.Loc_X[i] = random.randrange(v1, v2)
-            if v1 < v2:
-                self.Loc_X[i] = random.randrange(v1, v2)
-            else:
-                self.Loc_X[i] = max(v1, v2)
-            SOURCE.append(i)
-            TARGET.append(i)
-
-
-
-    """
     def Evaluation_connected(self, B, PATH, SOURCE, TARGET):
         # print B, PATH
         #print"Y"
@@ -3514,17 +2462,8 @@ class constraintGraph:
         if start == end:
             saved_path = path[:]
             self.paths_h.append(saved_path)
-            # for i in edge_labels1:
-            # print >> f1, path
 
-            # self.paths_h.append(path)
-            # print "self.paths_h",self.paths_h
-
-            # paths.append(path)
         else:
-            # If current vertex is not destination
-            # Recur for all the vertices adjacent to this vertex
-
             for i in G.neighbors(start):
                 if visited[i] == False:
                     self.printAllPaths_h(G, i, end, visited, path)
@@ -3720,49 +2659,6 @@ class constraintGraph:
             # print H
             for graph in H:
                 Fixed_Node = self.Loc_Y.keys()
-                # print "F", Fixed_Node
-                '''
-                Splitlist = []
-                for i, j in graph.edges():
-                    # print i,j
-                    for node in G.nodes():
-                        if node in Loc.keys() and node > i and node < j:
-                            edge = (i, j)
-                            if edge not in Splitlist:
-                                Splitlist.append(edge)
-                print Splitlist
-                med = {}
-                for i in Splitlist:
-                    start = i[0]
-                    end = i[1]
-
-                    for node in Fixed_Node:
-                        if node > start and node < end:
-                            key = (start, end)
-                            med.setdefault(key, [])
-                            med[key].append(node)
-                print med
-
-                for i, v in med.items():
-                    print i, v
-
-                    start = i[0]
-                    end = i[-1]
-                    succ = v
-
-                    print succ
-                    s = start
-                    e = end
-                    print "s,e", s, e
-                    # if len(succ)>1:
-                    if s in Fixed_Node or e in Fixed_Node:
-                        for i in range(len(succ)):
-                            edge_split(s, succ[i], e, Fixed_Node, B)
-                            if len(succ) > 1:
-                                s = succ[i]
-
-                print B
-                '''
 
                 # Draw(G)
                 n = list(graph.nodes())
@@ -3772,12 +2668,7 @@ class constraintGraph:
                 end = n[-1]
                 # print start, end
                 self.Location_finding_V(B, start, end, SOURCE=None, TARGET=None, flag=False)
-                '''
-                for i in Fixed_Node:
-                    for j in Fixed_Node:
-                        if graph.has_edge(i, j):
-                            graph.remove_edge(i, j)
-                '''
+
 
             Fixed_Node = self.Loc_Y.keys()
             # print "FIXED", Fixed_Node
@@ -3805,12 +2696,7 @@ class constraintGraph:
         D_V_Newval = [0]
         # n=len(D_V_change)
         V = copy.deepcopy(value)
-        '''
-        Prob = []
-        for i in V:
-            Prob.append(1 / float(sum(V)))
-        D_V_Newval = np.random.multinomial(Range, Prob)
-        '''
+
         while (len(value) > 1):
             # print value
             i = 0
@@ -3827,10 +2713,7 @@ class constraintGraph:
 
             D_V_Newval.append(x)
 
-            # print p
-            # variable.append(x + p)
-            # print variable
-        #del D_V_Newval[0]
+
         del D_V_Newval[0]
         D_V_Newval.append(Range - sum(D_V_Newval))
 
@@ -3840,8 +2723,6 @@ class constraintGraph:
             x = V[i] + D_V_Newval[i]
             variable.append(x)
 
-        # variable.append(Max - sum(variable))
-        # random.shuffle(variable)
         return variable
 
     def LONGEST_PATH_V(self, B, source, target):
@@ -3971,70 +2852,6 @@ class constraintGraph:
 
         return
 
-    """
-    def Evaluation_connected_V(self, B, PATH, SOURCE, TARGET):
-        # print B, PATH
-
-        Fixed = self.Loc_Y.keys()
-        # print Fixed
-        UnFixed = []
-        for i in PATH:
-            if i not in Fixed:
-                UnFixed.append(i)
-        # print UnFixed
-        while len(UnFixed) > 0:
-            k=UnFixed.pop(0)
-            Min_val = {}
-            # Val=LONGEST_PATH(B,0,4)
-            # print "Val",Val[2]
-            for i in SOURCE:
-
-
-                key = k
-                Min_val.setdefault(key, [])
-                # if B[i][j]!=0:
-                Val = self.LONGEST_PATH_V(B, i, j)
-                # print i,j,Val[2]
-                if Val[2] != 0:
-                    x = (self.Loc_Y[i] + Val[2])
-                    Min_val[key].append(x)
-            # print Min_val
-            Max_val = {}
-            #for i in UnFixed:
-
-            for j in TARGET:
-                key = k
-                Max_val.setdefault(key, [])
-                # if B[i][j]!=0:
-                Val = self.LONGEST_PATH_V(B, i, j)
-                # print i,j,Val[2]
-
-                if Val[2] != 0:
-                    x = (self.Loc_Y[j] - Val[2])
-                    Max_val[key].append(x)
-            # print Max_val
-
-            #i = UnFixed.pop(0)
-            # for i in UnFixed:
-            # if i==UnFixed[0]:
-            v_low = max(Min_val[i])
-            # v_h1=LOC[i]
-            v_h2 = min(Max_val[i])
-            v1 = v_low
-            # v2=max(v_h1,v_h2)
-            v2 = v_h2
-            # print i,v1,v2
-            if v1 < v2:
-                self.Loc_Y[i] = random.randrange(v1, v2)
-            else:
-                self.Loc_Y[i] = max(v1, v2)
-            # UnFixed.pop(i)
-            SOURCE.append(i)
-            TARGET.append(i)
-
-
-
-    """
     def Evaluation_connected_V(self, B, PATH, SOURCE, TARGET):
         # print B, PATH
 
@@ -4075,31 +2892,9 @@ class constraintGraph:
                     if Val[2] != 0:
                         x = (self.Loc_Y[j] - Val[2])
                         Max_val[key].append(x)
-            # print Max_val
-            '''
-            start=PATH[0]
-            end=PATH[-1]
-            PATH, Value, Sum = LONGEST_PATH(B, start, end)
-            Max = Loc[end] - Loc[start]
 
-            Range = Max - Sum
-            variable = randomvaluegenerator(Range, Value, Max)
-            LOC=copy.deepcopy(Loc)
-            print variable,LOC
-
-            loc = {}
-            for i in range(len(PATH)):
-                if PATH[i] in LOC:
-                    # continue
-                    loc[PATH[i]] = LOC[PATH[i]]
-                else:
-                    loc[PATH[i]] = LOC[PATH[i - 1]] + variable[i - 1]
-                    LOC[PATH[i]] = LOC[PATH[i - 1]] + variable[i - 1]
-            print loc, Loc
-            '''
             i = UnFixed.pop(0)
-            # for i in UnFixed:
-            # if i==UnFixed[0]:
+
             v_low = max(Min_val[i])
             # v_h1=LOC[i]
             v_h2 = min(Max_val[i])

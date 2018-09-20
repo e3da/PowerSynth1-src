@@ -41,6 +41,7 @@ from powercad.layer_stack.layer_stack_import import *
 from powercad.general.settings.Error_messages import *
 from PySide import QtCore, QtGui
 from powercad.sym_layout.symbolic_layout import SymPoint
+from powercad.project_builder.dialogs.cons_setup_ui import Ui_Constraint_setup
 from powercad.response_surface.Model_Formulation import form_trace_model_optimetric,form_fasthenry_trace_response_surface
 import sys
 import psidialogs
@@ -1082,24 +1083,203 @@ class Device_states_dialog(QtGui.QDialog):
         self.per_ui.device_states_df=self.dv_df
 
         self.close()
+
+class ConsDialog(QtGui.QDialog):
+    def __init__(self, parent):
+        QtGui.QDialog.__init__(self, parent)
+        self.ui = Ui_Constraint_setup()
+        self.ui.setupUi(self)
+        self.parent = parent
+        self.cons_df = pd.DataFrame()
+        self.cons_dims = pd.DataFrame()
+        self.cons_sp = pd.DataFrame()
+        self.cons_encl = pd.DataFrame()
+        self.num_types = 0 # number of tile's types
+        self.ui.btn_load.pressed.connect(self.load_table_csv)
+        self.ui.btn_apply.pressed.connect(self.apply_changes)
+        self.ui.btn_save.pressed.connect(self.save_cons)
+    def load_table_csv(self):
+        cons_file = QFileDialog.getOpenFileName(self, "Select Constraint File", 'C://',"Constraints Files (*.csv)")
+        self.cons_df=pd.read_csv(cons_file[0])
+        table_df= self.cons_df
+        total_cols = len(table_df.axes[1])
+        r_sp=4 # row of min spacing
+        r_encl= r_sp+total_cols # row of min encl
+        self.ui.tbl_cons_dims.setRowCount(4)
+        self.ui.tbl_cons_dims.setColumnCount(total_cols)
+        self.ui.tbl_cons_gaps.setRowCount(total_cols)
+        self.ui.tbl_cons_gaps.setColumnCount(total_cols)
+        self.ui.tbl_cons_encl.setRowCount(total_cols)
+        self.ui.tbl_cons_encl.setColumnCount(total_cols)
+        # First table for dimensions
+        cols_name = list(table_df.columns.values)
+        self.cons_dims = pd.DataFrame(columns=cols_name)
+        self.cons_sp = pd.DataFrame(columns=["Min Spacing"]+cols_name[1:-1])
+        self.cons_encl = pd.DataFrame(columns=["Min Enclosure"] + cols_name[1:-1])
+        for c in range(total_cols):
+            self.ui.tbl_cons_dims.setItem(0, c, QtGui.QTableWidgetItem())
+            self.ui.tbl_cons_dims.item(0, c).setText(cols_name[c])
+            if c ==0:
+                self.ui.tbl_cons_encl.setItem(0, c, QtGui.QTableWidgetItem())
+                self.ui.tbl_cons_encl.item(0, c).setText("Min Enclosure")
+                self.ui.tbl_cons_gaps.setItem(0, c, QtGui.QTableWidgetItem())
+                self.ui.tbl_cons_gaps.item(0, c).setText("Min Spacing")
+            else:
+                self.ui.tbl_cons_encl.setItem(0, c, QtGui.QTableWidgetItem())
+                self.ui.tbl_cons_encl.item(0, c).setText(cols_name[c])
+                self.ui.tbl_cons_gaps.setItem(0, c, QtGui.QTableWidgetItem())
+                self.ui.tbl_cons_gaps.item(0, c).setText(cols_name[c])
+
+        for r in range(3):
+            for c in range(total_cols):
+                self.ui.tbl_cons_dims.setItem(r+1, c, QtGui.QTableWidgetItem())
+                self.ui.tbl_cons_dims.item(r+1, c).setText(str(table_df.iloc[r, c]))
+
+        for r in range(total_cols-1):
+            for c in range(total_cols):
+                self.ui.tbl_cons_gaps.setItem(r+1 , c, QtGui.QTableWidgetItem())
+                self.ui.tbl_cons_gaps.item(r+1,c).setText(str(table_df.iloc[r + r_sp, c]))
+                self.ui.tbl_cons_encl.setItem(r + 1, c, QtGui.QTableWidgetItem())
+                self.ui.tbl_cons_encl.item(r + 1, c).setText(str(table_df.iloc[r + r_encl, c]))
+
+    def apply_changes(self):
+        loc_id = 0
+        for row in range(self.ui.tbl_cons_dims.rowCount()-1):
+
+            for col in range(len(self.cons_dims.columns)):
+                colid= self.cons_dims.columns[col]
+                self.cons_dims.loc[row,colid] = self.ui.tbl_cons_dims.item(row+1, col).text()
+                self.cons_df.loc[loc_id,colid]= self.ui.tbl_cons_dims.item(row+1, col).text()
+
+            loc_id += 1
+        for row in range(self.ui.tbl_cons_gaps.rowCount()):
+            for col in range(len(self.cons_sp.columns)):
+                colid = self.cons_sp.columns[col]
+                colid1 = self.cons_dims.columns[col]
+                if row != 0:
+                    self.cons_sp.loc[row, colid] = self.ui.tbl_cons_gaps.item(row, col).text()
+                    self.cons_df.loc[loc_id, colid1] = self.ui.tbl_cons_gaps.item(row, col).text()
+                else:
+                    self.cons_df.loc[loc_id, colid1] = colid
+
+            loc_id += 1
+        for row in range(self.ui.tbl_cons_encl.rowCount()):
+            for col in range(len(self.cons_encl.columns)):
+                colid = self.cons_encl.columns[col]
+                colid1 = self.cons_dims.columns[col]
+                if row != 0:
+                    self.cons_encl.loc[row, colid] = self.ui.tbl_cons_encl.item(row, col).text()
+                    self.cons_df.loc[loc_id, colid1] = self.ui.tbl_cons_encl.item(row, col).text()
+                else:
+                    self.cons_df.loc[loc_id, colid1] = colid
+            loc_id += 1
+
+        self.parent.cons_df=self.cons_df
+        self.close()
+    def save_cons(self):
+        self.apply_changes()
+        save_path = QtGui.QFileDialog.getSaveFileName(self,"Save constraint file",'C://',
+                                                      "Constraints Files (*.csv)")
+        self.cons_df.to_csv(save_path[0],index_label=False)
+
+
 class New_layout_engine_dialog(QtGui.QDialog):
-    def __init__(self,parent):
+    def __init__(self,parent,fig):
         QtGui.QDialog.__init__(self, parent)
         self.ui = Ui_CornerStitch_Dialog()
         self.ui.setupUi(self)
         self.parent = parent
         self.cornerstitch = None
-        self.constraint=None
-        self.num_layouts=1
-
+        self.constraint=False
+        self.num_layouts=0
+        self.mainwindow_fig=fig ##Temporary addition
+        self.fp_width=120
+        self.fp_length=100
+        self.cons_df=None
+        self.current_mode = 0
         # add buttons
         self.ui.btn_constraints.pressed.connect(self.add_constraints)
+
+        # combo box
+        self.ui.cmb_modes.currentIndexChanged.connect(self.mode_handler)
+        # init:
+        self.initialize_layout(self.mainwindow_fig)
+
+
         self.ui.btn_gen_layouts.pressed.connect(self.gen_layouts)
+    def mode_handler(self):
+        choice = self.ui.cmb_modes.currentText()
+        if choice == 'Mode 0':
+            print "run mode 0"
+            self.current_mode=0
+        elif choice == 'Mode 1':
+            print "run mode 1"
+            self.current_mode=1
+
+        elif choice == 'Mode 2':
+            print "run mode 2"
+            self.current_mode=2
+
+        elif choice == 'Mode 3':
+            print "run mode 3"
+            self.current_mode=3
 
     def add_constraints(self):
+
+        constraints = ConsDialog(self)
+        constraints.exec_()
+
         print "add constraints"
+        self.constraint=True
+        return self.cons_df
     def gen_layouts(self):
-        if self.constraint==None:
+        if not(self.constraint):
             print "cant generate layouts"
         else:
             print "generate layout"
+            N = self.ui.txt_num_layouts.text()
+            if int(N)>0:
+            #N=self.ui.txt_num_layouts.setText(str(self.num_layouts))
+                self.ui.cmb_sols.clear()
+                for i in range(int(N)):
+                    item = 'Layout'+str(i)
+                    self.ui.cmb_sols.addItem(item)
+            else:
+                print "Give No. of layouts to be generated"
+    def initialize_layout(self,fig):
+        '''
+        plot main window figure
+        Returns:
+
+        '''
+        self.ui.txt_width.setText(str(self.fp_width))
+        self.ui.txt_height.setText(str(self.fp_length))
+        fig2=Figure()
+        self.ax2 = fig2.add_subplot(111, aspect=1.0)
+        self.canvas=FigureCanvas(fig2)
+
+        grid_layout = QtGui.QGridLayout(self.ui.grview_layout_sols)
+        grid_layout.setContentsMargins(0, 0, 0, 0)
+        grid_layout.addWidget(self.canvas, 0, 0, 1, 1)
+        if fig==None:
+            self.ax1 = fig.add_subplot(111, aspect=1.0)
+            self.ax1.plot([0, 1, 2], [1, 2, 3])
+            self.ax2 = fig.add_subplot(121, aspect=1.0)
+            self.ax2.plot([0, 1, 2], [1, 2, 3])
+        else:
+
+            for k, v in fig.items():
+                for p in v:
+                    print p
+                    x=p.get_x()
+                    y=p.get_y()
+                    self.ax2.text(x,y,'blabla')
+                    self.ax2.add_patch(p)
+                max_x = k[0]
+                max_y=k[1]
+                self.ui.txt_width.setText(str(max_x))
+                self.ui.txt_height.setText(str(max_y))
+                self.ax2.set_xlim(0,max_x)
+                self.ax2.set_ylim(0,max_y)
+
+        self.canvas.draw()
