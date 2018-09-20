@@ -3047,14 +3047,6 @@ class Baseplate():
                         continue
                 ALL_CONNECTED_V.append(Connected)
 
-            # print len(ALL_CONNECTED_V)
-            # for i in ALL_CONNECTED_V:
-            # print"LENGTH", len(i)
-
-        ################################################# (Finding connected components)
-
-
-    ##############################################
 
 class CornerStitch():
     def __init__(self):
@@ -3091,13 +3083,12 @@ class CornerStitch():
 
 
 
-    def draw_layout(self,Rectangles, max_x, max_y, path):
+    def draw_layout(self,Rectangles, max_x, max_y, path=None):
         fig10, ax5 = plt.subplots()
         colors = ['green', 'red', 'blue', 'yellow', 'pink']
         type = ['Type_1', 'Type_2', 'Type_3', 'Type_4','Type_5']
         Patches=[]
         for i in Rectangles:
-            #print i.x,i.y,i.type
             for t in type:
                 if i[5] == t:
                     type_ind = type.index(t)
@@ -3123,20 +3114,17 @@ class CornerStitch():
         plt.xlim(0, max_x)
         plt.ylim(0, max_y)
 
-        fig10.savefig(path + '/' + 'Initial_layout.png', bbox_inches='tight')
 
 
 
 
-    def input_processing(self,Input,Base_W,Base_H,path,name):
+    def input_processing(self,Input,Base_W,Base_H,path=None,name=None):
         Baseplate1 = Baseplate(Base_W, Base_H, "EMPTY")
         Hnode0, Vnode0 = Baseplate1.Initialize()
         self.draw_layout(Input,Base_W, Base_H,path)
         Htree = Tree(hNodeList=[Hnode0], vNodeList=None)
         Vtree = Tree(hNodeList=None, vNodeList=[Vnode0])
-        Directory=path
-        directory=path
-        testbase=name
+
         while (len(Input) > 0):
             inp=Input.pop(0)
 
@@ -3150,19 +3138,7 @@ class CornerStitch():
                         ParentH = i
                         break
                 CHILDH = ParentH
-                # print "PAR",CHILDH.id,len(CHILDH.stitchList)
-
-                # CHILDH=copy.copy(ParentH)
-                # CHILDH=Hnode(boundaries =ParentH.boundaries, child = ParentH.child, stitchList =ParentH.stitchList , parent =ParentH.parent, id = ParentH.id)
-                x1 = int(inp[2])
-                y1 = int(inp[3]) + int(inp[5])
-                x2 = int(inp[2]) + int(inp[4])
-                y2 = int(inp[3])
-                # CHILDH.insert(inp[0], x1, y1, x2, y2, inp[6], inp[7])
                 CHILDH.insert(inp[0], int(inp[2]), int(inp[3]), int(inp[4]), int(inp[5]), inp[6], inp[7])
-
-                # L = len(Vtree.vNodeList)
-                # print int(inp[1]), int(inp[2]), int(inp[3]), int(inp[4]), inp[5]
 
                 for i in reversed(Vtree.vNodeList):
                     if i.parent.id == 1:
@@ -3170,13 +3146,6 @@ class CornerStitch():
                         Parent = i
                         break
                 CHILD = Parent
-                # print "PAR",Parent.id
-                # CHILD=Vnode(boundaries =Parent.boundaries, child = Parent.child, stitchList = Parent.stitchList, parent =Parent.parent, id = Parent.id)
-                x1 = int(inp[2])
-                y1 = int(inp[3]) + int(inp[5])
-                x2 = int(inp[2]) + int(inp[4])
-                y2 = int(inp[3])
-                # CHILD.insert(inp[0], x1, y1, x2, y2, inp[6], inp[7])
                 CHILD.insert(inp[0], int(inp[2]), int(inp[3]), int(inp[4]), int(inp[5]), inp[6], inp[7])
 
             if inp[1] == "." and inp[2] == ".":

@@ -1,26 +1,7 @@
-
-import os
-import copy
-import itertools
 import matplotlib.pyplot as plt
 import matplotlib
-from powercad.design.module_data import gen_test_module_data
-from powercad.general.settings import settings
-from powercad.sym_layout.Recursive_test_cases.map_id_net import map_id_net
-from powercad.sym_layout.symbolic_layout import SymbolicLayout, DeviceInstance, SymLine, SymPoint, ElectricalMeasure, \
-    ThermalMeasure
-from powercad.tech_lib.test_techlib import get_dieattach, get_mosfet
-from powercad.tech_lib.test_techlib import get_power_bondwire, get_signal_bondwire
-from powercad.tech_lib.test_techlib import get_signal_lead, get_power_lead
-from powercad.corner_stitch import *
 from powercad.corner_stitch import CornerStitch as CS
-
-import sys
-import pandas as pd
-from PySide import QtGui
-from PySide.QtGui import QFileDialog,QMainWindow
-from powercad.project_builder.proj_dialogs import New_layout_engine_dialog
-
+from matplotlib import patches
 
 class Rectangle():
     def __init__(self,type=None,x=None,y=None,width=None,height=None,name=None,Schar=None,Echar=None,Netid=None):
@@ -50,6 +31,19 @@ class Rectangle():
         self.name=name
 
 
+def draw_rect_list(rectlist, ax, color='blue', pattern='//',x_max=None, y_max=None):
+    patch = []
+    for r in rectlist:
+        p = patches.Rectangle((r[0], r[1]), r[2], r[3], fill=True,
+                              edgecolor='black', facecolor=color, hatch=pattern,linewidth=3)
+        patch.append(p)
+        ax.add_patch(p)
+    # ax1.autoscale_view(tight=True)
+    plt.xlim(0, x_max)
+    plt.ylim(0, y_max)
+    plt.gca().set_aspect('equal', adjustable='box')
+    plt.show()
+    
 
 def plot_layout(Layout_Rects,path,name,level):
 
@@ -85,7 +79,7 @@ def plot_layout(Layout_Rects,path,name,level):
                 if i[4]==t:
                     type_ind=type.index(t)
                     colour=colors[type_ind]
-            R=matplotlib.patches.Rectangle(
+            R=patches.Rectangle(
                     (i[0], i[1]),  # (x,y)
                     i[2],  # width
                     i[3],  # height
@@ -153,7 +147,7 @@ def plot_layout(Layout_Rects,path,name,level):
                         colour = colors[type_ind]
 
                 ax1.add_patch(
-                    matplotlib.patches.Rectangle(
+                    patches.Rectangle(
                         (i[0], i[1]),  # (x,y)
                         i[2],  # width
                         i[3],  # height
@@ -326,27 +320,7 @@ def input_conversion(sym_layout):
                         width = converted_x_coordinates[x_ind2] - x + 8
                         y2 = converted_y_coordinates[y_ind2]
                         height = y2 - y
-                '''
-                if obj.vertical == False:
-                    print "Y"
 
-                    for k, v in Super_Traces_dict.items():
-                        if v == obj:
-                            x_ind = x_coordinates.index(obj.pt1[0])
-                            y_ind = y_coordinates.index(k[1])
-                            x_ind2 = x_coordinates.index(obj.pt2[0])
-                            # print x_ind2
-                            # y_ind2 = y_coordinates.index(obj.pt2[1])
-                            x = converted_x_coordinates[x_ind]
-                            y = converted_y_coordinates[y_ind]
-                            width = converted_x_coordinates[x_ind2] - x + 8
-                            y_ind2 = y_coordinates.index(k[0])
-                            # x_ind2=x_coordinates.index(obj.pt2[0])
-                            y_ind1 = y_coordinates.index(k[1])
-                            y2 = converted_y_coordinates[y_ind2]
-                            y1 = converted_y_coordinates[y_ind1]
-                            height = y2 - y1
-                '''
                 R = Rectangle('Type_1', x, y, width, height, name=obj.path_id)
                 Rectangles.append(R)
             else:
@@ -422,6 +396,9 @@ def input_conversion(sym_layout):
             name = obj.path_id
 
         Input_rects.append(Rectangle(type, x, y, width, height, name, Schar='/', Echar='/'))
-    return Input_rects
+    CS1 = CS.CornerStitch()
+    INPUT = CS1.read_input('list', Rect_list=Input_rects)
+    Htree, Vtree = CS1.input_processing(INPUT, x_max + 20, y_max + 20)
+    return Input_rects,Htree,Vtree
 
 
