@@ -396,9 +396,7 @@ def input_conversion(sym_layout):
             name = obj.path_id
 
         Input_rects.append(Rectangle(type, x, y, width, height, name, Schar='/', Echar='/'))
-    CS1 = CS.CornerStitch()
-    INPUT = CS1.read_input('list', Rect_list=Input_rects)
-    Htree, Vtree = CS1.input_processing(INPUT, x_max + 20, y_max + 20)
-    return Input_rects,Htree,Vtree
+
+    return Input_rects,x_max,y_max
 
 

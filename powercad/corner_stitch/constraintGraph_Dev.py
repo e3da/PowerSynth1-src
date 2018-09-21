@@ -23,24 +23,7 @@ class constraintGraph:
     sources
     """
 
-    def __init__(self, vertices, edges):
-        """
-        create from a given set of edges and vertices
-        vertexMatrix is a 2d list n vertices long that shows the connectivity between the vertices
-        edges is just a set of edges
-        zeroDimensionList is where, independent of orientation, the list index corresponds to the graph's orientation
-        zero dimension representation. For example, in a very simple horizontally oriented 30 x30 plane,
-        where the only cell has a lower left corner of 5,15 and an upper right corner of 10, 25, zeroDimensionList will
-        be as follows: [0]:0, [1]:5, [2]:10, [3]:30. Notice that it is arranged in increasing order, and we are only
-        concerned with the x values, since this is horizontally oriented.
-        """
-        self.vertexMatrixh = int[len(vertices)][len(vertices)]
-        self.vertexMatrixv = int[len(vertices)][len(vertices)]
-        self.edges = edges
-        self.zeroDimensionList = []
-        ####################################
-
-    def __init__(self, name1, name2,W=None,H=None,XLocation=None,YLocation=None):
+    def __init__(self,W=None,H=None,XLocation=None,YLocation=None,path=None,name=None):
         """
         Default constructor
         """
@@ -56,8 +39,8 @@ class constraintGraph:
         # self.newYlocation = []
         self.NEWXLOCATION = []  ####Array of all X locations after optimization
         self.NEWYLOCATION = []  ####Array of all Y locations after optimization
-        self.name1 = name1
-        self.name2 = name2
+        self.path = path
+        self.name = name
         self.paths_h = []  ### all paths in HCG from leftmost node to right most node
         self.paths_v = []  ### all paths in VCG from bottom most node to top most node
 
@@ -121,7 +104,7 @@ class constraintGraph:
         """
         return
 
-    def graphFromLayer(self, H_NODELIST, V_NODELIST, level,path,name,N=None):
+    def graphFromLayer(self, H_NODELIST, V_NODELIST, level,N=None,path=None,name=None):
         """
         given a cornerStitch, construct a constraint graph detailing the dependencies of
         one dimension point to another
@@ -1484,7 +1467,7 @@ class constraintGraph:
                 dist[node].append(Location[node])
 
             #self.drawGraph_h_new(name, G2, edge_labels1, dist)
-
+            '''
             csvfile=path+'/'+name+'Min_X_Location.csv'
             location_file=path+'/'+name + 'Fixed_Loc.csv'
 
@@ -1503,7 +1486,7 @@ class constraintGraph:
                                 if rect.vertex1==key or rect.vertex2==key:
                                     writer.writerow([key, value, rect.name])
 
-
+            '''
             LOC_H = {}
             for i in Location.keys():
                 # print i,self.ZDL_H[ID][i]
@@ -1933,7 +1916,7 @@ class constraintGraph:
             # print Graph_pos_h
             # print"LOC=",Graph_pos_h
             #self.drawGraph_v_new(name, GV, edge_labels1, dist)
-
+            '''
             csvfile = path+'/'+name + 'Min_Y_Location.csv'
 
             with open(csvfile, 'wb') as csv_file:
@@ -1941,7 +1924,7 @@ class constraintGraph:
                 writer.writerow(["YNode", "Min Loc"])
                 for key, value in Location.items():
                     writer.writerow([key, value])
-            #f1 = open(self.name1 + 'Fixed_Loc.csv', "r")  # open input file for reading
+            #f1 = open(self.path + 'Fixed_Loc.csv', "r")  # open input file for reading
 
 
 
@@ -1959,7 +1942,7 @@ class constraintGraph:
 
                 #for key, value in Location.items():
                     #writer.writerow([key, value])
-
+            '''
 
 
 
@@ -3020,7 +3003,7 @@ class constraintGraph:
         nx.draw(G2, pos, node_color='red', node_size=300, edge_color=edge_colors1)
         # nx.draw(G, pos, node_color='red', node_size=300, edge_color=edge_colors)
         # plt.show()
-        plt.savefig(self.name1 + name + 'gh.png')
+        plt.savefig(self.path + name + 'gh.png')
         plt.close()
 
     def drawGraph_h_new(self, name, G2, edge_labels1, loc):
@@ -3032,7 +3015,7 @@ class constraintGraph:
         nx.draw_networkx_labels(G2, pos, labels=loc)
         nx.draw_networkx_edge_labels(G2, pos, edge_labels=edge_labels1)
         nx.draw(G2, pos, node_color='red', node_size=900, edge_color=edge_colors1)
-        plt.savefig(self.name2 + '-' + name + 'location_h.png')
+        plt.savefig(self.name + '-' + name + 'location_h.png')
         plt.close()
         # pylab.show()
 
@@ -3045,7 +3028,7 @@ class constraintGraph:
         nx.draw_networkx_edge_labels(G1, pos, edge_labels=edge_labels)
         nx.draw_networkx_labels(G1, pos)
         nx.draw(G1, pos, node_color='red', node_size=300, edge_color=edge_colors)
-        plt.savefig(self.name2 + name2 + 'gv.png')
+        plt.savefig(self.name + name2 + 'gv.png')
         plt.close()
 
         '''
@@ -3054,7 +3037,7 @@ class constraintGraph:
         nx.draw_networkx_edge_labels(G1, pos, edge_labels=edge_labels)
         #nx.draw_networkx_labels(G1, pos)
         nx.draw(G1, pos, node_color='red', node_size=300, edge_color=edge_colors)
-        plt.savefig(self.name2 + 'locv.png')
+        plt.savefig(self.name + 'locv.png')
         '''
         # nx.draw(G, pos, node_color='red', node_size=300, edge_color=edge_colors)
         # app = Viewer(G1)
@@ -3072,7 +3055,7 @@ class constraintGraph:
         nx.draw_networkx_labels(G1, pos, labels=loc)
         nx.draw_networkx_edge_labels(G1, pos, edge_labels=edge_labels)
         nx.draw(G1, pos, node_color='red', node_size=900, edge_color=edge_colors)
-        plt.savefig(self.name2 + '-' + name2 + 'location_v.png')
+        plt.savefig(self.name + '-' + name2 + 'location_v.png')
         plt.close()
 
 

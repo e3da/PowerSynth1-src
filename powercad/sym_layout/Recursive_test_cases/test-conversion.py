@@ -18,14 +18,12 @@ from powercad.sym_layout.symbolic_layout import SymbolicLayout, DeviceInstance, 
 from powercad.tech_lib.test_techlib import get_dieattach, get_mosfet
 from powercad.tech_lib.test_techlib import get_power_bondwire, get_signal_bondwire
 from powercad.tech_lib.test_techlib import get_signal_lead, get_power_lead
-from powercad.corner_stitch import *
-from powercad.corner_stitch import CornerStitch as CS
 import sys
-import pandas as pd
 from PySide import QtGui
 from PySide.QtGui import QFileDialog,QMainWindow
 from powercad.project_builder.proj_dialogs import New_layout_engine_dialog
 from powercad.corner_stitch.API_PS import *
+from powercad.corner_stitch.CornerStitch import *
 class Rectangle():
     def __init__(self,type=None,x=None,y=None,width=None,height=None,name=None,Schar=None,Echar=None,Netid=None):
         '''
@@ -294,8 +292,8 @@ def make_netlist():
     ads_net.import_net_data(net_data)
     ads_net.export_ads('RC_BL_4sw_pos1_200.net')
 
-def plot_layout(Layout_Rects,path,name,level):
-
+def plot_layout(Layout_Rects,level,path=None,name=None):
+    Patches=[]
     if level==0:
         Rectangles=[]
         for k,v in Layout_Rects.items():
@@ -346,7 +344,8 @@ def plot_layout(Layout_Rects,path,name,level):
 
         #fig1.savefig(path+'/'+name+'-layout.png', bbox_inches='tight')
         #plt.close()
-        return ALL_Patches
+        Patches.append(ALL_Patches)
+        return Patches
 
 
     else:
@@ -427,7 +426,7 @@ def intersection_pt(line1, line2):    # Find intersection point of 2 orthogonal 
         y = line2.pt1[1]                     # take the y value from line 2
 
     return x, y
-def Sym_to_CS(Input_rects,Htree,Vtree):
+def Sym_to_CS(input_rects,Htree,Vtree):
     ALL_RECTS={}
     DIM=[]
 
@@ -446,7 +445,7 @@ def Sym_to_CS(Input_rects,Htree,Vtree):
     ALL_RECTS['V']=DIM
 
     SYM_CS={}
-    for rect in Input_rects:
+    for rect in input_rects:
         x1=rect.x
         y1=rect.y
         x2=rect.x+rect.width
@@ -479,71 +478,73 @@ def random_layout(directory):
 
     #for obj in sym_layout.all_sym:
         #print  type(obj)
-    Input_rects,Htree,Vtree=input_conversion(sym_layout)
+    
 
-    path = 'C://Users//qmle//Desktop//New Layout Engine//Test_newUI'
+    path = 'D:\Initial_Layouts\TEST'
     name = "RD-100"
-    sym_to_cs = Sym_to_CS(Input_rects, Htree,Vtree)
-    for k in sym_to_cs.keys():
-        rect_list = sym_to_cs[k]
-        fig,ax=plt.subplots()
-        draw_rect_list(rectlist=rect_list,ax=ax,x_max=130,y_max=120)
-    print sym_to_cs # dictionary to link objects
-    level=0
-    CG1=CS.CS_to_CG(level) # Constraint graph generation
-    CG1.getConstraints(path+'/'+'Constraints-1.csv')
-    Evaluated_X,Evaluated_Y=CG1.evaluation(Htree,Vtree,path,name,N=3,W=100,H=60,XLoc=None,YLoc=None)
-    if level==0:
-        CS_SYM_information,Layout_Rects=CG1.UPDATE_min(Evaluated_X,Evaluated_Y,Htree,Vtree,sym_to_cs) # CS_SYM_information is a dictionary where key=path_id(component name) and value=list of updated rectangles, Layout Rects is a dictionary for minimum HCS and VCS evaluated rectangles (used for plotting only)
-        Patches=plot_layout(Layout_Rects,path,name,level)
-
-    else:
-        CS_SYM_information, Layout_Rects=CG1.UPDATE(Evaluated_X, Evaluated_Y, Htree, Vtree,sym_to_cs)
-        plot_layout(Layout_Rects, path, name, level)
-
     app = QtGui.QApplication(sys.argv)
     window = QMainWindow()
-    open_new_layout_engine(window,Patches)
+    New_engine = New_layout_engine()
+    New_engine.init_layout_from_symlayout(sym_layout)
+    New_engine.open_new_layout_engine(window=window)
+    
 
-    layout_ratio = 1.0
-    dev_mos = DeviceInstance(0.1, 5.0, get_mosfet(layout_ratio),
-                             get_dieattach())  # Create a device instance with 10 W power dissipation. Highlight + "Crtl+Shift+I" to see the definition of this object
+class New_layout_engine():
+    def __init__(self):
+        self.W=None
+        self.H=None
+        self.window=None
+        self.Htree=None
+        self.Vtree=None
+        self.cons_df=None
+        # for initialize only
+        self.init_data=[]
+        self.cornerstitch=CornerStitch()
+        # current solutions
+        self.cur_fig_data=None
+    def open_new_layout_engine(self,window):
+        self.window=window
+        patches = self.init_data[0]
+        self.new_layout_engine = New_layout_engine_dialog(self.window, patches, self.W+20, self.H+20,engine=self)
+        self.new_layout_engine.exec_()
+    def init_layout_from_symlayout(self,sym_layout):
+        '''
+        initialize new layout engine with old symlayout data structure
+        Returns:
+        '''
+        input_rects, self.W, self.H = input_conversion(sym_layout)
+        input = self.cornerstitch.read_input('list', Rect_list=input_rects)
+        self.Htree, self.Vtree = self.cornerstitch.input_processing(input, self.W + 20, self.H + 20)
+        print self.Htree
+        print self.Vtree
+        print input_rects
 
-    pow_lead = get_power_lead()  # Get a power lead object
 
-    sig_lead = get_signal_lead(layout_ratio)  # Get a signal lead object
 
-    power_bw = get_power_bondwire()  # Get bondwire object
-    signal_bw = get_signal_bondwire()  # Get bondwire object
-    # This will be added into the UI later based on Tristan import
-    net_id = {'0013': 'DC_plus', '0012': 'DC_neg', '0016': 'G_High', '0015': 'G_Low', '0014': 'Out', '0010': 'M1',
-              '0011': 'M2', '0008': 'M3',
-              '0009': 'M4'}
-    map_id_net(dict=net_id, symbols=sym_layout.all_sym)
+        patches=self.cornerstitch.draw_layout(input_rects)
+        sym_to_cs = Sym_to_CS(input_rects, self.Htree, self.Vtree)
+        print patches
+        self.init_data=[patches,sym_to_cs]
 
-    make_test_leads(symbols=sym_layout.all_sym, lead_type=sig_lead,
-                    lead_id=['0016', '0015', '0014', '0013', '0012'])
-    '''make_test_leads(symbols=sym_layout.all_sym, lead_type=pow_lead,
-                    lead_id=[])'''
-    make_test_bonds(symbols=sym_layout.all_sym, bond_type=signal_bw,
-                    bond_id=['0019', '0023', '0022', '0026'], wire_spec=[2, 10])
-    make_test_bonds(symbols=sym_layout.all_sym, bond_type=power_bw,
-                    bond_id=['0024', '0020', '0021', '0025'], wire_spec=[2, 10])
-    make_test_devices(symbols=sym_layout.all_sym, dev=dev_mos, dev_id=['0008', '0009', '0010', '0011'])
 
-    # make_test_symmetries(sym_layout) # You can assign the symmetry objects here
+    def generate_solutions(self,level,num_layouts=1):
+        CG1 = CS_to_CG(level)
+        # CG1.getConstraints(path+'/'+'Constraints-1.csv')
+        CG1.getConstraints(self.cons_df)
+        sym_to_cs=self.init_data[1]
+        if level == 0:
+            Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=None, W=None, H=None,
+                                                      XLoc=None,
+                                                      YLoc=None)
+            CS_SYM_information, Layout_Rects = CG1.UPDATE_min(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree,
+                                                              sym_to_cs)  # CS_SYM_information is a dictionary where key=path_id(component name) and value=list of updated rectangles, Layout Rects is a dictionary for minimum HCS and VCS evaluated rectangles (used for plotting only)
+            self.cur_fig_data = plot_layout(Layout_Rects, level)
+        else:
+            print "nothing here!!!!"
+            #CS_SYM_information, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y, Htree, Vtree, sym_to_cs)
+            #Patches = plot_layout(Layout_Rects, level)
 
-    add_test_measures(sym_layout)  # Assign a measurement between 2 SYM-Points (using their IDs)
-
-    module = gen_test_module_data(f)
-    # Pepare for optimization.
-
-    sym_layout.form_design_problem(module, temp_dir)  # Collect data to user interface
-    sym_layout._map_design_vars()
-    setup_model(sym_layout)
-def open_new_layout_engine(window,fig=None):
-    new_layout_engine = New_layout_engine_dialog(window,fig)
-    new_layout_engine.exec_()
+        return self.cur_fig_data
 def test1():
     # The test goes here, moddify the path below as you wish...
     directory ='Layout//CS-conversion//RD-100.psc' # directory to layout script

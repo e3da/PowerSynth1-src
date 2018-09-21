@@ -1184,45 +1184,59 @@ class ConsDialog(QtGui.QDialog):
 
 
 class New_layout_engine_dialog(QtGui.QDialog):
-    def __init__(self,parent,fig):
+    def __init__(self,parent,fig,W,H,engine=None):
         QtGui.QDialog.__init__(self, parent)
         self.ui = Ui_CornerStitch_Dialog()
         self.ui.setupUi(self)
+        self.engine=engine
         self.parent = parent
         self.cornerstitch = None
         self.constraint=False
         self.num_layouts=0
         self.mainwindow_fig=fig ##Temporary addition
-        self.fp_width=120
-        self.fp_length=100
+        self.fp_width=W
+        self.fp_length=H
         self.cons_df=None
         self.current_mode = 0
+        self.generated_layouts = {}
+        self.Patches=None
+
         # add buttons
         self.ui.btn_constraints.pressed.connect(self.add_constraints)
-
-        # combo box
         self.ui.cmb_modes.currentIndexChanged.connect(self.mode_handler)
-        # init:
         self.initialize_layout(self.mainwindow_fig)
 
-
         self.ui.btn_gen_layouts.pressed.connect(self.gen_layouts)
+        self.ui.cmb_sols.currentIndexChanged.connect(self.layout_plot)
+    def getPatches(self,Patches):
+        if self.Patches==None:
+            self.Patches=Patches
+            print "self.Patches"
+        return
+    def setPatches(self):
+        return self.Patches
     def mode_handler(self):
         choice = self.ui.cmb_modes.currentText()
         if choice == 'Mode 0':
             print "run mode 0"
             self.current_mode=0
+            self.ui.txt_num_layouts.setEnabled(False)
         elif choice == 'Mode 1':
             print "run mode 1"
             self.current_mode=1
+            self.ui.txt_num_layouts.setEnabled(True)
 
         elif choice == 'Mode 2':
             print "run mode 2"
             self.current_mode=2
+            self.ui.txt_num_layouts.setEnabled(True)
 
         elif choice == 'Mode 3':
             print "run mode 3"
             self.current_mode=3
+            self.ui.txt_num_layouts.setEnabled(True)
+
+        return
 
     def add_constraints(self):
 
@@ -1231,21 +1245,55 @@ class New_layout_engine_dialog(QtGui.QDialog):
 
         print "add constraints"
         self.constraint=True
-        return self.cons_df
+        self.engine.cons_df=self.cons_df
     def gen_layouts(self):
         if not(self.constraint):
             print "cant generate layouts"
+            return
         else:
             print "generate layout"
-            N = self.ui.txt_num_layouts.text()
-            if int(N)>0:
-            #N=self.ui.txt_num_layouts.setText(str(self.num_layouts))
-                self.ui.cmb_sols.clear()
-                for i in range(int(N)):
-                    item = 'Layout'+str(i)
-                    self.ui.cmb_sols.addItem(item)
+            if self.current_mode!=0:
+                N = int(self.ui.txt_num_layouts.text())
             else:
-                print "Give No. of layouts to be generated"
+                N=1
+            Patches=self.engine.generate_solutions(self.current_mode,num_layouts=N)
+            Layouts=[]
+            #N=self.ui.txt_num_layouts.setText(str(self.num_layouts))
+            self.ui.cmb_sols.clear()
+            for i in range(int(N)):
+                item = 'Layout '+str(i)
+                self.ui.cmb_sols.addItem(item)
+                Layouts.append(item)
+            print Layouts
+            print Patches
+            if Patches!=None:
+                for i in range(int(N)):
+                    print i,Layouts[i],Patches[i]
+                    self.generated_layouts[Layouts[i]] = Patches[i] #generated_layouts={Layout0:{(width,Height):[list of patches in the layout]},......}
+            else:
+                print"Patches not found"
+
+        return
+
+    def layout_plot(self):
+        print self.generated_layouts
+        self.ax2.clear()
+        if self.current_mode!=0:
+            choice = self.ui.cmb_sols.currentText()
+        else:
+            choice = 'Layout 0'
+        for k,v in self.generated_layouts.items():
+            if choice==k:
+                print choice
+                for k1,v1 in v.items():
+                    for p in v1:
+                        self.ax2.add_patch(p)
+                    self.ax2.set_xlim(0, k1[0])
+                    self.ax2.set_ylim(0, k1[1])
+                self.canvas.draw()
+
+
+
     def initialize_layout(self,fig):
         '''
         plot main window figure
@@ -1262,24 +1310,37 @@ class New_layout_engine_dialog(QtGui.QDialog):
         grid_layout.setContentsMargins(0, 0, 0, 0)
         grid_layout.addWidget(self.canvas, 0, 0, 1, 1)
         if fig==None:
-            self.ax1 = fig.add_subplot(111, aspect=1.0)
+            self.ax1 = fig2.add_subplot(111, aspect=1.0)
             self.ax1.plot([0, 1, 2], [1, 2, 3])
-            self.ax2 = fig.add_subplot(121, aspect=1.0)
+            self.ax2 = fig2.add_subplot(121, aspect=1.0)
             self.ax2.plot([0, 1, 2], [1, 2, 3])
         else:
-
-            for k, v in fig.items():
-                for p in v:
-                    print p
+            Names=fig.keys()
+            Names.sort()
+            for k, p in fig.items():
+                #for p in v:
+                if k[0]=='T':
                     x=p.get_x()
                     y=p.get_y()
-                    self.ax2.text(x,y,'blabla')
+                    self.ax2.text(x+1,y+1,k)
                     self.ax2.add_patch(p)
-                max_x = k[0]
-                max_y=k[1]
-                self.ui.txt_width.setText(str(max_x))
-                self.ui.txt_height.setText(str(max_y))
-                self.ax2.set_xlim(0,max_x)
-                self.ax2.set_ylim(0,max_y)
+            for k, p in fig.items():
+
+                if k[0] !='T':
+                    x = p.get_x()
+                    y = p.get_y()
+                    self.ax2.text(x + 1, y + 1, k)
+                    self.ax2.add_patch(p)
+
+                #max_x = k[0]
+                #max_y=k[1]
+                #self.ui.txt_width.setText(str(max_x))
+                #self.ui.txt_height.setText(str(max_y))
+            self.ax2.set_xlim(0,self.fp_width)
+            self.ax2.set_ylim(0,self.fp_length)
 
         self.canvas.draw()
+        return
+    def run_mode(self):
+        return self.current_mode
+

@@ -18,10 +18,11 @@ import networkx as nx
 import numpy as np
 from matplotlib.patches import Circle, Wedge
 from matplotlib.collections import PatchCollection
-import constraintGraph_Dev as cg
+from constraintGraph_Dev import *
 import CSCG
 import constraint as ct
 import collections
+import operator
 
 import ast
 import pandas as pd
@@ -3077,43 +3078,35 @@ class CornerStitch():
             Modified_input=[]
 
             for R in Rect_list:
-               Modified_input.append([R.Schar,R.x,R.y,R.width,R.height,R.type,R.Echar])
+               Modified_input.append([R.Schar,R.x,R.y,R.width,R.height,R.type,R.Echar,R.name])
 
         return Modified_input
 
 
 
-    def draw_layout(self,Rectangles, max_x, max_y, path=None):
-        fig10, ax5 = plt.subplots()
+    def draw_layout(self,rects=None, max_x=None, max_y=None, path=None):
         colors = ['green', 'red', 'blue', 'yellow', 'pink']
         type = ['Type_1', 'Type_2', 'Type_3', 'Type_4','Type_5']
-        Patches=[]
-        for i in Rectangles:
-            for t in type:
-                if i[5] == t:
-                    type_ind = type.index(t)
-                    colour = colors[type_ind]
-
-            Patches.append(matplotlib.patches.Rectangle(
-                    (i[1], i[2]),  # (x,y)
-                    i[3],  # width
-                    i[4],  # height
-                    facecolor=colour,
-
-                ))
-            ax5.add_patch(
-                matplotlib.patches.Rectangle(
-                    (i[1], i[2]),  # (x,y)
-                    i[3],  # width
-                    i[4],  # height
-                    facecolor=colour,
-
+        zorders = [1,2,3,4,5]
+        Patches={}
+        for r in rects:
+            i = type.index(r.type)
+            P=matplotlib.patches.Rectangle(
+                    (r.x, r.y),  # (x,y)
+                    r.width,  # width
+                    r.height,  # height
+                    facecolor=colors[i],
+                    zorder=zorders[i]
                 )
-            )
+            Patches[r.name]=P
 
-        plt.xlim(0, max_x)
-        plt.ylim(0, max_y)
+        #plt.xlim(0, max_x)
+        #plt.ylim(0, max_y)
+        #Patches.sort(key=operator.attrgetter('facecolor'))
+        for k,v in Patches.items():
+            print k,v
 
+        return Patches
 
 
 
@@ -3121,7 +3114,6 @@ class CornerStitch():
     def input_processing(self,Input,Base_W,Base_H,path=None,name=None):
         Baseplate1 = Baseplate(Base_W, Base_H, "EMPTY")
         Hnode0, Vnode0 = Baseplate1.Initialize()
-        self.draw_layout(Input,Base_W, Base_H,path)
         Htree = Tree(hNodeList=[Hnode0], vNodeList=None)
         Vtree = Tree(hNodeList=None, vNodeList=[Vnode0])
 
@@ -3225,21 +3217,28 @@ class CS_to_CG():
         '''
         self.level=level
     def getConstraints(self,constraint_file):
-        data = pd.read_csv(constraint_file, header=None)
+        #data = pd.read_csv(constraint_file, header=None)
+
+        data = constraint_file
+
+        Types=len(data.columns)
+
         SP = []
         EN = []
-        width = ((data.loc[1, 1:5]).values.tolist())
-        extension = ((data.loc[2, 1:5]).values.tolist())
-        height = ((data.loc[3, 1:5]).values.tolist())
-        # print extension
-        for i in range(len(data)):
+
+        width = ((data.iloc[0, 1:]).values.tolist())
+        extension = ((data.iloc[1, 1:]).values.tolist())
+        height = ((data.iloc[2, 1:]).values.tolist())
+
+        for j in range(len(data)):
             # print i
             # print data.nrows[i]
-            if i > 4 and i < 10:
+            if j >3 and j < (3+Types):
 
-                SP.append((data.loc[i, 1:5]).values.tolist())
-            elif i > 10 and i <= 15:
-                EN.append((data.loc[i, 1:5]).values.tolist())
+                SP.append((data.iloc[j, 1:(Types)]).values.tolist())
+
+            elif j > (3+Types) and j < (3+2*Types):
+                EN.append((data.iloc[j, 1:(Types)]).values.tolist())
             else:
                 continue
         CONSTRAINT = ct.constraint()
@@ -3305,16 +3304,16 @@ class CS_to_CG():
                             continue
         return SYM_CS
 
-    def evaluation(self,Htree,Vtree,path,name,N,W,H,XLoc,YLoc):
+    def evaluation(self,Htree,Vtree,N,W,H,XLoc,YLoc,path=None,name=None):
         if self.level==1:
-            CG = cg.constraintGraph(path, name, W=None, H=None,XLocation=None, YLocation=None)
-            CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList,self.level, path,name, N)
+            CG = constraintGraph( W=None, H=None,XLocation=None, YLocation=None)
+            CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList,self.level, N)
         elif self.level==2 or self.level==3:
-            CG = cg.constraintGraph(path, name, W, H, XLoc, YLoc)
-            CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList, self.level,path,name, N)
+            CG = constraintGraph(W, H, XLoc, YLoc)
+            CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList, self.level, N)
         else:
-            CG = cg.constraintGraph(path, name, W=None, H=None,XLocation=None, YLocation=None)
-            CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList, self.level,path,name,N=None)
+            CG = constraintGraph( W=None, H=None,XLocation=None, YLocation=None)
+            CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList, self.level,N=None)
         MIN_X, MIN_Y = CG.minValueCalculation(Htree.hNodeList, Vtree.vNodeList, self.level)
         return MIN_X, MIN_Y
 
