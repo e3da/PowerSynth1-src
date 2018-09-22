@@ -345,7 +345,7 @@ def plot_layout(Layout_Rects,level,path=None,name=None):
         #fig1.savefig(path+'/'+name+'-layout.png', bbox_inches='tight')
         #plt.close()
         Patches.append(ALL_Patches)
-        return Patches
+
 
 
     else:
@@ -375,40 +375,48 @@ def plot_layout(Layout_Rects,level,path=None,name=None):
                             min_x = i[0]
                         if i[1] < min_y:
                             min_y = i[1]
-                    Total_H[(max_x,max_y)]=Rectangles
+                    key=(max_x,max_y)
+                    Total_H.setdefault(key,[])
+                    Total_H[(max_x,max_y)].append(Rectangles)
         j = 0
+
+
         for k,v in Total_H.items():
-            print "TH",k,v
+            for i in range(len(v)):
 
-            Rectangles = v
-            max_x=k[0]
-            max_y=k[1]
-            fig1 = matplotlib.pyplot.figure()
-            ax1 = fig1.add_subplot(111, aspect='equal')
+                Rectangles = v[i]
+                max_x=k[0]
+                max_y=k[1]
+                ALL_Patches = {}
+                key = (max_x, max_y)
+                ALL_Patches.setdefault(key, [])
+                #fig1 = matplotlib.pyplot.figure()
+                #ax1 = fig1.add_subplot(111, aspect='equal')
 
-            colors = ['White', 'green', 'red', 'blue', 'yellow', 'pink']
-            type = ['EMPTY', 'Type_1', 'Type_2', 'Type_3', 'Type_4']
-            for i in Rectangles:
-                for t in type:
-                    if i[4] == t:
-                        type_ind = type.index(t)
-                        colour = colors[type_ind]
+                colors = ['White', 'green', 'red', 'blue', 'yellow', 'pink']
+                type = ['EMPTY', 'Type_1', 'Type_2', 'Type_3', 'Type_4']
+                for i in Rectangles:
+                    for t in type:
+                        if i[4] == t:
+                            type_ind = type.index(t)
+                            colour = colors[type_ind]
+                    R= matplotlib.patches.Rectangle(
+                            (i[0], i[1]),  # (x,y)
+                            i[2],  # width
+                            i[3],  # height
+                            facecolor=colour,
 
-                ax1.add_patch(
-                    matplotlib.patches.Rectangle(
-                        (i[0], i[1]),  # (x,y)
-                        i[2],  # width
-                        i[3],  # height
-                        facecolor=colour,
+                        )
+                    ALL_Patches[key].append(R)
 
-                    )
-                )
 
-            plt.xlim(0, max_x)
-            plt.ylim(0, max_y)
-            fig1.savefig(path + '/' + name +'-'+str(j)+ '.png', bbox_inches='tight')
-            j+=1
-            plt.close()
+                #plt.xlim(0, max_x)
+                #plt.ylim(0, max_y)
+                #fig1.savefig(path + '/' + name +'-'+str(j)+ '.png', bbox_inches='tight')
+                j+=1
+                Patches.append(ALL_Patches)
+
+    return Patches
 
 
 
@@ -515,39 +523,75 @@ class New_layout_engine():
         input_rects, self.W, self.H = input_conversion(sym_layout)
         input = self.cornerstitch.read_input('list', Rect_list=input_rects)
         self.Htree, self.Vtree = self.cornerstitch.input_processing(input, self.W + 20, self.H + 20)
-        print self.Htree
-        print self.Vtree
-        print input_rects
+        #print self.Htree
+        #print self.Vtree
+        #print input_rects
 
 
 
         patches=self.cornerstitch.draw_layout(input_rects)
         sym_to_cs = Sym_to_CS(input_rects, self.Htree, self.Vtree)
-        print patches
+
         self.init_data=[patches,sym_to_cs]
 
 
-    def generate_solutions(self,level,num_layouts=1):
+    def generate_solutions(self,level,num_layouts=1,W=None,H=None):
         CG1 = CS_to_CG(level)
         # CG1.getConstraints(path+'/'+'Constraints-1.csv')
         CG1.getConstraints(self.cons_df)
         sym_to_cs=self.init_data[1]
         if level == 0:
-            Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=None, W=None, H=None,
-                                                      XLoc=None,
-                                                      YLoc=None)
-            CS_SYM_information, Layout_Rects = CG1.UPDATE_min(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree,
-                                                              sym_to_cs)  # CS_SYM_information is a dictionary where key=path_id(component name) and value=list of updated rectangles, Layout Rects is a dictionary for minimum HCS and VCS evaluated rectangles (used for plotting only)
+            Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=None, W=None, H=None,XLoc=None,YLoc=None)
+            CS_SYM_information, Layout_Rects = CG1.UPDATE_min(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree,sym_to_cs)  # CS_SYM_information is a dictionary where key=path_id(component name) and value=list of updated rectangles, Layout Rects is a dictionary for minimum HCS and VCS evaluated rectangles (used for plotting only)
             self.cur_fig_data = plot_layout(Layout_Rects, level)
-        else:
-            print "nothing here!!!!"
-            #CS_SYM_information, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y, Htree, Vtree, sym_to_cs)
-            #Patches = plot_layout(Layout_Rects, level)
+        elif level==1:
+
+            Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=num_layouts, W=None, H=None,XLoc=None, YLoc=None)
+            CS_SYM_information, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y,self.Htree, self.Vtree, sym_to_cs)
+            self.cur_fig_data = plot_layout(Layout_Rects, level)
+        elif level==2:
+            CG2 = CS_to_CG(0)
+            Evaluated_X0, Evaluated_Y0 = CG2.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=None, W=None, H=None,XLoc=None,YLoc=None)
+
+            #print"Eval0", Evaluated_X0, Evaluated_Y0
+            Min_X_Loc = {}
+            Min_Y_Loc = {}
+            for k, v in Evaluated_X0.items():
+                XLoc = v.keys()
+                max_x = v[max(XLoc)]
+            for k, v in Evaluated_Y0.items():
+                YLoc = v.keys()
+                max_y = v[max(YLoc)]
+            XLoc.sort()
+            YLoc.sort()
+
+            #Min_X_Loc[0] = 0
+            #Min_Y_Loc[0] = 0
+            Min_X_Loc[len(XLoc) - 1] = max_x
+            Min_Y_Loc[len(YLoc) - 1] = max_y
+
+
+            for k,v in Min_X_Loc.items():
+                if W>v:
+                    Min_X_Loc[0] = 0
+                    Min_X_Loc[k]=W
+            for k,v in Min_Y_Loc.items():
+                if H>v:
+                    Min_Y_Loc[0] = 0
+                    Min_Y_Loc[k]=H
+
+            #print Min_X_Loc, Min_Y_Loc,num_layouts
+            Min_X_Loc=collections.OrderedDict(sorted(Min_X_Loc.items()))
+            Min_Y_Loc = collections.OrderedDict(sorted(Min_Y_Loc.items()))
+            Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=num_layouts, W=W, H=H,XLoc=Min_X_Loc, YLoc=Min_Y_Loc)
+            CS_SYM_information, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree, sym_to_cs)
+            self.cur_fig_data = plot_layout(Layout_Rects, level)
+
 
         return self.cur_fig_data
 def test1():
     # The test goes here, moddify the path below as you wish...
-    directory ='Layout//CS-conversion//RD-100.psc' # directory to layout script
+    directory ='Layout//CS-conversion//simple_switch.psc' # directory to layout script
     random_layout(directory)
 
 test1()

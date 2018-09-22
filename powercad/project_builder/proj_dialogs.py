@@ -1205,31 +1205,41 @@ class New_layout_engine_dialog(QtGui.QDialog):
         self.ui.btn_constraints.pressed.connect(self.add_constraints)
         self.ui.cmb_modes.currentIndexChanged.connect(self.mode_handler)
         self.initialize_layout(self.mainwindow_fig)
+        #self.ui.txt_width.textChanged.connect(self.width_edit_text_changed)
+        #self.ui.txt_height.textChanged.connect(self.height_edit_text_changed)
 
         self.ui.btn_gen_layouts.pressed.connect(self.gen_layouts)
         self.ui.cmb_sols.currentIndexChanged.connect(self.layout_plot)
-    def getPatches(self,Patches):
-        if self.Patches==None:
-            self.Patches=Patches
-            print "self.Patches"
-        return
-    def setPatches(self):
-        return self.Patches
+
+    def width_edit_text_changed(self):
+        W = int(self.ui.txt_width.text())
+        return W
+    def height_edit_text_changed(self):
+
+        H = int(self.ui.txt_height.text())
+        return H
     def mode_handler(self):
         choice = self.ui.cmb_modes.currentText()
         if choice == 'Mode 0':
             print "run mode 0"
             self.current_mode=0
             self.ui.txt_num_layouts.setEnabled(False)
+            self.ui.txt_width.setEnabled(False)
+            self.ui.txt_height.setEnabled(False)
         elif choice == 'Mode 1':
             print "run mode 1"
             self.current_mode=1
             self.ui.txt_num_layouts.setEnabled(True)
+            self.ui.txt_width.setEnabled(False)
+            self.ui.txt_height.setEnabled(False)
 
         elif choice == 'Mode 2':
             print "run mode 2"
             self.current_mode=2
             self.ui.txt_num_layouts.setEnabled(True)
+            self.ui.txt_width.setEnabled(True)
+            self.ui.txt_height.setEnabled(True)
+
 
         elif choice == 'Mode 3':
             print "run mode 3"
@@ -1243,7 +1253,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
         constraints = ConsDialog(self)
         constraints.exec_()
 
-        print "add constraints"
+
         self.constraint=True
         self.engine.cons_df=self.cons_df
     def gen_layouts(self):
@@ -1251,12 +1261,23 @@ class New_layout_engine_dialog(QtGui.QDialog):
             print "cant generate layouts"
             return
         else:
-            print "generate layout"
+
             if self.current_mode!=0:
                 N = int(self.ui.txt_num_layouts.text())
+                #if (self.ui.txt_width.setEnabled(True)):
+                W = self.ui.txt_width.text()
+                H = self.ui.txt_height.text()
+                print"W_H",W
+                Patches=self.engine.generate_solutions(self.current_mode,num_layouts=N,W=int(W),H=int(H))
+                #else:
+                    #Patches = self.engine.generate_solutions(self.current_mode, num_layouts=N)
+
             else:
                 N=1
-            Patches=self.engine.generate_solutions(self.current_mode,num_layouts=N)
+                Patches = self.engine.generate_solutions(self.current_mode, num_layouts=N)
+
+            #else:
+
             Layouts=[]
             #N=self.ui.txt_num_layouts.setText(str(self.num_layouts))
             self.ui.cmb_sols.clear()
@@ -1264,11 +1285,10 @@ class New_layout_engine_dialog(QtGui.QDialog):
                 item = 'Layout '+str(i)
                 self.ui.cmb_sols.addItem(item)
                 Layouts.append(item)
-            print Layouts
-            print Patches
+
             if Patches!=None:
                 for i in range(int(N)):
-                    print i,Layouts[i],Patches[i]
+
                     self.generated_layouts[Layouts[i]] = Patches[i] #generated_layouts={Layout0:{(width,Height):[list of patches in the layout]},......}
             else:
                 print"Patches not found"
@@ -1276,11 +1296,12 @@ class New_layout_engine_dialog(QtGui.QDialog):
         return
 
     def layout_plot(self):
-        print self.generated_layouts
+        #print self.generated_layouts
         self.ax2.clear()
         if self.current_mode!=0:
             choice = self.ui.cmb_sols.currentText()
         else:
+
             choice = 'Layout 0'
         for k,v in self.generated_layouts.items():
             if choice==k:
@@ -1290,6 +1311,8 @@ class New_layout_engine_dialog(QtGui.QDialog):
                         self.ax2.add_patch(p)
                     self.ax2.set_xlim(0, k1[0])
                     self.ax2.set_ylim(0, k1[1])
+                    self.ui.txt_width.setText(str(k1[0]))
+                    self.ui.txt_height.setText(str(k1[1]))
                 self.canvas.draw()
 
 

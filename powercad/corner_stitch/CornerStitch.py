@@ -3309,6 +3309,7 @@ class CS_to_CG():
             CG = constraintGraph( W=None, H=None,XLocation=None, YLocation=None)
             CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList,self.level, N)
         elif self.level==2 or self.level==3:
+            print W,H,XLoc,YLoc
             CG = constraintGraph(W, H, XLoc, YLoc)
             CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList, self.level, N)
         else:
