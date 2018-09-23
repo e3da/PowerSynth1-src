@@ -24,7 +24,8 @@ from PySide.QtGui import QFileDialog,QMainWindow
 from powercad.project_builder.proj_dialogs import New_layout_engine_dialog
 from powercad.corner_stitch.API_PS import *
 from powercad.corner_stitch.CornerStitch import *
-class Rectangle():
+from powercad.general.data_struct.util import *
+class Rectangle(Rect):
     def __init__(self,type=None,x=None,y=None,width=None,height=None,name=None,Schar=None,Echar=None,Netid=None):
         '''
 
@@ -50,6 +51,14 @@ class Rectangle():
         self.Echar=Echar
         self.Netid=Netid
         self.name=name
+
+        # inheritence member variables
+        self.top=self.y+self.height
+        self.bottom = self.y
+        self.left = self.x
+        self.right = self.x + self.width
+
+
 
 
 
