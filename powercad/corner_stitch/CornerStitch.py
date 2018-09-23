@@ -28,6 +28,7 @@ import ast
 import pandas as pd
 import csv
 import timeit
+import networkx as nx
 
 global VID,HID,Schar,Cchar,Htree,Vtree
 Schar='/'
@@ -3089,6 +3090,7 @@ class CornerStitch():
         type = ['Type_1', 'Type_2', 'Type_3', 'Type_4','Type_5']
         zorders = [1,2,3,4,5]
         Patches={}
+
         for r in rects:
             i = type.index(r.type)
             P=matplotlib.patches.Rectangle(
@@ -3105,8 +3107,34 @@ class CornerStitch():
         #Patches.sort(key=operator.attrgetter('facecolor'))
         for k,v in Patches.items():
             print k,v
+        ZDL = []
+        for rect in rects:
+            ZDL.append((rect.x, rect.y))
+            ZDL.append((rect.x + rect.width, rect.y))
+            ZDL.append((rect.x, rect.y + rect.height))
+            ZDL.append((rect.x + rect.width, rect.y + rect.height))
+        #print len(ZDL)
+        G = nx.Graph()
+        # print ZDL_H, ZDL_V
+        Nodes = {}
+        id = 1
+        lbls = {}
+        for i in ZDL:
+            if i not in Nodes.values():
+                Nodes[id] = (i)
 
-        return Patches
+                G.add_node(id, pos=i)
+                lbls[id] = str(id)
+                id += 1
+        pos = nx.get_node_attributes(G, 'pos')
+        #print"N", Nodes
+        # for n, p in Nodes.iteritems():
+        # G.node[n]['pos'] = p
+        Graph=[G,pos,lbls]
+
+
+
+        return Patches,Graph
 
 
 
@@ -3318,6 +3346,43 @@ class CS_to_CG():
         MIN_X, MIN_Y = CG.minValueCalculation(Htree.hNodeList, Vtree.vNodeList, self.level)
         return MIN_X, MIN_Y
 
+    def combined_graph(self,Htree,Vtree):
+
+        Rects = []
+        for rect in self.Htree.hNodeList[0].stitchList:
+            if rect.cell.type != "EMPTY":
+                Rects.append(rect)
+        for rect in self.Vtree.vNodeList[0].stitchList:
+            if rect.cell.type != "EMPTY":
+                Rects.append(rect)
+        print len(Rects)
+        ZDL = []
+        for rect in Rects:
+            ZDL.append((rect.cell.x, rect.cell.y))
+            ZDL.append((rect.cell.x + rect.getWidth(), rect.cell.y))
+            ZDL.append((rect.cell.x, rect.cell.y + rect.getHeight()))
+            ZDL.append((rect.cell.x + rect.getWidth(), rect.cell.y + rect.getHeight()))
+        print len(ZDL)
+        G = nx.Graph()
+        # print ZDL_H, ZDL_V
+        Nodes = {}
+        id = 1
+        lbls = {}
+        for i in ZDL:
+            Nodes[id] = (i)
+            G.add_node(id, pos=i)
+            lbls[id] = str(id)
+            id += 1
+        pos = nx.get_node_attributes(G, 'pos')
+        print"N", Nodes
+        # for n, p in Nodes.iteritems():
+        # G.node[n]['pos'] = p
+
+        nx.draw_networkx_nodes(G, pos, node_size=100, label=True)
+        nx.draw_networkx_labels(G, pos, lbls, font_size=8)
+        print len(G.node)
+        plt.show()
+        return Nodes
 
 
     def UPDATE_min(self,MINX, MINY,Htree,Vtree,sym_to_cs):

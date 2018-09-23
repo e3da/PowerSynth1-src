@@ -522,7 +522,8 @@ class New_layout_engine():
     def open_new_layout_engine(self,window):
         self.window=window
         patches = self.init_data[0]
-        self.new_layout_engine = New_layout_engine_dialog(self.window, patches, self.W+20, self.H+20,engine=self)
+        graph=self.init_data[2]
+        self.new_layout_engine = New_layout_engine_dialog(self.window, patches,graph, self.W+20, self.H+20,engine=self)
         self.new_layout_engine.exec_()
     def init_layout_from_symlayout(self,sym_layout):
         '''
@@ -538,16 +539,18 @@ class New_layout_engine():
 
 
 
-        patches=self.cornerstitch.draw_layout(input_rects)
+        patches,combined_graph=self.cornerstitch.draw_layout(input_rects)
         sym_to_cs = Sym_to_CS(input_rects, self.Htree, self.Vtree)
 
-        self.init_data=[patches,sym_to_cs]
+        self.init_data=[patches,sym_to_cs,combined_graph]
 
 
     def generate_solutions(self,level,num_layouts=1,W=None,H=None):
         CG1 = CS_to_CG(level)
         # CG1.getConstraints(path+'/'+'Constraints-1.csv')
         CG1.getConstraints(self.cons_df)
+        #Node_conbined = CG1.combined_graph(self.Htree, self.Vtree)
+        #print Node_conbined
         sym_to_cs=self.init_data[1]
         if level == 0:
             Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=None, W=None, H=None,XLoc=None,YLoc=None)

@@ -45,6 +45,7 @@ from powercad.project_builder.dialogs.cons_setup_ui import Ui_Constraint_setup
 from powercad.response_surface.Model_Formulation import form_trace_model_optimetric,form_fasthenry_trace_response_surface
 import sys
 import psidialogs
+import networkx as nx
 # CLASSES FOR DIALOG USAGE
 class GenericDeviceDialog(QtGui.QDialog):   
     # Author: quang le
@@ -1184,7 +1185,7 @@ class ConsDialog(QtGui.QDialog):
 
 
 class New_layout_engine_dialog(QtGui.QDialog):
-    def __init__(self,parent,fig,W,H,engine=None):
+    def __init__(self,parent,fig,graph,W,H,engine=None):
         QtGui.QDialog.__init__(self, parent)
         self.ui = Ui_CornerStitch_Dialog()
         self.ui.setupUi(self)
@@ -1194,6 +1195,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
         self.constraint=False
         self.num_layouts=0
         self.mainwindow_fig=fig ##Temporary addition
+        self.graph=graph
         self.fp_width=W
         self.fp_length=H
         self.cons_df=None
@@ -1204,7 +1206,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
         # add buttons
         self.ui.btn_constraints.pressed.connect(self.add_constraints)
         self.ui.cmb_modes.currentIndexChanged.connect(self.mode_handler)
-        self.initialize_layout(self.mainwindow_fig)
+        self.initialize_layout(self.mainwindow_fig,self.graph)
         #self.ui.txt_width.textChanged.connect(self.width_edit_text_changed)
         #self.ui.txt_height.textChanged.connect(self.height_edit_text_changed)
 
@@ -1292,7 +1294,8 @@ class New_layout_engine_dialog(QtGui.QDialog):
                     self.generated_layouts[Layouts[i]] = Patches[i] #generated_layouts={Layout0:{(width,Height):[list of patches in the layout]},......}
             else:
                 print"Patches not found"
-
+        if self.current_mode==0:
+            self.layout_plot()
         return
 
     def layout_plot(self):
@@ -1305,7 +1308,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
             choice = 'Layout 0'
         for k,v in self.generated_layouts.items():
             if choice==k:
-                print choice
+                #print choice
                 for k1,v1 in v.items():
                     for p in v1:
                         self.ax2.add_patch(p)
@@ -1317,7 +1320,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
 
 
 
-    def initialize_layout(self,fig):
+    def initialize_layout(self,fig,graph):
         '''
         plot main window figure
         Returns:
@@ -1361,6 +1364,11 @@ class New_layout_engine_dialog(QtGui.QDialog):
                 #self.ui.txt_height.setText(str(max_y))
             self.ax2.set_xlim(0,self.fp_width)
             self.ax2.set_ylim(0,self.fp_length)
+            G=graph[0]
+            pos=graph[1]
+            lbls=graph[2]
+            nx.draw_networkx_nodes(G, pos, node_size=100, label=True,ax=self.ax2)
+            nx.draw_networkx_labels(G, pos, lbls, font_size=8,ax=self.ax2)
 
         self.canvas.draw()
         return
