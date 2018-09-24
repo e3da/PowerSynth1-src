@@ -555,11 +555,21 @@ class New_layout_engine():
         if level == 0:
             Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=None, W=None, H=None,XLoc=None,YLoc=None)
             CS_SYM_information, Layout_Rects = CG1.UPDATE_min(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree,sym_to_cs)  # CS_SYM_information is a dictionary where key=path_id(component name) and value=list of updated rectangles, Layout Rects is a dictionary for minimum HCS and VCS evaluated rectangles (used for plotting only)
+            #print "CY", CS_SYM_information
+
             self.cur_fig_data = plot_layout(Layout_Rects, level)
+            #print self.cur_fig_data
+            CS_SYM_Updated={}
+            for i in self.cur_fig_data:
+                for k,v in i.items():
+                    CS_SYM_Updated[k]=CS_SYM_information
+            #print "CY", CS_SYM_Updated
+
         elif level==1:
 
             Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=num_layouts, W=None, H=None,XLoc=None, YLoc=None)
-            CS_SYM_information, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y,self.Htree, self.Vtree, sym_to_cs)
+            CS_SYM_Updated, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y,self.Htree, self.Vtree, sym_to_cs)
+
             self.cur_fig_data = plot_layout(Layout_Rects, level)
         elif level==2:
             CG2 = CS_to_CG(0)
@@ -596,7 +606,8 @@ class New_layout_engine():
             Min_X_Loc=collections.OrderedDict(sorted(Min_X_Loc.items()))
             Min_Y_Loc = collections.OrderedDict(sorted(Min_Y_Loc.items()))
             Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=num_layouts, W=W, H=H,XLoc=Min_X_Loc, YLoc=Min_Y_Loc)
-            CS_SYM_information, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree, sym_to_cs)
+            CS_SYM_Updated, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree, sym_to_cs)
+            #print "CY", CS_SYM_information
             self.cur_fig_data = plot_layout(Layout_Rects, level)
 
 

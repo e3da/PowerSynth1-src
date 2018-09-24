@@ -3408,6 +3408,7 @@ class CS_to_CG():
         RET_H = {}
 
         ALL_HRECTS={}   # used for mapping symbolic layout objects with corner stitch resultant rectangles.
+
         for i in Htree.hNodeList:
             if i.child != []:
                 Dimensions = []
@@ -3435,10 +3436,13 @@ class CS_to_CG():
                             if r[0]==k[0] and r[1]==k[1]:
                                 ALL_HRECTS[key].append(rect)
 
-
                     Dimensions.append(rect)
+
+
                 Recatngles_H[i.id] = Dimensions
                 RET_H[i.id] = DIM
+
+
 
         Recatngles_V = {}
         RET_V = {}
@@ -3492,6 +3496,8 @@ class CS_to_CG():
         #print DIM
         for i in range(len(MIN_X)):
             Dimensions = []
+            #print"M", MIN_X[i]
+            Size={}
             UP_Dim={}
             for j in range(len(DIM)):
 
@@ -3507,9 +3513,13 @@ class CS_to_CG():
                             if r[0]==k[0] and r[1]==k[1]:
                                 UP_Dim[key1].append(rect)
                     Dimensions.append(rect)
+                W=max(MIN_X[i].values())
+                H=max(MIN_Y[i].values())
+                #key=
+                Size[(W,H)]=UP_Dim
 
             Recatngles_H[key].append(Dimensions)
-            ALL_HRECTS[key2].append(UP_Dim)
+            ALL_HRECTS[key2].append(Size)
 
 
         DIM = []
