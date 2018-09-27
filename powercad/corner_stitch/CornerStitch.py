@@ -29,6 +29,7 @@ import pandas as pd
 import csv
 import timeit
 import networkx as nx
+from powercad.general.data_struct.util import *
 
 global VID,HID,Schar,Cchar,Htree,Vtree
 Schar='/'
@@ -2645,20 +2646,42 @@ class Tree():
 
 
 ###################################################
-class Rectangle():
+class Rectangle(Rect):
+    def __init__(self, type=None, x=None, y=None, width=None, height=None, name=None, Schar=None, Echar=None,
+                 Netid=None):
+        '''
 
-    def __init__(self,x,y,w,h,type,parent=None):
-        self.x1=x
-        self.y1=y
-        self.x2=self.x1+w
-        self.y2=self.y1+h
+        Args:
+            type: type of each component: Trace=Type_1, MOS= Type_2, Lead=Type_3, Diode=Type_4
+            x: bottom left corner x coordinate of a rectangle
+            y: bottom left corner y coordinate of a rectangle
+            width: width of a rectangle
+            height: height of a rectangle
+            Netid: id of net, in which component is connected to
+            name: component path_id (from sym_layout object)
+            Schar: Starting character of each input line for input processing:'/'
+            Echar: Ending character of each input line for input processing: '/'
+        '''
+        # inheritence member variables
+
         self.type=type
-        self.parent=parent
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.Schar = Schar
+        self.Echar = Echar
+        self.Netid = Netid
+        self.name = name
+        Rect.__init__(self, top=self.y + self.height, bottom=self.y, left=self.x, right=self.x + self.width)
+    def __str__(self):
+        return 'x: '+str(self.x) + ', y: ' + str(self.y) + ', w: ' + str(self.width) + ', h: ' + str(self.height)
 
+    def __repr__(self):
+        return self.__str__()
     def contains(self, b):
         return not (self.x1 > b.x2 or b.x1 > self.x2 or b.y1 > self.y2 or self.y1 > b.y2)
 
-    #self.left > rect.right or rect.left > self.right or rect.bottom > self.top or self.bottom > rect.top
     def getParent(self):
         return self.parent
 
@@ -3098,15 +3121,13 @@ class CornerStitch():
                     r.width,  # width
                     r.height,  # height
                     facecolor=colors[i],
-                    zorder=zorders[i]
+                    alpha=0.5,
+                    zorder=zorders[i],
+                    edgecolor='black',
+                    linewidth=2,
                 )
             Patches[r.name]=P
 
-        #plt.xlim(0, max_x)
-        #plt.ylim(0, max_y)
-        #Patches.sort(key=operator.attrgetter('facecolor'))
-        for k,v in Patches.items():
-            print k,v
         ZDL = []
         for rect in rects:
             ZDL.append((rect.x, rect.y))
@@ -3425,7 +3446,7 @@ class CS_to_CG():
                             MINY[i.id].keys():
                         rect = [MINX[i.id][k[0]], MINY[i.id][k[1]], MINX[i.id][k[2]] - MINX[i.id][k[0]],
                                 MINY[i.id][k[3]] - MINY[i.id][k[1]], j.cell.type]
-
+                        r1=Rectangle(x=rect[0],y=rect[1],width=rect[2],height=rect[3],type=rect[4])
                     for k1,v in sym_to_cs.items():
 
                         key=k1
@@ -3433,7 +3454,7 @@ class CS_to_CG():
                         for r in v:
 
                             if r[0]==k[0] and r[1]==k[1]:
-                                ALL_HRECTS[key].append(rect)
+                                ALL_HRECTS[key].append(r1)
 
 
                     Dimensions.append(rect)
@@ -3492,24 +3513,32 @@ class CS_to_CG():
         #print DIM
         for i in range(len(MIN_X)):
             Dimensions = []
+            #print"M", MIN_X[i]
+            Size={}
             UP_Dim={}
             for j in range(len(DIM)):
 
                 k=DIM[j]
                 if k[0] in MIN_X[i].keys() and k[1] in MIN_Y[i].keys() and k[2] in MIN_X[i].keys() and k[3] in MIN_Y[i].keys():
                     rect = [MIN_X[i][k[0]], MIN_Y[i][k[1]], MIN_X[i][k[2]] - MIN_X[i][k[0]],MIN_Y[i][k[3]] - MIN_Y[i][k[1]],k[4]]
+                    r1 = Rectangle(x=rect[0], y=rect[1], width=rect[2], height=rect[3], type=rect[4])
+
                     for k1,v in sym_to_cs.items():
-                        #print k,v
                         key1=k1
                         UP_Dim.setdefault(key1,[])
                         for r in v:
 
                             if r[0]==k[0] and r[1]==k[1]:
-                                UP_Dim[key1].append(rect)
+                                UP_Dim[key1].append(r1)
                     Dimensions.append(rect)
+                W = max(MIN_X[i].values())
+                H = max(MIN_Y[i].values())
+                KEY = (W, H)
+                Size={}
+                Size[KEY]=UP_Dim
 
             Recatngles_H[key].append(Dimensions)
-            ALL_HRECTS[key2].append(UP_Dim)
+            ALL_HRECTS[key2].append(Size)
 
 
         DIM = []

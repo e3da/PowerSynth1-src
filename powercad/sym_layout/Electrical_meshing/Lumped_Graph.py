@@ -76,10 +76,10 @@ class E_graph():
         pt1 = trace_data[3].node[n1]['point']
         pt2 = trace_data[3].node[n2]['point']
         if trace_data[0].element.vertical:
-            width = trace_data[0].trace_rect.width()
+            width = trace_data[0].trace_rect.width
             length = math.fabs(pt2[1] - pt1[1])
         else:
-            width = trace_data[0].trace_rect.height()
+            width = trace_data[0].trace_rect.height
             length = math.fabs(pt2[0] - pt1[0])
         lumped_graph.add_edge(n1, n2,
                               {'ind': 1.0 / 1, 'res': 1.0 / 1, 'cap': 1.0 / 1,
@@ -112,10 +112,10 @@ class E_graph():
                 main = conn_trace
 
         if main.element.vertical:
-            width = conn.trace_rect.height()
+            width = conn.trace_rect.height
             length = math.fabs(pt2[0] - pt1[0])
         else:
-            width = conn.trace_rect.width()
+            width = conn.trace_rect.width
             length = math.fabs(pt2[1] - pt1[1])
         # print 'corner', width,length*2
         lumped_graph.add_edge(n1, n2,
