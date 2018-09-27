@@ -15,7 +15,7 @@ from powercad.project_builder.proj_dialogs import New_layout_engine_dialog
 from powercad.corner_stitch.API_PS import *
 from powercad.corner_stitch.CornerStitch import *
 from powercad.general.data_struct.util import *
-from powercad.tech_lib.test_techlib import get_device, get_dieattach
+from powercad.tech_lib.test_techlib import get_mosfet, get_dieattach
 
 
 
@@ -353,9 +353,9 @@ def random_layout(directory):
     sym_layout = SymbolicLayout()  # initiate a symbolic layout object
 
     sym_layout.load_layout(test_file, 'script')  # load the script
-    dev1 = DeviceInstance(0.1, 10, get_device(),
+    dev1 = DeviceInstance(0.1, 10, get_mosfet(),
                           get_dieattach())  # Create a device instance with 10 W power dissipation.
-    dev2 = DeviceInstance(0.1, 10, get_device(),
+    dev2 = DeviceInstance(0.1, 10, get_mosfet(),
                           get_dieattach())  # Create a device instance with 10 W power dissipation.
     make_test_devices(sym_layout.all_sym, dev_dict={'M1': dev1, 'M2': dev2})
 

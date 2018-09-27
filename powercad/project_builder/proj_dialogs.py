@@ -31,7 +31,7 @@ from powercad.project_builder.dialogs.bondwire_setup import Ui_Bondwire_setup
 from powercad.project_builder.dialogs.layoutEditor_ui import Ui_layouteditorDialog
 from powercad.project_builder.dialogs.CS_design_ui import Ui_CornerStitch_Dialog
 from powercad.project_builder.project import Project
-from powercad.sym_layout.symbolic_layout import SymbolicLayout
+from powercad.sym_layout.symbolic_layout import SymbolicLayout,plot_layout
 from powercad.general.settings.settings import DEFAULT_TECH_LIB_DIR,EXPORT_DATA_PATH,ANSYS_IPY64,FASTHENRY_FOLDER,GMSH_BIN_PATH,ELMER_BIN_PATH
 from powercad.electro_thermal.ElectroThermal_toolbox import rdson_fit_transistor, list2float, csv_load_file,Vth_fit,fCRSS_fit
 from powercad.general.settings.save_and_load import save_file, load_file
@@ -768,20 +768,20 @@ class ResponseSurfaceDialog(QtGui.QDialog):
 
 
 class ModelSelectionDialog(QtGui.QDialog):
-    def __init__(self, parent):
+    def __init__(self, parent,techlib_dir=DEFAULT_TECH_LIB_DIR,mode=1):
         QtGui.QDialog.__init__(self, parent)
         self.ui = Ui_ModelSelection()
         self.ui.setupUi(self)
         self.parent = parent
         # populate model files
-        self.model_dir = os.path.join(DEFAULT_TECH_LIB_DIR, 'Model', 'Trace')
+        self.model_dir = os.path.join(techlib_dir, 'Model', 'Trace')
         self.rs_model = QtGui.QFileSystemModel()
         self.rs_model.setRootPath(self.model_dir)
         self.rs_model.setFilter(QtCore.QDir.Files)
         self.ui.list_mdl_choices.setModel(self.rs_model)
         self.ui.list_mdl_choices.setRootIndex(self.rs_model.setRootPath(self.model_dir))
         self.ui.buttonBox.accepted.connect(self.select_mdl)
-
+        self.mode=mode
     def show_mdl_info(self):
         selected=str(self.rs_model.fileName(self.ui.list_mdl_choices.currentIndex()))
         mdl = load_file(os.path.join(self.model_dir,selected))
@@ -789,12 +789,12 @@ class ModelSelectionDialog(QtGui.QDialog):
         self.ui.textEdit.setText(text)
         self.ui.list_mdl_choices.currentIndex()
 
-    def select_mdl(self,mode=1):
+    def select_mdl(self):
         try:
             self.model=load_file(os.path.join(self.model_dir,self.rs_model.fileName(self.ui.list_mdl_choices.currentIndex())))
-            if mode==1:
+            if self.mode==1:
                 self.parent.project.symb_layout.set_RS_model(self.model)
-            elif mode ==2:
+            elif self.mode ==2:
                 self.parent.parent.engine.sym_layout.set_RS_model(self.model)
 
             Notifier(msg="model is set to: "+str(self.rs_model.fileName(self.ui.list_mdl_choices.currentIndex())),msg_name="model selected")
@@ -1380,8 +1380,6 @@ class New_layout_engine_dialog(QtGui.QDialog):
     def eval_setup(self):
         eval = ET_standalone_Dialog(self)
         eval.exec_()
-        if self.perf_dict!={}:
-            self.ui.btn_gen_layouts.setEnabled(True)
     def layout_plot(self,layout_ind=0):
         self.ax1.clear()
         if self.current_mode!=0:
@@ -1515,19 +1513,23 @@ class New_layout_engine_dialog(QtGui.QDialog):
             perf = self.perf_dict[p]
             measure = perf['measure']
             for layout in sym_info.keys():
+                ax = plt.subplot('111', adjustable='box', aspect=1.0)
                 symb_rect_dict = sym_info[layout]['sym_info']
                 dims= sym_info[layout]['Dims']
+                bp_dims = [dims[0]+4,dims[1]+4]
                 self._sym_update_layout(sym_info=symb_rect_dict)
+                update_sym_baseplate_dims(sym_layout=sym_layout, dims=bp_dims)
+                update_substrate_dims(sym_layout=sym_layout, dims=dims)
+                plot_layout(sym_layout=sym_layout,ax=ax)
+                plt.show()
                 if perf['type'] == 'Thermal':
                     lbl = measure.name +'(degree C)'
                     pdraw["label"]=(lbl)
                     if self.current_mode==1:
                         mdl = 2
-                        update_sym_baseplate_dims(sym_layout=sym_layout,dims=dims)
                     else:
                         mdl =measure.mdl
                         if measure.mdl ==1:
-                            update_sym_baseplate_dims(sym_layout=sym_layout, dims=dims)
                             waiter = Waiting_dialog(self,txt_msg="Running thermal characterization, please wait ... ")
                             code = "self.parent.engine.sym_layout.thermal_characterize()"
                             waiter.run_process(code=code)
@@ -1741,9 +1743,17 @@ class ET_standalone_Dialog(QtGui.QDialog):
         self.ui.btn_done.pressed.connect(self.finished)
         self.ui.btn_remove.pressed.connect(self.remove_row)
         self.ui.btn_dv_states.pressed.connect(self.open_dv_state)
+        self.ui.btn_select_mdl.pressed.connect(self.select_RS_model)
+        self.ui.cmb_electrical_mdl.currentIndexChanged.connect(self.current_model)
         self.init_table()
         self.reload_table()
         self.load_src_sink()
+    def current_model(self):
+        if str(self.ui.cmb_electrical_mdl.currentText())== "Response Surface Model":
+            self.ui.btn_select_mdl.setEnabled(True)
+    def select_RS_model(self):
+        rs_settings = ModelSelectionDialog(self,techlib_dir="C:\PowerSynth_git\CornerStitch_fixed\PowerCAD-full\\tech_lib",mode=2)
+        rs_settings.exec_()
     def load_src_sink(self):
         self.ui.cmb_src_select.clear()
         self.ui.cmb_sink_select.clear()
@@ -1844,7 +1854,10 @@ class ET_standalone_Dialog(QtGui.QDialog):
                     src_type = 'G'
 
                 pt2 = self._sym_find_pt_obj(self.parent.engine.sym_layout, sink)
-                mdl = 'MS'
+                if str(self.ui.cmb_electrical_mdl.currentText()) == "Response Surface Model":
+                    mdl = "RS"
+                else:
+                    mdl = "MS"
                 if eval_type!= "Capacitance":
                     if eval_type == "Inductance":
                         measure_type=2
@@ -1870,6 +1883,7 @@ class ET_standalone_Dialog(QtGui.QDialog):
         print self.dev_df
     def finished(self):
         self.parent.perf_dict = self.perf_dict
+        self.parent.ui.btn_gen_layouts.setEnabled(True)
         self.close()
 
     def init_table(self):

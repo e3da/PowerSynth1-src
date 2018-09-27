@@ -100,6 +100,8 @@ class Rect:
         self.bottom = bottom
         self.left = left
         self.right = right
+        self.width = self.width_eval()
+        self.height = self.height_eval()
 
     def __str__(self):
         return str(self.top)+', '+str(self.bottom)+', '+str(self.left)+', '+str(self.right)
@@ -142,10 +144,10 @@ class Rect:
     def area(self):
         return (self.top - self.bottom)*(self.right - self.left)
 
-    def width(self):
+    def width_eval(self):
         return self.right - self.left
 
-    def height(self):
+    def height_eval(self):
         return self.top - self.bottom
 
     def center(self):
