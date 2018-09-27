@@ -514,6 +514,9 @@ class New_layout_engine():
         self.Htree=None
         self.Vtree=None
         self.cons_df=None
+        self.Min_X=None
+        self.Min_Y=None
+        #self.level=None
         # for initialize only
         self.init_data=[]
         self.cornerstitch=CornerStitch()
@@ -523,6 +526,7 @@ class New_layout_engine():
         self.window=window
         patches = self.init_data[0]
         graph=self.init_data[2]
+        #if self.level!=3:
         self.new_layout_engine = New_layout_engine_dialog(self.window, patches,graph, self.W+20, self.H+20,engine=self)
         self.new_layout_engine.exec_()
     def init_layout_from_symlayout(self,sym_layout):
@@ -539,13 +543,21 @@ class New_layout_engine():
 
 
 
-        patches,combined_graph=self.cornerstitch.draw_layout(input_rects)
+        patches,combined_graph=self.cornerstitch.draw_layout(input_rects) # combined_graph=[G,pos,labels]
         sym_to_cs = Sym_to_CS(input_rects, self.Htree, self.Vtree)
 
         self.init_data=[patches,sym_to_cs,combined_graph]
 
+    def mode_zero(self):
+        #print"pass"
+        CG1 = CS_to_CG(0)
+        # CG1.getConstraints(path+'/'+'Constraints-1.csv')
+        CG1.getConstraints(self.cons_df)
+        Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=None, W=None, H=None,XLoc=None,YLoc=None)
+        return Evaluated_X,Evaluated_Y
 
-    def generate_solutions(self,level,num_layouts=1,W=None,H=None):
+    def generate_solutions(self,level,num_layouts=1,W=None,H=None,fixed_x_location=None,fixed_y_location=None):
+        #self.level=level
         CG1 = CS_to_CG(level)
         # CG1.getConstraints(path+'/'+'Constraints-1.csv')
         CG1.getConstraints(self.cons_df)
@@ -555,7 +567,7 @@ class New_layout_engine():
         if level == 0:
             Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=None, W=None, H=None,XLoc=None,YLoc=None)
             CS_SYM_information, Layout_Rects = CG1.UPDATE_min(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree,sym_to_cs)  # CS_SYM_information is a dictionary where key=path_id(component name) and value=list of updated rectangles, Layout Rects is a dictionary for minimum HCS and VCS evaluated rectangles (used for plotting only)
-            #print "CY", CS_SYM_information
+
 
             self.cur_fig_data = plot_layout(Layout_Rects, level)
             #print self.cur_fig_data
@@ -563,12 +575,13 @@ class New_layout_engine():
             for i in self.cur_fig_data:
                 for k,v in i.items():
                     CS_SYM_Updated[k]=CS_SYM_information
-            #print "CY", CS_SYM_Updated
+            print "CY", CS_SYM_Updated
 
         elif level==1:
 
             Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=num_layouts, W=None, H=None,XLoc=None, YLoc=None)
             CS_SYM_Updated, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y,self.Htree, self.Vtree, sym_to_cs)
+            print "CY", CS_SYM_Updated
 
             self.cur_fig_data = plot_layout(Layout_Rects, level)
         elif level==2:
@@ -607,14 +620,65 @@ class New_layout_engine():
             Min_Y_Loc = collections.OrderedDict(sorted(Min_Y_Loc.items()))
             Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=num_layouts, W=W, H=H,XLoc=Min_X_Loc, YLoc=Min_Y_Loc)
             CS_SYM_Updated, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree, sym_to_cs)
-            #print "CY", CS_SYM_information
-            self.cur_fig_data = plot_layout(Layout_Rects, level)
+            print "CY", CS_SYM_Updated
 
+            self.cur_fig_data = plot_layout(Layout_Rects, level)
+        elif level==3:
+            CG2 = CS_to_CG(0)
+            Evaluated_X0, Evaluated_Y0 = CG2.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=None, W=None, H=None,
+                                                        XLoc=None, YLoc=None)
+
+            # print"Eval0", Evaluated_X0, Evaluated_Y0
+            self.Min_X = Evaluated_X0
+            self.Min_Y = Evaluated_Y0
+            Min_X_Loc = {}
+            Min_Y_Loc = {}
+            for k, v in Evaluated_X0.items():
+                XLoc = v.keys()
+                max_x = v[max(XLoc)]
+            for k, v in Evaluated_Y0.items():
+                YLoc = v.keys()
+                max_y = v[max(YLoc)]
+            XLoc.sort()
+            YLoc.sort()
+
+            # Min_X_Loc[0] = 0
+            # Min_Y_Loc[0] = 0
+            Min_X_Loc[len(XLoc) - 1] = max_x
+            Min_Y_Loc[len(YLoc) - 1] = max_y
+
+            for k, v in Min_X_Loc.items():
+                if W > v:
+                    Min_X_Loc[0] = 0
+                    Min_X_Loc[k] = W
+            for k, v in Min_Y_Loc.items():
+                if H > v:
+                    Min_Y_Loc[0] = 0
+                    Min_Y_Loc[k] = H
+            print "Node", self.init_data[2][1] #Gives the dictionary where key= Node# and value=initial (x,y) coordinate
+            ### Data from GUI
+            for k,v in fixed_x_location.items():
+                Min_X_Loc[k]=v
+            for k,v in fixed_y_location.items():
+                Min_Y_Loc[k]=v
+
+
+
+
+            Min_X_Loc = collections.OrderedDict(sorted(Min_X_Loc.items()))
+            Min_Y_Loc = collections.OrderedDict(sorted(Min_Y_Loc.items()))
+            print Min_X_Loc, Min_Y_Loc,num_layouts
+            Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=num_layouts, W=W, H=H,
+                                                      XLoc=Min_X_Loc, YLoc=Min_Y_Loc)
+            CS_SYM_Updated, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree, sym_to_cs)
+            print "CY", CS_SYM_Updated
+
+            self.cur_fig_data = plot_layout(Layout_Rects, level)
 
         return self.cur_fig_data
 def test1():
     # The test goes here, moddify the path below as you wish...
-    directory ='Layout//CS-conversion//simple_switch.psc' # directory to layout script
+    directory ='Layout//CS-conversion//RD-100.psc' # directory to layout script
     random_layout(directory)
 
 test1()

@@ -3426,7 +3426,7 @@ class CS_to_CG():
                             MINY[i.id].keys():
                         rect = [MINX[i.id][k[0]], MINY[i.id][k[1]], MINX[i.id][k[2]] - MINX[i.id][k[0]],
                                 MINY[i.id][k[3]] - MINY[i.id][k[1]], j.cell.type]
-
+                        R = Rectangle(x=rect[0], y=rect[1], w=rect[2], h=rect[3], type=rect[4])
                     for k1,v in sym_to_cs.items():
 
                         key=k1
@@ -3434,7 +3434,7 @@ class CS_to_CG():
                         for r in v:
 
                             if r[0]==k[0] and r[1]==k[1]:
-                                ALL_HRECTS[key].append(rect)
+                                ALL_HRECTS[key].append(R)
 
                     Dimensions.append(rect)
 
@@ -3460,6 +3460,8 @@ class CS_to_CG():
                             MINY[i.id].keys():
                         rect = [MINX[i.id][k[0]], MINY[i.id][k[1]], MINX[i.id][k[2]] - MINX[i.id][k[0]],
                                 MINY[i.id][k[3]] - MINY[i.id][k[1]], j.cell.type]
+
+
 
                     Dimensions.append(rect)
                 Recatngles_V[i.id] = Dimensions
@@ -3504,6 +3506,7 @@ class CS_to_CG():
                 k=DIM[j]
                 if k[0] in MIN_X[i].keys() and k[1] in MIN_Y[i].keys() and k[2] in MIN_X[i].keys() and k[3] in MIN_Y[i].keys():
                     rect = [MIN_X[i][k[0]], MIN_Y[i][k[1]], MIN_X[i][k[2]] - MIN_X[i][k[0]],MIN_Y[i][k[3]] - MIN_Y[i][k[1]],k[4]]
+                    R = Rectangle(x=rect[0], y=rect[1], w=rect[2], h=rect[3], type=rect[4])
                     for k1,v in sym_to_cs.items():
                         #print k,v
                         key1=k1
@@ -3511,12 +3514,17 @@ class CS_to_CG():
                         for r in v:
 
                             if r[0]==k[0] and r[1]==k[1]:
-                                UP_Dim[key1].append(rect)
+                                UP_Dim[key1].append(R)
+
                     Dimensions.append(rect)
-                W=max(MIN_X[i].values())
-                H=max(MIN_Y[i].values())
-                #key=
-                Size[(W,H)]=UP_Dim
+            W = max(MIN_X[i].values())
+            H = max(MIN_Y[i].values())
+            KEY = (W, H)
+            print KEY, UP_Dim
+            Size.setdefault(KEY, [])
+            Size[KEY].append(UP_Dim)
+
+
 
             Recatngles_H[key].append(Dimensions)
             ALL_HRECTS[key2].append(Size)
