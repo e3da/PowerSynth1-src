@@ -30,6 +30,7 @@ from powercad.project_builder.dialogs.Env_setup import Ui_EnvSetup
 from powercad.project_builder.dialogs.bondwire_setup import Ui_Bondwire_setup
 from powercad.project_builder.dialogs.layoutEditor_ui import Ui_layouteditorDialog
 from powercad.project_builder.dialogs.CS_design_ui import Ui_CornerStitch_Dialog
+from powercad.project_builder.dialogs.Fixed_loc_ui import Ui_Fixed_location_Dialog
 from powercad.project_builder.project import Project
 from powercad.sym_layout.symbolic_layout import SymbolicLayout,plot_layout
 from powercad.general.settings.settings import DEFAULT_TECH_LIB_DIR,EXPORT_DATA_PATH,ANSYS_IPY64,FASTHENRY_FOLDER,GMSH_BIN_PATH,ELMER_BIN_PATH
@@ -1115,12 +1116,20 @@ class ConsDialog(QtGui.QDialog):
         self.cons_sp = pd.DataFrame()
         self.cons_encl = pd.DataFrame()
         self.num_types = 0 # number of tile's types
-        self.ui.btn_load.pressed.connect(self.load_table_csv)
+        self.ui.btn_load.pressed.connect(self.load_table)
         self.ui.btn_apply.pressed.connect(self.apply_changes)
         self.ui.btn_save.pressed.connect(self.save_cons)
-    def load_table_csv(self):
-        cons_file = QFileDialog.getOpenFileName(self, "Select Constraint File", 'C://',"Constraints Files (*.csv)")
-        self.cons_df=pd.read_csv(cons_file[0])
+        self.load_table(mode=0)
+
+    def load_table(self,mode=1):
+        if mode==1: # from csv
+            cons_file = QFileDialog.getOpenFileName(self, "Select Constraint File", 'C://',"Constraints Files (*.csv)")
+            self.cons_df=pd.read_csv(cons_file[0])
+        elif mode==0:
+            if self.parent.cons_df is not None:
+                self.cons_df = self.parent.cons_df
+            else:
+                return
         table_df= self.cons_df
         total_cols = len(table_df.axes[1])
         r_sp=4 # row of min spacing
@@ -1202,6 +1211,176 @@ class ConsDialog(QtGui.QDialog):
                                                       "Constraints Files (*.csv)")
         self.cons_df.to_csv(save_path[0],index_label=False)
 
+class Fixed_locations_Dialog(QtGui.QDialog):
+    def __init__(self, parent):
+        QtGui.QDialog.__init__(self, parent)
+        self.ui = Ui_Fixed_location_Dialog()
+        self.ui.setupUi(self)
+        self.parent = parent
+        self.node_dict=None
+        self.Nodes=[]
+        self.current_node = None
+        self.X = None
+        self.Y = None
+        self.init_table()
+        self.new_node_dict={}
+        self.Min_X,self.Min_Y=self.parent.engine.mode_zero()
+        #print self.Min_X,self.Min_Y
+        self.ui.cmb_nodes.currentIndexChanged.connect(self.node_handler)
+        self.ui.txt_inputx.setEnabled(False)
+        self.ui.txt_inputy.setEnabled(False)
+        self.ui.txt_inputx.textChanged.connect(self.x_edit_text_changed)
+        self.ui.txt_inputy.textChanged.connect(self.y_edit_text_changed)
+        self.ui.btn_addnode.pressed.connect(self.add_row)
+        self.ui.btn_rmvnode.pressed.connect(self.remove_row)
+        self.ui.btn_save.pressed.connect(self.finished)
+
+    #def show_nodeID(self,Nodelist):
+    def init_table(self):
+        row_id = self.ui.table_Fixedloc.rowCount()
+        if len(self.parent.input_node_info.keys())>0:
+            for k,v in self.parent.input_node_info.items():
+
+                self.ui.table_Fixedloc.insertRow(row_id)
+                self.ui.table_Fixedloc.setItem(row_id, 0, QtGui.QTableWidgetItem())
+                self.ui.table_Fixedloc.setItem(row_id, 1, QtGui.QTableWidgetItem())
+                self.ui.table_Fixedloc.setItem(row_id, 2, QtGui.QTableWidgetItem())
+                self.ui.table_Fixedloc.item(row_id, 0).setText(str(k))
+                self.ui.table_Fixedloc.item(row_id, 1).setText(str(v[0]))
+                self.ui.table_Fixedloc.item(row_id, 2).setText(str(v[1]))
+                row_id += 1
+    def set_node_id(self,node_dict):
+        self.node_dict=node_dict
+
+        self.ui.cmb_nodes.clear()
+        for i in node_dict.keys():
+            item = 'Node ' + str(i)
+            self.ui.cmb_nodes.addItem(item)
+            self.Nodes.append(item)
+    def x_edit_text_changed(self):
+
+        self.X = int(self.ui.txt_inputx.text())
+    def y_edit_text_changed(self):
+        self.Y = int(self.ui.txt_inputy.text())
+    def set_label(self,x,y):
+        label="Node min location X:"+str(x)+"   "+"Y:"+str(y)
+        self.ui.lbl_minxy.setText(label)
+        self.ui.txt_inputx.setEnabled(True)
+        self.ui.txt_inputy.setEnabled(True)
+
+    def node_handler(self):
+        #self.ui.txt_inputx.clear()
+        #self.ui.txt_inputy.clear()
+        choice = self.ui.cmb_nodes.currentText()
+
+        for i in self.Nodes:
+            if choice==i:
+                #self.ui.txt_inputx.clear()
+                #self.ui.txt_inputy.clear()
+                self.X=None
+                self.Y=None
+                node_id=int(i.split()[1])
+                self.current_node = node_id
+                #print"node_id", node_id
+                for k,v in self.node_dict.items():
+                    #print "node_dict",k,v[0],v[1]
+                    if k==node_id:
+                        x=v[0]
+                        y=v[1]
+                    else:
+                        continue
+
+
+                for k,v in self.Min_X.items():
+
+                    for k1,v1 in v.items():
+                        if k1==x:
+                            x_min=v1
+                            #self.ui.lbl_minxy.setText(str(v1))
+
+                        else:
+                            continue
+                for k,v in self.Min_Y.items():
+                    for k1,v1 in v.items():
+                        if k1==y:
+                            y_min=v1
+                            #self.ui.lbl_minxy.setText(str(v1))
+
+                        else:
+                            continue
+                self.set_label(x_min,y_min)
+    def add_row(self):
+
+        row_id = self.ui.table_Fixedloc.rowCount()
+        #self.ui.table_Fixedloc.insertRow(rowPosition)
+        #self.ui.table_Fixedloc.setItem(rowPosition, self.current_node, self.X, self.Y)
+
+        self.ui.table_Fixedloc.insertRow(row_id)
+        self.ui.table_Fixedloc.setItem(row_id, 0, QtGui.QTableWidgetItem())
+        self.ui.table_Fixedloc.setItem(row_id, 1, QtGui.QTableWidgetItem())
+        self.ui.table_Fixedloc.setItem(row_id, 2, QtGui.QTableWidgetItem())
+        self.ui.table_Fixedloc.item(row_id, 0).setText(str(self.current_node))
+        self.ui.table_Fixedloc.item(row_id, 1).setText(str(self.X))
+        self.ui.table_Fixedloc.item(row_id, 2).setText(str(self.Y))
+        self.new_node_dict[self.current_node]=(self.X,self.Y)
+        #print "New",self.new_node_dict
+
+
+    def remove_row(self):
+        selected_row = self.ui.table_Fixedloc.currentRow()
+        row_id=self.ui.table_Fixedloc.selectionModel().selectedIndexes()[0].row()
+        node_id = str(self.ui.table_Fixedloc.item(row_id,0).text())
+        self.ui.table_Fixedloc.removeRow(selected_row)
+        for k,v in self.new_node_dict.items():
+            if k==int(node_id):
+                del self.new_node_dict[k]
+        #print "R_new",self.new_node_dict
+
+    #def set_locations(self):
+    def finished(self):
+        Xloc={}
+        for k,v in self.Min_X.items():
+            Xloc=v.keys()
+        Yloc={}
+        for k,v in self.Min_Y.items():
+            Yloc=v.keys()
+        #print Xloc,Yloc
+        for k1,v1 in self.new_node_dict.items():
+
+            for k,v in self.node_dict.items():
+                if k1==k:
+                    print k1,v1,v
+                    if v1[0]!= None and v1[1]!=None:
+                        ind=Xloc.index(v[0])
+                        print "Xind",ind
+                        self.parent.fixed_x_locations[ind] = v1[0]
+                        ind2 = Yloc.index(v[1])
+                        print "Yind", ind2
+                        self.parent.fixed_y_locations[ind2] = v1[1]
+                    elif v1[0]==None and v1[1]!= None:
+                        ind2=Yloc.index(v[1])
+                        print "Yind", ind2
+                        self.parent.fixed_y_locations[ind2]=v1[1]
+                    elif v1[0]!=None and v1[1]==None:
+                        ind = Xloc.index(v[0])
+                        print "Xind", ind
+                        self.parent.fixed_x_locations[ind] = v1[0]
+                    else:
+                        continue
+                else:
+                    continue
+
+        #print self.parent.fixed_x_locations,self.parent.fixed_y_locations
+        self.parent.input_node_info=self.new_node_dict
+
+        self.close()
+
+
+
+
+
+
+
 
 class New_layout_engine_dialog(QtGui.QDialog):
     def __init__(self,parent,fig,W,H,engine=None,graph=None):
@@ -1223,10 +1402,12 @@ class New_layout_engine_dialog(QtGui.QDialog):
         self.layout_data = {}
         self.perf_dict={}
         self.Patches=None
-        # for evaluation
-        self.cur_cs_sym_data=None
+        self.input_node_info={}
+        self.fixed_x_locations={}
+        self.fixed_y_locations = {}
 
         # add buttons
+        self.ui.btn_fixed_locs.pressed.connect(self.assign_fixed_locations)
         self.ui.btn_constraints.pressed.connect(self.add_constraints)
         self.ui.cmb_modes.currentIndexChanged.connect(self.mode_handler)
         self.initialize_layout(self.mainwindow_fig,self.graph)
@@ -1263,13 +1444,16 @@ class New_layout_engine_dialog(QtGui.QDialog):
         H = int(self.ui.txt_height.text())
         return H
     def mode_handler(self):
-        choice = self.ui.cmb_modes.currentText()
-        print self.current_mode
+        choice = str(self.ui.cmb_modes.currentText())
+        print "mode",choice
+
         if choice == 'Minimum Size Layout':
             self.current_mode=0
             self.ui.txt_num_layouts.setEnabled(False)
             self.ui.txt_width.setEnabled(False)
             self.ui.txt_height.setEnabled(False)
+            self.ui.btn_fixed_locs.setEnabled(False)
+
         elif choice == 'Variable Size Layout':
             QtGui.QMessageBox.warning(self, "Varied Baseplate Size",
                                       "Thermal model is set to analytical for fast evaluation")
@@ -1278,19 +1462,34 @@ class New_layout_engine_dialog(QtGui.QDialog):
             self.ui.txt_num_layouts.setEnabled(True)
             self.ui.txt_width.setEnabled(False)
             self.ui.txt_height.setEnabled(False)
+            self.ui.btn_fixed_locs.setEnabled(False)
+            #self.initialize_layout(fig=self.mainwindow_fig, graph=None)
 
         elif choice == 'Fixed Size Layout':
             self.current_mode=2
             self.ui.txt_num_layouts.setEnabled(True)
             self.ui.txt_width.setEnabled(True)
             self.ui.txt_height.setEnabled(True)
+            self.ui.btn_fixed_locs.setEnabled(False)
 
-
-        elif choice == 'Fixed Size with Fixed Locations':
+        elif choice == 'Fixed Size with Fixed Loactions':
             self.current_mode=3
             self.ui.txt_num_layouts.setEnabled(True)
+            self.ui.txt_width.setEnabled(True)
+            self.ui.txt_height.setEnabled(True)
+            self.ui.btn_fixed_locs.setEnabled(True)
+        print "current mode",self.current_mode
+
 
         return
+
+
+    def assign_fixed_locations(self):
+        fixed_locations=Fixed_locations_Dialog(self)
+        fixed_locations.set_node_id(self.graph[1])
+        fixed_locations.exec_()
+
+
 
     def add_constraints(self):
 
@@ -1301,13 +1500,13 @@ class New_layout_engine_dialog(QtGui.QDialog):
         self.constraint=True
         self.engine.cons_df=self.cons_df
         self.ui.btn_eval_setup.setEnabled(True)
-
+        self.ui.btn_gen_layouts.setEnabled(True)
     def update_sol_browser(self):
         self.ax3.clear()
         print "plot sol browser"
         if self.perf_dict=={}:
-            self.perf1 = {"label": 'Ind (nH)','data':[]}
-            self.perf2 = {"label": 'Temp (C)', 'data': []}
+            self.perf1 = {"label": 'layout index','data':[]}
+            self.perf2 = {"label": 'layout index', 'data': []}
 
             for layout in self.generated_layouts.keys():
                 id = self.generated_layouts.keys().index(layout)
@@ -1345,7 +1544,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
                 N = int(self.ui.txt_num_layouts.text())
                 W = self.ui.txt_width.text()
                 H = self.ui.txt_height.text()
-                Patches, cs_sym_data=self.engine.generate_solutions(self.current_mode,num_layouts=N,W=int(W),H=int(H))
+                Patches, cs_sym_data=self.engine.generate_solutions(self.current_mode,num_layouts=N,W=int(W),H=int(H),fixed_x_location=self.fixed_x_locations,fixed_y_location=self.fixed_y_locations)
             else:
                 N=1
                 Patches, cs_sym_data= self.engine.generate_solutions(self.current_mode, num_layouts=N)
@@ -1883,7 +2082,6 @@ class ET_standalone_Dialog(QtGui.QDialog):
         print self.dev_df
     def finished(self):
         self.parent.perf_dict = self.perf_dict
-        self.parent.ui.btn_gen_layouts.setEnabled(True)
         self.close()
 
     def init_table(self):
