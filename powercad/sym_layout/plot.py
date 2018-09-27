@@ -31,14 +31,14 @@ def plot_svg_objs(layout):
 
     for element in layout:
         if isinstance(element, LayoutPoint):
-            patch = Circle(element.pt, radius=bounds.width()/30.0)
+            patch = Circle(element.pt, radius=bounds.width/30.0)
             ax.add_patch(patch)
 
     ax.axis([bounds.left, bounds.right, bounds.bottom, bounds.top])
     plt.show()
     #print "plot_svg_objs() completed."
 
-def plot_layout(sym_layout, filletFlag, ax = plt.subplot('111', adjustable='box', aspect=1.0), new_window=True, plot_row_col=False):
+def plot_layout(sym_layout, filletFlag=True, ax = plt.subplot('111', adjustable='box', aspect=1.0), new_window=True, plot_row_col=False):
     #print "plot_layout() started."
     hlist = sym_layout.h_rowcol_list
     vlist = sym_layout.v_rowcol_list
@@ -55,7 +55,7 @@ def plot_layout(sym_layout, filletFlag, ax = plt.subplot('111', adjustable='box'
     ledge = sym_layout.module.substrate.ledge_width
     sub_rect = Rect(sub_l, 0.0, 0.0, sub_w)
     sub_rect.translate(-ledge, -ledge)
-    r = Rectangle((sub_rect.left, sub_rect.bottom), sub_rect.width(), sub_rect.height(), facecolor='#B87333', edgecolor='#616161')
+    r = Rectangle((sub_rect.left, sub_rect.bottom), sub_rect.width, sub_rect.height, facecolor='#B87333', edgecolor='#616161')
     ax.add_patch(r)
 
     # Detect corners for filleting
@@ -77,13 +77,13 @@ def plot_layout(sym_layout, filletFlag, ax = plt.subplot('111', adjustable='box'
         if plot:
             color = '#C0C0C0'
             rect = sym.trace_rect
-            r = Rectangle((rect.left, rect.bottom), rect.width(), rect.height(), alpha=1, facecolor=color, edgecolor=color,zorder=1)
+            r = Rectangle((rect.left, rect.bottom), rect.width, rect.height, alpha=1, facecolor=color, edgecolor=color,zorder=1)
             ax.add_patch(r)
 
     for lead in sym_layout.leads:
         lead_label = lead.name
         rect = lead.footprint_rect
-        r = Rectangle((rect.left, rect.bottom), rect.width(), rect.height(), alpha=0.5, facecolor='#00FF00', edgecolor=color,zorder=2)
+        r = Rectangle((rect.left, rect.bottom), rect.width, rect.height, alpha=0.5, facecolor='#00FF00', edgecolor=color,zorder=2)
         ax.add_patch(r)
         patch = Circle(lead.center_position, radius=0.1)
         ax.add_patch(patch)
@@ -99,7 +99,7 @@ def plot_layout(sym_layout, filletFlag, ax = plt.subplot('111', adjustable='box'
         for dev in sym_layout.devices:
             die_label=dev.name
             rect = dev.footprint_rect
-            r = Rectangle((rect.left, rect.bottom), rect.width(), rect.height(), alpha=0.5, facecolor='#0000FF', edgecolor=color,zorder=2)
+            r = Rectangle((rect.left, rect.bottom), rect.width, rect.height, alpha=0.5, facecolor='#0000FF', edgecolor=color,zorder=2)
             ax.add_patch(r)
             patch = Circle(dev.center_position, radius=0.1)
             ax.add_patch(patch)

@@ -1,63 +1,21 @@
 # This will test the new lumped graph structure along with Kelvin connection
 #@authors: Quang Le
-import os
-import copy
-import itertools
-import matplotlib.pyplot as plt
-import networkx as nx
-import matplotlib
-from powercad.Spice_handler.spice_import.NetlistImport import Netlist, Netlis_export_ADS
+
 from powercad.design.module_data import gen_test_module_data
 from powercad.general.settings import settings
-from powercad.interfaces.FastHenry.fh_layers import output_fh_script, read_result
 from powercad.parasitics.analysis import parasitic_analysis
-from powercad.sym_layout.Recursive_test_cases.map_id_net import map_id_net
 from powercad.sym_layout.plot import plot_layout
 from powercad.sym_layout.symbolic_layout import SymbolicLayout, DeviceInstance, SymLine, SymPoint, ElectricalMeasure, \
     ThermalMeasure
-from powercad.tech_lib.test_techlib import get_dieattach, get_mosfet
 from powercad.tech_lib.test_techlib import get_power_bondwire, get_signal_bondwire
 from powercad.tech_lib.test_techlib import get_signal_lead, get_power_lead
-import sys
 from PySide import QtGui
 from PySide.QtGui import QFileDialog,QMainWindow
 from powercad.project_builder.proj_dialogs import New_layout_engine_dialog
 from powercad.corner_stitch.API_PS import *
 from powercad.corner_stitch.CornerStitch import *
 from powercad.general.data_struct.util import *
-class Rectangle(Rect):
-    def __init__(self,type=None,x=None,y=None,width=None,height=None,name=None,Schar=None,Echar=None,Netid=None):
-        '''
-
-        Args:
-            type: type of each component: Trace=Type_1, MOS= Type_2, Lead=Type_3, Diode=Type_4
-            x: bottom left corner x coordinate of a rectangle
-            y: bottom left corner y coordinate of a rectangle
-            width: width of a rectangle
-            height: height of a rectangle
-            Netid: id of net, in which component is connected to
-            name: component path_id (from sym_layout object)
-            Schar: Starting character of each input line for input processing:'/'
-            Echar: Ending character of each input line for input processing: '/'
-        '''
-
-
-        self.type = type
-        self.x=x
-        self.y=y
-        self.width=width
-        self.height=height
-        self.Schar = Schar
-        self.Echar=Echar
-        self.Netid=Netid
-        self.name=name
-
-        # inheritence member variables
-        self.top=self.y+self.height
-        self.bottom = self.y
-        self.left = self.x
-        self.right = self.x + self.width
-
+from powercad.tech_lib.test_techlib import get_mosfet, get_dieattach
 
 
 
@@ -85,28 +43,33 @@ def make_test_constraints(symbols):
             obj.constraint = (4.8, 10.0, None)
 
 
-def make_test_devices(symbols, dev,dev_id):
+def make_test_devices(symbols, dev=None, dev_dict=None):
     # symbols list of all SymLine and SymPoints in a loaded layout (sym_layout.all_sym)
-    for obj in symbols:
-        for id in dev_id:
-            if obj.element.path_id == id:
+    if dev_dict == None:  # Apply same powers
+        for obj in symbols:
+            if 'M' in obj.name:
                 obj.tech = dev
+    else:
+        for obj in symbols:
+            if obj.name in dev_dict.keys():
+                obj.tech = dev_dict[obj.name]
 
 
-def make_test_leads(symbols, lead_type,lead_id):
+def make_test_leads(symbols, pow_lead, sig_lead):
     for obj in symbols:
-        for id in lead_id:
-            if obj.element.path_id == id:
-                obj.tech = lead_type
+        if obj.name == 'L1' or obj.name == 'L3' or obj.name == 'L2':
+            obj.tech = sig_lead
 
+def make_test_bonds(df, bw_sig, bw_power):
+    bw_data = [['POWER', 'M2', 'T2', 'a', bw_power],
+               ['POWER', 'M1', 'T7', 'a', bw_power],
+               ['SIGNAL', 'M2', 'T5', 'a', bw_sig],
+               ['SIGNAL', 'M1', 'T5', 'a', bw_sig]]
+    for row in range(4):
+        for col in range(5):
+            df.loc[row, col] = bw_data[row][col]
 
-def make_test_bonds(symbols, bond_type, bond_id,wire_spec):
-    for obj in symbols:
-        for id in bond_id:
-            if obj.element.path_id == id:
-                obj.make_bondwire(bond_type)
-                obj.wire_sep = wire_spec[0]
-                obj.num_wires = wire_spec[1]
+    return df
 
 
 def make_test_design_values(sym_layout, dimlist, default):
@@ -218,89 +181,6 @@ def plot_lumped_graph(sym_layout):
     plt.show()
     plot_layout(sym_layout)
 
-def make_test_setup2(f,directory):
-
-    temp_dir = os.path.abspath(settings.TEMP_DIR)  # The directory where thermal characterization files are stored
-
-    test_file = os.path.abspath(directory)  # A layout script file, you can link this to any file you want
-
-    sym_layout = SymbolicLayout()  # initiate a symbolic layout object
-
-    sym_layout.load_layout(test_file, 'script')  # load the script
-    name_file=None
-    #sym_layout.assign_name(name_file)
-
-    layout_ratio = 2.0
-    dev_mos = DeviceInstance(0.1, 5.0, get_mosfet(),get_dieattach())  # Create a device instance with 10 W power dissipation. Highlight + "Crtl+Shift+I" to see the definition of this object
-
-    pow_lead = get_power_lead()  # Get a power lead object
-
-    sig_lead = get_signal_lead()  # Get a signal lead object
-
-    power_bw = get_power_bondwire()  # Get bondwire object
-    signal_bw = get_signal_bondwire()  # Get bondwire object
-    # This will be added into the UI later based on Tristan import
-    net_id={'0013':'DC_plus','0012':'DC_neg','0016':'G_High','0015':'G_Low','0014':'Out','0010':'M1','0011':'M2','0008':'M3',
-            '0009':'M4'}
-    map_id_net(dict=net_id,symbols=sym_layout.all_sym)
-
-    make_test_leads(symbols=sym_layout.all_sym, lead_type=sig_lead,
-                    lead_id=['0016','0015','0014', '0013','0012'])
-    '''make_test_leads(symbols=sym_layout.all_sym, lead_type=pow_lead,
-                    lead_id=[])'''
-    make_test_bonds(symbols=sym_layout.all_sym, bond_type=signal_bw,
-                    bond_id=['0019', '0023','0022','0026'], wire_spec=[2, 10])
-    make_test_bonds(symbols=sym_layout.all_sym, bond_type=power_bw,
-                    bond_id=['0024','0020','0021','0025'], wire_spec=[2, 10])
-    make_test_devices(symbols=sym_layout.all_sym,dev=dev_mos,dev_id=['0008','0009','0010','0011'])
-
-    # make_test_symmetries(sym_layout) # You can assign the symmetry objects here
-
-    add_test_measures(sym_layout)  # Assign a measurement between 2 SYM-Points (using their IDs)
-
-    module = gen_test_module_data_BL(f, 100, 300.0, layout_ratio)
-    # Pepare for optimization.
-
-    sym_layout.form_design_problem(module, temp_dir) # Collect data to user interface
-    sym_layout._map_design_vars()
-    setup_model(sym_layout)
-    #sym_layout.optimize()
-    # layout 1
-    #individual = [8.832333588157837, 11.47321729522074, 11.47321729522074, 11.47321729522074, 2.0, 4.554984513520513, 4.412775882777208, 4.412775882777208, 4.685335776775386, 2, 4.412775882777208, 0.32383276483316237, 0.0, 0.3, 0.9]
-    # layout 2
-    individual = [8.832333588157837, 11.47321729522074, 11.47321729522074, 11.47321729522074, 2.0, 4.554984513520513, 4.412775882777208, 4.412775882777208, 4.685335776775386, 2, 4.412775882777208, 0.32383276483316237, 0.0, 0.52383276483316237, 0.8]
-    # layout 3
-    #individual = [8.832333588157837, 11.47321729522074, 11.47321729522074, 11.47321729522074, 2.0, 4.554984513520513, 4.412775882777208, 4.412775882777208, 4.685335776775386, 2, 4.412775882777208, 0.32383276483316237, 0.0, 0.75, 0.95]
-    # layout 4
-    #individual = [8.832333588157837, 11.47321729522074, 11.47321729522074, 11.47321729522074, 2.0, 4.554984513520513, 4.412775882777208, 4.412775882777208, 4.685335776775386, 2, 4.412775882777208, 0.35, 0.55, 0.75, 0.95]
-
-    individual=[i*layout_ratio if i>1 else i for i in individual] # layout i ratio i
-    individual_spara =[4.723828657253275, 16.472407757897972, 3.027772807643007, 0.7291915966525637, 0.34930748270444323, 0.1808883006719934, 0.3962145355607477]
-    print 'individual', individual
-    print "opt_to_sym_index", sym_layout.opt_to_sym_index
-    sym_layout.rev_map_design_vars(individual)
-    sym_layout.generate_layout()
-    plot_layout(sym_layout)
-    plt.show()
-    sym_layout._build_lumped_graph()
-    #sym_layout.E_graph.export_graph_to_file(sym_layout.lumped_graph)
-    # form netlist assignment form netlist import
-    netlist= Netlist('Netlist//H_bridge4sw.txt')
-    netlist.form_assignment_list_fh()
-    external=netlist.get_external_list_fh()
-    output_fh_script(sym_layout,"C:\Users\qmle\Desktop\Balancing\Mutual_test\layout cases//BL_layout_pos1_200",external=external)
-
-    #plot_lumped_graph(sym_layout)
-    #print one_measure(sym_layout)
-def make_netlist():
-    netlist = Netlist('Netlist//H_bridge4sw.txt')
-    netlist.form_assignment_list_fh()
-    net_data = read_result("C:\Users\qmle\Desktop\Balancing\Mutual_test\layout cases//fh_results//BL_layout_pos1_200.inp.M.txt")
-    df, pm = netlist.get_assign_df()
-    ads_net = Netlis_export_ADS(df=df, pm=pm)
-    ads_net.import_net_data(net_data)
-    ads_net.export_ads('RC_BL_4sw_pos1_200.net')
-
 def plot_layout(Layout_Rects,level,path=None,name=None):
     Patches=[]
     if level==0:
@@ -324,7 +204,6 @@ def plot_layout(Layout_Rects,level,path=None,name=None):
                 min_x = i[0]
             if i[1] < min_y:
                 min_y = i[1]
-        #fig1, ax1 = plt.subplots()
         colors=['White','green','red','blue','yellow','pink']
         type=['EMPTY','Type_1','Type_2','Type_3','Type_4']
         ALL_Patches={}
@@ -339,20 +218,9 @@ def plot_layout(Layout_Rects,level,path=None,name=None):
                     (i[0], i[1]),  # (x,y)
                     i[2],  # width
                     i[3],  # height
-                    facecolor=colour,
-
+                    facecolor=colour
                 )
             ALL_Patches[key].append(R)
-
-            #ax1.add_patch(R)
-
-
-
-        #plt.xlim(0, max_x)
-        #plt.ylim(0, max_y)
-
-        #fig1.savefig(path+'/'+name+'-layout.png', bbox_inches='tight')
-        #plt.close()
         Patches.append(ALL_Patches)
 
 
@@ -399,8 +267,7 @@ def plot_layout(Layout_Rects,level,path=None,name=None):
                 ALL_Patches = {}
                 key = (max_x, max_y)
                 ALL_Patches.setdefault(key, [])
-                #fig1 = matplotlib.pyplot.figure()
-                #ax1 = fig1.add_subplot(111, aspect='equal')
+
 
                 colors = ['White', 'green', 'red', 'blue', 'yellow', 'pink']
                 type = ['EMPTY', 'Type_1', 'Type_2', 'Type_3', 'Type_4']
@@ -413,15 +280,9 @@ def plot_layout(Layout_Rects,level,path=None,name=None):
                             (i[0], i[1]),  # (x,y)
                             i[2],  # width
                             i[3],  # height
-                            facecolor=colour,
-
+                            facecolor=colour
                         )
                     ALL_Patches[key].append(R)
-
-
-                #plt.xlim(0, max_x)
-                #plt.ylim(0, max_y)
-                #fig1.savefig(path + '/' + name +'-'+str(j)+ '.png', bbox_inches='tight')
                 j+=1
                 Patches.append(ALL_Patches)
 
@@ -492,13 +353,24 @@ def random_layout(directory):
     sym_layout = SymbolicLayout()  # initiate a symbolic layout object
 
     sym_layout.load_layout(test_file, 'script')  # load the script
+    dev1 = DeviceInstance(0.1, 10, get_mosfet(),
+                          get_dieattach())  # Create a device instance with 10 W power dissipation.
+    dev2 = DeviceInstance(0.1, 10, get_mosfet(),
+                          get_dieattach())  # Create a device instance with 10 W power dissipation.
+    make_test_devices(sym_layout.all_sym, dev_dict={'M1': dev1, 'M2': dev2})
 
-    #for obj in sym_layout.all_sym:
-        #print  type(obj)
+    sig_lead = get_signal_lead()  # Get a signal lead object
     
+    power_bw = get_power_bondwire()  # Get bondwire object
+    signal_bw = get_signal_bondwire()  # Get bondwire object
+    pow_lead = None
+    table_df = pd.DataFrame()
+    table_df = make_test_bonds(table_df, signal_bw, power_bw)
+    make_test_leads(sym_layout.all_sym, pow_lead,
+                    sig_lead)
+    module = gen_test_module_data(100.0)
+    sym_layout.form_api_cs(module, table_df, temp_dir)  # Collect data to user interface
 
-    path = 'D:\Initial_Layouts\TEST'
-    name = "RD-100"
     app = QtGui.QApplication(sys.argv)
     window = QMainWindow()
     New_engine = New_layout_engine()
@@ -514,75 +386,58 @@ class New_layout_engine():
         self.Htree=None
         self.Vtree=None
         self.cons_df=None
-        self.Min_X=None
-        self.Min_Y=None
-        #self.level=None
         # for initialize only
         self.init_data=[]
         self.cornerstitch=CornerStitch()
         # current solutions
         self.cur_fig_data=None
+        # only activate when the sym_layout API is used
+        self.sym_layout=None
+        self.layout_sols={}
     def open_new_layout_engine(self,window):
         self.window=window
         patches = self.init_data[0]
         graph=self.init_data[2]
-        #if self.level!=3:
-        self.new_layout_engine = New_layout_engine_dialog(self.window, patches,graph, self.W+20, self.H+20,engine=self)
+        self.new_layout_engine = New_layout_engine_dialog(self.window, patches, W=self.W+20,H= self.H+20,engine=self,
+                                                          graph=graph)
         self.new_layout_engine.exec_()
     def init_layout_from_symlayout(self,sym_layout):
         '''
         initialize new layout engine with old symlayout data structure
         Returns:
         '''
+        print "initializing ....."
+        self.sym_layout=sym_layout
         input_rects, self.W, self.H = input_conversion(sym_layout)
         input = self.cornerstitch.read_input('list', Rect_list=input_rects)
         self.Htree, self.Vtree = self.cornerstitch.input_processing(input, self.W + 20, self.H + 20)
-        #print self.Htree
-        #print self.Vtree
-        #print input_rects
 
-
-
-        patches,combined_graph=self.cornerstitch.draw_layout(input_rects) # combined_graph=[G,pos,labels]
+        patches,combined_graph=self.cornerstitch.draw_layout(input_rects)
         sym_to_cs = Sym_to_CS(input_rects, self.Htree, self.Vtree)
 
         self.init_data=[patches,sym_to_cs,combined_graph]
 
-    def mode_zero(self):
-        #print"pass"
-        CG1 = CS_to_CG(0)
-        # CG1.getConstraints(path+'/'+'Constraints-1.csv')
-        CG1.getConstraints(self.cons_df)
-        Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=None, W=None, H=None,XLoc=None,YLoc=None)
-        return Evaluated_X,Evaluated_Y
 
-    def generate_solutions(self,level,num_layouts=1,W=None,H=None,fixed_x_location=None,fixed_y_location=None):
-        #self.level=level
+    def generate_solutions(self,level,num_layouts=1,W=None,H=None):
         CG1 = CS_to_CG(level)
         # CG1.getConstraints(path+'/'+'Constraints-1.csv')
         CG1.getConstraints(self.cons_df)
-        #Node_conbined = CG1.combined_graph(self.Htree, self.Vtree)
-        #print Node_conbined
         sym_to_cs=self.init_data[1]
         if level == 0:
             Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=None, W=None, H=None,XLoc=None,YLoc=None)
             CS_SYM_information, Layout_Rects = CG1.UPDATE_min(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree,sym_to_cs)  # CS_SYM_information is a dictionary where key=path_id(component name) and value=list of updated rectangles, Layout Rects is a dictionary for minimum HCS and VCS evaluated rectangles (used for plotting only)
-
-
             self.cur_fig_data = plot_layout(Layout_Rects, level)
-            #print self.cur_fig_data
+
             CS_SYM_Updated={}
             for i in self.cur_fig_data:
                 for k,v in i.items():
                     CS_SYM_Updated[k]=CS_SYM_information
-            print "CY", CS_SYM_Updated
-
+            CS_SYM_Updated = [CS_SYM_Updated]
         elif level==1:
 
             Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=num_layouts, W=None, H=None,XLoc=None, YLoc=None)
             CS_SYM_Updated, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y,self.Htree, self.Vtree, sym_to_cs)
-            print "CY", CS_SYM_Updated
-
+            CS_SYM_Updated = CS_SYM_Updated['H']
             self.cur_fig_data = plot_layout(Layout_Rects, level)
         elif level==2:
             CG2 = CS_to_CG(0)
@@ -599,86 +454,30 @@ class New_layout_engine():
                 max_y = v[max(YLoc)]
             XLoc.sort()
             YLoc.sort()
-
-            #Min_X_Loc[0] = 0
-            #Min_Y_Loc[0] = 0
             Min_X_Loc[len(XLoc) - 1] = max_x
             Min_Y_Loc[len(YLoc) - 1] = max_y
 
 
             for k,v in Min_X_Loc.items():
-                if W>v:
+                if W>=v:
                     Min_X_Loc[0] = 0
                     Min_X_Loc[k]=W
             for k,v in Min_Y_Loc.items():
-                if H>v:
+                if H>=v:
                     Min_Y_Loc[0] = 0
                     Min_Y_Loc[k]=H
 
-            #print Min_X_Loc, Min_Y_Loc,num_layouts
             Min_X_Loc=collections.OrderedDict(sorted(Min_X_Loc.items()))
             Min_Y_Loc = collections.OrderedDict(sorted(Min_Y_Loc.items()))
             Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=num_layouts, W=W, H=H,XLoc=Min_X_Loc, YLoc=Min_Y_Loc)
             CS_SYM_Updated, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree, sym_to_cs)
-            print "CY", CS_SYM_Updated
-
-            self.cur_fig_data = plot_layout(Layout_Rects, level)
-        elif level==3:
-            CG2 = CS_to_CG(0)
-            Evaluated_X0, Evaluated_Y0 = CG2.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=None, W=None, H=None,
-                                                        XLoc=None, YLoc=None)
-
-            # print"Eval0", Evaluated_X0, Evaluated_Y0
-            self.Min_X = Evaluated_X0
-            self.Min_Y = Evaluated_Y0
-            Min_X_Loc = {}
-            Min_Y_Loc = {}
-            for k, v in Evaluated_X0.items():
-                XLoc = v.keys()
-                max_x = v[max(XLoc)]
-            for k, v in Evaluated_Y0.items():
-                YLoc = v.keys()
-                max_y = v[max(YLoc)]
-            XLoc.sort()
-            YLoc.sort()
-
-            # Min_X_Loc[0] = 0
-            # Min_Y_Loc[0] = 0
-            Min_X_Loc[len(XLoc) - 1] = max_x
-            Min_Y_Loc[len(YLoc) - 1] = max_y
-
-            for k, v in Min_X_Loc.items():
-                if W > v:
-                    Min_X_Loc[0] = 0
-                    Min_X_Loc[k] = W
-            for k, v in Min_Y_Loc.items():
-                if H > v:
-                    Min_Y_Loc[0] = 0
-                    Min_Y_Loc[k] = H
-            print "Node", self.init_data[2][1] #Gives the dictionary where key= Node# and value=initial (x,y) coordinate
-            ### Data from GUI
-            for k,v in fixed_x_location.items():
-                Min_X_Loc[k]=v
-            for k,v in fixed_y_location.items():
-                Min_Y_Loc[k]=v
-
-
-
-
-            Min_X_Loc = collections.OrderedDict(sorted(Min_X_Loc.items()))
-            Min_Y_Loc = collections.OrderedDict(sorted(Min_Y_Loc.items()))
-            print Min_X_Loc, Min_Y_Loc,num_layouts
-            Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=num_layouts, W=W, H=H,
-                                                      XLoc=Min_X_Loc, YLoc=Min_Y_Loc)
-            CS_SYM_Updated, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree, sym_to_cs)
-            print "CY", CS_SYM_Updated
-
+            CS_SYM_Updated = CS_SYM_Updated['H']
             self.cur_fig_data = plot_layout(Layout_Rects, level)
 
-        return self.cur_fig_data
+        return self.cur_fig_data, CS_SYM_Updated
 def test1():
     # The test goes here, moddify the path below as you wish...
-    directory ='Layout//CS-conversion//RD-100.psc' # directory to layout script
+    directory ='Layout//CS-conversion//simple_switch.psc' # directory to layout script
     random_layout(directory)
 
 test1()

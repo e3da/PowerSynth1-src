@@ -119,7 +119,7 @@ class ElectricalMeasure(object):
     UNIT_IND = ('nH', 'nanoHenry')
     UNIT_CAP = ('pF', 'picoFarad')
 
-    def __init__(self, pt1, pt2, measure, freq, name, lines, mdl,src_sink_type=[None,None],device_state=None):
+    def __init__(self, pt1, pt2, measure, name, lines=None, mdl=None,src_sink_type=[None,None],device_state=None):
         """
         Electrical parasitic measure object
 
@@ -442,7 +442,7 @@ class SymbolicLayout(object):
             obj = self.layout[i]           # for each object in the layout add the normalized obj to obj list
             raw = self.raw_layout[i]       # add the raw object to object list
             if isinstance(obj, LayoutLine):# if this is a LayoutLine then make a SymLine object
-                sym = SymLine(obj, raw)    # make a SymLine object
+                sym = SymLine(line=obj, raw_line=raw)    # make a SymLine object
 
                 self.all_lines.append(obj)
 
@@ -454,6 +454,38 @@ class SymbolicLayout(object):
 
             self.all_sym.append(sym)       # append the sym obj to all_sym list
     '''-----------------------------------------------------------------------------------------------------------------------------------------------------'''
+    def form_api_cs(self,module,tbl_bw_connect=None, temp_dir=settings.TEMP_DIR):
+        """ Formulate and check the design problem before optimization.
+                Keyword Arguments:
+                module: A powercad.sym_layout.module_data.ModuleData object
+                temp_dir: A path to a temp. dir. for doing thermal characterizations (must be absolute)
+                """
+        self.module = module  # this object include user inputs from PowerSynth interface e.g: frequency, materials...
+        self.design_rules = module.design_rules  # design_rules from user interface->Project->Design Rules Editor
+        self.module.check_data()  # check if the input is not None.. go to powercad->design->module_data for more info
+        self.temp_dir = temp_dir  # temp_dir where the characterization thermal files will be stored
+        ledge_width = module.substrate.ledge_width  # collect module data information... go to powercad->design->module_data->project_structures to learn ab this
+        self.sub_dim = (module.substrate.dimensions[0] - 2 * ledge_width, module.substrate.dimensions[
+            1] - 2 * ledge_width)  # This is the dimension of the top metal layer (before tracing)
+
+
+
+        self.gap = self.design_rules.min_trace_trace_width  # minimum gap between two traces
+        self._check_sym_elements()
+        self._build_trace_layout()  # Go through only traces and collect SymLine to a list object
+        self._find_trace_connections()  # Search in the list of traces built above to create a connection list  >go to this method to read more
+        self._build_virtual_grid_matrix()  # go to this method to read more
+
+        self.clear_bondwire_data()  # Clear the previous bondwire data
+        self.add_bondwire_from_table(tbl_bw_connect)
+        self._find_parent_lines()  # build up connections between lines and points > go to this method to read more
+        self.dev_dv_list = self._get_device_design_vars()  # go to this method to read more
+        self.bondwire_dv_list = self._get_bondwire_design_vars()  # go to this method to read more
+        self._get_trace_design_vars()  # go to this method to read more
+        self._build_symbol_graph()
+        self._build_trace_graph()  # go to this method to read more
+        # Check Device Thermal Characterizations (checks for cached characterizations) # Only for modes 0 2 3
+        self.thermal_characterize()
 
     def form_design_problem(self, module,tbl_bw_connect=None, temp_dir=settings.TEMP_DIR):
         """ Formulate and check the design problem before optimization.
@@ -499,7 +531,11 @@ class SymbolicLayout(object):
         self.bondwire_design_values = [None]*len(self.bondwire_dv_list)
 
         # Check Device Thermal Characterizations (checks for cached characterizations)
-        dev_char_dict, sub_tf = characterize_devices(self, temp_dir)
+        self.thermal_characterize()
+
+
+    def thermal_characterize(self):
+        dev_char_dict, sub_tf = characterize_devices(self, self.temp_dir)
         self.module.sublayers_thermal = sub_tf
         for dev in self.devices:
             dev.tech.thermal_features = dev_char_dict[dev.tech]
@@ -554,13 +590,17 @@ class SymbolicLayout(object):
     def _check_formulation(self):
         #pause(True)                        # add to graph
         # Every layout point should have a techlib object bound to it (devices, leads)
+        self._check_sym_elements()
+        # Check over design rules and sub_dims, gap_width, etc. to make sure everything looks valid
+        # Check number of performance objectives (should be greater than zero)
+        self._check_perf_measure()
+    def _check_sym_elements(self):
         for sym in self.all_sym:           # go through all points and lines-> if there is no tech lib bound to a single point report the problem
             if isinstance(sym, SymPoint):
                 if sym.tech is None:
                     #print sym.element.path_id
                     raise FormulationError('A layout point element has not been identified!')
-        # Check over design rules and sub_dims, gap_width, etc. to make sure everything looks valid
-        # Check number of performance objectives (should be greater than zero)
+    def _check_perf_measure(self):
         if len(self.perf_measures) < 1:    # in case the user forget to insert performance measure notify them to do so
             raise FormulationError('At least one performance measure needs to be identified for layout optimization! Please go to "Design Performance Identification" tab')
         elif len(self.perf_measures) == 1: # if single objective, make a copy of the single objective so NSGA-II can work

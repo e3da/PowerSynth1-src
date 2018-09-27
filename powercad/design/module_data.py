@@ -51,4 +51,21 @@ def gen_test_module_data(freq):
     data.ambient_temp = 300.0 # 300 Kelvin
     
     return data
-    
+
+def update_sym_baseplate_dims(sym_layout,dims):
+    module = sym_layout.module
+    width = dims[0]
+    height = dims[1]
+    z = module.baseplate.dimensions[2]
+    h = module.baseplate.eff_conv_coeff
+    bp_tech = module.baseplate.baseplate_tech
+    module.baseplate = BaseplateInstance((width, height, z), h, bp_tech)
+
+def update_substrate_dims(sym_layout,dims,ledge_width=0):
+    module = sym_layout.module
+    width = dims[0]
+    height = dims[1]
+    sub_tech = module.substrate.substrate_tech
+    module.substrate = SubstrateInstance((width, height), ledge_width, sub_tech)
+
+
