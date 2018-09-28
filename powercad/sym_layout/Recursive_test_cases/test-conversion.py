@@ -190,6 +190,7 @@ def random_layout(directory):
     sym_layout = SymbolicLayout()  # initiate a symbolic layout object
 
     sym_layout.load_layout(test_file, 'script')  # load the script
+
     dev1 = DeviceInstance(0.1, 10, get_mosfet(),
                           get_dieattach())  # Create a device instance with 10 W power dissipation.
     dev2 = DeviceInstance(0.1, 10, get_mosfet(),

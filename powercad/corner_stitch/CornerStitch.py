@@ -23,7 +23,8 @@ import CSCG
 import constraint as ct
 import collections
 import operator
-
+from powercad.cons_aware_en.cons_engine import *
+import csv
 import ast
 import pandas as pd
 import csv
@@ -3266,7 +3267,6 @@ class CS_to_CG():
         '''
         self.level=level
     def getConstraints(self,constraint_file):
-        #data = pd.read_csv(constraint_file, header=None)
 
         data = constraint_file
 
@@ -3293,15 +3293,17 @@ class CS_to_CG():
         CONSTRAINT = ct.constraint()
 
         # for i in range(len(constraints)):
-        minWidth = map(int, width)
-        minExtension = map(int, extension)
-        minHeight = map(int, height)
+        minWidth = map(float, width)
+        minExtension = map(float, extension)
+        minHeight = map(float, height)
         # print minExtension
-        minSpacing = [map(int, i) for i in SP]
-        minEnclosure = [map(int, i) for i in EN]
+        minSpacing = [map(float, i) for i in SP]
+        minEnclosure = [map(float, i) for i in EN]
+
+
 
         # print minWidth,minSpacing,minEnclosure
-
+        CONSTRAINT = ct.constraint()
         CONSTRAINT.setupMinWidth(minWidth)
         CONSTRAINT.setupMinHeight(minHeight)
         CONSTRAINT.setupMinExtension(minExtension)

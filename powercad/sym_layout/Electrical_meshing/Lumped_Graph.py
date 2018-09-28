@@ -194,6 +194,7 @@ class E_graph():
         :param lumped_graph:
         :return:
         '''
+        print "build lumped edges",self.mdl_type['E']
         w_all = []
         l_all = []
         w1_all = []
@@ -263,6 +264,7 @@ class E_graph():
         self.trace_nodes.append(nodes)
 
     def _eval_parasitic_models(self, width, length, trace_data):
+        print "W", width,"L",length
         ind = trace_inductance(width, length, trace_data[1], trace_data[2])
         res = trace_resistance(trace_data[4], width, length, trace_data[1], trace_data[2], trace_data[5])
         cap = trace_capacitance(width, length, trace_data[1], trace_data[2], trace_data[6])
@@ -1052,7 +1054,6 @@ class E_graph():
         supertrace_sum, long_sum=self._build_normal_POI(supertrace_conn, supertrace_sum, long_conn, long_sum, lumped_graph,)
         # FORM GRAPH
         self.form_graph(lumped_graph, mesh_nodes,supertrace_conn,supertrace_sum,long_sum,vert_count)
-
     def export_graph_to_file(self,lumped_graph,f_edge="C:\Users\qmle\Desktop\TestPy\Electrical\Solver\MNA//edges.txt",
                              f_node="C:\Users\qmle\Desktop\TestPy\Electrical\Solver\MNA//nodes.txt"):
         file = open(f_node, 'wb')

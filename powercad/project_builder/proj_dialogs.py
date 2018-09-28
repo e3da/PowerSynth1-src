@@ -1121,16 +1121,24 @@ class ConsDialog(QtGui.QDialog):
         self.ui.btn_save.pressed.connect(self.save_cons)
         self.load_table(mode=0)
 
-    def load_table(self,mode=1):
+
+
+
+    def load_table(self,mode=0):
         if mode==1: # from csv
             cons_file = QFileDialog.getOpenFileName(self, "Select Constraint File", 'C://',"Constraints Files (*.csv)")
             self.cons_df=pd.read_csv(cons_file[0])
         elif mode==0:
-            if self.parent.cons_df is not None:
-                self.cons_df = self.parent.cons_df
-            else:
-                return
+
+            cons_file = 'out.csv'
+            if cons_file is not None:
+                self.cons_df = pd.read_csv(cons_file)
+                #self.cons_df = self.parent.cons_df
+            #else:
+                #return
+        #print"con", self.cons_df
         table_df= self.cons_df
+        #print table_df
         total_cols = len(table_df.axes[1])
         r_sp=4 # row of min spacing
         r_encl= r_sp+total_cols # row of min encl
@@ -1204,6 +1212,7 @@ class ConsDialog(QtGui.QDialog):
             loc_id += 1
 
         self.parent.cons_df=self.cons_df
+        #print "DFs",self.parent.cons_df
         self.close()
     def save_cons(self):
         self.apply_changes()
@@ -1349,21 +1358,21 @@ class Fixed_locations_Dialog(QtGui.QDialog):
 
             for k,v in self.node_dict.items():
                 if k1==k:
-                    print k1,v1,v
+                    #print k1,v1,v
                     if v1[0]!= None and v1[1]!=None:
                         ind=Xloc.index(v[0])
-                        print "Xind",ind
+                        #print "Xind",ind
                         self.parent.fixed_x_locations[ind] = v1[0]
                         ind2 = Yloc.index(v[1])
-                        print "Yind", ind2
+                        ##print "Yind", ind2
                         self.parent.fixed_y_locations[ind2] = v1[1]
                     elif v1[0]==None and v1[1]!= None:
                         ind2=Yloc.index(v[1])
-                        print "Yind", ind2
+                        #print "Yind", ind2
                         self.parent.fixed_y_locations[ind2]=v1[1]
                     elif v1[0]!=None and v1[1]==None:
                         ind = Xloc.index(v[0])
-                        print "Xind", ind
+                        #print "Xind", ind
                         self.parent.fixed_x_locations[ind] = v1[0]
                     else:
                         continue
@@ -1494,11 +1503,17 @@ class New_layout_engine_dialog(QtGui.QDialog):
     def add_constraints(self):
 
         constraints = ConsDialog(self)
+        self.constraint=True
+        #if self.engine.cons_df is not None:
+        self.cons_df=self.engine.cons_df
+        #print"CON", self.cons_df
         constraints.exec_()
 
 
         self.constraint=True
+        #self.cons_df=self.engine.cons_df
         self.engine.cons_df=self.cons_df
+        #print"DF", self.cons_df
         self.ui.btn_eval_setup.setEnabled(True)
         self.ui.btn_gen_layouts.setEnabled(True)
     def update_sol_browser(self):
@@ -1544,7 +1559,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
                 N = int(self.ui.txt_num_layouts.text())
                 W = self.ui.txt_width.text()
                 H = self.ui.txt_height.text()
-                Patches, cs_sym_data=self.engine.generate_solutions(self.current_mode,num_layouts=N,W=int(W),H=int(H),fixed_x_location=self.fixed_x_locations,fixed_y_location=self.fixed_y_locations)
+                Patches, cs_sym_data=self.engine.generate_solutions(self.current_mode,num_layouts=N,W=float(W),H=float(H),fixed_x_location=self.fixed_x_locations,fixed_y_location=self.fixed_y_locations)
             else:
                 N=1
                 Patches, cs_sym_data= self.engine.generate_solutions(self.current_mode, num_layouts=N)
@@ -1719,8 +1734,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
                 self._sym_update_layout(sym_info=symb_rect_dict)
                 update_sym_baseplate_dims(sym_layout=sym_layout, dims=bp_dims)
                 update_substrate_dims(sym_layout=sym_layout, dims=dims)
-                plot_layout(sym_layout=sym_layout,ax=ax)
-                plt.show()
+
                 if perf['type'] == 'Thermal':
                     lbl = measure.name +'(degree C)'
                     pdraw["label"]=(lbl)
@@ -1739,7 +1753,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
                                  ElectricalMeasure.MEASURE_IND: 'ind',
                                  ElectricalMeasure.MEASURE_CAP: 'cap'}
                     measure_type = type_dict[measure.measure]
-                    print measure_type
+
                     if measure_type=='res':
                         lbl = measure.name + ' (mOhm)'
                     if measure_type == 'ind':
@@ -1763,7 +1777,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
                                                       tbl_states.loc[row, 3]]
                                     if dev.is_diode():
                                         dev.states = [tbl_states.loc[row, 1]]
-
+                        sym_layout.mdl_type['E']=measure.mdl
                         sym_layout._build_lumped_graph()  # Rebuild the lumped graph for different device state.
 
                         # Measure res. or ind. from src node to sink node
@@ -1829,14 +1843,14 @@ class New_layout_engine_dialog(QtGui.QDialog):
                 dev.orientation = 1
                 dev.footprint_rect = Rect(dev_region.bottom + height, dev_region.bottom, dev_region.left,
                                           dev_region.left + width)
-                xpos = dev_region.left+width/2
+                xpos = trace_rect.center_x()
                 ypos = dev_region.bottom+height/2
             else:
                 dev.footprint_rect = Rect(dev_region.bottom + width, dev_region.bottom, dev_region.left,
                                           dev_region.left + height)
 
                 xpos = dev_region.left + height / 2
-                ypos = dev_region.bottom + width / 2
+                ypos = trace_rect.center_y()
                 dev.orientation = 3
             dev.center_position = (xpos, ypos)
             if len(dev.sym_bondwires) > 0:
@@ -2048,9 +2062,9 @@ class ET_standalone_Dialog(QtGui.QDialog):
                 pt1 = self._sym_find_pt_obj(self.parent.engine.sym_layout,src)
                 sink = str(self.ui.cmb_sink_select.currentText())
                 if 'S' in sink:
-                    src_type = 'S'
+                    sink_type = 'S'
                 elif 'G' in sink:
-                    src_type = 'G'
+                    sink_type = 'G'
 
                 pt2 = self._sym_find_pt_obj(self.parent.engine.sym_layout, sink)
                 if str(self.ui.cmb_electrical_mdl.currentText()) == "Response Surface Model":

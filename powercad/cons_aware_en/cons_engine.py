@@ -5,7 +5,7 @@ from powercad.corner_stitch.API_PS import *
 from powercad.corner_stitch.CornerStitch import *
 from powercad.sym_layout.symbolic_layout import SymPoint,SymLine
 from powercad.design.library_structures import *
-
+import csv
 def plot_layout(Layout_Rects,level,path=None,name=None):
     Patches=[]
     if level==0:
@@ -178,6 +178,7 @@ class New_layout_engine():
         self.cons_df =None
         self.Min_X =None
         self.Min_Y =None
+        self.cons_info=None
         # self.level=None
         # for initialize only
         self.init_data =[]
@@ -195,16 +196,55 @@ class New_layout_engine():
                                                           ,engine=self,
                                                           graph=graph)
         self.new_layout_engine.exec_()
-    def init_layout_from_symlayout(self ,sym_layout):
+    def cons_from_ps(self):
+        minWidth = self.cons_info[0]
+        minHeight = self.cons_info[1]
+        minExtension = self.cons_info[2]
+        SP = self.cons_info[3]
+        En = self.cons_info[4]
+
+        Dim_Con = {}
+        r1=['Min Dimensions','EMPTY', 'Trace', 'MOS', 'Lead', 'Diode']
+        r2=['Min Width',str(minWidth[0]),str(minWidth[1]),str(minWidth[2]),str(minWidth[3]),str(minWidth[4])]
+        r3=['Min Height',str(minHeight[0]),str(minHeight[1]),str(minHeight[2]),str(minHeight[3]),str(minHeight[4])]
+        r4=['Min Extension',str(minExtension[0]),str(minExtension[1]),str(minExtension[2]),str(minExtension[3]), str(minExtension[4])]
+        r5=['Min Spacing','EMPTY', 'Trace', 'MOS', 'Lead', 'Diode']
+        r6=['EMPTY',str(SP[0]), 'N/A', 'N/A', 'N/A', 'N/A']
+        r7=['Trace','N/A', str(SP[1]), 'N/A', 'N/A', 'N/A']
+        r8=['MOS','N/A', 'N/A', str(SP[2]), 'N/A', 'N/A']
+        r9=['Lead','N/A', 'N/A', str(SP[5]), str(SP[3]), 'N/A']
+        r10=['Diode','N/A', 'N/A', 'N/A', str(SP[6]), str(SP[4])]
+        r11=['Min Enclosure','EMPTY', 'Trace', 'MOS', 'Lead', 'Diode']
+        r12=['EMPTY','N/A', str(En[0]), 'N/A', 'N/A', 'N/A']
+        r13=['Trace', 'N/A','N/A',str(En[1]), str(En[2]), str(En[3])]
+        r14 = ['MOS', 'N/A', 'N/A', 'N/A', 'N/A', 'N/A']
+        r15=['Lead','N/A', 'N/A', 'N/A', 'N/A', 'N/A']
+        r16=[ 'Diode','N/A', 'N/A', 'N/A', 'N/A', 'N/A']
+        my_list = [r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,r13,r14,r15,r16]
+
+        df = pd.DataFrame(my_list)
+        #self.cons_df=df
+
+        df.to_csv('out.csv', sep=',', header=None, index=None)
+
+
+
+        return
+    def init_layout_from_symlayout(self ,sym_layout=None):
         '''
         initialize new layout engine with old symlayout data structure
         Returns:
         '''
         print "initializing ....."
         self.sym_layout =sym_layout
-        self.collect_sym_cons_info(sym_layout)
-        # Data frame for NewEngine is made here....
 
+        # Data frame for NewEngine is made here....
+        #if (self.cons_df.empty):
+
+        if sym_layout!=None:
+            self.cons_info = self.collect_sym_cons_info(sym_layout)
+            self.cons_df=self.cons_from_ps()
+            #print"con",self.cons_df
         #------------------------------------------
         input_rects, self.W, self.H = input_conversion(sym_layout)
         input = self.cornerstitch.read_input('list', Rect_list=input_rects)
@@ -269,9 +309,16 @@ class New_layout_engine():
         Gap_3_3 = Gap_2_2
         Gap_3_4 = Gap_2_2
         Gap_4_4 = Gap_2_2
+        Gap_0_0=2#[EMPTY type]
         # Ledge Width (Type EMPTY to 1 ?)
         ledge_width = sym_layout.module.substrate.ledge_width
+        minWidth=[ledge_width,Type1_W,Type2_W,Type3_W,Type4_W] # Trace,MOS,Lead,Diode
+        minHeight=[ledge_width,Type1_W,Type2_H,Type3_H,Type4_H]
+        minExtension=[ledge_width,Type1_W,Type2_W,Type3_W,Type4_W]
+        Gaps=[Gap_0_0,Gap_1_1,Gap_2_2,Gap_3_3,Gap_4_4,Gap_2_3,Gap_3_4]
+        Enclosures=[ledge_width,Gap_1_2,Gap_1_3,Gap_1_4]
         print Type1_W,Type2_W,Type3_W,Type4_W,Gap_1_2,Gap_2_2,ledge_width
+        return minWidth,minHeight,minExtension,Gaps,Enclosures
 
     def mode_zero(self):
         # print"pass"
