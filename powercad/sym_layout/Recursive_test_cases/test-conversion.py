@@ -1,26 +1,15 @@
 # This will test the new lumped graph structure along with Kelvin connection
 #@authors: Quang Le
-import os
-import copy
-import itertools
-import matplotlib.pyplot as plt
-import networkx as nx
-import matplotlib
-from powercad.Spice_handler.spice_import.NetlistImport import Netlist, Netlis_export_ADS
+
 from powercad.design.module_data import gen_test_module_data
 from powercad.general.settings import settings
 from powercad.parasitics.analysis import parasitic_analysis
-from powercad.sym_layout.plot import plot_layout
 from powercad.sym_layout.symbolic_layout import SymbolicLayout, DeviceInstance, SymLine, SymPoint, ElectricalMeasure, \
     ThermalMeasure
 from powercad.tech_lib.test_techlib import get_power_bondwire, get_signal_bondwire
 from powercad.tech_lib.test_techlib import get_signal_lead, get_power_lead
 from PySide import QtGui
 from PySide.QtGui import QFileDialog,QMainWindow
-from powercad.project_builder.proj_dialogs import New_layout_engine_dialog
-from powercad.corner_stitch.API_PS import *
-from powercad.corner_stitch.CornerStitch import *
-from powercad.general.data_struct.util import *
 from powercad.tech_lib.test_techlib import get_mosfet, get_dieattach
 from powercad.cons_aware_en.cons_engine import *
 

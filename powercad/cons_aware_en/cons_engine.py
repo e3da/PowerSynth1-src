@@ -3,8 +3,8 @@ from powercad.sym_layout.plot import plot_layout
 from powercad.project_builder.proj_dialogs import New_layout_engine_dialog
 from powercad.corner_stitch.API_PS import *
 from powercad.corner_stitch.CornerStitch import *
-from powercad.general.data_struct.util import *
-
+from powercad.sym_layout.symbolic_layout import SymPoint,SymLine
+from powercad.design.library_structures import *
 
 def plot_layout(Layout_Rects,level,path=None,name=None):
     Patches=[]
@@ -202,6 +202,10 @@ class New_layout_engine():
         '''
         print "initializing ....."
         self.sym_layout =sym_layout
+        self.collect_sym_cons_info(sym_layout)
+        # Data frame for NewEngine is made here....
+
+        #------------------------------------------
         input_rects, self.W, self.H = input_conversion(sym_layout)
         input = self.cornerstitch.read_input('list', Rect_list=input_rects)
         self.Htree, self.Vtree = self.cornerstitch.input_processing(input, self.W + 20, self.H + 20)
@@ -210,6 +214,64 @@ class New_layout_engine():
         sym_to_cs = Sym_to_CS(input_rects, self.Htree, self.Vtree)
 
         self.init_data =[patches ,sym_to_cs ,combined_graph]
+
+    def collect_sym_cons_info(self, sym_layout):
+        '''
+        Go through sym objs and search for dimensions, sym DRC
+        :return:
+        '''
+        # NOTE: There can be multiple types of mosfets and diodes themselves for now assume all mosfet are the same
+        # Take the maximum width and height of the mosfet group, Init with all 0s for cases they are not used
+        diode_widths=[0]
+        diode_heights=[0]
+        mosfet_widths = [0]
+        mosfet_heights = [0]
+        lead_widths=[0]
+        lead_heights=[0]
+        # Go through all devices and find max dimensions
+
+        for dev in sym_layout.devices:
+            width, height, thickness = dev.tech.device_tech.dimensions
+            if dev.is_diode():
+                diode_widths.append(width)
+                diode_heights.append(height)
+            if dev.is_transistor():
+                mosfet_widths.append(width)
+                mosfet_heights.append(height)
+
+        for lead in sym_layout.leads:
+            if lead.tech.shape == Lead.BUSBAR:
+                width= lead.tech.dimensions[0]
+                height = lead.tech.dimensions[1]
+            elif lead.tech.shape == Lead.ROUND:
+                width = lead.tech.dimensions[0] # Radius
+                height = lead.tech.dimensions[0]
+            lead_widths.append(width)
+            lead_heights.append(height)
+
+        # Info is here
+        Type2_W = max(mosfet_widths+ mosfet_heights)
+        Type2_H = Type2_W # Because a device can rotate
+        Type3_W= max(lead_widths+lead_heights)
+        Type3_H = Type3_W  # Because a lead can rotate
+        Type4_W = max(diode_widths + diode_heights)
+        Type4_H = Type4_W  # Because a diode can rotate
+        #Design_rule
+        design_rule = sym_layout.module.design_rules
+        # SEE powercad/design/project_structures.py
+        Type1_W = design_rule.min_trace_width
+        Gap_1_1 = design_rule.min_trace_trace_width
+        Gap_1_2 = design_rule.min_die_trace_dist
+        Gap_1_3 = Gap_1_2
+        Gap_1_4 = Gap_1_2
+        Gap_2_2 = design_rule.min_die_die_dist
+        Gap_2_3 = Gap_2_2
+        Gap_3_3 = Gap_2_2
+        Gap_3_4 = Gap_2_2
+        Gap_4_4 = Gap_2_2
+        # Ledge Width (Type EMPTY to 1 ?)
+        ledge_width = sym_layout.module.substrate.ledge_width
+        print Type1_W,Type2_W,Type3_W,Type4_W,Gap_1_2,Gap_2_2,ledge_width
 
     def mode_zero(self):
         # print"pass"
