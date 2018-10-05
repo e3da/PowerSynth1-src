@@ -1124,7 +1124,7 @@ class ConsDialog(QtGui.QDialog):
 
 
 
-    def load_table(self,mode=0):
+    def load_table(self,mode=1):
         if mode==1: # from csv
             cons_file = QFileDialog.getOpenFileName(self, "Select Constraint File", 'C://',"Constraints Files (*.csv)")
             self.cons_df=pd.read_csv(cons_file[0])
@@ -1238,8 +1238,7 @@ class Fixed_locations_Dialog(QtGui.QDialog):
         self.ui.cmb_nodes.currentIndexChanged.connect(self.node_handler)
         self.ui.txt_inputx.setEnabled(False)
         self.ui.txt_inputy.setEnabled(False)
-        self.ui.txt_inputx.textChanged.connect(self.x_edit_text_changed)
-        self.ui.txt_inputy.textChanged.connect(self.y_edit_text_changed)
+
         self.ui.btn_addnode.pressed.connect(self.add_row)
         self.ui.btn_rmvnode.pressed.connect(self.remove_row)
         self.ui.btn_save.pressed.connect(self.finished)
@@ -1255,8 +1254,8 @@ class Fixed_locations_Dialog(QtGui.QDialog):
                 self.ui.table_Fixedloc.setItem(row_id, 1, QtGui.QTableWidgetItem())
                 self.ui.table_Fixedloc.setItem(row_id, 2, QtGui.QTableWidgetItem())
                 self.ui.table_Fixedloc.item(row_id, 0).setText(str(k))
-                self.ui.table_Fixedloc.item(row_id, 1).setText(str(v[0]))
-                self.ui.table_Fixedloc.item(row_id, 2).setText(str(v[1]))
+                self.ui.table_Fixedloc.item(row_id, 1).setText(str(float(v[0])/1000))
+                self.ui.table_Fixedloc.item(row_id, 2).setText(str(float(v[1]) / 1000))
                 row_id += 1
     def set_node_id(self,node_dict):
         self.node_dict=node_dict
@@ -1266,13 +1265,9 @@ class Fixed_locations_Dialog(QtGui.QDialog):
             item = 'Node ' + str(i)
             self.ui.cmb_nodes.addItem(item)
             self.Nodes.append(item)
-    def x_edit_text_changed(self):
 
-        self.X = int(self.ui.txt_inputx.text())
-    def y_edit_text_changed(self):
-        self.Y = int(self.ui.txt_inputy.text())
-    def set_label(self,x,y):
-        label="Node min location X:"+str(x)+"   "+"Y:"+str(y)
+    def set_label(self,x,y,div=1000):
+        label="Node min location X:"+str(float(x)/div)+"   "+"Y:"+str(float(y)/div)
         self.ui.lbl_minxy.setText(label)
         self.ui.txt_inputx.setEnabled(True)
         self.ui.txt_inputy.setEnabled(True)
@@ -1323,16 +1318,27 @@ class Fixed_locations_Dialog(QtGui.QDialog):
         row_id = self.ui.table_Fixedloc.rowCount()
         #self.ui.table_Fixedloc.insertRow(rowPosition)
         #self.ui.table_Fixedloc.setItem(rowPosition, self.current_node, self.X, self.Y)
-
         self.ui.table_Fixedloc.insertRow(row_id)
         self.ui.table_Fixedloc.setItem(row_id, 0, QtGui.QTableWidgetItem())
         self.ui.table_Fixedloc.setItem(row_id, 1, QtGui.QTableWidgetItem())
         self.ui.table_Fixedloc.setItem(row_id, 2, QtGui.QTableWidgetItem())
         self.ui.table_Fixedloc.item(row_id, 0).setText(str(self.current_node))
-        self.ui.table_Fixedloc.item(row_id, 1).setText(str(self.X))
-        self.ui.table_Fixedloc.item(row_id, 2).setText(str(self.Y))
+        if str(self.ui.txt_inputx.text())!='':
+            self.X = int(self.ui.txt_inputx.text()) * 1000
+            self.ui.table_Fixedloc.item(row_id, 1).setText(str(float(self.X) / 1000))
+        else:
+            self.ui.table_Fixedloc.item(row_id, 1).setText('None')
+
+        if str(self.ui.txt_inputy.text()) != '':
+            self.Y = int(self.ui.txt_inputy.text()) * 1000
+            self.ui.table_Fixedloc.item(row_id, 2).setText(str(float(self.Y) / 1000))
+
+        else:
+            self.ui.table_Fixedloc.item(row_id, 2).setText('None')
+
+
+
         self.new_node_dict[self.current_node]=(self.X,self.Y)
-        #print "New",self.new_node_dict
 
 
     def remove_row(self):
@@ -1383,11 +1389,6 @@ class Fixed_locations_Dialog(QtGui.QDialog):
         self.parent.input_node_info=self.new_node_dict
 
         self.close()
-
-
-
-
-
 
 
 
@@ -1462,6 +1463,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
             self.ui.txt_width.setEnabled(False)
             self.ui.txt_height.setEnabled(False)
             self.ui.btn_fixed_locs.setEnabled(False)
+            self.refresh_layout()
 
         elif choice == 'Variable Size Layout':
             QtGui.QMessageBox.warning(self, "Varied Baseplate Size",
@@ -1472,6 +1474,9 @@ class New_layout_engine_dialog(QtGui.QDialog):
             self.ui.txt_width.setEnabled(False)
             self.ui.txt_height.setEnabled(False)
             self.ui.btn_fixed_locs.setEnabled(False)
+            self.refresh_layout()
+
+
             #self.initialize_layout(fig=self.mainwindow_fig, graph=None)
 
         elif choice == 'Fixed Size Layout':
@@ -1480,6 +1485,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
             self.ui.txt_width.setEnabled(True)
             self.ui.txt_height.setEnabled(True)
             self.ui.btn_fixed_locs.setEnabled(False)
+            self.refresh_layout()
 
         elif choice == 'Fixed Size with Fixed Loactions':
             self.current_mode=3
@@ -1487,6 +1493,8 @@ class New_layout_engine_dialog(QtGui.QDialog):
             self.ui.txt_width.setEnabled(True)
             self.ui.txt_height.setEnabled(True)
             self.ui.btn_fixed_locs.setEnabled(True)
+            self.refresh_layout()
+
         print "current mode",self.current_mode
 
 
@@ -1557,9 +1565,9 @@ class New_layout_engine_dialog(QtGui.QDialog):
 
             if self.current_mode!=0:
                 N = int(self.ui.txt_num_layouts.text())
-                W = self.ui.txt_width.text()
-                H = self.ui.txt_height.text()
-                Patches, cs_sym_data=self.engine.generate_solutions(self.current_mode,num_layouts=N,W=float(W),H=float(H),fixed_x_location=self.fixed_x_locations,fixed_y_location=self.fixed_y_locations)
+                W = int(self.ui.txt_width.text())*1000
+                H = int(self.ui.txt_height.text())*1000
+                Patches, cs_sym_data=self.engine.generate_solutions(self.current_mode,num_layouts=N,W=W,H=H,fixed_x_location=self.fixed_x_locations,fixed_y_location=self.fixed_y_locations)
             else:
                 N=1
                 Patches, cs_sym_data= self.engine.generate_solutions(self.current_mode, num_layouts=N)
@@ -1572,14 +1580,25 @@ class New_layout_engine_dialog(QtGui.QDialog):
 
                 # UPDATE layout sols for plotting
                 for i in range(int(N)):
-                    self.generated_layouts[Layouts[i]] = {'Patches': Patches[i]}
-                    self.layout_data[Layouts[i]] = {'Rects': cs_sym_data[i]}
+
+                    '''
+                    Plot real Layout here
+                    '''
+                    if self.engine.sym_layout != None:
+                        self.layout_data[Layouts[i]] = {'Rects': cs_sym_data[i]}
+
+                        self.generated_layouts[Layouts[i]] = {'Patches': Patches[i]}
             else:
                 print"Patches not found"
         # Convert Data info to Symb object for evaluation
         if self.engine.sym_layout!=None:
             sym_info=self.form_sym_obj_rect_dict()
             # Evaluate performace for all all layouts
+            for p in self.perf_dict.keys():
+                perf = self.perf_dict[p]
+                measure = perf['measure']
+                if perf['type'] == 'Thermal' and measure.mdl==1 and self.current_mode!=1:
+                    self.engine.sym_layout.thermal_characterize()
             self._sym_eval_perf(sym_info=sym_info)
         # Update the solution browser
         self.update_sol_browser()
@@ -1594,32 +1613,74 @@ class New_layout_engine_dialog(QtGui.QDialog):
     def eval_setup(self):
         eval = ET_standalone_Dialog(self)
         eval.exec_()
-    def layout_plot(self,layout_ind=0):
+    def layout_plot(self,layout_ind=0,mode='ps'):
         self.ax1.clear()
         if self.current_mode!=0:
             choice = 'Layout '+str(layout_ind)
         else:
 
             choice = 'Layout 0'
-        for k,v in self.generated_layouts.items():
-            if choice==k:
-                for k1,v1 in v['Patches'].items():
-                    for p in v1:
-                        self.ax1.add_patch(p)
-                    self.ax1.set_xlim(0, k1[0])
-                    self.ax1.set_ylim(0, k1[1])
-                    self.ui.txt_width.setText(str(k1[0]))
-                    self.ui.txt_height.setText(str(k1[1]))
-                self.canvas_sols.draw()
+        if mode == 'cs':
+            for k,v in self.generated_layouts.items():
+                if choice==k:
+                    for k1,v1 in v['Patches'].items():
+                        for p in v1:
+                            self.ax1.add_patch(p)
+                        self.ax1.set_xlim(0, k1[0])
+                        self.ax1.set_ylim(0, k1[1])
+                        self.ui.txt_width.setText(str(k1[0]))
+                        self.ui.txt_height.setText(str(k1[1]))
+                    self.canvas_sols.draw()
+        elif mode == 'ps':
+            sym_info = self.form_sym_obj_rect_dict()
+            sym_layout = self.engine.sym_layout
+            symb_rect_dict = sym_info[choice]['sym_info']
+            dims = sym_info[choice]['Dims']
+            bp_dims = [dims[0] + 4, dims[1] + 4]
+            self._sym_update_layout(sym_info=symb_rect_dict)
+            update_sym_baseplate_dims(sym_layout=sym_layout, dims=bp_dims)
+            update_substrate_dims(sym_layout=sym_layout, dims=dims)
+            plot_layout(sym_layout, ax=self.ax1,new_window=False)
+            self.canvas_sols.draw()
 
+    def refresh_layout(self):
+        print "refresh layout"
+        self.ax2.clear()
+        self.ax2.set_position([0.07, 0.07, 0.9, 0.9])
 
+        Names = self.init_fig.keys()
+        Names.sort()
+        for k, p in self.init_fig.items():
+            # for p in v:
+            if k[0] == 'T':
+                x = p.get_x()
+                y = p.get_y()
+                self.ax2.text(x + 1, y + 1, k)
+                self.ax2.add_patch(p)
+        for k, p in self.init_fig.items():
 
+            if k[0] != 'T':
+                x = p.get_x()
+                y = p.get_y()
+                self.ax2.text(x + 1, y + 1, k, weight='bold')
+                self.ax2.add_patch(p)
+        if self.init_graph != None and self.current_mode == 3:
+            G = self.init_graph[0]
+            pos = self.init_graph[1]
+            lbls = self.init_graph[2]
+            nx.draw_networkx_nodes(G, pos, node_size=100, label=True, ax=self.ax2, zorder=6)
+            nx.draw_networkx_labels(G, pos, lbls, font_size=8, ax=self.ax2)
+        self.ax2.set_xlim(0, self.fp_width)
+        self.ax2.set_ylim(0, self.fp_length)
+        self.canvas_init.draw()
     def initialize_layout(self,fig,graph=None):
         '''
         plot main window figure
         Returns:
 
         '''
+        self.init_fig=fig
+        self.init_graph=graph
         self.ui.txt_width.setText(str(self.fp_width))
         self.ui.txt_height.setText(str(self.fp_length))
         fig2=Figure()
@@ -1670,18 +1731,18 @@ class New_layout_engine_dialog(QtGui.QDialog):
                     self.ax2.add_patch(p)
             self.ax2.set_xlim(0,self.fp_width)
             self.ax2.set_ylim(0,self.fp_length)
-            if graph!=None:
+            if self.init_graph!=None and self.current_mode==3:
                 G=graph[0]
                 pos=graph[1]
                 lbls=graph[2]
                 nx.draw_networkx_nodes(G, pos, node_size=100, label=True,ax=self.ax2,zorder=6)
                 nx.draw_networkx_labels(G, pos, lbls, font_size=8,ax=self.ax2)
-
+        self.ax3.ticklabel_format(axis='both',style='sci')
         self.canvas_init.draw()
         return
     def run_mode(self):
         return self.current_mode
-    def form_sym_obj_rect_dict(self):
+    def form_sym_obj_rect_dict(self,div=1000):
         '''
         From group of CornerStitch Rectangles, form a single rectangle for each trace
         Output type : {"Layout id": {'Sym_info': symb_rect_dict,'Dims': [W,H]} --- Dims is the dimension of the baseplate
@@ -1692,18 +1753,20 @@ class New_layout_engine_dialog(QtGui.QDialog):
             symb_rect_dict = {}
             p_data = self.layout_data[layout]['Rects']
             W,H= p_data.keys()[0]
+            W=float(W)/div
+            H=float(H)/div
             rect_dict = p_data.values()[0]
             for r_id in rect_dict.keys():
-                left=1000
-                bottom = 1000
+                left=1e32
+                bottom = 1e32
                 right = 0
                 top=0
                 for rect in rect_dict[r_id]:
                     type = rect.type
-                    min_x = rect.left
-                    max_x = rect.right
-                    min_y = rect.bottom
-                    max_y = rect.top
+                    min_x = float(rect.left) / div
+                    max_x = float(rect.right) / div
+                    min_y = float(rect.bottom) / div
+                    max_y = float(rect.top)/div
                     if min_x<=left:
                         left = float(min_x)
                     if min_y<=bottom:
@@ -1742,10 +1805,8 @@ class New_layout_engine_dialog(QtGui.QDialog):
                         mdl = 2
                     else:
                         mdl =measure.mdl
-                        if measure.mdl ==1:
-                            waiter = Waiting_dialog(self,txt_msg="Running thermal characterization, please wait ... ")
-                            code = "self.parent.engine.sym_layout.thermal_characterize()"
-                            waiter.run_process(code=code)
+
+
                     val = sym_layout ._thermal_analysis(measure, mdl)
                     pdraw['data'].append(val)
                 elif perf['type'] == 'Electrical':
@@ -1778,7 +1839,11 @@ class New_layout_engine_dialog(QtGui.QDialog):
                                     if dev.is_diode():
                                         dev.states = [tbl_states.loc[row, 1]]
                         sym_layout.mdl_type['E']=measure.mdl
+                        #ax = plt.subplot('111', adjustable='box', aspect=1.0)
+                        ##plot_layout(sym_layout,ax)
+                        #plt.show()
                         sym_layout._build_lumped_graph()  # Rebuild the lumped graph for different device state.
+                        #sym_layout.E_graph.plot_lumped_graph()
 
                         # Measure res. or ind. from src node to sink node
                         source_terminal = measure.src_term
@@ -1890,8 +1955,8 @@ class New_layout_engine_dialog(QtGui.QDialog):
                     lead.orientation = 3
                     # find if near left or right (decide orientation)
                     # for power leads only right now
-                    edge_dist = self.sub_dim[0] - 0.5 * (trace_rect.left + trace_rect.right)
-                    if edge_dist < 0.5 * self.sub_dim[0]:
+                    edge_dist = sym_layout.sub_dim[0] - 0.5 * (trace_rect.left + trace_rect.right)
+                    if edge_dist < 0.5 * sym_layout.sub_dim[0]:
                         # right
                         xpos = trace_rect.right - hwidth
                         lead.orientation = 3
@@ -1908,8 +1973,8 @@ class New_layout_engine_dialog(QtGui.QDialog):
                     hlength = 0.5 * lead.tech.dimensions[1]
                     lead.orientation = 1
 
-                    edge_dist = self.sub_dim[1] - 0.5 * (trace_rect.top + trace_rect.bottom)
-                    if edge_dist < 0.5 * self.sub_dim[1]:
+                    edge_dist = sym_layout.sub_dim[1] - 0.5 * (trace_rect.top + trace_rect.bottom)
+                    if edge_dist < 0.5 * sym_layout.sub_dim[1]:
                         # top
                         ypos = trace_rect.top - hlength
                         lead.orientation = 1

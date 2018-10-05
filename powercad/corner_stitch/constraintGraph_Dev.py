@@ -9,9 +9,7 @@ import collections
 import json
 import copy
 import random
-import csv
-import scipy as sp
-import pandas as pd
+from random import randrange
 import timeit
 import csv
 #########################################################################################################################
@@ -2187,7 +2185,7 @@ class constraintGraph:
             # print v
             if ((2 * v) / n) > 0:
                 #x = random.randrange(0, ((2 * v) / n))
-                x =  random.uniform(0, ((2 * v) / n))
+                x =  randrange(0, (int(2 * v) / n))
 
             else:
                 x = 0
@@ -2389,7 +2387,7 @@ class constraintGraph:
             #print"v" ,v1, v2
             # self.Loc_X[i] = random.randrange(v1, v2)
             if v1 < v2:
-                self.Loc_X[i] = random.uniform(v1, v2)
+                self.Loc_X[i] = randrange(v1, v2)
             else:
                 self.Loc_X[i] = max(v1, v2)
             SOURCE.append(i)
@@ -2691,7 +2689,7 @@ class constraintGraph:
             # print v
             if ((2 * v) / n) > 0:
                 #x = random.randrange(0, ((2 * v) / n))
-                x = random.uniform(0, ((2 * v) / n))
+                x = randrange(0, (int(2 * v) / n))
             else:
                 x = 0
             # print "x", x
@@ -2889,7 +2887,7 @@ class constraintGraph:
             v2 = v_h2
             # print i,v1,v2
             if v1 < v2:
-                self.Loc_Y[i] = random.uniform(v1, v2)
+                self.Loc_Y[i] = randrange(v1, v2)
             else:
                 self.Loc_Y[i] = max(v1, v2)
             # UnFixed.pop(i)

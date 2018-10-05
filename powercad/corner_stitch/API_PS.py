@@ -1,6 +1,5 @@
 import matplotlib.pyplot as plt
 import matplotlib
-from powercad.corner_stitch import CornerStitch as CS
 from matplotlib import patches
 
 class Rectangle():

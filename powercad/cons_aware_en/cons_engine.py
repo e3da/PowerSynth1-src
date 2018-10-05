@@ -1,11 +1,289 @@
-
-from powercad.sym_layout.plot import plot_layout
 from powercad.project_builder.proj_dialogs import New_layout_engine_dialog
+import pandas as pd
 from powercad.corner_stitch.API_PS import *
 from powercad.corner_stitch.CornerStitch import *
-from powercad.sym_layout.symbolic_layout import SymPoint,SymLine
 from powercad.design.library_structures import *
-import csv
+
+
+class New_layout_engine():
+    def __init__(self):
+        self.W = None
+        self.H = None
+        self.window = None
+        self.Htree = None
+        self.Vtree = None
+        self.cons_df = None
+        self.Min_X = None
+        self.Min_Y = None
+        self.cons_info = None
+        # self.level=None
+        # for initialize only
+        self.init_data = []
+        self.cornerstitch = CornerStitch()
+        # current solutions
+        self.cur_fig_data = None
+        # only activate when the sym_layout API is used
+        self.sym_layout = None
+        self.layout_sols = {}
+
+    def open_new_layout_engine(self, window):
+        self.window = window
+        patches = self.init_data[0]
+        graph = self.init_data[2]
+        self.new_layout_engine = New_layout_engine_dialog(self.window, patches, W=self.W + 20, H=self.H + 20
+                                                          , engine=self,
+                                                          graph=graph)
+        self.new_layout_engine.exec_()
+
+    def cons_from_ps(self):
+        minWidth = self.cons_info[0]
+        minHeight = self.cons_info[1]
+        minExtension = self.cons_info[2]
+        SP = self.cons_info[3]
+        En = self.cons_info[4]
+
+        Dim_Con = {}
+        r1 = ['Min Dimensions', 'EMPTY', 'Trace', 'MOS', 'Lead', 'Diode']
+        r2 = ['Min Width', str(minWidth[0]), str(minWidth[1]), str(minWidth[2]), str(minWidth[3]), str(minWidth[4])]
+        r3 = ['Min Height', str(minHeight[0]), str(minHeight[1]), str(minHeight[2]), str(minHeight[3]),
+              str(minHeight[4])]
+        r4 = ['Min Extension', str(minExtension[0]), str(minExtension[1]), str(minExtension[2]), str(minExtension[3]),
+              str(minExtension[4])]
+        r5 = ['Min Spacing', 'EMPTY', 'Trace', 'MOS', 'Lead', 'Diode']
+        r6 = ['EMPTY', str(SP[0]), 0, 0, 0, 0]
+        r7 = ['Trace', 0, str(SP[1]), 0, 0, 0]
+        r8 = ['MOS', 0, 0, str(SP[2]), 0, 0]
+        r9 = ['Lead', 0, 0, str(SP[5]), str(SP[3]), 0]
+        r10 = ['Diode', 0, 0, 0, str(SP[6]), str(SP[4])]
+        r11 = ['Min Enclosure', 'EMPTY', 'Trace', 'MOS', 'Lead', 'Diode']
+        r12 = ['EMPTY', 0, str(En[0]), 0, 0, 0]
+        r13 = ['Trace', 0, 0, str(En[1]), str(En[2]), str(En[3])]
+        r14 = ['MOS', 0, 0, 0, 0, 0]
+        r15 = ['Lead', 0, 0, 0, 0, 0]
+        r16 = ['Diode', 0, 0, 0, 0, 0]
+        my_list = [r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, r13, r14, r15, r16]
+
+        df = pd.DataFrame(my_list)
+        # self.cons_df=df
+
+        df.to_csv('out.csv', sep=',', header=None, index=None)
+
+        return
+
+    def init_layout_from_symlayout(self, sym_layout=None):
+        '''
+        initialize new layout engine with old symlayout data structure
+        Returns:
+        '''
+        print "initializing ....."
+        self.sym_layout = sym_layout
+
+        # Data frame for NewEngine is made here....
+        # if (self.cons_df.empty):
+
+        if sym_layout != None:
+            self.cons_info = self.collect_sym_cons_info(sym_layout)
+            self.cons_df = self.cons_from_ps()
+            # print"con",self.cons_df
+        # ------------------------------------------
+        input_rects, self.W, self.H = input_conversion(sym_layout)
+        input = self.cornerstitch.read_input('list', Rect_list=input_rects)
+        self.Htree, self.Vtree = self.cornerstitch.input_processing(input, self.W + 20, self.H + 20)
+
+        patches, combined_graph = self.cornerstitch.draw_layout(input_rects)
+        sym_to_cs = Sym_to_CS(input_rects, self.Htree, self.Vtree)
+
+        self.init_data = [patches, sym_to_cs, combined_graph]
+
+    def collect_sym_cons_info(self, sym_layout):
+        '''
+        Go through sym objs and search for dimensions, sym DRC
+        :return:
+        '''
+        # NOTE: There can be multiple types of mosfets and diodes themselves for now assume all mosfet are the same
+        # Take the maximum width and height of the mosfet group, Init with all 0s for cases they are not used
+        diode_widths = [0]
+        diode_heights = [0]
+        mosfet_widths = [0]
+        mosfet_heights = [0]
+        lead_widths = [0]
+        lead_heights = [0]
+        # Go through all devices and find max dimensions
+
+        for dev in sym_layout.devices:
+            width, height, thickness = dev.tech.device_tech.dimensions
+            if dev.is_diode():
+                diode_widths.append(width)
+                diode_heights.append(height)
+            if dev.is_transistor():
+                mosfet_widths.append(width)
+                mosfet_heights.append(height)
+
+        for lead in sym_layout.leads:
+            if lead.tech.shape == Lead.BUSBAR:
+                width = lead.tech.dimensions[0]
+                height = lead.tech.dimensions[1]
+            elif lead.tech.shape == Lead.ROUND:
+                width = lead.tech.dimensions[0]  # Radius
+                height = lead.tech.dimensions[0]
+            lead_widths.append(width)
+            lead_heights.append(height)
+
+        # Info is here
+        Type2_W = max(mosfet_widths + mosfet_heights)
+        Type2_H = Type2_W  # Because a device can rotate
+        Type3_W = max(lead_widths + lead_heights)
+        Type3_H = Type3_W  # Because a lead can rotate
+        Type4_W = max(diode_widths + diode_heights)
+        Type4_H = Type4_W  # Because a diode can rotate
+        # Design_rule
+        design_rule = sym_layout.module.design_rules
+        # SEE powercad/design/project_structures.py
+        Type1_W = design_rule.min_trace_width
+        Gap_1_1 = design_rule.min_trace_trace_width
+        Gap_1_2 = design_rule.min_die_trace_dist
+        Gap_1_3 = Gap_1_2
+        Gap_1_4 = Gap_1_2
+        Gap_2_2 = design_rule.min_die_die_dist
+        Gap_2_3 = Gap_2_2
+        Gap_3_3 = Gap_2_2
+        Gap_3_4 = Gap_2_2
+        Gap_4_4 = Gap_2_2
+        Gap_0_0 = 2  # [EMPTY type]
+        # Ledge Width (Type EMPTY to 1 ?)
+        ledge_width = sym_layout.module.substrate.ledge_width
+        minWidth = [ledge_width, Type1_W, Type2_W, Type3_W, Type4_W]  # Trace,MOS,Lead,Diode
+        minHeight = [ledge_width, Type1_W, Type2_H, Type3_H, Type4_H]
+        minExtension = [ledge_width, Type1_W, Type2_W, Type3_W, Type4_W]
+        Gaps = [Gap_0_0, Gap_1_1, Gap_2_2, Gap_3_3, Gap_4_4, Gap_2_3, Gap_3_4]
+        Enclosures = [ledge_width, Gap_1_2, Gap_1_3, Gap_1_4]
+        print Type1_W, Type2_W, Type3_W, Type4_W, Gap_1_2, Gap_2_2, ledge_width
+        return minWidth, minHeight, minExtension, Gaps, Enclosures
+
+    def mode_zero(self):
+        # print"pass"
+        CG1 = CS_to_CG(0)
+        # CG1.getConstraints(path+'/'+'Constraints-1.csv')
+        CG1.getConstraints(self.cons_df)
+        Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=None, W=None, H=None, XLoc=None
+                                                  , YLoc=None)
+        return Evaluated_X, Evaluated_Y
+
+    def generate_solutions(self, level, num_layouts=1, W=None, H=None, fixed_x_location=None, fixed_y_location=None):
+        # self.level=level
+        CG1 = CS_to_CG(level)
+        # CG1.getConstraints(path+'/'+'Constraints-1.csv')
+        CG1.getConstraints(self.cons_df)
+        sym_to_cs = self.init_data[1]
+        if level == 0:
+            Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=None, W=None, H=None
+                                                      , XLoc=None, YLoc=None)
+            CS_SYM_information, Layout_Rects = CG1.UPDATE_min(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree
+                                                              ,
+                                                              sym_to_cs)  # CS_SYM_information is a dictionary where key=path_id(component name) and value=list of updated rectangles, Layout Rects is a dictionary for minimum HCS and VCS evaluated rectangles (used for plotting only)
+
+            self.cur_fig_data = plot_layout(Layout_Rects, level)
+
+            CS_SYM_Updated = {}
+            for i in self.cur_fig_data:
+                for k, v in i.items():
+                    CS_SYM_Updated[k] = CS_SYM_information
+            CS_SYM_Updated = [CS_SYM_Updated]
+        elif level == 1:
+
+            Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=num_layouts, W=None, H=None
+                                                      , XLoc=None, YLoc=None)
+            CS_SYM_Updated, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree, sym_to_cs)
+            CS_SYM_Updated = CS_SYM_Updated['H']
+            self.cur_fig_data = plot_layout(Layout_Rects, level)
+        elif level == 2:
+            CG2 = CS_to_CG(0)
+            Evaluated_X0, Evaluated_Y0 = CG2.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=None, W=None, H=None
+                                                        , XLoc=None, YLoc=None)
+
+            # print"Eval0", Evaluated_X0, Evaluated_Y0
+            Min_X_Loc = {}
+            Min_Y_Loc = {}
+            for k, v in Evaluated_X0.items():
+                XLoc = v.keys()
+                max_x = v[max(XLoc)]
+            for k, v in Evaluated_Y0.items():
+                YLoc = v.keys()
+                max_y = v[max(YLoc)]
+            XLoc.sort()
+            YLoc.sort()
+            Min_X_Loc[len(XLoc) - 1] = max_x
+            Min_Y_Loc[len(YLoc) - 1] = max_y
+
+            for k, v in Min_X_Loc.items():
+                if W >= v:
+                    Min_X_Loc[0] = 0
+                    Min_X_Loc[k] = W
+            for k, v in Min_Y_Loc.items():
+                if H >= v:
+                    Min_Y_Loc[0] = 0
+                    Min_Y_Loc[k] = H
+
+            Min_X_Loc = collections.OrderedDict(sorted(Min_X_Loc.items()))
+            Min_Y_Loc = collections.OrderedDict(sorted(Min_Y_Loc.items()))
+            print "MIN",Min_X_Loc,Min_Y_Loc
+            Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=num_layouts, W=W, H=H,
+                                                      XLoc=Min_X_Loc, YLoc=Min_Y_Loc)
+            CS_SYM_Updated, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree, sym_to_cs)
+            CS_SYM_Updated = CS_SYM_Updated['H']
+            self.cur_fig_data = plot_layout(Layout_Rects, level)
+        elif level == 3:
+            CG2 = CS_to_CG(0)
+            Evaluated_X0, Evaluated_Y0 = CG2.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=None, W=None, H=None,
+                                                        XLoc=None, YLoc=None)
+
+            # print"Eval0", Evaluated_X0, Evaluated_Y0
+            self.Min_X = Evaluated_X0
+            self.Min_Y = Evaluated_Y0
+            Min_X_Loc = {}
+            Min_Y_Loc = {}
+            for k, v in Evaluated_X0.items():
+                XLoc = v.keys()
+                max_x = v[max(XLoc)]
+            for k, v in Evaluated_Y0.items():
+                YLoc = v.keys()
+                max_y = v[max(YLoc)]
+            XLoc.sort()
+            YLoc.sort()
+
+            # Min_X_Loc[0] = 0
+            # Min_Y_Loc[0] = 0
+            Min_X_Loc[len(XLoc) - 1] = max_x
+            Min_Y_Loc[len(YLoc) - 1] = max_y
+
+            for k, v in Min_X_Loc.items():
+                if W > v:
+                    Min_X_Loc[0] = 0
+                    Min_X_Loc[k] = W
+            for k, v in Min_Y_Loc.items():
+                if H > v:
+                    Min_Y_Loc[0] = 0
+                    Min_Y_Loc[k] = H
+            # print "Node", self.init_data[2][1] #Gives the dictionary where key= Node# and value=initial (x,y) coordinate
+            ### Data from GUI
+            for k, v in fixed_x_location.items():
+                Min_X_Loc[k] = v
+            for k, v in fixed_y_location.items():
+                Min_Y_Loc[k] = v
+
+            Min_X_Loc = collections.OrderedDict(sorted(Min_X_Loc.items()))
+            Min_Y_Loc = collections.OrderedDict(sorted(Min_Y_Loc.items()))
+            print "MIN", Min_X_Loc, Min_Y_Loc
+
+            Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=num_layouts, W=W, H=H,
+                                                      XLoc=Min_X_Loc, YLoc=Min_Y_Loc)
+            CS_SYM_Updated, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree, sym_to_cs)
+
+            CS_SYM_Updated = CS_SYM_Updated['H']
+            self.cur_fig_data = plot_layout(Layout_Rects, level)
+
+        return self.cur_fig_data, CS_SYM_Updated
+
 def plot_layout(Layout_Rects,level,path=None,name=None):
     Patches=[]
     if level==0:
@@ -167,278 +445,3 @@ def Sym_to_CS(input_rects,Htree,Vtree):
     return SYM_CS
 
 
-
-class New_layout_engine():
-    def __init__(self):
-        self. W =None
-        self. H =None
-        self.window =None
-        self.Htree =None
-        self.Vtree =None
-        self.cons_df =None
-        self.Min_X =None
-        self.Min_Y =None
-        self.cons_info=None
-        # self.level=None
-        # for initialize only
-        self.init_data =[]
-        self.cornerstitch =CornerStitch()
-        # current solutions
-        self.cur_fig_data =None
-        # only activate when the sym_layout API is used
-        self.sym_layout =None
-        self.layout_sols ={}
-    def open_new_layout_engine(self ,window):
-        self.window =window
-        patches = self.init_data[0]
-        graph =self.init_data[2]
-        self.new_layout_engine = New_layout_engine_dialog(self.window, patches, W=self. W +20 ,H= self. H +20
-                                                          ,engine=self,
-                                                          graph=graph)
-        self.new_layout_engine.exec_()
-    def cons_from_ps(self):
-        minWidth = self.cons_info[0]
-        minHeight = self.cons_info[1]
-        minExtension = self.cons_info[2]
-        SP = self.cons_info[3]
-        En = self.cons_info[4]
-
-        Dim_Con = {}
-        r1=['Min Dimensions','EMPTY', 'Trace', 'MOS', 'Lead', 'Diode']
-        r2=['Min Width',str(minWidth[0]),str(minWidth[1]),str(minWidth[2]),str(minWidth[3]),str(minWidth[4])]
-        r3=['Min Height',str(minHeight[0]),str(minHeight[1]),str(minHeight[2]),str(minHeight[3]),str(minHeight[4])]
-        r4=['Min Extension',str(minExtension[0]),str(minExtension[1]),str(minExtension[2]),str(minExtension[3]), str(minExtension[4])]
-        r5=['Min Spacing','EMPTY', 'Trace', 'MOS', 'Lead', 'Diode']
-        r6=['EMPTY',str(SP[0]), 'N/A', 'N/A', 'N/A', 'N/A']
-        r7=['Trace','N/A', str(SP[1]), 'N/A', 'N/A', 'N/A']
-        r8=['MOS','N/A', 'N/A', str(SP[2]), 'N/A', 'N/A']
-        r9=['Lead','N/A', 'N/A', str(SP[5]), str(SP[3]), 'N/A']
-        r10=['Diode','N/A', 'N/A', 'N/A', str(SP[6]), str(SP[4])]
-        r11=['Min Enclosure','EMPTY', 'Trace', 'MOS', 'Lead', 'Diode']
-        r12=['EMPTY','N/A', str(En[0]), 'N/A', 'N/A', 'N/A']
-        r13=['Trace', 'N/A','N/A',str(En[1]), str(En[2]), str(En[3])]
-        r14 = ['MOS', 'N/A', 'N/A', 'N/A', 'N/A', 'N/A']
-        r15=['Lead','N/A', 'N/A', 'N/A', 'N/A', 'N/A']
-        r16=[ 'Diode','N/A', 'N/A', 'N/A', 'N/A', 'N/A']
-        my_list = [r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,r13,r14,r15,r16]
-
-        df = pd.DataFrame(my_list)
-        #self.cons_df=df
-
-        df.to_csv('out.csv', sep=',', header=None, index=None)
-
-
-
-        return
-    def init_layout_from_symlayout(self ,sym_layout=None):
-        '''
-        initialize new layout engine with old symlayout data structure
-        Returns:
-        '''
-        print "initializing ....."
-        self.sym_layout =sym_layout
-
-        # Data frame for NewEngine is made here....
-        #if (self.cons_df.empty):
-
-        if sym_layout!=None:
-            self.cons_info = self.collect_sym_cons_info(sym_layout)
-            self.cons_df=self.cons_from_ps()
-            #print"con",self.cons_df
-        #------------------------------------------
-        input_rects, self.W, self.H = input_conversion(sym_layout)
-        input = self.cornerstitch.read_input('list', Rect_list=input_rects)
-        self.Htree, self.Vtree = self.cornerstitch.input_processing(input, self.W + 20, self.H + 20)
-
-        patches ,combined_graph =self.cornerstitch.draw_layout(input_rects)
-        sym_to_cs = Sym_to_CS(input_rects, self.Htree, self.Vtree)
-
-        self.init_data =[patches ,sym_to_cs ,combined_graph]
-
-    def collect_sym_cons_info(self, sym_layout):
-        '''
-        Go through sym objs and search for dimensions, sym DRC
-        :return:
-        '''
-        # NOTE: There can be multiple types of mosfets and diodes themselves for now assume all mosfet are the same
-        # Take the maximum width and height of the mosfet group, Init with all 0s for cases they are not used
-        diode_widths=[0]
-        diode_heights=[0]
-        mosfet_widths = [0]
-        mosfet_heights = [0]
-        lead_widths=[0]
-        lead_heights=[0]
-        # Go through all devices and find max dimensions
-
-        for dev in sym_layout.devices:
-            width, height, thickness = dev.tech.device_tech.dimensions
-            if dev.is_diode():
-                diode_widths.append(width)
-                diode_heights.append(height)
-            if dev.is_transistor():
-                mosfet_widths.append(width)
-                mosfet_heights.append(height)
-
-        for lead in sym_layout.leads:
-            if lead.tech.shape == Lead.BUSBAR:
-                width= lead.tech.dimensions[0]
-                height = lead.tech.dimensions[1]
-            elif lead.tech.shape == Lead.ROUND:
-                width = lead.tech.dimensions[0] # Radius
-                height = lead.tech.dimensions[0]
-            lead_widths.append(width)
-            lead_heights.append(height)
-
-        # Info is here
-        Type2_W = max(mosfet_widths+ mosfet_heights)
-        Type2_H = Type2_W # Because a device can rotate
-        Type3_W= max(lead_widths+lead_heights)
-        Type3_H = Type3_W  # Because a lead can rotate
-        Type4_W = max(diode_widths + diode_heights)
-        Type4_H = Type4_W  # Because a diode can rotate
-        #Design_rule
-        design_rule = sym_layout.module.design_rules
-        # SEE powercad/design/project_structures.py
-        Type1_W = design_rule.min_trace_width
-        Gap_1_1 = design_rule.min_trace_trace_width
-        Gap_1_2 = design_rule.min_die_trace_dist
-        Gap_1_3 = Gap_1_2
-        Gap_1_4 = Gap_1_2
-        Gap_2_2 = design_rule.min_die_die_dist
-        Gap_2_3 = Gap_2_2
-        Gap_3_3 = Gap_2_2
-        Gap_3_4 = Gap_2_2
-        Gap_4_4 = Gap_2_2
-        Gap_0_0=2#[EMPTY type]
-        # Ledge Width (Type EMPTY to 1 ?)
-        ledge_width = sym_layout.module.substrate.ledge_width
-        minWidth=[ledge_width,Type1_W,Type2_W,Type3_W,Type4_W] # Trace,MOS,Lead,Diode
-        minHeight=[ledge_width,Type1_W,Type2_H,Type3_H,Type4_H]
-        minExtension=[ledge_width,Type1_W,Type2_W,Type3_W,Type4_W]
-        Gaps=[Gap_0_0,Gap_1_1,Gap_2_2,Gap_3_3,Gap_4_4,Gap_2_3,Gap_3_4]
-        Enclosures=[ledge_width,Gap_1_2,Gap_1_3,Gap_1_4]
-        print Type1_W,Type2_W,Type3_W,Type4_W,Gap_1_2,Gap_2_2,ledge_width
-        return minWidth,minHeight,minExtension,Gaps,Enclosures
-
-    def mode_zero(self):
-        # print"pass"
-        CG1 = CS_to_CG(0)
-        # CG1.getConstraints(path+'/'+'Constraints-1.csv')
-        CG1.getConstraints(self.cons_df)
-        Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=None, W=None, H=None ,XLoc=None
-                                                  ,YLoc=None)
-        return Evaluated_X ,Evaluated_Y
-
-    def generate_solutions(self ,level ,num_layouts=1 ,W=None ,H=None ,fixed_x_location=None ,fixed_y_location=None):
-        # self.level=level
-        CG1 = CS_to_CG(level)
-        # CG1.getConstraints(path+'/'+'Constraints-1.csv')
-        CG1.getConstraints(self.cons_df)
-        sym_to_cs =self.init_data[1]
-        if level == 0:
-            Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=None, W=None, H=None
-                                                      ,XLoc=None ,YLoc=None)
-            CS_SYM_information, Layout_Rects = CG1.UPDATE_min(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree
-                                                              ,sym_to_cs)  # CS_SYM_information is a dictionary where key=path_id(component name) and value=list of updated rectangles, Layout Rects is a dictionary for minimum HCS and VCS evaluated rectangles (used for plotting only)
-
-
-            self.cur_fig_data = plot_layout(Layout_Rects, level)
-
-            CS_SYM_Updated ={}
-            for i in self.cur_fig_data:
-                for k ,v in i.items():
-                    CS_SYM_Updated[k ] =CS_SYM_information
-            CS_SYM_Updated = [CS_SYM_Updated]
-        elif level==1:
-
-            Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=num_layouts, W=None, H=None
-                                                      ,XLoc=None, YLoc=None)
-            CS_SYM_Updated, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y ,self.Htree, self.Vtree, sym_to_cs)
-            CS_SYM_Updated = CS_SYM_Updated['H']
-            self.cur_fig_data = plot_layout(Layout_Rects, level)
-        elif level==2:
-            CG2 = CS_to_CG(0)
-            Evaluated_X0, Evaluated_Y0 = CG2.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=None, W=None, H=None
-                                                        ,XLoc=None ,YLoc=None)
-
-            # print"Eval0", Evaluated_X0, Evaluated_Y0
-            Min_X_Loc = {}
-            Min_Y_Loc = {}
-            for k, v in Evaluated_X0.items():
-                XLoc = v.keys()
-                max_x = v[max(XLoc)]
-            for k, v in Evaluated_Y0.items():
-                YLoc = v.keys()
-                max_y = v[max(YLoc)]
-            XLoc.sort()
-            YLoc.sort()
-            Min_X_Loc[len(XLoc) - 1] = max_x
-            Min_Y_Loc[len(YLoc) - 1] = max_y
-
-
-            for k ,v in Min_X_Loc.items():
-                if W>= v:
-                    Min_X_Loc[0] = 0
-                    Min_X_Loc[k] = W
-            for k, v in Min_Y_Loc.items():
-                if H >= v:
-                    Min_Y_Loc[0] = 0
-                    Min_Y_Loc[k] = H
-
-            Min_X_Loc = collections.OrderedDict(sorted(Min_X_Loc.items()))
-            Min_Y_Loc = collections.OrderedDict(sorted(Min_Y_Loc.items()))
-            Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=num_layouts, W=W, H=H,
-                                                      XLoc=Min_X_Loc, YLoc=Min_Y_Loc)
-            CS_SYM_Updated, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree, sym_to_cs)
-            CS_SYM_Updated = CS_SYM_Updated['H']
-            self.cur_fig_data = plot_layout(Layout_Rects, level)
-        elif level == 3:
-            CG2 = CS_to_CG(0)
-            Evaluated_X0, Evaluated_Y0 = CG2.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=None, W=None, H=None,
-                                                        XLoc=None, YLoc=None)
-
-            # print"Eval0", Evaluated_X0, Evaluated_Y0
-            self.Min_X = Evaluated_X0
-            self.Min_Y = Evaluated_Y0
-            Min_X_Loc = {}
-            Min_Y_Loc = {}
-            for k, v in Evaluated_X0.items():
-                XLoc = v.keys()
-                max_x = v[max(XLoc)]
-            for k, v in Evaluated_Y0.items():
-                YLoc = v.keys()
-                max_y = v[max(YLoc)]
-            XLoc.sort()
-            YLoc.sort()
-
-            # Min_X_Loc[0] = 0
-            # Min_Y_Loc[0] = 0
-            Min_X_Loc[len(XLoc) - 1] = max_x
-            Min_Y_Loc[len(YLoc) - 1] = max_y
-
-            for k, v in Min_X_Loc.items():
-                if W > v:
-                    Min_X_Loc[0] = 0
-                    Min_X_Loc[k] = W
-            for k, v in Min_Y_Loc.items():
-                if H > v:
-                    Min_Y_Loc[0] = 0
-                    Min_Y_Loc[k] = H
-            # print "Node", self.init_data[2][1] #Gives the dictionary where key= Node# and value=initial (x,y) coordinate
-            ### Data from GUI
-            for k, v in fixed_x_location.items():
-                Min_X_Loc[k] = v
-            for k, v in fixed_y_location.items():
-                Min_Y_Loc[k] = v
-
-            Min_X_Loc = collections.OrderedDict(sorted(Min_X_Loc.items()))
-            Min_Y_Loc = collections.OrderedDict(sorted(Min_Y_Loc.items()))
-
-            Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=num_layouts, W=W, H=H,
-                                                      XLoc=Min_X_Loc, YLoc=Min_Y_Loc)
-            CS_SYM_Updated, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree, sym_to_cs)
-
-            CS_SYM_Updated = CS_SYM_Updated['H']
-            self.cur_fig_data = plot_layout(Layout_Rects, level)
-
-        return self.cur_fig_data, CS_SYM_Updated

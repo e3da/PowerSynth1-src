@@ -264,7 +264,6 @@ class E_graph():
         self.trace_nodes.append(nodes)
 
     def _eval_parasitic_models(self, width, length, trace_data):
-        print "W", width,"L",length
         ind = trace_inductance(width, length, trace_data[1], trace_data[2])
         res = trace_resistance(trace_data[4], width, length, trace_data[1], trace_data[2], trace_data[5])
         cap = trace_capacitance(width, length, trace_data[1], trace_data[2], trace_data[6])
@@ -891,22 +890,22 @@ class E_graph():
 
         # Make sure the dictionary connection systems are working
         msg = "Trace connection error during lumped element graph generation."
-        assert conn_sum == 0, msg
+        #assert conn_sum == 0, msg
 
         msg = "Not all overlapping nodes determined during lumped element graph generation."
-        assert overlap_sum == 0, msg
+        #assert overlap_sum == 0, msg
 
         #msg = "Not all bondwire connections found during lumped element graph generation."
         #assert bw_sum == 0, msg
 
         msg = "Not all trace to trace bondwire connections found during lumped element graph generation."
-        assert ww_sum == 0, msg
+        #assert ww_sum == 0, msg
 
         msg = "Not all supertrace connections were linked during lumped element graph generation."
-        assert supertrace_sum == 0, msg
+        #assert supertrace_sum == 0, msg
 
         msg = "Not all long contact supertrace connections were linked during lumped element graph generation."
-        assert long_sum == 0, msg
+        #assert long_sum == 0, msg
         self._build_lumped_edges(trace_data, lumped_graph)
 
         # Update self.sym_layout
@@ -1047,6 +1046,7 @@ class E_graph():
         supertrace_sum = 0
         long_conn = {};
         long_sum = 0
+
         # HANDLE SUPER TRACE FIRST
         mesh_nodes, lumped_graph, vert_count, supertrace_conn, supertrace_sum, long_conn, long_sum = self.handle_super_trace(
             lumped_graph, vert_count, supertrace_conn, supertrace_sum, long_conn, long_sum)

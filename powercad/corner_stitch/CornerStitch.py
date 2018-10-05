@@ -5,30 +5,14 @@ Created on June 1, 2017
 @author: John Calvin Alumbaugh, jcalumba
 '''
 import os
-import sys
-import copy
 import matplotlib
 matplotlib.use('Agg')
-import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-from matplotlib import pylab
-from sets import Set
-from abc import ABCMeta, abstractmethod
-import networkx as nx
-import numpy as np
-from matplotlib.patches import Circle, Wedge
-from matplotlib.collections import PatchCollection
+from abc import ABCMeta
 from constraintGraph_Dev import *
-import CSCG
 import constraint as ct
 import collections
-import operator
-from powercad.cons_aware_en.cons_engine import *
 import csv
-import ast
-import pandas as pd
-import csv
-import timeit
 import networkx as nx
 from powercad.general.data_struct.util import *
 
@@ -3266,41 +3250,45 @@ class CS_to_CG():
             level: Mode of operation
         '''
         self.level=level
-    def getConstraints(self,constraint_file):
-
+    def getConstraints(self,constraint_file,sigs=3):
+        mult = 10** sigs
+        print "layout multiplier", mult
         data = constraint_file
 
         Types=len(data.columns)
 
         SP = []
         EN = []
-
-        width = ((data.iloc[0, 1:]).values.tolist())
-        extension = ((data.iloc[1, 1:]).values.tolist())
-        height = ((data.iloc[2, 1:]).values.tolist())
+        width = [int(math.floor(float(w)* mult)) for w in ((data.iloc[0, 1:]).values.tolist())]
+        extension = [int(math.floor(float(ext) * mult)) for ext in ((data.iloc[1, 1:]).values.tolist())]
+        height = [int(math.floor(float(h) * mult)) for h in ((data.iloc[2, 1:]).values.tolist())]
 
         for j in range(len(data)):
             # print i
             # print data.nrows[i]
             if j >3 and j < (3+Types):
-
-                SP.append((data.iloc[j, 1:(Types)]).values.tolist())
+                SP1 = [int(math.floor(float(spa) * mult)) for spa in (data.iloc[j, 1:(Types)]).values.tolist()]
+                SP.append(SP1)
 
             elif j > (3+Types) and j < (3+2*Types):
-                EN.append((data.iloc[j, 1:(Types)]).values.tolist())
+                EN1 = [int(math.floor(float(enc) * mult)) for enc in (data.iloc[j, 1:(Types)]).values.tolist()]
+                EN.append(EN1)
+
             else:
                 continue
         CONSTRAINT = ct.constraint()
 
         # for i in range(len(constraints)):
-        minWidth = map(float, width)
-        minExtension = map(float, extension)
-        minHeight = map(float, height)
+        minWidth = map(int, width)
+        minExtension = map(int, extension)
+        minHeight = map(int, height)
         # print minExtension
-        minSpacing = [map(float, i) for i in SP]
-        minEnclosure = [map(float, i) for i in EN]
 
 
+        minSpacing = [map(int, i) for i in SP]
+        minEnclosure = [map(int, i) for i in EN]
+
+        print minWidth,minEnclosure,minExtension,minHeight,minSpacing
 
         # print minWidth,minSpacing,minEnclosure
         CONSTRAINT = ct.constraint()

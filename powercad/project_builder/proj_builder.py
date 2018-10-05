@@ -32,13 +32,12 @@ from powercad.project_builder.windows.mainWindow_newlayoutengine import Ui_MainW
 from powercad.project_builder.windows.sol_window import SolutionWindow
 from powercad.project_builder.proj_dialogs import NewProjectDialog, OpenProjectDialog, EditTechLibPathDialog, \
     GenericDeviceDialog,LayoutEditorDialog, ResponseSurfaceDialog,ModelSelectionDialog,EnvironmentSetupDialog,SetupDeviceDialogs\
-    ,WireConnectionDialogs,New_layout_engine_dialog
+    ,WireConnectionDialogs
 
 from powercad.drc.process_design_rules_editor import ProcessDesignRulesEditor
 from powercad.tech_lib.tech_lib_wiz import TechLibWizDialog
 
 from powercad.layer_stack.layer_stack_import import LayerStackImport
-from powercad.general.settings.settings import MANUAL
 from powercad.sym_layout.symbolic_layout import SymLine,SymPoint
 from powercad.design.library_structures import BondWire, Lead
 from powercad.sol_browser.graph_app import GrapheneWindow
@@ -47,7 +46,8 @@ from powercad.sym_layout.svg import LayoutLine, LayoutPoint
 from powercad.general.settings.save_and_load import save_file, load_file
 from powercad.general.settings.settings import *
 from powercad.general.settings.Error_messages import *
-
+from powercad.cons_aware_en.cons_engine import New_layout_engine
+import copy
 
 class ProjectBuilder(QtGui.QMainWindow):
     
@@ -289,8 +289,15 @@ class ProjectBuilder(QtGui.QMainWindow):
                 self.project.module_data.design_rules = ProcessDesignRules(1.2, 1.2, 0.2, 0.1, 1.0, 0.2, 0.2, 0.2)
 
     def open_new_layout_engine(self):
-        new_layout_engine = New_layout_engine_dialog(self)
-        new_layout_engine.exec_()
+        if not self.build_module_stack(False):
+            QtGui.QMessageBox.warning(self, "Module Stack Error",
+                                      "One or more settings on the module stack page have an error.")
+            run_optimization = False
+        self.project.symb_layout.form_api_cs(self.project.module_data, self.project.tbl_bondwire_connect, self.TEMP_DIR)
+        new_layout_engine = New_layout_engine()
+        symlayout = copy.deepcopy(self.project.symb_layout)
+        new_layout_engine.init_layout_from_symlayout(symlayout)
+        new_layout_engine.open_new_layout_engine(self)
 
 
     def open_design_rule_editor(self):

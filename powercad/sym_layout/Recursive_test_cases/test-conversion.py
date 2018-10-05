@@ -12,7 +12,7 @@ from PySide import QtGui
 from PySide.QtGui import QFileDialog,QMainWindow
 from powercad.tech_lib.test_techlib import get_mosfet, get_dieattach
 from powercad.cons_aware_en.cons_engine import *
-
+import sys
 
 
 

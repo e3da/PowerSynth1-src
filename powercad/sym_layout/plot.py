@@ -38,7 +38,7 @@ def plot_svg_objs(layout):
     plt.show()
     #print "plot_svg_objs() completed."
 
-def plot_layout(sym_layout, filletFlag=True, ax = plt.subplot('111', adjustable='box', aspect=1.0), new_window=True, plot_row_col=False):
+def plot_layout(sym_layout, filletFlag=False, ax = plt.subplot('111', adjustable='box', aspect=1.0), new_window=True, plot_row_col=False):
     #print "plot_layout() started."
     hlist = sym_layout.h_rowcol_list
     vlist = sym_layout.v_rowcol_list
@@ -50,6 +50,7 @@ def plot_layout(sym_layout, filletFlag=True, ax = plt.subplot('111', adjustable=
     print "Traces", traces
     print "sub_dim",sub_dim
     '''
+    patches = []
     # Plot substrate boundary first
     sub_w, sub_l = sym_layout.module.substrate.dimensions
     ledge = sym_layout.module.substrate.ledge_width
@@ -57,7 +58,6 @@ def plot_layout(sym_layout, filletFlag=True, ax = plt.subplot('111', adjustable=
     sub_rect.translate(-ledge, -ledge)
     r = Rectangle((sub_rect.left, sub_rect.bottom), sub_rect.width, sub_rect.height, facecolor='#B87333', edgecolor='#616161')
     ax.add_patch(r)
-
     # Detect corners for filleting
     if filletFlag:
         sym_layout2 = copy.deepcopy(sym_layout) # create a deepcopy of sym_layout so that phantom traces can be removed
@@ -134,7 +134,7 @@ def plot_layout(sym_layout, filletFlag=True, ax = plt.subplot('111', adjustable=
     if new_window:
         plt.show()
 
-    print "plot_layout() completed."
+    #print "plot_layout() completed."
     return ax
 
 class Trace(object):

@@ -484,8 +484,6 @@ class SymbolicLayout(object):
         self._get_trace_design_vars()  # go to this method to read more
         self._build_symbol_graph()
         self._build_trace_graph()  # go to this method to read more
-        # Check Device Thermal Characterizations (checks for cached characterizations) # Only for modes 0 2 3
-        self.thermal_characterize()
 
     def form_design_problem(self, module,tbl_bw_connect=None, temp_dir=settings.TEMP_DIR):
         """ Formulate and check the design problem before optimization.

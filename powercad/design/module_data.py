@@ -38,7 +38,7 @@ class ModuleData(object):
 def gen_test_module_data(freq):
     data = ModuleData()
     # dimensions, eff_conv_coeff, baseplate_tech
-    data.baseplate = BaseplateInstance((60, 60, 5), 150, get_baseplate())
+    data.baseplate = BaseplateInstance((62, 60, 5), 150, get_baseplate())
     
     # thickness, attach_tech
     data.substrate_attach = SubstrateAttachInstance(0.1, get_sub_attach())
