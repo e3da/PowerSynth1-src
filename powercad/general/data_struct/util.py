@@ -201,6 +201,11 @@ class Rect:
         else:
             return False
 
+    def encloses1(self, x, y):
+        if x > self.left and x < self.right and y > self.bottom and y < self.top:
+            return True
+        else:
+            return False
     def translate(self, dx, dy):
         self.top += dy
         self.bottom += dy
@@ -325,16 +330,23 @@ def get_overlap_interval(interval1, interval2):
     return (max(interval1[0], interval2[0]), min(interval1[1], interval2[1]))
 
 
-def draw_rect_list(rectlist,ax,color,pattern):
+def draw_rect_list(rectlist,color,pattern):
+    fig,ax = plt.subplots()
     patch=[]
+    plt.xlim(-5, 15)
+    plt.ylim(-5, 10)
     for r in rectlist:
         p = patches.Rectangle((r.left, r.bottom), r.width(), r.height(),fill=True,
-            edgecolor='black',facecolor=color,hatch=pattern,linewidth=4)
+            edgecolor='black',facecolor=color,hatch=pattern,linewidth=2,alpha=0.5)
+        #print r.left,r.bottom,r.width(),r.height()
         patch.append(p)
         ax.add_patch(p)
-    plt.xlim(0,60)
-    plt.ylim(0, 60)
-    plt.gca().set_aspect('equal', adjustable='box')
+        txt = str(r.width())+'_'+ str(r.height())
+        ax.text(r.left+r.width()/2, r.bottom+r.height()/2,txt)
+    plt.show()
+
+
+
 
 
 if __name__ == '__main__':

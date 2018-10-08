@@ -25,17 +25,17 @@ class E_plate:
         if self.n == (0, 0, 1) or self.n == (0, 0, -1):
             self.x = rect.left
             self.y = rect.bottom
-            self.z = z * sum(self.n)
+            self.z = z #* sum(self.n)
         # YZ plane
         elif self.n == (1, 0, 0) or self.n == (-1, 0, 0):
             self.y = rect.left
             self.z = rect.bottom
-            self.x = z * sum(self.n)
+            self.x = z #* sum(self.n)
         # XZ plane
         elif self.n == (0, 1, 0) or self.n == (0, -1, 0):
             self.z = rect.left
             self.x = rect.bottom
-            self.y = z * sum(self.n)
+            self.y = z #* sum(self.n)
 
         # Used these to save edges and nodes information
         self.mesh_nodes=[]
@@ -50,7 +50,9 @@ class E_plate:
 
         '''
         # Assume 2 sheets on same plane xy and same z, check if trace enclose sheet
-        if (self.n == sheet.n and (self.z +self.dz) == sheet.z) or (self.n == -1*sheet.n and self.z == sheet.z): #upper and lower faces of a trace
+        print self.n, -1*sheet.n, self.z ,sheet.z,self.dz
+        if (self.n == sheet.n and (self.z +self.dz) == sheet.z) or (sum(self.n) == -1*sum(sheet.n) and self.z == sheet.z): #upper and lower faces of a trace
+            print "found it"
             if self.rect.encloses(sheet.rect.center_x(), sheet.rect.center_y()):
                 return True
             else:
@@ -157,10 +159,10 @@ def plot_rect3D(rect2ds=None, ax=None):
 
         ax.add_collection3d(poly0)
         ax.add_collection3d(poly1)
-        if isinstance(obj, Sheet):
-            ax.text(obj.rect.center_x(), obj.rect.center_y(), z0, obj.net)
-        else:
-            ax.text(obj.rect.center_x(), obj.rect.center_y(), z0, obj.name)
+        #if isinstance(obj, Sheet):
+        #    ax.text(obj.rect.center_x(), obj.rect.center_y(), z0, obj.net)
+        #else:
+        #    ax.text(obj.rect.center_x(), obj.rect.center_y(), z0, obj.name)
 
 
 

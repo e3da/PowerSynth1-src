@@ -2,9 +2,7 @@
 @ qmle: This routine is used to connect the layer stack format to formulate the appropriate response surface model
 '''
 from powercad.layer_stack.layer_stack_import import *
-import os
 from powercad.interfaces.Q3D.Ipy_script import Q3D_ipy_script
-import numpy as np
 from powercad.interfaces.Q3D.Electrical import rect_q3d_box
 from powercad.response_surface.Response_Surface import RS_model
 from powercad.response_surface.Layer_Stack import Layer_Stack
@@ -14,15 +12,10 @@ from powercad.general.data_struct.Unit import Unit
 from powercad.general.settings.Error_messages import InputError, Notifier
 from powercad.parasitics.mdl_compare import trace_cap_krige, trace_ind_krige, trace_res_krige, load_mdl
 import subprocess
-from scipy.interpolate import interp1d
-from powercad.interfaces.FastHenry.Standard_Trace_Model import Uniform_Trace, write_to_file
-from powercad.response_surface.RS_build_function import *
 from scipy.interpolate import InterpolatedUnivariateSpline
 from powercad.interfaces.FastHenry.fh_layers import  *
-from powercad.interfaces.FastHenry.Standard_Trace_Model import write_to_file
-from powercad.interfaces.FastHenry.Standard_Trace_Model import Square_corner, write_to_file
+from powercad.interfaces.FastHenry.Standard_Trace_Model import *
 from powercad.response_surface.RS_build_function import *
-from scipy.optimize import curve_fit
 from scipy.interpolate import interp1d
 import time
 def form_trace_model(layer_stack, Width=[1.2, 40], Length=[1.2, 40], freq=[10, 100, 10], wdir=None, savedir=None,
@@ -670,9 +663,9 @@ def form_fasthenry_trace_response_surface(layer_stack, Width=[1.2, 40], Length=[
     model_input.set_dir(savedir)
     model_input.set_data_bound([[minW, maxW], [minL, maxL]])
     model_input.set_name(mdl_name)
-    mesh_size=5
+    mesh_size=10
     model_input.create_uniform_DOE([mesh_size, mesh_size], True)
-    #model_input.create_DOE(0, 10)
+    #model_input.create_DOE(3, mesh_size**2)
     model_input.generate_fname()
     fasthenry_env = env[0]
     fasthenry_option = "-sludecomp"
@@ -697,12 +690,16 @@ def form_fasthenry_trace_response_surface(layer_stack, Width=[1.2, 40], Length=[
     nhinc_bp = str(nhinc_bp).replace('.0','')
     nhinc_met = str(nhinc_met).replace('.0','')
     #print nhinc_bp,nhinc_met
+    fig,ax = plt.subplots()
+    for [w,l] in model_input.DOE.tolist():
+        ax.scatter(w,l,s=100)
+    plt.show()
     for [w, l] in model_input.DOE.tolist():
         start=time.time()
         name = model_input.mdl_name + '_W_' + str(w) + '_L_' + str(l)
         print "RUNNING",name
         fname = os.path.join(wdir, name + ".inp")
-        nwinc = math.floor(math.log(w * 1e-3 / sd_met / 3) / math.log(2) * 2 + 1)
+        nwinc = math.ceil(math.log(w * 1e-3 / sd_met / 3) / math.log(2) * 2 + 1)
         if nwinc % 2 == 0:
             nwinc += 1
         nwinc=str(nwinc).replace('.0','')
@@ -713,16 +710,19 @@ def form_fasthenry_trace_response_surface(layer_stack, Width=[1.2, 40], Length=[
         script = Uniform_Trace.format(half_dim[0], half_dim[1], bp_t, bp_cond, nhinc_bp, half_dim[2],
                                       half_dim[3], met_z, metal_thick, metal_cond, nhinc_met, l / 2, trace_z, w,
                                       metal_thick, metal_cond, nwinc, nhinc_met, fmin * 1000, fmax * 1000, 10)
+        #print script
         write_to_file(script=script, file_des=fname)
         ''' Run FastHenry'''
         print fname
         args = [fasthenry_env, fasthenry_option, fname]
         p = subprocess.Popen(args, shell=False, stdout=subprocess.PIPE)
         stdout, stderr = p.communicate()
-        print stdout,stderr
+        #print stdout,stderr
         ''' Output Path'''
         outname=os.path.join(os.getcwd(), 'Zc.mat')
+        print "mesh", nwinc,nhinc_met
         print "run_time",time.time()-start
+
         ''' Convert Zc.mat to readable format'''
         f_list=[]
         r_list=[]
@@ -1118,9 +1118,9 @@ def test_build_trace_model_fh():
     dir = os.path.abspath(mdk_dir)
     ls = LayerStackImport(dir)
     ls.import_csv()
-    Width = [0.25, 2]
+    Width = [0.2, 2]
     Length = [0.5, 4]
-    freq = [1, 1500, 10] # in kHz
+    freq = [1, 1000, 100] # in kHz
     form_fasthenry_trace_response_surface(layer_stack=ls, Width=Width, Length=Length, freq=freq, wdir=w_dir,
                                           savedir=w_dir
                                           , mdl_name='test2d', env=env, doe_mode=2)

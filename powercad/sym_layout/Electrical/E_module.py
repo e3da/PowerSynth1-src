@@ -26,7 +26,6 @@ class Component:
                 self.net_graph.add_edge(c[0], c[1], attr_dict=v)
             else:
                 self.net_graph.add_edge(c[0],c[1],attr_dict=v)
-
     def build_graph(self):
         self.update_edges()
 

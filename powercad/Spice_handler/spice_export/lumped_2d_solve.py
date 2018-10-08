@@ -54,7 +54,7 @@ class Circuit():
         self.solver = None
         self.line_cnt=0
         self.results_dict={}
-        self.Rport=1
+        self.Rport=50
     def assign_freq(self,freq=1000):
         if self.comp_mode=='sym':
             self.s = Symbol('s')  # the Laplace variable
@@ -120,7 +120,7 @@ class Circuit():
         types = nx.get_node_attributes(lumped_graph, 'type')
         for edge in lumped_graph.edges(data=True):
             node1 = edge[0]
-            RLCname = edge[2]['attr']['trace'].name
+            RLCname = edge[2]['data'].name
             if node1 not in self.node_dict.keys():
                 net1 = net_id
                 self.node_dict[node1]=net1
@@ -132,7 +132,7 @@ class Circuit():
             int_net = net_id
             # add a reistor between net1 and internal net
             net_id += 1
-            val = edge[2]['attr']['res']
+            val = edge[2]['res']
 
             self._graph_add_comp(rowid, Rname.format(RLCname), net1, int_net, val)
             rowid += 1
@@ -146,7 +146,7 @@ class Circuit():
 
             # add an inductor between internal net and net2
 
-            val = edge[2]['attr']['ind']
+            val = edge[2]['ind']
             self._graph_add_comp(rowid, Lname.format(RLCname), int_net, net2, val)
             rowid += 1
             # add a capacitor between net2 and ground net # TODO: for multilayers this will be wrong...
@@ -169,9 +169,8 @@ class Circuit():
         self.line_cnt = self.df_circuit_info.shape[0]
         row_id = self.line_cnt
         for edge in m_graph.edges(data=True):
-            print 'edge',edge
+            #print 'edge',edge
             M_val = edge[2]['attr']['Mval']
-            #print M_val
             L1_name = 'L' + str(edge[0])
             L2_name = 'L' + str(edge[1])
             M_name='M'+'_'+L1_name+'_'+L2_name
@@ -537,8 +536,6 @@ class Circuit():
                 vn1, vn2, ind2_index = self.find_vname(
                     self.df_circuit_info.loc[i, 'Lname2'])  # get i_unk position for Ly
                 Mval = self.df_circuit_info.loc[i, 'value']
-                    # display the The D matrix
-                # Mval
                 self.M[Mname] = Mval
                 # print self.M
                 if self.comp_mode == 'sym':
@@ -547,7 +544,7 @@ class Circuit():
                     self.D[ind2_index, ind1_index] += -s * sympify(
                         'M{:s}'.format(self.df_circuit_info.loc[i, 'element'].lower()[1:]))  # -s*Mxx
                 elif self.comp_mode == 'val':
-                    self.D[ind1_index, ind2_index] += -s * Mval  # s*Mxx
+                    self.D[ind1_index, ind2_index] += s * Mval  # s*Mxx
                     self.D[ind2_index, ind1_index] += -s * Mval  # -s*Mxx
     def V_mat(self, num_nodes):
         # generate the V matrix
@@ -646,7 +643,7 @@ class Circuit():
         self.V = zeros(num_nodes, 1)
         self.I = np.zeros((num_nodes, 1), dtype=np.complex_)
         self.G = np.zeros((num_nodes, num_nodes), dtype=np.complex_)  # also called Yr, the reduced nodal matrix
-
+        print num_nodes
         # count the number of element types that affect the size of the B, C, D, E and J arrays
         # these are element types that have unknown currents
         i_unk = self.df_uk_current.shape[0]
