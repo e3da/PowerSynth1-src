@@ -231,6 +231,7 @@ class New_layout_engine():
                                                       XLoc=Min_X_Loc, YLoc=Min_Y_Loc)
             CS_SYM_Updated, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree, sym_to_cs)
             CS_SYM_Updated = CS_SYM_Updated['H']
+            print "CS_SYM",CS_SYM_Updated
             self.cur_fig_data = plot_layout(Layout_Rects, level)
         elif level == 3:
             CG2 = CS_to_CG(0)

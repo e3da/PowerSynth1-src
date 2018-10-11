@@ -1752,11 +1752,13 @@ class New_layout_engine_dialog(QtGui.QDialog):
         for layout in self.layout_data.keys():
             symb_rect_dict = {}
             p_data = self.layout_data[layout]['Rects']
+            #print "p_data",p_data
             W,H= p_data.keys()[0]
             W=float(W)/div
             H=float(H)/div
             rect_dict = p_data.values()[0]
             for r_id in rect_dict.keys():
+                #print 'rect id',r_id
                 left=1e32
                 bottom = 1e32
                 right = 0
@@ -1889,7 +1891,8 @@ class New_layout_engine_dialog(QtGui.QDialog):
         sym_layout = self.engine.sym_layout
         sym_layout.trace_rects = []
         for tr in self.engine.sym_layout.all_trace_lines:
-            rect = sym_info[tr.name]
+            #print "trace id ",tr.element.path_id
+            rect = sym_info[tr.element.path_id] # MIGHT BE AN ISSUE HERE
             sym_layout.trace_rects.append(rect)
             tr.trace_rect = rect
     def _sym_place_devices(self,sym_info=None):
@@ -1988,7 +1991,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
 
                 lead.center_position = (xpos, ypos)
             elif lead.tech.shape == Lead.ROUND:
-                lead_region = sym_info[lead.name]
+                lead_region = sym_info[lead.element.path_id]
                 radius = 0.5 * lead.tech.dimensions[0]
                 center = [lead_region.left+radius, lead_region.bottom]
                 lead.footprint_rect = Rect(center[1] + radius, center[1] - radius,

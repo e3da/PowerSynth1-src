@@ -53,8 +53,6 @@ class constraintGraph:
         self.Y = []
         self.Loc_X = {}
         self.Loc_Y = {}
-        # self.W_T = [160,165,170,175,180,185,190,195,200,205]
-        # self.H_T =[105,110,120,130,140,150,160,170,180,190]
 
         ############################
 
@@ -117,14 +115,15 @@ class constraintGraph:
             if node.child == []:
                 continue
             else:
-                self.HorizontalNodeList.append(node)
+                self.HorizontalNodeList.append(node) # only appending all horizontal tree nodes which have children. Nodes having no children are not included
 
         for node in V_NODELIST:
             if node.child == []:
                 continue
             else:
-                self.VerticalNodeList.append(node)
+                self.VerticalNodeList.append(node)# only appending all vertical tree nodes which have children. Nodes having no children are not included
 
+        ## For reliability constraint handling
         if CONNECTED_H!=None:
             Voltage={}
             self.voltage_constraint={}
@@ -383,7 +382,7 @@ class constraintGraph:
 
 
 
-    ##### for single node
+    #####  constraint graph evaluation after randomization to determine each node new location
     def minValueCalculation(self, hNodeList, vNodeList, level):
         if level != 0:
 
@@ -421,6 +420,7 @@ class constraintGraph:
 
             return self.minX, self.minY
 
+    # only minimum x location evaluation
     def set_minX(self, node):
         if node.id in self.minLocationH.keys():
             L = self.minLocationH[node.id]
@@ -442,8 +442,9 @@ class constraintGraph:
                     final[K[k]] = final[K[k - 1]] + L1[K[k]]
 
             self.minX[node.id] = final
-        # print"H", final
 
+
+    # only minimum y location evaluation
     def set_minY(self, node):
         if node.id in self.minLocationV.keys():
             L = self.minLocationV[node.id]
@@ -489,7 +490,7 @@ class constraintGraph:
 
     def dimListFromLayer(self, cornerStitch_h, cornerStitch_v):
         """
-        generate the zeroDimensionList from a cornerStitch
+        generate the zeroDimensionList from a cornerStitch (horizontal and vertical cuts)
         """
 
         pointSet_v = Set()  # this is a set of zero dimensional line coordinates, (e.g. x0, x1, x2, etc.)
@@ -535,12 +536,9 @@ class constraintGraph:
         # self.zeroDimensionListh = setToList_h
         return setToList_h, setToList_v
 
-
+    ## creating edges from corner stitched tiles
     def setEdgesFromLayer(self, cornerStitch_h, cornerStitch_v):
-        # self.vertexMatrixh=defaultdict(lambda: defaultdict(list))
-        # self.vertexMatrixv = defaultdict(lambda: defaultdict(list))
-
-        ID = cornerStitch_h.id
+        ID = cornerStitch_h.id # node id
         # print"ID", ID
         n1 = len(self.ZDL_H[ID])
         n2 = len(self.ZDL_V[ID])
@@ -551,17 +549,23 @@ class constraintGraph:
 
 
 
-        # if cornerStitch_h.parent!=None:
+        # creating vertical constraint graph edges
+        """
+        for each tile in vertical corner-stitched layout find the constraint depending on the tile's position. If the tile has a background tile, it's node id is different than the background tile.
+        So that tile is a potential min height candidate.index=0:min width,1: min spacing, 2:min enclosure,3:min extension,4:minheight. For vertical corner-stitched layout min height is associated
+        with tiles, min width is for horizontal corner stitched tile. 
+        
+        """
         for rect in cornerStitch_v.stitchList:
-            Extend_h = 0
+            Extend_h = 0 # to find if horizontal extension is there
             # if rect.cell.type == "SOLID":
             if rect.nodeId != ID:
-                origin = self.ZDL_H[ID].index(rect.cell.x)
-                dest = self.ZDL_H[ID].index(rect.getEast().cell.x)
-                origin1=self.ZDL_V[ID].index(rect.cell.y)
-                dest1=self.ZDL_V[ID].index(rect.getNorth().cell.y)
+                origin = self.ZDL_H[ID].index(rect.cell.x) # if horizontal extension needs to set up node in horizontal constraint graph
+                dest = self.ZDL_H[ID].index(rect.getEast().cell.x) # if horizontal extension needs to set up node in horizontal constraint graph
+                origin1=self.ZDL_V[ID].index(rect.cell.y) # finding origin node in vertical constraint graph for min height constraned edge
+                dest1=self.ZDL_V[ID].index(rect.getNorth().cell.y)# finding destination node in vertical constraint graph for min height constraned edge
                 id = rect.cell.id
-
+                # if a tile has completely shared right edge with another tile of same type it should be a horizontal extension
                 if rect.getEast().nodeId == rect.nodeId:
                     East = rect.getEast().cell.id
                     if rect.southEast(rect).nodeId == rect.nodeId:
@@ -571,6 +575,7 @@ class constraintGraph:
 
                 else:
                     East = None
+                # if a tile has completely shared left edge with another tile of same type it should be a horizontal extension
                 if rect.getWest().nodeId == rect.nodeId:
                     West = rect.getWest().cell.id
                     if rect.northWest(rect).nodeId == rect.nodeId:
@@ -588,13 +593,12 @@ class constraintGraph:
                 else:
                     southEast = None
 
-                # print id,East,West,rect.cell.x,rect.cell.y
-
-                c = constraint.constraint(4)
+                # this tile has a minheight constraint between it's bottom and top edge
+                c = constraint.constraint(4) # index=4 means minheight constraint
                 index = 4
                 value2=None
+                # for reliability constraint purpose: Checks if current dependent minimum height is greater than design rule min height or not
                 if rect.current!=None:
-                    #print"R", rect.cell.x,rect.cell.y
 
                     C = rect.current
 
@@ -603,57 +607,49 @@ class constraintGraph:
 
                     bins = np.array(seq)
                     ind = bins.searchsorted(C)
-                    #print seq, ind, bins, C
                     C1 = seq[ind]
-                    #print "Voltage",C1
+
                     if C1 in self.current_constraint.keys():
-                        #print"C", value2
+
                         value2 = self.current_constraint[C1]
-                        #print value2
+
                     else:
                         value2 = None
 
-
-                #else:
-                #value = constraint.constraint.getConstraintVal(c, type=rect.cell.type)
                 value1 = constraint.constraint.getConstraintVal(c, type=rect.cell.type)
-                if value2!=None and value2 > value1:
+                if value2!=None and value2 > value1: #sets up greater value as constraint value
                     value = value2
                 else:
                     value = value1
-                #print"R", rect.cell.x, rect.cell.y, value2
                 rect.vertex1 = origin1
                 rect.vertex2 = dest1
                 e = Edge(origin1, dest1, value, index, str(constraint.constraint.Type.index(rect.cell.type)), id, East,
                          West, northWest, southEast)
-                # print "e",(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id, East, West,northWest, southEast)
                 # e = Edge(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id)
-                edgesv.append(Edge(origin1, dest1, value, index, str(constraint.constraint.Type.index(rect.cell.type)), id, East,West, northWest, southEast))
-                # edgesh.append(Edge(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id))
-                # self.vertexMatrixh[origin][dest].append((rect.getWidth()))
-                self.vertexMatrixv[ID][origin1][dest1].append(Edge.getEdgeWeight(e, origin, dest))
+                edgesv.append(Edge(origin1, dest1, value, index, str(constraint.constraint.Type.index(rect.cell.type)), id, East,West, northWest, southEast)) # appending edge for vertical constraint graph
+
+                self.vertexMatrixv[ID][origin1][dest1].append(Edge.getEdgeWeight(e, origin, dest)) # updating vertical constraint graph adjacency matrix
 
 
-                if Extend_h==1:
-                    c = constraint.constraint(3)
+                if Extend_h==1: # if its a horizontal extension
+                    c = constraint.constraint(3) # index=3 means minextension type constraint
                     index = 3
                     rect.vertex1 = origin
                     rect.vertex2 = dest
                     value = constraint.constraint.getConstraintVal(c, type=rect.cell.type)
                     e = Edge(origin, dest, value, index, str(constraint.constraint.Type.index(rect.cell.type)), id, East,
                              West, northWest, southEast)
-                    # print "e",(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id, East, West,northWest, southEast)
                     # e = Edge(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id)
                     edgesh.append(
                         Edge(origin, dest, value, index, str(constraint.constraint.Type.index(rect.cell.type)), id, East,
-                             West, northWest, southEast))
+                             West, northWest, southEast)) # appending in horizontal constraint graph edges
                     # edgesh.append(Edge(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id))
                     # self.vertexMatrixh[origin][dest].append((rect.getWidth()))
-                    self.vertexMatrixh[ID][origin][dest].append(Edge.getEdgeWeight(e, origin, dest))
+                    self.vertexMatrixh[ID][origin][dest].append(Edge.getEdgeWeight(e, origin, dest)) # updating horizontal constraint graph matrix
 
 
                 # self.edgesh.append(Edge(origin, dest, constraint.constraint(rect.getWidth(), origin, dest)))#
-            else:
+            else: # if current tile has same id as current node: means current tile is a background tile. for a background tile there are 2 options:1.min spacing,2.min enclosure
                 # print ID
                 origin = self.ZDL_V[ID].index(rect.cell.y)
                 dest = self.ZDL_V[ID].index(rect.getNorth().cell.y)
@@ -676,31 +672,26 @@ class constraintGraph:
                     eastSouth = rect.eastSouth(rect).cell.id
                 else:
                     eastSouth = None
-
+                # checking if its min spacing or not: if its spacing current tile's north and south tile should be foreground tiles (nodeid should be different)
                 if rect.NORTH.nodeId != ID and rect.SOUTH.nodeId != ID and rect.NORTH in cornerStitch_v.stitchList and rect.SOUTH in cornerStitch_v.stitchList:
                     t2 = constraint.constraint.Type.index(rect.NORTH.cell.type)
                     t1 = constraint.constraint.Type.index(rect.SOUTH.cell.type)
                     value2=None
+                    # for reliability constraint purpose: If its empty voltage-dependent spacing maybe applicable. the greater value between voltage dependent spacing and design
+                    #rule dependent spacing will dominate
                     if rect.cell.type=="EMPTY":
                         if rect.NORTH.voltage!=None and rect.SOUTH.voltage!=None:
-                            #print rect.cell.x,rect.cell.y,rect.voltage
                             V=abs(rect.NORTH.voltage-rect.SOUTH.voltage)
-                            #print "Voltage", V
-                            #V=self.round(V)
-                            #print "Voltage1", V
                             sequence=self.voltage_constraint.keys()
                             sequence.sort()
-
                             bins=np.array(sequence)
                             ind=bins.searchsorted(V)
-                            #print sequence,ind,bins,V
                             V1=sequence[ind]
-                            #print "Voltage",sequence, sequence[ind]
                             if V1 in self.voltage_constraint.keys():
                                 value2=self.voltage_constraint[V1]
                             else:
                                 value2=None
-                    #print"V", value2
+
                     c = constraint.constraint(1)
                     index = 1
                     value1 = constraint.constraint.getConstraintVal(c, source=t1, dest=t2)
@@ -709,20 +700,19 @@ class constraintGraph:
                     else:
                         value=value1
 
-                    #print origin, dest, value
                     e = Edge(origin, dest, value, index, str(constraint.constraint.Type.index(rect.cell.type)), id,
                              North, South, westNorth, eastSouth)
                     # e = Edge(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id)
-
                     edgesv.append(
                         Edge(origin, dest, value, index, str(constraint.constraint.Type.index(rect.cell.type)), id,
                              North, South, westNorth, eastSouth))
                     # edgesv.append(Edge(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id))
                     self.vertexMatrixv[ID][origin][dest].append(Edge.getEdgeWeight(e, origin, dest))
+                # checking for minimum enclosure constraint: if current tile is bottom tile its north tile should be foreground tile and south tile should be boundary tile and not in stitchlist
                 elif rect.NORTH.nodeId != ID and rect.SOUTH not in cornerStitch_v.stitchList and rect.NORTH in cornerStitch_v.stitchList:
                     t2 = constraint.constraint.Type.index(rect.NORTH.cell.type)
                     t1 = constraint.constraint.Type.index(rect.cell.type)
-                    c = constraint.constraint(2)
+                    c = constraint.constraint(2) # index=2 means enclosure constraint
                     # print t1,t2
                     index = 2
                     value = constraint.constraint.getConstraintVal(c, source=t1, dest=t2)
@@ -733,13 +723,13 @@ class constraintGraph:
                         Edge(origin, dest, value, index, str(constraint.constraint.Type.index(rect.cell.type)), id,
                              North, South, westNorth, eastSouth))
                     # e = Edge(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id)
-
                     # edgesv.append(Edge(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id))
                     self.vertexMatrixv[ID][origin][dest].append(Edge.getEdgeWeight(e, origin, dest))
+                # checking for minimum enclosure constraint: if current tile is top tile its south tile should be foreground tile and north tile should be boundary tile and not in stitchlist
                 elif rect.SOUTH.nodeId != ID and rect.NORTH not in cornerStitch_v.stitchList and rect.SOUTH in cornerStitch_v.stitchList:
                     t2 = constraint.constraint.Type.index(rect.SOUTH.cell.type)
                     t1 = constraint.constraint.Type.index(rect.cell.type)
-                    c = constraint.constraint(2)
+                    c = constraint.constraint(2) # index=2 means min enclosure constraint
                     index = 2
                     value = constraint.constraint.getConstraintVal(c, source=t1, dest=t2)
                     e = Edge(origin, dest, value, index, str(constraint.constraint.Type.index(rect.cell.type)), id,
@@ -749,9 +739,10 @@ class constraintGraph:
                         Edge(origin, dest, value, index, str(constraint.constraint.Type.index(rect.cell.type)), id,
                              North, South, westNorth, eastSouth))
                     # e = Edge(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id)
-
                     # edgesv.append(Edge(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id))
                     self.vertexMatrixv[ID][origin][dest].append(Edge.getEdgeWeight(e, origin, dest))
+                # if current tile is stretched from bottom to top, it's a complete background tile and should be a min height constraint generator. It's redundant actually as this tile will be considered
+                # as foreground tile in its background plane's cornerstitched layout, there it will be again considered as min height constraint generator.
                 elif rect.NORTH not in cornerStitch_v.stitchList and rect.SOUTH not in cornerStitch_v.stitchList:
                     c = constraint.constraint(4)
                     index = 4
@@ -789,16 +780,16 @@ class constraintGraph:
                         Edge(origin, dest, value, index, str(constraint.constraint.Type.index(rect.cell.type)), id,
                              North, South, westNorth, eastSouth))
                     # e = Edge(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id)
-
                     # edgesv.append(Edge(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id))
                     self.vertexMatrixv[ID][origin][dest].append(Edge.getEdgeWeight(e, origin, dest))
-
+        '''
+        creating edges for horizontal constraint graph from horizontal cornerstitched tiles. index=0: min width, index=1: min spacing, index=2: min Enclosure, index=3: min extension
+        same as vertical constraint graph edge generation. all north are now east, south are now west. if vertical extension rule is applicable to any tile vertical constraint graph is generated.
+        voltage dependent spacing for empty tiles and current dependent widths are applied for foreground tiles.
+        
+        '''
         for rect in cornerStitch_h.stitchList:
             Extend_v = 0
-            # if rect.cell.type == "SOLID":
-            # print rect.cell.x,rect.cell.y,rect.EAST.cell.x,rect.WEST.cell.x
-            # if rect.EAST not in cornerStitch_h.stitchList and rect.WEST  not in cornerStitch_h.stitchList:
-            # print rect.cell.x, rect.cell.y, rect.EAST.cell.x, rect.WEST.cell.x
             if rect.nodeId != ID:
                 origin = self.ZDL_V[ID].index(rect.cell.y)
                 dest = self.ZDL_V[ID].index(rect.getNorth().cell.y)
