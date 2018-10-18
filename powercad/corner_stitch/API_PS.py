@@ -319,9 +319,11 @@ def input_conversion(sym_layout):
                         width = converted_x_coordinates[x_ind2] - x + 8
                         y2 = converted_y_coordinates[y_ind2]
                         height = y2 - y
+                        name2=v.path_id # as it is a super trace name2=horizontal trace name
 
-                R = Rectangle('Type_1', x, y, width, height, name=obj.path_id)
+                R = Rectangle('Type_1', x, y, width, height, name=obj.path_id+name2) # super trace is now a single rectangle with name="vertical trace name+horizontal trace name':if 'Ta' and 'Tb' are supertrace where Ta is vertical new name of converted rectangle is 'TaTb'
                 Rectangles.append(R)
+
             else:
                 continue
     Rectangles.sort(key=lambda x: x.Netid, reverse=False)
@@ -343,9 +345,6 @@ def input_conversion(sym_layout):
                         elif rect2.y >= rect1.y and rect2.y + rect2.height <= rect1.y + rect1.height and rect1.x + rect1.width == rect2.x + rect2.width:
 
                             rect2.width -= rect1.width
-
-
-
 
                 elif element[1].vertical == True:
                     if rect1.name == element[1].path_id and rect2.name == element[0].path_id:

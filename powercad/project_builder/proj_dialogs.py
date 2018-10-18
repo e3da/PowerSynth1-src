@@ -1892,6 +1892,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
         sym_layout.trace_rects = []
         for tr in self.engine.sym_layout.all_trace_lines:
             #print "trace id ",tr.element.path_id
+            #if tr.element.path_id in sym_info.keys():
             rect = sym_info[tr.element.path_id] # MIGHT BE AN ISSUE HERE
             sym_layout.trace_rects.append(rect)
             tr.trace_rect = rect
