@@ -536,10 +536,118 @@ class constraintGraph:
         # self.zeroDimensionListh = setToList_h
         return setToList_h, setToList_v
 
+    # finding patterns for shared x,y coordinates tiles, where to foreground and one background tile is associated with same coordinate
+    def shared_coordinate_pattern(self,cornerStitch_h,cornerStitch_v,ID):
+        init_list_H=[]   # to hold tiles which share same y coordinate in the form: [{'bottom':[T1,T2,..],'top':[T3,T4,...],'back':[T5,T6,...]},{}]
+        # 'bottom' holds those tiles which bottom edge is shared at Y, 'top' holds those tiles which top edge is shared at Y, 'back' holds those tiles which are background and either top or bottom edge is shared at Y
+        #print self.ZDL_V
+        for y in self.ZDL_V[ID]:
+
+            dict_y={}
+            rects=[]
+            fore=0
+            for rect in cornerStitch_h.stitchList:
+                if rect.cell.y==y or rect.NORTH.cell.y==y:
+                    rects.append(rect)
+                    if rect.nodeId!=ID:
+                        fore+=1
+            if fore>1: # if there are atleast two foreground tiles we may need to think of pattern finding
+                bottom=[]
+                top=[]
+                back=[]
+                for r in rects:
+                    if r.cell.y==y and r.nodeId!=ID:
+                        bottom.append(r)
+                    elif r.NORTH.cell.y==y and r.nodeId!=ID:
+                        top.append(r)
+                    elif r.nodeId==ID:
+                        back.append(r)
+                dict_y['bottom']=bottom
+                dict_y['top']=top
+                dict_y['back']=back
+            else:
+                continue
+            init_list_H.append(dict_y)
+
+        init_list_V = []  # to hold tiles which share same y coordinate in the form: [{'bottom':[T1,T2,..],'top':[T3,T4,...],'back':[T5,T6,...]},{..}]
+        # 'bottom' holds those tiles which bottom edge is shared at Y, 'top' holds those tiles which top edge is shared at Y, 'back' holds those tiles which are background and either top or bottom edge is shared at Y
+        # print self.ZDL_V
+        for x in self.ZDL_H[ID]:
+            #print"YY",x
+            dict_x = {}
+            rects = []
+            fore = 0
+            for rect in cornerStitch_v.stitchList:
+                if rect.cell.x == x or rect.EAST.cell.x == x:
+                    rects.append(rect)
+                    if rect.nodeId != ID:
+                        fore += 1
+            if fore > 1:  # if there are atleast two foreground tiles we may need to think of pattern finding
+                right = []
+                left = []
+                back = []
+                for r in rects:
+                    if r.cell.x == x and r.nodeId != ID:
+                        left.append(r)
+                    elif r.EAST.cell.x == x and r.nodeId != ID:
+                        right.append(r)
+                    elif r.nodeId == ID:
+                        back.append(r)
+                dict_x['right'] = right
+                dict_x['left'] = left
+                dict_x['back'] = back
+            else:
+                continue
+            init_list_V.append(dict_x)
+
+        Final_List_H = []
+        for i in init_list_H:
+
+            for j in i['bottom']:
+
+
+                for k in i['top']:
+
+                    if j.eastSouth(j) == k.northWest(k) and j.eastSouth(j) in i['back']:
+                        if j.cell.x<k.cell.x:
+                            Final_List_H.append((j, k))
+                        else:
+                            Final_List_H.append((k, j))
+                    elif j.SOUTH == k.EAST and j.SOUTH in i['back']:
+                        if j.cell.x < k.cell.x:
+                            Final_List_H.append((j, k))
+                        else:
+                            Final_List_H.append((k, j))
+                    else:
+                        continue
+        #for i in Final_List_H:
+            #print i[0].cell.x,i[0].cell.y,i[1].cell.x,i[1].cell.y
+        Final_List_V=[]
+        for i in init_list_V:
+
+            for j in i['right']:
+                for k in i['left']:
+                    if j.southEast(j)==k.westNorth(k) and j.southEast(j) in i['back']:
+                        if j.cell.y < k.cell.y:
+                            Final_List_V.append((j, k))
+                        else:
+                            Final_List_V.append((k, j))
+                    elif j.EAST==k.SOUTH and j.EAST in i['back']:
+                        if j.cell.y < k.cell.y:
+                            Final_List_V.append((j, k))
+                        else:
+                            Final_List_V.append((k, j))
+                    else:
+                        continue
+        for i in Final_List_V:
+            print i[0].cell.x,i[0].cell.y,i[1].cell.x,i[1].cell.y
+
+        return Final_List_H,Final_List_V
     ## creating edges from corner stitched tiles
     def setEdgesFromLayer(self, cornerStitch_h, cornerStitch_v):
         ID = cornerStitch_h.id # node id
         # print"ID", ID
+        Horizontal_patterns, Vertical_patterns = self.shared_coordinate_pattern(cornerStitch_h, cornerStitch_v, ID)
         n1 = len(self.ZDL_H[ID])
         n2 = len(self.ZDL_V[ID])
         self.vertexMatrixh[ID] = [[[] for i in range(n1)] for j in range(n1)]
@@ -1014,7 +1122,98 @@ class constraintGraph:
                     # edgesh.append(Edge(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id))
                     self.vertexMatrixh[ID][origin][dest].append(Edge.getEdgeWeight(e, origin, dest))
 
+        ## adding missing edges for shaed coordinate patterns
+        for i in Horizontal_patterns:
+            r1=i[0]
+            r2=i[1]
+            origin=self.ZDL_H[ID].index(r1.EAST.cell.x)
+            dest=self.ZDL_H[ID].index(r2.cell.x)
+            t2 = constraint.constraint.Type.index(r2.cell.type)
+            t1 = constraint.constraint.Type.index(r1.cell.type)
+            c = constraint.constraint(1)
+            index = 1
+            value1 = constraint.constraint.getConstraintVal(c, source=t1, dest=t2)
+            value2 = None
+            # if V==1:
+            if r1.voltage!=None and r2.voltage!=None:
 
+                V = abs(r1.voltage - r2.voltage)
+                V = self.round(V)
+                # print "Voltage",V
+                sequence = self.voltage_constraint.keys()
+                sequence.sort()
+                bins = np.array(sequence)
+                ind = bins.searchsorted(V)
+                V1 = sequence[ind]
+                # print "Voltage",sequence, sequence[ind]
+                if V1 in self.voltage_constraint.keys():
+                    value2 = self.voltage_constraint[V1]
+                    # print value2
+                else:
+                    value2 = None
+
+            #c = constraint.constraint(1)
+            #index = 1
+            #value1 = constraint.constraint.getConstraintVal(c, source=t1, dest=t2)
+            if value2 != None and value2 > value1:
+                value = value2
+            else:
+                value = value1
+
+
+            #print"value",value,t1,t2
+
+            e = Edge(origin, dest, value, index, type=None,id=None)
+
+
+            edgesh.append(Edge(origin, dest, value, index, type=None,id=None))
+
+            # e = Edge(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id)
+
+            # edgesh.append(Edge(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id))
+            self.vertexMatrixh[ID][origin][dest].append(Edge.getEdgeWeight(e, origin, dest))
+        for i in Vertical_patterns:
+            r1 = i[0]
+            r2 = i[1]
+            origin = self.ZDL_V[ID].index(r1.NORTH.cell.y)
+            dest = self.ZDL_V[ID].index(r2.cell.y)
+            t2 = constraint.constraint.Type.index(r2.cell.type)
+            t1 = constraint.constraint.Type.index(r1.cell.type)
+            c = constraint.constraint(1)
+            index = 1
+            value1 = constraint.constraint.getConstraintVal(c, source=t1, dest=t2)
+            if r1.voltage!=None and r2.voltage!=None:
+
+                V = abs(r1.voltage - r2.voltage)
+                V = self.round(V)
+                # print "Voltage",V
+                sequence = self.voltage_constraint.keys()
+                sequence.sort()
+                bins = np.array(sequence)
+                ind = bins.searchsorted(V)
+                V1 = sequence[ind]
+                # print "Voltage",sequence, sequence[ind]
+                if V1 in self.voltage_constraint.keys():
+                    value2 = self.voltage_constraint[V1]
+                    # print value2
+                else:
+                    value2 = None
+
+
+            if value2 != None and value2 > value1:
+                value = value2
+            else:
+                value = value1
+
+            e = Edge(origin, dest, value, index,type=None,id=None)
+
+
+            edgesv.append(
+                Edge(origin, dest, value, index,type=None,id=None))
+            # e = Edge(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id)
+
+            # edgesv.append(Edge(origin, dest, value,index, str(constraint.constraint.Type.index(rect.cell.type)), id))
+            self.vertexMatrixv[ID][origin][dest].append(Edge.getEdgeWeight(e, origin, dest))
 
 
         dictList1 = []
@@ -1046,6 +1245,8 @@ class constraintGraph:
                 value = 1
                 # e = Edge(origin, dest, value, index,type=None, id=None)
                 edgesh_new.append(Edge(source, destination, value, index, type=None, id=None))
+
+
         dictList2 = []
         edgesv_new = copy.deepcopy(edgesv)
         for foo in edgesv_new:
@@ -1167,18 +1368,15 @@ class constraintGraph:
                 EDGEH = []
                 #for i in range(len(label4)):
                 #for i in range(len(edgelabels)):
-                SD=N*500
+                SD=N*200
                 for (k1), v in edgelabels.items():
                     edge = {}
-                    '''
-                    x = random.normalvariate(v[0], 1000)
-                    val=x*10
-                    '''
+
 
                     if v[2] == 0:
                         if v[1] == '1':
 
-                            val = int(min(100* v[0], max(v[0], random.gauss(3*v[0], SD))))
+                            val = int(min(100* v[0], max(v[0], random.gauss(v[0], SD))))
 
 
                         elif v[1] == '2':
@@ -1629,7 +1827,7 @@ class constraintGraph:
             for i in range(N):
 
                 EDGEV = []
-                SD=N*500
+                SD=N*200
 
                 for (k1), v in edgelabels.items():
                     edge = {}
@@ -1637,7 +1835,7 @@ class constraintGraph:
                     # print (k1),v
                     if v[2] == 4:
                         if v[1] == '1':
-                            val = int(min(100 * v[0], max(v[0], random.gauss(3*v[0], SD))))
+                            val = int(min(100 * v[0], max(v[0], random.gauss(v[0], SD))))
                             # print val,(10,40)
                             # val = random.randint(v[0],10*v[0])
                         elif v[1] == '2':
@@ -1651,7 +1849,7 @@ class constraintGraph:
                             # val = random.randint(v[0],4*v[0])
 
                         elif v[1] == '4':
-                            val = int(min(2 * v[0], max(v[0], random.gauss(v[0], SD/500))))
+                            val = int(min(2 * v[0], max(v[0], random.gauss(v[0], SD))))
                             # print val,(3,20)
                             # val = random.randint(v[0], 5*v[0])
                         elif v[1] == '0':
