@@ -1167,44 +1167,55 @@ class constraintGraph:
                 EDGEH = []
                 #for i in range(len(label4)):
                 #for i in range(len(edgelabels)):
+                SD=N*500
                 for (k1), v in edgelabels.items():
                     edge = {}
+                    '''
+                    x = random.normalvariate(v[0], 1000)
+                    val=x*10
+                    '''
 
-                    #print (k1),v
                     if v[2] == 0:
                         if v[1] == '1':
-                            val = int(min(10* v[0], max(v[0], random.gauss(3*v[0], 5))))
+
+                            val = int(min(100* v[0], max(v[0], random.gauss(3*v[0], SD))))
+
 
                         elif v[1] == '2':
-                            val = int(min(2 * v[0], max(v[0], random.gauss(v[0], 4))))
+                            val = int(min(2 * v[0], max(v[0], random.gauss(v[0], SD))))
 
                         elif v[1] == '3':
-                            val = int(min(v[0] * 2, max(v[0], random.gauss(v[0], 4))))
+                            val = int(min(v[0] * 2, max(v[0], random.gauss(v[0], SD))))
                             # print val,(20,40)
                             # val = random.randint(v[0],4*v[0])
 
                         elif v[1] == '4':
-                            val = int(min(2 * v[0], max(v[0], random.gauss(v[0], 4))))
+                            val = int(min(2 * v[0], max(v[0], random.gauss(v[0], SD/50))))
                             # print val,(3,20)
                             # val = random.randint(v[0], 5*v[0])
                         elif v[1] == '0':
-                            val = int(min(v[0] * 2, max(v[0], random.gauss(v[0], 2))))
+                            val = int(min(v[0] * 100, max(v[0], random.gauss(v[0], SD))))
                         elif (isinstance(v[1], int)):
                             # print "H",(k1),v
-                            val = int(min(4 * v[0], max(v[0], random.gauss(v[0], 10))))
+                            val = int(min(100 * v[0], max(v[0], random.gauss(v[0], SD))))
 
 
                     elif v[2] == 1:
                         if v[1] == 'missing':
-                            val = int(min(5 * v[0], max(v[0], random.gauss(v[0], 5))))
+                            val = int(min(100 * v[0], max(v[0], random.gauss(v[0], SD))))
                         else:
-                            val = int(min(10 * v[0], max(v[0], random.gauss(v[0], 5))))
+                            val = int(min(100 * v[0], max(v[0], random.gauss(v[0], SD))))
                         # print val,(5,20)
                         # val = random.randint(v[0], 10*v[0])
+                    elif v[2] == 2:
+                        val=int(min(100 * v[0], max(v[0], random.gauss(v[0], SD/50))))
                     else:
-                        val = random.randint(v[0], 5 * v[0])
+                        val = int(min(10* v[0], max(v[0], random.gauss(v[0], SD))))
+                        #val = random.randint(v[0], 100 * v[0])
 
                     edge[(k1)] = val
+                    #print "v", v[0],v[1]
+                    #print "val", val
                     EDGEH.append(edge)
 
 
@@ -1618,7 +1629,7 @@ class constraintGraph:
             for i in range(N):
 
                 EDGEV = []
-
+                SD=N*500
 
                 for (k1), v in edgelabels.items():
                     edge = {}
@@ -1626,39 +1637,42 @@ class constraintGraph:
                     # print (k1),v
                     if v[2] == 4:
                         if v[1] == '1':
-                            val = int(min(10 * v[0], max(v[0], random.gauss(3*v[0], 5))))
+                            val = int(min(100 * v[0], max(v[0], random.gauss(3*v[0], SD))))
                             # print val,(10,40)
                             # val = random.randint(v[0],10*v[0])
                         elif v[1] == '2':
-                            val = int(min(2 * v[0], max(v[0], random.gauss(v[0], 4))))
+                            val = int(min(2 * v[0], max(v[0], random.gauss(v[0], SD))))
                             # print val,(8,30)
                             # val = random.randint(v[0], 10*v[0])
                             # val = v[0]
                         elif v[1] == '3':
-                            val = int(min(v[0] * 2, max(v[0], random.gauss(v[0], 4))))
+                            val = int(min(v[0] * 2, max(v[0], random.gauss(v[0], SD))))
                             # print val,(20,40)
                             # val = random.randint(v[0],4*v[0])
 
                         elif v[1] == '4':
-                            val = int(min(2 * v[0], max(v[0], random.gauss(v[0], 4))))
+                            val = int(min(2 * v[0], max(v[0], random.gauss(v[0], SD/500))))
                             # print val,(3,20)
                             # val = random.randint(v[0], 5*v[0])
                         elif v[1] == '0':
-                            val = int(min(v[0] * 2, max(v[0], random.gauss(v[0],2))))
+                            val = int(min(v[0] * 100, max(v[0], random.gauss(v[0],SD))))
                         elif (isinstance(v[1], int)):
                             # print "H",(k1),v
-                            val = int(min(4 * v[0], max(v[0], random.gauss(v[0], 10))))
+                            val = int(min(100 * v[0], max(v[0], random.gauss(v[0], SD))))
 
 
                     elif v[2] == 1:
                         if v[1] == 'missing':
-                            val = int(min(5 * v[0], max(v[0], random.gauss(v[0], 5))))
+                            val = int(min(100 * v[0], max(v[0], random.gauss(v[0], SD))))
                         else:
-                            val = int(min(10 * v[0], max(v[0], random.gauss(v[0], 5))))
+                            val = int(min(100 * v[0], max(v[0], random.gauss(v[0], SD))))
                         # print val,(5,20)
                         # val = random.randint(v[0], 10*v[0])
+                    elif v[2] == 2:
+                        val=int(min(100 * v[0], max(v[0], random.gauss(v[0], SD/50))))
                     else:
-                        val = random.randint(v[0], 5 * v[0])
+                        val = int(min(100 * v[0], max(v[0], random.gauss(v[0], SD))))
+                        #val = random.randint(v[0], 5 * v[0])
 
                     edge[(k1)] = val
                     EDGEV.append(edge)

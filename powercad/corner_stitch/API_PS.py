@@ -3,7 +3,7 @@ import matplotlib
 from matplotlib import patches
 
 class Rectangle():
-    def __init__(self,type=None,x=None,y=None,width=None,height=None,name=None,Schar=None,Echar=None,Netid=None):
+    def __init__(self,type=None,x=None,y=None,width=None,height=None,name=None,Super=None,Schar=None,Echar=None,Netid=None):
         '''
 
         Args:
@@ -28,6 +28,7 @@ class Rectangle():
         self.Echar=Echar
         self.Netid=Netid
         self.name=name
+        self.Super=Super
 
 
 def draw_rect_list(rectlist, ax, color='blue', pattern='//',x_max=None, y_max=None):
@@ -129,7 +130,7 @@ def plot_layout(Layout_Rects,path,name,level):
                     Total_H[(max_x,max_y)]=Rectangles
         j = 0
         for k,v in Total_H.items():
-            print "TH",k,v
+            #print "TH",k,v
 
             Rectangles = v
             max_x=k[0]
@@ -319,18 +320,19 @@ def input_conversion(sym_layout):
                         width = converted_x_coordinates[x_ind2] - x + 8
                         y2 = converted_y_coordinates[y_ind2]
                         height = y2 - y
-                        name2=v.path_id # as it is a super trace name2=horizontal trace name
 
-                R = Rectangle('Type_1', x, y, width, height, name=obj.path_id+name2) # super trace is now a single rectangle with name="vertical trace name+horizontal trace name':if 'Ta' and 'Tb' are supertrace where Ta is vertical new name of converted rectangle is 'TaTb'
+                R = Rectangle('Type_1', x, y, width, height, name=obj.path_id) # super trace is now a single rectangle with name="vertical trace name+horizontal trace name':if 'Ta' and 'Tb' are supertrace where Ta is vertical new name of converted rectangle is 'TaTb'
                 Rectangles.append(R)
 
             else:
                 continue
     Rectangles.sort(key=lambda x: x.Netid, reverse=False)
+    #print "LEN",len(Rectangles)
 
     for rect1 in Rectangles:
         for rect2 in Rectangles:
-            for element in Intersections.values():
+            for element in Intersections.values() :
+                #print"EL",element[0].path_id,element[1].path_id
                 if element[0].vertical == True:
                     if rect1.name == element[0].path_id and rect2.name == element[1].path_id:
 
@@ -358,11 +360,23 @@ def input_conversion(sym_layout):
 
                             rect2.width -= rect1.width
 
+
+
     Input_rects = []
     for rect in Rectangles:
         rect.Schar = '/'
         rect.Echar = '/'
         Input_rects.append(rect)
+    for rect in Rectangles:
+        for k,v in Super_Traces_dict.items():
+            #print"K", k.path_id,rect.name
+            if k.path_id==rect.name:
+
+                rect1=Rectangle('Type_1', rect.x, rect.y, rect.width, rect.height, name=v.path_id)
+
+                rect1.Schar = '/'
+                rect1.Echar = '/'
+                Input_rects.append(rect1)
 
     for obj in sym_layout.all_points:
         if obj.path_id[0] == 'M':

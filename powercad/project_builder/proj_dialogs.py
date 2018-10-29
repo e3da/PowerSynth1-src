@@ -1890,6 +1890,8 @@ class New_layout_engine_dialog(QtGui.QDialog):
         # Handle traces
         sym_layout = self.engine.sym_layout
         sym_layout.trace_rects = []
+        #print"S", sym_info
+        #raw_input()
         for tr in self.engine.sym_layout.all_trace_lines:
             #print "trace id ",tr.element.path_id
             #if tr.element.path_id in sym_info.keys():
@@ -1902,7 +1904,9 @@ class New_layout_engine_dialog(QtGui.QDialog):
         Use the rectangles built from corner stitch to update device locations in sym layout
         '''
         sym_layout = self.engine.sym_layout
+        #print "SYM", sym_info
         for dev in sym_layout.devices:
+            #print "SYM",sym_info[dev.name]
             dev_region = sym_info[dev.name]
             width, height, thickness = dev.tech.device_tech.dimensions
 
