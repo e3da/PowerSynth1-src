@@ -376,7 +376,7 @@ class constraintGraph:
                     if i.parent != None:
                         parent = i.parent.id
 
-            self.cgToGraph_v(path,name, ID, edgev, parent, level,N)
+            self.cgToGraph_v(path,name, ID, self.edgesv_new[ID], parent, level,N)
 
 
 
@@ -1242,7 +1242,7 @@ class constraintGraph:
                 c = constraint.constraint(1)
                 index = 1
                 # value = int(constraint.constraint.getConstraintVal(c, source=t1, dest=t2)/(2**0.5))
-                value = 1
+                value = 1000
                 # e = Edge(origin, dest, value, index,type=None, id=None)
                 edgesh_new.append(Edge(source, destination, value, index, type=None, id=None))
 
@@ -1257,7 +1257,7 @@ class constraintGraph:
             d2[k].append(v)
 
         nodes = [x for x in range(len(self.ZDL_V[ID]))]
-
+        #print"Nodes",nodes
         for i in range(len(nodes) - 1):
             if (nodes[i], nodes[i + 1]) not in d2.keys():
                 source = nodes[i]
@@ -1270,16 +1270,17 @@ class constraintGraph:
                 c = constraint.constraint(1)
                 index = 1
                 # value = int(constraint.constraint.getConstraintVal(c, source=t1, dest=t2) / (2 ** 0.5))
-                value = 1
+                value = 1000
                 # print value
                 # e = Edge(origin, dest, value, index,type=None, id=None)
+                #print"origin",source,destination,value
                 edgesv_new.append(Edge(source, destination, value, index, type=None, id=None))
 
         self.edgesh_new[ID] = edgesh_new
         self.edgesv_new[ID] = edgesv_new
 
-        self.edgesh[ID] = edgesh
-        self.edgesv[ID] = edgesv
+        #self.edgesh[ID] = edgesh
+        #self.edgesv[ID] = edgesv
 
 
     def cgToGraph_h(self,path, name, ID, edgeh, parentID, level,N):
@@ -2151,10 +2152,10 @@ class constraintGraph:
             for i in Location.keys():
                 # print i, self.ZDL_V[ID][i]
                 LOC_V[self.ZDL_V[ID][i]] = Location[i]
-            # print LOC_H
+
             odV = collections.OrderedDict(sorted(LOC_V.items()))
             self.minLocationV[ID] = odV
-
+            print"LOC", self.minLocationV[ID]
             if parentID != None:
                 # N=len(self.ZDL_H[parentID])
                 KEYS = list(LOC_V.keys())

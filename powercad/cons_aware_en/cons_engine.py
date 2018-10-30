@@ -323,7 +323,9 @@ def plot_layout(Layout_Rects,level,path=None,name=None):
                     (i[0], i[1]),  # (x,y)
                     i[2],  # width
                     i[3],  # height
-                    facecolor=colour
+                    facecolor=colour,
+                    edgecolor='black'
+
                 )
             ALL_Patches[key].append(R)
         Patches.append(ALL_Patches)

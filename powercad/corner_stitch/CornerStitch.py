@@ -3000,7 +3000,7 @@ class CS_to_CG():
         Recatngles_V = collections.OrderedDict(sorted(Recatngles_V.items()))
         for k, v in Recatngles_V.items():
             ALL_RECTS['V'] = v
-
+        #print "ALL",ALL_HRECTS
         return ALL_HRECTS,ALL_RECTS
 
     def UPDATE(self,MINX,MINY,Htree, Vtree, sym_to_cs):
