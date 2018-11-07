@@ -36,6 +36,10 @@ class New_layout_engine():
         self.new_layout_engine.exec_()
 
     def cons_from_ps(self):
+        '''
+        finding constraint values from technology library of PowerSynth
+        :return: constraint dataframe according to new layout engine
+        '''
         minWidth = self.cons_info[0]
         minHeight = self.cons_info[1]
         minExtension = self.cons_info[2]
@@ -84,14 +88,14 @@ class New_layout_engine():
         if sym_layout != None:
             self.cons_info = self.collect_sym_cons_info(sym_layout)
             self.cons_df = self.cons_from_ps()
-            # print"con",self.cons_df
+
         # ------------------------------------------
         input_rects, self.W, self.H = input_conversion(sym_layout)
         input = self.cornerstitch.read_input('list', Rect_list=input_rects)
-        #print"in", input
+
         self.Htree, self.Vtree = self.cornerstitch.input_processing(input, self.W + 20, self.H + 20)
 
-        patches, combined_graph = self.cornerstitch.draw_layout(input_rects)
+        patches, combined_graph = self.cornerstitch.draw_layout(rects=input_rects,Htree=self.Htree,Vtree=self.Vtree)
         sym_to_cs = Sym_to_CS(input_rects, self.Htree, self.Vtree)
 
         self.init_data = [patches, sym_to_cs, combined_graph]
@@ -161,19 +165,31 @@ class New_layout_engine():
         print Type1_W, Type2_W, Type3_W, Type4_W, Gap_1_2, Gap_2_2, ledge_width
         return minWidth, minHeight, minExtension, Gaps, Enclosures
 
-    def mode_zero(self):
-        # print"pass"
+    def mode_zero(self): # evaluates mode 0
+
         CG1 = CS_to_CG(0)
-        # CG1.getConstraints(path+'/'+'Constraints-1.csv')
         CG1.getConstraints(self.cons_df)
-        Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=None, W=None, H=None, XLoc=None
-                                                  , YLoc=None)
+        Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=None, W=None, H=None, XLoc=None, YLoc=None)
+        ZDL_H={}
+        ZDL_V={}
+        for k,v in Evaluated_X.items():
+            ZDL_H=v
+        for k,v in Evaluated_Y.items():
+            ZDL_V=v
+        IND_H=[i for i in range(len(ZDL_H.keys()))]
+        IND_V = [i for i in range(len(ZDL_V.keys()))]
+        MIN_X={}
+        MIN_Y={}
+        for k,v in ZDL_H.items():
+            MIN_X[ZDL_H.keys().index(k)]=v
+        for k,v in ZDL_V.items():
+            MIN_Y[ZDL_V.keys().index(k)]=v
+
         return Evaluated_X, Evaluated_Y
 
     def generate_solutions(self, level, num_layouts=1, W=None, H=None, fixed_x_location=None, fixed_y_location=None):
-        # self.level=level
+
         CG1 = CS_to_CG(level)
-        # CG1.getConstraints(path+'/'+'Constraints-1.csv')
         CG1.getConstraints(self.cons_df)
         sym_to_cs = self.init_data[1]
         if level == 0:
@@ -202,7 +218,7 @@ class New_layout_engine():
             Evaluated_X0, Evaluated_Y0 = CG2.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=None, W=None, H=None
                                                         , XLoc=None, YLoc=None)
 
-            # print"Eval0", Evaluated_X0, Evaluated_Y0
+            #print"Eval0", Evaluated_X0, Evaluated_Y0
             Min_X_Loc = {}
             Min_Y_Loc = {}
             for k, v in Evaluated_X0.items():
@@ -220,28 +236,34 @@ class New_layout_engine():
                 if W >= v:
                     Min_X_Loc[0] = 0
                     Min_X_Loc[k] = W
+                else:
+                    print"Enter Width greater than or equal Minimum Width"
+                    return
             for k, v in Min_Y_Loc.items():
                 if H >= v:
                     Min_Y_Loc[0] = 0
                     Min_Y_Loc[k] = H
+                else:
+                    print"Enter Height greater than or equal Minimum Height"
+                    return
 
             Min_X_Loc = collections.OrderedDict(sorted(Min_X_Loc.items()))
             Min_Y_Loc = collections.OrderedDict(sorted(Min_Y_Loc.items()))
-            #print "MIN",Min_X_Loc,Min_Y_Loc
+
             Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=num_layouts, W=W, H=H,
                                                       XLoc=Min_X_Loc, YLoc=Min_Y_Loc)
             CS_SYM_Updated, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree, sym_to_cs)
             CS_SYM_Updated = CS_SYM_Updated['H']
-            #print "CS_SYM",CS_SYM_Updated
             self.cur_fig_data = plot_layout(Layout_Rects, level)
         elif level == 3:
+            self.mode_zero()
             CG2 = CS_to_CG(0)
             Evaluated_X0, Evaluated_Y0 = CG2.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=None, W=None, H=None,
                                                         XLoc=None, YLoc=None)
 
-            # print"Eval0", Evaluated_X0, Evaluated_Y0
             self.Min_X = Evaluated_X0
             self.Min_Y = Evaluated_Y0
+
             Min_X_Loc = {}
             Min_Y_Loc = {}
             for k, v in Evaluated_X0.items():
@@ -262,11 +284,17 @@ class New_layout_engine():
                 if W > v:
                     Min_X_Loc[0] = 0
                     Min_X_Loc[k] = W
+                else:
+                    print"Enter Width greater than or equal Minimum Width"
+                    return
             for k, v in Min_Y_Loc.items():
                 if H > v:
                     Min_Y_Loc[0] = 0
                     Min_Y_Loc[k] = H
-            # print "Node", self.init_data[2][1] #Gives the dictionary where key= Node# and value=initial (x,y) coordinate
+                else:
+                    print"Enter Height greater than or equal Minimum Height"
+                    return
+
             ### Data from GUI
             for k, v in fixed_x_location.items():
                 Min_X_Loc[k] = v
@@ -275,18 +303,20 @@ class New_layout_engine():
 
             Min_X_Loc = collections.OrderedDict(sorted(Min_X_Loc.items()))
             Min_Y_Loc = collections.OrderedDict(sorted(Min_Y_Loc.items()))
-            print "MIN", Min_X_Loc, Min_Y_Loc
 
+            print Min_X_Loc,Min_Y_Loc
             Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=num_layouts, W=W, H=H,
                                                       XLoc=Min_X_Loc, YLoc=Min_Y_Loc)
             CS_SYM_Updated, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree, sym_to_cs)
+            print"DONE"
 
             CS_SYM_Updated = CS_SYM_Updated['H']
             self.cur_fig_data = plot_layout(Layout_Rects, level)
 
         return self.cur_fig_data, CS_SYM_Updated
 
-def plot_layout(Layout_Rects,level,path=None,name=None):
+def plot_layout(Layout_Rects,level):
+    # Prepares rectangles as patches according to the requirement of mode of operation
     Patches=[]
     if level==0:
         Rectangles=[]
@@ -296,8 +326,8 @@ def plot_layout(Layout_Rects,level,path=None,name=None):
                     Rectangles.append(rect)
         max_x = 0
         max_y = 0
-        min_x = 1000
-        min_y = 1000
+        min_x = 1e10
+        min_y = 1e10
 
         for i in Rectangles:
 
@@ -346,8 +376,8 @@ def plot_layout(Layout_Rects,level,path=None,name=None):
                         Rectangles.append(rect)
                     max_x = 0
                     max_y = 0
-                    min_x = 1000
-                    min_y = 1000
+                    min_x = 1e10
+                    min_y = 1e10
 
                     for i in Rectangles:
                         #print i
@@ -412,6 +442,7 @@ def intersection_pt(line1, line2):    # Find intersection point of 2 orthogonal 
 
     return x, y
 def Sym_to_CS(input_rects,Htree,Vtree):
+    # Converts corner stitch rectangles to powersynth objects . Makes a list of tiles mapping each powersynth lyout object
     ALL_RECTS={}
     DIM=[]
 
@@ -439,39 +470,15 @@ def Sym_to_CS(input_rects,Htree,Vtree):
         name=rect.name
         for k,v in ALL_RECTS.items():
             if k=='H':
-
-                #print"LEN", len(name)
-                #key1=None
-                '''
-                if len(name)>3:
-                    parts = [name[i:i + 2] for i in range(0, len(name), 2)]
-                    key=parts[0]
-                    key1=parts[1]
-                    SYM_CS.setdefault(key1, [])
-                else:
-                    key=name
-                    key1=None
-                '''
-                #print key,key1
                 key=name
                 SYM_CS.setdefault(key,[])
                 for i in v:
                     if i[0]>=x1 and i[1]>=y1 and i[0]+i[2]<=x2 and i[1]+i[3]<=y2 and i[4]==type:
-                        '''
-                        if len(name) > 3:
-                            parts = [name[i:i + 2] for i in range(0, len(name), 2)]
-                            key = parts[0]
-                            key1 = parts[1]
-                            SYM_CS.setdefault(key1, [])
-                        else:
-                            key = name
-                            key1 = None
-                        '''
                         SYM_CS[key].append(i)
 
                     else:
                         continue
-        #print "S_C",SYM_CS
+
     return SYM_CS
 
 

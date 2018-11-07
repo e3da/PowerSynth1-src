@@ -46,8 +46,16 @@ def draw_rect_list(rectlist, ax, color='blue', pattern='//',x_max=None, y_max=No
     
 
 def plot_layout(Layout_Rects,path,name,level):
+    '''
 
-    if level==0:
+    :param Layout_Rects: All rectangles to be plot
+    :param path: No use
+    :param name: No use
+    :param level: mode of operation
+    :return:
+    '''
+
+    if level==0: # single layout solution
         Rectangles=[]
         for k,v in Layout_Rects.items():
             if k=='H':
@@ -88,19 +96,11 @@ def plot_layout(Layout_Rects,path,name,level):
                 )
             ALL_Patches[key].append(R)
 
-            #ax1.add_patch(R)
-
-
-
-        #plt.xlim(0, max_x)
-        #plt.ylim(0, max_y)
-
-        #fig1.savefig(path+'/'+name+'-layout.png', bbox_inches='tight')
-        #plt.close()
+            # ALL_Patches are rectangles to be plot with colors defined according to type : {(width,Height):{R1,R2,,,,,}}
         return ALL_Patches
 
 
-    else:
+    else: # N number of layout solutions
         for k,v in Layout_Rects.items():
 
             if k=='H':
@@ -182,6 +182,11 @@ def intersection_pt(line1, line2):    # Find intersection point of 2 orthogonal 
 
 
 def input_conversion(sym_layout):
+    '''
+
+    :param sym_layout: symbolic layout information (lines and points)
+    :return: converted rectangles for each line and point object in symbolic layout
+    '''
 
     x_coordinates =[]                        # stores the x coordinates of all objects for conversion
     y_coordinates =[]                        # stores the y coordinates of all objects for conversion
@@ -327,12 +332,12 @@ def input_conversion(sym_layout):
             else:
                 continue
     Rectangles.sort(key=lambda x: x.Netid, reverse=False)
-    #print "LEN",len(Rectangles)
 
+    # the foloowing part is used to remove overlapping between two parts (So that they should not be in same group)
     for rect1 in Rectangles:
         for rect2 in Rectangles:
             for element in Intersections.values() :
-                #print"EL",element[0].path_id,element[1].path_id
+
                 if element[0].vertical == True:
                     if rect1.name == element[0].path_id and rect2.name == element[1].path_id:
 
@@ -409,6 +414,6 @@ def input_conversion(sym_layout):
 
         Input_rects.append(Rectangle(type, x, y, width, height, name, Schar='/', Echar='/'))
 
-    return Input_rects,x_max,y_max
+    return Input_rects,x_max,y_max # Input_rects are input to corner stitch insert function, max_x,max_y are maximum x and y coordinate of the layout
 
 

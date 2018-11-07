@@ -19,7 +19,7 @@ from matplotlib import colors
 
 import powercad.sym_layout.plot as plot
 
-plot.plt.matplotlib.use('Qt4Agg')
+#plot.plt.matplotlib.use('Qt4Agg')
 plot.plt.matplotlib.rcParams['backend.qt4']='PySide'
 
 from matplotlib.patches import Rectangle, Circle

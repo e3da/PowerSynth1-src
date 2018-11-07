@@ -53,6 +53,13 @@
          <item row="0" column="0">
           <widget class="QGraphicsView" name="grview_init_layout"/>
          </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="Node_ID">
+           <property name="text">
+            <string>Node ID : </string>
+           </property>
+          </widget>
+         </item>
         </layout>
        </widget>
       </item>
@@ -107,7 +114,7 @@
       </size>
      </property>
      <property name="title">
-      <string>Florrplan size</string>
+      <string>Floorplan size</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_2">
       <item row="0" column="0">
@@ -181,7 +188,7 @@
    <item row="1" column="2">
     <widget class="QGroupBox" name="groupBox_3">
      <property name="title">
-      <string>Button Box</string>
+      <string>Control Buttons</string>
      </property>
      <layout class="QGridLayout" name="gridLayout">
       <item row="0" column="0">

@@ -12,12 +12,12 @@ from PySide import QtCore, QtGui
 
 import powercad.sym_layout.plot as plot
 #from matplotlib.sphinxext.plot_directive import align # SM - unused import
-plot.plt.matplotlib.use('Qt4Agg')
+#plot.plt.matplotlib.use('Qt4Agg')
 plot.plt.matplotlib.rcParams['backend.qt4']='PySide'
 
 import numpy as npy
 import matplotlib
-matplotlib.use('Qt4Agg')
+#matplotlib.use('Qt4Agg')
 matplotlib.rcParams['backend.qt4']='PySide'
 
 from matplotlib.figure import Figure

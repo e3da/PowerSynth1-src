@@ -1369,7 +1369,7 @@ class constraintGraph:
                 EDGEH = []
                 #for i in range(len(label4)):
                 #for i in range(len(edgelabels)):
-                SD=N*200
+                SD=N*300
                 for (k1), v in edgelabels.items():
                     edge = {}
 
@@ -1828,7 +1828,7 @@ class constraintGraph:
             for i in range(N):
 
                 EDGEV = []
-                SD=N*200
+                SD=N*300
 
                 for (k1), v in edgelabels.items():
                     edge = {}
@@ -2155,7 +2155,7 @@ class constraintGraph:
 
             odV = collections.OrderedDict(sorted(LOC_V.items()))
             self.minLocationV[ID] = odV
-            print"LOC", self.minLocationV[ID]
+            #print"LOC", self.minLocationV[ID]
             if parentID != None:
                 # N=len(self.ZDL_H[parentID])
                 KEYS = list(LOC_V.keys())

@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file 'CS_design.ui'
 #
-# Created: Wed Sep 26 00:46:48 2018
-#      by: pyside-uic 0.2.15 running on PySide 1.2.2
+# Created: Mon Nov 05 19:03:26 2018
+#      by: pyside-uic 0.2.15 running on PySide 1.2.4
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -36,6 +36,9 @@ class Ui_CornerStitch_Dialog(object):
         self.grview_init_layout = QtGui.QGraphicsView(self.groupBox_5)
         self.grview_init_layout.setObjectName("grview_init_layout")
         self.gridLayout_8.addWidget(self.grview_init_layout, 0, 0, 1, 1)
+        self.Node_ID = QtGui.QLabel(self.groupBox_5)
+        self.Node_ID.setObjectName("Node_ID")
+        self.gridLayout_8.addWidget(self.Node_ID, 1, 0, 1, 1)
         self.gridLayout_9.addWidget(self.groupBox_5, 1, 0, 1, 1)
         self.gridLayout_7.addWidget(self.grbox_view, 0, 0, 3, 1)
         self.grbox_modes = QtGui.QGroupBox(CornerStitch_Dialog)
@@ -120,17 +123,18 @@ class Ui_CornerStitch_Dialog(object):
         self.grbox_view.setTitle(QtGui.QApplication.translate("CornerStitch_Dialog", "Layout Visualization", None, QtGui.QApplication.UnicodeUTF8))
         self.groupBox_4.setTitle(QtGui.QApplication.translate("CornerStitch_Dialog", "Generated Layout", None, QtGui.QApplication.UnicodeUTF8))
         self.groupBox_5.setTitle(QtGui.QApplication.translate("CornerStitch_Dialog", "Input (initial) Layout", None, QtGui.QApplication.UnicodeUTF8))
+        self.Node_ID.setText(QtGui.QApplication.translate("CornerStitch_Dialog", "Node ID : ", None, QtGui.QApplication.UnicodeUTF8))
         self.grbox_modes.setTitle(QtGui.QApplication.translate("CornerStitch_Dialog", "Modes", None, QtGui.QApplication.UnicodeUTF8))
         self.cmb_modes.setItemText(0, QtGui.QApplication.translate("CornerStitch_Dialog", "Minimum Size Layout", None, QtGui.QApplication.UnicodeUTF8))
         self.cmb_modes.setItemText(1, QtGui.QApplication.translate("CornerStitch_Dialog", "Variable Size Layout", None, QtGui.QApplication.UnicodeUTF8))
         self.cmb_modes.setItemText(2, QtGui.QApplication.translate("CornerStitch_Dialog", "Fixed Size Layout", None, QtGui.QApplication.UnicodeUTF8))
         self.cmb_modes.setItemText(3, QtGui.QApplication.translate("CornerStitch_Dialog", "Fixed Size with Fixed Loactions", None, QtGui.QApplication.UnicodeUTF8))
-        self.grbox_flsize.setTitle(QtGui.QApplication.translate("CornerStitch_Dialog", "Florrplan size", None, QtGui.QApplication.UnicodeUTF8))
+        self.grbox_flsize.setTitle(QtGui.QApplication.translate("CornerStitch_Dialog", "Floorplan size", None, QtGui.QApplication.UnicodeUTF8))
         self.lbl_width.setText(QtGui.QApplication.translate("CornerStitch_Dialog", "Width", None, QtGui.QApplication.UnicodeUTF8))
         self.lbl_height_2.setText(QtGui.QApplication.translate("CornerStitch_Dialog", "Height", None, QtGui.QApplication.UnicodeUTF8))
         self.groupBox.setTitle(QtGui.QApplication.translate("CornerStitch_Dialog", "Layouts Solutions", None, QtGui.QApplication.UnicodeUTF8))
         self.lbl_num_layouts.setText(QtGui.QApplication.translate("CornerStitch_Dialog", "Num of layouts", None, QtGui.QApplication.UnicodeUTF8))
-        self.groupBox_3.setTitle(QtGui.QApplication.translate("CornerStitch_Dialog", "Button Box", None, QtGui.QApplication.UnicodeUTF8))
+        self.groupBox_3.setTitle(QtGui.QApplication.translate("CornerStitch_Dialog", "Control Buttons", None, QtGui.QApplication.UnicodeUTF8))
         self.btn_fixed_locs.setText(QtGui.QApplication.translate("CornerStitch_Dialog", "Fixed Locations", None, QtGui.QApplication.UnicodeUTF8))
         self.btn_constraints.setText(QtGui.QApplication.translate("CornerStitch_Dialog", "Assign Constraints", None, QtGui.QApplication.UnicodeUTF8))
         self.btn_eval_setup.setText(QtGui.QApplication.translate("CornerStitch_Dialog", "Measurement Setup", None, QtGui.QApplication.UnicodeUTF8))

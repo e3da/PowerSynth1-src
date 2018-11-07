@@ -1,7 +1,7 @@
 '''
 Created on Oct 12, 2012
 
-@author: Peter N. Tucker, qmle
+@author: Peter N. Tucker, qmle, Imam Al Razi
 '''
 # IMPORT METHODS
 import os
@@ -16,7 +16,8 @@ import powercad.sym_layout.plot as plot
 from powercad.project_builder.dialogs.propertiesDeviceDialog import Ui_device_propeties
 from powercad.Spice_handler.spice_import.NetlistImport import Netlist
 
-plot.plt.matplotlib.use('Qt4Agg')
+
+#plot.plt.matplotlib.use('Qt4Agg')
 plot.plt.matplotlib.rcParams['backend.qt4']='PySide'
 from powercad.design.project_structures import *
 from powercad.project_builder.dialogs.device_states import Ui_dev_state_dialog
@@ -473,29 +474,7 @@ class NewProjectDialog(QtGui.QDialog):
                 self.ui.txt_symbnet_address.setText(os.path.abspath(symbnet_file[0]))
             elif file_extension == '.txt' or file_extension == '.psc':
                 self.ui.txt_symbnet_address.setText(os.path.abspath(symbnet_file[0]))
-    '''
-    def convert_netlist(self):
-        # Prepares for conversion
-        # Converts datatype of positive, negative, and output nodes from object attributes into strings
-        netlist_file_name, netlist_file_extension = os.path.splitext(
-            self.ui.txt_symbnet_address.text())  # separates the file path and file name combination from the file extension (.txt or .net)
-        converter = Netlist_SVG_converter.Converter(self.ui.txt_symbnet_address.text(),
-                                                    netlist_file_name)  # initializes the converter object with the specific source's file path and file name
-        # Converts from netlist to svg
-        symbnet_file = converter.convert(vp=str(self.ui.txt_positive_source.text()),
-                                         # the positive source node mentioned by the user is converted to string type and saved in variable vp
-                                         vn=str(self.ui.txt_negative_source.text()),
-                                         # the negative source node mentioned by the user is converted to string type and saved in variable vn
-                                         output_node=str(
-                                             self.ui.txt_output.text()))  # the output node mentioned by the user is converted to string type and saved in variable output_node
 
-        NetlistConverter = Netlist_SVG_converter.Converter(self.ui.txt_symbnet_address.text(), netlist_file_name)
-        symbnet_file = NetlistConverter.convert(vp=str(self.ui.txt_positive_source.text()),
-                                                vn=str(self.ui.txt_negative_source.text()),
-                                                output_node=str(self.ui.txt_output.text()))
-
-        return os.path.abspath(symbnet_file[0])  # Shilpi - return the converted file
-    '''
     def create(self):
         # Save most recent entries
         # If netlist, create symbolic layout
@@ -1243,6 +1222,7 @@ class Fixed_locations_Dialog(QtGui.QDialog):
         self.ui.btn_rmvnode.pressed.connect(self.remove_row)
         self.ui.btn_save.pressed.connect(self.finished)
 
+
     #def show_nodeID(self,Nodelist):
     def init_table(self):
         row_id = self.ui.table_Fixedloc.rowCount()
@@ -1257,6 +1237,7 @@ class Fixed_locations_Dialog(QtGui.QDialog):
                 self.ui.table_Fixedloc.item(row_id, 1).setText(str(float(v[0])/1000))
                 self.ui.table_Fixedloc.item(row_id, 2).setText(str(float(v[1]) / 1000))
                 row_id += 1
+
     def set_node_id(self,node_dict):
         self.node_dict=node_dict
 
@@ -1349,7 +1330,7 @@ class Fixed_locations_Dialog(QtGui.QDialog):
         for k,v in self.new_node_dict.items():
             if k==int(node_id):
                 del self.new_node_dict[k]
-        #print "R_new",self.new_node_dict
+
 
     #def set_locations(self):
     def finished(self):
@@ -1359,33 +1340,33 @@ class Fixed_locations_Dialog(QtGui.QDialog):
         Yloc={}
         for k,v in self.Min_Y.items():
             Yloc=v.keys()
-        #print Xloc,Yloc
+
         for k1,v1 in self.new_node_dict.items():
 
             for k,v in self.node_dict.items():
                 if k1==k:
-                    #print k1,v1,v
+
                     if v1[0]!= None and v1[1]!=None:
                         ind=Xloc.index(v[0])
-                        #print "Xind",ind
+
                         self.parent.fixed_x_locations[ind] = v1[0]
                         ind2 = Yloc.index(v[1])
-                        ##print "Yind", ind2
+
                         self.parent.fixed_y_locations[ind2] = v1[1]
                     elif v1[0]==None and v1[1]!= None:
                         ind2=Yloc.index(v[1])
-                        #print "Yind", ind2
+
                         self.parent.fixed_y_locations[ind2]=v1[1]
                     elif v1[0]!=None and v1[1]==None:
                         ind = Xloc.index(v[0])
-                        #print "Xind", ind
+
                         self.parent.fixed_x_locations[ind] = v1[0]
                     else:
                         continue
                 else:
                     continue
 
-        #print self.parent.fixed_x_locations,self.parent.fixed_y_locations
+
         self.parent.input_node_info=self.new_node_dict
 
         self.close()
@@ -1455,7 +1436,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
         return H
     def mode_handler(self):
         choice = str(self.ui.cmb_modes.currentText())
-        print "mode",choice
+
 
         if choice == 'Minimum Size Layout':
             self.current_mode=0
@@ -1493,9 +1474,10 @@ class New_layout_engine_dialog(QtGui.QDialog):
             self.ui.txt_width.setEnabled(True)
             self.ui.txt_height.setEnabled(True)
             self.ui.btn_fixed_locs.setEnabled(True)
-            self.refresh_layout()
+            self.refresh_layout_mode3()
+            #self.refresh_layout()
 
-        print "current mode",self.current_mode
+
 
 
         return
@@ -1504,6 +1486,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
     def assign_fixed_locations(self):
         fixed_locations=Fixed_locations_Dialog(self)
         fixed_locations.set_node_id(self.graph[1])
+        fixed_locations.show()
         fixed_locations.exec_()
 
 
@@ -1512,16 +1495,16 @@ class New_layout_engine_dialog(QtGui.QDialog):
 
         constraints = ConsDialog(self)
         self.constraint=True
-        #if self.engine.cons_df is not None:
+
         self.cons_df=self.engine.cons_df
-        #print"CON", self.cons_df
+
         constraints.exec_()
 
 
         self.constraint=True
-        #self.cons_df=self.engine.cons_df
+
         self.engine.cons_df=self.cons_df
-        #print"DF", self.cons_df
+
         self.ui.btn_eval_setup.setEnabled(True)
         self.ui.btn_gen_layouts.setEnabled(True)
     def update_sol_browser(self):
@@ -1549,7 +1532,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
     def on_pick(self, event):
         self.update_sol_browser()
         ind = event.ind[0]
-        print self.perf1['data'][ind] , self.perf2['data'][ind]
+        #print self.perf1['data'][ind] , self.perf2['data'][ind]
         self.ax3.plot(self.perf1['data'][ind], self.perf2['data'][ind], 'o',c='red')
         self.layout_plot(layout_ind=ind)
         self.canvas_sols.draw()
@@ -1584,6 +1567,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
                     '''
                     Plot real Layout here
                     '''
+                    #print "P",patches[i]
                     if self.engine.sym_layout != None:
                         self.layout_data[Layouts[i]] = {'Rects': cs_sym_data[i]}
 
@@ -1619,12 +1603,22 @@ class New_layout_engine_dialog(QtGui.QDialog):
             choice = 'Layout '+str(layout_ind)
         else:
 
+
             choice = 'Layout 0'
+            for k,v in self.generated_layouts.items():
+                if choice==k:
+                    for k1,v1 in v['Patches'].items():
+                        W=(k1[0]/1000)
+                        H=(k1[1]/1000)
+                        self.ui.txt_width.setText(str(W))
+                        self.ui.txt_height.setText(str(H))
+
         if mode == 'cs':
             for k,v in self.generated_layouts.items():
                 if choice==k:
                     for k1,v1 in v['Patches'].items():
                         for p in v1:
+
                             self.ax1.add_patch(p)
                         self.ax1.set_xlim(0, k1[0])
                         self.ax1.set_ylim(0, k1[1])
@@ -1636,6 +1630,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
             sym_layout = self.engine.sym_layout
             symb_rect_dict = sym_info[choice]['sym_info']
             dims = sym_info[choice]['Dims']
+            #print dims,symb_rect_dict
             bp_dims = [dims[0] + 4, dims[1] + 4]
             self._sym_update_layout(sym_info=symb_rect_dict)
             update_sym_baseplate_dims(sym_layout=sym_layout, dims=bp_dims)
@@ -1643,8 +1638,10 @@ class New_layout_engine_dialog(QtGui.QDialog):
             plot_layout(sym_layout, ax=self.ax1,new_window=False)
             self.canvas_sols.draw()
 
+
+
     def refresh_layout(self):
-        print "refresh layout"
+        #print "refresh layout"
         self.ax2.clear()
         self.ax2.set_position([0.07, 0.07, 0.9, 0.9])
 
@@ -1668,11 +1665,70 @@ class New_layout_engine_dialog(QtGui.QDialog):
             G = self.init_graph[0]
             pos = self.init_graph[1]
             lbls = self.init_graph[2]
-            nx.draw_networkx_nodes(G, pos, node_size=100, label=True, ax=self.ax2, zorder=6)
-            nx.draw_networkx_labels(G, pos, lbls, font_size=8, ax=self.ax2)
+            nx.draw_networkx_nodes(G, pos, node_size=80, label=True, ax=self.ax2, zorder=6)
+            #print"lb", lbls,pos
+
+
+            nx.draw_networkx_labels(G, pos, lbls, font_size=6, ax=self.ax2)
+
         self.ax2.set_xlim(0, self.fp_width)
         self.ax2.set_ylim(0, self.fp_length)
+
+
+
         self.canvas_init.draw()
+
+    def refresh_layout_mode3(self):
+        self.ax2.clear()
+
+        #print "plot sol browser"
+        Names = self.init_fig.keys()
+        Names.sort()
+        for k, p in self.init_fig.items():
+            # for p in v:
+            if k[0] == 'T':
+                x = p.get_x()
+                y = p.get_y()
+                self.ax2.text(x + 1, y + 1, k)
+                self.ax2.add_patch(p)
+        for k, p in self.init_fig.items():
+
+            if k[0] != 'T':
+                x = p.get_x()
+                y = p.get_y()
+                self.ax2.text(x + 1, y + 1, k, weight='bold')
+                self.ax2.add_patch(p)
+
+        data = {"x": [], "y": [], "label": []}
+        for label, coord in self.init_graph[1].items():
+            data["x"].append(coord[0])
+            data["y"].append(coord[1])
+            data["label"].append(label)
+
+        self.ax2.plot(data['x'], data['y'], 'o', picker=5)
+        self.ax2.set_xlim(0, self.fp_width)
+        self.ax2.set_ylim(0, self.fp_length)
+
+        self.canvas_init.draw()
+        self.canvas_init.callbacks.connect('pick_event', self.on_click)
+
+    def on_click(self, event):
+        self.ax2.plot(event.mouseevent.xdata,event.mouseevent.ydata, 'o', c='red')
+        x = round(event.mouseevent.xdata,2)
+        y = round(event.mouseevent.ydata,2)
+
+        for k,v in self.init_graph[1].items():
+            if((abs(x-v[0])<=0.99 and abs(y-v[1])<=0.99)):
+
+                self.show_node_id(k)
+
+
+
+
+    def show_node_id(self, id):
+        label = "Node ID: "+str(id)
+        self.ui.Node_ID.setText(label)
+
     def initialize_layout(self,fig,graph=None):
         '''
         plot main window figure
@@ -2166,7 +2222,7 @@ class ET_standalone_Dialog(QtGui.QDialog):
     def open_dv_state(self):
         dv_state = Device_states_dialog(parent=self,mode=2)
         dv_state.exec_()
-        print self.dev_df
+        #print self.dev_df
     def finished(self):
         self.parent.perf_dict = self.perf_dict
         self.close()
@@ -2177,7 +2233,7 @@ class ET_standalone_Dialog(QtGui.QDialog):
             for symb_obj in self.parent.engine.sym_layout.all_sym:
                 if isinstance(symb_obj,SymPoint):
                     if symb_obj.name[0]=='M':
-                        print symb_obj.name, symb_obj.tech.heat_flow
+                        #print symb_obj.name, symb_obj.tech.heat_flow
                         self.ui.tbl_thermal_data.insertRow(row_id)
                         self.ui.tbl_thermal_data.setItem(row_id, 0, QtGui.QTableWidgetItem())
                         self.ui.tbl_thermal_data.setItem(row_id, 1, QtGui.QTableWidgetItem())
