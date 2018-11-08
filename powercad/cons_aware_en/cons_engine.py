@@ -170,22 +170,11 @@ class New_layout_engine():
         CG1 = CS_to_CG(0)
         CG1.getConstraints(self.cons_df)
         Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=None, W=None, H=None, XLoc=None, YLoc=None)
-        ZDL_H={}
-        ZDL_V={}
-        for k,v in Evaluated_X.items():
-            ZDL_H=v
-        for k,v in Evaluated_Y.items():
-            ZDL_V=v
-        IND_H=[i for i in range(len(ZDL_H.keys()))]
-        IND_V = [i for i in range(len(ZDL_V.keys()))]
-        MIN_X={}
-        MIN_Y={}
-        for k,v in ZDL_H.items():
-            MIN_X[ZDL_H.keys().index(k)]=v
-        for k,v in ZDL_V.items():
-            MIN_Y[ZDL_V.keys().index(k)]=v
+
 
         return Evaluated_X, Evaluated_Y
+
+
 
     def generate_solutions(self, level, num_layouts=1, W=None, H=None, fixed_x_location=None, fixed_y_location=None):
 
@@ -214,24 +203,47 @@ class New_layout_engine():
             CS_SYM_Updated = CS_SYM_Updated['H']
             self.cur_fig_data = plot_layout(Layout_Rects, level)
         elif level == 2:
+            '''
             CG2 = CS_to_CG(0)
             Evaluated_X0, Evaluated_Y0 = CG2.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=None, W=None, H=None
                                                         , XLoc=None, YLoc=None)
+             '''
+            Evaluated_X0, Evaluated_Y0 = self.mode_zero()
+            ZDL_H={}
+            ZDL_V={}
+            for k,v in Evaluated_X0.items():
+                ZDL_H=v
+            for k,v in Evaluated_Y0.items():
+                ZDL_V=v
+            MIN_X={}
+            MIN_Y={}
+            for k,v in ZDL_H.items():
+                MIN_X[ZDL_H.keys().index(k)]=v
+            for k,v in ZDL_V.items():
+                MIN_Y[ZDL_V.keys().index(k)]=v
 
+
+            #Evaluated_X0, Evaluated_Y0=self.mode_zero()
+            max_x=max(MIN_X.values())
+            max_y = max(MIN_Y.values())
+            XLoc=MIN_X.keys()
+            YLoc=MIN_Y.keys()
             #print"Eval0", Evaluated_X0, Evaluated_Y0
             Min_X_Loc = {}
             Min_Y_Loc = {}
+            '''
             for k, v in Evaluated_X0.items():
                 XLoc = v.keys()
                 max_x = v[max(XLoc)]
             for k, v in Evaluated_Y0.items():
                 YLoc = v.keys()
                 max_y = v[max(YLoc)]
+            '''
             XLoc.sort()
             YLoc.sort()
             Min_X_Loc[len(XLoc) - 1] = max_x
             Min_Y_Loc[len(YLoc) - 1] = max_y
-
+            print Min_X_Loc,Min_Y_Loc
             for k, v in Min_X_Loc.items():
                 if W >= v:
                     Min_X_Loc[0] = 0
@@ -261,6 +273,20 @@ class New_layout_engine():
             Evaluated_X0, Evaluated_Y0 = CG2.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=None, W=None, H=None,
                                                         XLoc=None, YLoc=None)
 
+            ZDL_H = {}
+            ZDL_V = {}
+            for k, v in Evaluated_X0.items():
+                ZDL_H = v
+            for k, v in Evaluated_Y0.items():
+                ZDL_V = v
+            MIN_X = {}
+            MIN_Y = {}
+            for k, v in ZDL_H.items():
+                MIN_X[ZDL_H.keys().index(k)] = v
+            for k, v in ZDL_V.items():
+                MIN_Y[ZDL_V.keys().index(k)] = v
+
+
             self.Min_X = Evaluated_X0
             self.Min_Y = Evaluated_Y0
 
@@ -284,17 +310,38 @@ class New_layout_engine():
                 if W > v:
                     Min_X_Loc[0] = 0
                     Min_X_Loc[k] = W
+                    fixed_x_location[k]=W
+
                 else:
                     print"Enter Width greater than or equal Minimum Width"
-                    return
+                    return None,None
             for k, v in Min_Y_Loc.items():
                 if H > v:
                     Min_Y_Loc[0] = 0
                     Min_Y_Loc[k] = H
+                    fixed_y_location[k]=H
                 else:
                     print"Enter Height greater than or equal Minimum Height"
-                    return
+                    return None,None
+            #print MIN_X
 
+            #print"F", fixed_x_location
+            Nodes_H=fixed_x_location.keys()
+            Nodes_V=fixed_y_location.keys()
+            Nodes_H.sort()
+            Nodes_V.sort()
+            distance_H={}
+            distance_V={}
+            min_distance_H={}
+            min_distance_V={}
+            for i in range(len(Nodes_H)-1):
+                distance_H[Nodes_H[i]]=fixed_x_location[Nodes_H[i+1]]-fixed_x_location[Nodes_H[i]]
+                min_distance_H[Nodes_H[i]]=MIN_X[Nodes_H[i+1]]-MIN_X[Nodes_H[i]]
+            #print distance_H, min_distance_H
+            for i in range(len(Nodes_V)-1):
+                distance_V[Nodes_V[i]]=fixed_y_location[Nodes_V[i+1]]-fixed_y_location[Nodes_V[i]]
+                min_distance_V[Nodes_V[i]]=MIN_Y[Nodes_V[i+1]]-MIN_Y[Nodes_V[i]]
+            #print"V", distance_V , min_distance_V
             ### Data from GUI
             for k, v in fixed_x_location.items():
                 Min_X_Loc[k] = v
@@ -304,7 +351,18 @@ class New_layout_engine():
             Min_X_Loc = collections.OrderedDict(sorted(Min_X_Loc.items()))
             Min_Y_Loc = collections.OrderedDict(sorted(Min_Y_Loc.items()))
 
-            print Min_X_Loc,Min_Y_Loc
+            #print Min_X_Loc,Min_Y_Loc
+            for k,v in Min_X_Loc.items():
+                if k in distance_H:
+                    if distance_H[k]<min_distance_H[k] or Min_X_Loc[k]<MIN_X[k] :
+                        print"Invalid Location for X coordinate"
+                        return None,None
+            for k,v in Min_Y_Loc.items():
+                if k in distance_V:
+                    if distance_V[k]<min_distance_V[k]or Min_Y_Loc[k]<MIN_Y[k]  :
+                        print"Invalid Location for Y coordinate"
+                        return None,None
+
             Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=num_layouts, W=W, H=H,
                                                       XLoc=Min_X_Loc, YLoc=Min_Y_Loc)
             CS_SYM_Updated, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree, sym_to_cs)

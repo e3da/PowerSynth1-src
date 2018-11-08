@@ -1211,7 +1211,8 @@ class Fixed_locations_Dialog(QtGui.QDialog):
         self.X = None
         self.Y = None
         self.init_table()
-        self.new_node_dict={}
+        self.new_node_dict = {}
+
         self.Min_X,self.Min_Y=self.parent.engine.mode_zero()
         #print self.Min_X,self.Min_Y
         self.ui.cmb_nodes.currentIndexChanged.connect(self.node_handler)
@@ -1225,7 +1226,13 @@ class Fixed_locations_Dialog(QtGui.QDialog):
 
     #def show_nodeID(self,Nodelist):
     def init_table(self):
+
+        if self.parent.input_node_info!=None:
+            self.new_node_dict=self.parent.input_node_info
+        print"P", self.parent.input_node_info
         row_id = self.ui.table_Fixedloc.rowCount()
+
+        #print"R", row_id
         if len(self.parent.input_node_info.keys())>0:
             for k,v in self.parent.input_node_info.items():
 
@@ -1233,9 +1240,16 @@ class Fixed_locations_Dialog(QtGui.QDialog):
                 self.ui.table_Fixedloc.setItem(row_id, 0, QtGui.QTableWidgetItem())
                 self.ui.table_Fixedloc.setItem(row_id, 1, QtGui.QTableWidgetItem())
                 self.ui.table_Fixedloc.setItem(row_id, 2, QtGui.QTableWidgetItem())
-                self.ui.table_Fixedloc.item(row_id, 0).setText(str(k))
-                self.ui.table_Fixedloc.item(row_id, 1).setText(str(float(v[0])/1000))
-                self.ui.table_Fixedloc.item(row_id, 2).setText(str(float(v[1]) / 1000))
+                if k!=None:
+                    self.ui.table_Fixedloc.item(row_id, 0).setText(str(k))
+                if v[0]!=None:
+                    self.ui.table_Fixedloc.item(row_id, 1).setText(str(float(v[0])/1000))
+                else:
+                    self.ui.table_Fixedloc.item(row_id, 1).setText("None")
+                if v[1]!=None:
+                    self.ui.table_Fixedloc.item(row_id, 2).setText(str(float(v[1]) / 1000))
+                else:
+                    self.ui.table_Fixedloc.item(row_id, 2).setText("None")
                 row_id += 1
 
     def set_node_id(self,node_dict):
@@ -1327,13 +1341,25 @@ class Fixed_locations_Dialog(QtGui.QDialog):
         row_id=self.ui.table_Fixedloc.selectionModel().selectedIndexes()[0].row()
         node_id = str(self.ui.table_Fixedloc.item(row_id,0).text())
         self.ui.table_Fixedloc.removeRow(selected_row)
+        for k1,v1 in self.parent.input_node_info.items():
+            if k1 == int(node_id) :
+                del self.parent.input_node_info[k1]
+       
         for k,v in self.new_node_dict.items():
             if k==int(node_id):
                 del self.new_node_dict[k]
 
 
+
+        #print "RP", self.parent.input_node_info,self.new_node_dict,self.node_dict
+
+
+
     #def set_locations(self):
     def finished(self):
+        #self.parent.input_node_info = self.new_node_dict
+        self.parent.fixed_x_locations={}
+        self.parent.fixed_y_locations={}
         Xloc={}
         for k,v in self.Min_X.items():
             Xloc=v.keys()
@@ -1342,7 +1368,9 @@ class Fixed_locations_Dialog(QtGui.QDialog):
             Yloc=v.keys()
 
         for k1,v1 in self.new_node_dict.items():
-
+            self.parent.input_node_info[k1]=v1
+        for k1, v1 in self.parent.input_node_info.items():
+            #self.parent.input_node_info[k1] = v1
             for k,v in self.node_dict.items():
                 if k1==k:
 
@@ -1367,7 +1395,8 @@ class Fixed_locations_Dialog(QtGui.QDialog):
                     continue
 
 
-        self.parent.input_node_info=self.new_node_dict
+        #self.parent.input_node_info=self.new_node_dict
+        #print"XY", self.parent.fixed_x_locations,self.parent.fixed_y_locations
 
         self.close()
 
@@ -1394,6 +1423,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
         self.perf_dict={}
         self.Patches=None
         self.input_node_info={}
+
         self.fixed_x_locations={}
         self.fixed_y_locations = {}
 
@@ -1484,10 +1514,12 @@ class New_layout_engine_dialog(QtGui.QDialog):
 
 
     def assign_fixed_locations(self):
+
         fixed_locations=Fixed_locations_Dialog(self)
         fixed_locations.set_node_id(self.graph[1])
         fixed_locations.show()
         fixed_locations.exec_()
+
 
 
 
@@ -1547,10 +1579,19 @@ class New_layout_engine_dialog(QtGui.QDialog):
             print "generate layout"
 
             if self.current_mode!=0:
-                N = int(self.ui.txt_num_layouts.text())
+                try:
+                    N = int(self.ui.txt_num_layouts.text())
+                except:
+                    print "Please enter Num of Layouts greater than 0"
+                    print "ERROR: Invalid Information"
+                    return
+
                 W = int(self.ui.txt_width.text())*1000
                 H = int(self.ui.txt_height.text())*1000
                 Patches, cs_sym_data=self.engine.generate_solutions(self.current_mode,num_layouts=N,W=W,H=H,fixed_x_location=self.fixed_x_locations,fixed_y_location=self.fixed_y_locations)
+                if Patches==None or cs_sym_data==None:
+                    print "ERROR: Invalid Information"
+                    return
             else:
                 N=1
                 Patches, cs_sym_data= self.engine.generate_solutions(self.current_mode, num_layouts=N)
@@ -1673,6 +1714,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
 
         self.ax2.set_xlim(0, self.fp_width)
         self.ax2.set_ylim(0, self.fp_length)
+        #self.ax2.set_aspect('equal')
 
 
 
@@ -1708,7 +1750,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
         self.ax2.plot(data['x'], data['y'], 'o', picker=5)
         self.ax2.set_xlim(0, self.fp_width)
         self.ax2.set_ylim(0, self.fp_length)
-
+        #self.ax2.set_aspect('auto')
         self.canvas_init.draw()
         self.canvas_init.callbacks.connect('pick_event', self.on_click)
 

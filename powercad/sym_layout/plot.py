@@ -69,6 +69,7 @@ def plot_layout(sym_layout, filletFlag=False, ax = plt.subplot('111', adjustable
     ax.set_ylim(sub_rect.bottom - 1.0, sub_rect.top + 1.0)
     ax.set_axis_on()  # sxm: originally ax.set_axis_off()
 
+
     for sym in traces:
         plot = True
         if sym.is_supertrace():

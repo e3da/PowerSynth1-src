@@ -171,6 +171,7 @@ class SymWire(object):
     def __init__(self):
         self.tech = None  # holds a reference to Bondwire object
         self.device = None  # device in which wire is connected to
+
         self.dev_pt = None  # 1 or 2 -- which end is connected to device
         self.trace = None  # trace that wire is connected to
         self.trace2 = None  # 2nd trace that wire is connected to
@@ -183,7 +184,7 @@ class SymWire(object):
         self.end_pt_conn = None  # points to the trace object in which end_pts are connected to
         self.num_wires = None  # Number of wires in the trace to trace bondwire
         self.wire_sep = None  # Separation between wires in trace to trace bondwire
-
+        #self.footprint_rect=None
 
 class SymLine(object):
     def __init__(self, line=None, raw_line=None):
@@ -1813,9 +1814,12 @@ class SymbolicLayout(object):
                 lx, ly = landing.position
                 coord = complex(lx - hwidth, ly - hlength)  # create coordinates wrt the die center
                 coord = coord * rot_vec  # Rotate coordinates by theta
+                #wire.device=self.footprint_rect
 
-                start_pt = (coord.real + wire.device.center_position[0],
-                            coord.imag + wire.device.center_position[1])
+                #start_pt = (coord.real + wire.device.center_position[0],coord.imag + wire.device.center_position[1])
+                x=wire.device.footprint_rect.left+(wire.device.footprint_rect.right-wire.device.footprint_rect.left)/2 # calculating center x coordinate of device footprint
+                y=wire.device.footprint_rect.bottom+(wire.device.footprint_rect.top-wire.device.footprint_rect.bottom)/2 # calculating center y coordinate of device footprint
+                start_pt = (coord.real + x,coord.imag + y)
                 #print wire.device.name, wire.dev_pt, wire.device.orientation
                 if wire.trace.element.vertical:
 
@@ -1855,6 +1859,7 @@ class SymbolicLayout(object):
         wire.end_pts = end_pts
         wire.land_pt = land_pt
         wire.land_pt2 = None
+
 
     def _place_device_bondwire_angle(self, wire):
         start_pts = []
