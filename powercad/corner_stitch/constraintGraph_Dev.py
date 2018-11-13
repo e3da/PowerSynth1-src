@@ -12,6 +12,8 @@ import random
 from random import randrange
 import timeit
 import csv
+import cProfile
+import re
 #########################################################################################################################
 
 
@@ -1592,8 +1594,10 @@ class constraintGraph:
                 for k, v in self.XLoc.items():
                     if k in n:
                         self.Loc_X[k] = v
+                #cProfile.run('re.compile("self.FUNCTION|G")')
 
                 self.FUNCTION(G)
+
 
                 loct.append(self.Loc_X)
 
@@ -2285,7 +2289,7 @@ class constraintGraph:
                     node.append(j)
             if len(node) > 2:
                 Node_List.append(node)
-        # print Node_List
+        #print Node_List
 
         Connected_List = []
 
@@ -2303,8 +2307,48 @@ class constraintGraph:
                 if len(LIST) > 0:
                     Connected_List.append(list(set(LIST)))
 
-        
-        if len(Connected_List) > 0:
+
+        for i in range(len(Connected_List)):
+            PATH = Connected_List[i]
+
+            # print Connected_List[0][0]
+            start = PATH[0]
+            end = PATH[-1]
+            # print start, end
+            LONGESTPATH, Value, Sum = self.LONGEST_PATH(B, start, end)
+            if LONGESTPATH == PATH:
+                H = []
+                for i in range(len(Node_List)):
+                    H.append(G.subgraph(Node_List[i]))
+                # print len(H)
+                for graph in H:
+
+
+                    n = list(graph.nodes())
+                    n.sort()
+
+                    start = n[0]
+                    end = n[-1]
+
+                    self.Location_finding(B, start, end, SOURCE=None, TARGET=None, flag=False)
+
+                Fixed_Node = self.Loc_X.keys()
+                # print "FIXED", Fixed_Node
+
+                for i in Fixed_Node:
+                    for j in Fixed_Node:
+                        if G.has_edge(i, j):
+                            G.remove_edge(i, j)
+
+                if len(G.edges()) == 0:
+
+                    return
+
+                else:
+                    self.FUNCTION(G)
+
+        #print "H",Connected_List
+        if len(Connected_List) > 1:
             for i in range(len(Connected_List)):
                 PATH = Connected_List[i]
                 # print Connected_List[0][0]
@@ -2549,6 +2593,7 @@ class constraintGraph:
                 UnFixed.append(i)
         #print UnFixed
         start2 = timeit.default_timer()
+
         while (len(UnFixed)) > 0:
             Min_val = {}
             # Val=LONGEST_PATH(B,0,4)
@@ -2559,6 +2604,7 @@ class constraintGraph:
                     key = j
                     Min_val.setdefault(key, [])
                     # if B[i][j]!=0:
+
                     Val = self.LONGEST_PATH(B, i, j)
                     # print i,j,Val[2]
                     if Val[2] != 0:
@@ -2603,9 +2649,15 @@ class constraintGraph:
         PATH, Value, Sum = self.LONGEST_PATH(B, start, end)
         e1 = timeit.default_timer()
         if flag == True:
+            cProfile.runctx(
+                'self.Evaluation_connected(B, PATH, SOURCE, TARGET)',
+                globals(),
+                locals(),
 
+            )
 
             self.Evaluation_connected(B, PATH, SOURCE, TARGET)
+            #flag=False
 
 
 
@@ -2802,9 +2854,52 @@ class constraintGraph:
                     Connected_List.append(list(set(LIST)))
                     # if LIST not in Connected_List:
                     # Connected_List.append(LIST)
-        # print Connected_List
+        #print"V", Connected_List
+        for i in range(len(Connected_List)):
+            PATH = Connected_List[i]
 
-        if len(Connected_List) > 0:
+            # print Connected_List[0][0]
+            start = PATH[0]
+            end = PATH[-1]
+            # print start, end
+            LONGESTPATH, Value, Sum = self.LONGEST_PATH(B, start, end)
+            if LONGESTPATH == PATH:
+                H = []
+                for i in range(len(Node_List)):
+                    H.append(G.subgraph(Node_List[i]))
+                # print H
+                for graph in H:
+                    Fixed_Node = self.Loc_Y.keys()
+
+                    # Draw(G)
+                    n = list(graph.nodes())
+                    # print n
+                    n.sort()
+                    start = n[0]
+                    end = n[-1]
+                    # print start, end
+                    self.Location_finding_V(B, start, end, SOURCE=None, TARGET=None, flag=False)
+
+                Fixed_Node = self.Loc_Y.keys()
+                # print "FIXED", Fixed_Node
+
+                for i in Fixed_Node:
+                    for j in Fixed_Node:
+                        if G.has_edge(i, j):
+                            G.remove_edge(i, j)
+                            # B[i][j] = 0
+                # Draw(G)
+                # print G.edges()
+                if len(G.edges()) == 0:
+                    # print "Y"
+                    return
+                # if (G.edges()==None):
+                # return
+
+                else:
+                    self.FUNCTION_V(G)
+
+        if len(Connected_List) > 1:
             for i in range(len(Connected_List)):
 
                 PATH = Connected_List[i]
@@ -3103,7 +3198,9 @@ class constraintGraph:
 
         PATH, Value, Sum = self.LONGEST_PATH_V(B, start, end)
         if flag == True:
+
             self.Evaluation_connected_V(B, PATH, SOURCE, TARGET)
+            #flag = False
         else:
             # print "s",start,end
             Max = self.Loc_Y[end] - self.Loc_Y[start]

@@ -92,7 +92,24 @@ class New_layout_engine():
         # ------------------------------------------
         input_rects, self.W, self.H = input_conversion(sym_layout)
         input = self.cornerstitch.read_input('list', Rect_list=input_rects)
+        ''''
+        print"IN"
+        for i in input:
+            j=[]
+            j.append('+')
 
+            j.append(i[5])
+
+            j.append(i[1])
+
+            j.append(i[2])
+
+            j.append(i[3])
+
+            j.append(i[4])
+
+            print j
+        '''
         self.Htree, self.Vtree = self.cornerstitch.input_processing(input, self.W + 20, self.H + 20)
 
         patches, combined_graph = self.cornerstitch.draw_layout(rects=input_rects,Htree=self.Htree,Vtree=self.Vtree)
@@ -264,6 +281,8 @@ class New_layout_engine():
 
             Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=num_layouts, W=W, H=H,
                                                       XLoc=Min_X_Loc, YLoc=Min_Y_Loc)
+            #print"EVAL_H",Evaluated_X
+            #print"EVAL_V", Evaluated_Y
             CS_SYM_Updated, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree, sym_to_cs)
             CS_SYM_Updated = CS_SYM_Updated['H']
             self.cur_fig_data = plot_layout(Layout_Rects, level)
@@ -365,8 +384,10 @@ class New_layout_engine():
 
             Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=num_layouts, W=W, H=H,
                                                       XLoc=Min_X_Loc, YLoc=Min_Y_Loc)
+            #print"EVAL_H", Evaluated_X
+            #print"EVAL_V", Evaluated_Y
             CS_SYM_Updated, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree, sym_to_cs)
-            print"DONE"
+
 
             CS_SYM_Updated = CS_SYM_Updated['H']
             self.cur_fig_data = plot_layout(Layout_Rects, level)

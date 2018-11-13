@@ -1344,7 +1344,7 @@ class Fixed_locations_Dialog(QtGui.QDialog):
         for k1,v1 in self.parent.input_node_info.items():
             if k1 == int(node_id) :
                 del self.parent.input_node_info[k1]
-       
+
         for k,v in self.new_node_dict.items():
             if k==int(node_id):
                 del self.new_node_dict[k]

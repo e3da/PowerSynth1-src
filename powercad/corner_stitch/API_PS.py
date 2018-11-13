@@ -256,7 +256,7 @@ def input_conversion(sym_layout):
         lines =list(set(v))
         if len(lines ) >1:
             Intersections[k ] =lines
-
+    #print"IN",Intersections
     CONNECTED =[item for sublist in Intersections.values() for item in sublist ]
     ext =0
     for line in sym_layout.all_lines:
@@ -265,10 +265,10 @@ def input_conversion(sym_layout):
     for obj in sym_layout.all_lines:
         if obj not in Super_Traces:
             y_ind2 = y_coordinates.index(obj.pt2[1])
-            if obj.vertical == True and y_ind2 == mx_y and obj not in CONNECTED :
+            if obj.vertical == True and y_ind2 == mx_y and obj.pt2  not in Intersections.keys() :
                 if ext==1:
                     Extend.append(obj)
-
+    #print"LE",len(Extend)
     for obj in sym_layout.all_lines:
         if obj not in Super_Traces:
 
