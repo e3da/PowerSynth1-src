@@ -2289,33 +2289,58 @@ class constraintGraph:
                     node.append(j)
             if len(node) > 2:
                 Node_List.append(node)
-        #print Node_List
+        #print"NODE", Node_List
 
+
+        List=[]
+        for i in range(len(B)):
+            for j in range(len(B)):
+                for k in range(len(Node_List)):
+                    if i in Node_List[k] and j not in Node_List[k] and B[i][j]!=0:
+                        for m in range(len(Node_List)):
+                            if j in Node_List[m]:
+                                if Node_List[k] not in List:
+                                    List.append(Node_List[k])
+                                if Node_List[m] not in List:
+                                    List.append(Node_List[m])
+
+        #print"L", List
         Connected_List = []
+        if len(List) > 0:
+            L = []
+            for i in List:
+                L += i
+            Connected_List.append(list(set(L)))
+        else:
+            for k in range(len(Node_List)):
+                for m in range(len(Node_List)):
+                    LIST = []
+                    for i in range(len(B)):
+                        for j in range(len(B)):
+                            if i in Node_List[k] and j in Node_List[m]:
+                                if i not in Node_List[m] and j not in Node_List[k]:
+                                    if B[i][j] != 0:
+                                        # LIST.append(Node_List[k])
+                                        # LIST.append(Node_List[m])
+                                        LIST = Node_List[k] + Node_List[m]
 
-        for k in range(len(Node_List)):
-            for m in range(len(Node_List)):
-                LIST = []
-                for i in range(len(B)):
-                    for j in range(len(B)):
-                        if i in Node_List[k] and j in Node_List[m]:
-                            if i not in Node_List[m] and j not in Node_List[k]:
-                                if B[i][j] != 0:
-                                    # LIST.append(Node_List[k])
-                                    # LIST.append(Node_List[m])
-                                    LIST = Node_List[k] + Node_List[m]
-                if len(LIST) > 0:
-                    Connected_List.append(list(set(LIST)))
+                    if len(LIST) > 0:
+                        Connected_List.append(list(set(LIST)))
+                        # if LIST not in Connected_List:
+                        # Connected_List.append(LIST)
 
+        #print"CON", Connected_List
 
-        for i in range(len(Connected_List)):
-            PATH = Connected_List[i]
-
+        if len(Connected_List)==1:
+            #for i in range(len(Connected_List)):
+            PATH = Connected_List[0]
+            #print"P", PATH
             # print Connected_List[0][0]
             start = PATH[0]
             end = PATH[-1]
             # print start, end
             LONGESTPATH, Value, Sum = self.LONGEST_PATH(B, start, end)
+
             if LONGESTPATH == PATH:
                 H = []
                 for i in range(len(Node_List)):
@@ -2348,7 +2373,7 @@ class constraintGraph:
                     self.FUNCTION(G)
 
         #print "H",Connected_List
-        if len(Connected_List) > 1:
+        elif len(Connected_List) > 1:
             for i in range(len(Connected_List)):
                 PATH = Connected_List[i]
                 # print Connected_List[0][0]
@@ -2835,28 +2860,48 @@ class constraintGraph:
             if len(node) > 2:
                 Node_List.append(node)
         # print Node_List
+        List = []
+        for i in range(len(B)):
+            for j in range(len(B)):
+                for k in range(len(Node_List)):
+                    if i in Node_List[k] and j not in Node_List[k] and B[i][j] != 0:
+                        for m in range(len(Node_List)):
+                            if j in Node_List[m]:
+                                if Node_List[k] not in List:
+                                    List.append(Node_List[k])
+                                if Node_List[m] not in List:
+                                    List.append(Node_List[m])
 
+        #print"L", List
         Connected_List = []
-        for k in range(len(Node_List)):
-            for m in range(len(Node_List)):
-                LIST = []
-                for i in range(len(B)):
-                    for j in range(len(B)):
-                        if i in Node_List[k] and j in Node_List[m]:
-                            if i not in Node_List[m] and j not in Node_List[k]:
-                                if B[i][j] != 0:
-                                    # print i,j
-                                    # LIST.append(Node_List[k])
-                                    # LIST.append(Node_List[m])
-                                    # print Node_List[k],Node_List[m]
-                                    LIST = Node_List[k] + Node_List[m]
-                if len(LIST) > 0:
-                    Connected_List.append(list(set(LIST)))
-                    # if LIST not in Connected_List:
+        if len(List) > 0:
+            L = []
+            for i in List:
+                L += i
+            Connected_List.append(list(set(L)))
+        #Connected_List = []
+        else:
+            for k in range(len(Node_List)):
+                for m in range(len(Node_List)):
+                    LIST = []
+                    for i in range(len(B)):
+                        for j in range(len(B)):
+                            if i in Node_List[k] and j in Node_List[m]:
+                                if i not in Node_List[m] and j not in Node_List[k]:
+                                    if B[i][j] != 0:
+                                        # print i,j
+                                        # LIST.append(Node_List[k])
+                                        # LIST.append(Node_List[m])
+                                        # print Node_List[k],Node_List[m]
+                                        LIST = Node_List[k] + Node_List[m]
+                    if len(LIST) > 0:
+                        Connected_List.append(list(set(LIST)))
+                        # if LIST not in Connected_List:
                     # Connected_List.append(LIST)
         #print"V", Connected_List
-        for i in range(len(Connected_List)):
-            PATH = Connected_List[i]
+        if len(Connected_List)==1:
+        #for i in range(len(Connected_List)):
+            PATH = Connected_List[0]
 
             # print Connected_List[0][0]
             start = PATH[0]
@@ -2899,7 +2944,7 @@ class constraintGraph:
                 else:
                     self.FUNCTION_V(G)
 
-        if len(Connected_List) > 1:
+        elif len(Connected_List) > 1:
             for i in range(len(Connected_List)):
 
                 PATH = Connected_List[i]

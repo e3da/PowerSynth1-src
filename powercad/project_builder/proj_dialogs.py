@@ -1229,7 +1229,7 @@ class Fixed_locations_Dialog(QtGui.QDialog):
 
         if self.parent.input_node_info!=None:
             self.new_node_dict=self.parent.input_node_info
-        print"P", self.parent.input_node_info
+        #print"P", self.parent.input_node_info
         row_id = self.ui.table_Fixedloc.rowCount()
 
         #print"R", row_id
