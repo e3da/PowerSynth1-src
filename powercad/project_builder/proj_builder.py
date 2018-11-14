@@ -101,6 +101,7 @@ class ProjectBuilder(QtGui.QMainWindow):
         self.ui.btn_new_layout_engine.pressed.connect(self.open_new_layout_engine)
         # Module stack page
         self.ui.btn_import_layer_stack.pressed.connect(self.import_layer_stack)
+
         # Constraints page
         self.ui.txt_minWidth.textEdited.connect(self.constraint_min_edit)
         self.ui.txt_maxWidth.textEdited.connect(self.constraint_max_edit)
@@ -289,7 +290,7 @@ class ProjectBuilder(QtGui.QMainWindow):
                 self.project.module_data.design_rules = ProcessDesignRules(1.2, 1.2, 0.2, 0.1, 1.0, 0.2, 0.2, 0.2)
 
     def open_new_layout_engine(self):
-        if not self.build_module_stack(False):
+        if not self.build_module_stack():
             QtGui.QMessageBox.warning(self, "Module Stack Error",
                                       "One or more settings on the module stack page have an error.")
             run_optimization = False
@@ -854,6 +855,8 @@ class ProjectBuilder(QtGui.QMainWindow):
 
         # used later to setup device category items
         self.device_list_model = QtGui.QFileSystemModel()
+        self.attach_list_model = QtGui.QFileSystemModel()
+        self.attach_list_model.setFilter(QtCore.QDir.Files | QtCore.QDir.NoDotAndDotDot)
 
     def _clear_component_fields(self):
         self.ui.txt_device_heat_flow.setEnabled(False); self.ui.txt_device_heat_flow.setText("")
@@ -875,7 +878,7 @@ class ProjectBuilder(QtGui.QMainWindow):
 
 
         categ = self.categ_list_model.fileName(self.ui.lst_categories.selectedIndexes()[0])
-        
+
         if categ == 'Device' or categ=='Lead':
             self.ui.btn_addDevice.setEnabled(True)
             self.ui.btn_addDevice.setText('Add')
@@ -1393,7 +1396,7 @@ class ProjectBuilder(QtGui.QMainWindow):
                 print 'Optimization Complete'
                 print 'seed is : ', iseed
                 print 'Runtime:',time.time()-starttime,'seconds.'
-                print 'Opening Solution Browser...'                
+                print 'Opening Solution Browser...'
                 self.project.symb_layout.opt_progress_fn = None
                 self.sol_browser = GrapheneWindow(self)
                 self.sol_browser.show()
@@ -1590,4 +1593,3 @@ if __name__ == "__main__":
 
 # test- Jul 25, 2017
 
-        

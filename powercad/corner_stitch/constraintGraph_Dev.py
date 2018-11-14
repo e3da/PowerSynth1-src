@@ -2344,6 +2344,7 @@ class constraintGraph:
             if LONGESTPATH == PATH:
                 H = []
                 for i in range(len(Node_List)):
+
                     H.append(G.subgraph(Node_List[i]))
                 # print len(H)
                 for graph in H:
@@ -2674,12 +2675,7 @@ class constraintGraph:
         PATH, Value, Sum = self.LONGEST_PATH(B, start, end)
         e1 = timeit.default_timer()
         if flag == True:
-            cProfile.runctx(
-                'self.Evaluation_connected(B, PATH, SOURCE, TARGET)',
-                globals(),
-                locals(),
 
-            )
 
             self.Evaluation_connected(B, PATH, SOURCE, TARGET)
             #flag=False

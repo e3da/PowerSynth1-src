@@ -273,12 +273,3 @@ if __name__ == '__main__':
     print c1.inter_line(l1)
 
 
-    '''
-    rect = Rect(2.0, 0.0, 0.0, 2.0)
-    rect2 = Rect(2.0, 0.0, 0.0, 2.0)
-    inter = rect.intersection(rect2)
-    if inter is not None:
-        print inter.area()
-    else:
-        print 'weird'
-    '''
