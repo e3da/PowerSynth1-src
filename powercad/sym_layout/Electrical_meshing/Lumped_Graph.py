@@ -74,10 +74,10 @@ class E_graph():
         pt1 = trace_data[3].node[n1]['point']
         pt2 = trace_data[3].node[n2]['point']
         if trace_data[0].element.vertical:
-            width = trace_data[0].trace_rect.width
+            width = trace_data[0].trace_rect.width()
             length = math.fabs(pt2[1] - pt1[1])
         else:
-            width = trace_data[0].trace_rect.height
+            width = trace_data[0].trace_rect.height()
             length = math.fabs(pt2[0] - pt1[0])
         lumped_graph.add_edge(n1, n2,
                               {'ind': 1.0 / 1, 'res': 1.0 / 1, 'cap': 1.0 / 1,
@@ -88,13 +88,7 @@ class E_graph():
     def _trace_conn_path_eval(self, n1, n2, trace_data, conn_trace, lumped_graph):
         pt1 = trace_data[3].node[n1]['point']
         pt2 = trace_data[3].node[n2]['point']
-        '''
-        if isinstance(conn_trace.element,LayoutPoint):
-            print "errrorrr",conn_trace.element.path_id
-            raw_input()
-        else:
-            print "correct!!"
-        '''
+
         main = None  # main trace
         conn = None  # connecting trace
         # Determine which trace is ortho. to conn. direction
@@ -116,10 +110,10 @@ class E_graph():
                 main = conn_trace
 
         if main.element.vertical:
-            width = conn.trace_rect.height
+            width = conn.trace_rect.height()
             length = math.fabs(pt2[0] - pt1[0])
         else:
-            width = conn.trace_rect.width
+            width = conn.trace_rect.width()
             length = math.fabs(pt2[1] - pt1[1])
         # print 'corner', width,length*2
         lumped_graph.add_edge(n1, n2,
@@ -198,7 +192,6 @@ class E_graph():
         :param lumped_graph:
         :return:
         '''
-        print "build lumped edges",self.mdl_type['E']
         w_all = []
         l_all = []
         w1_all = []
