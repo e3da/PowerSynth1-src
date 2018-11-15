@@ -92,24 +92,7 @@ class New_layout_engine():
         # ------------------------------------------
         input_rects, self.W, self.H = input_conversion(sym_layout)
         input = self.cornerstitch.read_input('list', Rect_list=input_rects)
-        ''''
-        print"IN"
-        for i in input:
-            j=[]
-            j.append('+')
 
-            j.append(i[5])
-
-            j.append(i[1])
-
-            j.append(i[2])
-
-            j.append(i[3])
-
-            j.append(i[4])
-
-            print j
-        '''
         self.Htree, self.Vtree = self.cornerstitch.input_processing(input, self.W + 20, self.H + 20)
 
         patches, combined_graph = self.cornerstitch.draw_layout(rects=input_rects,Htree=self.Htree,Vtree=self.Vtree)
@@ -220,11 +203,7 @@ class New_layout_engine():
             CS_SYM_Updated = CS_SYM_Updated['H']
             self.cur_fig_data = plot_layout(Layout_Rects, level)
         elif level == 2:
-            '''
-            CG2 = CS_to_CG(0)
-            Evaluated_X0, Evaluated_Y0 = CG2.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=None, W=None, H=None
-                                                        , XLoc=None, YLoc=None)
-             '''
+
             Evaluated_X0, Evaluated_Y0 = self.mode_zero()
             ZDL_H={}
             ZDL_V={}
@@ -240,22 +219,15 @@ class New_layout_engine():
                 MIN_Y[ZDL_V.keys().index(k)]=v
 
 
-            #Evaluated_X0, Evaluated_Y0=self.mode_zero()
+
             max_x=max(MIN_X.values())
             max_y = max(MIN_Y.values())
             XLoc=MIN_X.keys()
             YLoc=MIN_Y.keys()
-            #print"Eval0", Evaluated_X0, Evaluated_Y0
+
             Min_X_Loc = {}
             Min_Y_Loc = {}
-            '''
-            for k, v in Evaluated_X0.items():
-                XLoc = v.keys()
-                max_x = v[max(XLoc)]
-            for k, v in Evaluated_Y0.items():
-                YLoc = v.keys()
-                max_y = v[max(YLoc)]
-            '''
+
             XLoc.sort()
             YLoc.sort()
             Min_X_Loc[len(XLoc) - 1] = max_x
@@ -281,8 +253,7 @@ class New_layout_engine():
 
             Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=num_layouts, W=W, H=H,
                                                       XLoc=Min_X_Loc, YLoc=Min_Y_Loc)
-            #print"EVAL_H",Evaluated_X
-            #print"EVAL_V", Evaluated_Y
+
             CS_SYM_Updated, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree, sym_to_cs)
             CS_SYM_Updated = CS_SYM_Updated['H']
             self.cur_fig_data = plot_layout(Layout_Rects, level)
@@ -319,9 +290,6 @@ class New_layout_engine():
                 max_y = v[max(YLoc)]
             XLoc.sort()
             YLoc.sort()
-
-            # Min_X_Loc[0] = 0
-            # Min_Y_Loc[0] = 0
             Min_X_Loc[len(XLoc) - 1] = max_x
             Min_Y_Loc[len(YLoc) - 1] = max_y
 
@@ -342,9 +310,7 @@ class New_layout_engine():
                 else:
                     print"Enter Height greater than or equal Minimum Height"
                     return None,None
-            #print MIN_X
 
-            #print"F", fixed_x_location
             Nodes_H=fixed_x_location.keys()
             Nodes_V=fixed_y_location.keys()
             Nodes_H.sort()
@@ -356,11 +322,10 @@ class New_layout_engine():
             for i in range(len(Nodes_H)-1):
                 distance_H[Nodes_H[i]]=fixed_x_location[Nodes_H[i+1]]-fixed_x_location[Nodes_H[i]]
                 min_distance_H[Nodes_H[i]]=MIN_X[Nodes_H[i+1]]-MIN_X[Nodes_H[i]]
-            #print distance_H, min_distance_H
             for i in range(len(Nodes_V)-1):
                 distance_V[Nodes_V[i]]=fixed_y_location[Nodes_V[i+1]]-fixed_y_location[Nodes_V[i]]
                 min_distance_V[Nodes_V[i]]=MIN_Y[Nodes_V[i+1]]-MIN_Y[Nodes_V[i]]
-            #print"V", distance_V , min_distance_V
+
             ### Data from GUI
             for k, v in fixed_x_location.items():
                 Min_X_Loc[k] = v
@@ -370,7 +335,7 @@ class New_layout_engine():
             Min_X_Loc = collections.OrderedDict(sorted(Min_X_Loc.items()))
             Min_Y_Loc = collections.OrderedDict(sorted(Min_Y_Loc.items()))
 
-            #print Min_X_Loc,Min_Y_Loc
+
             for k,v in Min_X_Loc.items():
                 if k in distance_H:
                     if distance_H[k]<min_distance_H[k] or Min_X_Loc[k]<MIN_X[k] :
@@ -384,8 +349,7 @@ class New_layout_engine():
 
             Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=num_layouts, W=W, H=H,
                                                       XLoc=Min_X_Loc, YLoc=Min_Y_Loc)
-            #print"EVAL_H", Evaluated_X
-            #print"EVAL_V", Evaluated_Y
+
             CS_SYM_Updated, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree, sym_to_cs)
 
 

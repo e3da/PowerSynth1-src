@@ -1451,8 +1451,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
     def setPatches(self):
         return self.Patches
 
-        #self.ui.txt_width.textChanged.connect(self.width_edit_text_changed)
-        #self.ui.txt_height.textChanged.connect(self.height_edit_text_changed)
+
 
         self.ui.btn_gen_layouts.pressed.connect(self.gen_layouts)
         self.ui.cmb_sols.currentIndexChanged.connect(self.layout_plot)
@@ -1505,7 +1504,6 @@ class New_layout_engine_dialog(QtGui.QDialog):
             self.ui.txt_height.setEnabled(True)
             self.ui.btn_fixed_locs.setEnabled(True)
             self.refresh_layout_mode3()
-            #self.refresh_layout()
 
 
 
@@ -1556,15 +1554,13 @@ class New_layout_engine_dialog(QtGui.QDialog):
         self.ax3.plot(self.perf1['data'],self.perf2['data'],'o',picker=5)
         self.ax3.set_xlabel(self.perf1['label'])
         self.ax3.set_ylabel(self.perf2['label'])
-        #self.ax3.set_xlim(min(self.perf1['data']), max(self.perf1['data']))
-        #self.ax3.set_ylim(min(self.perf2['data'])-1, max(self.perf2['data'])+1)
         self.canvas_sol_browser.draw()
         self.canvas_sol_browser.callbacks.connect('pick_event',self.on_pick)
 
     def on_pick(self, event):
         self.update_sol_browser()
         ind = event.ind[0]
-        #print self.perf1['data'][ind] , self.perf2['data'][ind]
+
         self.ax3.plot(self.perf1['data'][ind], self.perf2['data'][ind], 'o',c='red')
         self.layout_plot(layout_ind=ind)
         self.canvas_sols.draw()
