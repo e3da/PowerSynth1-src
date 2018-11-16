@@ -107,7 +107,6 @@ class DesignRuleCheck():
     def check_trace_min_width(self):
             # Check that all traces are greater than minimum width
             min_width = self.symb_layout.design_rules.min_trace_width
-            
             total_error = 0.0
             for rect in self.symb_layout.trace_rects:
                 if rect.width < min_width:

@@ -38,7 +38,6 @@ def draw_rect_list(rectlist, ax, color='blue', pattern='//',x_max=None, y_max=No
                               edgecolor='black', facecolor=color, hatch=pattern,linewidth=3)
         patch.append(p)
         ax.add_patch(p)
-    # ax1.autoscale_view(tight=True)
     plt.xlim(0, x_max)
     plt.ylim(0, y_max)
     plt.gca().set_aspect('equal', adjustable='box')
@@ -76,7 +75,6 @@ def plot_layout(Layout_Rects,path,name,level):
                 min_x = i[0]
             if i[1] < min_y:
                 min_y = i[1]
-        #fig1, ax1 = plt.subplots()
         colors=['White','green','red','blue','yellow','pink']
         type=['EMPTY','Type_1','Type_2','Type_3','Type_4']
         ALL_Patches={}
@@ -130,8 +128,6 @@ def plot_layout(Layout_Rects,path,name,level):
                     Total_H[(max_x,max_y)]=Rectangles
         j = 0
         for k,v in Total_H.items():
-            #print "TH",k,v
-
             Rectangles = v
             max_x=k[0]
             max_y=k[1]
@@ -200,12 +196,11 @@ def input_conversion(sym_layout):
     for obj in sym_layout.all_points:
         x_coordinates.append(obj.pt[0])
         y_coordinates.append(obj.pt[1])
-    # print set(x_coordinates),set(y_coordinates)
-    x_coordinates =list(set(x_coordinates))
-    y_coordinates =list(set(y_coordinates))
+
+    x_coordinates =list(set(x_coordinates)) #removes duplicate x coordinates
+    y_coordinates =list(set(y_coordinates)) #removes duplicate y coordinates
     Extend =[]
     mx_y =max(y_coordinates)
-
     converted_x_coordinates =[( i +1 ) *10 for i in x_coordinates] # stores the converted x coordinates of all objects for conversion
     converted_y_coordinates = [( i +1) * 10 for i in y_coordinates] # stores the converted y coordinates of all objects for conversion
     x_max = max(converted_x_coordinates) # stores maximum x value to determine total width of the layout
@@ -216,13 +211,17 @@ def input_conversion(sym_layout):
     Super_Traces_dict ={} # stores super traces {(vertical trace y2,y2,x2,x2):horizontal trace}
     Connected ={}
 
+    '''
     Points =[]
     for obj in sym_layout.all_lines:
         Points.append(obj.pt1)
         Points.append(obj.pt2)
+        
 
     Points =list(set(Points))
+    '''
 
+    #finds the intersection points
     for obj1 in sym_layout.all_lines:
         for obj2 in sym_layout.all_lines:
             if obj1!=obj2:
@@ -233,31 +232,30 @@ def input_conversion(sym_layout):
                         Connected[pt ] =([obj1 ,obj2])
 
 
-
+    # saves super trace information in dictionary format
     for obj1 in sym_layout.all_lines:
         for obj2 in sym_layout.all_lines:
             if obj1!=obj2:
 
                 if obj1.pt1[0] > obj2.pt1[0] and obj1.pt1[0] < obj2.pt2[0] and obj2.pt1[1] > obj1.pt1[1] and obj2.pt1[1] < obj1.pt2[1] and obj1.vertical!=obj2.vertical:  # in case of T shape (from the pic you drew above this is a super trace
-                    # print obj1.pt1,obj1.pt2,obj2.pt1,obj2.pt2
                     Super_Traces.append(obj1)
                     Super_Traces.append(obj2)
-                    # Super_Traces_dict[(obj1.pt2[1],obj1.pt1[1],obj1.pt2[0],obj1.pt1[0])]=obj2
                     Super_Traces_dict[obj1] = obj2
             else:
                 continue
 
-                # sym_layout.all_lines.remove(obj1)
-
-    # print Connected
+    # Finds connected components at each intersection points
     Intersections ={}
     for k, v in Connected.items():
 
         lines =list(set(v))
         if len(lines ) >1:
             Intersections[k ] =lines
-    #print"IN",Intersections
-    CONNECTED =[item for sublist in Intersections.values() for item in sublist ]
+
+    #CONNECTED =[item for sublist in Intersections.values() for item in sublist ]
+
+    # finds if there is extra height required for any trace as normally for vertical traces height is distance between two points. But if there is parallel horizontal trace at that y
+    # coordinate the horizontal trace has a height of 8 .That 8 should be added to the vertical trace (which is not connected to any horizontal trace at that y coordinate) height otherwise the layout
     ext =0
     for line in sym_layout.all_lines:
         if line.vertical == False and line.pt1[1] == mx_y :
@@ -268,14 +266,21 @@ def input_conversion(sym_layout):
             if obj.vertical == True and y_ind2 == mx_y and obj.pt2  not in Intersections.keys() :
                 if ext==1:
                     Extend.append(obj)
-    #print"LE",len(Extend)
+
+    """
+    For each horizontal trace : bottom left coordinate(x,y)=point1, height=8,width = distance between point2 and point1 of the line object,Type=Type_1
+    For each vertical trace: bottom left coordinate(x,y)=point1,width=8, height= distance between point2 and point1 of the line object, Type=Type_1
+    For each MOS:bottom left coordinate(x,y)=point, width=height=4, Type=Type_2
+    For each Diode: bottom left coordinate(x,y)=point,width=height=3, Type=Type_4
+    For each Lead: bottom left coordinate(x,y)=point,width=6, height=4, Type=type_3
+    For super traces vertical trace has the same property as normal vertical trace and horizontal trace is duplicate of that trace.
+    """
     for obj in sym_layout.all_lines:
         if obj not in Super_Traces:
 
             if obj.vertical == True:
                 x_ind = x_coordinates.index(obj.pt1[0])
                 y_ind = y_coordinates.index(obj.pt1[1])
-                # x_ind2=x_coordinates.index(obj.pt2[0])
                 y_ind2 = y_coordinates.index(obj.pt2[1])
 
                 x = converted_x_coordinates[x_ind]
@@ -287,8 +292,6 @@ def input_conversion(sym_layout):
                     height = converted_y_coordinates[y_ind2] - y
 
                 width = 8
-
-
             else:
                 x_ind = x_coordinates.index(obj.pt1[0])
                 y_ind = y_coordinates.index(obj.pt1[1])
@@ -299,14 +302,11 @@ def input_conversion(sym_layout):
                 y = converted_y_coordinates[y_ind]
                 width = converted_x_coordinates[x_ind2] - x + 8
                 height = 8
-
             R = Rectangle('Type_1', x, y, width, height, name=obj.path_id)
             Rectangles.append(R)
         else:
             if obj.vertical == True:
-
                 for k, v in Super_Traces_dict.items():
-
                     if k == obj:
                         if k.pt1[1] < k.pt2[1]:
                             y_ind = y_coordinates.index(obj.pt1[1])
@@ -326,14 +326,14 @@ def input_conversion(sym_layout):
                         y2 = converted_y_coordinates[y_ind2]
                         height = y2 - y
 
-                R = Rectangle('Type_1', x, y, width, height, name=obj.path_id) # super trace is now a single rectangle with name="vertical trace name+horizontal trace name':if 'Ta' and 'Tb' are supertrace where Ta is vertical new name of converted rectangle is 'TaTb'
+                R = Rectangle('Type_1', x, y, width, height, name=obj.path_id)
                 Rectangles.append(R)
 
             else:
                 continue
     Rectangles.sort(key=lambda x: x.Netid, reverse=False)
 
-    # the foloowing part is used to remove overlapping between two parts (So that they should not be in same group)
+    # the following part is used to remove overlapping between two parts (So that they should not be in same group)
     for rect1 in Rectangles:
         for rect2 in Rectangles:
             for element in Intersections.values() :
@@ -366,7 +366,7 @@ def input_conversion(sym_layout):
                             rect2.width -= rect1.width
 
 
-
+    # Schar and Echar for corner stitch input compatibility
     Input_rects = []
     for rect in Rectangles:
         rect.Schar = '/'
@@ -374,11 +374,8 @@ def input_conversion(sym_layout):
         Input_rects.append(rect)
     for rect in Rectangles:
         for k,v in Super_Traces_dict.items():
-            #print"K", k.path_id,rect.name
             if k.path_id==rect.name:
-
                 rect1=Rectangle('Type_1', rect.x, rect.y, rect.width, rect.height, name=v.path_id)
-
                 rect1.Schar = '/'
                 rect1.Echar = '/'
                 Input_rects.append(rect1)

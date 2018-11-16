@@ -2074,7 +2074,10 @@ class SymbolicLayout(object):
         self.trace_rects = []
         for line in self.all_trace_lines:
             if line.has_rect:
+                line.trace_rect.width_eval()
+                line.trace_rect.height_eval()
                 self.trace_rects.append(line.trace_rect)
+
     '''-----------------------------------------------------------------------------------------------------------------------------------------------------'''
     # DRC functions here replaced by design_rule_check.py - Jonathan
 
@@ -2226,8 +2229,10 @@ class SymbolicLayout(object):
         self.generate_layout()
         ret = []
         drc = DesignRuleCheck(self)
-        drc_count = drc.count_drc_errors(False)
-
+        drc_count = drc.count_drc_errors(True)
+        #fig, ax = plt.subplots()
+        #plot_layout(self, ax=ax)
+        #plt.show()
         if drc_count > 0:   # Non-convergence case
             #Brett's method
             for i in xrange(len(self.perf_measures)):

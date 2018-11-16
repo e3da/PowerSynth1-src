@@ -145,10 +145,12 @@ class Rect:
         return (self.top - self.bottom)*(self.right - self.left)
 
     def width_eval(self):
-        return self.right - self.left
+        self.width=self.right - self.left
+        return self.width
 
     def height_eval(self):
-        return self.top - self.bottom
+        self.height=self.top - self.bottom
+        return self.height
 
     def center(self):
         return 0.5*(self.right+self.left), 0.5*(self.top+self.bottom)
