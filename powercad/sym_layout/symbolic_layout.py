@@ -1814,12 +1814,12 @@ class SymbolicLayout(object):
                 lx, ly = landing.position
                 coord = complex(lx - hwidth, ly - hlength)  # create coordinates wrt the die center
                 coord = coord * rot_vec  # Rotate coordinates by theta
-                #wire.device=self.footprint_rect
+
 
                 #start_pt = (coord.real + wire.device.center_position[0],coord.imag + wire.device.center_position[1])
                 x=wire.device.footprint_rect.left+(wire.device.footprint_rect.right-wire.device.footprint_rect.left)/2 # calculating center x coordinate of device footprint
                 y=wire.device.footprint_rect.bottom+(wire.device.footprint_rect.top-wire.device.footprint_rect.bottom)/2 # calculating center y coordinate of device footprint
-                start_pt = (coord.real + x,coord.imag + y)
+                start_pt = (coord.real + x,coord.imag + y) # changed to start bondwire from center of device
                 #print wire.device.name, wire.dev_pt, wire.device.orientation
                 if wire.trace.element.vertical:
 

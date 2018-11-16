@@ -426,7 +426,7 @@ def plot_layout(Layout_Rects,level):
                     min_y = 1e10
 
                     for i in Rectangles:
-                        #print i
+
                         if i[0] + i[2] > max_x:
                             max_x = i[0] + i[2]
                         if i[1] + i[3] > max_y:

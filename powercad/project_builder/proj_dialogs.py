@@ -1403,6 +1403,7 @@ class Fixed_locations_Dialog(QtGui.QDialog):
 
 
 class New_layout_engine_dialog(QtGui.QDialog):
+    # Test New LAyout Engine
     def __init__(self,parent,fig,W,H,engine=None,graph=None):
         QtGui.QDialog.__init__(self, parent)
         self.ui = Ui_CornerStitch_Dialog()
@@ -1443,6 +1444,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
         self.ui.btn_gen_layouts.setEnabled(False)
         self.ui.btn_eval_setup.setEnabled(False)
 
+
     def getPatches(self,Patches):
         if self.Patches==None:
             self.Patches=Patches
@@ -1451,11 +1453,8 @@ class New_layout_engine_dialog(QtGui.QDialog):
     def setPatches(self):
         return self.Patches
 
-
-
         self.ui.btn_gen_layouts.pressed.connect(self.gen_layouts)
         self.ui.cmb_sols.currentIndexChanged.connect(self.layout_plot)
-
     def width_edit_text_changed(self):
         W = int(self.ui.txt_width.text())
         return W
@@ -1463,7 +1462,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
 
         H = int(self.ui.txt_height.text())
         return H
-    def mode_handler(self):
+    def mode_handler(self): # Modes combobox
         choice = str(self.ui.cmb_modes.currentText())
 
 
@@ -1486,9 +1485,6 @@ class New_layout_engine_dialog(QtGui.QDialog):
             self.ui.btn_fixed_locs.setEnabled(False)
             self.refresh_layout()
 
-
-            #self.initialize_layout(fig=self.mainwindow_fig, graph=None)
-
         elif choice == 'Fixed Size Layout':
             self.current_mode=2
             self.ui.txt_num_layouts.setEnabled(True)
@@ -1505,13 +1501,10 @@ class New_layout_engine_dialog(QtGui.QDialog):
             self.ui.btn_fixed_locs.setEnabled(True)
             self.refresh_layout_mode3()
 
-
-
-
         return
 
 
-    def assign_fixed_locations(self):
+    def assign_fixed_locations(self): # Fixed Locations (for mode-3)
 
         fixed_locations=Fixed_locations_Dialog(self)
         fixed_locations.set_node_id(self.graph[1])
@@ -1560,7 +1553,6 @@ class New_layout_engine_dialog(QtGui.QDialog):
     def on_pick(self, event):
         self.update_sol_browser()
         ind = event.ind[0]
-
         self.ax3.plot(self.perf1['data'][ind], self.perf2['data'][ind], 'o',c='red')
         self.layout_plot(layout_ind=ind)
         self.canvas_sols.draw()
@@ -1604,16 +1596,18 @@ class New_layout_engine_dialog(QtGui.QDialog):
                     '''
                     Plot real Layout here
                     '''
-                    #print "P",patches[i]
+
                     if self.engine.sym_layout != None:
                         self.layout_data[Layouts[i]] = {'Rects': cs_sym_data[i]}
 
                         self.generated_layouts[Layouts[i]] = {'Patches': Patches[i]}
             else:
                 print"Patches not found"
+
         # Convert Data info to Symb object for evaluation
         if self.engine.sym_layout!=None:
             sym_info=self.form_sym_obj_rect_dict()
+
             # Evaluate performace for all all layouts
             for p in self.perf_dict.keys():
                 perf = self.perf_dict[p]
@@ -1621,6 +1615,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
                 if perf['type'] == 'Thermal' and measure.mdl==1 and self.current_mode!=1:
                     self.engine.sym_layout.thermal_characterize()
             self._sym_eval_perf(sym_info=sym_info)
+
         # Update the solution browser
         self.update_sol_browser()
 
@@ -1650,7 +1645,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
                         self.ui.txt_width.setText(str(W))
                         self.ui.txt_height.setText(str(H))
 
-        if mode == 'cs':
+        if mode == 'cs': # corner stitch plotting engine (has some issues)
             for k,v in self.generated_layouts.items():
                 if choice==k:
                     for k1,v1 in v['Patches'].items():
@@ -1678,14 +1673,13 @@ class New_layout_engine_dialog(QtGui.QDialog):
 
 
     def refresh_layout(self):
-        #print "refresh layout"
         self.ax2.clear()
         self.ax2.set_position([0.07, 0.07, 0.9, 0.9])
 
         Names = self.init_fig.keys()
         Names.sort()
         for k, p in self.init_fig.items():
-            # for p in v:
+
             if k[0] == 'T':
                 x = p.get_x()
                 y = p.get_y()
@@ -1703,27 +1697,21 @@ class New_layout_engine_dialog(QtGui.QDialog):
             pos = self.init_graph[1]
             lbls = self.init_graph[2]
             nx.draw_networkx_nodes(G, pos, node_size=80, label=True, ax=self.ax2, zorder=6)
-            #print"lb", lbls,pos
+
 
 
             nx.draw_networkx_labels(G, pos, lbls, font_size=6, ax=self.ax2)
 
         self.ax2.set_xlim(0, self.fp_width)
         self.ax2.set_ylim(0, self.fp_length)
-        #self.ax2.set_aspect('equal')
-
-
-
         self.canvas_init.draw()
 
     def refresh_layout_mode3(self):
         self.ax2.clear()
-
-        #print "plot sol browser"
         Names = self.init_fig.keys()
         Names.sort()
         for k, p in self.init_fig.items():
-            # for p in v:
+
             if k[0] == 'T':
                 x = p.get_x()
                 y = p.get_y()
@@ -1746,7 +1734,6 @@ class New_layout_engine_dialog(QtGui.QDialog):
         self.ax2.plot(data['x'], data['y'], 'o', picker=5)
         self.ax2.set_xlim(0, self.fp_width)
         self.ax2.set_ylim(0, self.fp_length)
-        #self.ax2.set_aspect('auto')
         self.canvas_init.draw()
         self.canvas_init.callbacks.connect('pick_event', self.on_click)
 
@@ -1810,7 +1797,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
             Names=fig.keys()
             Names.sort()
             for k, p in fig.items():
-                #for p in v:
+
                 if k[0]=='T':
                     x=p.get_x()
                     y=p.get_y()
@@ -1935,11 +1922,10 @@ class New_layout_engine_dialog(QtGui.QDialog):
                                     if dev.is_diode():
                                         dev.states = [tbl_states.loc[row, 1]]
                         sym_layout.mdl_type['E']=measure.mdl
-                        #ax = plt.subplot('111', adjustable='box', aspect=1.0)
-                        ##plot_layout(sym_layout,ax)
-                        #plt.show()
+
+
                         sym_layout._build_lumped_graph()  # Rebuild the lumped graph for different device state.
-                        #sym_layout.E_graph.plot_lumped_graph()
+
 
                         # Measure res. or ind. from src node to sink node
                         source_terminal = measure.src_term
@@ -1984,12 +1970,10 @@ class New_layout_engine_dialog(QtGui.QDialog):
         # Handle traces
         sym_layout = self.engine.sym_layout
         sym_layout.trace_rects = []
-        #print"S", sym_info
-        #raw_input()
+
+
         for tr in self.engine.sym_layout.all_trace_lines:
-            #print "trace id ",tr.element.path_id
-            #if tr.element.path_id in sym_info.keys():
-            rect = sym_info[tr.element.path_id] # MIGHT BE AN ISSUE HERE
+            rect = sym_info[tr.element.path_id]
             sym_layout.trace_rects.append(rect)
             tr.trace_rect = rect
     def _sym_place_devices(self,sym_info=None):
@@ -1998,9 +1982,9 @@ class New_layout_engine_dialog(QtGui.QDialog):
         Use the rectangles built from corner stitch to update device locations in sym layout
         '''
         sym_layout = self.engine.sym_layout
-        #print "SYM", sym_info
+
         for dev in sym_layout.devices:
-            #print "SYM",sym_info[dev.name]
+
             dev_region = sym_info[dev.name]
             width, height, thickness = dev.tech.device_tech.dimensions
 
@@ -2031,6 +2015,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
                     raise LayoutError('No connected power bondwire!')
 
                 if dev.orientation == 1:
+
                     # On vertical trace
                     # orient device by power bonds
                     if powerbond.trace.trace_rect.left < trace_rect.left:
@@ -2055,6 +2040,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
                     hwidth = 0.5 * lead.tech.dimensions[1]
                     hlength = 0.5 * lead.tech.dimensions[0]
                     lead.orientation = 3
+
                     # find if near left or right (decide orientation)
                     # for power leads only right now
                     edge_dist = sym_layout.sub_dim[0] - 0.5 * (trace_rect.left + trace_rect.right)
@@ -2260,7 +2246,7 @@ class ET_standalone_Dialog(QtGui.QDialog):
     def open_dv_state(self):
         dv_state = Device_states_dialog(parent=self,mode=2)
         dv_state.exec_()
-        #print self.dev_df
+
     def finished(self):
         self.parent.perf_dict = self.perf_dict
         self.close()
@@ -2271,7 +2257,7 @@ class ET_standalone_Dialog(QtGui.QDialog):
             for symb_obj in self.parent.engine.sym_layout.all_sym:
                 if isinstance(symb_obj,SymPoint):
                     if symb_obj.name[0]=='M':
-                        #print symb_obj.name, symb_obj.tech.heat_flow
+
                         self.ui.tbl_thermal_data.insertRow(row_id)
                         self.ui.tbl_thermal_data.setItem(row_id, 0, QtGui.QTableWidgetItem())
                         self.ui.tbl_thermal_data.setItem(row_id, 1, QtGui.QTableWidgetItem())

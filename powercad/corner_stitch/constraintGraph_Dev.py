@@ -466,34 +466,7 @@ class constraintGraph:
                 # this tile has a minheight constraint between it's bottom and top edge
                 c = constraint.constraint(4) # index=4 means minheight constraint
                 index = 4
-                '''
-                value2=None
-                
-                # for reliability constraint purpose: Checks if current dependent minimum height is greater than design rule min height or not
-                if rect.current!=None:
-                    C = rect.current
-                    seq = self.current_constraint.keys()
-                    seq.sort()
 
-                    bins = np.array(seq)
-                    ind = bins.searchsorted(C)
-                    C1 = seq[ind]
-
-                    if C1 in self.current_constraint.keys():
-
-                        value2 = self.current_constraint[C1]
-
-                    else:
-                        value2 = None
-
-                value1 = constraint.constraint.getConstraintVal(c, type=rect.cell.type)
-                if value2!=None and value2 > value1: #sets up greater value as constraint value
-                    value = value2
-                else:
-                    value = value1
-                rect.vertex1 = origin1
-                rect.vertex2 = dest1
-                '''
                 value = constraint.constraint.getConstraintVal(c, type=rect.cell.type)
 
                 e = Edge(origin1, dest1, value, index, str(constraint.constraint.Type.index(rect.cell.type)), id, East,West, northWest, southEast)
@@ -540,31 +513,7 @@ class constraintGraph:
                 if rect.NORTH.nodeId != ID and rect.SOUTH.nodeId != ID and rect.NORTH in cornerStitch_v.stitchList and rect.SOUTH in cornerStitch_v.stitchList:
                     t2 = constraint.constraint.Type.index(rect.NORTH.cell.type)
                     t1 = constraint.constraint.Type.index(rect.SOUTH.cell.type)
-                    '''
-                    value2=None
-                    # for reliability constraint purpose: If its empty voltage-dependent spacing maybe applicable. the greater value between voltage dependent spacing and design
-                    #rule dependent spacing will dominate
-                    if rect.cell.type=="EMPTY":
-                        if rect.NORTH.voltage!=None and rect.SOUTH.voltage!=None:
-                            V=abs(rect.NORTH.voltage-rect.SOUTH.voltage)
-                            sequence=self.voltage_constraint.keys()
-                            sequence.sort()
-                            bins=np.array(sequence)
-                            ind=bins.searchsorted(V)
-                            V1=sequence[ind]
-                            if V1 in self.voltage_constraint.keys():
-                                value2=self.voltage_constraint[V1]
-                            else:
-                                value2=None
 
-                    c = constraint.constraint(1)
-                    index = 1
-                    value1 = constraint.constraint.getConstraintVal(c, source=t1, dest=t2)
-                    if value2!=None and value2>value1:
-                        value=value2
-                    else:
-                        value=value1
-                    '''
                     c = constraint.constraint(1) # index=1 means min spacing constraint
                     index = 1
                     value = constraint.constraint.getConstraintVal(c, source=t1, dest=t2)
@@ -607,34 +556,7 @@ class constraintGraph:
                 elif rect.NORTH not in cornerStitch_v.stitchList and rect.SOUTH not in cornerStitch_v.stitchList:
                     c = constraint.constraint(4) # index=4 means minheight constraint
                     index = 4
-                    '''
-                    if rect.current != None:
 
-                        C = rect.current
-
-                        seq = self.current_constraint.keys()
-                        seq.sort()
-
-                        bins = np.array(seq)
-                        ind = bins.searchsorted(C)
-                        # print sequence, ind, bins, V
-                        C1 = seq[ind]
-                        # print "Voltage",sequence, sequence[ind]
-                        if C1 in self.current_constraint.keys():
-                            value2 = self.current_constraint[C1]
-                        else:
-                            value2 = None
-                        # print rect.cell.x, rect.cell.y, value2
-                        value1 = constraint.constraint.getConstraintVal(c, type=rect.cell.type)
-                        if value2 > value1:
-                            value = value2
-                        else:
-                            value = value1
-                    else:
-                        value = constraint.constraint.getConstraintVal(c, type=rect.cell.type)
-                    rect.vertex1 = origin
-                    rect.vertex2 = dest
-                    '''
                     value = constraint.constraint.getConstraintVal(c, type=rect.cell.type)
                     e = Edge(origin, dest, value, index, str(constraint.constraint.Type.index(rect.cell.type)), id,
                              North, South, westNorth, eastSouth)
@@ -682,34 +604,7 @@ class constraintGraph:
 
                 c = constraint.constraint(0)
                 index = 0 # min width constraint
-                '''
-                if rect.current != None:
 
-                    C = rect.current
-
-                    seq = self.current_constraint.keys()
-                    seq.sort()
-
-                    bins = np.array(seq)
-                    ind = bins.searchsorted(C)
-                    # print sequence, ind, bins, V
-                    C1 = seq[ind]
-                    # print "Voltage",sequence, sequence[ind]
-                    if C1 in self.current_constraint.keys():
-                        value2 = self.current_constraint[C1]
-                    else:
-                        value2 = None
-                    #print rect.cell.x, rect.cell.y, value2
-                    value1 = constraint.constraint.getConstraintVal(c, type=rect.cell.type)
-                    if value2 > value1:
-                        value = value2
-                    else:
-                        value = value1
-                else:
-                    value = constraint.constraint.getConstraintVal(c, type=rect.cell.type)
-                rect.vertex1 = origin1
-                rect.vertex2 = dest1
-                '''
                 value = constraint.constraint.getConstraintVal(c, type=rect.cell.type)
                 e = Edge(origin1, dest1, value, index, str(constraint.constraint.Type.index(rect.cell.type)), id, North,
                          South, westNorth, eastSouth)
@@ -758,31 +653,7 @@ class constraintGraph:
                 if rect.EAST.nodeId != ID and rect.WEST.nodeId != ID and rect.EAST in cornerStitch_h.stitchList and rect.WEST in cornerStitch_h.stitchList:
                     t2 = constraint.constraint.Type.index(rect.EAST.cell.type)
                     t1 = constraint.constraint.Type.index(rect.WEST.cell.type)
-                    '''
-                    value2 = None
-                    if rect.cell.type == "EMPTY":
-                        if rect.EAST.voltage != None and rect.WEST.voltage != None:
-                            # print rect.cell.x,rect.cell.y,rect.voltage
-                            V = abs(rect.EAST.voltage - rect.WEST.voltage)
-                            #V = self.round(V)
-                            # print "Voltage",V
-                            sequence = self.voltage_constraint.keys()
-                            sequence.sort()
-                            bins = np.array(sequence)
-                            ind = bins.searchsorted(V)
-                            V1 = sequence[ind]
-                            # print "Voltage",sequence, sequence[ind]
-                            if V1 in self.voltage_constraint.keys():
-                                value2 = self.voltage_constraint[V1]
-                                #print value2
-                            else:
-                                value2 = None
-                    value1 = constraint.constraint.getConstraintVal(c, source=t1, dest=t2)
-                    if value2!=None and value2>value1:
-                        value=value2
-                    else:
-                        value=value1
-                    '''
+
                     c = constraint.constraint(1)
                     index = 1
                     value = constraint.constraint.getConstraintVal(c, source=t1, dest=t2)
@@ -821,36 +692,7 @@ class constraintGraph:
 
                     c = constraint.constraint(0)
                     index = 0
-                    '''
-                    if rect.current != None:
 
-                        C = rect.current
-
-                        seq = self.current_constraint.keys()
-                        seq.sort()
-
-                        bins = np.array(seq)
-                        ind = bins.searchsorted(C)
-        
-                        C1 = seq[ind]
-                        #print "Current",sequence, sequence[ind]
-                        if C1 in self.current_constraint.keys():
-                            value2 = self.current_constraint[C1]
-                        else:
-                            value2 = None
-                        # print rect.cell.x, rect.cell.y, value2
-                        value1 = constraint.constraint.getConstraintVal(c, type=rect.cell.type)
-                        if value2 > value1:
-                            value = value2
-                        else:
-                            value = value1
-                    else:
-                        value = constraint.constraint.getConstraintVal(c, type=rect.cell.type)
-                    #value = constraint.constraint.getConstraintVal(c, type=rect.cell.type)
-                    # print "val",value
-                    rect.vertex1 = origin
-                    rect.vertex2 = dest
-                    '''
                     value = constraint.constraint.getConstraintVal(c, type=rect.cell.type)
                     e = Edge(origin, dest, value, index, str(constraint.constraint.Type.index(rect.cell.type)), id,
                              East, West, northWest, southEast)
@@ -870,36 +712,7 @@ class constraintGraph:
             t1 = constraint.constraint.Type.index(r1.cell.type)
             c = constraint.constraint(1) #sapcing constraints
             index = 1
-            '''
-            value1 = constraint.constraint.getConstraintVal(c, source=t1, dest=t2)
-            value2 = None
-            if r1.voltage!=None and r2.voltage!=None:
 
-                V = abs(r1.voltage - r2.voltage)
-                V = self.round(V)
-                sequence = self.voltage_constraint.keys()
-                sequence.sort()
-                bins = np.array(sequence)
-                ind = bins.searchsorted(V)
-                V1 = sequence[ind]
-                # print "Voltage",sequence, sequence[ind]
-                if V1 in self.voltage_constraint.keys():
-                    value2 = self.voltage_constraint[V1]
-                    # print value2
-                else:
-                    value2 = None
-
-            #c = constraint.constraint(1)
-            #index = 1
-            #value1 = constraint.constraint.getConstraintVal(c, source=t1, dest=t2)
-            if value2 != None and value2 > value1:
-                value = value2
-            else:
-                value = value1
-
-
-            #print"value",value,t1,t2
-            '''
             value = constraint.constraint.getConstraintVal(c, source=t1, dest=t2)
             e = Edge(origin, dest, value, index, type=None,id=None)
             edgesh.append(Edge(origin, dest, value, index, type=None,id=None))
@@ -914,31 +727,7 @@ class constraintGraph:
             t1 = constraint.constraint.Type.index(r1.cell.type)
             c = constraint.constraint(1)
             index = 1
-            '''
-            value1 = constraint.constraint.getConstraintVal(c, source=t1, dest=t2)
-            if r1.voltage!=None and r2.voltage!=None:
 
-                V = abs(r1.voltage - r2.voltage)
-                V = self.round(V)
-                sequence = self.voltage_constraint.keys()
-                sequence.sort()
-                bins = np.array(sequence)
-                ind = bins.searchsorted(V)
-                V1 = sequence[ind]
-                # print "Voltage",sequence, sequence[ind]
-                if V1 in self.voltage_constraint.keys():
-                    value2 = self.voltage_constraint[V1]
-                    # print value2
-                else:
-                    value2 = None
-
-
-            if value2 != None and value2 > value1:
-                value = value2
-            else:
-                value = value1
-            
-            '''
             value = constraint.constraint.getConstraintVal(c, source=t1, dest=t2)
             e = Edge(origin, dest, value, index,type=None,id=None)
 
@@ -1091,7 +880,7 @@ class constraintGraph:
                         else:
                             val = int(min(1000* v[0], max(v[0], random.gauss(v[0], SD))))
                     elif v[2] == 2:
-                        val=int(min(100 * v[0], max(v[0], random.gauss(v[0], SD))))
+                        val=int(min(100 * v[0], max(v[0], random.gauss(v[0], SD/50))))
                     else:
                         val = int(min(10* v[0], max(v[0], random.gauss(v[0], SD))))
 
@@ -1398,7 +1187,7 @@ class constraintGraph:
                             val = int(min( 1000*v[0], max(v[0], random.gauss(v[0], SD))))
 
                     elif v[2] == 2:
-                        val=int(min(100 * v[0], max(v[0], random.gauss(v[0], SD))))
+                        val=int(min(100 * v[0], max(v[0], random.gauss(v[0], SD/50))))
                     else:
                         val = int(min(100 * v[0], max(v[0], random.gauss(v[0], SD))))
 
