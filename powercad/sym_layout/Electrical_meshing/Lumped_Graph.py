@@ -173,7 +173,7 @@ class E_graph():
             inv_res += 1.0 / wire_res
             inv_ind += 1.0 / wire_ind
         #self.bw_mdl = load_mdl('C://Users//qmle//Desktop//Testing//FastHenry//Fasthenry3_test_gp//WorkSpace_bw',
-                               #mdl_name='bw.mdl')
+        #                       mdl_name='bw.mdl')
         #R, L = wire_group(self.bw_mdl, D)
         '''
         print "distance",D
@@ -202,7 +202,6 @@ class E_graph():
         c_num = len(self.corner_info)
         # print "corner num",c_num
         f = trace_data[4]
-        print self.mdl_type['E']
         if self.mdl_type['E'] == 'RS':
             # print "selected RS"
             for w, l in self.trace_info:
