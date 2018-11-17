@@ -202,6 +202,7 @@ class E_graph():
         c_num = len(self.corner_info)
         # print "corner num",c_num
         f = trace_data[4]
+        print self.mdl_type['E']
         if self.mdl_type['E'] == 'RS':
             # print "selected RS"
             for w, l in self.trace_info:

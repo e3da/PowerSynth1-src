@@ -53,6 +53,23 @@ def gen_test_module_data(freq,h,tamb=25.1):
     return data
 
 
+def gen_test_module_data_BL_te(freq, h, tamb=25.1):
+    data = ModuleData()
+    # dimensions, eff_conv_coeff, baseplate_tech
+    data.baseplate = BaseplateInstance((60, 60, 4), h, get_baseplate())
+
+    # thickness, attach_tech
+    data.substrate_attach = SubstrateAttachInstance(0.1, get_sub_attach())
+
+    # dimensions, ledge_width, substrate_tech
+    data.substrate = SubstrateInstance((50, 40), 2, get_substrate2())
+
+    data.design_rules = ProcessDesignRules(2, 1.27, 0.5, 0.5, 0.8, 0.3, 0.2, 0.2)
+    data.frequency = freq  # 100 kHz
+    data.ambient_temp = tamb
+
+    return data
+
 def gen_test_module_data_RD100(freq, h, tamb=25.1):
     data = ModuleData()
     # dimensions, eff_conv_coeff, baseplate_tech

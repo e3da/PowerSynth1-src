@@ -35,7 +35,6 @@ script that can be run inside EMPro.
 import numpy as np
 import pickle
 from powercad.design.library_structures import Lead
-from powercad.design.module_design import ModuleDesign
 from powercad.interfaces.EMPro.EMProFunctions import empro_func
 from powercad.sym_layout.testing_tools import load_symbolic_layout
 

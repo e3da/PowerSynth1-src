@@ -717,9 +717,9 @@ def form_fasthenry_trace_response_surface(layer_stack, Width=[1.2, 40], Length=[
         ''' Run FastHenry'''
         print fname
         args = [fasthenry_env, fasthenry_option, fname]
-        p = subprocess.Popen(args, shell=False, stdout=subprocess.PIPE)
-        stdout, stderr = p.communicate()
-        print stdout,stderr
+        #p = subprocess.Popen(args, shell=False, stdout=subprocess.PIPE)
+        #stdout, stderr = p.communicate()
+        #print stdout,stderr
         ''' Output Path'''
         outname=os.path.join(os.getcwd(), 'Zc.mat')
         print "run_time",time.time()-start
@@ -761,23 +761,30 @@ def form_fasthenry_trace_response_surface(layer_stack, Width=[1.2, 40], Length=[
             l_list1.append(l_f(f))
             r_list1.append(r_f(f))
         plt.plot(frange,r_list1)
-        with open(datafile, 'wb') as csvfile:  # open filepath
-            fieldnames = [F_key, R_key, L_key]
-            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-            writer.writeheader()
-            for i in range(len(frange)):
-                writer.writerow({F_key: frange[i], R_key: r_list1[i], L_key: l_list1[i]})
 
-    print model_input.generic_fnames
+        #with open(datafile, 'wb') as csvfile:  # open filepath
+        #    fieldnames = [F_key, R_key, L_key]
+        #    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        #    writer.writeheader()
+        #    for i in range(len(frange)):
+        #        writer.writerow({F_key: frange[i], R_key: r_list1[i], L_key: l_list1[i]})
+
+    #print model_input.generic_fnames
     LAC_model = []
+    print "building L model"
     for i in range(len(frange)):
+        print "frequency", frange[i],'kHZ'
         LAC_input = RS_model()
         LAC_input = deepcopy(model_input)
         LAC_input.set_unit('n', 'H')
         LAC_input.set_sweep_unit('k', 'Hz')
-        LAC_input.read_file(file_ext='csv', mode='single', row=i, units=('Hz', 'H'), wdir=wdir)
+        print "row",i*100
+        row = i * 100
+
+        LAC_input.read_file(file_ext='csv', mode='single', row=row, units=('Hz', 'H'), wdir=wdir)
         LAC_input.build_RS_mdl('Krigging')
         LAC_model.append({'f': frange[i], 'mdl': LAC_input})
+    print "building R model"
 
     RAC_model = []
     for i in range(len(frange)):
@@ -785,7 +792,9 @@ def form_fasthenry_trace_response_surface(layer_stack, Width=[1.2, 40], Length=[
         RAC_input = deepcopy(model_input)
         RAC_input.set_unit('m', 'Ohm')
         RAC_input.set_sweep_unit('k', 'Hz')
-        RAC_input.read_file(file_ext='csv', mode='single', row=i, units=('Hz', 'Ohm'), wdir=wdir)
+        row = i * 100
+
+        RAC_input.read_file(file_ext='csv', mode='single', row=row, units=('Hz', 'Ohm'), wdir=wdir)
         RAC_input.build_RS_mdl('Krigging')
         RAC_model.append({'f': frange[i], 'mdl': RAC_input})
     package = {'L': LAC_model, 'R': RAC_model, 'C': None ,'opt_points': frange}
@@ -1115,10 +1124,10 @@ def test_build_trace_model_fh():
     ls.import_csv()
     Width = [2, 20]
     Length = [2, 20]
-    freq = [10, 1000, 10]
+    freq = [100, 30000, 1000]
     form_fasthenry_trace_response_surface(layer_stack=ls, Width=Width, Length=Length, freq=freq, wdir=w_dir,
                                           savedir=w_dir
-                                          , mdl_name='test6', env=env, doe_mode=2)
+                                          , mdl_name='high_f_bl', env=env, doe_mode=2)
 
 
 def test_build_trace_cornermodel_fh():
@@ -1187,7 +1196,6 @@ def test_continuous(w, l1, l2, f):
     mdl = rs_mdl['L']
     print trace_ind_krige(f, w, l1 + l2, mdl) - trace_ind_krige(f, w, l2, mdl) - trace_ind_krige(f, w, l1, mdl)
 
-
 if __name__ == "__main__":
     #test_corner_ind_correction(10, 4, 4)
     #test_corner_ind_correction(10, 4, 10)
@@ -1196,7 +1204,6 @@ if __name__ == "__main__":
     test_build_trace_model_fh()
     #test_build_trace_cornermodel_fh()
     f=100
-    print range(1)
     #test_corner_ind_correction_fh(f,8,8)
     #test_corner_ind_correction_fh(f, 4,10)
     #test_corner_ind_correction_fh(f, 10, 4)
