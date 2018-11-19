@@ -2,10 +2,7 @@ from powercad.general.data_struct.util import Rect
 import mpl_toolkits.mplot3d as a3d
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
-
-
-
-
+from powercad.design.library_structures import Lead
 
 
 class E_plate:
@@ -40,6 +37,8 @@ class E_plate:
         # Used these to save edges and nodes information
         self.mesh_nodes=[]
         self.name =None # String to represent object name (serve for hierarchy later)
+        self.node = None  # node reference to Tree
+
     def include_sheet(self,sheet):
         '''
 
@@ -50,9 +49,9 @@ class E_plate:
 
         '''
         # Assume 2 sheets on same plane xy and same z, check if trace enclose sheet
-        print self.n, -1*sheet.n, self.z ,sheet.z,self.dz
+        #print self.n, -1*sheet.n, self.z ,sheet.z,self.dz
         if (self.n == sheet.n and (self.z +self.dz) == sheet.z) or (sum(self.n) == -1*sum(sheet.n) and self.z == sheet.z): #upper and lower faces of a trace
-            print "found it"
+            #print "found it"
             if self.rect.encloses(sheet.rect.center_x(), sheet.rect.center_y()):
                 return True
             else:
@@ -91,6 +90,8 @@ class Sheet(E_plate):
         self.zorder = 10
         self.type = type
         self.component=None
+        self.node = None  # node reference to Tree
+
 
 def plot_rect3D(rect2ds=None, ax=None):
     '''
@@ -165,7 +166,14 @@ def plot_rect3D(rect2ds=None, ax=None):
         #    ax.text(obj.rect.center_x(), obj.rect.center_y(), z0, obj.name)
 
 
-
+def load_traces(md):
+    plates=[]
+    sheet=[]
+    traces=md.traces
+    leads = md.leads
+    for r in traces:
+        plates.append(E_plate(rect=r, z=0.84, dz=0.2))
+    return plates
 if __name__ == "__main__":
     fig = plt.figure()
     ax = a3d.Axes3D(fig)

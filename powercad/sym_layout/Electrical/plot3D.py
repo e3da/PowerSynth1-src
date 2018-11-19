@@ -66,9 +66,11 @@ def plot_E_map_test(G=None,ax=None,cmap=None):
 def network_plot_3D(G, ax, cmap_node={}, cmap_edge={}):
     pos = {}
     labels = {}
+    type = {}
     for n in G.nodes():
         node = G.node[n]['node']
         pos[n] = node.pos
+        type[n]=node.type
         labels[n] = node.node_id
     # 3D network plot
     with plt.style.context(('ggplot')):
@@ -81,13 +83,17 @@ def network_plot_3D(G, ax, cmap_node={}, cmap_edge={}):
 
             # Scatter plot
             if cmap_node == {}:
-                ax.scatter(xi, yi, zi, c='blue', s=50, edgecolors='k', alpha=1)
+                if type[key]=='internal':
+                    ax.scatter(xi, yi, zi, c='blue', s=10, edgecolors='k', alpha=1)
+                else:
+                    ax.scatter(xi, yi, zi, c='red', s=10, edgecolors='k', alpha=1)
+
             else:
                 name = str(xi) + str(yi) + str(zi)
                 color = cmap_node[name]
-                ax.scatter(xi, yi, zi, c=color, s=100, edgecolors='k', alpha=0.5)
+                ax.scatter(xi, yi, zi, c=color, s=10, edgecolors='k', alpha=0.5)
 
-            ax.text(xi, yi, zi, lbl)
+            ax.text(xi, yi, zi, lbl,fontsize=5)
         # Loop on the list of edges to get the x,y,z, coordinates of the connected nodes
         # Those two points are the extrema of the line to be plotted
         for e in G.edges(data=True):
@@ -101,9 +107,9 @@ def network_plot_3D(G, ax, cmap_node={}, cmap_edge={}):
             # Plot the connecting lines
             if cmap_edge == {}:
                 if type == 'internal':
-                    ax.plot(x, y, z, c='black', alpha=0.5, linewidth=2.5)
+                    ax.plot(x, y, z, c='gray', alpha=0.5, linewidth=2.5)
                 elif type == 'boundary':
-                    ax.plot(x, y, z, c='black', alpha=0.5, linewidth=2.5)
+                    ax.plot(x, y, z, c='black', alpha=1, linewidth=2.5)
                 else:
                     ax.plot(x, y, z, dashes=[6, 2],c='blue', alpha=0.5, linewidth=2.5)
 

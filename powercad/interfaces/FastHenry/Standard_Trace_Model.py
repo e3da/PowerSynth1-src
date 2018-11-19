@@ -24,7 +24,55 @@ Run='''
 .end
 
 '''
+Uniform_Trace_2= '''
+* This is not a generic code for now, just to test the standard PowerSynth topology
+* Test bp
+.units mm
+* {0}
+* {1}
+*////////////////////
+* 0: Date
+* 1: File name
+* 2: Trace center
+* 3: Back side seg x 
+* 4: Back side seg y
+* 5: Backside metal Half Width
+* 6: Backside metal Half Length
+* 7: Backside metal Z coordinate ( Baseplate thickness + solder thickness)
+* 8: Backside metal thickness
+* 9: Backside metal conductivity (Note: convert to S/mm)
+* 10: Backside Metal Vertical Split (Nhinc)
+* Metal Trace
+* 11: Trace Half Length
+* 12: Trace's Z Coordinate
+* 13: Trace's width
+* 14: Trace's thickness
+* 15: Trace's conductivity (Note: convert to S/mm)
+* 16: Adaptive width discretization nwinc
+* 17: Adaptive height discretization nwinc
+* 18: fmin in Hz
+* 19: fmax in Hz
+* 20: num of decade
 
+
+g_M1 x1=-{5} y1=-{6} z1={7} x2={5} y2=-{6} z2={7} x3={5} y3={6} z3={7}
++ thick={8}
++ seg1={3} seg2={4}
++ sigma={9}
++ nhinc={10} 
+
+* Plane A
+NA1s x={2} y=-{11} z={12}
+NA1e x={2} y={11} z={12}
+EA1 NA1s NA1e w={13} h={14} sigma={15}
++ nwinc={16} nhinc={17}
+*////////////////////
+*.external ng1 ng2
+.external NA1s NA1e
+
+.freq fmin={18} fmax={19} ndec={20}
+.end
+'''
 
 Uniform_Trace= '''
 * This is not a generic code for now, just to test the standard PowerSynth topology
@@ -66,12 +114,9 @@ Uniform_Trace= '''
 *+ nhinc={4} 
 
 g_M1 x1=-{5} y1=-{6} z1={7} x2={5} y2=-{6} z2={7} x3={5} y3={6} z3={7}
-*+ file=NONE thick={8}
 + thick={8}
-+ seg1=10 seg2=10
++ seg1=5 seg2=5
 + sigma={9}
-*+ contact decay_rect (0,-{11},{7},10.0,10.0,5.0,5.0,{13},{13})
-*+ contact decay_rect (0,{11},{7},10.0,10.0,5.0,5.0,{13},{13})
 + nhinc={10} 
 
 * Plane A

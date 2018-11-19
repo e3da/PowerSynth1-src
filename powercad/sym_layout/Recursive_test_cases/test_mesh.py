@@ -5,12 +5,16 @@ from powercad.design.module_data import gen_test_module_data
 from powercad.general.settings import settings
 from powercad.parasitics.analysis import parasitic_analysis
 from powercad.sym_layout.Electrical.E_mesh import *
+from powercad.sym_layout.Electrical.E_plate import *
+from powercad.design.module_design import ModuleDesign
+
 from powercad.sym_layout.plot import plot_layout
 from powercad.sym_layout.symbolic_layout import SymbolicLayout, DeviceInstance, SymLine, SymPoint, ElectricalMeasure, \
     ThermalMeasure
 from powercad.tech_lib.test_techlib import get_device, get_dieattach
 from powercad.tech_lib.test_techlib import get_power_bondwire, get_signal_bondwire
 from powercad.tech_lib.test_techlib import get_signal_lead
+from powercad.Spice_handler.spice_export.PEEC_num_solver import *
 
 
 def make_test_symmetries(sym_layout):
@@ -246,13 +250,103 @@ def make_test_setup2(f, directory):
     individual = [10, 4, 10, 2.0, 2.0, 10, 4, 0.38232573137878245, 0.7, 0.68, 0.24]
     sym_layout.rev_map_design_vars(individual)
     sym_layout.generate_layout()
-    plot_layout(sym_layout)
-    plt.show()
+    #plot_layout(sym_layout)
     md = ModuleDesign(sym_layout)
-    em = ElectricalMesh()
-    em.mesh_grid(md,3,3)
-    #em.update_mutual()
-    #mesh_delaunay(md)
+    plates = load_traces(md)
+    # ADD SHEET
+    # First bw group
+    x1=16.5
+    x2=18.5
+    x3=15.5
+    x4=16.5
+    #es = E_stack(file="C:\Users\qmle\Desktop\Documents\Conferences\IWIPP\ELayerStack//2_layers.csv")
+    #es.load_layer_stack()
+    bw11 = Rect(40.5, 38.5, x1, x2)
+    BW1s = Sheet(rect=bw11, net='bw11', type='point', n=(0, 0, 1), z=1.04)
+    bw12 = Rect(45.5, 44.5, x1, x2)
+    BW1e = Sheet(rect=bw12, net='bw12', type='point', n=(0, 0, 1), z=1.04)
+    # Second bw group
+    bw21 = Rect(14.5, 12.5, x3, x4)
+    BW2s = Sheet(rect=bw21, net='bw21', type='point', n=(0, 0, 1), z=1.04)
+    bw22 = Rect(8.5, 7.5, x3, x4)
+    BW2e = Sheet(rect=bw22, net='bw22', type='point', n=(0, 0, 1), z=1.04)
+    # First Pad
+    p1 = Rect(37.5, 36.5, 4, 6)
+    P1 = Sheet(rect=p1, net='P1', type='point', n=(0, 0, 1), z=1.04)
+    p2 = Rect(6.5, 5.5, 4, 6)
+    P2 = Sheet(rect=p2, net='P2', type='point', n=(0, 0, 1), z=1.04)
+
+    Bw1 = Component(sheet=[BW1s, BW1e], conn=[['bw11', 'bw12']], val={'R':0.6e-3,'L':1e-9})
+    Bw2 = Component(sheet=[BW2s, BW2e], conn=[['bw21', 'bw22']], val={'R': 0.6-3, 'L': 1e-9})
+    bs_copper = Rect(50, 0, 0, 40)
+    #bs_plate=E_plate(rect=bs_copper, z=0, dz=0.2)
+    #plates.append(bs_plate)
+    sheets = [P1,P2]
+    new_module = E_module(plate=plates, components = [Bw1,Bw2],sheet=sheets)#,layer_stack=es)
+    new_module.form_group()
+    new_module.split_layer_group()
+
+
+    hier = Hier_E(module=new_module)
+    hier.form_hierachy()
+    freqs=[10,20,50,100,500,1000]
+    for freq in freqs:
+        emesh = ElectricalMesh(hier_E=hier, freq=freq, mdl_name='2d_high_freq_journal.rsmdl')
+        #fig = plt.figure(1)
+        start = time.time()
+        emesh.mesh_grid_hier(Nx=4, Ny=4)
+        #ax = plt.subplot('111', adjustable='box', aspect=1.0)
+        emesh.plot_lumped_graph()
+        plt.show()
+        emesh.update_mutual()
+        # EVALUATION
+        circuit = Circuit()
+        pt1 = (4, 37,0.84)
+        pt2 = (4, 6,0.84)
+        src1 = emesh.find_node(pt1)
+        sink1 = emesh.find_node(pt2)
+
+        circuit.comp_mode = 'val'
+        circuit._graph_read(emesh.graph)
+        circuit.m_graph_read(emesh.m_graph)
+        circuit.assign_freq(freq*1000)
+        circuit.Rport=1e-10
+        circuit._assign_vsource(src1, vname='Vs1', volt=1)
+        circuit._add_ports(sink1)
+        circuit.build_current_info()
+        circuit.solve_iv()
+        print time.time()-start,'s'
+        print 'f',freq,'kHz'
+        print "model",circuit._compute_imp(src1, sink1, sink1)
+
+        '''
+        all_I=[]
+        result = circuit.results
+        for e in emesh.graph.edges(data=True):
+            edge = e[2]['data']
+            edge_name = edge.name
+            if edge.data['type']!='hier':
+                width = edge.data['w'] * 1e-3
+                thick = edge.thick*1e-3
+                A = width * thick
+                I_name = 'I_L' + edge_name
+                edge.I = np.real(result[I_name])
+                edge.J = edge.I / A
+                all_I.append(abs(edge.J))
+        I_min = min(all_I)
+        I_max = max(all_I)
+        normI = Normalize(I_min, I_max)
+        normI = Normalize(0,50000)
+        fig = plt.figure(2)
+        ax = fig.add_subplot(111)
+        plt.xlim([0, 40])
+        plt.ylim([0, 50])
+        plot_combined_I_quiver_map_layer(norm=normI, ax=ax, cmap=emesh.c_map, G=emesh.graph, sel_z=0.84, mode='J',
+                                         W=[2, 37],
+                                         H=[2, 47], numvecs=61)
+        plt.show()
+
+        '''
 
 # The test goes here, moddify the path below as you wish...
 directory = 'Layout/journal_2(v2).psc'  # directory to layout script

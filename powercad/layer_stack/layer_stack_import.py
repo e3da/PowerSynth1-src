@@ -161,7 +161,7 @@ class LayerStackImport:
                 
 
 
-                print 'Found metal/dielectric ' + str(width) + ', ' + str(length)
+                print 'Found metal/dielectric ' + str(metal_width) + ', ' + str(metal_length)
                 
             elif layer_type == self.interconnect_abbrev :
                 try:
@@ -177,7 +177,7 @@ class LayerStackImport:
         except:
             self.compatible = False
             self.error_msg = 'Could not find substrate layers.'
-        print 'Found substrate ' + str(width) + ', ' + str(length) + ', ' + str(ledge_width)  
+        print 'Found substrate ' + str(substrate_width) + ', ' + str(substrate_length) + ', ' + str(ledge_width)
                     
         # TODO - check for excess substrate layers
                 

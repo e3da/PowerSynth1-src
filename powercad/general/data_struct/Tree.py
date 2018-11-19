@@ -65,7 +65,7 @@ class Tree():
                 result = start_node.nodes[kname]
             else:
                 node = start_node.nodes[n]
-                print " Searching for children of ", node.name
+                #print " Searching for children of ", node.name
                 result = self.search_tree(node, kname)
 
         if result!=None:

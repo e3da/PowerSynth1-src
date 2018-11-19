@@ -5,6 +5,8 @@ This is a simple representation of a module in pads and rect
 import networkx as nx
 from powercad.sym_layout.Electrical.E_plate import *
 from powercad.sym_layout.Electrical.E_hierarchy import *
+import csv
+
 
 class Component:
     def __init__(self, sheet=[], conn=[],val=[],type="p"):
@@ -29,9 +31,39 @@ class Component:
     def build_graph(self):
         self.update_edges()
 
+class E_stack():
+    '''
+    A Simple Layer Stack for Electrical Parasitics computation
+    '''
+
+    def __init__(self,file):
+        self.csvfile = file
+        self.layer_id=[] # layer ID
+        self.thick={} # layer thickness in mm
+        self.z={}   # layer z in mm
+        self.mat={} # material conductivity in Ohm.m
+    def load_layer_stack(self):
+        with open(self.csvfile) as csv_file:
+            csv_reader = csv.DictReader(csv_file)
+            for row in csv_reader:
+                self.layer_id.append(row['ID'])
+                self.thick[row['ID']]= float(row['thick'])
+                self.z[row['ID']] = float(row['z'])
+                self.mat[row['ID']] = float(row['mat'])
+        print self.layer_id
+        print self.thick
+        print self.z
+        print self.mat
+
+    def id_by_z(self,z):
+        for i in self.layer_id:
+            if z == self.z[i]:
+                return i
+
+
 class E_module:
 
-    def __init__(self,sheet=[],plate=[],layer_stack=[],components=[]):
+    def __init__(self,sheet=[],plate=[],layer_stack=None,components=[]):
         '''
         Representation of a power module in multiple sheets and plates
         Args:
@@ -90,7 +122,7 @@ class E_module:
     def split_layer_group(self):
         plate_group=self.group
         self.plate=[]
-
+        self.group_layer_dict={}
         splitted_group = {}
         for group in plate_group.keys():  # First collect all xs and ys coordinates
             counter=0
@@ -98,6 +130,8 @@ class E_module:
             ys = []
             splitted_group[group] = []
             z= plate_group[group][0].z
+            if self.layer_stack != None:
+                self.group_layer_dict[group] = self.layer_stack.id_by_z(z)
             dz = plate_group[group][0].dz
             n= plate_group[group][0].n
             for plate in plate_group[group]:
@@ -129,10 +163,13 @@ class E_module:
                     midy = bot + (top - bot) / 2
                     split = False
                     for plate in plate_group[group]:
+                        cur_plate = plate
+
                         trace=plate.rect
                         if trace.encloses(midx, midy):
                             split = True
                             break
+
                     if split:
                         newRect = Rect(top=top, bottom=bot, left=left, right=right)
                         newPlate = E_plate(rect=newRect,z=z,dz=dz,n=n)
@@ -140,8 +177,11 @@ class E_module:
                         counter+=1
 
                         splitted_group[group].append(newPlate)
-
+                        if self.layer_stack != None:
+                            self.group_layer_dict[group] = self.layer_stack.id_by_z(z)
                         self.plate.append(newPlate)
+                    #else:
+                    #    splitted_group[group].append(cur_plate)
         self.group=splitted_group
 
 def test1():
@@ -254,7 +294,13 @@ def test_comp2():
     S3 = Sheet(rect=sh3, net='M1_G', type='point', n=(0, 0, 1), z=0.4)
     comp = Component(sheet=[S1, S2, S3], conn=[['M1_D', 'M1_S']], val=[{'R': 200e-3, 'L': 0, 'C': 10e-12}], type='a')
     comp.build_graph()
+
+def load_e_stack_test(file):
+    es=E_stack(file=file)
+    es.load_layer_stack()
+
 if __name__ == '__main__':
-    test_comp()
+    #test_comp()
+    load_e_stack_test("C:\Users\qmle\Desktop\Documents\Conferences\IWIPP\ELayerStack//2_layers.csv")
 
 

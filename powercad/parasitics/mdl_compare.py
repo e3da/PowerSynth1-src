@@ -118,7 +118,7 @@ def trace_inductance(w, l, t, h):
     # returns inductance in nano-Henries
     return Ind
 
-def trace_capacitance(w, l, t, h, k=8.8):
+def trace_capacitance(w, l, t, h, k=4.4,fringe=False):
     # w: mm (trace width, perpendicular to current flow)
     # l: mm (trace length, parallel to current flow)
     # t: mm (trace thickness)
@@ -134,6 +134,7 @@ def trace_capacitance(w, l, t, h, k=8.8):
     h1_eff = (2.0 * h1 + t1) / 2.0
 
     # effective area of fringe capacitance:
+
     A = 2.0 * t1 * (w1 + l1)
 
     # effective dielectric constant:
@@ -143,7 +144,9 @@ def trace_capacitance(w, l, t, h, k=8.8):
     except:
         return 10000
     # sum of parallel plate and fringe capacitance
-    c = k * e_0 * (w1 * l1) / h1 + keff * e_0 * A / h1_eff  # equation 3.19 page 50 from Zihao's thesis
+    c = k * e_0 * (w1 * l1) / h1
+    if fringe:
+        c+=keff * e_0 * A / h1_eff  # equation 3.19 page 50 from Zihao's thesis
     c *= 1e12  # unit in pF
     if c <= 0.0:
         c = 1e-6
@@ -179,7 +182,7 @@ def trace_res_krige1(f,w,l,t,p,mdl):
 
     return rac
 
-def trace_res_krige(f,w,l,t,p,mdl):
+def trace_res_krige(f,w,l,t,p,mdl,mode='Krigg'):
     # unit is mOhm
     # f in kHz
     # Select a model for the closest frequency point
@@ -193,8 +196,14 @@ def trace_res_krige(f,w,l,t,p,mdl):
     #print 'f',fselect
     m_sel=mdl[f_index]['mdl']
     model = m_sel.model[0]
-    r=model.execute('points',w,l)
-    r = np.ma.asarray(r[0])
+    if mode == "Krigg":
+        r=model.execute('points',w,l)
+        r = np.ma.asarray(r[0])
+    else:
+        dim = np.ndarray((len(w), 2))
+        dim[:,0] = w
+        dim[:,1] = l
+        r= model.predict(dim)
 
     if isinstance(r,np.ma.masked_array) and isinstance(w,float):
         return r[0]
@@ -211,7 +220,7 @@ def trace_ind_krige1(f,w,l,mdl):
     l=mdl.sweep_function(f,params[0],params[1])
     return l
 
-def trace_ind_krige(f,w,l,mdl):
+def trace_ind_krige(f,w,l,mdl, mode='Krigg'):
     # unit is nH
     # f in kHz
     # Select a model for the closest frequency point
@@ -223,11 +232,19 @@ def trace_ind_krige(f,w,l,mdl):
     ferr=[f for i in range(len(frange))]
     ferr=(abs(np.array(frange)-np.array(ferr))).tolist()
     f_index=ferr.index(min(ferr))
+    #print 'estimated',frange[f_index]
     m_sel=mdl[f_index]['mdl']
     model = m_sel.model[0]
     #print "width,length", w, l
-    l=model.execute('points',w,l)
-    l = np.ma.asarray(l[0])
+    if mode == "Krigg":
+        l = model.execute('points', w, l)
+        l = np.ma.asarray(l[0])
+    else:
+        dim = np.ndarray((len(w), 2))
+        dim[:, 0] = w
+        dim[:, 1] = l
+        l = model.predict(dim)
+
 
     if isinstance(l,np.ma.masked_array) and isinstance(w,float):
         return l[0]
@@ -265,6 +282,14 @@ def trace_90_corner_ind(f,w1,w2,mdl):
         return l
 
 if __name__ == '__main__':
+    c1=trace_capacitance(5,8,0.035,1,4.4,True)
+    c2=trace_capacitance(3,15, 0.035, 1, 4.4, True)
+    c3 = trace_capacitance(2, 20, 0.035, 1, 4.4, True)
+    c4 = trace_capacitance(0.035, 20, 1, 1, 4.4, False)
+    print "C4",c4
+
+    print c1+c2,c3
+    '''
     mdl_dir='D:\Testing\Py_Q3D_test\All rs models'
     mdl_dir='C:\Users\qmle\Desktop\Testing\Py_Q3D_test\All rs models'
     mdl1=load_mdl(mdl_dir,'RAC[4x4].rsmdl')
@@ -280,9 +305,11 @@ if __name__ == '__main__':
     mdl3=load_mdl(mdl_dir,'C_mesh_100_krige.rsmdl')
     Q3D_C=mdl3.input[0]
     '''
+    '''
     print Q3D_C # pF
     print 'here resistance', trace_res_krige(110,7.5,7.5,mdl1)
 
+    '''
     '''
     #Test Corner Cases Overestimation
     fig1 = plt.figure(1)
@@ -301,6 +328,7 @@ if __name__ == '__main__':
         for i in range(len(L)):
             out.append({'W':W[i],'Inductance':L[i][0]})
         writer.writerows(out)
+    '''
 '''
     fig1 = plt.figure(1)
     ax = fig1.gca(projection='3d')

@@ -70,7 +70,7 @@ def inter_func(x, y, z, sign):
 
 
 @jit
-def mutual_between_bars(w1, l1, t1, w2, l2, t2, l3, p, d):
+def mutual_between_bars(w1, l1, t1, w2, l2, t2, l3, p, E):
     '''
     This function is used to compute the mutual inductance value between 2 rectangular bars in space.
     all dimension are in mm
@@ -83,7 +83,7 @@ def mutual_between_bars(w1, l1, t1, w2, l2, t2, l3, p, d):
     :param t2: second bar 's thick
     :param l3: distance between two bars' (longtitude)
     :param p: height of second bar (+z)
-    :param d: distance between 2 bars'
+    :param E: distance between 2 bars'
     :return: Mutual inductance of 2 bars in nH
     '''
     w1 = w1 * 0.1
@@ -96,15 +96,19 @@ def mutual_between_bars(w1, l1, t1, w2, l2, t2, l3, p, d):
 
     l3 = l3 * 0.1
     p = p * 0.1
-    d = d * 0.1
+    E=E*0.1
 
-    E = d + w1
     Const = 0.001 / (w1 * t1 * w2 * t2)
 
 
     Mb = Const * outer_addition(q1=E - w1, q2=E + w2 - w1, q3=E + w2, q4=E, r1=p - t1, r2=p + t2 - t1, r3=p + t2, r4=p,
                                 s1=l3 - l1, s2=l3 + l2 - l1, s3=l2 + l3, s4=l3)
-
+    #print "new cal"
+    #print 'w1', w1, 'l1', l1, 't1', t1
+    #print 'w2', w2, 'l2', l2, 't2', t2
+    #print 'p', p, 'E', E, 'l3', l3
+    #print "a",w1,'b',t1,'l1',l1,'E',E,'d',w2,'c',t2,'l2',l2,'p',p,'l3',l3
+    #print Mb*1000
     return Mb * 1000  # in nH
 
 
@@ -199,4 +203,4 @@ def Test_Mutual():
 
 
 if __name__ == '__main__':
-    print mutual_between_bars(w1=10, l1=20, t1=0.2, w2=12, l2=14, t2=0.2, l3=0, p=0, d=4)
+    print mutual_between_bars(w1=10, l1=10, t1=0.2, w2=10, l2=16.67, t2=0.2, l3=16.67, p=0, d=0)

@@ -330,19 +330,23 @@ def get_overlap_interval(interval1, interval2):
     return (max(interval1[0], interval2[0]), min(interval1[1], interval2[1]))
 
 
-def draw_rect_list(rectlist,color,pattern):
+def draw_rect_list(rectlist,color,pattern,text=None):
     fig,ax = plt.subplots()
     patch=[]
-    plt.xlim(-5, 15)
-    plt.ylim(-5, 10)
+    plt.xlim(-5, 50)
+    plt.ylim(-5, 50)
     for r in rectlist:
         p = patches.Rectangle((r.left, r.bottom), r.width(), r.height(),fill=True,
             edgecolor='black',facecolor=color,hatch=pattern,linewidth=2,alpha=0.5)
         #print r.left,r.bottom,r.width(),r.height()
         patch.append(p)
         ax.add_patch(p)
-        txt = str(r.width())+'_'+ str(r.height())
-        ax.text(r.left+r.width()/2, r.bottom+r.height()/2,txt)
+        if text ==None:
+            txt = str(r.width())+'_'+ str(r.height())
+        else:
+            txt = text[rectlist.index(r)]
+        ax.text(r.left + r.width() / 2, r.bottom + r.height() / 2, txt)
+
     plt.show()
 
 
