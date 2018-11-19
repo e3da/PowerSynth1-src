@@ -1455,6 +1455,47 @@ class constraintGraph:
             if len(node) > 2:
                 Node_List.append(node)
 
+        nodes.sort()
+
+        start = nodes[0]
+        end = nodes[-1]
+        LONGESTPATH, Value, Sum = self.LONGEST_PATH(B, start, end)
+
+        if (len(LONGESTPATH)) == len(nodes):
+            H = []
+            for i in range(len(Node_List)):
+                H.append(G.subgraph(Node_List[i]))  # finds all subgraphs according to node list
+            for graph in H:
+                n = list(graph.nodes())
+                n.sort()
+                start = n[0]
+                end = n[-1]
+                self.Location_finding(B, start, end, SOURCE=None, TARGET=None, flag=False)  # evaluates each subgraph
+            Fixed_Node = self.Loc_X.keys()
+            for i in Fixed_Node:
+                for j in Fixed_Node:
+                    if G.has_edge(i, j):
+                        G.remove_edge(i, j)
+            if len(G.edges()) == 0:
+                return
+            else:
+                self.FUNCTION(G)
+        else:
+            Connected_List = []
+            for k in range(len(Node_List)):
+                for m in range(len(Node_List)):
+                    LIST = []
+                    for i in range(len(B)):
+                        for j in range(len(B)):
+                            if i in Node_List[k] and j in Node_List[m]:
+                                if i not in Node_List[m] and j not in Node_List[k]:
+                                    if B[i][j] != 0:
+                                        LIST = Node_List[k] + Node_List[m]
+
+                    if len(LIST) > 0:
+                        Connected_List.append(list(set(LIST)))
+
+        '''
         # Checks whether those subgraph vertices are connected among themselves
         List=[] # This list
         for i in range(len(B)):
@@ -1518,8 +1559,8 @@ class constraintGraph:
                     return
                 else:
                     self.FUNCTION(G)
-
-        elif len(Connected_List) > 1:
+        '''
+        if len(Connected_List) > 1:
             for i in range(len(Connected_List)):
                 PATH = Connected_List[i]
                 start = PATH[0]
