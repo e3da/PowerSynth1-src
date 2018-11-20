@@ -319,7 +319,7 @@ class PerformanceListUI(object):
             if measure == ElectricalMeasure.MEASURE_CAP:
                 performance_measure = ElectricalMeasure(None,None,measure,freq,self.ui.txt_perform_name.text(),self.perform_lines,model)
             else:
-                performance_measure = ElectricalMeasure(pt1=self.perform_devices[0],pt2=self.perform_devices[1],measure=measure,freq=freq,name=self.ui.txt_perform_name.text(),lines=None,mdl=model,src_sink_type=self.perform_devices_pins,device_state=self.device_states_df)
+                performance_measure = ElectricalMeasure(pt1=self.perform_devices[0],pt2=self.perform_devices[1],measure=measure,name=self.ui.txt_perform_name.text(),lines=None,mdl=model,src_sink_type=self.perform_devices_pins,device_state=self.device_states_df)
         elif self.ui.cmb_perform_elecTherm.currentText() == "Thermal":
             # get type
             # get type

@@ -45,8 +45,8 @@ def rect_flux_analysis(sym_layout):
     
     devices = []
     for dev in sym_layout.devices:
-        device = Device(width = dev.footprint_rect.width()*1e-3,
-                     length = dev.footprint_rect.height()*1e-3,
+        device = Device(width = dev.footprint_rect.width*1e-3,
+                     length = dev.footprint_rect.height*1e-3,
                      center = (dev.center_position[0]*1e-3, dev.center_position[1]*1e-3),
                      Q = dev.tech.heat_flow)
         devices.append(device)
@@ -55,7 +55,7 @@ def rect_flux_analysis(sym_layout):
     for i in xrange(len(devices)):
         # Find extra temp. through die
         dev = sym_layout.devices[i]
-        A = dev.footprint_rect.width()*dev.footprint_rect.height()*1e-6
+        A = dev.footprint_rect.width*dev.footprint_rect.height*1e-6
         t1 = dev.tech.device_tech.dimensions[2]*1e-3
         res = t1/(A*dev.tech.device_tech.properties.thermal_cond)
         t2 = dev.tech.attach_thickness*1e-3

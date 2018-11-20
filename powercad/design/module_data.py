@@ -38,7 +38,7 @@ class ModuleData(object):
 def gen_test_module_data(freq):
     data = ModuleData()
     # dimensions, eff_conv_coeff, baseplate_tech
-    data.baseplate = BaseplateInstance((60, 60, 5), 150, get_baseplate())
+    data.baseplate = BaseplateInstance((62, 60, 5), 150, get_baseplate())
     
     # thickness, attach_tech
     data.substrate_attach = SubstrateAttachInstance(0.1, get_sub_attach())
@@ -51,4 +51,21 @@ def gen_test_module_data(freq):
     data.ambient_temp = 300.0 # 300 Kelvin
     
     return data
-    
+
+def update_sym_baseplate_dims(sym_layout,dims):
+    module = sym_layout.module
+    width = dims[0]
+    height = dims[1]
+    z = module.baseplate.dimensions[2]
+    h = module.baseplate.eff_conv_coeff
+    bp_tech = module.baseplate.baseplate_tech
+    module.baseplate = BaseplateInstance((width, height, z), h, bp_tech)
+
+def update_substrate_dims(sym_layout,dims,ledge_width=0):
+    module = sym_layout.module
+    width = dims[0]
+    height = dims[1]
+    sub_tech = module.substrate.substrate_tech
+    module.substrate = SubstrateInstance((width, height), ledge_width, sub_tech)
+
+

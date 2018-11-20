@@ -100,6 +100,8 @@ class Rect:
         self.bottom = bottom
         self.left = left
         self.right = right
+        self.width = self.width_eval()
+        self.height = self.height_eval()
 
     def __str__(self):
         return str(self.top)+', '+str(self.bottom)+', '+str(self.left)+', '+str(self.right)
@@ -142,11 +144,13 @@ class Rect:
     def area(self):
         return (self.top - self.bottom)*(self.right - self.left)
 
-    def width(self):
-        return self.right - self.left
+    def width_eval(self):
+        self.width=self.right - self.left
+        return self.width
 
-    def height(self):
-        return self.top - self.bottom
+    def height_eval(self):
+        self.height=self.top - self.bottom
+        return self.height
 
     def center(self):
         return 0.5*(self.right+self.left), 0.5*(self.top+self.bottom)
@@ -271,12 +275,3 @@ if __name__ == '__main__':
     print c1.inter_line(l1)
 
 
-    '''
-    rect = Rect(2.0, 0.0, 0.0, 2.0)
-    rect2 = Rect(2.0, 0.0, 0.0, 2.0)
-    inter = rect.intersection(rect2)
-    if inter is not None:
-        print inter.area()
-    else:
-        print 'weird'
-    '''

@@ -1,13 +1,13 @@
 '''
 Created on Oct 12, 2012
 
-@author: Peter N. Tucker, qmle
+@author: Peter N. Tucker, qmle, Imam Al Razi
 '''
 # IMPORT METHODS
 import os
 import traceback
 import pandas as pd
-from PySide import QtGui
+import random
 import types
 from PySide.QtGui import QFileDialog, QStandardItemModel,QStandardItem, QMessageBox,QFont
 from matplotlib.figure import Figure
@@ -16,7 +16,8 @@ import powercad.sym_layout.plot as plot
 from powercad.project_builder.dialogs.propertiesDeviceDialog import Ui_device_propeties
 from powercad.Spice_handler.spice_import.NetlistImport import Netlist
 
-plot.plt.matplotlib.use('Qt4Agg')
+
+#plot.plt.matplotlib.use('Qt4Agg')
 plot.plt.matplotlib.rcParams['backend.qt4']='PySide'
 from powercad.design.project_structures import *
 from powercad.project_builder.dialogs.device_states import Ui_dev_state_dialog
@@ -29,20 +30,31 @@ from powercad.project_builder.dialogs.device_setup_dialog import Ui_setup_device
 from powercad.project_builder.dialogs.Env_setup import Ui_EnvSetup
 from powercad.project_builder.dialogs.bondwire_setup import Ui_Bondwire_setup
 from powercad.project_builder.dialogs.layoutEditor_ui import Ui_layouteditorDialog
+from powercad.project_builder.dialogs.CS_design_ui import Ui_CornerStitch_Dialog
+from powercad.project_builder.dialogs.Fixed_loc_ui import Ui_Fixed_location_Dialog
 from powercad.project_builder.project import Project
-from powercad.sym_layout.symbolic_layout import SymbolicLayout
+from powercad.sym_layout.symbolic_layout import SymbolicLayout,plot_layout
 from powercad.general.settings.settings import DEFAULT_TECH_LIB_DIR,EXPORT_DATA_PATH,ANSYS_IPY64,FASTHENRY_FOLDER,GMSH_BIN_PATH,ELMER_BIN_PATH
 from powercad.electro_thermal.ElectroThermal_toolbox import rdson_fit_transistor, list2float, csv_load_file,Vth_fit,fCRSS_fit
 from powercad.general.settings.save_and_load import save_file, load_file
 from powercad.project_builder.dialogs.ResponseSurface import Ui_ResponseSurface
 from powercad.project_builder.dialogs.ModelSelection import Ui_ModelSelection
+from powercad.project_builder.dialogs.ET_evaluate_ui import Ui_ET_Evaluation_Dialog
+from powercad.project_builder.dialogs.waiting_ui import Ui_waiting_dialog
 from powercad.layer_stack.layer_stack_import import *
 from powercad.general.settings.Error_messages import *
 from PySide import QtCore, QtGui
-from powercad.sym_layout.symbolic_layout import SymPoint
+from powercad.sym_layout.symbolic_layout import SymPoint,ElectricalMeasure,ThermalMeasure, LayoutError
+from powercad.project_builder.dialogs.cons_setup_ui import Ui_Constraint_setup
 from powercad.response_surface.Model_Formulation import form_trace_model_optimetric,form_fasthenry_trace_response_surface
-import sys
+from powercad.parasitics.analysis import parasitic_analysis
 import psidialogs
+from numpy.linalg.linalg import LinAlgError
+
+import networkx as nx
+from powercad.design.module_data import *
+from powercad.corner_stitch.CornerStitch import Rectangle
+from powercad.general.data_struct.util import *
 # CLASSES FOR DIALOG USAGE
 class GenericDeviceDialog(QtGui.QDialog):   
     # Author: quang le
@@ -462,29 +474,7 @@ class NewProjectDialog(QtGui.QDialog):
                 self.ui.txt_symbnet_address.setText(os.path.abspath(symbnet_file[0]))
             elif file_extension == '.txt' or file_extension == '.psc':
                 self.ui.txt_symbnet_address.setText(os.path.abspath(symbnet_file[0]))
-    '''
-    def convert_netlist(self):
-        # Prepares for conversion
-        # Converts datatype of positive, negative, and output nodes from object attributes into strings
-        netlist_file_name, netlist_file_extension = os.path.splitext(
-            self.ui.txt_symbnet_address.text())  # separates the file path and file name combination from the file extension (.txt or .net)
-        converter = Netlist_SVG_converter.Converter(self.ui.txt_symbnet_address.text(),
-                                                    netlist_file_name)  # initializes the converter object with the specific source's file path and file name
-        # Converts from netlist to svg
-        symbnet_file = converter.convert(vp=str(self.ui.txt_positive_source.text()),
-                                         # the positive source node mentioned by the user is converted to string type and saved in variable vp
-                                         vn=str(self.ui.txt_negative_source.text()),
-                                         # the negative source node mentioned by the user is converted to string type and saved in variable vn
-                                         output_node=str(
-                                             self.ui.txt_output.text()))  # the output node mentioned by the user is converted to string type and saved in variable output_node
 
-        NetlistConverter = Netlist_SVG_converter.Converter(self.ui.txt_symbnet_address.text(), netlist_file_name)
-        symbnet_file = NetlistConverter.convert(vp=str(self.ui.txt_positive_source.text()),
-                                                vn=str(self.ui.txt_negative_source.text()),
-                                                output_node=str(self.ui.txt_output.text()))
-
-        return os.path.abspath(symbnet_file[0])  # Shilpi - return the converted file
-    '''
     def create(self):
         # Save most recent entries
         # If netlist, create symbolic layout
@@ -758,20 +748,20 @@ class ResponseSurfaceDialog(QtGui.QDialog):
 
 
 class ModelSelectionDialog(QtGui.QDialog):
-    def __init__(self, parent):
+    def __init__(self, parent,techlib_dir=DEFAULT_TECH_LIB_DIR,mode=1):
         QtGui.QDialog.__init__(self, parent)
         self.ui = Ui_ModelSelection()
         self.ui.setupUi(self)
         self.parent = parent
         # populate model files
-        self.model_dir = os.path.join(DEFAULT_TECH_LIB_DIR, 'Model', 'Trace')
+        self.model_dir = os.path.join(techlib_dir, 'Model', 'Trace')
         self.rs_model = QtGui.QFileSystemModel()
         self.rs_model.setRootPath(self.model_dir)
         self.rs_model.setFilter(QtCore.QDir.Files)
         self.ui.list_mdl_choices.setModel(self.rs_model)
         self.ui.list_mdl_choices.setRootIndex(self.rs_model.setRootPath(self.model_dir))
         self.ui.buttonBox.accepted.connect(self.select_mdl)
-
+        self.mode=mode
     def show_mdl_info(self):
         selected=str(self.rs_model.fileName(self.ui.list_mdl_choices.currentIndex()))
         mdl = load_file(os.path.join(self.model_dir,selected))
@@ -782,7 +772,11 @@ class ModelSelectionDialog(QtGui.QDialog):
     def select_mdl(self):
         try:
             self.model=load_file(os.path.join(self.model_dir,self.rs_model.fileName(self.ui.list_mdl_choices.currentIndex())))
-            self.parent.project.symb_layout.set_RS_model(self.model)
+            if self.mode==1:
+                self.parent.project.symb_layout.set_RS_model(self.model)
+            elif self.mode ==2:
+                self.parent.parent.engine.sym_layout.set_RS_model(self.model)
+
             Notifier(msg="model is set to: "+str(self.rs_model.fileName(self.ui.list_mdl_choices.currentIndex())),msg_name="model selected")
         except:
             InputError(msg="Unexpected error:"+str(sys.exc_info()[0]))
@@ -1014,7 +1008,7 @@ class WireConnectionDialogs(QtGui.QDialog):
         self.ui.tbl_bw_connection.removeRow(selected_row)
 
 class Device_states_dialog(QtGui.QDialog):
-    def __init__(self,parent,per_ui):
+    def __init__(self,parent,per_ui=None,mode=1):
         QtGui.QDialog.__init__(self, parent)
         self.ui = Ui_dev_state_dialog()
         self.ui.setupUi(self)
@@ -1023,14 +1017,19 @@ class Device_states_dialog(QtGui.QDialog):
         self.ui.btn_ok.pressed.connect(self.Ok)
         self.dv_df=pd.DataFrame()
         self.group=QtGui.QButtonGroup()
-
+        self.mode = mode
         self.load_table()
 
     def closeEvent(self,event):
         self.Ok()
 
     def load_table(self):
-        for dv in self.parent.project.symb_layout.all_sym:
+        if self.mode == 1 :
+            all_sym = self.parent.project.symb_layout.all_sym # Called from old PS
+        elif self.mode ==2:
+            all_sym = self.parent.parent.engine.sym_layout.all_sym  # Called from new engine
+
+        for dv in all_sym:
             if isinstance(dv, SymPoint):
                 if dv.tech == None:
                     Notifier("Not all devices have technology file, please go to the previous page to select", "Error")
@@ -1078,6 +1077,1212 @@ class Device_states_dialog(QtGui.QDialog):
                 else:
                     if self.ui.tbl_states.cellWidget(row, col)!=None:
                         self.dv_df.loc[row, col]= int(self.ui.tbl_states.cellWidget(row, col).isChecked()*1)
-        self.per_ui.device_states_df=self.dv_df
+        #print self.dv_df
+        if self.mode == 1:
+            self.per_ui.device_states_df=self.dv_df
+        if self.mode == 2:
+            self.parent.dev_df = self.dv_df
+        self.close()
 
+class ConsDialog(QtGui.QDialog):
+    def __init__(self, parent):
+        QtGui.QDialog.__init__(self, parent)
+        self.ui = Ui_Constraint_setup()
+        self.ui.setupUi(self)
+        self.parent = parent
+        self.cons_df = pd.DataFrame()
+        self.cons_dims = pd.DataFrame()
+        self.cons_sp = pd.DataFrame()
+        self.cons_encl = pd.DataFrame()
+        self.num_types = 0 # number of tile's types
+        self.ui.btn_load.pressed.connect(self.load_table)
+        self.ui.btn_apply.pressed.connect(self.apply_changes)
+        self.ui.btn_save.pressed.connect(self.save_cons)
+        self.load_table(mode=0)
+
+
+
+
+    def load_table(self,mode=1):
+        if mode==1: # from csv
+            cons_file = QFileDialog.getOpenFileName(self, "Select Constraint File", 'C://',"Constraints Files (*.csv)")
+            self.cons_df=pd.read_csv(cons_file[0])
+        elif mode==0:
+
+            cons_file = 'out.csv'
+            if cons_file is not None:
+                self.cons_df = pd.read_csv(cons_file)
+                #self.cons_df = self.parent.cons_df
+            #else:
+                #return
+        #print"con", self.cons_df
+        table_df= self.cons_df
+        #print table_df
+        total_cols = len(table_df.axes[1])
+        r_sp=4 # row of min spacing
+        r_encl= r_sp+total_cols # row of min encl
+        self.ui.tbl_cons_dims.setRowCount(4)
+        self.ui.tbl_cons_dims.setColumnCount(total_cols)
+        self.ui.tbl_cons_gaps.setRowCount(total_cols)
+        self.ui.tbl_cons_gaps.setColumnCount(total_cols)
+        self.ui.tbl_cons_encl.setRowCount(total_cols)
+        self.ui.tbl_cons_encl.setColumnCount(total_cols)
+        # First table for dimensions
+        cols_name = list(table_df.columns.values)
+        self.cons_dims = pd.DataFrame(columns=cols_name)
+        self.cons_sp = pd.DataFrame(columns=["Min Spacing"]+cols_name[1:-1])
+        self.cons_encl = pd.DataFrame(columns=["Min Enclosure"] + cols_name[1:-1])
+        for c in range(total_cols):
+            self.ui.tbl_cons_dims.setItem(0, c, QtGui.QTableWidgetItem())
+            self.ui.tbl_cons_dims.item(0, c).setText(cols_name[c])
+            if c ==0:
+                self.ui.tbl_cons_encl.setItem(0, c, QtGui.QTableWidgetItem())
+                self.ui.tbl_cons_encl.item(0, c).setText("Min Enclosure")
+                self.ui.tbl_cons_gaps.setItem(0, c, QtGui.QTableWidgetItem())
+                self.ui.tbl_cons_gaps.item(0, c).setText("Min Spacing")
+            else:
+                self.ui.tbl_cons_encl.setItem(0, c, QtGui.QTableWidgetItem())
+                self.ui.tbl_cons_encl.item(0, c).setText(cols_name[c])
+                self.ui.tbl_cons_gaps.setItem(0, c, QtGui.QTableWidgetItem())
+                self.ui.tbl_cons_gaps.item(0, c).setText(cols_name[c])
+
+        for r in range(3):
+            for c in range(total_cols):
+                self.ui.tbl_cons_dims.setItem(r+1, c, QtGui.QTableWidgetItem())
+                self.ui.tbl_cons_dims.item(r+1, c).setText(str(table_df.iloc[r, c]))
+
+        for r in range(total_cols-1):
+            for c in range(total_cols):
+                self.ui.tbl_cons_gaps.setItem(r+1 , c, QtGui.QTableWidgetItem())
+                self.ui.tbl_cons_gaps.item(r+1,c).setText(str(table_df.iloc[r + r_sp, c]))
+                self.ui.tbl_cons_encl.setItem(r + 1, c, QtGui.QTableWidgetItem())
+                self.ui.tbl_cons_encl.item(r + 1, c).setText(str(table_df.iloc[r + r_encl, c]))
+
+    def apply_changes(self):
+        loc_id = 0
+        for row in range(self.ui.tbl_cons_dims.rowCount()-1):
+
+            for col in range(len(self.cons_dims.columns)):
+                colid= self.cons_dims.columns[col]
+                self.cons_dims.loc[row,colid] = self.ui.tbl_cons_dims.item(row+1, col).text()
+                self.cons_df.loc[loc_id,colid]= self.ui.tbl_cons_dims.item(row+1, col).text()
+
+            loc_id += 1
+        for row in range(self.ui.tbl_cons_gaps.rowCount()):
+            for col in range(len(self.cons_sp.columns)):
+                colid = self.cons_sp.columns[col]
+                colid1 = self.cons_dims.columns[col]
+                if row != 0:
+                    self.cons_sp.loc[row, colid] = self.ui.tbl_cons_gaps.item(row, col).text()
+                    self.cons_df.loc[loc_id, colid1] = self.ui.tbl_cons_gaps.item(row, col).text()
+                else:
+                    self.cons_df.loc[loc_id, colid1] = colid
+
+            loc_id += 1
+        for row in range(self.ui.tbl_cons_encl.rowCount()):
+            for col in range(len(self.cons_encl.columns)):
+                colid = self.cons_encl.columns[col]
+                colid1 = self.cons_dims.columns[col]
+                if row != 0:
+                    self.cons_encl.loc[row, colid] = self.ui.tbl_cons_encl.item(row, col).text()
+                    self.cons_df.loc[loc_id, colid1] = self.ui.tbl_cons_encl.item(row, col).text()
+                else:
+                    self.cons_df.loc[loc_id, colid1] = colid
+            loc_id += 1
+
+        self.parent.cons_df=self.cons_df
+        #print "DFs",self.parent.cons_df
+        self.close()
+    def save_cons(self):
+        self.apply_changes()
+        save_path = QtGui.QFileDialog.getSaveFileName(self,"Save constraint file",'C://',
+                                                      "Constraints Files (*.csv)")
+        self.cons_df.to_csv(save_path[0],index_label=False)
+
+class Fixed_locations_Dialog(QtGui.QDialog):
+    def __init__(self, parent):
+        QtGui.QDialog.__init__(self, parent)
+        self.ui = Ui_Fixed_location_Dialog()
+        self.ui.setupUi(self)
+        self.parent = parent
+        self.node_dict=None
+        self.Nodes=[]
+        self.current_node = None
+        self.X = None
+        self.Y = None
+        self.init_table()
+        self.new_node_dict = {}
+
+        self.Min_X,self.Min_Y=self.parent.engine.mode_zero()
+        #print self.Min_X,self.Min_Y
+        self.ui.cmb_nodes.currentIndexChanged.connect(self.node_handler)
+        self.ui.txt_inputx.setEnabled(False)
+        self.ui.txt_inputy.setEnabled(False)
+
+        self.ui.btn_addnode.pressed.connect(self.add_row)
+        self.ui.btn_rmvnode.pressed.connect(self.remove_row)
+        self.ui.btn_save.pressed.connect(self.finished)
+
+
+    #def show_nodeID(self,Nodelist):
+    def init_table(self):
+
+        if self.parent.input_node_info!=None:
+            self.new_node_dict=self.parent.input_node_info
+        #print"P", self.parent.input_node_info
+        row_id = self.ui.table_Fixedloc.rowCount()
+
+        #print"R", row_id
+        if len(self.parent.input_node_info.keys())>0:
+            for k,v in self.parent.input_node_info.items():
+
+                self.ui.table_Fixedloc.insertRow(row_id)
+                self.ui.table_Fixedloc.setItem(row_id, 0, QtGui.QTableWidgetItem())
+                self.ui.table_Fixedloc.setItem(row_id, 1, QtGui.QTableWidgetItem())
+                self.ui.table_Fixedloc.setItem(row_id, 2, QtGui.QTableWidgetItem())
+                if k!=None:
+                    self.ui.table_Fixedloc.item(row_id, 0).setText(str(k))
+                if v[0]!=None:
+                    self.ui.table_Fixedloc.item(row_id, 1).setText(str(float(v[0])/1000))
+                else:
+                    self.ui.table_Fixedloc.item(row_id, 1).setText("None")
+                if v[1]!=None:
+                    self.ui.table_Fixedloc.item(row_id, 2).setText(str(float(v[1]) / 1000))
+                else:
+                    self.ui.table_Fixedloc.item(row_id, 2).setText("None")
+                row_id += 1
+
+    def set_node_id(self,node_dict):
+        self.node_dict=node_dict
+
+        self.ui.cmb_nodes.clear()
+        for i in node_dict.keys():
+            item = 'Node ' + str(i)
+            self.ui.cmb_nodes.addItem(item)
+            self.Nodes.append(item)
+
+    def set_label(self,x,y,div=1000):
+        label="Node min location X:"+str(float(x)/div)+"   "+"Y:"+str(float(y)/div)
+        self.ui.lbl_minxy.setText(label)
+        self.ui.txt_inputx.setEnabled(True)
+        self.ui.txt_inputy.setEnabled(True)
+
+    def node_handler(self):
+        #self.ui.txt_inputx.clear()
+        #self.ui.txt_inputy.clear()
+        choice = self.ui.cmb_nodes.currentText()
+
+        for i in self.Nodes:
+            if choice==i:
+                #self.ui.txt_inputx.clear()
+                #self.ui.txt_inputy.clear()
+                self.X=None
+                self.Y=None
+                node_id=int(i.split()[1])
+                self.current_node = node_id
+                #print"node_id", node_id
+                for k,v in self.node_dict.items():
+                    #print "node_dict",k,v[0],v[1]
+                    if k==node_id:
+                        x=v[0]
+                        y=v[1]
+                    else:
+                        continue
+
+
+                for k,v in self.Min_X.items():
+
+                    for k1,v1 in v.items():
+                        if k1==x:
+                            x_min=v1
+                            #self.ui.lbl_minxy.setText(str(v1))
+
+                        else:
+                            continue
+                for k,v in self.Min_Y.items():
+                    for k1,v1 in v.items():
+                        if k1==y:
+                            y_min=v1
+                            #self.ui.lbl_minxy.setText(str(v1))
+
+                        else:
+                            continue
+                self.set_label(x_min,y_min)
+    def add_row(self):
+
+        row_id = self.ui.table_Fixedloc.rowCount()
+        #self.ui.table_Fixedloc.insertRow(rowPosition)
+        #self.ui.table_Fixedloc.setItem(rowPosition, self.current_node, self.X, self.Y)
+        self.ui.table_Fixedloc.insertRow(row_id)
+        self.ui.table_Fixedloc.setItem(row_id, 0, QtGui.QTableWidgetItem())
+        self.ui.table_Fixedloc.setItem(row_id, 1, QtGui.QTableWidgetItem())
+        self.ui.table_Fixedloc.setItem(row_id, 2, QtGui.QTableWidgetItem())
+        self.ui.table_Fixedloc.item(row_id, 0).setText(str(self.current_node))
+        if str(self.ui.txt_inputx.text())!='':
+            self.X = int(self.ui.txt_inputx.text()) * 1000
+            self.ui.table_Fixedloc.item(row_id, 1).setText(str(float(self.X) / 1000))
+        else:
+            self.ui.table_Fixedloc.item(row_id, 1).setText('None')
+
+        if str(self.ui.txt_inputy.text()) != '':
+            self.Y = int(self.ui.txt_inputy.text()) * 1000
+            self.ui.table_Fixedloc.item(row_id, 2).setText(str(float(self.Y) / 1000))
+
+        else:
+            self.ui.table_Fixedloc.item(row_id, 2).setText('None')
+
+
+
+        self.new_node_dict[self.current_node]=(self.X,self.Y)
+
+
+    def remove_row(self):
+        selected_row = self.ui.table_Fixedloc.currentRow()
+        row_id=self.ui.table_Fixedloc.selectionModel().selectedIndexes()[0].row()
+        node_id = str(self.ui.table_Fixedloc.item(row_id,0).text())
+        self.ui.table_Fixedloc.removeRow(selected_row)
+        for k1,v1 in self.parent.input_node_info.items():
+            if k1 == int(node_id) :
+                del self.parent.input_node_info[k1]
+
+        for k,v in self.new_node_dict.items():
+            if k==int(node_id):
+                del self.new_node_dict[k]
+
+
+
+        #print "RP", self.parent.input_node_info,self.new_node_dict,self.node_dict
+
+
+
+    #def set_locations(self):
+    def finished(self):
+        #self.parent.input_node_info = self.new_node_dict
+        self.parent.fixed_x_locations={}
+        self.parent.fixed_y_locations={}
+        Xloc={}
+        for k,v in self.Min_X.items():
+            Xloc=v.keys()
+        Yloc={}
+        for k,v in self.Min_Y.items():
+            Yloc=v.keys()
+
+        for k1,v1 in self.new_node_dict.items():
+            self.parent.input_node_info[k1]=v1
+        for k1, v1 in self.parent.input_node_info.items():
+            #self.parent.input_node_info[k1] = v1
+            for k,v in self.node_dict.items():
+                if k1==k:
+
+                    if v1[0]!= None and v1[1]!=None:
+                        ind=Xloc.index(v[0])
+
+                        self.parent.fixed_x_locations[ind] = v1[0]
+                        ind2 = Yloc.index(v[1])
+
+                        self.parent.fixed_y_locations[ind2] = v1[1]
+                    elif v1[0]==None and v1[1]!= None:
+                        ind2=Yloc.index(v[1])
+
+                        self.parent.fixed_y_locations[ind2]=v1[1]
+                    elif v1[0]!=None and v1[1]==None:
+                        ind = Xloc.index(v[0])
+
+                        self.parent.fixed_x_locations[ind] = v1[0]
+                    else:
+                        continue
+                else:
+                    continue
+
+
+        #self.parent.input_node_info=self.new_node_dict
+        #print"XY", self.parent.fixed_x_locations,self.parent.fixed_y_locations
+
+        self.close()
+
+
+
+class New_layout_engine_dialog(QtGui.QDialog):
+    # Test New LAyout Engine
+    def __init__(self,parent,fig,W,H,engine=None,graph=None):
+        QtGui.QDialog.__init__(self, parent)
+        self.ui = Ui_CornerStitch_Dialog()
+        self.ui.setupUi(self)
+        self.engine=engine
+        self.parent = parent
+        self.cornerstitch = None
+        self.constraint=False
+        self.num_layouts=0
+        self.mainwindow_fig=fig ##Temporary addition
+        self.graph=graph
+        self.fp_width=W
+        self.fp_length=H
+        self.cons_df=None
+        self.current_mode = 0
+        self.generated_layouts = {}
+        self.layout_data = {}
+        self.perf_dict={}
+        self.Patches=None
+        self.input_node_info={}
+
+        self.fixed_x_locations={}
+        self.fixed_y_locations = {}
+
+        # add buttons
+        self.ui.btn_fixed_locs.pressed.connect(self.assign_fixed_locations)
+        self.ui.btn_constraints.pressed.connect(self.add_constraints)
+        self.ui.cmb_modes.currentIndexChanged.connect(self.mode_handler)
+        self.initialize_layout(self.mainwindow_fig,self.graph)
+
+        self.ui.btn_eval_setup.pressed.connect(self.eval_setup)
+        self.ui.btn_gen_layouts.pressed.connect(self.gen_layouts)
+        # initialize for mode 0
+        self.ui.txt_num_layouts.setEnabled(False)
+        self.ui.txt_width.setEnabled(False)
+        self.ui.txt_height.setEnabled(False)
+        self.ui.btn_fixed_locs.setEnabled(False)
+        self.ui.btn_gen_layouts.setEnabled(False)
+        self.ui.btn_eval_setup.setEnabled(False)
+
+
+    def getPatches(self,Patches):
+        if self.Patches==None:
+            self.Patches=Patches
+            print "self.Patches"
+        return
+    def setPatches(self):
+        return self.Patches
+
+        self.ui.btn_gen_layouts.pressed.connect(self.gen_layouts)
+        self.ui.cmb_sols.currentIndexChanged.connect(self.layout_plot)
+    def width_edit_text_changed(self):
+        W = int(self.ui.txt_width.text())
+        return W
+    def height_edit_text_changed(self):
+
+        H = int(self.ui.txt_height.text())
+        return H
+    def mode_handler(self): # Modes combobox
+        choice = str(self.ui.cmb_modes.currentText())
+
+
+        if choice == 'Minimum Size Layout':
+            self.current_mode=0
+            self.ui.txt_num_layouts.setEnabled(False)
+            self.ui.txt_width.setEnabled(False)
+            self.ui.txt_height.setEnabled(False)
+            self.ui.btn_fixed_locs.setEnabled(False)
+            self.refresh_layout()
+
+        elif choice == 'Variable Size Layout':
+            QtGui.QMessageBox.warning(self, "Varied Baseplate Size",
+                                      "Thermal model is set to analytical for fast evaluation")
+
+            self.current_mode=1
+            self.ui.txt_num_layouts.setEnabled(True)
+            self.ui.txt_width.setEnabled(False)
+            self.ui.txt_height.setEnabled(False)
+            self.ui.btn_fixed_locs.setEnabled(False)
+            self.refresh_layout()
+
+        elif choice == 'Fixed Size Layout':
+            self.current_mode=2
+            self.ui.txt_num_layouts.setEnabled(True)
+            self.ui.txt_width.setEnabled(True)
+            self.ui.txt_height.setEnabled(True)
+            self.ui.btn_fixed_locs.setEnabled(False)
+            self.refresh_layout()
+
+        elif choice == 'Fixed Size with Fixed Loactions':
+            self.current_mode=3
+            self.ui.txt_num_layouts.setEnabled(True)
+            self.ui.txt_width.setEnabled(True)
+            self.ui.txt_height.setEnabled(True)
+            self.ui.btn_fixed_locs.setEnabled(True)
+            self.refresh_layout_mode3()
+
+        return
+
+
+    def assign_fixed_locations(self): # Fixed Locations (for mode-3)
+
+        fixed_locations=Fixed_locations_Dialog(self)
+        fixed_locations.set_node_id(self.graph[1])
+        fixed_locations.show()
+        fixed_locations.exec_()
+
+
+
+
+    def add_constraints(self):
+
+        constraints = ConsDialog(self)
+        self.constraint=True
+
+        self.cons_df=self.engine.cons_df
+
+        constraints.exec_()
+
+
+        self.constraint=True
+
+        self.engine.cons_df=self.cons_df
+
+        self.ui.btn_eval_setup.setEnabled(True)
+        self.ui.btn_gen_layouts.setEnabled(True)
+    def update_sol_browser(self):
+        self.ax3.clear()
+        print "plot sol browser"
+        if self.perf_dict=={}:
+            self.perf1 = {"label": 'layout index','data':[]}
+            self.perf2 = {"label": 'layout index', 'data': []}
+
+            for layout in self.generated_layouts.keys():
+                id = self.generated_layouts.keys().index(layout)
+                self.perf1['data'].append(id)
+                self.perf2['data'].append(id)
+
+
+
+        self.ax3.plot(self.perf1['data'],self.perf2['data'],'o',picker=5)
+        self.ax3.set_xlabel(self.perf1['label'])
+        self.ax3.set_ylabel(self.perf2['label'])
+        self.canvas_sol_browser.draw()
+        self.canvas_sol_browser.callbacks.connect('pick_event',self.on_pick)
+
+    def on_pick(self, event):
+        self.update_sol_browser()
+        ind = event.ind[0]
+        self.ax3.plot(self.perf1['data'][ind], self.perf2['data'][ind], 'o',c='red')
+        self.layout_plot(layout_ind=ind)
+        self.canvas_sols.draw()
+        self.canvas_sol_browser.draw()
+    def gen_layouts(self):
+        self.generated_layouts = {}
+        self.layout_data={}
+        if not(self.constraint):
+            print "cant generate layouts"
+            return
+        else:
+            print "generate layout"
+
+            if self.current_mode!=0:
+                try:
+                    N = int(self.ui.txt_num_layouts.text())
+                except:
+                    print "Please enter Num of Layouts greater than 0"
+                    print "ERROR: Invalid Information"
+                    return
+
+                W = int(self.ui.txt_width.text())*1000
+                H = int(self.ui.txt_height.text())*1000
+                Patches, cs_sym_data=self.engine.generate_solutions(self.current_mode,num_layouts=N,W=W,H=H,fixed_x_location=self.fixed_x_locations,fixed_y_location=self.fixed_y_locations)
+                if Patches==None or cs_sym_data==None:
+                    print "ERROR: Invalid Information"
+                    return
+            else:
+                N=1
+                Patches, cs_sym_data= self.engine.generate_solutions(self.current_mode, num_layouts=N)
+            Layouts=[]
+            for i in range(int(N)):
+                item = 'Layout '+str(i)
+                Layouts.append(item)
+
+            if Patches!=None:
+
+                # UPDATE layout sols for plotting
+                for i in range(int(N)):
+
+                    '''
+                    Plot real Layout here
+                    '''
+
+                    if self.engine.sym_layout != None:
+                        self.layout_data[Layouts[i]] = {'Rects': cs_sym_data[i]}
+
+                        self.generated_layouts[Layouts[i]] = {'Patches': Patches[i]}
+            else:
+                print"Patches not found"
+
+        # Convert Data info to Symb object for evaluation
+        if self.engine.sym_layout!=None:
+            sym_info=self.form_sym_obj_rect_dict()
+
+            # Evaluate performace for all all layouts
+            for p in self.perf_dict.keys():
+                perf = self.perf_dict[p]
+                measure = perf['measure']
+                if perf['type'] == 'Thermal' and measure.mdl==1 and self.current_mode!=1:
+                    self.engine.sym_layout.thermal_characterize()
+            self._sym_eval_perf(sym_info=sym_info)
+
+        # Update the solution browser
+        self.update_sol_browser()
+
+        if self.current_mode==0:
+            self.layout_plot()
+        return
+
+
+
+
+    def eval_setup(self):
+        eval = ET_standalone_Dialog(self)
+        eval.exec_()
+    def layout_plot(self,layout_ind=0,mode='ps'):
+        self.ax1.clear()
+        if self.current_mode!=0:
+            choice = 'Layout '+str(layout_ind)
+        else:
+
+
+            choice = 'Layout 0'
+            for k,v in self.generated_layouts.items():
+                if choice==k:
+                    for k1,v1 in v['Patches'].items():
+                        W=(k1[0]/1000)
+                        H=(k1[1]/1000)
+                        self.ui.txt_width.setText(str(W))
+                        self.ui.txt_height.setText(str(H))
+
+        if mode == 'cs': # corner stitch plotting engine (has some issues)
+            for k,v in self.generated_layouts.items():
+                if choice==k:
+                    for k1,v1 in v['Patches'].items():
+                        for p in v1:
+
+                            self.ax1.add_patch(p)
+                        self.ax1.set_xlim(0, k1[0])
+                        self.ax1.set_ylim(0, k1[1])
+                        self.ui.txt_width.setText(str(k1[0]))
+                        self.ui.txt_height.setText(str(k1[1]))
+                    self.canvas_sols.draw()
+        elif mode == 'ps':
+            sym_info = self.form_sym_obj_rect_dict()
+            sym_layout = self.engine.sym_layout
+            symb_rect_dict = sym_info[choice]['sym_info']
+            dims = sym_info[choice]['Dims']
+            #print dims,symb_rect_dict
+            bp_dims = [dims[0] + 4, dims[1] + 4]
+            self._sym_update_layout(sym_info=symb_rect_dict)
+            update_sym_baseplate_dims(sym_layout=sym_layout, dims=bp_dims)
+            update_substrate_dims(sym_layout=sym_layout, dims=dims)
+            plot_layout(sym_layout, ax=self.ax1,new_window=False)
+            self.canvas_sols.draw()
+
+
+
+    def refresh_layout(self):
+        self.ax2.clear()
+        self.ax2.set_position([0.07, 0.07, 0.9, 0.9])
+
+        Names = self.init_fig.keys()
+        Names.sort()
+        for k, p in self.init_fig.items():
+
+            if k[0] == 'T':
+                x = p.get_x()
+                y = p.get_y()
+                self.ax2.text(x + 1, y + 1, k)
+                self.ax2.add_patch(p)
+        for k, p in self.init_fig.items():
+
+            if k[0] != 'T':
+                x = p.get_x()
+                y = p.get_y()
+                self.ax2.text(x + 1, y + 1, k, weight='bold')
+                self.ax2.add_patch(p)
+        if self.init_graph != None and self.current_mode == 3:
+            G = self.init_graph[0]
+            pos = self.init_graph[1]
+            lbls = self.init_graph[2]
+            nx.draw_networkx_nodes(G, pos, node_size=80, label=True, ax=self.ax2, zorder=6)
+
+
+
+            nx.draw_networkx_labels(G, pos, lbls, font_size=6, ax=self.ax2)
+
+        self.ax2.set_xlim(0, self.fp_width)
+        self.ax2.set_ylim(0, self.fp_length)
+        self.canvas_init.draw()
+
+    def refresh_layout_mode3(self):
+        self.ax2.clear()
+        Names = self.init_fig.keys()
+        Names.sort()
+        for k, p in self.init_fig.items():
+
+            if k[0] == 'T':
+                x = p.get_x()
+                y = p.get_y()
+                self.ax2.text(x + 1, y + 1, k)
+                self.ax2.add_patch(p)
+        for k, p in self.init_fig.items():
+
+            if k[0] != 'T':
+                x = p.get_x()
+                y = p.get_y()
+                self.ax2.text(x + 1, y + 1, k, weight='bold')
+                self.ax2.add_patch(p)
+
+        data = {"x": [], "y": [], "label": []}
+        for label, coord in self.init_graph[1].items():
+            data["x"].append(coord[0])
+            data["y"].append(coord[1])
+            data["label"].append(label)
+
+        self.ax2.plot(data['x'], data['y'], 'o', picker=5)
+        self.ax2.set_xlim(0, self.fp_width)
+        self.ax2.set_ylim(0, self.fp_length)
+        self.canvas_init.draw()
+        self.canvas_init.callbacks.connect('pick_event', self.on_click)
+
+    def on_click(self, event):
+        self.ax2.plot(event.mouseevent.xdata,event.mouseevent.ydata, 'o', c='red')
+        x = round(event.mouseevent.xdata,2)
+        y = round(event.mouseevent.ydata,2)
+
+        for k,v in self.init_graph[1].items():
+            if((abs(x-v[0])<=0.99 and abs(y-v[1])<=0.99)):
+
+                self.show_node_id(k)
+
+
+
+
+    def show_node_id(self, id):
+        label = "Node ID: "+str(id)
+        self.ui.Node_ID.setText(label)
+
+    def initialize_layout(self,fig,graph=None):
+        '''
+        plot main window figure
+        Returns:
+
+        '''
+        self.init_fig=fig
+        self.init_graph=graph
+        self.ui.txt_width.setText(str(self.fp_width))
+        self.ui.txt_height.setText(str(self.fp_length))
+        fig2=Figure()
+        fig1 = Figure()
+        fig3=Figure()
+        self.ax1 = fig1.add_subplot(111) # Generated Layout
+        self.ax2 = fig2.add_subplot(111) # Initial Layout
+        self.ax3 = fig3.add_subplot(111)  # Initial Layout
+
+        self.canvas_init=FigureCanvas(fig2)
+        self.canvas_sols = FigureCanvas(fig1)
+        self.canvas_sol_browser = FigureCanvas(fig3)
+        grid_layout = QtGui.QGridLayout(self.ui.grview_init_layout)
+        grid_layout.setContentsMargins(0, 0, 0, 0)
+        grid_layout.addWidget(self.canvas_init, 0, 0, 1, 1)
+
+        grid_layout = QtGui.QGridLayout(self.ui.grview_layout_sols)
+        grid_layout.setContentsMargins(0, 0, 0, 0)
+        grid_layout.addWidget(self.canvas_sols, 0, 0, 1, 1)
+
+        grid_layout = QtGui.QGridLayout(self.ui.grview_sols_browser)
+        grid_layout.setContentsMargins(0, 0, 0, 0)
+        grid_layout.addWidget(self.canvas_sol_browser, 0, 0, 1, 1)
+
+        self.ax1.set_position([0.07, 0.07, 0.9, 0.9])
+        self.ax2.set_position([0.07, 0.07, 0.9, 0.9])
+        self.ax3.set_position([0.2, 0.2, 0.7, 0.7])
+
+        if fig==None:
+            self.ax2 = fig2.add_subplot(111, aspect=1.0)
+            self.ax2.plot([0, 1, 2], [1, 2, 3])
+        else:
+            Names=fig.keys()
+            Names.sort()
+            for k, p in fig.items():
+
+                if k[0]=='T':
+                    x=p.get_x()
+                    y=p.get_y()
+                    self.ax2.text(x+1,y+1,k)
+                    self.ax2.add_patch(p)
+            for k, p in fig.items():
+
+                if k[0] !='T':
+                    x = p.get_x()
+                    y = p.get_y()
+                    self.ax2.text(x + 1, y + 1, k,weight='bold')
+                    self.ax2.add_patch(p)
+            self.ax2.set_xlim(0,self.fp_width)
+            self.ax2.set_ylim(0,self.fp_length)
+            if self.init_graph!=None and self.current_mode==3:
+                G=graph[0]
+                pos=graph[1]
+                lbls=graph[2]
+                nx.draw_networkx_nodes(G, pos, node_size=100, label=True,ax=self.ax2,zorder=6)
+                nx.draw_networkx_labels(G, pos, lbls, font_size=8,ax=self.ax2)
+        self.ax3.ticklabel_format(axis='both',style='sci')
+        self.canvas_init.draw()
+        return
+    def run_mode(self):
+        return self.current_mode
+    def form_sym_obj_rect_dict(self,div=1000):
+        '''
+        From group of CornerStitch Rectangles, form a single rectangle for each trace
+        Output type : {"Layout id": {'Sym_info': symb_rect_dict,'Dims': [W,H]} --- Dims is the dimension of the baseplate
+        where symb_rect_dict= {'Symbolic ID': [R1,R2 ... Ri]} where Ri is a Rectangle object
+        '''
+        layout_symb_dict={}
+        for layout in self.layout_data.keys():
+            symb_rect_dict = {}
+            p_data = self.layout_data[layout]['Rects']
+            #print "p_data",p_data
+            W,H= p_data.keys()[0]
+            W=float(W)/div
+            H=float(H)/div
+            rect_dict = p_data.values()[0]
+            for r_id in rect_dict.keys():
+                #print 'rect id',r_id
+                left=1e32
+                bottom = 1e32
+                right = 0
+                top=0
+                for rect in rect_dict[r_id]:
+                    type = rect.type
+                    min_x = float(rect.left) / div
+                    max_x = float(rect.right) / div
+                    min_y = float(rect.bottom) / div
+                    max_y = float(rect.top)/div
+                    if min_x<=left:
+                        left = float(min_x)
+                    if min_y<=bottom:
+                        bottom=float(min_y)
+                    if max_x >= right:
+                        right = float(max_x)
+                    if max_y >= top:
+                        top = float(max_y)
+                symb_rect_dict[r_id]=Rectangle(x=left,y=bottom,width=right-left,height=top-bottom,type =type)
+            layout_symb_dict[layout]={'sym_info':symb_rect_dict,'Dims':[W,H]}
+        return layout_symb_dict
+
+
+
+    def _sym_eval_perf(self,sym_info=None):
+        self.perf1 = {"label": None, 'data': []}
+        self.perf2 = {"label": None, 'data': []}
+        sym_layout = self.engine.sym_layout
+        perf_plot = [self.perf1, self.perf2]
+        for p, pdraw in zip(self.perf_dict.keys(), perf_plot):
+            perf = self.perf_dict[p]
+            measure = perf['measure']
+            for layout in sym_info.keys():
+                ax = plt.subplot('111', adjustable='box', aspect=1.0)
+                symb_rect_dict = sym_info[layout]['sym_info']
+                dims= sym_info[layout]['Dims']
+                bp_dims = [dims[0]+4,dims[1]+4]
+                self._sym_update_layout(sym_info=symb_rect_dict)
+                update_sym_baseplate_dims(sym_layout=sym_layout, dims=bp_dims)
+                update_substrate_dims(sym_layout=sym_layout, dims=dims)
+
+                if perf['type'] == 'Thermal':
+                    lbl = measure.name +'(degree C)'
+                    pdraw["label"]=(lbl)
+                    if self.current_mode==1:
+                        mdl = 2
+                    else:
+                        mdl =measure.mdl
+
+
+                    val = sym_layout ._thermal_analysis(measure, mdl)
+                    pdraw['data'].append(val)
+                elif perf['type'] == 'Electrical':
+                    type_dict = {ElectricalMeasure.MEASURE_RES: 'res',
+                                 ElectricalMeasure.MEASURE_IND: 'ind',
+                                 ElectricalMeasure.MEASURE_CAP: 'cap'}
+                    measure_type = type_dict[measure.measure]
+
+                    if measure_type=='res':
+                        lbl = measure.name + ' (mOhm)'
+                    if measure_type == 'ind':
+                        lbl = measure.name + ' (nH)'
+                    if measure_type == 'cap':
+                        lbl = measure.name + ' (pF)'
+
+                    pdraw["label"] = (lbl)
+                    if measure.measure == ElectricalMeasure.MEASURE_CAP:
+                        val = sym_layout._measure_capacitance(measure)
+                    else:
+
+                        # load device states table
+                        tbl_states = measure.dev_state
+                        for row in range(len(tbl_states.axes[0])):
+                            dev_name = tbl_states.loc[row, 0]
+                            for dev in sym_layout.devices:
+                                if (dev.name == dev_name) or dev.element.path_id == dev_name:
+                                    if dev.is_transistor():
+                                        dev.states = [tbl_states.loc[row, 1], tbl_states.loc[row, 2],
+                                                      tbl_states.loc[row, 3]]
+                                    if dev.is_diode():
+                                        dev.states = [tbl_states.loc[row, 1]]
+                        sym_layout.mdl_type['E']=measure.mdl
+
+
+                        sym_layout._build_lumped_graph()  # Rebuild the lumped graph for different device state.
+
+
+                        # Measure res. or ind. from src node to sink node
+                        source_terminal = measure.src_term
+                        sink_terminal = measure.sink_term
+
+                        src = measure.pt1.lumped_node
+                        sink = measure.pt2.lumped_node
+
+                        if source_terminal != None:
+                            if source_terminal == 'S' or source_terminal == 'Anode':
+                                src = src * 1000 + 1
+                            elif source_terminal == 'G':
+                                src = src * 1000 + 2
+
+                        if sink_terminal != None:
+                            if sink_terminal == 'S' or source_terminal == 'Anode':
+                                sink = sink * 1000 + 1
+                            elif sink_terminal == 'G':
+                                sink = sink * 1000 + 2
+
+                        node_dict = {}
+                        index = 0
+                        for n in sym_layout.lumped_graph.nodes():
+                            node_dict[n] = index
+                            index += 1
+                        try:
+                            val = parasitic_analysis(sym_layout.lumped_graph, src, sink, measure_type, node_dict)
+                        except LinAlgError:
+                            val = 1e6
+                    pdraw['data'].append(val)
+    def _sym_update_layout(self, sym_info=None):
+        # ToDo:Here we can add the automate symbolic layout - Corner Stitch interface to update thermal
+        self._sym_update_trace_lines(sym_info=sym_info)
+        self._sym_place_devices(sym_info=sym_info)
+        self._sym_place_leads(sym_info=sym_info)
+        self._sym_place_bondwires()
+    def _sym_update_trace_lines(self, sym_info=None):
+        '''
+        *Only used when a symbolic layout is introduced
+        Use the rectangles built from corner stitch to make trace rectangles in sym layout
+        '''
+        # Handle traces
+        sym_layout = self.engine.sym_layout
+        sym_layout.trace_rects = []
+
+
+        for tr in self.engine.sym_layout.all_trace_lines:
+            rect = sym_info[tr.element.path_id]
+            sym_layout.trace_rects.append(rect)
+            tr.trace_rect = rect
+    def _sym_place_devices(self,sym_info=None):
+        '''
+        *Only used when a symbolic layout is introduced
+        Use the rectangles built from corner stitch to update device locations in sym layout
+        '''
+        sym_layout = self.engine.sym_layout
+
+        for dev in sym_layout.devices:
+
+            dev_region = sym_info[dev.name]
+            width, height, thickness = dev.tech.device_tech.dimensions
+
+            line = dev.parent_line
+            trace_rect = line.trace_rect
+            if line.element.vertical:
+                dev.orientation = 1
+                dev.footprint_rect = Rect(dev_region.bottom + height, dev_region.bottom, dev_region.left,
+                                          dev_region.left + width)
+                xpos = trace_rect.center_x()
+                ypos = dev_region.bottom+height/2
+            else:
+                dev.footprint_rect = Rect(dev_region.bottom + width, dev_region.bottom, dev_region.left,
+                                          dev_region.left + height)
+
+                xpos = dev_region.left + height / 2
+                ypos = trace_rect.center_y()
+                dev.orientation = 3
+            dev.center_position = (xpos, ypos)
+            if len(dev.sym_bondwires) > 0:
+                powerbond = None
+                for bw in dev.sym_bondwires:
+                    if bw.tech.wire_type == BondWire.POWER:
+                        powerbond = bw
+                        break
+
+                if powerbond is None:
+                    raise LayoutError('No connected power bondwire!')
+
+                if dev.orientation == 1:
+
+                    # On vertical trace
+                    # orient device by power bonds
+                    if powerbond.trace.trace_rect.left < trace_rect.left:
+                        dev.orientation = 2  # 180 degrees from ref.
+                    else:
+                        dev.orientation = 1  # 0 degrees from ref.
+                elif dev.orientation == 3:
+                    if powerbond.trace.trace_rect.top < trace_rect.top:
+                        dev.orientation = 3  # 180 degrees from ref.
+                    else:
+                        dev.orientation = 4  # 0 degrees from ref.
+
+    def _sym_place_leads(self,sym_info=None):
+        sym_layout = self.engine.sym_layout
+
+        for lead in sym_layout.leads:
+            if lead.tech.shape == Lead.BUSBAR:
+                line = lead.parent_line
+                trace_rect = line.trace_rect
+
+                if line.element.vertical:
+                    hwidth = 0.5 * lead.tech.dimensions[1]
+                    hlength = 0.5 * lead.tech.dimensions[0]
+                    lead.orientation = 3
+
+                    # find if near left or right (decide orientation)
+                    # for power leads only right now
+                    edge_dist = sym_layout.sub_dim[0] - 0.5 * (trace_rect.left + trace_rect.right)
+                    if edge_dist < 0.5 * sym_layout.sub_dim[0]:
+                        # right
+                        xpos = trace_rect.right - hwidth
+                        lead.orientation = 3
+                    else:
+                        # left
+                        xpos = trace_rect.left + hwidth
+                        lead.orientation = 4
+
+                    ypos = 0.5 * (trace_rect.bottom + trace_rect.top)
+                    lead.footprint_rect = Rect(ypos + hlength, ypos - hlength, xpos - hwidth, xpos + hwidth)
+                else:
+                    # find if near top or bottom (decide orientation)
+                    hwidth = 0.5 * lead.tech.dimensions[0]
+                    hlength = 0.5 * lead.tech.dimensions[1]
+                    lead.orientation = 1
+
+                    edge_dist = sym_layout.sub_dim[1] - 0.5 * (trace_rect.top + trace_rect.bottom)
+                    if edge_dist < 0.5 * sym_layout.sub_dim[1]:
+                        # top
+                        ypos = trace_rect.top - hlength
+                        lead.orientation = 1
+                    else:
+                        # bottom
+                        ypos = trace_rect.bottom + hlength
+                        lead.orientation = 2
+
+                    xpos = 0.5 * (trace_rect.left + trace_rect.right)
+                    lead.footprint_rect = Rect(ypos + hlength, ypos - hlength, xpos - hwidth, xpos + hwidth)
+
+                lead.center_position = (xpos, ypos)
+            elif lead.tech.shape == Lead.ROUND:
+                lead_region = sym_info[lead.element.path_id]
+                radius = 0.5 * lead.tech.dimensions[0]
+                center = [lead_region.left+radius, lead_region.bottom]
+                lead.footprint_rect = Rect(center[1] + radius, center[1] - radius,
+                                           center[0] - radius, center[0] + radius)
+                lead.center_position = center
+
+
+    def _sym_place_bondwires(self):
+        sym_layout = self.engine.sym_layout
+        for wire in sym_layout.bondwires:
+            if wire.dev_pt is not None:
+                sym_layout._place_device_bondwire(wire)
+
+
+class ET_standalone_Dialog(QtGui.QDialog):
+    def __init__(self, parent):
+        QtGui.QDialog.__init__(self, parent)
+        self.ui = Ui_ET_Evaluation_Dialog()
+        self.ui.setupUi(self)
+        self.parent = parent
+        self.tbl_thermal=None
+        self.tbl_elec=None
+        self.dev_df = None
+        self.perf_dict=self.parent.perf_dict
+        self.ui.Tab_model_select.setEnabled(False)
+        self.ui.txt_perfname.textChanged.connect(self.perf_name)
+        self.ui.btn_thermal_perf.pressed.connect(self.add_perf)
+        self.ui.btn_add_elec_perf.pressed.connect(self.add_perf)
+
+        self.ui.btn_done.pressed.connect(self.finished)
+        self.ui.btn_remove.pressed.connect(self.remove_row)
+        self.ui.btn_dv_states.pressed.connect(self.open_dv_state)
+        self.ui.btn_select_mdl.pressed.connect(self.select_RS_model)
+        self.ui.cmb_electrical_mdl.currentIndexChanged.connect(self.current_model)
+        self.init_table()
+        self.reload_table()
+        self.load_src_sink()
+    def current_model(self):
+        if str(self.ui.cmb_electrical_mdl.currentText())== "Response Surface Model":
+            self.ui.btn_select_mdl.setEnabled(True)
+    def select_RS_model(self):
+        rs_settings = ModelSelectionDialog(self,techlib_dir="C:\PowerSynth_git\CornerStitch_fixed\PowerCAD-full\\tech_lib",mode=2)
+        rs_settings.exec_()
+    def load_src_sink(self):
+        self.ui.cmb_src_select.clear()
+        self.ui.cmb_sink_select.clear()
+        net_id=[]
+        for sym in self.parent.engine.sym_layout.all_sym:
+            if isinstance(sym,SymPoint):
+                if sym.name[0]=='M':
+                    net_id.append(sym.name +'_D')
+                    net_id.append(sym.name + '_S')
+                    net_id.append(sym.name + '_G')
+                else:
+                    net_id.append(sym.name)
+        self.ui.cmb_src_select.addItems(net_id)
+        self.ui.cmb_sink_select.addItems(net_id)
+
+    def perf_name(self):
+        if self.ui.txt_perfname!='':
+            self.ui.Tab_model_select.setEnabled(True)
+        else:
+            self.ui.Tab_model_select.setEnabled(False)
+    def reload_table(self):
+        self.ui.tbl_perf_list.clearContents()
+        self.ui.tbl_perf_list.setRowCount(0)
+        row_id = 0
+        for p_k in self.perf_dict.keys():
+            perf = self.perf_dict[p_k]
+            self.ui.tbl_perf_list.insertRow(row_id)
+            self.ui.tbl_perf_list.setItem(row_id, 0, QtGui.QTableWidgetItem())
+            self.ui.tbl_perf_list.setItem(row_id, 1, QtGui.QTableWidgetItem())
+            self.ui.tbl_perf_list.setItem(row_id, 2, QtGui.QTableWidgetItem())
+            self.ui.tbl_perf_list.item(row_id, 0).setText(p_k)
+            self.ui.tbl_perf_list.item(row_id, 1).setText(perf['type'])
+            self.ui.tbl_perf_list.item(row_id, 2).setText(perf['Eval'])
+
+    def _sym_find_pt_obj(self,symlayout,name):
+        for sym in symlayout.all_sym:
+            if sym.name in name:
+                return sym
+
+
+    def add_perf(self):
+        if len(self.perf_dict.keys()) <2:
+            if self.ui.Tab_model_select.currentIndex()==0:
+                print "Add thermal performance"
+                perf_name = str(self.ui.txt_perfname.text())
+                type='Thermal'
+                mdl_str = str(self.ui.cmb_thermal_mdl.currentText())
+                eval_type = str(self.ui.cmb_thermal_type.currentText())
+                devices=[]
+                for row in range(self.ui.tbl_thermal_data.rowCount()):
+                    if int(self.ui.tbl_thermal_data.cellWidget(row, 2).isChecked() * 1)==1:
+                        dev_key=str(self.ui.tbl_thermal_data.item(row, 0).text())
+                        for dev in self.parent.engine.sym_layout.devices:
+                            if dev.name == dev_key:
+                                devices.append(dev)
+                if mdl_str =="Fast Approximation with FEM":
+                    mdl = 1
+                elif mdl_str == "Analytical Rectangular Flux":
+                    mdl =2
+
+                if eval_type == "Maximum":
+                    stat_func = 1
+                elif eval_type=="Average":
+                    stat_func=2
+                elif eval_type == "Std Deviation":
+                    stat_func=3
+                measure=ThermalMeasure(stat_fn=stat_func,devices=devices,name=perf_name,mdl=mdl)
+                self.perf_dict[perf_name]={'type':type,'measure': measure,'Eval':eval_type}
+                row_id = self.ui.tbl_perf_list.rowCount()
+                if devices!=[]:
+                    self.ui.tbl_perf_list.insertRow(row_id)
+                    self.ui.tbl_perf_list.setItem(row_id, 0, QtGui.QTableWidgetItem())
+                    self.ui.tbl_perf_list.setItem(row_id, 1, QtGui.QTableWidgetItem())
+                    self.ui.tbl_perf_list.setItem(row_id, 2, QtGui.QTableWidgetItem())
+                    self.ui.tbl_perf_list.item(row_id, 0).setText(perf_name)
+                    self.ui.tbl_perf_list.item(row_id, 1).setText(type)
+                    self.ui.tbl_perf_list.item(row_id, 2).setText(eval_type)
+                else:
+                    QtGui.QMessageBox.about(self, "Reminder", "Please select devices for measurement")
+            if self.ui.Tab_model_select.currentIndex() == 1:
+                print "Add electrical performance"
+                perf_name = str(self.ui.txt_perfname.text())
+                type = 'Electrical'
+                mdl_str = str(self.ui.cmb_electrical_mdl.currentText())
+                eval_type = str(self.ui.cmb_electrical_type.currentText())
+                src_type= None
+                sink_type = None
+                src = str(self.ui.cmb_src_select.currentText())
+                if 'S' in src:
+                    src_type = 'S'
+                elif 'G' in src:
+                    src_type = 'G'
+                pt1 = self._sym_find_pt_obj(self.parent.engine.sym_layout,src)
+                sink = str(self.ui.cmb_sink_select.currentText())
+                if 'S' in sink:
+                    sink_type = 'S'
+                elif 'G' in sink:
+                    sink_type = 'G'
+
+                pt2 = self._sym_find_pt_obj(self.parent.engine.sym_layout, sink)
+                if str(self.ui.cmb_electrical_mdl.currentText()) == "Response Surface Model":
+                    mdl = "RS"
+                else:
+                    mdl = "MS"
+                if eval_type!= "Capacitance":
+                    if eval_type == "Inductance":
+                        measure_type=2
+                    if eval_type == "Resistance":
+                        measure_type = 1
+                    measure=ElectricalMeasure(pt1=pt1,pt2=pt2,name=perf_name,mdl=mdl,src_sink_type=[src_type,sink_type],
+                                              device_state=self.dev_df,measure=measure_type)
+                self.perf_dict[perf_name] = {'type': type, 'measure': measure, 'Eval': eval_type}
+                row_id = self.ui.tbl_perf_list.rowCount()
+
+                self.ui.tbl_perf_list.insertRow(row_id)
+                self.ui.tbl_perf_list.setItem(row_id, 0, QtGui.QTableWidgetItem())
+                self.ui.tbl_perf_list.setItem(row_id, 1, QtGui.QTableWidgetItem())
+                self.ui.tbl_perf_list.setItem(row_id, 2, QtGui.QTableWidgetItem())
+                self.ui.tbl_perf_list.item(row_id, 0).setText(perf_name)
+                self.ui.tbl_perf_list.item(row_id, 1).setText(type)
+                self.ui.tbl_perf_list.item(row_id, 2).setText(eval_type)
+        else:
+            QtGui.QMessageBox.about(self, "Limitation", "We only support 2 objectives right now")
+    def open_dv_state(self):
+        dv_state = Device_states_dialog(parent=self,mode=2)
+        dv_state.exec_()
+
+    def finished(self):
+        self.parent.perf_dict = self.perf_dict
+        self.close()
+
+    def init_table(self):
+        row_id = self.ui.tbl_thermal_data.rowCount()
+        if self.parent.engine.sym_layout!=None:
+            for symb_obj in self.parent.engine.sym_layout.all_sym:
+                if isinstance(symb_obj,SymPoint):
+                    if symb_obj.name[0]=='M':
+
+                        self.ui.tbl_thermal_data.insertRow(row_id)
+                        self.ui.tbl_thermal_data.setItem(row_id, 0, QtGui.QTableWidgetItem())
+                        self.ui.tbl_thermal_data.setItem(row_id, 1, QtGui.QTableWidgetItem())
+                        self.ui.tbl_thermal_data.setItem(row_id, 2, QtGui.QTableWidgetItem())
+                        self.ui.tbl_thermal_data.item(row_id, 0).setText(str(symb_obj.name))
+                        self.ui.tbl_thermal_data.item(row_id, 1).setText(str(symb_obj.tech.heat_flow))
+                        btn_sel = QtGui.QCheckBox(self.ui.tbl_thermal_data)
+                        self.ui.tbl_thermal_data.setCellWidget(row_id, 2, btn_sel)  # Drain to source
+                        row_id+=1
+
+    def remove_row(self):
+        selected_row = self.ui.tbl_perf_list.currentRow()
+        row_id=self.ui.tbl_perf_list.selectionModel().selectedIndexes()[0].row()
+        perf_name = str(self.ui.tbl_perf_list.item(row_id,0).text())
+        del self.perf_dict[perf_name]
+        self.ui.tbl_perf_list.removeRow(selected_row)
+class Waiting_dialog(QtGui.QDialog):
+    def __init__(self, parent,txt_msg="none"):
+        QtGui.QDialog.__init__(self, parent)
+        self.ui = Ui_waiting_dialog()
+        self.ui.setupUi(self)
+        self.parent = parent
+        self.ui.txt_wait_msg.setText(txt_msg)
+
+    def run_process(self,code):
+        self.show()
+        exec(code)
         self.close()
