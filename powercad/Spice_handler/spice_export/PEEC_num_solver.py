@@ -4,8 +4,11 @@ from scipy.sparse.linalg import gmres
 from powercad.Spice_handler.spice_export.LTSPICE import *
 from powercad.Spice_handler.spice_export.HSPICE import *
 from powercad.Spice_handler.spice_export.raw_read import *
-from numba import jit
+from matplotlib.colors import *
 
+from numba import jit
+from scipy import *
+from powercad.sym_layout.Electrical.E_mesh import plot_combined_I_quiver_map_layer
 class diag_prec:
     def __init__(self, A):
         self.shape = A.shape
@@ -340,7 +343,7 @@ class Circuit():
         print('failed to find matching branch element in find_vname')
 
 
-    def _compute_S_params(self,ports=[]):
+    def _compute_S_params(self,ports=[],plot=False,emesh=None,mode='mag'):
         '''
                 Perform multiple calculation to find the Sparams src sink pair
                 Args:
@@ -353,7 +356,6 @@ class Circuit():
         S_mat = np.ndarray([len(all_ports), len(all_ports)])  # Form an impedance matrix
         ana_ports = []  # list of ports that got analyzed already
         for p in all_ports:
-            print p
             self._add_ports(p, True)
         for sel_port in all_ports:  # go to each source in the list assign a voltage source
             id = all_ports.index(sel_port)
@@ -370,21 +372,62 @@ class Circuit():
             Zin = vi/ii
             Z0 = self.Rport
             #print Z0,Zin
-            S_mat[id, id] = 20 * np.log10(np.abs(((Zin - Z0) / (Zin + Z0)))) # Update diagonal values
-            #print S_mat[id,id]
-            #raw_input()
+            if mode == 'mag':
+                S_mat[id, id] = 20 * np.log10(np.abs(((Zin - Z0) / (Zin + Z0)))) # Update diagonal values
+            elif mode == 'real':
+                S_mat[id, id] = 20 * np.log10(abs(np.real(((Zin - Z0) / (Zin + Z0)))))  # Update diagonal values
+            elif mode == 'imag':
+                S_mat[id, id] = 20 * np.log10(abs(np.imag(((Zin - Z0) / (Zin + Z0)))))  # Update diagonal values
+
             for j_port in all_ports:
                 if j_port!=sel_port:
                     id2 = all_ports.index(j_port)
                     port_j = 'v' + str(self.node_dict[all_ports[id2]])
                     vj = self.results[port_j]
-                    S_mat[id, id2] = 20 * np.log10(np.abs(2 * vj))
+                    if mode == 'mag':
+                        S_mat[id, id2] = 20 * np.log10(np.abs(2 * vj))
+                    if mode == 'real':
+                        S_mat[id, id2] = 20 * np.log10(abs(np.real(2 * vj)))
+                    if mode == 'imag':
+                        S_mat[id, id2] = 20 * np.log10(np.imag(2 * vj))
                     #S_mat[id2, id] = 20 * np.log10(np.abs(2 * vj))
+
+            if plot:
+                print "plot for:", sel_port
+                all_I = []
+                result = self.results
+                for e in emesh.graph.edges(data=True):
+                    edge = e[2]['data']
+                    edge_name = edge.name
+                    width = edge.data['w'] * 1e-3
+                    thick = edge.thick * 1e-3
+                    A = width * thick
+                    I_name = 'I_L' + edge_name
+                    edge.I = np.real(result[I_name])
+                    edge.J = edge.I / A
+                    all_I.append(abs(edge.J))
+                I_min = min(all_I)
+                I_max = max(all_I)
+                normI = Normalize(I_min, I_max)
+
+                fig = plt.figure(2)
+                ax = fig.add_subplot(111)
+                plt.xlim([0, 20])
+                plt.ylim([0, 11])
+                plot_combined_I_quiver_map_layer(norm=normI, ax=ax, cmap=emesh.c_map, G=emesh.graph, sel_z=1.035,
+                                                 mode='J',
+                                                 W=[0, 20],
+                                                 H=[0, 11], numvecs=41)
+                plt.show()
             self._remove_vsrc(sel_port, 'Vs')
             self._add_ports(sel_port,True)
             self.refresh_current_info()
             self.results={}
+
+
         return S_mat
+
+
     def _compute_matrix(self, srcs=[], sinks=[]):
         print "mat solve"
         '''
@@ -705,7 +748,7 @@ class Circuit():
         #print "conditioner matrix", numpy.linalg.cond(A)
 
         t = time.time()
-        print "solving ...",self.freq,'Hz'
+        #print "solving ...",self.freq,'Hz'
         method=1
         if method ==1:
             self.results= scipy.sparse.linalg.spsolve(A,Z)

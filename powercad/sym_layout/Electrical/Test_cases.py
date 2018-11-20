@@ -727,14 +727,10 @@ def test_layer_stack_mutual():
     # circuit.results=circuit.hspice_result
 
 def S_para_IWIPP():
-    data = open('spara2.csv','wb')
+
     freqs = [10, 21.544, 46.415, 100, 215.443, 464.159, 1000,2154.43,4641.59,10000, 21544.3, 46415.9, 100000]
-    freqs = np.logspace(4,9,num=20)
+    freqs = np.logspace(4,9,num=20).tolist()
     #f_cv = [f*1000 for f in freqs]
-    S11=[]
-    S22=[]
-    S33=[]
-    S44 = []
     R1 = Rect(8, 0, 0, 5)
     R2 = Rect(8, 5, 5, 20)
     R3 = Rect(11, 9, 0, 20)
@@ -749,7 +745,6 @@ def S_para_IWIPP():
     hier = Hier_E(module=new_module)
     hier.form_hierachy()
     emesh = ElectricalMesh(hier_E=hier, mdl_name='s_params_test.rsmdl')
-    emesh.update_mutual()
     emesh.mesh_grid_hier(Nx=3, Ny=3)
     #emesh.plot_lumped_graph()
     #plt.show()
@@ -762,6 +757,10 @@ def S_para_IWIPP():
     P2 = emesh.find_node(pt2)
     P3 = emesh.find_node(pt3)
     P4 = emesh.find_node(pt4)
+    S_dict={'freq':[]}
+    for i in range(4):
+        for j in range(4):
+            S_dict['S{0}{1}'.format(i + 1, j + 1)]  =[]
     for freq in freqs:
         emesh.f=freq/1000
         emesh.update_trace_RL_val()
@@ -772,41 +771,45 @@ def S_para_IWIPP():
 
         circuit.comp_mode = 'val'
         circuit._graph_read(emesh.graph)
+        emesh.update_mutual()
         circuit.m_graph_read(emesh.m_graph)
-        print P1,P2,P3,P4
+        #print P1,P2,P3,P4
         #P5 = emesh.find_node(pt5)
-        circuit._graph_add_comp('C100',1,29,68e-15)
-        circuit._graph_add_comp('R100', 1, 29, 0.4e9)
-        circuit._graph_add_comp('C300', 2, 24, 34e-15)
-        circuit._graph_add_comp('R300', 2, 24, 0.2e9)
+        circuit._graph_add_comp('C100',1,29, 68e-12)
+        #circuit._graph_add_comp('R100', 1, 29, 0.4e8)
+        circuit._graph_add_comp('C300', 2, 24, 34e-12)
+        #circuit._graph_add_comp('R300', 2, 24, 0.2e8)
 
-        circuit._graph_add_comp('C400', 2, 25, 34e-15)
-        circuit._graph_add_comp('R400', 2, 25, 0.2e9)
+        circuit._graph_add_comp('C400', 2, 25, 34e-12)
+        #circuit._graph_add_comp('R400', 2, 25, 0.2e8)
 
-        circuit._graph_add_comp('C500', 3, 26, 34e-15)
-        circuit._graph_add_comp('R500', 3, 26, 0.2e9)
+        circuit._graph_add_comp('C500', 3, 26, 34e-12)
+        #circuit._graph_add_comp('R500', 3, 26, 0.2e8)
 
         circuit.Rport=50
-        S_mat=circuit._compute_S_params(ports=[P1,P2,P3,P4])
-        S11.append(S_mat[0,0])
-        S22.append(S_mat[0,1])
-        S33.append(S_mat[0, 2])
-        S44.append(S_mat[0, 3])
-
-    plt.semilogx(freqs, S11)
-    plt.semilogx(freqs, S22)
-    plt.semilogx(freqs, S33)
-    plt.semilogx(freqs, S44)
-
-    plt.legend(['S11','S21','S31','S41'])
+        S_mat=circuit._compute_S_params(ports=[P1,P2,P3,P4],emesh=emesh,plot=False,mode='mag')
+        S_dict['freq'].append(freq)
+        for i in range(4):
+            for j in range(4):
+                S_dict['S{0}{1}'.format(i + 1, j + 1)].append(S_mat[i, j])
+    legends=[]
+    for i in range(4):
+        for j in range(4):
+            plt.semilogx(freqs, S_dict['S{0}{1}'.format(i + 1, j + 1)])
+            legends.append('S{0}{1}'.format(i+1,j+1))
+    plt.legend(legends)
 
     plt.show()
-    with data:
-        fields = ['freq','S11', 'S31','S21','S41']
-        writer = csv.DictWriter(data, fieldnames=fields)
-        writer.writeheader()
+
+    with open('spara3.csv', 'wb') as data:
+        w = csv.writer(data)
+        w.writerow(S_dict.keys())
         for i in range(len(freqs)):
-            writer.writerow({'freq':freqs[i],'S11':S11[i],'S31':S33[i],'S21':S22[i],'S41':S44[i]})
+            row = []
+            for k in S_dict.keys():
+                print S_dict[k]
+                row.append(S_dict[k][i])
+            w.writerow(row)
 
 
 def test_layer_stack_ushape():

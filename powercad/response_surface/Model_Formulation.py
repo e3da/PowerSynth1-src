@@ -1252,7 +1252,7 @@ if __name__ == "__main__":
     #test_corner_ind_correction(10, 4, 10)
     # test_build_corner_correction()
     time1=time.time()
-    test_build_trace_model_fh1()
+    test_build_trace_model_fh()
     #test_build_trace_mdl_q3d()
     #test_build_trace_cornermodel_fh()
     print range(1)

@@ -285,7 +285,7 @@ if __name__ == '__main__':
     c1=trace_capacitance(5,8,0.035,1,4.4,True)
     c2=trace_capacitance(3,15, 0.035, 1, 4.4, True)
     c3 = trace_capacitance(2, 20, 0.035, 1, 4.4, True)
-    c4 = trace_capacitance(0.035, 20, 1, 1, 4.4, False)
+    c4 = trace_capacitance(0.035, 20, 1, 1, 1, False)
     print "C4",c4
 
     print c1+c2,c3

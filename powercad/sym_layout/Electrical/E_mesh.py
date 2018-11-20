@@ -145,7 +145,8 @@ class ElectricalMesh():
                 Height += node.N_edge.len / 2
             if node.S_edge != None:
                 Height += node.S_edge.len / 2
-            self.graph.node[n]['cap'] = 5.8 / 21 * 1e-12# trace_capacitance(w=Width, l=Height, t=t, h=h, k=4.6,fringe=True) * 1e-12
+            self.graph.node[n]['cap'] = 5.8 / 21 * 1e-12#trace_capacitance(w=Width, l=Height, t=t, h=h, k=4.6,fringe=True) * 1e-12
+            # 5.8 / 21 * 1e-12
             #if node.type=='internal':
             #    self.graph.node[n]['cap'] = trace_capacitance(w=Height, l=Width, t=t, h=h,k=4.6)*1e-12
             #else:
