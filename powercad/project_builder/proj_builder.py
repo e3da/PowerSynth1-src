@@ -290,10 +290,14 @@ class ProjectBuilder(QtGui.QMainWindow):
                 self.project.module_data.design_rules = ProcessDesignRules(1.2, 1.2, 0.2, 0.1, 1.0, 0.2, 0.2, 0.2)
 
     def open_new_layout_engine(self):
-        if not self.build_module_stack():
+        if self.layer_stack_import!=None:
+            flag=False
+        else:
+            flag=True
+        if not self.build_module_stack(flag=flag):
             QtGui.QMessageBox.warning(self, "Module Stack Error",
                                       "One or more settings on the module stack page have an error.")
-            run_optimization = False
+
         self.project.symb_layout.form_api_cs(self.project.module_data, self.project.tbl_bondwire_connect, self.TEMP_DIR)
         new_layout_engine = New_layout_engine()
         symlayout = copy.deepcopy(self.project.symb_layout)
