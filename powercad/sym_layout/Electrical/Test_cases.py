@@ -775,15 +775,14 @@ def S_para_IWIPP():
         circuit.m_graph_read(emesh.m_graph)
         #print P1,P2,P3,P4
         #P5 = emesh.find_node(pt5)
-        circuit._graph_add_comp('C100',1,29, 68e-12)
+        circuit._graph_add_comp('C100',20,22, 68e-14)
         #circuit._graph_add_comp('R100', 1, 29, 0.4e8)
-        circuit._graph_add_comp('C300', 2, 24, 34e-12)
+        circuit._graph_add_comp('C300', 8, 23, 34e-14)
         #circuit._graph_add_comp('R300', 2, 24, 0.2e8)
 
-        circuit._graph_add_comp('C400', 2, 25, 34e-12)
+        circuit._graph_add_comp('C400', 9, 24, 34e-14)
         #circuit._graph_add_comp('R400', 2, 25, 0.2e8)
 
-        circuit._graph_add_comp('C500', 3, 26, 34e-12)
         #circuit._graph_add_comp('R500', 3, 26, 0.2e8)
 
         circuit.Rport=50
@@ -793,11 +792,15 @@ def S_para_IWIPP():
             for j in range(4):
                 S_dict['S{0}{1}'.format(i + 1, j + 1)].append(S_mat[i, j])
     legends=[]
-    for i in range(4):
-        for j in range(4):
-            plt.semilogx(freqs, S_dict['S{0}{1}'.format(i + 1, j + 1)])
-            legends.append('S{0}{1}'.format(i+1,j+1))
-    plt.legend(legends)
+    #for i in range(4):
+    #    for j in range(4):
+    #        plt.semilogx(freqs, S_dict['S{0}{1}'.format(i + 1, j + 1)])
+    #        legends.append('S{0}{1}'.format(i+1,j+1))
+
+    plt.semilogx(freqs, S_dict['S13'])
+    plt.semilogx(freqs, S_dict['S14'])
+
+    plt.legend(['S13','S14'])
 
     plt.show()
 
