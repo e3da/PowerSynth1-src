@@ -69,6 +69,7 @@ class ElectricalMesh():
         self.hier_E=hier_E
         self.graph=nx.Graph()#nx.MultiGraph()
         self.m_graph=nx.Graph() # A graph represent Mutual
+        self.cap_dict={} # Each node and its capacitive cell
         self.node_count=1
         self.node_dict = {}
         self.c_map =cm.jet
@@ -122,44 +123,56 @@ class ElectricalMesh():
             self.all_n2.append(n2)
             self.m_graph.add_node(edge_name) # edge name by 2 nodes
 
-    def compute_all_cap(self, t=0.035, h=1.0):
-        Cap = []
-        for w, l in zip(self.all_W, self.all_L):
-            C = trace_capacitance(w=w, l=l, t=t, h=h)
-            Cap.append(C)
-        print sum(Cap)
-        return Cap
 
-    def update_C_val(self, t=0.035, h=1.0):
-        Ctot=0
+    def update_C_val(self, t=0.035, h=0.2,mode=1):
+        n_cap_dict=self.update_C_dict()
+        C_tot = 0
+        for n1 in self.graph.nodes():
+            if mode == 1:
+                for n2 in self.graph.nodes():
+                    if n1 != n2:
+                        rect1 = n_cap_dict[n1]
+                        rect2 = n_cap_dict[n2]
+                        int_rect = rect1.intersection(rect2)
+
+                        if int_rect!=None and not((n1,n2) in self.cap_dict) and not ((n2, n1) in self.cap_dict):
+                            cap_val = trace_capacitance(int_rect.width(),int_rect.height(),t,h,4.6,True)*1e-12
+                            C_tot+=cap_val
+                            self.cap_dict[(n1, n2)]=cap_val
+            elif mode==2:
+                rect1 = n_cap_dict[n1]
+                cap_val = trace_capacitance(rect1.width(), rect1.height(), t, h, 4.6, True) * 1e-12
+                C_tot += cap_val
+                self.cap_dict[(n1, 0)] = cap_val
+        #print self.cap_dict
+        print "total cap", C_tot
+
+
+    def update_C_dict(self):
+        # For each node, create a node - rectangle for cap cell
+        n_capt_dict={}
         for n in self.graph.nodes():
             node = self.graph.node[n]['node']
             # Find Width,Height value
-            Width=0
-            Height=0
-            if node.W_edge!=None:
-                Width += node.W_edge.len/2
+            left = node.pos[0]
+            right =node.pos[0]
+            top = node.pos[1]
+            bottom =node.pos[1]
+            if node.W_edge != None:
+                left-=node.W_edge.len / 2
             if node.E_edge != None:
-                Width += node.E_edge.len/2
+                right+= node.E_edge.len / 2
             if node.N_edge != None:
-                Height += node.N_edge.len / 2
+                top += node.N_edge.len / 2
             if node.S_edge != None:
-                Height += node.S_edge.len / 2
-            self.graph.node[n]['cap'] = 5.8 / 21 * 1e-12#trace_capacitance(w=Width, l=Height, t=t, h=h, k=4.6,fringe=True) * 1e-12
-            # 5.8 / 21 * 1e-12
-            #if node.type=='internal':
-            #    self.graph.node[n]['cap'] = trace_capacitance(w=Height, l=Width, t=t, h=h,k=4.6)*1e-12
-            #else:
-            #    self.graph.node[n]['cap'] = trace_capacitance(w=Height, l=Width, t=t, h=h, k=4.6) * 1e-12
+                bottom -= node.S_edge.len / 2
+            n_capt_dict[n]=Rect(top=top,bottom=bottom,left=left,right=right)
 
-            #print node.node_id,"w",Width,"h",Height, self.graph.node[n]['cap']
-            Ctot+= self.graph.node[n]['cap']
-        print Ctot ,'F'
-        #raw_input()
+        return n_capt_dict
     def update_trace_RL_val(self, p=1.68e-8,t=0.2):
         if self.f != 0: # AC mode
             all_r = trace_res_krige(self.f, self.all_W, self.all_L, t=0, p=0, mdl=self.mdl['R']).tolist()
-            all_l = trace_ind_krige(1000, self.all_W, self.all_L, mdl=self.mdl['L']).tolist()
+            all_l = trace_ind_krige(self.f, self.all_W, self.all_L, mdl=self.mdl['L']).tolist()
             #all_c = self.compute_all_cap()
             for i in range(len(self.all_W)):
                 n1 = self.all_n1[i]
@@ -171,7 +184,7 @@ class ElectricalMesh():
                     #self.graph[n1][n2].values()[0]['cap'] = all_c[i] * 1e-12
 
                     edge_data = self.graph[n1][n2].values()[0]['data']
-                    edge_data.R = all_r[i]*1e-3
+                    edge_data.R = all_r[i]*1e-3 
                     edge_data.L = all_l[i]*1e-9
                     #edge_data.C = all_c[i]*1e-12
         else: # DC mode
@@ -203,7 +216,7 @@ class ElectricalMesh():
         except:
             print "cant find edge" , edge.nodeA.node_id, edge.nodeB.node_id
 
-    def update_mutual(self):
+    def update_mutual(self,mult=1):
         u = 4 * math.pi * 1e-7
         sd_met = math.sqrt(1 / (math.pi * self.f*1000 * u * 5.96e7 * 1e6))*1000
         for e1 in self.graph.edges(data=True):
@@ -322,8 +335,8 @@ class ElectricalMesh():
                             #    print z1, z2
                             #    print "diff", abs(z1 - z2), M12
                             #    raw_input("stop")
-                            self.m_graph.add_edge(e1_name,e2_name,attr={'Mval':M12*1e-9})
-
+                            self.m_graph.add_edge(e1_name,e2_name,attr={'Mval':mult*M12*1e-9})
+                        '''
                         elif M12<0:
                             print ori1,ori2
                             print "new cal"
@@ -339,7 +352,7 @@ class ElectricalMesh():
                             draw_rect_list(rects,'blue','+',['r1','r2'])
                             raw_input()
                             # print "a",w1,'b',t1,'l1',l1,'E',E,'d',w2,'c',t2,'l2',l2,'p',p,'l3',l3
-
+                        '''
 
     def find_E(self,ax=None):
         bound_graph= nx.Graph()
@@ -491,17 +504,21 @@ class ElectricalMesh():
                     corners_trace_dict[c] = list(set(corners_trace_dict[c]))
                 corners = list(set(corners))
                 lines += tr.get_all_lines()
-                '''
+
                 # GROUND PLANE
                 if z ==0: # TEST FOR NOW , HAVE TO SPECIFY LATER
-                    num_x=7#+  int(self.f/100)
-                    num_y=7#+ int(self.f / 100)
+                    num_x=10#+  int(self.f/100)
+                    num_y=10#+ int(self.f / 100)
                     self.div=2
+                elif z==-100:
+                    num_x = 2  # +  int(self.f/100)
+                    num_y = 2  # + int(self.f / 100)
+                    self.div = 2
                 else:
                     num_x = Nx
                     num_y = Ny
                     self.div=2
-                '''
+
                 #xs = np.linspace(tr.left, tr.right, num_x)
                 #ys = np.linspace(tr.bottom, tr.top, num_y)
                 # TESTING

@@ -84,6 +84,9 @@ class Circuit():
         self.Rport=50
         self.freq = 1000
 
+
+
+
     def assign_freq(self,freq=1000):
         self.freq = freq
         self.s = 2 * freq * np.pi * 1j
@@ -112,9 +115,148 @@ class Circuit():
         self.nnode[name] = nnode
         self.value[name] = float(val)
 
+    def _assign_vsource(self, source_node, vname='Vs', volt=1, ground=0):
+        # add current source to source_node
+        self.V_node = source_node
+        source_net = self.node_dict[source_node]
+        vnet = self.max_net_id
+        # self.indep_voltage_source(source_net, 0, val=volt, name=vname)
 
+        if self.Rport != 0:
+            self.indep_voltage_source(vnet, ground, val=volt, name=vname)
+            R_name = 'Rin' + str(source_net)
+            # R_G = 'R_G'+ str(source_net)
+            # self._graph_add_comp(R_G, ground, 0, 1e-9)
 
+            self._graph_add_comp(R_name, vnet, source_net, self.Rport)
+        else:
+            self.indep_voltage_source(vnet, source_net, val=volt, name=vname)
 
+        self.max_net_id += 1
+
+    def _add_ports(self, node, port=True, ground=0):
+        newport = self.node_dict[node]
+        if port:
+            R_name = 'Rin' + str(newport)
+            #R_G = 'R_G' + str(newport)
+
+            if self.Rport != 0:
+                self._graph_add_comp(R_name, newport, ground, self.Rport)
+                #self._graph_add_comp(R_G, ground, 0, 1e-9)
+
+            else:
+                self.equiv([newport], 0)
+        else:
+            self.equiv([node], 0)
+    def _find_all_s_ports(self,P_pos,P_neg=[]):
+        # Find the corresponded net value for each node value
+        Pos_net=[]
+        Neg_net=[]
+        for p in P_pos:
+            Pos_net.append(self.node_dict[p])
+        if P_neg!=[]:
+            for n in P_neg:
+                Neg_net.append(self.node_dict[n])
+        else:
+            Neg_net = [0 for n in P_pos]
+        return Pos_net,Neg_net
+
+    def _build_broad_band(self,graph_low_freq,graph_high_freq):
+        '''
+        Provide 2 different extracted graph from DC and AC extraction, build a netlist for broad band s-parameter extraction.
+        This is based on a non-physical model in
+        Args:
+            graph_low_freq:  Extracted graph at DC
+            graph_high_freq: Extracted graph at AC
+        '''
+        # List out all ports
+        all_edge_dc = graph_low_freq.edges(data=True)
+        all_edge_ac = graph_high_freq.edges(data=True)
+
+        self.node_dict = {}
+        # MAP the ports first
+        net_id = 1  # starting at 1 saving 0 for ground
+        Rname = "R{0}"
+        Lname = "L{0}"
+        for edc,eac in zip(all_edge_dc,all_edge_ac):
+            n1 = edc[0]
+            n2 = eac[1]
+            # node id are the same for 2 graphs
+            edged = edc[2]['data']
+            data = edged.data
+            node1 = graph_low_freq.node[n1]['node']
+            pos1 = node1.pos
+            node2 = graph_low_freq.node[n2]['node']
+
+            pos2 = node2.pos
+            node1 = n1
+            node2 = n2
+
+            if data['type'] == 'trace':
+                if data['ori'] == 'h':
+                    # make sure the node with smaller x will be positive
+                    if pos1[0] > pos2[0]:
+                        temp = n1
+                        node1 = n2
+                        node2 = temp
+                elif data['ori'] == 'v':
+                    # make sure the node with smaller y will be positive
+                    if pos1[1] > pos2[1]:
+                        temp = n1
+                        node1 = n2
+                        node2 = temp
+
+            RLname_dc = edc[2]['data'].name+'_dc'
+            RLname_ac = eac[2]['data'].name + '_ac'
+            Lname_diff = eac[2]['data'].name + '_diff'
+
+            if node1 not in self.node_dict.keys():
+                net1 = net_id
+                self.node_dict[node1] = net1
+                net_id += 1
+            else:
+                net1 = self.node_dict[node1]
+            int_net1 = net_id
+            net_id += 1
+            int_net2 = net_id
+            net_id +=1
+            Rdc = edc[2]['res']
+            Rac = eac[2]['res']
+            Ldc = edc[2]['ind']
+            Lac = eac[2]['ind']
+            Ldiff = abs(Ldc-Lac)
+            self._graph_add_comp(Rname.format(RLname_dc), net1, int_net1, Rdc)
+            self._graph_add_comp(Lname.format(RLname_ac), int_net1, int_net2, Lac)
+
+            if node2 not in self.node_dict.keys():
+                net2 = net_id
+                self.node_dict[node2] = net2
+                net_id += 1
+            else:
+                net2 = self.node_dict[node2]
+            self._graph_add_comp(Lname.format(Lname_diff), int_net2, net2, Ldiff)
+            self._graph_add_comp(Rname.format(RLname_ac), int_net2, net2, Rac)
+        self.max_net_id = net_id
+
+    def m_graph_read_broadband(self, m_graph):
+        '''
+
+        Args:
+            m_graph: is the mutual coupling info from mesh
+
+        Returns:
+            update M elemts
+        '''
+        for edge in m_graph.edges(data=True):
+            M_val = edge[2]['attr']['Mval']
+            L1ac_name = 'L' + str(edge[0]) + '_ac'
+            L2ac_name = 'L' + str(edge[1]) + '_ac'
+            L1diff_name = 'L' + str(edge[0]) + '_diff'
+            L2diff_name = 'L' + str(edge[1]) + '_diff'
+            M_name_ac = 'M' + '_' + L1ac_name + '_' + L2ac_name
+            M_name_diff = 'M' + '_' + L1diff_name + '_' + L2diff_name
+            self._graph_add_M(M_name_ac, L1ac_name, L2ac_name, M_val)
+            #self._graph_add_M(M_name_diff, L1diff_name, L2diff_name, M_val/2)
 
     def _graph_read(self,graph):
         '''
@@ -128,18 +270,14 @@ class Circuit():
         net_id = 1  # starting at 1 saving 0 for ground
         Rname = "R{0}"
         Lname = "L{0}"
-        Cname = "C{0}"
-        rem_list=[]
         for edge in graph.edges(data=True):
             n1 = edge[0]
             n2 = edge[1]
             edged = edge[2]['data']
             data = edged.data
             node1 = graph.node[n1]['node']
-            C1 = graph.node[n1]['cap']
             pos1 = node1.pos
             node2 = graph.node[n2]['node']
-            C2 = graph.node[n2]['cap']
 
             pos2 = node2.pos
             node1 = n1
@@ -181,24 +319,22 @@ class Circuit():
 
             # add an inductor between internal net and net2
             val = edge[2]['ind']
-            #print Lname.format(RLCname)
             self._graph_add_comp(Lname.format(RLname), int_net, net2, val)
-
-            #ADD CAP
-
-            if not (n1 in rem_list):
-                self._graph_add_comp(Cname.format(RLname+'_1'), net1, 0, C1)
-                rem_list.append(n1)
-            if not (n2 in rem_list):
-                self._graph_add_comp(Cname.format(RLname + '_2'), net2, 0, C2)
-                rem_list.append(n2)
-            '''
-            if 'cap' in edge[2].keys():  # IF this branch has a capacitance
-                val = edge[2]['cap']
-                self._graph_add_comp(Cname.format(RLname + '_1'), net1, 0, val/2)
-                self._graph_add_comp(Cname.format(RLname + '_2'), net2, 0, val / 2)
-            '''
         self.max_net_id=net_id
+
+    def cap_update(self,cap_dict):
+        for k in cap_dict.keys():
+            n1 = k[0]
+            n2 = k[1]
+            cval = cap_dict[k]
+            net1 = self.node_dict[n1]
+            if n2!=0:
+                net2 = self.node_dict[n2]
+            else:
+                net2=0
+            Cname = str(net1)+str(net2)
+            self._graph_add_comp("C{0}".format(Cname), net1, net2, cval)
+
     def m_graph_read(self,m_graph):
         '''
 
@@ -241,21 +377,7 @@ class Circuit():
                 self.cur_nnode[el] = self.nnode[el]
                 self.cur_value[el] = self.value[el]
 
-    def _assign_vsource(self,source_node,vname='Vs',volt=1):
-        # add current source to source_node
-        self.V_node=source_node
-        source_net =self.node_dict[source_node]
-        vnet=self.max_net_id
-        #self.indep_voltage_source(source_net, 0, val=volt, name=vname)
 
-        if self.Rport!=0:
-            self.indep_voltage_source(vnet,0,val=volt,name=vname)
-            R_name = 'Rin' + str(source_net)
-            self._graph_add_comp(R_name, vnet, source_net, self.Rport)
-        else:
-            self.indep_voltage_source(vnet, source_net, val=volt, name=vname)
-
-        self.max_net_id += 1
 
     def equiv(self, nodes,net=None):
         '''
@@ -312,16 +434,7 @@ class Circuit():
             R_name = 'Rin' + str(port)
             self._remove_comp(R_name)
 
-    def _add_ports(self,node,port=True):
-        newport = self.node_dict[node]
-        if port:
-            R_name = 'Rin' + str(newport)
-            if self.Rport!=0:
-                self._graph_add_comp( R_name, newport, 0, self.Rport)
-            else:
-                self.equiv([newport],0)
-        else:
-            self.equiv([node],0)
+
     def get_source_current(self,vsrc_name):
         Iname='I_'+ vsrc_name
         return self.results[Iname]
@@ -343,35 +456,36 @@ class Circuit():
         print('failed to find matching branch element in find_vname')
 
 
-    def _compute_S_params(self,ports=[],plot=False,emesh=None,mode='mag'):
+    def _compute_S_params(self,ports=[],plot=False,emesh=None,mode='mag',ground=[0,0,0,0]):
         '''
                 Perform multiple calculation to find the Sparams src sink pair
                 Args:
-                    srcs: list of sources
-                    sinks: list of sinks
-                    *src and sink at same list index will be in a pair
+                    ports: list of positive ports
+                    ground: list of negative ports
                 Returns:
         '''
         all_ports = list(ports)  # list of ports
         S_mat = np.ndarray([len(all_ports), len(all_ports)])  # Form an impedance matrix
-        ana_ports = []  # list of ports that got analyzed already
         for p in all_ports:
-            self._add_ports(p, True)
+            self._add_ports(p, True,ground[all_ports.index(p)])
+
+
         for sel_port in all_ports:  # go to each source in the list assign a voltage source
             id = all_ports.index(sel_port)
             self._remove_port(sel_port)
-            self._assign_vsource(sel_port, vname='Vs', volt=1)
+            self._assign_vsource(sel_port, vname='Vs', volt=1,ground=ground[all_ports.index(sel_port)])
             self.build_current_info()
             self.solve_iv()
-            #self.solve_iv_hspice(filename='S_para.sp',
-            #    env=os.path.abspath('C:\synopsys\Hspice_O-2018.09\WIN64\hspice.exe'))
-            #self.results=self.hspice_result
+            name = 'S_para_'+str(sel_port)+'.sp'
+            self.solve_iv_hspice(filename=name,
+                env=os.path.abspath('C:\synopsys\Hspice_O-2018.09\WIN64\hspice.exe'))
+            self.results=self.hspice_result
             port_i = 'v' + str(self.node_dict[sel_port])
             vi = self.results[port_i]
             ii = -self.get_source_current('Vs')
+            print vi, ii
             Zin = vi/ii
             Z0 = self.Rport
-            #print Z0,Zin
             if mode == 'mag':
                 S_mat[id, id] = 20 * np.log10(np.abs(((Zin - Z0) / (Zin + Z0)))) # Update diagonal values
             elif mode == 'real':
@@ -390,7 +504,6 @@ class Circuit():
                         S_mat[id, id2] = 20 * np.log10(abs(np.real(2 * vj)))
                     if mode == 'imag':
                         S_mat[id, id2] = 20 * np.log10(np.imag(2 * vj))
-                    #S_mat[id2, id] = 20 * np.log10(np.abs(2 * vj))
 
             if plot:
                 print "plot for:", sel_port
@@ -410,17 +523,25 @@ class Circuit():
                 I_max = max(all_I)
                 normI = Normalize(I_min, I_max)
 
+                fig = plt.figure(1)
+                ax = fig.add_subplot(111)
+                plt.xlim([0, 20])
+                plt.ylim([0, 11])
+                plot_combined_I_quiver_map_layer(norm=normI, ax=ax, cmap=emesh.c_map, G=emesh.graph, sel_z=0,
+                                                 mode='J',
+                                                 W=[0, 20],
+                                                 H=[0, 11], numvecs=41)
                 fig = plt.figure(2)
                 ax = fig.add_subplot(111)
                 plt.xlim([0, 20])
                 plt.ylim([0, 11])
-                plot_combined_I_quiver_map_layer(norm=normI, ax=ax, cmap=emesh.c_map, G=emesh.graph, sel_z=1.035,
+                plot_combined_I_quiver_map_layer(norm=normI, ax=ax, cmap=emesh.c_map, G=emesh.graph, sel_z=0.235,
                                                  mode='J',
                                                  W=[0, 20],
                                                  H=[0, 11], numvecs=41)
                 plt.show()
             self._remove_vsrc(sel_port, 'Vs')
-            self._add_ports(sel_port,True)
+            self._add_ports(sel_port,True, ground[all_ports.index(sel_port)])
             self.refresh_current_info()
             self.results={}
 
@@ -876,6 +997,32 @@ def validate_solver_2():
     print circuit.cur_element
     #circuit.results=circuit.hspice_result
     print circuit.results
+def test_broadband():
+
+    imp=[]
+    freqs = np.linspace(1,1e9,1000)
+
+    for f in freqs:
+        circuit = Circuit()
+        circuit._graph_add_comp('Rdc', 1, 2, 1e-3)
+        circuit._graph_add_comp('Lac', 2, 3, 5e-9)
+        circuit._graph_add_comp('Ldiff', 3, 0, 5e-9)
+        circuit._graph_add_comp('Rac', 3, 0, 10e-3)
+        circuit.indep_voltage_source(1, 0, val=1, name='V1')
+        circuit.assign_freq(f)
+        circuit.build_current_info()
+        circuit.solve_iv()
+        imp.append(-circuit.results['v1']/ circuit.results['I_V1'])
+        #print circuit.results
+    R = np.real(imp)
+    L = np.imag(imp)/(2*pi*freqs)
+    plt.figure(1)
+    plt.semilogx(freqs,R)
+    plt.figure(2)
+    plt.semilogx(freqs, L)
+    plt.show()
+
 if __name__ == "__main__":
     #validate_solver_simple()
-    validate_solver_2()
+    #validate_solver_2()
+    test_broadband()

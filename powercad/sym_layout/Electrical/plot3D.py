@@ -93,7 +93,7 @@ def network_plot_3D(G, ax, cmap_node={}, cmap_edge={}):
                 color = cmap_node[name]
                 ax.scatter(xi, yi, zi, c=color, s=10, edgecolors='k', alpha=0.5)
 
-            ax.text(xi, yi, zi, lbl,fontsize=5)
+            ax.text(xi, yi, zi, lbl,fontsize=12)
         # Loop on the list of edges to get the x,y,z, coordinates of the connected nodes
         # Those two points are the extrema of the line to be plotted
         for e in G.edges(data=True):

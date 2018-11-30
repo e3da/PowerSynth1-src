@@ -4,7 +4,8 @@ import pstats
 from powercad.Spice_handler.spice_export.PEEC_num_solver import *
 from scipy import *
 from powercad.sym_layout.Electrical.E_mesh import *
-
+from powercad.Spice_handler.spice_export.HSPICE import HSPICE
+import copy
 def test_hier2():
     freqs = [0, 100, 200, 1000]
     for freq in freqs:
@@ -726,6 +727,112 @@ def test_layer_stack_mutual():
     # env=os.path.abspath('C:\synopsys\Hspice_O-2018.09\WIN64\hspice.exe'))
     # circuit.results=circuit.hspice_result
 
+
+def S_para_IWIPP_HSPICE_no_ground():
+    # USE HSPICE to extract s-parameter
+    frange = [1e0, 1e9]
+    R1 = Rect(8, 0, 0, 5)
+    R2 = Rect(8, 5, 5, 20)
+    R3 = Rect(11, 9, 0, 20)
+    rects = [R1, R2, R3]
+    plates = [E_plate(rect=r, z=0.235, dz=0.035) for r in rects]
+
+    new_module = E_module(plate=plates)
+    new_module.form_group()
+    new_module.split_layer_group()
+    hier = Hier_E(module=new_module)
+    hier.form_hierachy()
+    emesh = ElectricalMesh(hier_E=hier, mdl_name='s_params_test.rsmdl')
+    emesh.mesh_grid_hier(Nx=4, Ny=4)
+    plates = [E_plate(rect=r, z=0.235, dz=0.035) for r in rects]
+    pt1 = (2.5, 0, 0.235)
+    pt2 = (20, 6.5, 0.235)
+    pt3 = (0, 10, 0.235)
+    pt4 = (20, 10, 0.235)
+    P1 = emesh.find_node(pt1)
+    P2 = emesh.find_node(pt2)
+    P3 = emesh.find_node(pt3)
+    P4 = emesh.find_node(pt4)
+    emesh.f = 0.01  # kHz
+    emesh.update_trace_RL_val()
+    emesh.update_C_val(mode=2)
+    circuit = Circuit()
+    circuit.comp_mode = 'val'
+    circuit._graph_read(emesh.graph)
+    emesh.update_mutual(mult=1)
+    circuit.m_graph_read(emesh.m_graph)
+    circuit.cap_update(emesh.cap_dict)
+    P, N = circuit._find_all_s_ports(P_pos=[P1, P2, P3, P4])
+    H_SPICE = HSPICE(env=os.path.abspath('C:\synopsys\Hspice_O-2018.09\WIN64\hspice.exe'), file='s_para_noground.p')
+    H_SPICE.write_S_para_analysis(circuit=circuit, p_pos=P, p_neg=N, frange=frange)
+    H_SPICE.run()
+def S_para_IWIPP_HSPICE_wground():
+    # USE HSPICE to extract s-parameter
+    frange = [1e0,1e9]
+    R1 = Rect(8, 0, 0, 5)
+    R2 = Rect(8, 5, 5, 20)
+    R3 = Rect(11, 9, 0, 20)
+    rects = [R1, R2, R3]
+
+    plates = [E_plate(rect=r, z=0.235, dz=0.035) for r in rects]
+
+    RG = Rect(12, -1, -1, 21)
+    plates.append(E_plate(rect=RG, z=0, dz=0.035))
+    #RG1 = Rect(1000, 999, -1, 1)
+
+    #plates.append(E_plate(rect=RG1, z=-100, dz=0.035))
+
+    # R4= Rect(13, -1, -1, 21)
+    # plates.append(E_plate(rect=R4, z=0, dz=0.035))
+    new_module = E_module(plate=plates)
+    new_module.form_group()
+    new_module.split_layer_group()
+    hier = Hier_E(module=new_module)
+    hier.form_hierachy()
+    emesh = ElectricalMesh(hier_E=hier, mdl_name='s_params_test_noground.rsmdl')
+    emesh.mesh_grid_hier(Nx=4, Ny=4)
+    pt1 = (2.5, 0, 0.235)
+    pt2 = (20, 6.5, 0.235)
+    pt3 = (0, 10, 0.235)
+    pt4 = (20, 10, 0.235)
+    g1 = (2.5, 0, 0)
+    g2 = (20, 6.5, 0)
+    g3 = (0, 10, 0)
+    g4 = (20, 10, 0)
+    P1 = emesh.find_node(pt1)
+    P2 = emesh.find_node(pt2)
+    P3 = emesh.find_node(pt3)
+    P4 = emesh.find_node(pt4)
+    G1 = emesh.find_node(g1)
+    G2 = emesh.find_node(g2)
+    G3 = emesh.find_node(g3)
+    G4 = emesh.find_node(g4)
+    emesh.f = 100000 # kHz
+    emesh.update_trace_RL_val()
+    emesh.update_C_val()
+    # add ac mesh
+    #emesh_ac = copy.deepcopy(emesh)
+    #emesh_ac.f = 100000 # kHz
+    #emesh_ac.update_trace_RL_val()
+
+    circuit = Circuit()
+    circuit.comp_mode = 'val'
+    circuit._graph_read(emesh.graph)
+    # circuit._build_broad_band(emesh.graph,emesh_ac.graph)
+    emesh.update_mutual(mult=1)
+    circuit.m_graph_read(emesh.m_graph)
+
+    #circuit.m_graph_read_broadband(emesh.m_graph)
+    circuit.cap_update(emesh.cap_dict)
+    circuit.Rport = 1e9
+    circuit._add_ports(G1, True)
+    circuit._add_ports(G2, True)
+    circuit._add_ports(G3, True)
+    circuit._add_ports(G4, True)
+    P,N=circuit._find_all_s_ports(P_pos=[P1,P2,P3,P4],P_neg=[G1,G2,G3,G4])
+    H_SPICE = HSPICE(env=os.path.abspath('C:\synopsys\Hspice_O-2018.09\WIN64\hspice.exe'), file='s_para_wground.p')
+    H_SPICE.write_S_para_analysis(circuit=circuit,p_pos=P,p_neg=N,frange=frange)
+    H_SPICE.run()
 def S_para_IWIPP():
 
     freqs = [10, 21.544, 46.415, 100, 215.443, 464.159, 1000,2154.43,4641.59,10000, 21544.3, 46415.9, 100000]
@@ -736,7 +843,12 @@ def S_para_IWIPP():
     R3 = Rect(11, 9, 0, 20)
     rects = [R1, R2, R3]
 
-    plates = [E_plate(rect=r, z=1.035, dz=0.035) for r in rects]
+    plates = [E_plate(rect=r, z=0.235, dz=0.035) for r in rects]
+
+    RG = Rect(12,-1,-1,21)
+    plates.append(E_plate(rect=RG,z=0,dz=0.035))
+    #plates.append(E_plate(rect=RG, z=-100, dz=0.035))
+
     # R4= Rect(13, -1, -1, 21)
     # plates.append(E_plate(rect=R4, z=0, dz=0.035))
     new_module = E_module(plate=plates)
@@ -744,46 +856,65 @@ def S_para_IWIPP():
     new_module.split_layer_group()
     hier = Hier_E(module=new_module)
     hier.form_hierachy()
-    emesh = ElectricalMesh(hier_E=hier, mdl_name='s_params_test.rsmdl')
+    emesh = ElectricalMesh(hier_E=hier, mdl_name='s_params_test_noground.rsmdl')
     emesh.mesh_grid_hier(Nx=3, Ny=3)
+    fig = plt.figure(1)
+    ax = a3d.Axes3D(fig)
+    ax.set_xlim3d(-1, 21)
+    ax.set_ylim3d(-1, 14)
+    ax.set_zlim3d(-1, 2)
+    emesh.plot_3d(fig=fig, ax=ax)
     #emesh.plot_lumped_graph()
-    #plt.show()
-    pt1 = (2.5, 0, 1.035)
-    pt2 = (20, 6.5, 1.035)
-    pt3 = (0, 10, 1.035)
-    pt4 = (20, 10, 1.035)
-
+    plt.show()
+    pt1 = (2.5, 0, 0.235)
+    pt2 = (20, 6.5, 0.235)
+    pt3 = (0, 10, 0.235)
+    pt4 = (20, 10, 0.235)
+    g1 = (2.5, 0, 0)
+    g2 = (20, 6.5, 0)
+    g3 = (0, 10, 0)
+    g4 = (20, 10, 0)
+    #g5 = (11,6.5,-100)
     P1 = emesh.find_node(pt1)
     P2 = emesh.find_node(pt2)
     P3 = emesh.find_node(pt3)
     P4 = emesh.find_node(pt4)
+    G1 = emesh.find_node(g1)
+    G2 = emesh.find_node(g2)
+    G3 = emesh.find_node(g3)
+    G4 = emesh.find_node(g4)
+
+    #G5 = emesh.find_node(g5)
+
+    print P1,G1
+    print P2, G2
+    print P3, G3
+    print P4, G4
+
     S_dict={'freq':[]}
     for i in range(4):
         for j in range(4):
             S_dict['S{0}{1}'.format(i + 1, j + 1)]  =[]
+
+
     for freq in freqs:
         emesh.f=freq/1000
         emesh.update_trace_RL_val()
         emesh.update_C_val()
+        emesh.update_mutual(mult=1)
 
         circuit = Circuit()
         circuit.assign_freq(freq)
 
         circuit.comp_mode = 'val'
         circuit._graph_read(emesh.graph)
-        emesh.update_mutual()
+        circuit.cap_update(emesh.cap_dict)
         circuit.m_graph_read(emesh.m_graph)
-        #print P1,P2,P3,P4
-        #P5 = emesh.find_node(pt5)
-        circuit._graph_add_comp('C100',20,22, 68e-14)
-        #circuit._graph_add_comp('R100', 1, 29, 0.4e8)
-        circuit._graph_add_comp('C300', 8, 23, 34e-14)
-        #circuit._graph_add_comp('R300', 2, 24, 0.2e8)
-
-        circuit._graph_add_comp('C400', 9, 24, 34e-14)
-        #circuit._graph_add_comp('R400', 2, 25, 0.2e8)
-
-        #circuit._graph_add_comp('R500', 3, 26, 0.2e8)
+        circuit.Rport = 1e-9
+        circuit._add_ports(G1,True)
+        circuit._add_ports(G2, True)
+        circuit._add_ports(G3, True)
+        circuit._add_ports(G4, True)
 
         circuit.Rport=50
         S_mat=circuit._compute_S_params(ports=[P1,P2,P3,P4],emesh=emesh,plot=False,mode='mag')
@@ -792,19 +923,19 @@ def S_para_IWIPP():
             for j in range(4):
                 S_dict['S{0}{1}'.format(i + 1, j + 1)].append(S_mat[i, j])
     legends=[]
-    #for i in range(4):
-    #    for j in range(4):
-    #        plt.semilogx(freqs, S_dict['S{0}{1}'.format(i + 1, j + 1)])
-    #        legends.append('S{0}{1}'.format(i+1,j+1))
+    for i in range(4):
+        for j in range(4):
+            plt.semilogx(freqs, S_dict['S{0}{1}'.format(i + 1, j + 1)])
+            legends.append('S{0}{1}'.format(i+1,j+1))
 
-    plt.semilogx(freqs, S_dict['S13'])
-    plt.semilogx(freqs, S_dict['S14'])
+    #plt.semilogx(freqs, S_dict['S13'])
+    #plt.semilogx(freqs, S_dict['S14'])
 
-    plt.legend(['S13','S14'])
+    plt.legend(legends)
 
     plt.show()
 
-    with open('spara3.csv', 'wb') as data:
+    with open('spara4.csv', 'wb') as data:
         w = csv.writer(data)
         w.writerow(S_dict.keys())
         for i in range(len(freqs)):
@@ -927,7 +1058,10 @@ if __name__ == '__main__':
     #test_mutual()
     # test_hier2()
     #test_Ushape()
-    S_para_IWIPP()
+    #S_para_IWIPP()
+    S_para_IWIPP_HSPICE_wground()
+    #S_para_IWIPP_HSPICE_no_ground()
+
     #test_layer_stack_ushape()
     #test_layer_stack_mutual()
     #balance_study()

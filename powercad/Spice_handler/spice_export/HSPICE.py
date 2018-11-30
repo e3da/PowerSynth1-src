@@ -21,15 +21,86 @@ class HSPICE:
         p = subprocess.Popen(args, shell=False, stdout=subprocess.PIPE)
         stdout, stderr = p.communicate()
 
-    def ac_lin(self, fmin, fmax, nump):
-        return ".ac lin {0} {1}Hz {2}Hz".format(nump, fmin, fmax)
+    def ac_lin(self, fmin, fmax, num):
+        line = ".ac dec {0} {1}Hz {2}Hz".format(num, fmin, fmax)
+        line +='\n'
+        return line
     def tran_sim(self,step=1,stop=100,unit='ns'):
         return  ".TRAN {0}{2} {1}{2}".format(step,stop,unit)
+    def s_para_ports(self,p_pos,p_neg):
+        ports=''
+        P = "p{0} {1} {2} port={0} z0=50\n"
+        for i in range(len(p_pos)):
+            ports += P.format(i+1,p_pos[i],p_neg[i])
+        return ports
+    def s_para_probe(self,num):
+        probe = '.probe'
+        for i in range(num):
+            for j in range(num):
+                probe+=' s{0}{1}(db) s{0}{1}(p)'.format(i+1,j+1)
+        probe+='\n'
+        return probe
 
     def operatingpoint(self):
         return ".op"
     def add_probe(self,ind):
         self.probe.append(ind)
+    def write_S_para_analysis(self,circuit,p_pos,p_neg,frange):
+        all_elements = circuit.element
+        Kid = 0
+        script =''
+        with open(self.file, 'w') as f:
+            script+=strftime("* %Y-%m-%d %H:%M:%S", gmtime()) + '\n'
+            for e in all_elements:
+
+                if e[0] != 'M':
+                    pnode = str(circuit.pnode[e])
+                    nnode = str(circuit.nnode[e])
+                    if str(circuit.nnode[e]) == '0':
+                        nnode = 'gnd'
+                    value = str(circuit.value[e])
+                    if e[0] == 'R':
+                        line = [e, pnode, nnode, value]
+                    elif e[0] == 'V':
+                        # =[e,pnode,nnode, "pulse(0V 5V 2ms 0.1ms 0.1ms 2ms 4ms)"]
+                        line = [e, pnode, nnode, 'DC', '0', 'AC', value]
+                    elif e[0] == 'L':
+                        line = [e, pnode, nnode, value]
+                        ind = 'i(' + str(e) + ')'
+                        self.add_probe(ind=ind)
+
+                    elif e[0] == 'C':
+                        line = [e, pnode, nnode, value + 'F']
+                    line = " ".join(line)
+                    line += '\n'
+                    script+= line
+                else:
+                    Lname1 = circuit.Lname1[e]
+                    Lname2 = circuit.Lname2[e]
+                    Lval1 = circuit.value[Lname1]
+                    Lval2 = circuit.value[Lname2]
+                    Mval = circuit.value[e]
+                    kname = 'K' + str(Kid)
+                    Kid += 1
+                    value = round(Mval / sqrt(Lval1 * Lval2), 4)
+
+                    # print "netlist",Mval,Lname1,Lname2
+                    line = [kname, Lname1, Lname2, str(value)]
+                    line = " ".join(line)
+                    line += '\n'
+                    script+=line
+
+            # write ac sim
+
+            script+=self.s_para_ports(p_pos,p_neg) # form the port list
+            script+=self.ac_lin(num=100,fmin=frange[0],fmax=frange[1])
+            script+='.lin format=touchstone \n'
+            script+=self.s_para_probe(len(p_pos))
+            script += '.option GENK=2\n'
+            #script+='.option post=2\n'
+
+            script+='.end\n'
+            f.write(script)
 
     def write2(self, circuit, frange):
         all_elements = circuit.element

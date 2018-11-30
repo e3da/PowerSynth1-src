@@ -719,7 +719,7 @@ def form_fasthenry_trace_response_surface(layer_stack, Width=[1.2, 40], Length=[
         name = model_input.mdl_name + '_W_' + str(w) + '_L_' + str(l)
         print "RUNNING",name
         fname = os.path.join(wdir, name + ".inp")
-        nwinc = math.ceil(math.log(w * 1e-3 / sd_met / 3) / math.log(2) * 2 + 3)
+        nwinc = math.ceil((math.log(w * 1e-3 / sd_met / 3) / math.log(2) * 2 + 3)/9)
         if nwinc % 2 == 0:
             nwinc += 1
         if nwinc<0:
@@ -780,7 +780,7 @@ def form_fasthenry_trace_response_surface(layer_stack, Width=[1.2, 40], Length=[
         l_list1=[]
         r_list1=[]
         #print fmin , fmax ,fstep
-        frange=range(fmin,fmax+fstep,fstep)
+        frange=np.arange(fmin,(fmax+fstep),fstep)
         for f in frange:
             l_list1.append(l_f(f))
             r_list1.append(r_f(f))
@@ -1145,12 +1145,12 @@ def test_build_trace_model_fh():
     metal_cond = 5.96*1e7
     sd_met = math.sqrt(1 / (math.pi * 1e6 * u * metal_cond * 1e6))
 
-    Width = [0.5,5]
-    Length = [0.5,10]
-    freq = [10, 100000, 100] # in kHz
+    Width = [0.1,5]
+    Length = [0.1,5]
+    freq = [0.01, 10000000, 100] # in kHz
     form_fasthenry_trace_response_surface(layer_stack=ls, Width=Width, Length=Length, freq=freq, wdir=w_dir,
                                           savedir=w_dir
-                                          , mdl_name='s_params_test', env=env, doe_mode=2)
+                                          , mdl_name='s_params_test_noground', env=env, doe_mode=2)
 
 
 def test_build_trace_model_fh1():

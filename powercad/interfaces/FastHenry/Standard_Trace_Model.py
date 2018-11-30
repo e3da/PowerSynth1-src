@@ -113,11 +113,11 @@ Uniform_Trace= '''
 *+ sigma={3}
 *+ nhinc={4} 
 
-g_M1 x1=-{5} y1=-{6} z1={7} x2={5} y2=-{6} z2={7} x3={5} y3={6} z3={7}
-+ thick={8}
-+ seg1=10 seg2=10
-+ sigma={9}
-+ nhinc={10} 
+*g_M1 x1=-{5} y1=-{6} z1={7} x2={5} y2=-{6} z2={7} x3={5} y3={6} z3={7}
+*+ thick={8}
+*+ seg1=10 seg2=10
+*+ sigma={9}
+*+ nhinc={10} 
 
 * Plane A
 NA1s x=0 y=-{11} z={12}
