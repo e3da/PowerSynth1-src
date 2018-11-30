@@ -1,0 +1,16 @@
+Min Dimensions,EMPTY,Trace,MOS,Lead,Diode
+Min Width,2,1.27,3.1,1.2,0
+Min Height,2,1.27,3.1,1.2,0
+Min Extension,2,1.27,3.1,1.2,0
+Min Spacing,EMPTY,Trace,MOS,Lead,Diode
+EMPTY,2,0,0,0,0
+Trace,0,2,0,0,0
+MOS,0,0,0.5,0,0
+Lead,0,0,0.5,0.5,0
+Diode,0,0,0,0.5,0.5
+Min Enclosure,EMPTY,Trace,MOS,Lead,Diode
+EMPTY,0,2,0,0,0
+Trace,0,0,0.5,0.5,0.5
+MOS,0,0,0,0,0
+Lead,0,0,0,0,0
+Diode,0,0,0,0,0

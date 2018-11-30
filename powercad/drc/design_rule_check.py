@@ -64,7 +64,7 @@ class DesignRuleCheck():
         self.err_count += self.drc_single_check(self.symb_layout.h_min_max_overflow[1], 'Max. Horizontal_Overflow', debug)
         self.err_count += self.drc_single_check(self.symb_layout.v_min_max_overflow[0], 'Min. Vertical_Overflow', debug)
         self.err_count += self.drc_single_check(self.symb_layout.v_min_max_overflow[1], 'Max. Vertical_Overflow', debug)
-        self.err_count += self.drc_single_check(self.check_trace_min_width(), 'Traces less than Min_Width', debug) 
+        self.err_count += self.drc_single_check(self.check_trace_min_width(), 'Traces less than Min_Width', debug)
         self.err_count += self.drc_single_check(self.check_lead_trace_overlap(), 'Leads are overlapping trace', debug)
         self.err_count += self.drc_single_check(self.check_device_trace_overlap(), 'Devices are not overlapping trace', debug) 
         self.err_count += self.drc_single_check(self.check_component_overlap(), 'Two or more components are overlapping', debug)
@@ -107,13 +107,12 @@ class DesignRuleCheck():
     def check_trace_min_width(self):
             # Check that all traces are greater than minimum width
             min_width = self.symb_layout.design_rules.min_trace_width
-            
             total_error = 0.0
             for rect in self.symb_layout.trace_rects:
-                if rect.width() < min_width:
-                    total_error += min_width - rect.width()
-                if rect.height() < min_width:
-                    total_error += min_width - rect.height()
+                if rect.width < min_width:
+                    total_error += min_width - rect.width
+                if rect.height < min_width:
+                    total_error += min_width - rect.height
                     
             return total_error
     

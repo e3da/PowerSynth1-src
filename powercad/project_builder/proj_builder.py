@@ -19,7 +19,7 @@ from matplotlib import colors
 
 import powercad.sym_layout.plot as plot
 
-plot.plt.matplotlib.use('Qt4Agg')
+#plot.plt.matplotlib.use('Qt4Agg')
 plot.plt.matplotlib.rcParams['backend.qt4']='PySide'
 
 from matplotlib.patches import Rectangle, Circle
@@ -28,7 +28,7 @@ from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 
 from powercad.project_builder.symmetry_list import SymmetryListUI
 from powercad.project_builder.performance_list import PerformanceListUI
-from powercad.project_builder.windows.mainWindow_master import Ui_MainWindow
+from powercad.project_builder.windows.mainWindow_newlayoutengine import Ui_MainWindow
 from powercad.project_builder.windows.sol_window import SolutionWindow
 from powercad.project_builder.proj_dialogs import NewProjectDialog, OpenProjectDialog, EditTechLibPathDialog, \
     GenericDeviceDialog,LayoutEditorDialog, ResponseSurfaceDialog,ModelSelectionDialog,EnvironmentSetupDialog,SetupDeviceDialogs\
@@ -38,7 +38,6 @@ from powercad.drc.process_design_rules_editor import ProcessDesignRulesEditor
 from powercad.tech_lib.tech_lib_wiz import TechLibWizDialog
 
 from powercad.layer_stack.layer_stack_import import LayerStackImport
-from powercad.general.settings.settings import MANUAL
 from powercad.sym_layout.symbolic_layout import SymLine,SymPoint
 from powercad.design.library_structures import BondWire, Lead
 from powercad.sol_browser.graph_app import GrapheneWindow
@@ -47,7 +46,8 @@ from powercad.sym_layout.svg import LayoutLine, LayoutPoint
 from powercad.general.settings.save_and_load import save_file, load_file
 from powercad.general.settings.settings import *
 from powercad.general.settings.Error_messages import *
-
+from powercad.cons_aware_en.cons_engine import New_layout_engine
+import copy
 
 class ProjectBuilder(QtGui.QMainWindow):
 
@@ -98,8 +98,10 @@ class ProjectBuilder(QtGui.QMainWindow):
         self.ui.btn_modify.pressed.connect(self.modify_component)
         self.ui.btn_removeDevice.pressed.connect(self.remove_component)
         self.ui.btn_refresh_module_stack.pressed.connect(self.quit_layer_stack_mode)
+        self.ui.btn_new_layout_engine.pressed.connect(self.open_new_layout_engine)
         # Module stack page
         self.ui.btn_import_layer_stack.pressed.connect(self.import_layer_stack)
+
         # Constraints page
         self.ui.txt_minWidth.textEdited.connect(self.constraint_min_edit)
         self.ui.txt_maxWidth.textEdited.connect(self.constraint_max_edit)
@@ -166,6 +168,8 @@ class ProjectBuilder(QtGui.QMainWindow):
         self.ui.action_open_tech_lib_editor.setEnabled(enable)
         self.ui.action_edit_tech_path.setEnabled(enable)
         self.ui.action_load_symbolic_layout.setEnabled(enable)
+        self.ui.btn_new_layout_engine.setEnabled(enable)
+
 
     def refresh_ui(self): #Quang: clear all the old project  data when new project is loaded
         self.ui.tbl_projDevices.clear()
@@ -284,6 +288,23 @@ class ProjectBuilder(QtGui.QMainWindow):
             if self.project.module_data.design_rules is None:
                 QtGui.QMessageBox.warning(self, "Defualt Setup", "Process design rules is set to defaults got to Projects-> Design Rule to edit.")
                 self.project.module_data.design_rules = ProcessDesignRules(1.2, 1.2, 0.2, 0.1, 1.0, 0.2, 0.2, 0.2)
+
+    def open_new_layout_engine(self):
+        if self.layer_stack_import!=None:
+            flag=False
+        else:
+            flag=True
+        if not self.build_module_stack(flag=flag):
+            QtGui.QMessageBox.warning(self, "Module Stack Error",
+                                      "One or more settings on the module stack page have an error.")
+
+        self.project.symb_layout.form_api_cs(self.project.module_data, self.project.tbl_bondwire_connect, self.TEMP_DIR)
+        new_layout_engine = New_layout_engine()
+        symlayout = copy.deepcopy(self.project.symb_layout)
+        new_layout_engine.init_layout_from_symlayout(symlayout)
+        new_layout_engine.open_new_layout_engine(self)
+
+
     def open_design_rule_editor(self):
         # Check if a project has been opened/created
         if self.ui.navigation.isEnabled():
@@ -839,6 +860,8 @@ class ProjectBuilder(QtGui.QMainWindow):
 
         # used later to setup device category items
         self.device_list_model = QtGui.QFileSystemModel()
+        self.attach_list_model = QtGui.QFileSystemModel()
+        self.attach_list_model.setFilter(QtCore.QDir.Files | QtCore.QDir.NoDotAndDotDot)
 
     def _clear_component_fields(self):
         self.ui.txt_device_heat_flow.setEnabled(False); self.ui.txt_device_heat_flow.setText("")

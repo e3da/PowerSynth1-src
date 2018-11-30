@@ -22,6 +22,7 @@ def get_device():
     bl_g = BondwireLanding((5.0, 3.41), BondwireLanding.SIGNAL)
     bl_s1 = BondwireLanding((1, 2.41), BondwireLanding.POWER)
     bl_s3 = BondwireLanding((1, 4.41), BondwireLanding.POWER)
+    #device_model = open_device_model('powerMOSVA.va')
     device_model = None
     dev = Device('TEST', (6.82, 6.35, 0.8), device_props, Device.TRANSISTOR,
                  [bl_g, bl_s1, bl_s3], device_model, 1)

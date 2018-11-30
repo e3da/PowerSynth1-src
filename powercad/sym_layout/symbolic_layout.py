@@ -24,6 +24,7 @@ Created on Jun 27, 2012
 # - Need to handle supertrace connecting to supertrace
 #     * this will involve writing/changing code in both layout generation and parasitic extraction
 
+
 # Future work notes:
 # Work the concept of supertraces into the program better (more elegantly)
 # Remove the use of dictionaries in the design variable formulation process
@@ -265,7 +266,7 @@ class SymLine(object):
 
 
 class SymPoint(object):
-    def __init__(self, point, raw_point):
+    def __init__(self, point=None, raw_point=None):
         self.raw_element = raw_point
 
         self.element = point
@@ -435,17 +436,54 @@ class SymbolicLayout(object):
         # Create SymLines and SymPoints
         self.all_sym = []
         self.points = []
-
+        self.all_lines=[]                   # stores all layout line objects
+        self.all_points=[]                  # stores all layout points objects
         for i in xrange(len(self.layout)): # iterate through the layout
             obj = self.layout[i]           # for each object in the layout add the normalized obj to obj list
             raw = self.raw_layout[i]       # add the raw object to object list
             if isinstance(obj, LayoutLine):# if this is a LayoutLine then make a SymLine object
-                sym = SymLine(obj, raw)    # make a SymLine object
+                sym = SymLine(line=obj, raw_line=raw)    # make a SymLine object
+
+                self.all_lines.append(obj)
+
             elif isinstance(obj, LayoutPoint): # if this is a LayoutPoint then make a SymPoint object
                 sym = SymPoint(obj, raw)   # make a SymPoint object
                 self.points.append(sym)    # append this to the points list
+
+                self.all_points.append(obj)
+
             self.all_sym.append(sym)       # append the sym obj to all_sym list
     '''-----------------------------------------------------------------------------------------------------------------------------------------------------'''
+    def form_api_cs(self,module,tbl_bw_connect=None, temp_dir=settings.TEMP_DIR):
+        """ Formulate and check the design problem before optimization.
+                Keyword Arguments:
+                module: A powercad.sym_layout.module_data.ModuleData object
+                temp_dir: A path to a temp. dir. for doing thermal characterizations (must be absolute)
+                """
+        self.module = module  # this object include user inputs from PowerSynth interface e.g: frequency, materials...
+        self.design_rules = module.design_rules  # design_rules from user interface->Project->Design Rules Editor
+        self.module.check_data()  # check if the input is not None.. go to powercad->design->module_data for more info
+        self.temp_dir = temp_dir  # temp_dir where the characterization thermal files will be stored
+        ledge_width = module.substrate.ledge_width  # collect module data information... go to powercad->design->module_data->project_structures to learn ab this
+        self.sub_dim = (module.substrate.dimensions[0] - 2 * ledge_width, module.substrate.dimensions[
+            1] - 2 * ledge_width)  # This is the dimension of the top metal layer (before tracing)
+
+
+
+        self.gap = self.design_rules.min_trace_trace_width  # minimum gap between two traces
+        self._check_sym_elements()
+        self._build_trace_layout()  # Go through only traces and collect SymLine to a list object
+        self._find_trace_connections()  # Search in the list of traces built above to create a connection list  >go to this method to read more
+        self._build_virtual_grid_matrix()  # go to this method to read more
+
+        self.clear_bondwire_data()  # Clear the previous bondwire data
+        self.add_bondwire_from_table(tbl_bw_connect)
+        self._find_parent_lines()  # build up connections between lines and points > go to this method to read more
+        self.dev_dv_list = self._get_device_design_vars()  # go to this method to read more
+        self.bondwire_dv_list = self._get_bondwire_design_vars()  # go to this method to read more
+        self._get_trace_design_vars()  # go to this method to read more
+        self._build_symbol_graph()
+        self._build_trace_graph()  # go to this method to read more
 
     def form_design_problem(self, module,tbl_bw_connect=None, temp_dir=settings.TEMP_DIR):
         """ Formulate and check the design problem before optimization.
@@ -491,10 +529,14 @@ class SymbolicLayout(object):
         self.bondwire_design_values = [None]*len(self.bondwire_dv_list)
 
         # Check Device Thermal Characterizations (checks for cached characterizations)
-        #dev_char_dict, sub_tf = characterize_devices(self, temp_dir)
-        #self.module.sublayers_thermal = sub_tf
-        #for dev in self.devices:
-        #    dev.tech.thermal_features = dev_char_dict[dev.tech]
+        self.thermal_characterize()
+
+
+    def thermal_characterize(self):
+        dev_char_dict, sub_tf = characterize_devices(self, self.temp_dir)
+        self.module.sublayers_thermal = sub_tf
+        for dev in self.devices:
+            dev.tech.thermal_features = dev_char_dict[dev.tech]
 
     def clear_bondwire_data(self):
         for sym in self.all_sym:
@@ -546,12 +588,17 @@ class SymbolicLayout(object):
     def _check_formulation(self):
         #pause(True)                        # add to graph
         # Every layout point should have a techlib object bound to it (devices, leads)
+        self._check_sym_elements()
+        # Check over design rules and sub_dims, gap_width, etc. to make sure everything looks valid
+        # Check number of performance objectives (should be greater than zero)
+        self._check_perf_measure()
+    def _check_sym_elements(self):
         for sym in self.all_sym:           # go through all points and lines-> if there is no tech lib bound to a single point report the problem
             if isinstance(sym, SymPoint):
                 if sym.tech is None:
+                    #print sym.element.path_id
                     raise FormulationError('A layout point element has not been identified!')
-        # Check over design rules and sub_dims, gap_width, etc. to make sure everything looks valid
-        # Check number of performance objectives (should be greater than zero)
+    def _check_perf_measure(self):
         if len(self.perf_measures) < 1:    # in case the user forget to insert performance measure notify them to do so
             raise FormulationError('At least one performance measure needs to be identified for layout optimization! Please go to "Design Performance Identification" tab')
         elif len(self.perf_measures) == 1: # if single objective, make a copy of the single objective so NSGA-II can work
@@ -1769,8 +1816,11 @@ class SymbolicLayout(object):
                 coord = complex(lx - hwidth, ly - hlength)  # create coordinates wrt the die center
                 coord = coord * rot_vec  # Rotate coordinates by theta
 
-                start_pt = (coord.real + wire.device.center_position[0],
-                            coord.imag + wire.device.center_position[1])
+
+                #start_pt = (coord.real + wire.device.center_position[0],coord.imag + wire.device.center_position[1])
+                x=wire.device.footprint_rect.left+(wire.device.footprint_rect.right-wire.device.footprint_rect.left)/2 # calculating center x coordinate of device footprint
+                y=wire.device.footprint_rect.bottom+(wire.device.footprint_rect.top-wire.device.footprint_rect.bottom)/2 # calculating center y coordinate of device footprint
+                start_pt = (coord.real + x,coord.imag + y) # changed to start bondwire from center of device
                 #print wire.device.name, wire.dev_pt, wire.device.orientation
                 if wire.trace.element.vertical:
 
@@ -1810,6 +1860,7 @@ class SymbolicLayout(object):
         wire.end_pts = end_pts
         wire.land_pt = land_pt
         wire.land_pt2 = None
+
 
     def _place_device_bondwire_angle(self, wire):
         start_pts = []
@@ -2024,7 +2075,10 @@ class SymbolicLayout(object):
         self.trace_rects = []
         for line in self.all_trace_lines:
             if line.has_rect:
+                line.trace_rect.width_eval()
+                line.trace_rect.height_eval()
                 self.trace_rects.append(line.trace_rect)
+
     '''-----------------------------------------------------------------------------------------------------------------------------------------------------'''
     # DRC functions here replaced by design_rule_check.py - Jonathan
 
@@ -2177,7 +2231,7 @@ class SymbolicLayout(object):
         self.generate_layout()
         ret = []
         drc = DesignRuleCheck(self)
-        drc_count = drc.count_drc_errors(True)
+        drc_count = drc.count_drc_errors(False)
 
         if drc_count > 0:   # Non-convergence case
             #Brett's method
@@ -2185,15 +2239,12 @@ class SymbolicLayout(object):
                 ret.append(drc_count+10000)
             return ret
         else:
-            ax = plt.subplot('111', adjustable='box', aspect=1.0)
-            print individual
-            plot_layout(self,ax=ax)
-            plt.show()
             try:
                 self.count+=1
             except:
                 self.count =1
             #print self.count efficiency measure
+
             print ' new solution is found *******'    # convergence case
             #self._build_lumped_graph()
             for measure in self.perf_measures:
@@ -2209,7 +2260,6 @@ class SymbolicLayout(object):
 
                         # load device states table
                         tbl_states=measure.dev_state
-                        print tbl_states
                         for row in range(len(tbl_states.axes[0])):
                             dev_name=tbl_states.loc[row,0]
                             for dev in self.devices:
