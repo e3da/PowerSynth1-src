@@ -186,11 +186,12 @@ class New_layout_engine():
         CG1 = CS_to_CG(level)
         CG1.getConstraints(self.cons_df)
         sym_to_cs = self.init_data[1]
-
+        scaler = 1000  # to get back original dimensions all coordinated will be scaled down by 1000
         #mode-0
         if level == 0:
             Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=None, W=None, H=None, XLoc=None, YLoc=None) # for minimum sized layout only one solution is generated
-            CS_SYM_information, Layout_Rects = CG1.UPDATE_min(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree ,sym_to_cs)  # CS_SYM_information is a dictionary where key=path_id(component name) and value=list of updated rectangles, Layout Rects is a dictionary for minimum HCS and VCS evaluated rectangles (used for plotting only)
+
+            CS_SYM_information, Layout_Rects = CG1.UPDATE_min(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree ,sym_to_cs,scaler)  # CS_SYM_information is a dictionary where key=path_id(component name) and value=list of updated rectangles, Layout Rects is a dictionary for minimum HCS and VCS evaluated rectangles (used for plotting only)
             self.cur_fig_data = plot_layout(Layout_Rects, level)
             CS_SYM_Updated = {}
             for i in self.cur_fig_data:
@@ -203,7 +204,7 @@ class New_layout_engine():
 
             Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=num_layouts, W=None, H=None
                                                       , XLoc=None, YLoc=None)
-            CS_SYM_Updated, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree, sym_to_cs)
+            CS_SYM_Updated, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree, sym_to_cs,scaler)
             CS_SYM_Updated = CS_SYM_Updated['H']
             self.cur_fig_data = plot_layout(Layout_Rects, level)
 
@@ -259,7 +260,7 @@ class New_layout_engine():
             Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=num_layouts, W=W, H=H,
                                                       XLoc=Min_X_Loc, YLoc=Min_Y_Loc) # evaluates and finds updated locations for each coordinate
 
-            CS_SYM_Updated, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree, sym_to_cs)
+            CS_SYM_Updated, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree, sym_to_cs,scaler)
             CS_SYM_Updated = CS_SYM_Updated['H'] # takes only horizontal corner stitch data
             self.cur_fig_data = plot_layout(Layout_Rects, level) #collects the layout patches
 
@@ -353,7 +354,7 @@ class New_layout_engine():
 
             Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=num_layouts, W=W, H=H,XLoc=Min_X_Loc, YLoc=Min_Y_Loc)
 
-            CS_SYM_Updated, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree, sym_to_cs)
+            CS_SYM_Updated, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree, sym_to_cs,scaler)
 
 
             CS_SYM_Updated = CS_SYM_Updated['H'] # takes only horizontal corner stitch data
@@ -369,11 +370,12 @@ def plot_layout(Layout_Rects,level):
         for k,v in Layout_Rects.items():
             if k=='H':
                 for rect in v:                    #rect=[x,y,width,height,type]
+
                     Rectangles.append(rect)
         max_x = 0
         max_y = 0
-        min_x = 1e10
-        min_y = 1e10
+        min_x = 1e30
+        min_y = 1e30
 
         for i in Rectangles:
 
@@ -400,7 +402,7 @@ def plot_layout(Layout_Rects,level):
                     i[2],  # width
                     i[3],  # height
                     facecolor=colour,
-                    edgecolor='black'
+
 
                 )
             ALL_Patches[key].append(R)
@@ -419,11 +421,12 @@ def plot_layout(Layout_Rects,level):
 
                     Rectangles = []
                     for rect in v[j]:  # rect=[x,y,width,height,type]
+
                         Rectangles.append(rect)
                     max_x = 0
                     max_y = 0
-                    min_x = 1e10
-                    min_y = 1e10
+                    min_x = 1e30
+                    min_y = 1e30
 
                     for i in Rectangles:
 

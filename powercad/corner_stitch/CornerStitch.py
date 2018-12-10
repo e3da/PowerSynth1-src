@@ -2449,7 +2449,7 @@ class CS_to_CG():
 
 
 
-    def UPDATE_min(self,MINX, MINY,Htree,Vtree,sym_to_cs):
+    def UPDATE_min(self,MINX, MINY,Htree,Vtree,sym_to_cs,s=1000):
         '''
 
         Args:
@@ -2472,6 +2472,7 @@ class CS_to_CG():
         RET_H = {}
 
         ALL_HRECTS={}   # used for mapping symbolic layout objects with corner stitch resultant rectangles.
+        #s = 1000  # scaler
         for i in Htree.hNodeList:
             if i.child != []:
                 Dimensions = []
@@ -2487,9 +2488,12 @@ class CS_to_CG():
 
                     if k[0] in MINX[i.id].keys() and k[1] in MINY[i.id].keys() and k[2] in MINX[i.id].keys() and k[3] in \
                             MINY[i.id].keys():
-                        rect = [MINX[i.id][k[0]], MINY[i.id][k[1]], MINX[i.id][k[2]] - MINX[i.id][k[0]],
-                                MINY[i.id][k[3]] - MINY[i.id][k[1]], j.cell.type]
+                        rect = [(MINX[i.id][k[0]]), (MINY[i.id][k[1]]), (MINX[i.id][k[2]]) - (MINX[i.id][k[0]]),
+                               (MINY[i.id][k[3]]) - (MINY[i.id][k[1]]), j.cell.type]
                         r1=Rectangle(x=rect[0],y=rect[1],width=rect[2],height=rect[3],type=rect[4])
+                        r2 = [(MINX[i.id][k[0]]) / s, (MINY[i.id][k[1]]) / s,
+                                (MINX[i.id][k[2]]) / s - (MINX[i.id][k[0]]) / s,
+                                (MINY[i.id][k[3]]) / s - (MINY[i.id][k[1]]) / s, j.cell.type]
                     for k1,v in sym_to_cs.items():
 
                         key=k1
@@ -2500,7 +2504,7 @@ class CS_to_CG():
                                 ALL_HRECTS[key].append(r1)
 
 
-                    Dimensions.append(rect)
+                    Dimensions.append(r2)
 
 
                 Recatngles_H[i.id] = Dimensions
@@ -2522,8 +2526,8 @@ class CS_to_CG():
                     k = [j.cell.x, j.cell.y, j.EAST.cell.x, j.NORTH.cell.y]
                     if k[0] in MINX[i.id].keys() and k[1] in MINY[i.id].keys() and k[2] in MINX[i.id].keys() and k[3] in \
                             MINY[i.id].keys():
-                        rect = [MINX[i.id][k[0]], MINY[i.id][k[1]], MINX[i.id][k[2]] - MINX[i.id][k[0]],
-                                MINY[i.id][k[3]] - MINY[i.id][k[1]], j.cell.type]
+                        rect = [MINX[i.id][k[0]]/s, MINY[i.id][k[1]]/s, MINX[i.id][k[2]]/s - MINX[i.id][k[0]]/s,
+                                MINY[i.id][k[3]]/s - MINY[i.id][k[1]]/s, j.cell.type]
 
 
 
@@ -2542,7 +2546,7 @@ class CS_to_CG():
             ALL_RECTS['V'] = v
         return ALL_HRECTS,ALL_RECTS
 
-    def UPDATE(self,MINX,MINY,Htree, Vtree, sym_to_cs):
+    def UPDATE(self,MINX,MINY,Htree, Vtree, sym_to_cs,s=1000):
         '''
 
            Args:
@@ -2565,7 +2569,7 @@ class CS_to_CG():
         key2='H'
         ALL_HRECTS.setdefault(key2,[])
 
-
+        #s=1000 #scaler
         for j in Htree.hNodeList[0].stitchList:
             k = [j.cell.x, j.cell.y, j.EAST.cell.x, j.NORTH.cell.y,j.cell.type]
 
@@ -2580,7 +2584,8 @@ class CS_to_CG():
                 if k[0] in MIN_X[i].keys() and k[1] in MIN_Y[i].keys() and k[2] in MIN_X[i].keys() and k[3] in MIN_Y[i].keys():
                     rect = [MIN_X[i][k[0]], MIN_Y[i][k[1]], MIN_X[i][k[2]] - MIN_X[i][k[0]],MIN_Y[i][k[3]] - MIN_Y[i][k[1]],k[4]]
                     r1 = Rectangle(x=rect[0], y=rect[1], width=rect[2], height=rect[3], type=rect[4])
-
+                    r2 = [MIN_X[i][k[0]] / s, MIN_Y[i][k[1]] / s, MIN_X[i][k[2]] / s - MIN_X[i][k[0]] / s,
+                            MIN_Y[i][k[3]] / s - MIN_Y[i][k[1]] / s, k[4]]
                     for k1,v in sym_to_cs.items():
 
                         key1=k1
@@ -2589,7 +2594,7 @@ class CS_to_CG():
 
                             if r[0]==k[0] and r[1]==k[1]:
                                 UP_Dim[key1].append(r1)
-                    Dimensions.append(rect)
+                    Dimensions.append(r2)
                 W = max(MIN_X[i].values())
                 H = max(MIN_Y[i].values())
                 KEY = (W, H)
@@ -2613,7 +2618,7 @@ class CS_to_CG():
 
                 k=DIM[j]
                 if k[0] in MIN_X[i].keys() and k[1] in MIN_Y[i].keys() and k[2] in MIN_X[i].keys() and k[3] in MIN_Y[i].keys():
-                    rect = [MIN_X[i][k[0]], MIN_Y[i][k[1]], MIN_X[i][k[2]] - MIN_X[i][k[0]],MIN_Y[i][k[3]] - MIN_Y[i][k[1]],k[4]]
+                    rect = [MIN_X[i][k[0]]/s, MIN_Y[i][k[1]]/s, MIN_X[i][k[2]]/s - MIN_X[i][k[0]]/s,MIN_Y[i][k[3]]/s - MIN_Y[i][k[1]]/s,k[4]]
                     Dimensions.append(rect)
             Recatngles_V[key].append(Dimensions)
 

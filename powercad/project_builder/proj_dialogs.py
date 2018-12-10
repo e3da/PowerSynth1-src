@@ -1629,7 +1629,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
     def eval_setup(self):
         eval = ET_standalone_Dialog(self)
         eval.exec_()
-    def layout_plot(self,layout_ind=0,mode='ps'):
+    def layout_plot(self,layout_ind=0,mode='cs'):
         self.ax1.clear()
         if self.current_mode!=0:
             choice = 'Layout '+str(layout_ind)
