@@ -196,6 +196,7 @@ class constraintGraph:
                     self.minY[node.id] = self.minLocationV[node.id]
                 else:
                     self.set_minY(node)
+
             return self.minX, self.minY
 
     # only minimum x location evaluation
@@ -1034,6 +1035,7 @@ class constraintGraph:
             H = []
             for i, j in d3.items():
                 X[i] = max(j)   # keeping dominated edge values
+
             for k, v in X.items():
                 H.append((k[0], k[1], v))
             G = nx.MultiDiGraph()
@@ -1056,6 +1058,7 @@ class constraintGraph:
                             pred = j
                             val.append(Location[n[pred]] + B[j][i])
                     Location[n[i]] = max(val)
+
             dist = {}
             for node in Location:
                 key = node
