@@ -27,10 +27,11 @@ else:   # For debugging and running PowerSynth from Eclipse
     CACHED_CHAR_PATH = os.path.abspath("../../../export_data/cached_thermal") # sxm063
     MATERIAL_LIB_PATH='..//..//..//tech_lib//Material//Materials.csv'
     EXPORT_DATA_PATH=os.path.abspath("../../../export_data/")
-    GMSH_BIN_PATH = "C:\Users\PS\gmsh-2.7.0-Windows"
-    ELMER_BIN_PATH = os.path.abspath("C:\Users\PS\Elmer_8.2-Release\\bin")  # Emler on Imam's PC
+    GMSH_BIN_PATH = 'C:\PowerSynth\gmsh-2.7.0-Windows'
+    ELMER_BIN_PATH = 'C:\PowerSynth\Elmer 8.2-Release/bin'
     ANSYS_IPY64 = os.path.abspath('C:\Program Files\AnsysEM\AnsysEM18.2\Win64\common\IronPython')
-    FASTHENRY_FOLDER = 'C:\PowerSynth_git\Master_for_danfoss\PowerCAD-full\FastHenry'
+    #FASTHENRY_FOLDER = 'C:\PowerSynth_git\Master_for_danfoss\PowerCAD-full\FastHenry'
+    FASTHENRY_FOLDER = 'C:\PowerSynth\FastHenry'
     MANUAL = "C:\Users\qmle\Desktop\Build_danfoss\PowerSynth User Tutorial.html"
 
 if __name__ == '__main__':  # Module test

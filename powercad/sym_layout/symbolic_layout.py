@@ -119,7 +119,7 @@ class ElectricalMeasure(object):
     UNIT_IND = ('nH', 'nanoHenry')
     UNIT_CAP = ('pF', 'picoFarad')
 
-    def __init__(self, pt1, pt2, measure, name, lines=None, mdl=None,src_sink_type=[None,None],device_state=None):
+    def __init__(self, pt1=None, pt2=None, measure=None, name=None, lines=None, mdl=None, src_sink_type=[None,None],device_state=None):
         """
         Electrical parasitic measure object
 
@@ -2275,6 +2275,7 @@ class SymbolicLayout(object):
                         source_terminal=measure.src_term
                         sink_terminal=measure.sink_term
 
+
                         src = measure.pt1.lumped_node
                         sink = measure.pt2.lumped_node
 
@@ -2317,6 +2318,7 @@ class SymbolicLayout(object):
         # Update progress bar and eval count
         self.eval_count += 1
         print "Running... Current number of evaluations:", self.eval_count
+        print ret
         return ret
     '''-----------------------------------------------------------------------------------------------------------------------------------------------------'''
     def _measure_capacitance(self, measure):
