@@ -15,7 +15,7 @@ import numpy as np
 from PySide import QtGui
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
-from powercad.Spice_handler.spice_import.NetlistImport import Netlist, Netlis_export_ADS
+from powercad.Spice_handler.spice_import.NetlistImport import Netlist, Netlist_export_ADS
 from powercad.Spice_handler.spice_export.thermal_netlist_graph import Module_Full_Thermal_Netlist_Graph
 from powercad.Spice_handler.spice_export.netlist_graph import Module_SPICE_netlist_graph_v2, Module_SPICE_lumped_graph
 from powercad.design.module_design import ModuleDesign
@@ -166,7 +166,7 @@ class SolutionWindow(QtGui.QWidget):
 
                 spice_netlist=Circuit()
                 spice_netlist._graph_read(sym_layout.lumped_graph)
-                ads_net = Netlis_export_ADS(df=spice_netlist.df_circuit_info, pm=spice_netlist.portmap)
+                ads_net = Netlist_export_ADS(df=spice_netlist.df_circuit_info, pm=spice_netlist.portmap)
                 ads_net.export_ads2(outname)
                 QtGui.QMessageBox.about(None, "SPICE Electrical Parasitics Netlist", "Export successful.")
             except:

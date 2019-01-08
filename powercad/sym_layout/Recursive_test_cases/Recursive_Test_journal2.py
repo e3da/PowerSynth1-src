@@ -17,7 +17,7 @@ import powercad.design.module_design as md
 
 import matplotlib.pyplot as plt
 import pandas as pd
-# from powercad.design.MDConverter import MDEncoder
+import powercad.design.MDConverter as mdc
 
 
 def make_test_symmetries(sym_layout):
@@ -271,9 +271,11 @@ def make_test_setup2(f,directory):
 
 
 directory ='Layout/journal_2(v2).psc' # directory to layout script
-md = make_test_setup2(100.0,directory)
+md = make_test_setup2(100.0, directory)
+pp = mdc.ParaPowerWrapper(md)
 
 if __name__ == '__main__':
 
     directory ='Layout/journal_2(v2).psc' # directory to layout script
     md = make_test_setup2(100.0,directory)
+    pp = mdc.ParaPowerWrapper(md)

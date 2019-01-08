@@ -292,6 +292,8 @@ def make_test_setup3(directory):
 
 
     ''' Setup measurement '''
+    # mdl = load_file("C://Users//qmle//Desktop//Testing//FastHenry//Fasthenry3_test_gp//WorkSpace//test5.rsmdl")
+    # sym_layout.set_RS_model(mdl)
     dev_states = make_tbl_dev_states()
     add_test_measures(sym_layout,dev_states)  # Assign a measurement between 2 SYM-Points (using their IDs)
 
@@ -324,9 +326,18 @@ def make_test_setup3(directory):
         plot_layout(sym_layout)
         plt.show()
 
-if __name__ == '__main__':
+    return sym_layout
 
+# For testing in console
+directory ='Layout/journal_2(v2).psc' # directory to layout script
+# md = make_test_setup2(100.0,directory)
+sl = make_test_setup3(directory)
+
+
+if __name__ == '__main__':
+    '''
     directory ='Layout/journal_2(v2).psc' # directory to layout script
 
     #md = make_test_setup2(100.0,directory)
     make_test_setup3(directory)
+    '''

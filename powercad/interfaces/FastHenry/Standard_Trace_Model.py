@@ -37,12 +37,12 @@ Uniform_Trace= '''
 * 20: num of decade
 * BasePlate
 * Plane BP
-g_BP x1=-{0} y1=-{1} z1=0 x2={0} y2=-{1} z2=0 x3={0} y3={1} z3=0
-+ file=NONE thick={2}
-+ contact decay_rect (0,-{11},0,10.0,10.0,5.0,5.0,{13},{13})
-+ contact decay_rect (0,{11},0,10.0,10.0,5.0,5.0,{13},{13})
-+ sigma={3}
-+ nhinc={4} 
+*g_BP x1=-{0} y1=-{1} z1=0 x2={0} y2=-{1} z2=0 x3={0} y3={1} z3=0
+*+ file=NONE thick={2}
+*+ contact decay_rect (0,-{11},0,10.0,10.0,5.0,5.0,{13},{13})
+*+ contact decay_rect (0,{11},0,10.0,10.0,5.0,5.0,{13},{13})
+*+ sigma={3}
+*+ nhinc={4} 
 
 g_M1 x1=-{5} y1=-{6} z1={7} x2={5} y2=-{6} z2={7} x3={5} y3={6} z3={7}
 + file=NONE thick={8}
