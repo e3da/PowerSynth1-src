@@ -91,7 +91,8 @@ class Sheet(E_plate):
         self.type = type
         self.component=None
         self.node = None  # node reference to Tree
-
+    def get_center(self):
+        return self.rect.center()
 
 def plot_rect3D(rect2ds=None, ax=None):
     '''
@@ -108,8 +109,8 @@ def plot_rect3D(rect2ds=None, ax=None):
         x0 = obj.x
         y0 = obj.y
         z0 = obj.z
-        w = obj.rect.width()
-        h = obj.rect.height()
+        w = obj.rect.width_eval()
+        h = obj.rect.height_eval()
         if isinstance(obj, E_plate):
             color = 'orange'
         if isinstance(obj, Sheet):

@@ -93,7 +93,7 @@ class HSPICE:
             # write ac sim
 
             script+=self.s_para_ports(p_pos,p_neg) # form the port list
-            script+=self.ac_lin(num=100,fmin=frange[0],fmax=frange[1])
+            script+=self.ac_lin(num=50,fmin=frange[0],fmax=frange[1])
             script+='.lin format=touchstone \n'
             script+=self.s_para_probe(len(p_pos))
             script += '.option GENK=2\n'

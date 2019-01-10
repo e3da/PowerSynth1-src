@@ -4,6 +4,8 @@ from numba import jit
 import numpy as np
 import csv
 import matplotlib.pyplot as plt
+import operator
+from itertools import imap
 from mpl_toolkits.mplot3d import Axes3D
 
 
@@ -25,8 +27,8 @@ def inter_func1(x, y, z):
     z2 = z * z
     z3 = z2 * z
     z4 = z3 * z
-
-    sum4 = 1 / 60.0 * (x4 + y4 + z4 - 3 * x2 * y2 - 3 * y2 * z2 - 3 * x2 * z2) * np.sqrt(x2 + y2 + z2)
+    sqrt1 = np.sqrt
+    sum4 = 1 / 60.0 * (x4 + y4 + z4 - 3 * x2 * y2 - 3 * y2 * z2 - 3 * x2 * z2) * sqrt1(x2 + y2 + z2)
     if (y != 0 and z != 0) or (x != 0 and y != 0) or (x != 0 and z != 0):
         sum1 = (y2 * z2 / 4.0 - y4 / 24.0 - z4 / 24.0) * x * log(
             (x + sqrt(x2 + y2 + z2)) / sqrt(y2 + z2))  # if ((z2+y2)!=0) else 0
@@ -99,9 +101,9 @@ def mutual_between_bars(w1, l1, t1, w2, l2, t2, l3, p, E):
     E=E*0.1
 
     Const = 0.001 / (w1 * t1 * w2 * t2)
+    loop_add=outer_addition
 
-
-    Mb = Const * outer_addition(q1=E - w1, q2=E + w2 - w1, q3=E + w2, q4=E, r1=p - t1, r2=p + t2 - t1, r3=p + t2, r4=p,
+    Mb = Const * loop_add(q1=E - w1, q2=E + w2 - w1, q3=E + w2, q4=E, r1=p - t1, r2=p + t2 - t1, r3=p + t2, r4=p,
                                 s1=l3 - l1, s2=l3 + l2 - l1, s3=l2 + l3, s4=l3)
     #print "new cal"
     #print 'w1', w1, 'l1', l1, 't1', t1
@@ -203,4 +205,10 @@ def Test_Mutual():
 
 
 if __name__ == '__main__':
-    print mutual_between_bars(w1=10, l1=10, t1=0.2, w2=10, l2=16.67, t2=0.2, l3=16.67, p=0, d=0)
+    start = time.time()
+    mutual_between_bars(w1=10, l1=10, t1=0.2, w2=10, l2=16.67, t2=0.2, l3=16.67, p=0, E=10)
+
+    print "time",time.time()-start
+    start = time.time()
+
+    print "time", time.time() - start

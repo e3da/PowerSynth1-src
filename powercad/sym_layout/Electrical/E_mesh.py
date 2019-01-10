@@ -6,6 +6,7 @@ from powercad.sym_layout.Electrical.E_module import *
 from powercad.sym_layout.Electrical.plot3D import *
 from powercad.general.data_struct.util import Rect, draw_rect_list
 import math
+from itertools import product
 from numba import jit
 
 
@@ -124,9 +125,11 @@ class ElectricalMesh():
             self.m_graph.add_node(edge_name) # edge name by 2 nodes
 
 
-    def update_C_val(self, t=0.035, h=0.2,mode=1):
+    def update_C_val(self, t=0.035, h=1.5,mode=1):
         n_cap_dict=self.update_C_dict()
         C_tot = 0
+        num_nodes = len(self.graph.nodes())
+        cap_eval = trace_capacitance
         for n1 in self.graph.nodes():
             if mode == 1:
                 for n2 in self.graph.nodes():
@@ -136,12 +139,13 @@ class ElectricalMesh():
                         int_rect = rect1.intersection(rect2)
 
                         if int_rect!=None and not((n1,n2) in self.cap_dict) and not ((n2, n1) in self.cap_dict):
-                            cap_val = trace_capacitance(int_rect.width(),int_rect.height(),t,h,4.6,True)*1e-12
+                            cap_val = cap_eval(int_rect.width,int_rect.height,t,h,4.6,True)*1e-12*1.5
+                            #cap_val= 48*1e-12/num_nodes/2
                             C_tot+=cap_val
                             self.cap_dict[(n1, n2)]=cap_val
             elif mode==2:
                 rect1 = n_cap_dict[n1]
-                cap_val = trace_capacitance(rect1.width(), rect1.height(), t, h, 4.6, True) * 1e-12
+                cap_val = cap_eval(rect1.width(), rect1.height(), t, h, 4.6, True) * 1e-12
                 C_tot += cap_val
                 self.cap_dict[(n1, 0)] = cap_val
         #print self.cap_dict
@@ -217,12 +221,15 @@ class ElectricalMesh():
             print "cant find edge" , edge.nodeA.node_id, edge.nodeB.node_id
 
     def update_mutual(self,mult=1):
-        u = 4 * math.pi * 1e-7
-        sd_met = math.sqrt(1 / (math.pi * self.f*1000 * u * 5.96e7 * 1e6))*1000
-        for e1 in self.graph.edges(data=True):
+        M_cal = mutual_between_bars
+        add_M_edge = self.m_graph.add_edge
+        get_node = self.graph.node
+        all_edges = self.graph.edges(data=True)
+        #print len(all_edges)*len(all_edges)/2
+        for e1 in all_edges:
             data1= e1
-            n1_1 = self.graph.node[data1[0]]['node']  # node 1 on edge 1
-            n1_2 = self.graph.node[data1[1]]['node']  # node 2 on edge 1
+            n1_1 = get_node[data1[0]]['node']  # node 1 on edge 1
+            n1_2 = get_node[data1[1]]['node']  # node 2 on edge 1
             p1_1 = n1_1.pos
             p1_2 = n1_2.pos
             ori1 = 'h' if p1_1[1] == p1_2[1] else 'v'
@@ -244,7 +251,7 @@ class ElectricalMesh():
                 continue
 
             e1_name = edge1.data['name']
-            for e2 in self.graph.edges(data=True):
+            for e2 in all_edges:
                 if e1!=e2 and edge1.type != 'hier':
                     # First define the new edge name as a node name of Mutual graph
                     data2 = e2
@@ -252,8 +259,8 @@ class ElectricalMesh():
                     e2_name = edge2.data['name']
 
                     if not(self.m_graph.has_edge(e1_name,e2_name)):
-                        n2_1 = self.graph.node[data2[0]]['node']  # node 1 on edge 1
-                        n2_2 = self.graph.node[data2[1]]['node']  # node 2 on edge 1
+                        n2_1 = get_node[data2[0]]['node']  # node 1 on edge 1
+                        n2_2 = get_node[data2[1]]['node']  # node 2 on edge 1
                         p2_1 = n2_1.pos
                         p2_2 = n2_2.pos
                         ori2 = 'h' if p2_1[1] == p2_2[1] else 'v'
@@ -293,10 +300,9 @@ class ElectricalMesh():
                             p= z2-z1
                             E= r2.bottom- r1.bottom+diff1+diff2
                             l3= r2.left-r1.left
-                            M12 = mutual_between_bars(w1=w1, l1=l1, t1=t1, w2=w2, l2=l2, t2=t2, l3=l3,
+                            #print w1,l1,t1,w2,l2,t2,l3,p,E
+                            M12 = M_cal(w1=w1, l1=l1, t1=t1, w2=w2, l2=l2, t2=t2, l3=l3,
                                                         p=p, E=E)
-                            #if M12<0:
-                            #    print "case horizontal"
 
                         elif ori1 == 'v' and ori2 == 'v' and not (p2_2[0] == p1_2[0]):  # 2 vertical parallel pieces
                             y1_s = [p1_1[1], p1_2[1]]  # get all y from trace 1
@@ -315,7 +321,7 @@ class ElectricalMesh():
                             p = abs(z1 - z2)
                             E = r2.left - r1.left + diff1 + diff2
                             l3 = r1.top - r2.top
-                            M12 = mutual_between_bars(w1=w1, l1=l1, t1=t1, w2=w2, l2=l2, t2=t2, l3=l3,
+                            M12 = M_cal(w1=w1, l1=l1, t1=t1, w2=w2, l2=l2, t2=t2, l3=l3,
                                                       p=p, E=E)
                             #if M12 < 0:
                             #    print "case vertical"
@@ -335,7 +341,7 @@ class ElectricalMesh():
                             #    print z1, z2
                             #    print "diff", abs(z1 - z2), M12
                             #    raw_input("stop")
-                            self.m_graph.add_edge(e1_name,e2_name,attr={'Mval':mult*M12*1e-9})
+                            add_M_edge(e1_name,e2_name,attr={'Mval':mult*M12*1e-9})
                         '''
                         elif M12<0:
                             print ori1,ori2
@@ -403,9 +409,18 @@ class ElectricalMesh():
         return b_type
 
 
-    def mesh_grid_hier(self,Nx=3,Ny=3):
+    def update_E_comp_parasitics(self,net,comp_dict):
+        for c in comp_dict.keys():
+            for e in c.net_graph.edges(data=True):
+                print 'bw',e
+                (add_hier_edge(net[e[0]], net[e[1]], edge_data=e['edge_data']) for c in comp_dict.keys() for e in
+                                            c.net_graph.edges(data=True))
 
-        # Todo: gotta make this recursive code
+    def mesh_grid_hier(self,Nx=3,Ny=3):
+        # function calls in loop so it wont take time to search for these functions
+        mesh_nodes = self.mesh_nodes
+        mesh_edges = self.mesh_edges
+        add_hier_edge = self.add_hier_edge
         hier_E=self.hier_E
         comp_dict ={} # Use to remember the component that has its graph built (so we dont do it again)
         # all comp points
@@ -462,14 +477,16 @@ class ElectricalMesh():
                     self.add_node(cp_node)
                     comp_nodes[group].append(cp_node)
 
-        for c in comp_dict.keys(): # Once all components are built we make the edges
-            for e in c.net_graph.edges(data=True):
-                self.add_hier_edge(net[e[0]], net[e[1]],edge_data={'R':1.08e-3,'L':2.2e-9}) # TODO add bondwire model here
-
+        #for c in comp_dict.keys(): # Once all components are built we make the edges
+        #    for e in c.net_graph.edges(data=True):
+        #        self.add_hier_edge(net[e[0]], net[e[1]],edge_data={'R':1.08e-3,'L':2.2e-9}) # TODO add bondwire model here
+        #(add_hier_edge(net[e[0]], net[e[1]], edge_data={'R': 1.08e-3, 'L': 2.2e-9}) for c in comp_dict.keys() for e in
+        # c.net_graph.edges(data=True))
+        self.update_E_comp_parasitics(net=net,comp_dict=comp_dict)
 
         # These are applied for each different groups on each layer.
-        for g in hier_E.isl_group: # g here represents a trace island in T_Node
-
+        for g_id in xrange(len(hier_E.isl_group)): # g here represents a trace island in T_Node
+            g = hier_E.isl_group[g_id]
             # First forming all nodes and edges for a trace piece
             if hier_E.isl_group_data!={}:
                 thick = hier_E.isl_group_data[g]['thick']
@@ -482,9 +499,10 @@ class ElectricalMesh():
             node_dict = {}           # Use to store hashed data positions
             lines = []               # All rect bound lines
             points=[]                # All mesh points
-
-            for k in g.nodes: # Search for all traces in trace island
+            P_app = points.append
+            for k_id in xrange(len(g.nodes.keys())): # Search for all traces in trace island
                 # take the traces of this group ( by definition, each group have a different z level)
+                k = g.nodes.keys()[k_id]
                 trace=g.nodes[k]
                 tr = trace.data.rect
                 # mesh this trace
@@ -495,6 +513,7 @@ class ElectricalMesh():
                 # Forming corner - trace relationship
                 corners += tr.get_all_corners()
                 # Form relationship between corner and trace
+
                 for c in corners:
                     if tr.encloses(c[0], c[1]):
                         if not (c in corners_trace_dict.keys()):
@@ -507,8 +526,8 @@ class ElectricalMesh():
 
                 # GROUND PLANE
                 if z ==0: # TEST FOR NOW , HAVE TO SPECIFY LATER
-                    num_x=10#+  int(self.f/100)
-                    num_y=10#+ int(self.f / 100)
+                    num_x=5#+  int(self.f/100)
+                    num_y=5#+ int(self.f / 100)
                     self.div=2
                 elif z==-100:
                     num_x = 2  # +  int(self.f/100)
@@ -523,13 +542,13 @@ class ElectricalMesh():
                 #ys = np.linspace(tr.bottom, tr.top, num_y)
                 # TESTING
 
-                if tr.width()>tr.height():
+                if tr.width>tr.height:
                     xs = np.linspace(tr.left, tr.right, num_y)
                     ys = np.linspace(tr.bottom, tr.top, num_x)
-                elif tr.width() < tr.height():
+                elif tr.width < tr.height:
                     xs = np.linspace(tr.left, tr.right, num_x)
                     ys = np.linspace(tr.bottom, tr.top, num_y)
-                elif tr.width() == tr.height(): # Case corner piece
+                elif tr.width == tr.height: # Case corner piece
                     num_c = max([num_x,num_y])
                     xs = np.linspace(tr.left, tr.right, num_c)
                     ys = np.linspace(tr.bottom, tr.top, num_c)
@@ -544,7 +563,7 @@ class ElectricalMesh():
                     if not(name in node_dict):
                         p.append(z)#+ trace.data.dz)
                         node_dict[name]=p
-                        points.append(p)
+                        P_app(p)
 
 
             # Form relationship between lines and points, to split into boundary lines
@@ -586,10 +605,10 @@ class ElectricalMesh():
             #    plt.scatter([p[0]],[p[1]])
             #plt.show()
             # Finding mesh nodes for group
-            self.mesh_nodes(points=points,corners_trace_dict=corners_trace_dict,boundary_line=bound_lines,group=g)
+            mesh_nodes(points=points,corners_trace_dict=corners_trace_dict,boundary_line=bound_lines,group=g)
             # Finding mesh edges for group
-            self.mesh_edges(thick)
-
+            mesh_edges(thick)
+            #self.update_trace_RL_val()
             #self.mesh_edges2(thick)
             #fig,ax = plt.subplots()
             #draw_rect_list(all_rect,ax,'blue',None)
@@ -1522,7 +1541,7 @@ class ElectricalMesh():
         #    sd_met = math.sqrt(1 / (math.pi * self.f * u * cond * 1e6))*1000 *10# in mm
         # Forming Edges and Updating Edges width, length
         div = 3#self.div
-
+        store_edge =self.store_edge_info
         for n in self.graph.nodes():
 
             node = self.graph.node[n]['node']
@@ -1571,7 +1590,7 @@ class ElectricalMesh():
                     node.N_edge=edge_data
                     North.S_edge=edge_data
                     # Add edge to mesh
-                    self.store_edge_info(n, North.node_id, edge_data)
+                    store_edge(n, North.node_id, edge_data)
 
             if South != None and node.S_edge==None:
                 name = str(node.node_id) + '_' + str(South.node_id)
@@ -1611,7 +1630,7 @@ class ElectricalMesh():
                     node.S_edge = edge_data
                     South.N_edge = edge_data
                     # Add edge to mesh
-                    self.store_edge_info(n, South.node_id, edge_data)
+                    store_edge(n, South.node_id, edge_data)
             if West != None and node.W_edge==None:
                 name = str(node.node_id) + '_' + str(West.node_id)
 
@@ -1653,7 +1672,7 @@ class ElectricalMesh():
                     node.W_edge = edge_data
                     West.E_edge = edge_data
                     # Add edge to mesh
-                    self.store_edge_info(n, West.node_id, edge_data)
+                    store_edge(n, West.node_id, edge_data)
 
             if East != None and node.E_edge==None:
                 name = str(node.node_id) + '_' + str(East.node_id)
@@ -1698,7 +1717,7 @@ class ElectricalMesh():
                     node.E_edge = edge_data
                     East.W_edge = edge_data
                     # Add edge to mesh
-                    self.store_edge_info(n, East.node_id, edge_data)
+                    store_edge(n, East.node_id, edge_data)
 
     def mesh_nodes(self,points=[],group=None,corners_trace_dict=None,boundary_line=None):
         # Use for hierachy mode
@@ -1706,6 +1725,7 @@ class ElectricalMesh():
         # For each point, define the boundary type it has to that it will reduce the computation time for width and length
         #print group.name
         # Find all internal and boundary points
+        add_node = self.add_node
         for p in points:
             # First take into account special cases
             if p in corners_trace_dict.keys():
@@ -1716,7 +1736,7 @@ class ElectricalMesh():
                     new_node = Mesh_node(p, type, node_id=self.node_count, group_id=group.name)
                     new_node.b_type = b_type
 
-                    self.add_node(new_node)
+                    add_node(new_node)
                     continue
 
                 elif len(corners_trace_dict[p]) == 2:  # Special point 2
@@ -1748,19 +1768,19 @@ class ElectricalMesh():
 
                     new_node = Mesh_node(p, type, node_id=self.node_count, group_id=group.name)
                     new_node.b_type = b_type
-                    self.add_node(new_node)
+                    add_node(new_node)
                     continue
                 elif len(corners_trace_dict[p]) == 3:
                     type = "boundary"
                     b_type = []
                     new_node = Mesh_node(p, type, node_id=self.node_count, group_id=group.name)
                     new_node.b_type = b_type
-                    self.add_node(new_node)
+                    add_node(new_node)
                     continue
                 elif len(corners_trace_dict[p]) == 4:  # a point surrounded by 4 rect is an internal point
                     type = "internal"
                     new_node = Mesh_node(p, type, node_id=self.node_count, group_id=group.name)
-                    self.add_node(new_node)
+                    add_node(new_node)
                     continue
             type = "internal"
             for l in boundary_line:
@@ -1775,11 +1795,11 @@ class ElectricalMesh():
                         b_type = self.check_bound_type(tr, p)
                         new_node = Mesh_node(p, type, node_id=self.node_count, group_id=group.name)
                         new_node.b_type = b_type
-                        self.add_node(new_node)
+                        add_node(new_node)
                         break
                     elif type == 'internal':
                         new_node = Mesh_node(p, type, node_id=self.node_count, group_id=group.name)
-                        self.add_node(new_node)
+                        add_node(new_node)
                         break
             continue
 

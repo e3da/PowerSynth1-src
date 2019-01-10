@@ -134,7 +134,7 @@ class Circuit():
 
         self.max_net_id += 1
 
-    def _add_ports(self, node, port=True, ground=0):
+    def _add_termial(self, node, port=True, ground=0):
         newport = self.node_dict[node]
         if port:
             R_name = 'Rin' + str(newport)
@@ -467,7 +467,7 @@ class Circuit():
         all_ports = list(ports)  # list of ports
         S_mat = np.ndarray([len(all_ports), len(all_ports)])  # Form an impedance matrix
         for p in all_ports:
-            self._add_ports(p, True,ground[all_ports.index(p)])
+            self._add_termial(p, True, ground[all_ports.index(p)])
 
 
         for sel_port in all_ports:  # go to each source in the list assign a voltage source
@@ -541,7 +541,7 @@ class Circuit():
                                                  H=[0, 11], numvecs=41)
                 plt.show()
             self._remove_vsrc(sel_port, 'Vs')
-            self._add_ports(sel_port,True, ground[all_ports.index(sel_port)])
+            self._add_termial(sel_port, True, ground[all_ports.index(sel_port)])
             self.refresh_current_info()
             self.results={}
 
@@ -563,7 +563,7 @@ class Circuit():
         imp_mat = np.ndarray([len(srcs),len(sinks)],dtype=np.complex128) # Form an impedance matrix
         ana_ports=[] # list of ports that got analyzed already
         for p in all_ports:
-            self._add_ports(p,True)
+            self._add_termial(p, True)
         for id in range(len(srcs)): # go to each source in the list assign a voltage source
             cur_src = srcs[id]
             cur_sink = sinks[id]
@@ -596,7 +596,7 @@ class Circuit():
                     imp_mat[id,id2]= abs(Rij) + abs(Lij) * 1j   # Update off-diagonal values
                     imp_mat[id2, id] = abs(Rij) + abs(Lij) * 1j  # Update off-diagonal values
                 self._remove_vsrc(cur_src,'Vs')
-                self._add_ports(cur_src)
+                self._add_termial(cur_src)
                 self.refresh_current_info()
 
         for row in imp_mat:
@@ -614,9 +614,9 @@ class Circuit():
         # Assign signal to first port
         self._assign_vsource(srcs[0], vname=vname, volt=1)
         # ADD a port to 2nd source
-        self._add_ports(srcs[1],True)
-        self._add_ports(sinks[0], True)
-        self._add_ports(sinks[1], True)
+        self._add_termial(srcs[1], True)
+        self._add_termial(sinks[0], True)
+        self._add_termial(sinks[1], True)
         self.build_current_info()
         self.solve_iv()
         #self.solve_iv_hspice(filename='testM.sp',
@@ -649,7 +649,18 @@ class Circuit():
         #print (v_source - v_sink), I
         imp =(v_source-v_sink)/I
         return np.real(imp),np.imag(imp)/abs(self.s) # R vs L
-
+    def _compute_imp2(self,source_net,sink_net):
+        source_v = 'v' + str(source_net)
+        v_source = self.results[source_v]
+        if sink_net!=0:
+            sink_v = 'v' + str(sink_net)
+            v_sink = self.results[sink_v]
+        else:
+            v_sink=0
+        I = -self.results['I_Vs']
+        # print (v_source - v_sink), I
+        imp = (v_source - v_sink) / I
+        return np.real(imp), np.imag(imp) / abs(self.s)  # R vs L
     def GBCD_mat(self, i_unk):
         s = self.s
         sn =0
@@ -889,6 +900,7 @@ class Circuit():
         for i in range(len(self.X)):
             results_dict[str(self.X[i,0])]=self.results[i]
         self.results=results_dict
+        #print self.results
         #print "A matrix",A
         #print self.X
         #print "Z matrix",Z
@@ -971,7 +983,7 @@ def validate_solver_simple():
     circuit.build_current_info()
 
     circuit.solve_iv()
-    #circuit._compute_imp(1, 4, 4)
+    circuit._compute_imp(1, 4, 4)
 
     circuit.solve_iv_hspice(filename='validate.sp',
                             env=os.path.abspath('C:\synopsys\Hspice_O-2018.09\WIN64\hspice.exe'))

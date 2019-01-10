@@ -1,14 +1,16 @@
 import networkx as nx
 import random
-from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
-import numpy as np
-from matplotlib.collections import PatchCollection
 from math import sqrt
 from matplotlib.colors import *
 from matplotlib.patches import Rectangle
 import pandas as pd
 
+#import pygame
+#from pygame.locals import *
+
+from OpenGL.GL import *
+from OpenGL.GLU import *
 
 # PLOT 3 D GRAPHs, WILL BE USED TO DEMONSTRATE MESH PLOTS
 
@@ -118,7 +120,7 @@ def network_plot_3D(G, ax, cmap_node={}, cmap_edge={}):
                 ax.plot(x, y, z, c=color, alpha=1, linewidth=10)
 
     # Set the initial view
-    ax.view_init(30, -60)
+    #ax.view_init(30, -60)
     ax.set_xlabel('X (mm)')
     ax.set_ylabel('Y (mm)')
     ax.set_zlabel('Z (mm)')
@@ -341,3 +343,86 @@ def test_3D_mesh():
     G = generate_random_3Dgraph(n_nodes=n, radius=0.25, seed=1)
     network_plot_3D(G, 0)
     plt.show()
+'''
+def test_open_GL():
+    verticies = (
+        (1, -1, -1),
+        (1, 1, -1),
+        (-1, 1, -1),
+        (-1, -1, -1),
+        (1, -1, 1),
+        (1, 1, 1),
+        (-1, -1, 1),
+        (-1, 1, 1)
+    )
+
+    edges = (
+        (0, 1),
+        (0, 3),
+        (0, 4),
+        (2, 1),
+        (2, 3),
+        (2, 7),
+        (6, 3),
+        (6, 4),
+        (6, 7),
+        (5, 1),
+        (5, 4),
+        (5, 7)
+    )
+    pygame.init()
+    display = (800, 600)
+    pygame.display.set_mode(display, DOUBLEBUF | OPENGL)
+
+    gluPerspective(45, (display[0] / display[1]), 0.1, 50.0)
+
+    glTranslatef(0.0, 0.0, -5)
+
+    pygame.init()
+    display = (800, 600)
+    pygame.display.set_mode(display, DOUBLEBUF | OPENGL)
+
+    gluPerspective(45, (display[0] / display[1]), 0.1, 50.0)
+
+    glTranslatef(0, 0, -10)
+
+    glRotatef(25, 2, 1, 0)
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_LEFT:
+                    glTranslatef(-0.5, 0, 0)
+                if event.key == pygame.K_RIGHT:
+                    glTranslatef(0.5, 0, 0)
+
+                if event.key == pygame.K_UP:
+                    glTranslatef(0, 1, 0)
+                if event.key == pygame.K_DOWN:
+                    glTranslatef(0, -1, 0)
+
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 4:
+                    glTranslatef(0, 0, 1.0)
+
+                if event.button == 5:
+                    glTranslatef(0, 0, -1.0)
+
+        # glRotatef(1, 3, 1, 1)
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+        Cube(edges,verticies)
+        pygame.display.flip()
+        pygame.time.wait(10)
+
+def Cube(edges, verticies):
+    glBegin(GL_LINES)
+    for edge in edges:
+        for vertex in edge:
+            glVertex3fv(verticies[vertex])
+    glEnd()
+'''
+#test_open_GL()

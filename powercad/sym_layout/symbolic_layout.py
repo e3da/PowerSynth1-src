@@ -2320,6 +2320,8 @@ class SymbolicLayout(object):
             print "Running... Current number of evaluations:", self.eval_count
         else:
             print "Solution loaded "
+        print 'res', ret
+
         return ret
     '''-----------------------------------------------------------------------------------------------------------------------------------------------------'''
     def _measure_capacitance(self, measure):

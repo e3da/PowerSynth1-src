@@ -640,7 +640,7 @@ def form_corner_correction_model(layer_stack, Width=[1.2, 40], freq=[10, 100, 10
 
 
 def form_fasthenry_trace_response_surface(layer_stack, Width=[1.2, 40], Length=[1.2, 40], freq=[10, 100, 10], wdir=None,
-                                          savedir=None,mdl_name=None, env=None, doe_mode=0):
+                                          savedir=None,mdl_name=None, env=None, doe_mode=0,mode='lin'):
     '''
 
     :param layer_stack:
@@ -659,10 +659,17 @@ def form_fasthenry_trace_response_surface(layer_stack, Width=[1.2, 40], Length=[
     minW, maxW = Width
     minL, maxL = Length
     # Frequency in KHz
-    fmin, fmax, fstep = freq
-    fmin = fmin
-    fmax = fmax
-    fstep = fstep
+    if mode == 'lin':
+        fmin, fmax, fstep = freq
+        fmin = fmin
+        fmax = fmax
+        fstep = fstep
+    elif mode == 'log':
+        frange = np.logspace(freq[0],freq[1],freq[2])
+        fmin = frange[0]/1000
+        fmax = frange[-1]/1000
+        num = freq[2]
+        print fmin,fmax
 
     '''Layer Stack info for PowerSynth'''
     # BASEPLATE
@@ -696,7 +703,7 @@ def form_fasthenry_trace_response_surface(layer_stack, Width=[1.2, 40], Length=[
     sd_bp = math.sqrt(1 / (math.pi * fmax * u * bp_cond * 1e6))
     nhinc_bp = math.floor(math.log(bp_t * 1e-3 / sd_bp / 3) / math.log(2) * 2 + 1)
     sd_met = math.sqrt(1 / (math.pi * fmax * u * metal_cond * 1e6))
-    nhinc_met = math.ceil(math.log(metal_thick * 1e-3 / sd_met / 3) / math.log(2) * 2 + 1)
+    nhinc_met = math.ceil((math.log(metal_thick * 1e-3 / sd_met / 3) / math.log(2) * 2 + 1)/3)
     trace_z = met_z + metal_thick + iso_thick
     '''Ensure these are odd number'''
     #print nhinc_met, nhinc_bp
@@ -719,7 +726,7 @@ def form_fasthenry_trace_response_surface(layer_stack, Width=[1.2, 40], Length=[
         name = model_input.mdl_name + '_W_' + str(w) + '_L_' + str(l)
         print "RUNNING",name
         fname = os.path.join(wdir, name + ".inp")
-        nwinc = math.ceil((math.log(w * 1e-3 / sd_met / 3) / math.log(2) * 2 + 3)/9)
+        nwinc = math.ceil((math.log(w * 1e-3 / sd_met / 3) / math.log(2) * 2 + 3)/3)
         if nwinc % 2 == 0:
             nwinc += 1
         if nwinc<0:
@@ -736,9 +743,11 @@ def form_fasthenry_trace_response_surface(layer_stack, Width=[1.2, 40], Length=[
         write_to_file(script=script, file_des=fname)
         ''' Run FastHenry'''
         print fname
+        #if not(os.path.isfile(fname)):
         args = [fasthenry_env, fasthenry_option, fname]
         p = subprocess.Popen(args, shell=False, stdout=subprocess.PIPE)
         stdout, stderr = p.communicate()
+
         #print stdout,stderr
         ''' Output Path'''
         outname=os.path.join(os.getcwd(), 'Zc.mat')
@@ -774,18 +783,20 @@ def form_fasthenry_trace_response_surface(layer_stack, Width=[1.2, 40], Length=[
         ''' New list with more data points'''
         r_raw=r_list
         l_raw=l_list
-        #plt.plot(f_list,r_raw,'o')
-
 
         l_list1=[]
         r_list1=[]
         #print fmin , fmax ,fstep
-        frange=np.arange(fmin,(fmax+fstep),fstep)
+        if mode =='lin':
+            frange=np.arange(fmin,(fmax+fstep),fstep)
+        elif mode == 'log':
+            frange=np.logspace(freq[0],freq[1],num)/1000
+        print mode
         for f in frange:
             l_list1.append(l_f(f))
             r_list1.append(r_f(f))
-
-        #plt.plot(frange,r_list1)
+        #plt.semilogx(f_list, l_raw, 'o')
+        #plt.semilogx(frange, l_list1)
         #plt.autoscale(True,'y')
         #plt.title(str(w)+'_'+str(l))
         #plt.show()
@@ -797,6 +808,8 @@ def form_fasthenry_trace_response_surface(layer_stack, Width=[1.2, 40], Length=[
                 writer.writerow({F_key: frange[i], R_key: r_list1[i], L_key: l_list1[i]})
     print model_input.generic_fnames
     LAC_model = []
+    cur = 0
+    tot = len(frange)*2
     for i in range(len(frange)):
         LAC_input = RS_model()
         LAC_input = deepcopy(model_input)
@@ -805,7 +818,8 @@ def form_fasthenry_trace_response_surface(layer_stack, Width=[1.2, 40], Length=[
         LAC_input.read_file(file_ext='csv', mode='single', row=i, units=('Hz', 'H'), wdir=wdir)
         LAC_input.build_RS_mdl('OrKrigg')
         LAC_model.append({'f': frange[i], 'mdl': LAC_input})
-
+        print "percent done", float(cur)/tot*100
+        cur+=1
     RAC_model = []
     for i in range(len(frange)):
         RAC_input = RS_model()
@@ -815,6 +829,8 @@ def form_fasthenry_trace_response_surface(layer_stack, Width=[1.2, 40], Length=[
         RAC_input.read_file(file_ext='csv', mode='single', row=i, units=('Hz', 'Ohm'), wdir=wdir)
         RAC_input.build_RS_mdl('OrKrigg')
         RAC_model.append({'f': frange[i], 'mdl': RAC_input})
+        print "percent done", float(cur) / tot * 100
+        cur += 1
     package = {'L': LAC_model, 'R': RAC_model, 'C': None ,'opt_points': frange}
 
     try:
@@ -1135,7 +1151,7 @@ def test_build_trace_model_fh():
     fh_env_dir = "C://Users//qmle//Desktop//Testing//FastHenry//Fasthenry3_test_gp//WorkSpace//fasthenry.exe"
     read_output_dir = "C://Users//qmle//Desktop//Testing//FastHenry//Fasthenry3_test_gp//ReadOutput.exe"
     env = [fh_env_dir, read_output_dir]
-    mdk_dir ="C:\Users\qmle\Desktop\Documents\Conferences\IWIPP\Model//S_params_test.csv"
+    mdk_dir ="C:\Users\qmle\Desktop\Documents\Conferences\IWIPP\Model//S_params_test_pcb.csv"
     #mdk_dir = "G:\My Drive\MSCAD PowerSynth Archives\Internal\MDK\Layer Stack Quang//MDK_Validation.csv"
     w_dir = "C:\Users\qmle\Desktop\Documents\Conferences\IWIPP\Model\workspace"
     dir = os.path.abspath(mdk_dir)
@@ -1146,11 +1162,12 @@ def test_build_trace_model_fh():
     sd_met = math.sqrt(1 / (math.pi * 1e6 * u * metal_cond * 1e6))
 
     Width = [0.1,5]
-    Length = [0.1,5]
-    freq = [0.01, 10000000, 100] # in kHz
+    Length = [0.2,5]
+    #freq = [0.01, 100000, 100] # in kHz
+    freq = [1,10,200]
     form_fasthenry_trace_response_surface(layer_stack=ls, Width=Width, Length=Length, freq=freq, wdir=w_dir,
                                           savedir=w_dir
-                                          , mdl_name='s_params_test_noground', env=env, doe_mode=2)
+                                          , mdl_name='test_ECCE', env=env, doe_mode=2,mode='log')
 
 
 def test_build_trace_model_fh1():

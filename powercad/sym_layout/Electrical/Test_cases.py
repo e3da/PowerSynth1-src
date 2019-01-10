@@ -57,12 +57,12 @@ def test_hier2():
         sh13 = Rect(6, 5, -1.35, -1.25)
         S13 = Sheet(rect=sh13, net='bwS_m2', type='point', n=(0, 0, 1), z=0.2)
 
-        Mos1 = Component(sheet=[S1, S2, S3], conn=[['M1_D', 'M1_S']], val=[1e-3])
-        Mos2 = Component(sheet=[S4, S5, S6], conn=[['M2_D', 'M2_S']], val=[1e-3])
-        Bw_S1 = Component(sheet=[S2, S12], conn=[['bwS_m1', 'M1_S']], val=[1e-3])
-        Bw_S2 = Component(sheet=[S5, S13], conn=[['bwS_m2', 'M2_S']], val=[1e-3])
-        Bw_G1 = Component(sheet=[S3, S11], conn=[['bwG_m1', 'M1_G']], val=[1e-3])
-        Bw_G2 = Component(sheet=[S6, S10], conn=[['bwG_m2', 'M2_G']], val=[1e-3])
+        Mos1 = E_comp(sheet=[S1, S2, S3], conn=[['M1_D', 'M1_S']], val=[1e-3])
+        Mos2 = E_comp(sheet=[S4, S5, S6], conn=[['M2_D', 'M2_S']], val=[1e-3])
+        Bw_S1 = E_comp(sheet=[S2, S12], conn=[['bwS_m1', 'M1_S']], val=[1e-3])
+        Bw_S2 = E_comp(sheet=[S5, S13], conn=[['bwS_m2', 'M2_S']], val=[1e-3])
+        Bw_G1 = E_comp(sheet=[S3, S11], conn=[['bwG_m1', 'M1_G']], val=[1e-3])
+        Bw_G2 = E_comp(sheet=[S6, S10], conn=[['bwG_m2', 'M2_G']], val=[1e-3])
 
         new_module = E_module(plate=[R1, R2, R3, R4, R5, R6, R7],
                               sheet=[S7, S8, S9], components=[Mos1, Mos2, Bw_S1, Bw_S2, Bw_G1, Bw_G2])
@@ -102,7 +102,7 @@ def test_hier2():
         circuit.m_graph_read(emesh.m_graph)
         circuit.assign_freq(freq)
         circuit._assign_vsource(src1, vname='Vs1', volt=1)
-        circuit._add_ports(sink1)
+        circuit._add_termial(sink1)
         circuit.build_current_info()
         circuit.solve_iv()
 
@@ -255,7 +255,7 @@ def test_Ushape():
         circuit._assign_vsource(src1, vname='Vs1', volt=1)
         circuit.Rport = 50
 
-        circuit._add_ports(sink1)
+        circuit._add_termial(sink1)
         # circuit._add_ports(sink3)
 
         circuit.build_current_info()
@@ -415,7 +415,7 @@ def test_single_trace_mesh():
         print src1, sink1
         circuit.assign_freq(freq * 1000)
         circuit._assign_vsource(src1, vname='Vs1', volt=1)
-        circuit._add_ports(sink1)
+        circuit._add_termial(sink1)
         circuit.build_current_info()
         circuit.solve_iv()
         circuit.solve_iv_hspice(filename='singletrace.sp',
@@ -766,73 +766,184 @@ def S_para_IWIPP_HSPICE_no_ground():
     H_SPICE = HSPICE(env=os.path.abspath('C:\synopsys\Hspice_O-2018.09\WIN64\hspice.exe'), file='s_para_noground.p')
     H_SPICE.write_S_para_analysis(circuit=circuit, p_pos=P, p_neg=N, frange=frange)
     H_SPICE.run()
+
+
+def S_para_IWIPP_HSPICE_PCB():
+    # USE HSPICE to extract s-parameter
+    franges = np.logspace(4, 8, 10)
+    for i in range(len(franges)):
+        f = franges[i]
+        R1 = Rect(27.94, 22.86, 2.54, 78.74)
+        R2 = Rect(22.86, 2.54, 2.54, 15.24)
+        R3 = Rect(33.02, 30.48, 2.54, 78.74)
+        rects = [R1, R2, R3]
+
+        plates = [E_plate(rect=r, z=1.535, dz=0.035) for r in rects]
+
+        RG1 = Rect(35.56, 0, 0, 81.28)
+        # RG2 = Rect(7.5, -1, -1, 21)
+
+        plates.append(E_plate(rect=RG1, z=0, dz=0.035))
+        # plates.append(E_plate(rect=RG2, z=0, dz=0.035))
+
+        # RG1 = Rect(1000, 999, -1, 1)
+
+        # plates.append(E_plate(rect=RG1, z=-100, dz=0.035))
+
+        # R4= Rect(13, -1, -1, 21)
+        # plates.append(E_plate(rect=R4, z=0, dz=0.035))
+        new_module = E_module(plate=plates)
+        new_module.form_group()
+        new_module.split_layer_group()
+        hier = Hier_E(module=new_module)
+        hier.form_hierachy()
+
+        emesh = ElectricalMesh(hier_E=hier, mdl_name='s_params_test_noground_validate.rsmdl')
+        start =time.time()
+        emesh.mesh_grid_hier(Nx=4, Ny=4)
+        print "meshing time", time.time()-start
+        #fig = plt.figure(1)
+        #ax = a3d.Axes3D(fig)
+        #ax.set_xlim3d(-1, 90)
+        #ax.set_ylim3d(-1, 35)
+        #ax.set_zlim3d(-1, 2)
+        #emesh.plot_3d(fig=fig, ax=ax)
+        #plt.show()
+        pt1 = (8.89, 2.54, 1.535)
+        pt2 = (78.74, 25.4, 1.535)
+        pt3 = (2.54, 33.02, 1.535)
+        pt4 = (78.74, 33.02, 1.535)
+        g1 = (8.89, 2.54, 0)
+        g2 = (78.74, 25.4, 0)
+        g3 = (2.54, 33.02, 0)
+        g4 = (78.74, 33.02, 0)
+        P1 = emesh.find_node(pt1)
+        P2 = emesh.find_node(pt2)
+        P3 = emesh.find_node(pt3)
+        P4 = emesh.find_node(pt4)
+        G1 = emesh.find_node(g1)
+        G2 = emesh.find_node(g2)
+        G3 = emesh.find_node(g3)
+        G4 = emesh.find_node(g4)
+        emesh.f = f/1000 # kHz
+        emesh.update_trace_RL_val()
+        start = time.time()
+        emesh.update_C_val(h=1.5)
+        print 'C update', time.time() - start
+        # add ac mesh
+        # emesh_ac = copy.deepcopy(emesh)
+        # emesh_ac.f = 100000 # kHz
+        # emesh_ac.update_trace_RL_val()
+
+        circuit = Circuit()
+        circuit.comp_mode = 'val'
+        circuit._graph_read(emesh.graph)
+        # circuit._build_broad_band(emesh.graph,emesh_ac.graph)
+        start=time.time()
+        emesh.update_mutual(mult=1.0)
+        circuit.m_graph_read(emesh.m_graph)
+        print 'M update', time.time() - start
+
+        # circuit.m_graph_read_broadband(emesh.m_graph)
+        circuit.cap_update(emesh.cap_dict)
+        circuit.Rport = 1e9
+        circuit._add_termial(G1, True)
+        circuit._add_termial(G2, True)
+        circuit._add_termial(G3, True)
+        circuit._add_termial(G4, True)
+        P, N = circuit._find_all_s_ports(P_pos=[P1, P2, P3, P4], P_neg=[G1, G2, G3, G4])
+        file = 's_para_pcb_' +str(i)+ '.p'
+        H_SPICE = HSPICE(env=os.path.abspath('C:\synopsys\Hspice_O-2018.09\WIN64\hspice.exe'), file=file)
+        H_SPICE.write_S_para_analysis(circuit=circuit, p_pos=P, p_neg=N, frange=[f,f])
+        H_SPICE.run()
+
+
 def S_para_IWIPP_HSPICE_wground():
     # USE HSPICE to extract s-parameter
-    frange = [1e0,1e9]
-    R1 = Rect(8, 0, 0, 5)
-    R2 = Rect(8, 5, 5, 20)
-    R3 = Rect(11, 9, 0, 20)
-    rects = [R1, R2, R3]
+    franges = np.logspace(0,9,5)
+    for i in range(len(franges)):
+        f = franges[i]
+        print f
+        # USE HSPICE to extract s-parameter
+        R1 = Rect(8, 0, 0, 5)
+        R2 = Rect(8, 5, 5, 20)
+        R3 = Rect(11, 9, 0, 20)
+        rects = [R1, R2, R3]
 
-    plates = [E_plate(rect=r, z=0.235, dz=0.035) for r in rects]
+        plates = [E_plate(rect=r, z=0.235, dz=0.035) for r in rects]
 
-    RG = Rect(12, -1, -1, 21)
-    plates.append(E_plate(rect=RG, z=0, dz=0.035))
-    #RG1 = Rect(1000, 999, -1, 1)
+        RG1 = Rect(12, -1, -1, 21)
+        #RG2 = Rect(7.5, -1, -1, 21)
 
-    #plates.append(E_plate(rect=RG1, z=-100, dz=0.035))
+        plates.append(E_plate(rect=RG1, z=0, dz=0.035))
+        #plates.append(E_plate(rect=RG2, z=0, dz=0.035))
 
-    # R4= Rect(13, -1, -1, 21)
-    # plates.append(E_plate(rect=R4, z=0, dz=0.035))
-    new_module = E_module(plate=plates)
-    new_module.form_group()
-    new_module.split_layer_group()
-    hier = Hier_E(module=new_module)
-    hier.form_hierachy()
-    emesh = ElectricalMesh(hier_E=hier, mdl_name='s_params_test_noground.rsmdl')
-    emesh.mesh_grid_hier(Nx=4, Ny=4)
-    pt1 = (2.5, 0, 0.235)
-    pt2 = (20, 6.5, 0.235)
-    pt3 = (0, 10, 0.235)
-    pt4 = (20, 10, 0.235)
-    g1 = (2.5, 0, 0)
-    g2 = (20, 6.5, 0)
-    g3 = (0, 10, 0)
-    g4 = (20, 10, 0)
-    P1 = emesh.find_node(pt1)
-    P2 = emesh.find_node(pt2)
-    P3 = emesh.find_node(pt3)
-    P4 = emesh.find_node(pt4)
-    G1 = emesh.find_node(g1)
-    G2 = emesh.find_node(g2)
-    G3 = emesh.find_node(g3)
-    G4 = emesh.find_node(g4)
-    emesh.f = 100000 # kHz
-    emesh.update_trace_RL_val()
-    emesh.update_C_val()
-    # add ac mesh
-    #emesh_ac = copy.deepcopy(emesh)
-    #emesh_ac.f = 100000 # kHz
-    #emesh_ac.update_trace_RL_val()
+        #RG1 = Rect(1000, 999, -1, 1)
 
-    circuit = Circuit()
-    circuit.comp_mode = 'val'
-    circuit._graph_read(emesh.graph)
-    # circuit._build_broad_band(emesh.graph,emesh_ac.graph)
-    emesh.update_mutual(mult=1)
-    circuit.m_graph_read(emesh.m_graph)
+        #plates.append(E_plate(rect=RG1, z=-100, dz=0.035))
 
-    #circuit.m_graph_read_broadband(emesh.m_graph)
-    circuit.cap_update(emesh.cap_dict)
-    circuit.Rport = 1e9
-    circuit._add_ports(G1, True)
-    circuit._add_ports(G2, True)
-    circuit._add_ports(G3, True)
-    circuit._add_ports(G4, True)
-    P,N=circuit._find_all_s_ports(P_pos=[P1,P2,P3,P4],P_neg=[G1,G2,G3,G4])
-    H_SPICE = HSPICE(env=os.path.abspath('C:\synopsys\Hspice_O-2018.09\WIN64\hspice.exe'), file='s_para_wground.p')
-    H_SPICE.write_S_para_analysis(circuit=circuit,p_pos=P,p_neg=N,frange=frange)
-    H_SPICE.run()
+        # R4= Rect(13, -1, -1, 21)
+        # plates.append(E_plate(rect=R4, z=0, dz=0.035))
+        new_module = E_module(plate=plates)
+        new_module.form_group()
+        new_module.split_layer_group()
+        hier = Hier_E(module=new_module)
+        hier.form_hierachy()
+
+        emesh = ElectricalMesh(hier_E=hier, mdl_name='s_params_test_noground.rsmdl')
+        emesh.mesh_grid_hier(Nx=4, Ny=4)
+        fig = plt.figure(1)
+        ax = a3d.Axes3D(fig)
+        ax.set_xlim3d(-1, 21)
+        ax.set_ylim3d(-1, 14)
+        ax.set_zlim3d(-1, 2)
+        emesh.plot_3d(fig=fig, ax=ax)
+        plt.show()
+        pt1 = (2.5, 0, 0.235)
+        pt2 = (20, 6.5, 0.235)
+        pt3 = (0, 10, 0.235)
+        pt4 = (20, 10, 0.235)
+        g1 = (2.5, 0, 0)
+        g2 = (50, 6.5, 0)
+        g3 = (0, 10, 0)
+        g4 = (50, 10, 0)
+        P1 = emesh.find_node(pt1)
+        P2 = emesh.find_node(pt2)
+        P3 = emesh.find_node(pt3)
+        P4 = emesh.find_node(pt4)
+        G1 = emesh.find_node(g1)
+        G2 = emesh.find_node(g2)
+        G3 = emesh.find_node(g3)
+        G4 = emesh.find_node(g4)
+        emesh.f = f / 1000 # kHz
+        emesh.update_trace_RL_val()
+        emesh.update_C_val(h=0.2)
+        # add ac mesh
+        #emesh_ac = copy.deepcopy(emesh)
+        #emesh_ac.f = 100000 # kHz
+        #emesh_ac.update_trace_RL_val()
+
+        circuit = Circuit()
+        circuit.comp_mode = 'val'
+        circuit._graph_read(emesh.graph)
+        # circuit._build_broad_band(emesh.graph,emesh_ac.graph)
+        emesh.update_mutual(mult=1)
+        circuit.m_graph_read(emesh.m_graph)
+
+        #circuit.m_graph_read_broadband(emesh.m_graph)
+        circuit.cap_update(emesh.cap_dict)
+        circuit.Rport = 1e9
+        circuit._add_termial(G1, True)
+        circuit._add_termial(G2, True)
+        circuit._add_termial(G3, True)
+        circuit._add_termial(G4, True)
+        file = os.path.abspath('C:\Users\qmle\Desktop\Documents\Conferences\IWIPP\S_PARA COMPARE')+'\s_para_not_scaled_' + str(i) + '.p'
+
+        P,N=circuit._find_all_s_ports(P_pos=[P1,P2,P3,P4],P_neg=[G1,G2,G3,G4])
+        H_SPICE = HSPICE(env=os.path.abspath('C:\synopsys\Hspice_O-2018.09\WIN64\hspice.exe'), file=file)
+        H_SPICE.write_S_para_analysis(circuit=circuit,p_pos=P,p_neg=N,frange=[f,f])
+        H_SPICE.run()
+
 def S_para_IWIPP():
 
     freqs = [10, 21.544, 46.415, 100, 215.443, 464.159, 1000,2154.43,4641.59,10000, 21544.3, 46415.9, 100000]
@@ -911,10 +1022,10 @@ def S_para_IWIPP():
         circuit.cap_update(emesh.cap_dict)
         circuit.m_graph_read(emesh.m_graph)
         circuit.Rport = 1e-9
-        circuit._add_ports(G1,True)
-        circuit._add_ports(G2, True)
-        circuit._add_ports(G3, True)
-        circuit._add_ports(G4, True)
+        circuit._add_termial(G1, True)
+        circuit._add_termial(G2, True)
+        circuit._add_termial(G3, True)
+        circuit._add_termial(G4, True)
 
         circuit.Rport=50
         S_mat=circuit._compute_S_params(ports=[P1,P2,P3,P4],emesh=emesh,plot=False,mode='mag')
@@ -945,6 +1056,101 @@ def S_para_IWIPP():
                 row.append(S_dict[k][i])
             w.writerow(row)
 
+
+
+def ECCE_layout():
+
+    # Traces:
+
+    R1= Rect(16.7,0,0,38)
+    R2 = Rect(54.2,16.7,20.2,29.9)
+    R3 = Rect(63, 17.7, 30.9, 38.7)
+    R4 = Rect(27.6, 17.7, 38.7,71.6)
+    R5 = Rect(63, 48.3, 38.7, 71.6)
+    R6 = Rect(47.3, 28.6, 39.7, 72.1)
+    # Sheets for bondwires connect:
+    R7 = Rect(49, 48, 34, 35)
+    R8 = Rect(49, 48, 27, 28)
+    R9 = Rect(39, 38, 34, 35)
+    R10 = Rect(39, 38, 27, 28)
+    R11 = Rect(29, 28, 34, 35)
+    R12 = Rect(29, 28, 27, 28)
+    nets = ['bw1_s', 'bw1_e', 'bw2_s', 'bw2_e', 'bw3_s', 'bw3_e']
+    rects = [R1,R2,R3,R4,R5,R6]
+    rects_sh = [R7,R8,R9, R10, R11, R12]
+
+    #
+    comp=[]
+    sheets = [Sheet(rect=sh, net=nets[rects_sh.index(sh)], type='point', n=(0, 0, 1), z=0.4) for sh in rects_sh]
+    for i in range(len(sheets)):
+        if i%2==0:
+            print i, range(len(sheets))
+            sh1 = sheets[i]
+            sh2 =sheets[i + 1]
+            comp.append(E_wires(wire_radius=0.2,num_wires=4,wire_dis=0.2,start=sh1,stop= sh2,circuit=Circuit()))
+        else:
+            continue
+
+    plates = [E_plate(rect=r, z=0.2, dz=0.2) for r in rects]
+    # Plot 3D
+    plot_3D=True
+    plot_3D_mesh=True
+    if plot_3D:
+        fig = plt.figure(1)
+        ax = a3d.Axes3D(fig)
+        ax.set_xlim3d(0, 80)
+        ax.set_ylim3d(0, 80)
+        ax.set_zlim3d(-1, 10)
+        ax.view_init(azim=0, elev=90)
+        plot_rect3D(rect2ds=plates, ax=ax)
+    # Set up a new problem
+    new_module = E_module(plate=plates,sheet=sheets)
+    new_module.form_group()
+    new_module.split_layer_group()
+    hier = Hier_E(module=new_module)
+    hier.form_hierachy()
+    # Set up mesh                           This is the response surface model to use
+    emesh = ElectricalMesh(hier_E=hier, mdl_name='s_params_test.rsmdl')
+                    # This is the uniform mesh for each rect, will need an adaptive solution later
+    emesh.mesh_grid_hier(Nx=4, Ny=4)
+    emesh.f = 10000 # kHz
+    emesh.update_mutual()
+    # Terminals
+    t1 = (6, 5, 0.4)
+    t2 = (60, 60, 0.4)
+    T1 = emesh.find_node(t1)
+    T2 = emesh.find_node(t2)
+
+
+    circuit = Circuit()
+
+    circuit.comp_mode = 'val'
+    circuit._graph_read(emesh.graph)
+    circuit.cap_update(emesh.cap_dict)
+    circuit.m_graph_read(emesh.m_graph)
+    circuit.Rport = 50
+    circuit._add_termial(T1, True)
+    circuit._add_termial(T2, True)
+    circuit.assign_freq(1000000)
+    circuit._assign_vsource(T1, vname='Vs', volt=1)
+    circuit._add_termial(T2)
+    circuit.build_current_info()
+    circuit.solve_iv()
+    R, L = circuit._compute_imp2(T1, T2)
+    print R,L
+
+    if plot_3D_mesh:
+        fig = plt.figure(2)
+        ax = a3d.Axes3D(fig)
+        ax.set_xlim3d(0, 80)
+        ax.set_ylim3d(0, 80)
+        ax.set_zlim3d(-1, 10)
+        ax.view_init(azim=0, elev=90)
+        emesh.plot_3d(fig=fig, ax=ax)
+
+
+    if plot_3D_mesh or plot_3D:
+        plt.show()
 
 def test_layer_stack_ushape():
 
@@ -1059,9 +1265,10 @@ if __name__ == '__main__':
     # test_hier2()
     #test_Ushape()
     #S_para_IWIPP()
-    S_para_IWIPP_HSPICE_wground()
+    #S_para_IWIPP_HSPICE_wground()
+    #S_para_IWIPP_HSPICE_PCB()
     #S_para_IWIPP_HSPICE_no_ground()
-
+    ECCE_layout()
     #test_layer_stack_ushape()
     #test_layer_stack_mutual()
     #balance_study()
