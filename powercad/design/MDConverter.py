@@ -1,7 +1,8 @@
 import sys
 import numpy as np
-from simplejson import JSONEncoder
-
+# from simplejson import JSONEncoder
+import simplejson as json
+import matlab.engine
 
 '''
 def toJSON(object):
@@ -29,7 +30,7 @@ class Feature(object):
 
 class Feature(object):
     def __init__(self, entity=None, ref_loc=[0., 0., 0.],  x=None, y=None, z=None, w=None, l=None, h=None,
-                 dx=3, dy=3, dz=2, material=None, substrate=None, power=0, name=None):
+                 dx=1, dy=1, dz=1, material=None, substrate=None, power=0, name=None):
         self.name = name
         self.entity = entity
         self.ref_loc = ref_loc
@@ -59,15 +60,15 @@ class Feature(object):
             self.possible_types[self.type]()
 
     def def_device(self):
-        self.width, self.length, self.height = self.entity.device_instance.device_tech.dimensions
+        self.length, self.width, self.height = self.entity.device_instance.device_tech.dimensions
         left = self.entity.footprint_rect.left
         bottom = self.entity.footprint_rect.bottom
         die_attach_height = self.entity.device_instance.attach_thickness
-        die_attach_z = np.array([0. , die_attach_height]) + self.ref_loc[2]
+        die_attach_z = np.array([0., die_attach_height]) + self.ref_loc[2]
 
-        self.x = np.array([left, left + self.width]) + self.ref_loc[0]
-        self.y = np.array([bottom, bottom + self.length]) + self.ref_loc[1]
-        self.z = np.array([0., self.height]) + die_attach_z
+        self.x = np.array([0., self.width]) + self.ref_loc[0] + left
+        self.y = np.array([0., self.length]) + self.ref_loc[1] + bottom
+        self.z = np.array([0., self.height]) + die_attach_z + die_attach_height
         self.material = MaterialProperties(self.entity.device_instance.device_tech.properties)
         self.power = float(self.entity.device_instance.heat_flow)
 
@@ -91,17 +92,17 @@ class Feature(object):
         metal_height = self.entity.substrate_tech.metal_thickness
         isolation_height = self.entity.substrate_tech.isolation_thickness
         self.height = isolation_height
-        ledge_width = self.entity.ledge_width
+        ledge_width = float(self.entity.ledge_width)
 
         self.x = np.array([0., self.width]) + self.ref_loc[0]
         self.y = np.array([0., self.length]) + self.ref_loc[1]
-        self.z = np.array([metal_height, metal_height + self.height]) + self.ref_loc[2]
+        self.z = np.array([0., self.height]) + self.ref_loc[2] + metal_height
         self.material = MaterialProperties(self.entity.substrate_tech.isolation_properties)
 
         metal_w = self.width - 2*ledge_width
         metal_l = self.length - 2*ledge_width
-        metal_x = np.array([0., metal_w]) + self.ref_loc[0] + ledge_width
-        metal_y = np.array([0., metal_l]) + self.ref_loc[1] + ledge_width
+        metal_x = np.array([ledge_width, metal_w]) + self.ref_loc[0]
+        metal_y = np.array([ledge_width, metal_l]) + self.ref_loc[1]
         metal_z = np.array([0., metal_height]) + self.ref_loc[2]
 
         metal_material = MaterialProperties(self.entity.substrate_tech.metal_properties)
@@ -114,13 +115,13 @@ class Feature(object):
 
     def def_substrate_attach(self):
         self.height = self.entity.thickness
-        ledge_width = self.substrate.ledge_width
+        ledge_width = float(self.substrate.ledge_width)
         sub_width, sub_length = self.substrate.dimensions
         self.width = sub_width - 2*ledge_width
         self.length = sub_length - 2*ledge_width
 
-        self.x = np.array([0., self.width]) + self.ref_loc[0] + ledge_width
-        self.y = np.array([0., self.length]) + self.ref_loc[1] + ledge_width
+        self.x = np.array([ledge_width, self.width]) + self.ref_loc[0]
+        self.y = np.array([ledge_width, self.length]) + self.ref_loc[1]
         self.z = np.array([0., self.height]) + self.ref_loc[2]
 
         self.material = MaterialProperties(self.entity.attach_tech.properties)
@@ -128,7 +129,7 @@ class Feature(object):
 
     def def_trace(self):
         self.height = self.substrate.substrate_tech.metal_thickness
-        ledge_width = self.substrate.ledge_width
+        ledge_width = float(self.substrate.ledge_width)
         left = self.entity.left
         right = self.entity.right
         bottom = self.entity.bottom
@@ -136,18 +137,32 @@ class Feature(object):
         self.width = right - left
         self.length = top - bottom
 
-        self.x = np.array([0., self.width]) + self.ref_loc[0] + ledge_width
-        self.y = np.array([0., self.length]) + self.ref_loc[1] + ledge_width
-        self.z = np.array([0., self.height]) + self.ref_loc[1]
+        self.x = np.array([0., self.width]) + self.ref_loc[0] + left
+        self.y = np.array([0., self.length]) + self.ref_loc[1] + bottom
+        self.z = np.array([0., self.height]) + self.ref_loc[2]
 
         self.material = MaterialProperties(self.substrate.substrate_tech.metal_properties)
 
     def to_dict(self):
         # print self.name, self.material
+        x = self.x * 1e3
+        y = self.y * 1e3
+        z = self.z * 1e3
+
+        print self.name, x.tolist(), y.tolist(), z.tolist()
+
         feature_output = {'name': self.name,
-                          'x': self.x.tolist(), 'y': self.y.tolist(), 'z': self.z.tolist(),
+                          'x': x.tolist(), 'y': y.tolist(), 'z': z.tolist(),
                           'dz': self.dz, 'dy': self.dy, 'dx': self.dx,
-                          'Q': self.power, 'Matl': self.material.properties_dictionary.name}
+                          'Q': self.power, 'Matl': self.material.properties_dictionary['name']}
+        '''
+        feature_output = {'name': self.name,
+                          'x': matlab.double([self.x[0], self.x[1]]),
+                          'y': matlab.double([self.x[0], self.x[1]]),
+                          'z': matlab.double([self.x[0], self.x[1]]),
+                          'dz': self.dz, 'dy': self.dy, 'dx': self.dx,
+                          'Q': self.power, 'Matl': self.material.properties_dictionary['name']}
+        '''
         return feature_output
 
 
@@ -158,6 +173,7 @@ class MaterialProperties(object):
         for key, value in self.properties_dictionary.iteritems():
             setattr(self, key, value)
         '''
+
 
 class ExternalConditions(object):
     def __init__(self):
@@ -202,10 +218,10 @@ class ParaPowerWrapper(object):
         self.parapower = ParaPower(self.external_conditions.to_dict(),
                                    self.parameters.to_dict(),
                                    self.features)
-        #self.output = PPEncoder().encode(self.parapower)
+        # self.output = PPEncoder().encode(self.parapower)
 
     def get_ref_locs(self):
-        baseplate_h = self.module_design.baseplate.dimensions[2]
+        baseplate_w, baseplate_l, baseplate_h = self.module_design.baseplate.dimensions
         substrate_attach_h = self.module_design.substrate_attach.thickness
         substrate_metal_h = self.module_design.substrate.substrate_tech.metal_thickness
         substrate_isolation_h = self.module_design.substrate.substrate_tech.isolation_thickness
@@ -218,11 +234,17 @@ class ParaPowerWrapper(object):
         trace_z = substrate_isolation_z + substrate_isolation_h
         die_attach_z = trace_z + trace_h
 
+        sub_w, sub_l = self.module_design.substrate.dimensions
+        offset_x = (baseplate_w - sub_w) / 2.0
+        offset_y = (baseplate_l - sub_l) / 2.0
+
         ref_locs = {'baseplate': [0., 0., baseplate_z],
-                    'substrate_attach': [0., 0., substrate_attach_z],
-                    'substrate': [0., 0., substrate_metal_z],
-                    'traces': [0., 0., trace_z],
-                    'devices': [0., 0., die_attach_z]}
+                    'substrate_attach': [offset_x, offset_y, substrate_attach_z],
+                    'substrate': [offset_x, offset_y, substrate_metal_z],
+                    'traces': [offset_x, offset_y, trace_z],
+                    'devices': [offset_x, offset_y, die_attach_z]}
+        for loc in ref_locs:
+            print loc, ref_locs[loc]
         return ref_locs
 
     def get_features(self):
@@ -234,7 +256,7 @@ class ParaPowerWrapper(object):
         devices = self.module_design.devices
 
         # Baseplate
-        baseplate_f = Feature(entity=baseplate, ref_loc=self.ref_locs['baseplate'])
+        baseplate_f = Feature(entity=baseplate, ref_loc=self.ref_locs['baseplate'], dx=1, dy=1, dz=1)
         baseplate_f.name = 'Baseplate'
         features.append(baseplate_f)
         self.external_conditions.h_Bottom = baseplate_f.h_val
@@ -270,7 +292,7 @@ class ParaPowerWrapper(object):
             device_instance = Feature(entity=device, ref_loc=self.ref_locs['devices'])
         '''
         for i in range(len(devices)):
-            device_instance = Feature(entity=devices[i], ref_loc=self.ref_locs['devices'])
+            device_instance = Feature(entity=devices[i], ref_loc=self.ref_locs['devices'], dx=3, dy=3, dz=2)
             device_instance.name = self.device_id[i]
             if device_instance.child_features:
                 for child in device_instance.child_features:
@@ -293,9 +315,35 @@ class ParaPower(object):
         self.Params = parameters
         self.Features = features
         self.PottingMaterial = 0
+        self.temperature = None
+        self.path = 'C:/Users/tmevans/Documents/MATLAB/ParaPower/ARLParaPower2.0/ARLParaPower/'
+        # self.eng = self.init_matlab()
 
     def to_dict(self):
-        return self.__dict__
+        model_dict = {'ExternalConditions': self.ExternalConditions,
+                      'Params': self.Params,
+                      'Features': self.Features,
+                      'PottingMaterial': self.PottingMaterial}
+        return model_dict
+
+    def init_matlab(self):
+        eng = matlab.engine.start_matlab()
+        eng.cd(self.path)
+        return eng
+
+    def run_parapower(self):
+        #temp = self.eng.ImportTest()
+        # self.eng.workspace['test_md'] = self.eng.ImportPSModuleDesign(json.dumps(self.to_dict()), nargout=1)
+        # self.eng.save('test_md_file.mat', 'test_md')
+        return
+
+    def save_parapower(self):
+        fname = self.path + 'Test_MD_JSON.json'
+        with open(fname, 'w') as outfile:
+            json.dump(self.to_dict(), outfile)
+
+
+
 
 '''
 class BasePlate_v1(object):

@@ -219,16 +219,16 @@ def make_test_setup2(f,directory):
 
     results=[]
     # powers= [[1.89,1.98,1.92,1.98],[2.31,2.44,2.34,2.41],[2.83,2.93,2.844,2.938],[3.6096,3.788,3.66,3.776],[3.966,4.1004,4.033,4.1004]]
-    powers = [[1, 1, 1, 1]]
+    powers = [[10., 10., 10., 10.]]
     h_val =[102.331, 105.986, 110.236, 115.238, 117.656]
     for p, h in zip(powers, h_val):
         print "Test Case", p, h
         sym_layout = SymbolicLayout()  # initiate a symbolic layout object
         sym_layout.load_layout(test_file, 'script')  # load the script
-        dev1 = DeviceInstance(0.1, p[0], get_device(),get_dieattach())  # Create a device instance with 10 W power dissipation. Highlight + "Crtl+Shift+I" to see the definition of this object
-        dev2 = DeviceInstance(0.1, p[1], get_device(),get_dieattach())  # Create a device instance with 10 W power dissipation. Highlight + "Crtl+Shift+I" to see the definition of this object
-        dev3 = DeviceInstance(0.1, p[2], get_device(),get_dieattach())  # Create a device instance with 10 W power dissipation. Highlight + "Crtl+Shift+I" to see the definition of this object
-        dev4 = DeviceInstance(0.1, p[3], get_device(),get_dieattach())  # Create a device instance with 10 W power dissipation. Highlight + "Crtl+Shift+I" to see the definition of this object
+        dev1 = DeviceInstance(0.1, p[0], get_device(), get_dieattach())  # Create a device instance with 10 W power dissipation. Highlight + "Crtl+Shift+I" to see the definition of this object
+        dev2 = DeviceInstance(0.1, p[1], get_device(), get_dieattach())  # Create a device instance with 10 W power dissipation. Highlight + "Crtl+Shift+I" to see the definition of this object
+        dev3 = DeviceInstance(0.1, p[2], get_device(), get_dieattach())  # Create a device instance with 10 W power dissipation. Highlight + "Crtl+Shift+I" to see the definition of this object
+        dev4 = DeviceInstance(0.1, p[3], get_device(), get_dieattach())  # Create a device instance with 10 W power dissipation. Highlight + "Crtl+Shift+I" to see the definition of this object
 
         pow_lead = None  # Get a power lead object
 
@@ -253,7 +253,7 @@ def make_test_setup2(f,directory):
         sym_layout._map_design_vars()
 
         #sym_layout.optimize()
-        individual =[10, 4, 10, 2.0, 2.0, 10, 4, 0.38232573137878245, 0.7, 0.68, 0.24]
+        individual = [10, 4, 10, 2.0, 2.0, 10, 4, 0.38232573137878245, 0.7, 0.68, 0.24]
         sym_layout.rev_map_design_vars(individual)
         sym_layout.generate_layout()
         add_thermal_measure(sym_layout)
@@ -263,8 +263,8 @@ def make_test_setup2(f,directory):
         print results
     for r in results:
         print r
-    ax = plt.subplot('111', adjustable='box', aspect=1.0)
-    plot_layout(sym_layout,filletFlag=False,ax=ax)
+    # ax = plt.subplot('111', adjustable='box', aspect=1.0)
+    # plot_layout(sym_layout,filletFlag=False,ax=ax)
     return md.ModuleDesign(sym_layout)
 # The test goes here, moddify the path below as you wish...
 
@@ -273,6 +273,7 @@ def make_test_setup2(f,directory):
 directory ='Layout/journal_2(v2).psc' # directory to layout script
 md = make_test_setup2(100.0, directory)
 pp = mdc.ParaPowerWrapper(md)
+pp.parapower.save_parapower()
 
 if __name__ == '__main__':
 
