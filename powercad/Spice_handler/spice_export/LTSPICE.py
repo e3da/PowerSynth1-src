@@ -30,8 +30,6 @@ class LTSPICE:
         with open(self.file, 'w') as f:
             f.write(strftime("* %Y-%m-%d %H:%M:%S", gmtime()) + '\n')
             for e in all_elements:
-                print e
-
                 if e[0] != 'M':
                     pnode = str(circuit.pnode[e])
                     nnode = str(circuit.nnode[e])
@@ -43,7 +41,6 @@ class LTSPICE:
                         nnode = list(nnode.zfill(4))
                         nnode[0] = 'N'
                         nnode = ''.join(nnode)
-                    print pnode,nnode
                     value = str(circuit.value[e])
                     if e[0] == 'R':
                         line = [e, pnode, nnode, value]

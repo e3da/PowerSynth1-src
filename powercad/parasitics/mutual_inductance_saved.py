@@ -105,12 +105,7 @@ def mutual_between_bars(w1, l1, t1, w2, l2, t2, l3, p, E):
 
     Mb = Const * loop_add(q1=E - w1, q2=E + w2 - w1, q3=E + w2, q4=E, r1=p - t1, r2=p + t2 - t1, r3=p + t2, r4=p,
                                 s1=l3 - l1, s2=l3 + l2 - l1, s3=l2 + l3, s4=l3)
-    #print "new cal"
-    #print 'w1', w1, 'l1', l1, 't1', t1
-    #print 'w2', w2, 'l2', l2, 't2', t2
-    #print 'p', p, 'E', E, 'l3', l3
-    #print "a",w1,'b',t1,'l1',l1,'E',E,'d',w2,'c',t2,'l2',l2,'p',p,'l3',l3
-    #print Mb*1000
+
     return Mb * 1000  # in nH
 
 

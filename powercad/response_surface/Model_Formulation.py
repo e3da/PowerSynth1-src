@@ -665,11 +665,13 @@ def form_fasthenry_trace_response_surface(layer_stack, Width=[1.2, 40], Length=[
         fmax = fmax
         fstep = fstep
     elif mode == 'log':
+        print 'freq',freq
         frange = np.logspace(freq[0],freq[1],freq[2])
-        fmin = frange[0]/1000
-        fmax = frange[-1]/1000
+        print 'range',frange
+        fmin = frange[0]
+        fmax = frange[-1]
         num = freq[2]
-        print fmin,fmax
+        print 'here', fmin,fmax
 
     '''Layer Stack info for PowerSynth'''
     # BASEPLATE
@@ -690,7 +692,7 @@ def form_fasthenry_trace_response_surface(layer_stack, Width=[1.2, 40], Length=[
     model_input.set_dir(savedir)
     model_input.set_data_bound([[minW, maxW], [minL, maxL]])
     model_input.set_name(mdl_name)
-    mesh_size=5
+    mesh_size=10
     model_input.create_uniform_DOE([mesh_size, mesh_size], True)
     #model_input.create_DOE(3, mesh_size**2)
     model_input.generate_fname()
@@ -731,6 +733,7 @@ def form_fasthenry_trace_response_surface(layer_stack, Width=[1.2, 40], Length=[
             nwinc += 1
         if nwinc<0:
             nwinc=1
+        print "mesh", nwinc,nhinc_met
         nwinc=str(nwinc).replace('.0','')
         half_dim = [bp_W / 2, bp_L / 2, met_W / 2, met_L / 2]
         for i in range(len(half_dim)):
@@ -748,7 +751,7 @@ def form_fasthenry_trace_response_surface(layer_stack, Width=[1.2, 40], Length=[
         p = subprocess.Popen(args, shell=False, stdout=subprocess.PIPE)
         stdout, stderr = p.communicate()
 
-        #print stdout,stderr
+        print stdout,stderr
         ''' Output Path'''
         outname=os.path.join(os.getcwd(), 'Zc.mat')
         print "mesh", nwinc,nhinc_met
@@ -1154,6 +1157,8 @@ def test_build_trace_model_fh():
     mdk_dir ="C:\Users\qmle\Desktop\Documents\Conferences\IWIPP\Model//S_params_test_pcb.csv"
     #mdk_dir = "G:\My Drive\MSCAD PowerSynth Archives\Internal\MDK\Layer Stack Quang//MDK_Validation.csv"
     w_dir = "C:\Users\qmle\Desktop\Documents\Conferences\IWIPP\Model\workspace"
+    mdk_dir = "C:\Users\qmle\Desktop\Documents\Conferences\IWIPP\Model\ushape.csv"
+    #w_dir = "C:\Users\qmle\Desktop\Documents\Conferences\ECCE\Imam_Quang\Model\workspace"
     dir = os.path.abspath(mdk_dir)
     ls = LayerStackImport(dir)
     ls.import_csv()
@@ -1161,13 +1166,13 @@ def test_build_trace_model_fh():
     metal_cond = 5.96*1e7
     sd_met = math.sqrt(1 / (math.pi * 1e6 * u * metal_cond * 1e6))
 
-    Width = [0.1,5]
-    Length = [0.2,5]
+    Width = [0.2,2]
+    Length = [0.2,8.33]
     #freq = [0.01, 100000, 100] # in kHz
-    freq = [1,10,200]
+    freq = [3,6,100]
     form_fasthenry_trace_response_surface(layer_stack=ls, Width=Width, Length=Length, freq=freq, wdir=w_dir,
                                           savedir=w_dir
-                                          , mdl_name='test_ECCE', env=env, doe_mode=2,mode='log')
+                                          , mdl_name='1trace', env=env, doe_mode=2,mode='log')
 
 
 def test_build_trace_model_fh1():
@@ -1212,7 +1217,7 @@ def test_build_trace_cornermodel_fh():
     ls = LayerStackImport(dir)
     ls.import_csv()
     options = ['Q3D', 'mesh', False]
-    Width = [2, 10]
+    Width = [2, 45]
     freq = [10, 1000, 10]
     form_fasthenry_corner_correction(layer_stack=ls, Width=Width, freq=freq, wdir=w_dir, savedir=w_dir,
                                  mdl_name='corner_test_adapt_3'

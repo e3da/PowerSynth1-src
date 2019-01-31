@@ -23,10 +23,6 @@ class diag_prec:
 
 class Circuit():
     def __init__(self):
-        self.num_rlc = 0  # number of RLC elements
-        self.num_ind = 0  # number of inductors
-        self.num_V = 0  # number of independent voltage sources
-        self.num_I = 0  # number of independent current sources
         self.i_unk = 0  # number of current unknowns
         self.num_opamps = 0  # number of op amps
         self.num_vcvs = 0  # number of controlled sources of various types
@@ -83,8 +79,16 @@ class Circuit():
         self.results_dict={}
         self.Rport=50
         self.freq = 1000
+        # Counting number of elements
+        self.L_count = 0
+        self.R_count = 0
+        self.C_count = 0
+        self.M_count = 0
 
-
+        self.cur_src = []
+        self.src_pnode = {}
+        self.src_nnode = {}
+        self.src_value = {}
 
 
     def assign_freq(self,freq=1000):
@@ -102,11 +106,11 @@ class Circuit():
         self.Lname2[name] = L2_name
         self.value[name] = float(val)
 
-    def indep_current_source(self, pnode=0, nnode=0, val=1):
-        self.element.append('Is')
-        self.pnode['Is'] = pnode
-        self.nnode['Is'] = nnode
-        self.value['Is'] = float(val)
+    def indep_current_source(self, pnode=0, nnode=0, val=1, name='Is'):
+        self.cur_src.append(name)
+        self.src_pnode[name] = pnode
+        self.src_nnode[name] = nnode
+        self.src_value[name] = float(val)
 
     def indep_voltage_source(self, pnode=0, nnode=0, val=1000, name='Vs'):
         self.V_node=pnode
@@ -125,29 +129,15 @@ class Circuit():
         if self.Rport != 0:
             self.indep_voltage_source(vnet, ground, val=volt, name=vname)
             R_name = 'Rin' + str(source_net)
-            # R_G = 'R_G'+ str(source_net)
-            # self._graph_add_comp(R_G, ground, 0, 1e-9)
-
             self._graph_add_comp(R_name, vnet, source_net, self.Rport)
         else:
             self.indep_voltage_source(vnet, source_net, val=volt, name=vname)
 
         self.max_net_id += 1
 
-    def _add_termial(self, node, port=True, ground=0):
-        newport = self.node_dict[node]
-        if port:
-            R_name = 'Rin' + str(newport)
-            #R_G = 'R_G' + str(newport)
-
-            if self.Rport != 0:
-                self._graph_add_comp(R_name, newport, ground, self.Rport)
-                #self._graph_add_comp(R_G, ground, 0, 1e-9)
-
-            else:
-                self.equiv([newport], 0)
-        else:
-            self.equiv([node], 0)
+    def _add_termial(self, net, ground=0):
+        Equiv_name = 'Rt_' + str(net)
+        self._graph_add_comp(Equiv_name, net, ground, 1e-6)
     def _find_all_s_ports(self,P_pos,P_neg=[]):
         # Find the corresponded net value for each node value
         Pos_net=[]
@@ -308,8 +298,8 @@ class Circuit():
             int_net = net_id
             # add a reistor between net1 and internal net
             net_id += 1
-            val = edge[2]['res']
-            self._graph_add_comp(Rname.format(RLname), net1, int_net, val)
+            rval = edge[2]['res']
+            self._graph_add_comp(Rname.format(RLname), net1, int_net, rval)
             if node2 not in self.node_dict.keys():
                 net2 = net_id
                 self.node_dict[node2] = net2
@@ -318,10 +308,12 @@ class Circuit():
                 net2 = self.node_dict[node2]
 
             # add an inductor between internal net and net2
-            val = edge[2]['ind']
-            self._graph_add_comp(Lname.format(RLname), int_net, net2, val)
+            lval = edge[2]['ind']
+            self._graph_add_comp(Lname.format(RLname), int_net, net2, lval)
+            self.R_count+=1
+            self.L_count+=1
         self.max_net_id=net_id
-
+        #print "node dictionary", self.node_dict
     def cap_update(self,cap_dict):
         for k in cap_dict.keys():
             n1 = k[0]
@@ -349,6 +341,8 @@ class Circuit():
             L1_name = 'L' + str(edge[0])
             L2_name = 'L' + str(edge[1])
             M_name='M'+'_'+L1_name+'_'+L2_name
+            self.M_count += 1
+
             self._graph_add_M(M_name,L1_name,L2_name,M_val)
 
     def refresh_current_info(self):
@@ -687,12 +681,8 @@ class Circuit():
                 if (n1 != 0) and (n2 != 0):
                     self.G[n1 - 1, n2 - 1] += -g
                     self.G[n2 - 1, n1 - 1] += -g
-
-                # If node 1 is connected to ground, add element to diagonal of matrix
                 if n1 != 0:
                     self.G[n1 - 1, n1 - 1] += g
-
-                # same for for node 2
                 if n2 != 0:
                     self.G[n2 - 1, n2 - 1] += g
             # B MATRIX
@@ -776,20 +766,18 @@ class Circuit():
             self.J[i] = 'I_{0}'.format(self.cur_element[i])
 
     def I_mat(self):
-        # generate the I matrix, current sources have n2 = arrow end of the element
-        for i in range(len(self.cur_element)):
-            el = self.cur_element[i]
-            n1 = self.cur_pnode[el]
-            n2 = self.cur_nnode[el]
-            # process all the passive elements, save conductance to temp value
-            x = el[0]
-            if x == 'I':
-                g = float(self.cur_value[el])
+        if self.cur_src != []:
+            for i in range(len(self.cur_src)):
+                el = self.cur_src[i]
+                n1 = self.src_pnode[el]
+                n2 = self.src_nnode[el]
+                g = float(self.src_value[el])
                 # sum the current into each node
                 if n1 != 0:
-                    self.I[n1 - 1] -= g
+                    self.I[n1 - 1] += g
                 if n2 != 0:
                     self.I[n2 - 1] += g
+
 
     def Ev_mat(self):
         # generate the E matrix
@@ -836,14 +824,13 @@ class Circuit():
                 self.A[n, i] = self.C[i]
 
 
-
-    def solve_iv(self):
+    def init_solver(self):
         # initialize some symbolic matrix with zeros
         # A is formed by [[G, C] [B, D]]
         # Z = [I,E]
         # X = [V, J]
-        num_nodes = max([max(self.nnode.values()),max(self.pnode.values())])
-        self.V = np.chararray((num_nodes,1), itemsize=4)
+        num_nodes = max([max(self.nnode.values()), max(self.pnode.values())])
+        self.V = np.chararray((num_nodes, 1), itemsize=4)
         self.I = np.zeros((num_nodes, 1), dtype=np.complex_)
         self.G = np.zeros((num_nodes, num_nodes), dtype=np.complex_)  # also called Yr, the reduced nodal matrix
 
@@ -851,15 +838,15 @@ class Circuit():
         # these are element types that have unknown currents
         i_unk = len(self.cur_element)
         # if i_unk == 0, just generate empty arrays
-
+        #print "old iunk", i_unk
         self.B = np.zeros((num_nodes, i_unk), dtype=np.complex_)
         self.C = np.zeros((i_unk, num_nodes), dtype=np.complex_)
         self.D = np.zeros((i_unk, i_unk), dtype=np.complex_)
         self.Ev = np.zeros((i_unk, 1), dtype=np.complex_)
-        self.J = np.chararray((i_unk,1),itemsize =10)
+        self.J = np.chararray((i_unk, 1), itemsize=10)
         _form_time = time.time()
         self.GBCD_mat(i_unk)
-        #print "forming GBCD_mat time", time.time() - _form_time
+        # print "forming GBCD_mat time", time.time() - _form_time
         _form_time = time.time()
 
         self.J_mat()
@@ -868,12 +855,15 @@ class Circuit():
         self.Ev_mat()
         self.Z_mat()
         self.X_mat()
-        #print "forming J,V,I,Ev,Z,X matrices time", time.time() - _form_time
+        # print "forming J,V,I,Ev,Z,X matrices time", time.time() - _form_time
         _form_time = time.time()
         self.A_mat(num_nodes, i_unk)
-        #print "forming A matrix time", time.time() - _form_time
+        # print "forming A matrix time", time.time() - _form_time
+    def solve_iv(self):
+        self.init_solver()
         Z = self.Z
         A = self.A
+        print 'full',np.shape(A)
         #print cd_A.dinv
         #A=cd_A.dinv*A
         #Z=cd_A.dinv*Z
@@ -901,6 +891,8 @@ class Circuit():
             results_dict[str(self.X[i,0])]=self.results[i]
         self.results=results_dict
         #print self.results
+        print "R,L,M", self.R_count, self.L_count, self.M_count
+
         #print "A matrix",A
         #print self.X
         #print "Z matrix",Z
@@ -909,13 +901,14 @@ class Circuit():
         #print self.results
 
     def solve_iv_ltspice(self,env=None,filename=None):
+        self.init_solver()
         work_space = os.getcwd()
         file =os.path.join(work_space,filename)
         LT_SPICE =LTSPICE(env,file)
         LT_SPICE.write2(circuit=self,frange=[self.freq+0.001,self.freq+0.001,1])
         raw_file = file.split('.')[0]
         raw_file += '.raw'
-        #LT_SPICE.run()
+        LT_SPICE.run()
         result = SimData(raw_file)
         lt_result = result.get_data_dict()
         #print lt_result
@@ -923,6 +916,7 @@ class Circuit():
 
         for i in range(len(self.X)):
             x = str(self.X[i,0])
+
             if x[0] == 'v':
                 id = x[1:]
                 node = list(id.zfill(4))
@@ -1006,7 +1000,7 @@ def validate_solver_2():
     circuit.solve_iv()
     #circuit.solve_iv_hspice(filename='validate.sp',
     #                        env=os.path.abspath('C:\synopsys\Hspice_O-2018.09\WIN64\hspice.exe'))
-    print circuit.cur_element
+    #print circuit.cur_element
     #circuit.results=circuit.hspice_result
     print circuit.results
 def test_broadband():

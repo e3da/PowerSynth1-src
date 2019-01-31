@@ -2,10 +2,12 @@ import cProfile
 import matplotlib
 import pstats
 from powercad.Spice_handler.spice_export.PEEC_num_solver import *
+from powercad.Spice_handler.spice_export.RL_mat_eval import *
 from scipy import *
 from powercad.sym_layout.Electrical.E_mesh import *
 from powercad.Spice_handler.spice_export.HSPICE import HSPICE
 import copy
+from timeit import default_timer as timer
 def test_hier2():
     freqs = [0, 100, 200, 1000]
     for freq in freqs:
@@ -204,83 +206,123 @@ def test_hier2():
 
 
 def test_Ushape():
-    freqs = [0, 10, 21.544, 46.415, 100, 215.443, 464.159, 1000]
+    freqs = [10, 21.544, 46.415, 100, 215.443, 464.159, 1000]
+    mdl_dir = "C:\Users\qmle\Desktop\Documents\Conferences\IWIPP\Model\workspace"
+    mdl_name = '1trace.rsmdl'
+    rsmdl = load_mdl(mdl_dir, mdl_name)
+
     for freq in freqs:
-        pr = cProfile.Profile()
-        pr.enable()
-        R1 = Rect(4, 0, 0, 18)
+        # start profiler
+        start = time.time()
+        R1 = Rect(4, 0, 0, 20)
         R2 = Rect(16, 4, 16, 20)
-        R3 = Rect(20, 16, 0, 18)
+        R3 = Rect(20, 16, 0, 20)
         # R4 = Rect(7.5,2.5,0,7.5)
         rects = [R1, R2, R3]  # ,R4]
         P1, P2, P3 = [E_plate(rect=r, z=0, dz=0.2) for r in rects]
         new_module = E_module(plate=[P1, P2, P3])
         new_module.form_group()
         new_module.split_layer_group()
-        fig = plt.figure(1)
-        ax = a3d.Axes3D(fig)
-        ax.set_xlim3d(-5, 15)
-        ax.set_ylim3d(-5, 15)
-        ax.set_zlim3d(0, 2)
-        plot_rect3D(rect2ds=new_module.plate, ax=ax)
-        #plt.show()
-        fig = plt.figure(2)
-        ax = a3d.Axes3D(fig)
-        ax = plt.subplots()
+        #fig = plt.figure(1)
+        #ax = a3d.Axes3D(fig)
+        #ax.set_xlim3d(-5, 15)
+        #ax.set_ylim3d(-5, 15)
+        #ax.set_zlim3d(0, 2)
+
+        #fig = plt.figure(2)
+        #ax = a3d.Axes3D(fig)
+        #ax = plt.subplots()
         hier = Hier_E(module=new_module)
         hier.form_hierachy()
-        emesh = ElectricalMesh(hier_E=hier, freq=freq)
-        emesh.mesh_grid_hier(Nx=3, Ny=3)
-        emesh.plot_lumped_graph()
-        #ax.set_xlim3d(-5, 20)
-        #ax.set_ylim3d(-5, 20)
-        #ax.set_zlim3d(0, 2)
-        plt.show()
-
-        circuit = Circuit()
+        emesh = ElectricalMesh(hier_E=hier, freq=freq, mdl=rsmdl)
+        emesh.mesh_grid_hier(Nx=10, Ny=10)
         if freq != 0:
             emesh.update_mutual()
-        circuit.comp_mode = 'val'
-        circuit._graph_read(emesh.graph)
-        circuit.m_graph_read(emesh.m_graph)
-        pt1 = (0, 2)
-        pt2 = (0, 18)
+        emesh.update_trace_RL_val()
+        pr = cProfile.Profile()
+        pr.enable()
+        # Test new RL matrix
+        print "NEW"
+        time_RL = timer()
+        C1 = RL_circuit()
+        C1.comp_mode = 'val'
+        C1._graph_read(emesh.graph)
+        C1.m_graph_read(emesh.m_graph)
+        pt1 = (0, 2,0)
+        pt2 = (0, 18,0)
+        src1 = emesh.find_node(pt1)
+        sink1 = emesh.find_node(pt2)
+        #test_plot_emesh(emesh,[0,20],[0,20],[1,2])
+        vname = 'v'+str(src1)
+
+        C1.assign_freq(freq * 1000)
+        #C1.indep_current_source(src1, 0, 1)
+        C1.indep_voltage_source(src1, 0, 1)
+
+        C1._add_termial(sink1)
+        C1.build_current_info()
+        C1.solve_iv()
+        print "new",timer()-time_RL
+        #imp = C1.results[vname]
+        #print freq, 'kHz'
+        #print 'RL1', np.real(imp), abs(np.imag(imp) / C1.s)
+
+        print "OLD"
+        # Test old matrix solver
+        time_PEEC = timer()
+        C2 = Circuit()
+
+        C2.comp_mode = 'val'
+        C2._graph_read(emesh.graph)
+        C2.m_graph_read(emesh.m_graph)
+        pt1 = (0, 2, 0)
+        pt2 = (0, 18, 0)
 
         src1 = emesh.find_node(pt1)
         sink1 = emesh.find_node(pt2)
-        print src1, sink1
-        # raw_input()
-        # sink3 = emesh.find_node(pt3)
-        circuit.assign_freq(freq * 1000)
-        circuit._assign_vsource(src1, vname='Vs1', volt=1)
-        circuit.Rport = 50
 
-        circuit._add_termial(sink1)
-        # circuit._add_ports(sink3)
+        src1 = C2.node_dict[src1]
+        sink1 = C2.node_dict[sink1]
+        C2.assign_freq(freq * 1000)
+        C2.indep_voltage_source(src1, 0, 1)
+        #C2.indep_current_source(src1,0,1)
+        C2._add_termial(sink1)
+        C2.build_current_info()
+        C2.solve_iv()
+        peec_result = C2.results
 
-        circuit.build_current_info()
-        circuit.solve_iv()
-        # circuit.solve_iv_hspice(filename='ushape.sp', env='hspice')
-        print "freq", freq, "model", circuit._compute_imp(src1, sink1, sink1)
+        #print "all", res2
+        #print 'Res', np.real(imp)
+        ##print 'Ind', np.imag(imp) / C2.s
+        print "old", timer() - time_PEEC
 
-        # COMPARE:
-        '''
-        comp_dict= {}
-        for k in circuit.results.keys():
-            comp_dict[k] = (circuit.results[k]-circuit.hspice_result[k])/ circuit.hspice_result[k]
-
-        for k in comp_dict.keys():
-            print "diff",k,np.abs(comp_dict[k])*100
-        '''
-        # circuit.results = circuit.hspice_result
-        # print "freq", freq, "HSPICE", circuit._compute_imp(src1, sink1, sink1)
 
         pr.disable()
         pr.create_stats()
         file = open('mystats.txt', 'w')
         stats = pstats.Stats(pr, stream=file)
-        stats.sort_stats('time')
+        stats.sort_stats('cumulative')
         stats.print_stats()
+
+        ''' Compare between 2 solvers'''
+        pos = {}
+        all_V = []
+        debug=False
+        if debug == True:
+            for n in emesh.graph.nodes():
+                node = emesh.graph.node[n]['node']
+                pos[n] = node.pos
+                net1 = C1.node_dict[node.node_id]
+                net2 = C2.node_dict[node.node_id]
+                V1_name = 'v' + str(net1)
+                V2_name = 'v' + str(net2)
+                print "--Node--", n, 'V1_name', V1_name, 'V2_name', V2_name
+                print "V-New", abs(C1.results[V1_name]), "V-peec", abs(peec_result[V2_name])
+
+
+        #print freq, 'kHz'
+        #print 'RL2', np.real(imp), abs(np.imag(imp) / C2.s)
+        raw_input()
         '''
 
         result = circuit.results
@@ -385,77 +427,123 @@ def test_Ushape():
 
 
 def test_single_trace_mesh():
-    freqs = np.linspace(10, 100, 4).tolist()
-    freqs = [1000]
+    freqs = np.linspace(10, 1000, 100).tolist()
+    mdl_dir = "C:\Users\qmle\Desktop\Documents\Conferences\IWIPP\Model\workspace"
+    mdl_name = 'ushape.rsmdl'
+    rsmdl = load_mdl(mdl_dir, mdl_name)
+    #freqs = [1000]
+    start = time.time()
+    pr = cProfile.Profile()
+    pr.enable()
     for freq in freqs:
-        i = freqs.index(freq)
-        R4 = Rect(2, 0, 0, 10)
+        #G = Rect(4,0,0,20)
+        #G = E_plate(G, -10, 0.2)
+        R4 = Rect(4, 0, 0, 20)
         P4 = E_plate(R4, 0, 0.2)
         new_module = E_module(plate=[P4])
         new_module.form_group()
         new_module.split_layer_group()
-        fig = plt.figure(1)
-        ax = a3d.Axes3D(fig)
         hier = Hier_E(module=new_module)
         hier.form_hierachy()
-        emesh = ElectricalMesh(hier_E=hier, freq=freq)
+        emesh = ElectricalMesh(hier_E=hier, freq=freq,mdl=rsmdl)
         emesh.mesh_grid_hier(Nx=3, Ny=3)
+        emesh.update_trace_RL_val()
         emesh.update_mutual()
-        emesh.plot_3d(fig=fig, ax=ax)
-        ax.set_xlim3d(0, 10)
-        ax.set_ylim3d(0, 2)
-        ax.set_zlim3d(0, 2)
-        circuit = Circuit()
-        circuit._graph_read(emesh.graph)
-        circuit.m_graph_read(emesh.m_graph)
-        pt1 = (0, 1)
-        pt2 = (10, 1)
+        C1 = RL_circuit()
+
+        C1._graph_read(emesh.graph)
+        C1.m_graph_read(emesh.m_graph)
+        pt1 = (0, 2,0)
+        pt2 = (20, 2,0)
+        #pt3 = (0, 2, -100)
+
+        src1 = emesh.find_node(pt1)
+
+
+        sink1 = emesh.find_node(pt2)
+        #sink2 = emesh.find_node(pt3)
+
+        print 'src',src1,'sink', sink1
+        src_name = 'v'+str(src1)
+        print src_name
+        C1.assign_freq(freq * 1000)
+        #C1.indep_current_source(src1,0,1)
+        C1.indep_voltage_source(src1,0,1)
+        C1._add_termial(sink1)
+        #circuit._add_termial(sink2)
+
+        C1.build_current_info()
+        C1.solve_iv()
+        D1=C1.D
+
+
+        C2 = Circuit()
+
+        C2.comp_mode = 'val'
+        C2._graph_read(emesh.graph)
+        C2.m_graph_read(emesh.m_graph)
+        pt1 = (0, 2, 0)
+        pt2 = (20, 2, 0)
+
         src1 = emesh.find_node(pt1)
         sink1 = emesh.find_node(pt2)
-        print src1, sink1
-        circuit.assign_freq(freq * 1000)
-        circuit._assign_vsource(src1, vname='Vs1', volt=1)
-        circuit._add_termial(sink1)
-        circuit.build_current_info()
-        circuit.solve_iv()
-        circuit.solve_iv_hspice(filename='singletrace.sp',
-                                env=os.path.abspath('C:\synopsys\Hspice_O-2018.09\WIN64\hspice.exe'))
+        src1 = C2.node_dict[src1]
+        sink1 = C2.node_dict[sink1]
 
-        result = circuit.results
+        print 'net2',src1,sink1
+        C2.assign_freq(freq * 1000)
+        C2.indep_voltage_source(src1, 0, 1)
+        # C2.indep_current_source(src1,0,1)
+        C2._add_termial(sink1)
+        C2.build_current_info()
+        C2.solve_iv()
+        peec_result = dict(C2.results)
+        ENV = os.path.abspath('C:\Program Files\LTC\LTspiceXVII\XVIIx64.exe')
+        C2.solve_iv_ltspice(filename='singletrace.net',
+                                   env=ENV)
+        D2=C2.D
+        test_plot_emesh(emesh=emesh, xlim=[0, 22], ylim=[-1, 3], zlim=[0, 1])
 
-        matplotlib.use('Agg')
-        print freq, 'Hz'
+        numpy.savetxt("D1.csv", D1, delimiter=",")
+        numpy.savetxt("D2.csv", D2, delimiter=",")
 
-        print circuit._compute_imp(src1, sink1, sink1)
+        pos = {}
+        all_V = []
+        debug =False
+        if debug == True:
+            for n in emesh.graph.nodes():
+                node = emesh.graph.node[n]['node']
+                pos[n] = node.pos
+                net1 = C1.node_dict[node.node_id]
+                net2 = C2.node_dict[node.node_id]
+                V1_name = 'v' + str(net1)
+                V2_name = 'v' + str(net2)
+                print "--Node--", n , 'V1_name', V1_name,'V2_name',V2_name
+                print "V-New", abs(C1.results[V1_name]), "V-Ltspice", abs(C2.results[V2_name]),"V-peec",abs(peec_result[V2_name])
+
+
+        imp = 1/C1.results['I_Vs']
+        print freq,'kHz'
+        print 'RL1',np.real(imp), abs(np.imag(imp)/C1.s)
+        imp = 1 / peec_result['I_Vs']
+        print freq, 'kHz'
+        print 'RL2', np.real(imp), abs(np.imag(imp) / C2.s)
+        raw_input()
+
+        #raw_input()
+        #matplotlib.use('Agg')
+        #print freq, 'Hz'
+
+        #print circuit._compute_imp(src1, sink1, sink1)
 
         # PLOTTING CURRENT/CURRENT DENSITY VECTORS
-        all_I = []
-
-        for e in emesh.graph.edges(data=True):
-            edge = e[2]['data']
-            edge_name = edge.name
-            width = edge.data['w'] * 1e-3
-            thick = 0.2e-3
-            A = width * thick
-            I_name = 'I_L' + edge_name
-            edge.I = np.real(result[I_name])
-            edge.J = edge.I / A
-            all_I.append(abs(edge.J))
-        I_min = min(all_I)
-        I_max = max(all_I)
-        normI = Normalize(I_min, I_max)
-        normI = Normalize(10000, 100000)
-        fig = plt.figure(i)
-        ax = fig.add_subplot(111)
-        plt.xlim([0, 10])
-        plt.ylim([-1, 3])
-        plot_combined_I_quiver_map_layer(norm=normI, ax=ax, cmap=emesh.c_map, G=emesh.graph, sel_z=0, mode='J',
-                                         W=[0, 10],
-                                         H=[0, 2], numvecs=21)
-        plt.title('frequency ' + str(freq * 1000) + ' Hz')
-    plt.show()
-
-
+        test_plot_current(emesh=emesh,result=C1.results)
+    pr.disable()
+    pr.create_stats()
+    file = open('mystats.txt', 'w')
+    stats = pstats.Stats(pr, stream=file)
+    stats.sort_stats('cumulative')
+    stats.print_stats()
 def test_3d_module():
     R1 = Rect(5, 0, 0, 10)
     P1 = E_plate(R1, 0, 0.2)
@@ -800,7 +888,7 @@ def S_para_IWIPP_HSPICE_PCB():
 
         emesh = ElectricalMesh(hier_E=hier, mdl_name='s_params_test_noground_validate.rsmdl')
         start =time.time()
-        emesh.mesh_grid_hier(Nx=4, Ny=4)
+        emesh.mesh_grid_hier(Nx=10, Ny=10)
         print "meshing time", time.time()-start
         #fig = plt.figure(1)
         #ax = a3d.Axes3D(fig)
@@ -1260,17 +1348,57 @@ def test_layer_stack_ushape():
         #circuit.results = circuit.hspice_result
         #print "freq", freq, "model", circuit._compute_imp(src1, sink1, sink1)
 
+
+def test_plot_emesh(emesh=None,xlim=[],ylim=[],zlim=[]):
+
+
+    fig = plt.figure(1)
+    ax = a3d.Axes3D(fig)
+    ax.set_xlim3d(xlim[0], xlim[1])
+    ax.set_ylim3d(ylim[0], ylim[1])
+    ax.set_zlim3d(zlim[0], zlim[1])
+    emesh.plot_3d(fig=fig, ax=ax)
+    plt.savefig("mesh.png", dpi=300)
+    plt.show()
+
+def test_plot_current(emesh=None,result=None,thick=0.2e-3,freq=1000):
+
+    all_I = []
+
+    for e in emesh.graph.edges(data=True):
+        edge = e[2]['data']
+        edge_name = edge.name
+        width = edge.data['w'] * 1e-3
+        thick = thick
+        A = width * thick
+        I_name = 'I_B' + edge_name
+        edge.I = np.real(result[I_name])
+        edge.J = edge.I / A
+        all_I.append(abs(edge.J))
+    I_min = min(all_I)
+    I_max = max(all_I)
+    normI = Normalize(I_min, I_max)
+    fig = plt.figure(1)
+    ax = fig.add_subplot(111)
+    plt.xlim([0, 10])
+    plt.ylim([-1, 5])
+    plot_combined_I_quiver_map_layer(norm=normI, ax=ax, cmap=emesh.c_map, G=emesh.graph, sel_z=0, mode='J',
+                                     W=[0, 10],
+                                     H=[0, 4], numvecs=10)
+    plt.title('frequency ' + str(freq * 1000) + ' Hz')
+    plt.show()
+
 if __name__ == '__main__':
     #test_mutual()
     # test_hier2()
-    #test_Ushape()
+    test_Ushape()
     #S_para_IWIPP()
     #S_para_IWIPP_HSPICE_wground()
     #S_para_IWIPP_HSPICE_PCB()
     #S_para_IWIPP_HSPICE_no_ground()
-    ECCE_layout()
+    #ECCE_layout()
     #test_layer_stack_ushape()
     #test_layer_stack_mutual()
     #balance_study()
     #test_3d_module()
-    # test_single_trace_mesh()
+    #test_single_trace_mesh()

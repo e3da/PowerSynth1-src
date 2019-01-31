@@ -330,8 +330,6 @@ class E_module:
                     midy = bot + (top - bot) / 2
                     split = False
                     for plate in plate_group[group]:
-                        cur_plate = plate
-
                         trace = plate.rect
                         if trace.encloses(midx, midy):
                             split = True

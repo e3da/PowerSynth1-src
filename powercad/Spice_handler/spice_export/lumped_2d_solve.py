@@ -683,6 +683,8 @@ class Circuit():
 
         Z = self.Z
         A = self.A
+        print "matrices"
+        print A,Z
         '''
         col = [str(i + 1) for i in range(A.shape[0])]
         matA = pd.DataFrame(columns=col)

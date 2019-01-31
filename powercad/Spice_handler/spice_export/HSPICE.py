@@ -151,7 +151,7 @@ class HSPICE:
             # write ac sim
 
             if frange[0]>=1000:
-                sim_line = self.ac_lin(fmin=frange[0], fmax=frange[1], nump=1)
+                sim_line = self.ac_lin(fmin=frange[0], fmax=frange[1], num=1)
             else:
                 sim_line = self.operatingpoint()
 

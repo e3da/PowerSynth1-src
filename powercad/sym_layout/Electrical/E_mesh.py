@@ -1,5 +1,5 @@
 
-from powercad.parasitics.mdl_compare import trace_ind_krige,trace_res_krige,trace_capacitance
+from powercad.parasitics.mdl_compare import trace_ind_krige,trace_res_krige,trace_capacitance,trace_inductance
 from powercad.parasitics.mdl_compare import load_mdl
 from powercad.parasitics.mutual_inductance_saved import *
 from powercad.sym_layout.Electrical.E_module import *
@@ -66,7 +66,7 @@ class Mesh_edge:
 
 class ElectricalMesh():
     # Electrical Meshing for one selected layer
-    def __init__(self,hier_E=None,freq=1000,mdl_dir="C:\Users\qmle\Desktop\Documents\Conferences\IWIPP\Model\workspace",mdl_name='2d_high_freq.rsmdl'):
+    def __init__(self,hier_E=None,freq=1000,mdl=None):
         self.hier_E=hier_E
         self.graph=nx.Graph()#nx.MultiGraph()
         self.m_graph=nx.Graph() # A graph represent Mutual
@@ -75,7 +75,7 @@ class ElectricalMesh():
         self.node_dict = {}
         self.c_map =cm.jet
         self.f = freq
-        self.mdl = load_mdl(mdl_dir,mdl_name)
+        self.mdl = mdl
         self.all_nodes = []
         # list object used in RS model
         self.all_W=[]
@@ -84,6 +84,7 @@ class ElectricalMesh():
         self.all_n2 = []
         self.rm_edges=[]
         self.div=2 # by default, special case for gp
+        self.hier_edge_data={} # edge name : parent edge data
     def plot_3d(self,fig,ax):
         network_plot_3D(G=self.graph,ax=ax)
 
@@ -117,12 +118,11 @@ class ElectricalMesh():
         self.graph.add_edge(n1, n2, data= edge_data,ind=ind,res=res,name=edge_data.data['name'])
         # when update edge, update node in M graph as edge data to store M values later
         edge_name = edge_data.data['name']
-        if 1:
-            self.all_W.append(w)
-            self.all_L.append(l)
-            self.all_n1.append(n1)
-            self.all_n2.append(n2)
-            self.m_graph.add_node(edge_name) # edge name by 2 nodes
+        self.all_W.append(w)
+        self.all_L.append(l)
+        self.all_n1.append(n1)
+        self.all_n2.append(n2)
+        self.m_graph.add_node(edge_name) # edge name by 2 nodes
 
 
     def update_C_val(self, t=0.035, h=1.5,mode=1):
@@ -173,24 +173,30 @@ class ElectricalMesh():
             n_capt_dict[n]=Rect(top=top,bottom=bottom,left=left,right=right)
 
         return n_capt_dict
-    def update_trace_RL_val(self, p=1.68e-8,t=0.2):
-        if self.f != 0: # AC mode
-            all_r = trace_res_krige(self.f, self.all_W, self.all_L, t=0, p=0, mdl=self.mdl['R']).tolist()
-            all_l = trace_ind_krige(self.f, self.all_W, self.all_L, mdl=self.mdl['L']).tolist()
-            #all_c = self.compute_all_cap()
-            for i in range(len(self.all_W)):
-                n1 = self.all_n1[i]
-                n2 = self.all_n2[i]
-                #print 'bf',self.graph[n1][n2].values()[0]
-                if not ([n1,n2] in self.rm_edges):
-                    self.graph[n1][n2].values()[0]['res'] = all_r[i]*1e-3
-                    self.graph[n1][n2].values()[0]['ind'] = all_l[i] * 1e-9
-                    #self.graph[n1][n2].values()[0]['cap'] = all_c[i] * 1e-12
 
-                    edge_data = self.graph[n1][n2].values()[0]['data']
-                    edge_data.R = all_r[i]*1e-3 
-                    edge_data.L = all_l[i]*1e-9
-                    #edge_data.C = all_c[i]*1e-12
+    def update_trace_RL_val(self, p=1.68e-8,t=0.2,h=0.2,mode='RS'):
+        if self.f != 0: # AC mode
+            if mode =='RS':
+                all_r = trace_res_krige(self.f, self.all_W, self.all_L, t=0, p=0, mdl=self.mdl['R']).tolist()
+                all_l = trace_ind_krige(self.f, self.all_W, self.all_L, mdl=self.mdl['L']).tolist()
+                #all_l = [trace_inductance(w, l, t, h) for w, l in zip(self.all_W, self.all_L)]
+
+                #print 'R',all_r
+                #print 'L',all_l
+                #all_c = self.compute_all_cap()
+                for i in range(len(self.all_W)):
+                    n1 = self.all_n1[i]
+                    n2 = self.all_n2[i]
+                    #print 'bf',self.graph[n1][n2].values()[0]
+                    if not ([n1,n2] in self.rm_edges):
+                        self.graph[n1][n2].values()[0]['res'] = all_r[i]*1e-3
+                        self.graph[n1][n2].values()[0]['ind'] = all_l[i] * 1e-9
+                        #self.graph[n1][n2].values()[0]['cap'] = all_c[i] * 1e-12
+
+                        edge_data = self.graph[n1][n2].values()[0]['data']
+                        edge_data.R = all_r[i]*1e-3
+                        edge_data.L = all_l[i]*1e-9
+                        #edge_data.C = all_c[i]*1e-12
         else: # DC mode
             all_r = p * np.array(self.all_L) / (np.array(self.all_W) * t) * 1e-3
             for i in range(len(self.all_W)):
@@ -199,6 +205,103 @@ class ElectricalMesh():
                 self.graph[n1][n2].values()[0]['res'] = all_r[i]
                 edge_data = self.graph[n1][n2].values()[0]['data']
                 edge_data.R = all_r[i]
+
+    def update_hier_edge_RL(self):
+        Rx = SW.E_edge.R * d_sw_x / SW.E_edge.len
+        Lx = SW.E_edge.L * d_sw_x / SW.E_edge.len
+        Ry = SW.N_edge.R * d_sw_y / SW.N_edge.len
+        Ly = SW.N_edge.L * d_sw_y / SW.N_edge.len
+        # print SW.E_edge.R, SW.E_edge.L
+
+        R = Rx * Ry / (Rx + Ry)
+        L = Lx * Ly / (Lx + Ly)
+        R = 1e-6 if R == 0 else R
+        L = 1e-10 if L == 0 else L
+
+        SW_data = {'R': R, 'L': L, 'C': 1e-12}
+
+        # Compute NW data:
+        d_nw_x = abs(cp_node.pos[0] - NW.pos[0])
+        d_nw_y = abs(cp_node.pos[1] - NW.pos[1])
+
+        Rx = NW.E_edge.R * d_nw_x / NW.E_edge.len
+        Lx = NW.E_edge.L * d_nw_x / NW.E_edge.len
+        Ry = NW.S_edge.R * d_nw_y / NW.S_edge.len
+        Ly = NW.S_edge.L * d_nw_y / NW.S_edge.len
+
+        R = Rx * Ry / (Rx + Ry)
+        L = Lx * Ly / (Lx + Ly)
+        R = 1e-6 if R == 0 else R
+        L = 1e-10 if L == 0 else L
+
+        NW_data = {'R': R, 'L': L, 'C': 1e-12}
+
+        # Compute NE data:
+        d_ne_x = abs(cp_node.pos[0] - NE.pos[0])
+        d_ne_y = abs(cp_node.pos[1] - NE.pos[1])
+
+        Rx = NE.W_edge.R * d_ne_x / NE.W_edge.len
+        Lx = NE.W_edge.L * d_ne_x / NE.W_edge.len
+        Ry = NE.S_edge.R * d_ne_y / NE.S_edge.len
+        Ly = NE.S_edge.L * d_ne_y / NE.S_edge.len
+
+        R = Rx * Ry / (Rx + Ry)
+        L = Lx * Ly / (Lx + Ly)
+        R = 1e-6 if R == 0 else R
+        L = 1e-10 if L == 0 else L
+        NE_data = {'R': R, 'L': L, 'C': 1e-12}
+
+        # Compute SE data:
+        d_se_x = abs(cp_node.pos[0] - SE.pos[0])
+        d_se_y = abs(cp_node.pos[1] - SE.pos[1])
+
+        Rx = SE.W_edge.R * d_se_x / SE.W_edge.len
+        Lx = SE.W_edge.L * d_se_x / SE.W_edge.len
+        Ry = SE.N_edge.R * d_se_y / SE.N_edge.len
+        Ly = SE.N_edge.L * d_se_y / SE.N_edge.len
+
+        R = Rx * Ry / (Rx + Ry)
+        L = Lx * Ly / (Lx + Ly)
+        R = 1e-6 if R == 0 else R
+        L = 1e-10 if L == 0 else L
+        SE_data = {'R': R, 'L': L, 'C': 1e-12}
+    def _save_hier_node_data(self,hier_nodes=None,parent_data=None):
+        '''
+
+        Args:
+            hier_nodes: a group of hier nodes to form edges
+            parent_data: a dictionary contains nodes for parents' nodes
+                                    hier_data = {'SW':SW,'NW':NW,'NE':NE,'SE':SE} # 4 points on the corners of parent net
+
+        Returns:
+
+        '''
+        SW = parent_data['SW']
+        NW = parent_data['NW']
+        SE = parent_data['SE']
+        NE = parent_data['NE']
+
+        if len(hier_nodes)==0:
+            hier_node = hier_nodes[0]
+            if not (hier_node.pos[0] == NE.pos[0] or hier_node.pos[1] == NW.pos[1]): # Case hier node is inside parent cell
+                self.add_hier_edge(n1=hier_node.node_id, n2=SW.node_id)
+                self.add_hier_edge(n1=hier_node.node_id, n2=NW.node_id)
+                self.add_hier_edge(n1=hier_node.node_id, n2=NE.node_id)
+                self.add_hier_edge(n1=hier_node.node_id, n2=SE.node_id)
+            else:  # case hier node is on one of parent cell's edge
+                if hier_node.pos[0] == NE.pos[0]:
+                    self.add_hier_edge(n1=hier_node.node_id, n2=SE.node_id)
+                    self.add_hier_edge(n1=hier_node.node_id, n2=NE.node_id)
+                elif hier_node.pos[1] == NW.pos[1]:
+                    self.add_hier_edge(n1=hier_node.node_id, n2=NW.node_id)
+                    self.add_hier_edge(n1=hier_node.node_id, n2=NE.node_id)
+            name = hier_node.node_id
+            self.hier_edge_data[name] = parent_data
+        else: # Method to handle multiple hier node in same cell.
+            # First ranking the node location based on the orientation of parent cell.
+            print "implement me !"
+
+
 
     def add_hier_edge(self, n1, n2,edge_data=None):
         if edge_data==None:
@@ -213,6 +316,7 @@ class ElectricalMesh():
         edge_data=Mesh_edge(m_type='hier', nodeA=n1, nodeB=n2, data={'type':'hier','name':str(n1) + '_' + str(n2)})
 
         self.graph.add_edge(n1, n2, data=edge_data, ind=ind, res=res, cap=cap)
+
     def remove_edge(self,edge):
         try:
             self.rm_edges.append([edge.nodeA.node_id, edge.nodeB.node_id])
@@ -225,7 +329,6 @@ class ElectricalMesh():
         add_M_edge = self.m_graph.add_edge
         get_node = self.graph.node
         all_edges = self.graph.edges(data=True)
-        #print len(all_edges)*len(all_edges)/2
         for e1 in all_edges:
             data1= e1
             n1_1 = get_node[data1[0]]['node']  # node 1 on edge 1
@@ -234,8 +337,6 @@ class ElectricalMesh():
             p1_2 = n1_2.pos
             ori1 = 'h' if p1_1[1] == p1_2[1] else 'v'
             edge1 = data1[2]['data']
-
-
             if edge1.type!='hier':
                 w1= edge1.data['w']
                 diff1=0
@@ -248,6 +349,7 @@ class ElectricalMesh():
                 rect1 = edge1.data['rect']
                 rect1_data=[w1,l1,t1,z1]
             else:
+                print "continue"
                 continue
 
             e1_name = edge1.data['name']
@@ -300,7 +402,6 @@ class ElectricalMesh():
                             p= z2-z1
                             E= r2.bottom- r1.bottom+diff1+diff2
                             l3= r2.left-r1.left
-                            #print w1,l1,t1,w2,l2,t2,l3,p,E
                             M12 = M_cal(w1=w1, l1=l1, t1=t1, w2=w2, l2=l2, t2=t2, l3=l3,
                                                         p=p, E=E)
 
@@ -330,19 +431,8 @@ class ElectricalMesh():
 
 
                         if M12>0:
-
-                            #if ori1 =='v' and ori2 == 'v' and z1!=z2:
-                            #    rects = [r1, r2]
-                            #    print M12,'nH'
-
-                            #    draw_rect_list(rects,'blue','+')
-
-                            #if z1!=z2:
-                            #    print z1, z2
-                            #    print "diff", abs(z1 - z2), M12
-                            #    raw_input("stop")
                             add_M_edge(e1_name,e2_name,attr={'Mval':mult*M12*1e-9})
-                        '''
+
                         elif M12<0:
                             print ori1,ori2
                             print "new cal"
@@ -358,8 +448,9 @@ class ElectricalMesh():
                             draw_rect_list(rects,'blue','+',['r1','r2'])
                             raw_input()
                             # print "a",w1,'b',t1,'l1',l1,'E',E,'d',w2,'c',t2,'l2',l2,'p',p,'l3',l3
-                        '''
 
+                    else:
+                        continue
     def find_E(self,ax=None):
         bound_graph= nx.Graph()
         bound_nodes=[]
@@ -491,7 +582,7 @@ class ElectricalMesh():
             if hier_E.isl_group_data!={}:
                 thick = hier_E.isl_group_data[g]['thick']
             else:
-                thick = 0.035
+                thick = 0.035 # Hard coded for test case without MDK input
 
             corners_trace_dict = {}  # Dictionary to store all corners of each rectangular piece
             lines_corners_dict = {}  # Dictionary to store all lines connected to corners
@@ -505,11 +596,9 @@ class ElectricalMesh():
                 k = g.nodes.keys()[k_id]
                 trace=g.nodes[k]
                 tr = trace.data.rect
-                # mesh this trace
+
                 z = trace.data.z  # layer level for this node
-                #print "Z",z
-                num_x = Nx
-                num_y = Ny
+
                 # Forming corner - trace relationship
                 corners += tr.get_all_corners()
                 # Form relationship between corner and trace
@@ -525,7 +614,7 @@ class ElectricalMesh():
                 lines += tr.get_all_lines()
 
                 # GROUND PLANE
-                if z ==0: # TEST FOR NOW , HAVE TO SPECIFY LATER
+                if z ==1000: # TEST FOR NOW , HAVE TO SPECIFY LATER
                     num_x=5#+  int(self.f/100)
                     num_y=5#+ int(self.f / 100)
                     self.div=2
@@ -612,15 +701,15 @@ class ElectricalMesh():
             #self.mesh_edges2(thick)
             #fig,ax = plt.subplots()
             #draw_rect_list(all_rect,ax,'blue',None)
-
-            # Once we have all the nodes and edges for the trace group, we need to add node and approximated edges
-            #print 'comp nodes',comp_nodes
-            if comp_nodes!={} and g in comp_nodes: # CASE there are no components
+            # plt.show()
+            # Once we have all the nodes and edges for the trace group, we need to save hier node info
+            hier_group_dict = {}
+            if comp_nodes!={} and g in comp_nodes: # case there are components
                 for cp_node in comp_nodes[g]:
                     min_dis = 1000
                     SW = None
                     cp = cp_node.pos
-                    # Finding the point on South West corner
+                    # Finding the closest point on South West corner
                     for p in points:  # all point in group
                         del_x = cp[0] - p[0]
                         del_y = cp[1] - p[1]
@@ -628,93 +717,28 @@ class ElectricalMesh():
                         if del_x > 0 and del_y > 0:
                             if distance < min_dis:
                                 min_dis = distance
-                                d_sw_x=del_x
-                                d_sw_y=del_y
                                 SW = p
                     node_name = str(SW[0]) + '_' + str(SW[1])
-
                     # Compute SW data:
-                    #print cp,SW
-                    rat=2
-                    SW = self.node_dict[node_name]
-                    d_SW = np.sqrt(d_sw_x ** 2 + d_sw_y ** 2)
-                    Rx = SW.E_edge.R*d_sw_x/SW.E_edge.len
-                    Lx = SW.E_edge.L * d_sw_x / SW.E_edge.len
-                    Ry = SW.N_edge.R * d_sw_y / SW.N_edge.len
-                    Ly = SW.N_edge.L * d_sw_y / SW.N_edge.len
-                    #print SW.E_edge.R, SW.E_edge.L
-
-                    R = Rx * Ry / (Rx + Ry)
-                    L = Lx * Ly / (Lx + Ly)
-                    R=1e-6 if R==0 else R
-                    L = 1e-10 if L == 0 else L
-
-                    SW_data={'R':R,'L':L,'C':  1e-12}
-
-                    # Compute NW data:
+                    # 4 points on parent trace
+                    SW = self.node_dict[node_name] # SW - anchor node
                     NW = SW.North
-                    d_nw_x = abs(cp_node.pos[0] - NW.pos[0])
-                    d_nw_y = abs(cp_node.pos[1] - NW.pos[1])
-                    d_NW = np.sqrt(d_nw_x ** 2 + d_nw_y ** 2)
-
-                    Rx = NW.E_edge.R * d_nw_x / NW.E_edge.len
-                    Lx = NW.E_edge.L * d_nw_x / NW.E_edge.len
-                    Ry = NW.S_edge.R * d_nw_y / NW.S_edge.len
-                    Ly = NW.S_edge.L * d_nw_y / NW.S_edge.len
-
-                    R=Rx*Ry/(Rx+Ry)
-                    L = Lx * Ly / (Lx + Ly)
-                    R = 1e-6 if R == 0 else R
-                    L = 1e-10 if L == 0 else L
-
-                    NW_data = {'R': R, 'L': L, 'C': 1e-12}
-
-                    # Compute NE data:
                     NE = NW.East
-                    d_ne_x = abs(cp_node.pos[0] - NE.pos[0])
-                    d_ne_y = abs(cp_node.pos[1] - NE.pos[1])
-                    d_NE = np.sqrt(d_ne_x ** 2 + d_ne_y ** 2)
-
-                    Rx = NE.W_edge.R * d_ne_x / NE.W_edge.len
-                    Lx = NE.W_edge.L * d_ne_x / NE.W_edge.len
-                    Ry = NE.S_edge.R * d_ne_y / NE.S_edge.len
-                    Ly = NE.S_edge.L * d_ne_y / NE.S_edge.len
-
-                    R = Rx * Ry / (Rx + Ry)
-                    L = Lx * Ly / (Lx + Ly)
-                    R = 1e-6 if R == 0 else R
-                    L = 1e-10 if L == 0 else L
-                    NE_data = {'R': R, 'L': L, 'C': 1e-12}
-
-                    # Compute SE data:
                     SE = NE.South
-                    d_se_x = abs(cp_node.pos[0] - SE.pos[0])
-                    d_se_y = abs(cp_node.pos[1] - SE.pos[1])
-                    d_SE = np.sqrt(d_se_x ** 2 + d_se_y ** 2)
+                    hier_data = {'SW':SW,'NW':NW,'NE':NE,'SE':SE} # 4 points on the corners of parent net
+                    if not (SW.node_id in hier_group_dict): # form new group based on SW_id
+                        hier_group_dict[SW.node_id]={'node_group':[cp_node],'parent_data':hier_data}
+                    else: # if SW_id exists, add new hier node to group
+                        hier_group_dict[SW.node_id]['node_group'].append(cp_node)
 
-                    Rx = SE.W_edge.R * d_se_x / SE.W_edge.len
-                    Lx = SE.W_edge.L * d_se_x / SE.W_edge.len
-                    Ry = SE.N_edge.R * d_se_y / SE.N_edge.len
-                    Ly = SE.N_edge.L * d_se_y / SE.N_edge.len
 
-                    R = Rx * Ry / (Rx + Ry)
-                    L = Lx * Ly / (Lx + Ly)
-                    R = 1e-6 if R == 0 else R
-                    L = 1e-10 if L == 0 else L
-                    SE_data = {'R': R, 'L': L, 'C':  1e-12}
 
-                    if not (cp_node.pos[0]==NE.pos[0] or cp_node.pos[1] == NW.pos[1]):
-                        self.add_hier_edge(n1=cp_node.node_id, n2=SW.node_id,edge_data=SW_data)
-                        self.add_hier_edge(n1=cp_node.node_id, n2=NW.node_id, edge_data=NW_data)
-                        self.add_hier_edge(n1=cp_node.node_id, n2=NE.node_id, edge_data=NE_data)
-                        self.add_hier_edge(n1=cp_node.node_id, n2=SE.node_id, edge_data=SE_data)
-                    else:
-                        if cp_node.pos[0] == NE.pos[0]:
-                            self.add_hier_edge(n1=cp_node.node_id, n2=SE.node_id, edge_data=SW_data)
-                            self.add_hier_edge(n1=cp_node.node_id, n2=NE.node_id, edge_data=NW_data)
-                        elif cp_node.pos[1] == NW.pos[1]:
-                            self.add_hier_edge(n1=cp_node.node_id, n2=NW.node_id, edge_data=NW_data)
-                            self.add_hier_edge(n1=cp_node.node_id, n2=NE.node_id, edge_data=NE_data)
+            for k in hier_group_dict.keys(): # Based on group to form hier node
+                node_group = hier_group_dict[k]['node_group']
+                parent_data = hier_group_dict[k]['parent_data']
+                self._save_hier_node_data(hier_node =node_group,parent_data=parent_data)
+
+
 
     def mesh_edges2(self,thick=None):
         # THIS IS NOT OPTIMIZED -- NEED A BETTER SOLUTION AFTER POETS
@@ -1540,7 +1564,7 @@ class ElectricalMesh():
         #if cond!=None:
         #    sd_met = math.sqrt(1 / (math.pi * self.f * u * cond * 1e6))*1000 *10# in mm
         # Forming Edges and Updating Edges width, length
-        div = 3#self.div
+        div = 2#self.div
         store_edge =self.store_edge_info
         for n in self.graph.nodes():
 
