@@ -2,7 +2,7 @@
 import os
 
 import networkx as nx
-
+import numpy as np
 from powercad.design.module_data import gen_test_module_data
 from powercad.general.settings import settings
 from powercad.parasitics.analysis import parasitic_analysis
@@ -84,6 +84,7 @@ def make_test_bonds(df,bw_sig,bw_power):
     print df.iloc[0,0]
     return df
 
+
 def make_test_design_values(sym_layout, dimlist, default):
     hdv = []
     vdv = []
@@ -115,7 +116,7 @@ def make_test_design_values(sym_layout, dimlist, default):
     return hdv, vdv, dev_dv
 
 
-def add_test_measures(sym_layout):
+def add_test_measures(sym_layout, matlab_engine=None):
     pts = []
     for sym in sym_layout.all_sym:
         if sym.element.path_id == '0002':
@@ -127,16 +128,19 @@ def add_test_measures(sym_layout):
 
     if len(pts) == 2:
         m1 = ElectricalMeasure(pts[0], pts[1], ElectricalMeasure.MEASURE_IND, 100, "Loop Inductance", None, 'MS')
-        sym_layout.perf_measures.append(m1)
+        # sym_layout.perf_measures.append(m1)
         m2 = ElectricalMeasure(pts[0], pts[1], ElectricalMeasure.MEASURE_RES, 100, "Loop Resistance", None, 'MS')
-        sym_layout.perf_measures.append(m2)
+        # sym_layout.perf_measures.append(m2)
 
     devices = []
     for sym in sym_layout.all_sym:
         devices.append(sym)
 
-    m3 = ThermalMeasure(ThermalMeasure.FIND_MAX, devices, "Max Temp.", 'TFSM_MODEL')
+    m3 = ThermalMeasure(ThermalMeasure.FIND_MAX, devices, "PowerSynth Max Temp.", 'TFSM_MODEL')
     sym_layout.perf_measures.append(m3)
+
+    m4 = ThermalMeasure(ThermalMeasure.FIND_MAX, devices, "ParaPower Max Temp.", "ParaPowerThermal", matlab_engine=matlab_engine)
+    sym_layout.perf_measures.append(m4)
     print "perf", sym_layout.perf_measures
 
 
@@ -147,7 +151,7 @@ def setup_model(symlayout):
             symlayout.mdl_type['E']=pm.mdl
 
 
-def one_measure(symlayout):
+def one_measure(symlayout, matlab_engine=None):
     ret = []
     for measure in symlayout.perf_measures:
         if isinstance(measure, ElectricalMeasure):
@@ -181,7 +185,9 @@ def one_measure(symlayout):
                 type_id = 2
             elif type == 'Matlab':
                 type_id = 3
-            val = symlayout._thermal_analysis(measure, type_id)
+            elif type == 'ParaPowerThermal':
+                type_id = 4
+            val = symlayout._thermal_analysis(measure, type_id, matlab_engine=matlab_engine)
             ret.append(val)
     return ret
 
@@ -211,16 +217,26 @@ def plot_lumped_graph(sym_layout):
     plot_layout(sym_layout)
 
 
-def make_test_setup2(f,directory):
+def make_test_setup2(f, directory):
+
+    matlab_path = 'C:/Users/tmevans/Documents/MATLAB/ParaPower/ARLParaPower2.0/ARLParaPower/'
+    matlab_engine = mdc.init_matlab(matlab_path)
 
     temp_dir = os.path.abspath(settings.TEMP_DIR)  # The directory where thermal characterization files are stored
 
     test_file = os.path.abspath(directory)  # A layout script file, you can link this to any file you want
 
-    results=[]
+    ps_results = []
+    pp_results = []
+    ps_time = []
+    pp_time = []
     # powers= [[1.89,1.98,1.92,1.98],[2.31,2.44,2.34,2.41],[2.83,2.93,2.844,2.938],[3.6096,3.788,3.66,3.776],[3.966,4.1004,4.033,4.1004]]
-    powers = [[10., 10., 10., 10.]]
-    h_val =[102.331, 105.986, 110.236, 115.238, 117.656]
+    # powers = [[8., 8., 8., 8.]]
+    powers = [[2.5, 2.5, 2.5, 2.5], [5., 5., 5., 5.], [7.5, 7.5, 7.5, 7.5], [10., 10., 10., 10.],
+              [12.5, 12.5, 12.5, 12.5]]
+    # h_val = [102.331, 105.986, 110.236, 115.238, 117.656]
+    h_val = [150.0, 150.0, 150.0, 150.0, 150.0]
+    # h_val = [150.0]
     for p, h in zip(powers, h_val):
         print "Test Case", p, h
         sym_layout = SymbolicLayout()  # initiate a symbolic layout object
@@ -241,10 +257,10 @@ def make_test_setup2(f,directory):
         table_df = make_test_bonds(table_df, signal_bw, power_bw)
 
         make_test_leads(sym_layout.all_sym, pow_lead,sig_lead)  # Depends on the layout script you have, you can assign the lead object to a SYM-POINT using the id of the object
-        make_test_devices(sym_layout.all_sym,dev_dict={'M1':dev1,'M2':dev2,'M3':dev3,'M4':dev4})  # Depends on the layout script you have, you can assign the device object to a SYM-POINT using the id of the object
+        make_test_devices(sym_layout.all_sym, dev_dict={'M1':dev1,'M2':dev2,'M3':dev3,'M4':dev4})  # Depends on the layout script you have, you can assign the device object to a SYM-POINT using the id of the object
         # make_test_symmetries(sym_layout) # You can assign the symmetry objects here
 
-        add_test_measures(sym_layout)  # Assign a measurement between 2 SYM-Points (using their IDs)
+        add_test_measures(sym_layout, matlab_engine=matlab_engine)  # Assign a measurement between 2 SYM-Points (using their IDs)
 
         module = gen_test_module_data(f, h)
 
@@ -252,28 +268,90 @@ def make_test_setup2(f,directory):
         sym_layout.form_design_problem(module, table_df, temp_dir) # Collect data to user interface
         sym_layout._map_design_vars()
 
-        #sym_layout.optimize()
+        #sym_layout.optimize(inum_gen=50)
         individual = [10, 4, 10, 2.0, 2.0, 10, 4, 0.38232573137878245, 0.7, 0.68, 0.24]
         sym_layout.rev_map_design_vars(individual)
         sym_layout.generate_layout()
-        add_thermal_measure(sym_layout)
+        sym_layout.eval_count = 0
+        thermal_result = sym_layout._opt_eval(individual)
+
+        ps_results.append(thermal_result[0])
+        ps_time.append(thermal_result[1])
+        pp_results.append(thermal_result[2])
+        pp_time.append(thermal_result[3])
+
+        # add_thermal_measure(sym_layout)
         plot_layout(sym_layout)
         # plt.show()
-        results.append(thermal_measure(sym_layout))
-        print results
-    for r in results:
-        print r
-    # ax = plt.subplot('111', adjustable='box', aspect=1.0)
-    # plot_layout(sym_layout,filletFlag=False,ax=ax)
-    return md.ModuleDesign(sym_layout)
+        # results.append(thermal_measure(sym_layout))
+        # print results
+    # for r in results:
+    #     print r
+    ax = plt.subplot('111', adjustable='box', aspect=1.0)
+    plot_layout(sym_layout,filletFlag=False,ax=ax)
+    plot_compare_temp(powers, ps_results, pp_results)
+    return md.ModuleDesign(sym_layout), np.array(ps_time), np.array(pp_time)
 # The test goes here, moddify the path below as you wish...
 
 
+def plot_compare_temp(power_list, ps_results, pp_results):
+    power = []
+    for powers in power_list:
+        p = 0.
+        for i in powers:
+            p += i
+        power.append(p)
+    print '\n'
+    print '=_=' * 30
+    print 'power', power
+    print 'PowerSynth Results', ps_results
+    print 'ParaPower Results', pp_results
+    print '=_=' * 30
+
+    ps_results = np.array(ps_results) - 273.5
+    pp_results = np.array(pp_results) - 273.5
+
+    error = np.abs((ps_results - pp_results)/ps_results)*100
+
+    font_small = 16
+    font_large = 18
+    lw = 3
+    fig, ax = plt.subplots(1, 1)
+    ax.plot(power, ps_results, color='navy', linewidth=lw, label='PowerSynth')
+    ax.scatter(power, ps_results, color='navy', s=40)
+    ax.plot(power, pp_results, color='darkorange', linewidth=lw, label='ParaPower')
+    ax.scatter(power, pp_results, color='darkorange', s=40)
+    ax.set_ylabel('Temperature ($^\circ$C)', fontsize=font_small)
+    ax.set_xlabel('Total Power Dissipation (W)', fontsize=font_small)
+    ax2 = ax.twinx()
+    ax2.plot(power, error, color='green', linestyle='--', linewidth=lw, label='Rel. Difference')
+    ax2.scatter(power, error, color='green', s=40)
+    ax2.set_ylabel('Relative Difference (%)', fontsize=font_small)
+    ax.legend(loc='upper left', fontsize=12)
+    ax2.legend(loc='lower right', fontsize=12)
+    plt.title('PowerSynth and ParaPower\nThermal Model Comparison', weight='bold', fontsize=font_large)
+    ax2.set_ylim(4, 9)
+    ax.set_ylim(30, 130)
+    ax.set_xlim(5, 55)
+    ax.grid(which='major', axis='both')
+    ax.tick_params(labelsize=12)
+    ax2.set_yticks([4.5, 5.5, 6.5, 7.5, 8.5], minor=True)
+    ax2.tick_params(axis='y', which='minor', labelsize=12)
+    plt.savefig('0_2_PS_PP_Compare_Thermal.png', dpi=200)
+    plt.plot()
+
 
 directory ='Layout/journal_2(v2).psc' # directory to layout script
-md = make_test_setup2(100.0, directory)
-pp = mdc.ParaPowerWrapper(md)
-pp.parapower.save_parapower()
+md, ps_time, pp_time = make_test_setup2(100.0, directory)
+# pp = mdc.ParaPowerWrapper(md)
+# pp.parapower.save_parapower()
+#maxtemp = pp.parapower.run_parapower_thermal()
+'''
+print '\n'
+print '=' * 30
+print '|\tMax Temp: ', maxtemp
+print '=' * 30
+'''
 
 if __name__ == '__main__':
 

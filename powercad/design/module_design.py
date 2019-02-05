@@ -8,7 +8,7 @@ from copy import copy
 
 from powercad.design.solution_structures import DeviceSolution, LeadSolution, BondwireSolution
 from powercad.general.data_struct.util import translate_pt
-from powercad.sym_layout.symbolic_layout import build_test_layout
+# from powercad.sym_layout.symbolic_layout import build_test_layout
 
 class ModuleDesignError(Exception):
     def __init__(self, msg):

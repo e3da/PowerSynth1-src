@@ -135,8 +135,10 @@ class Trace(object):
         self.trace.translate(self.sub.isolation.x, self.sub.isolation.y)
         self.x = self.trace.left
         self.y = self.trace.bottom
-        self.width = self.trace.width()
-        self.length = self.trace.height()
+        # self.width = self.trace.width()
+        # self.length = self.trace.height()
+        self.width = self.trace.width
+        self.length = self.trace.height
 
 
 class Lead(object):

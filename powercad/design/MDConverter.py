@@ -4,29 +4,6 @@ import numpy as np
 import simplejson as json
 import matlab.engine
 
-'''
-def toJSON(object):
-    if 'simplejson' not in sys.modules:
-        import simplejson as json
-    return json.dumps(object, default=lambda o: vars(o), sort_keys=True, indent=4)
-
-
-class PPEncoder(JSONEncoder):
-    def default(self, o):
-        return o.__dict__
-
-
-class Feature(object):
-    def __init__(self, FeatureInstance):
-        self.geometry = None
-        self.material_properties = None
-        self.boundary_conditions = None
-        self.FeatureInstance = FeatureInstance
-
-    def get_geometry(self):
-        pass
-'''
-
 
 class Feature(object):
     def __init__(self, entity=None, ref_loc=[0., 0., 0.],  x=None, y=None, z=None, w=None, l=None, h=None,
@@ -125,7 +102,6 @@ class Feature(object):
         self.z = np.array([0., self.height]) + self.ref_loc[2]
 
         self.material = MaterialProperties(self.entity.attach_tech.properties)
-
 
     def def_trace(self):
         self.height = self.substrate.substrate_tech.metal_thickness
@@ -249,6 +225,9 @@ class ParaPowerWrapper(object):
 
     def get_features(self):
         features = []
+        features_1 = []
+        features_2 = []
+        features_3 = []
         baseplate = self.module_design.baseplate
         substrate_attach = self.module_design.substrate_attach
         substrate = self.module_design.substrate
@@ -258,29 +237,29 @@ class ParaPowerWrapper(object):
         # Baseplate
         baseplate_f = Feature(entity=baseplate, ref_loc=self.ref_locs['baseplate'], dx=1, dy=1, dz=1)
         baseplate_f.name = 'Baseplate'
-        features.append(baseplate_f)
+        features_1.append(baseplate_f)
         self.external_conditions.h_Bottom = baseplate_f.h_val
 
         # Substrate Attach
         substrate_attach_f = Feature(entity=substrate_attach,
                                      ref_loc=self.ref_locs['substrate_attach'], substrate=substrate)
         substrate_attach_f.name = 'Substrate_Attach'
-        features.append(substrate_attach_f)
+        features_1.append(substrate_attach_f)
 
         # Substrate
         substrate_f = Feature(entity=substrate, ref_loc=self.ref_locs['substrate'])
         substrate_f.name = 'Substrate_Isolation'
-        features.append(substrate_f)
+        features_2.append(substrate_f)
         if substrate_f.child_features:
             for child in substrate_f.child_features:
                 child.name = 'Substrate_Backside_Metal'
-                features.append(child)
+                features_1.append(child)
 
         # Traces
         for i in range(len(traces)):
             trace_f = Feature(entity=traces[i], ref_loc=self.ref_locs['traces'], substrate=substrate)
             trace_f.name = 'Trace_' + str(i)
-            features.append(trace_f)
+            features_2.append(trace_f)
         '''
         for trace in traces:
             features.append(Feature(entity=trace, ref_loc=self.ref_locs['traces'], substrate=substrate))
@@ -297,10 +276,13 @@ class ParaPowerWrapper(object):
             if device_instance.child_features:
                 for child in device_instance.child_features:
                     child.name = device_instance.name + "_Attach"
-                    features.append(child)
-            features.append(device_instance)
+                    features_2.append(child)
+            features_3.append(device_instance)
 
-        return features
+        features_2.extend(features_3)
+        features_1.extend(features_2)
+        features_1.reverse()
+        return features_1
 
 
 class FeaturesClass(object):
@@ -310,14 +292,15 @@ class FeaturesClass(object):
 
 
 class ParaPower(object):
-    def __init__(self, external_conditions, parameters, features):
+    def __init__(self, external_conditions=None, parameters=None, features=None,
+                 matlab_path='C:/Users/tmevans/Documents/MATLAB/ParaPower/ARLParaPower2.0/ARLParaPower/'):
         self.ExternalConditions = external_conditions
         self.Params = parameters
         self.Features = features
         self.PottingMaterial = 0
         self.temperature = None
-        self.path = 'C:/Users/tmevans/Documents/MATLAB/ParaPower/ARLParaPower2.0/ARLParaPower/'
-        # self.eng = self.init_matlab()
+        self.path = matlab_path
+        #self.eng = self.init_matlab()
 
     def to_dict(self):
         model_dict = {'ExternalConditions': self.ExternalConditions,
@@ -331,11 +314,16 @@ class ParaPower(object):
         eng.cd(self.path)
         return eng
 
-    def run_parapower(self):
-        #temp = self.eng.ImportTest()
+    def run_parapower_thermal(self, matlab_engine=None):
+        if not matlab_engine:
+            matlab_engine = self.init_matlab()
+            print '=' * 50
+            print 'oops, I self-started'
+        md_json = json.dumps(self.to_dict())
+        temperature = matlab_engine.ImportTest(md_json)
         # self.eng.workspace['test_md'] = self.eng.ImportPSModuleDesign(json.dumps(self.to_dict()), nargout=1)
         # self.eng.save('test_md_file.mat', 'test_md')
-        return
+        return temperature + 273.5
 
     def save_parapower(self):
         fname = self.path + 'Test_MD_JSON.json'
@@ -343,6 +331,10 @@ class ParaPower(object):
             json.dump(self.to_dict(), outfile)
 
 
+def init_matlab(path):
+    eng = matlab.engine.start_matlab()
+    eng.cd(path)
+    return eng
 
 
 '''

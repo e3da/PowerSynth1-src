@@ -266,6 +266,9 @@ class PerformanceListUI(object):
     def _handle_cap(self, event):
         if isinstance(event.artist, Rectangle):
             layout_line = self.parent.patch_dict.get_layout_obj(event.artist)
+            print "==" * 30
+            print "layout line",layout_line
+            print "==" * 30
             # color the object
             col = self.parent.color_wheel[0]
             color = col.getRgbF()
@@ -317,7 +320,7 @@ class PerformanceListUI(object):
                 return 1
             # create performace measure
             if measure == ElectricalMeasure.MEASURE_CAP:
-                performance_measure = ElectricalMeasure(None,None,measure,freq,self.ui.txt_perform_name.text(),self.perform_lines,model)
+                performance_measure = ElectricalMeasure(pt1=None,pt2=None,measure=measure,name=self.ui.txt_perform_name.text(),lines=self.perform_lines,mdl=model)
             else:
                 performance_measure = ElectricalMeasure(pt1=self.perform_devices[0],pt2=self.perform_devices[1],measure=measure,name=self.ui.txt_perform_name.text(),lines=None,mdl=model,src_sink_type=self.perform_devices_pins,device_state=self.device_states_df)
         elif self.ui.cmb_perform_elecTherm.currentText() == "Thermal":

@@ -18,7 +18,7 @@ def open_device_model(filename):
 
 def get_device():
     #name, dimensions, properties, device_type, wire_landings, power_side
-    device_props = MaterialProperties('Test', 4.62, 890, 8940, None, None, None)
+    device_props = MaterialProperties('Test', 120., 890, 8940, None, None, None)
     bl_g = BondwireLanding((5.0, 3.41), BondwireLanding.SIGNAL)
     bl_s1 = BondwireLanding((1, 2.41), BondwireLanding.POWER)
     bl_s3 = BondwireLanding((1, 4.41), BondwireLanding.POWER)
@@ -61,7 +61,7 @@ def get_dieattach():
     electrical_res -- (ohm*m) -- "Electrical Resistivity"
     rel_permit -- (unitless) -- "Relative Permittivity"
     rel_permeab -- (unitless) -- "Relative Permeability"'''
-    die_attach_props = MaterialProperties('Pb-Sn Solder Alloy', 35.8, 130.0, 11020.0, None, None, None)
+    die_attach_props = MaterialProperties('SiC', 120., 130.0, 11020.0, None, None, None)
     die_attach = DieAttach(die_attach_props)
     return die_attach
 
@@ -79,7 +79,7 @@ def get_substrate():
 
 def get_substrate2():
     # name, isolation_properties, metal_properties, metal_thickness, isolation_thickness
-    isolation_props = MaterialProperties('Al_N', 160.0, 740.0, 3250.0, None, 8.7, 2.8)
+    isolation_props = MaterialProperties('Al_N', 170.0, 740.0, 3250.0, None, 8.7, 2.8)
     metal_props = MaterialProperties('copper', 400.0, 386.0, 8020.0, 1.7e-8, None, None)
     substrate = Substrate('Cu-AlN-Cu 8-25-8 mils', isolation_props, metal_props, 0.2, 0.64)
     return substrate
@@ -98,7 +98,7 @@ def get_sub_attach2():
 
 def get_baseplate():
     # properties
-    base_props = MaterialProperties('copper', 190.0, 385.0, 9700.0, 1.70e-8, None, 1.0)
+    base_props = MaterialProperties('copper', 390.0, 385.0, 9700.0, 1.70e-8, None, 1.0)
     baseplate = Baseplate(base_props)
     return baseplate
 

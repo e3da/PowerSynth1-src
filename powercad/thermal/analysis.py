@@ -11,16 +11,22 @@ from powercad.thermal.fast_thermal import ThermalGeometry, TraceIsland, DieTherm
     ThermalProperties
 from powercad.thermal.rect_flux_channel_model import Baseplate, ExtaLayer, Device, layer_average, compound_top_surface_avg
 from powercad.electro_thermal.ElectroThermal_toolbox import *
+import powercad.design.MDConverter as mdc
+import powercad.design.module_design as md
+
 TFSM_MODEL = 1
 RECT_FLUX_MODEL = 2
-Successive_approximation_model=3
-MATLAB=4
+Successive_approximation_model = 3
+MATLAB = 4
+ParaPowerThermal = 5
 
-def perform_thermal_analysis(sym_layout, model=1):
+def perform_thermal_analysis(sym_layout, model=1, matlab_engine=None):
     if model == TFSM_MODEL:
         ret = tfsm_analysis(sym_layout)
     elif model == RECT_FLUX_MODEL:
         ret = rect_flux_analysis(sym_layout)
+    elif model == ParaPowerThermal:
+        ret = parapower_thermal_analysis(sym_layout, matlab_engine=matlab_engine)
     else:
         ret = tfsm_analysis(sym_layout)
     return ret
@@ -132,6 +138,7 @@ def successive_appoximation(sym_layout):  # in math this is known as bisection m
     tg.trace_islands = islands
     tg.sublayer_features = sym_layout.module.sublayers_thermal
 
+
 def tfsm_analysis(sym_layout):
     # Create trace islands
     islands = []
@@ -180,6 +187,14 @@ def tfsm_analysis(sym_layout):
 
     res= solve_TFSM(tg, 1.0)
     return res
+
+
+def parapower_thermal_analysis(sym_layout, matlab_engine=None):
+    module_design = md.ModuleDesign(sym_layout)
+    parapower_design = mdc.ParaPowerWrapper(module_design)
+    max_temperature = parapower_design.parapower.run_parapower_thermal(matlab_engine)
+    return max_temperature
+
 
 
 if __name__ == '__main__':

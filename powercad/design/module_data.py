@@ -48,7 +48,7 @@ def gen_test_module_data(freq, h):
     
     data.design_rules = ProcessDesignRules(2, 1.27, 0.5, 0.5, 0.8, 0.3, 0.2, 0.2)
     data.frequency = freq # 100 kHz
-    data.ambient_temp = 300.0 # 300 Kelvin
+    data.ambient_temp = 293.5 # 300 Kelvin
 
     
     return data

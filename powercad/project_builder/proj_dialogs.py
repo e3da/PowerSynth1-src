@@ -60,12 +60,13 @@ class GenericDeviceDialog(QtGui.QDialog):
     # Author: quang le
     # Date: 9-27-2016
     def __init__(self,parent, device_dir):
-        '''Constructor for Generic Device Dialog'''
-        '''Description: This is the constructor generic device dialog in PowerSynth. Libraries -> Generic Model ->triggered'''
-        '''This dialog will load existed data_sheet information of a device (MosFet or Diode) or letting user modify such information'''
-        '''Using the Electrothermal_toolbox in PowerSynth, curve fitting methods are used to find best fit parameters for each required datasheet curve '''
-        '''Inputs: DataSheet Information Qrr, Ciss, Vpl, Vth vs Tj curve, Rds vs Tj curve, Crss vs Vds curve'''
-        '''Outputs: Under tech_lib->Layout_selection->Device->Device_PModel-> *.pmdl files '''
+        '''Constructor for Generic Device Dialog
+        Description: This is the constructor generic device dialog in PowerSynth. Libraries -> Generic Model ->triggered
+        This dialog will load existed data_sheet information of a device (MosFet or Diode) or letting user modify such information
+        Using the Electrothermal_toolbox in PowerSynth, curve fitting methods are used to find best fit parameters for each required datasheet curve
+        Inputs: DataSheet Information Qrr, Ciss, Vpl, Vth vs Tj curve, Rds vs Tj curve, Crss vs Vds curve
+        Outputs: Under tech_lib->Layout_selection->Device->Device_PModel-> *.pmdl files
+        '''
         # Basic Constructor of any dialog connected a a Mianwindow
         QtGui.QDialog.__init__(self, None)
         self.ui = Ui_generic_device_builder()
@@ -1100,9 +1101,6 @@ class ConsDialog(QtGui.QDialog):
         self.ui.btn_save.pressed.connect(self.save_cons)
         self.load_table(mode=0)
 
-
-
-
     def load_table(self,mode=1):
         if mode==1: # from csv
             cons_file = QFileDialog.getOpenFileName(self, "Select Constraint File", 'C://',"Constraints Files (*.csv)")
@@ -1862,9 +1860,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
             layout_symb_dict[layout]={'sym_info':symb_rect_dict,'Dims':[W,H]}
         return layout_symb_dict
 
-
-
-    def _sym_eval_perf(self,sym_info=None):
+    def _sym_eval_perf(self, sym_info=None):
         self.perf1 = {"label": None, 'data': []}
         self.perf2 = {"label": None, 'data': []}
         sym_layout = self.engine.sym_layout
@@ -2212,7 +2208,7 @@ class ET_standalone_Dialog(QtGui.QDialog):
                     src_type = 'S'
                 elif 'G' in src:
                     src_type = 'G'
-                pt1 = self._sym_find_pt_obj(self.parent.engine.sym_layout,src)
+                pt1 = self._sym_find_pt_obj(self.parent.engine.sym_layout, src)
                 sink = str(self.ui.cmb_sink_select.currentText())
                 if 'S' in sink:
                     sink_type = 'S'
@@ -2229,8 +2225,9 @@ class ET_standalone_Dialog(QtGui.QDialog):
                         measure_type=2
                     if eval_type == "Resistance":
                         measure_type = 1
-                    measure=ElectricalMeasure(pt1=pt1,pt2=pt2,name=perf_name,mdl=mdl,src_sink_type=[src_type,sink_type],
-                                              device_state=self.dev_df,measure=measure_type)
+                    measure = ElectricalMeasure(pt1=pt1, pt2=pt2, name=perf_name ,mdl=mdl,
+                                                src_sink_type=[src_type,sink_type], device_state=self.dev_df,
+                                                measure=measure_type)
                 self.perf_dict[perf_name] = {'type': type, 'measure': measure, 'Eval': eval_type}
                 row_id = self.ui.tbl_perf_list.rowCount()
 

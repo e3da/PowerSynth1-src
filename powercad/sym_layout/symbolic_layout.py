@@ -92,7 +92,7 @@ class ThermalMeasure(object):
     
     UNIT = ('K', 'Kelvin')
     
-    def __init__(self, stat_fn, devices, name,mdl):
+    def __init__(self, stat_fn=None, devices=None, name=None, mdl=None, matlab_engine=None):
         """
         Thermal performance measure object
         
@@ -108,7 +108,9 @@ class ThermalMeasure(object):
         self.devices = devices
         self.name = name
         self.units = self.UNIT[0]
-        self.mdl=mdl
+        self.mdl = mdl
+        self.matlab_engine = matlab_engine
+
 
 class ElectricalMeasure(object):
     MEASURE_RES = 1
@@ -2228,6 +2230,7 @@ class SymbolicLayout(object):
         self.rev_map_design_vars(individual)
         self.generate_layout()
         ret = []
+        measurement_list = []
         drc = DesignRuleCheck(self)
         drc_count = drc.count_drc_errors(True)
         #fig, ax = plt.subplots()
@@ -2303,22 +2306,34 @@ class SymbolicLayout(object):
                         except LinAlgError:
                             val = 1e6
                     ret.append(val)
+                    measurement_list.append(measure_type)
 
 
                 elif isinstance(measure, ThermalMeasure):
                     type = measure.mdl
+                    matlab_engine = None
                     if type == 'TFSM_MODEL':
                         type_id=1
                     elif type == 'RECT_FLUX_MODEL':
                         type_id=2
                     elif type == 'Matlab':
                         type_id=3
-                    val = self._thermal_analysis(measure,type_id)
+                    elif type == 'ParaPowerThermal':
+                        type_id = 5
+                        matlab_engine = measure.matlab_engine
+                    # start = time.time()
+                    val = self._thermal_analysis(measure, type_id, matlab_engine=matlab_engine)
+                    # stop = time.time()
                     ret.append(val)
+                    measurement_list.append(type)
+                    # ret.append(stop-start)
         # Update progress bar and eval count
         self.eval_count += 1
         print "Running... Current number of evaluations:", self.eval_count
+        print "+===+" * 20
         print ret
+        print measurement_list
+        print "+===+" * 20
         return ret
     '''-----------------------------------------------------------------------------------------------------------------------------------------------------'''
     def _measure_capacitance(self, measure):
@@ -2352,9 +2367,9 @@ class SymbolicLayout(object):
 
         return total_cap
     '''-----------------------------------------------------------------------------------------------------------------------------------------------------'''
-    def _thermal_analysis(self, measure,type):
+    def _thermal_analysis(self, measure, type, matlab_engine=None):
         # RECT_FLUX_MODEL
-        temps = perform_thermal_analysis(self, type)#<--RECT_FLUX_MODEL
+        temps = perform_thermal_analysis(self, type, matlab_engine=matlab_engine)#<--RECT_FLUX_MODEL
 
         if isinstance(measure,int):
             return temps
@@ -2677,7 +2692,8 @@ def optimization_test(sym_layout):
 #    sym_layout.rev_map_design_vars(sym_layout.solutions[mid_sol])
 #    sym_layout.generate_layout()
 #    plot_layout(sym_layout)
-            
+
+
 def build_test_layout():
     from powercad.sym_layout.plot import plot_layout
     
