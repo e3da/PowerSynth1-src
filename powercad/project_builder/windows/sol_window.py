@@ -10,7 +10,7 @@ import os
 import sys
 import time
 import traceback
-
+import pickle
 import numpy as np
 from PySide import QtGui
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
@@ -104,7 +104,7 @@ class SolutionWindow(QtGui.QWidget):
                 print traceback.format_exc()
 
     def export_empro(self):
-        fn = QtGui.QFileDialog.getSaveFileName(self, dir=self.default_save_dir,options=QtGui.QFileDialog.ShowDirsOnly)
+        fn = QtGui.QFileDialog.getSaveFileName(self, dir=self.default_save_dir, options=QtGui.QFileDialog.ShowDirsOnly)
         print fn
         outname = fn[0]
 
@@ -112,6 +112,8 @@ class SolutionWindow(QtGui.QWidget):
             try:
                 self.sym_layout.gen_solution_layout(self.solution.index)
                 md = ModuleDesign(self.sym_layout)
+                # TODO for testing, export module design object
+                # pickle.dump(md, open(outname + '.p', 'wb'))
                 empro_script = EMProScript(md, outname+".py")
                 empro_script.generate()
                 QtGui.QMessageBox.about(None, "EMPro Script", "Export successful.")

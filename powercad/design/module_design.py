@@ -60,7 +60,7 @@ class ModuleDesign(object):
             cpos = translate_pt(cpos, ledge_width, ledge_width)
             fp = dev.footprint_rect.deepCopy()
             fp.translate(ledge_width, ledge_width)
-            dev_sol = DeviceSolution(cpos, dev.tech, fp)
+            dev_sol = DeviceSolution(cpos, dev.tech, fp, name=dev.name)
             self.devices.append(dev_sol)
             self.dv_id.append(dev.name)
 
@@ -85,7 +85,7 @@ class ModuleDesign(object):
                     eff_diam = wire.tech.eff_diameter()
                     beg_height = dev.tech.device_tech.dimensions[2] + float(dev.tech.attach_thickness)
                     height = wire.tech.a
-                    bw = BondwireSolution((pt1, pt2), beg_height, height, wire.tech, eff_diam)
+                    bw = BondwireSolution((pt1, pt2), beg_height, height, wire.tech, eff_diam, device=wire.device)
                     self.bondwires.append(bw)
             elif (wire.land_pt is not None) and (wire.land_pt2 is not None):
                 for pt1, pt2 in zip(wire.start_pts, wire.end_pts):

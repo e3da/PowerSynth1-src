@@ -2363,7 +2363,7 @@ class SymbolicLayout(object):
                     trace = line.trace_rect
 
                 if trace is not None:
-                    total_cap += trace_capacitance(trace.width(), trace.height(), metal_t, iso_t, epsil)
+                    total_cap += trace_capacitance(trace.width_eval(), trace.height_eval(), metal_t, iso_t, epsil)
 
         return total_cap
     '''-----------------------------------------------------------------------------------------------------------------------------------------------------'''

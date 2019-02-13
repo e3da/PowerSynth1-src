@@ -137,8 +137,8 @@ class Trace(object):
         self.y = self.trace.bottom
         # self.width = self.trace.width()
         # self.length = self.trace.height()
-        self.width = self.trace.width
-        self.length = self.trace.height
+        self.width = self.trace.width_eval()
+        self.length = self.trace.height_eval()
 
 
 class Lead(object):
@@ -153,11 +153,13 @@ class Lead(object):
         """
         self.lead_index = lead_index
         self.md = module_design
+        self.lead_id = self.md.lead_id
         self.lead = self.md.leads[self.lead_index]
-        self.name = "Lead" + str(self.lead_index)
+        #self.name = "Lead" + str(self.lead_index)
+        self.name = "Lead_" + self.lead_id[self.lead_index]
         self.sub = substrate
         self.base = baseplate
-        dim=self.lead.lead_tech.dimensions
+        dim = self.lead.lead_tech.dimensions
         (self.width, self.length) = dim[0:2]   # FIXME: may only work for cylindrical leads
         (self.x, self.y) = self.lead.position
         self.x += self.sub.isolation.x
@@ -176,6 +178,87 @@ class Lead(object):
         self.end = (self.edge_x, self.edge_y, self.z)
 
 
+class Device(object):
+    def __init__(self, device, bondwires_dict, origin):
+        self.name = device.name
+        self.bondwires_dict = bondwires_dict
+        self.origin = origin
+        self.width, self.length, self.height = device.device_instance.device_tech.dimensions
+
+        self.x = device.footprint_rect.left
+        self.y = device.footprint_rect.bottom
+        self.z = self.origin[2]
+
+        self.pads, self.wires = self.add_pads_and_wires()
+
+    def update_wire(self, wire, rounding=3):
+        wire.start_x = round(wire.start_x + self.origin[0], rounding)
+        wire.start_y = round(wire.start_y + self.origin[1], rounding)
+        wire.start_z = round(self.origin[2] + self.height, rounding)
+        wire.end_x = round(wire.end_x + self.origin[0], rounding)
+        wire.end_y = round(wire.end_y + self.origin[1], rounding)
+        wire.end_z = round(self.origin[2], rounding)
+
+    def make_pad(self, pad_name, wires, expansion=1.1):
+        pad_x = []
+        pad_y = []
+        pad_z = wires[0].start_z
+        bw_diameter = wires[0].diameter
+        offset = bw_diameter*expansion
+        for wire in wires:
+            pad_x.append(wire.start_x)
+            pad_y.append(wire.start_y)
+
+        lower_left = [min(pad_x) - offset,
+                      min(pad_y) - offset,
+                      pad_z]
+        lower_right = [max(pad_x) + offset,
+                       min(pad_y) - offset,
+                       pad_z]
+        upper_right = [max(pad_x) + offset,
+                       max(pad_y) + offset,
+                       pad_z]
+        upper_left = [min(pad_x) - offset,
+                      max(pad_y) + offset,
+                      pad_z]
+
+        pad = ["Device" + self.name + "_" + pad_name + "_pad",
+               [lower_left, lower_right, upper_right, upper_left]]
+        return pad
+
+    def add_pads_and_wires(self):
+        power_wires = []
+        signal_wires = []
+        bond_wires = []
+        for pad, wires in self.bondwires_dict.iteritems():
+            for wire in wires:
+                self.update_wire(wire)
+                bond_wires.append(wire)
+                if pad == 'Source':
+                    power_wires.append(wire)
+                elif pad == 'Gate':
+                    signal_wires.append(wire)
+
+        # Make Source pad
+        source_pad = self.make_pad('Source', power_wires)
+
+        # Make Gate pad
+        gate_pad = self.make_pad('Gate', signal_wires)
+        pads = [gate_pad, source_pad]
+        return pads, bond_wires
+
+
+class Wire(object):
+    def __init__(self, wire, bond_def_name, bond_def_index, rounding=3):
+        self.wire = wire
+        self.bond_def_name = bond_def_name
+        self.bond_def_index = bond_def_index
+        self.diameter = round(self.wire.eff_diameter, rounding)
+        self.radius = self.diameter / 2.0
+        (self.start_x, self.start_y) = self.wire.positions[0]
+        self.start_z = None
+        (self.end_x, self.end_y) = self.wire.positions[1]
+        self.end_z = None
 
 
 class Components(object):
@@ -185,9 +268,69 @@ class Components(object):
         self.bp = baseplate
         self.origin = [self.sub.isolation.x, self.sub.isolation.y, (self.sub.topside.z + self.sub.topside.height)]
 
-        (self.bondwire_groups, self.bondwire_list, self.bondwire_diameters, self.device_list) = self.group_wires()
-        (self.bondwire_definitions, self.bondwire_definition_names) = self.bondwire_def()
-        self.pads = self.generate_sheets_from_bondwire_group()
+        # (self.bondwire_groups, self.bondwire_list, self.bondwire_diameters, self.device_list) = self.group_wires()
+        self.bondwire_groups, self.device_dict = self.group_wires()
+        self.pads, self.bondwire_list, self.bondwire_definitions = self.get_pads_and_bondwires()
+        # (self.bondwire_definitions, self.bondwire_definition_names) = self.bondwire_def()
+        # self.pads = self.generate_sheets_from_bondwire_group()
+
+    def group_wires(self):
+        bondwires = self.md.bondwires
+        devices = self.md.devices
+        power_wire = 1
+        signal_wire = 2
+
+        bondwire_groups = {}
+        device_dict = {}
+        wire_number = 0
+        for device in devices:
+            device_wires = {'Gate': [], 'Source': []}
+
+            for bondwire in bondwires:
+                if bondwire.device.name == device.name:
+                    wire_type = bondwire.bondwire_tech.wire_type
+                    if wire_type == power_wire:
+                        pad_type = 'Source'
+                    elif wire_type == signal_wire:
+                        pad_type = 'Gate'
+
+                    wire_name = 'Wire_' + str(wire_number) + '_' + device.name + '_' + pad_type
+                    # new_wire = Wire(bondwire, wire_name, wire_number)
+                    new_wire = Wire(bondwire, wire_name, wire_name + "_def")
+                    device_wires[pad_type].append(new_wire)
+                    wire_number += 1
+
+            bondwire_groups[device.name] = device_wires
+            new_device = Device(device, device_wires, self.origin)
+            device_dict[device.name] = new_device
+        return bondwire_groups, device_dict
+
+    def get_pads_and_bondwires(self):
+        pads = []
+        bondwires = []
+        bondwire_defs = []
+        for device_name, device in self.device_dict.iteritems():
+            for pad in device.pads:
+                pads.append(pad)
+            for wire in device.wires:
+                bondwires.append(wire)
+                bondwire_defs.append([wire.bond_def_index, wire.radius])
+        return pads, bondwires, bondwire_defs
+
+
+
+    '''
+    def check_bw_on_device(self, bondwire, device):
+        bondwire_start_x, bondwire_start_y = bondwire.positions[0]
+        device_x = device.footprint_rect.left
+        device_y = device.footprint_rect.bottom
+        device_width, device_length, device_height = device.device_instance.device_tech.dimensions
+
+        if ((device_x < bondwire_start_x < (device_x + device_width)) and
+                (device_y < bondwire_start_y < (device_y + device_length))):
+            return True
+        else:
+            return False
 
 
     def group_wires(self):
@@ -197,24 +340,35 @@ class Components(object):
         :return: Bondwires grouped by device and size as a dictionary with [device, bondwire_diameter] as keys.
         """
 
-        device_list = []
-        bondwire_list = []
+        device_list = np.arange(0, len(self.md.devices))
+        bondwire_list = np.arange(0, len(self.md.bondwires))
         bondwire_diameters = []
 
-        for k in xrange(len(self.md.bondwires)):
-            for i in xrange(len(self.md.devices)):
-                device = self.md.devices[i]
-                device_footprint = device.footprint_rect
-                device_x = device_footprint.left
-                device_y = device_footprint.bottom
-                (device_width, device_length, device_height) = device.device_instance.device_tech.dimensions
+        bondwire_dict = {}
+        rounding = 3
+        for bondwire_index in range(bondwire_list):
+            bondwire = self.md.bondwires[bondwire_index]
+            diameter = round(bondwire.eff_diameter, rounding)
+            for device_index in range(device_list):
+                device = self.md.devices[device_index]
+                on_device = self.check_bw_on_device(bondwire, device)
+                if on_device:
+                    bondwire_dict[bondwire_index] = [diameter, device_index]
 
+        for i in xrange(0, len(self.md.devices)):
+            device = self.md.devices[i]
+            device_footprint = device.footprint_rect
+            device_x = device_footprint.left
+            device_y = device_footprint.bottom
+            (device_width, device_length, device_height) = device.device_instance.device_tech.dimensions
+
+            for k in xrange(0, len(self.md.bondwires)):
                 bondwire = self.md.bondwires[k]
                 bondwire_start_x, bondwire_start_y = bondwire.positions[0]
 
                 # Check to see if a given bondwire falls within the footprint of a given device
-                if (device_x < bondwire_start_x < (device_x + device_width)) and (
-                                device_y < bondwire_start_y < (device_y + device_length)):
+                if ((device_x < bondwire_start_x < (device_x + device_width)) and
+                        (device_y < bondwire_start_y < (device_y + device_length))):
                     device_list.append(i)
                     bondwire_list.append(k)
                     bondwire_diameters.append(round(bondwire.eff_diameter, 3))
@@ -222,8 +376,7 @@ class Components(object):
         # Group the wires by their respective devices, then by their diameters
         bondwire_groups = {}
         for index in xrange(len(device_list)):
-            bondwire_groups.setdefault((int(device_list[index]), bondwire_diameters[index]), []).append(
-                (bondwire_list[index]))
+            bondwire_groups.setdefault((int(device_list[index]), bondwire_diameters[index]), []).append((bondwire_list[index]))
 
         return bondwire_groups, bondwire_list, bondwire_diameters, device_list
 
@@ -337,7 +490,9 @@ class Components(object):
                 [("Device" + str(devices) + "_" + pad + "_Pad"), [lower_left, lower_right, upper_right, upper_left]])
 
         return sheets
+        '''
 
+'''
 class Wires(object):
     def __init__(self, wire_index, module_design, components):
         self.wire_index = wire_index
@@ -365,7 +520,7 @@ class Wires(object):
         self.end_x += self.comp.sub.isolation.x
         self.end_y += self.comp.sub.isolation.y
         self.end_z = self.comp.sub.topside.z + self.comp.sub.topside.height
-
+'''
 
 class GeometryDescriptions(object):
     """Scripting code stored as variables that will be output to the EMPro script."""
@@ -590,6 +745,8 @@ class EMProScript(object):
         self.components = Components(self.md, self.baseplate, self.substrate)
         #  Gather all the wires and leads from the module design object
         self.wires = self.md.bondwires
+        print self.wires
+
         self.leads = self.md.leads
 
     def generate(self):
@@ -719,23 +876,33 @@ class EMProScript(object):
         Write this to the output script.
         :return: None
         """
+        '''
         for key, value in self.components.bondwire_definition_names.items():
             diameter = key
             radius = float(diameter) / 2.0
             name = value
-
-            self.output.append(self.gd.create_bondwire_definition.format(name, radius))
+        '''
+        for bw_def in self.components.bondwire_definitions:
+            self.output.append(self.gd.create_bondwire_definition.format(bw_def[0], bw_def[1]))
 
     def generate_wires(self):
         """
         Generate bondwire geometries and write to the output script.
         :return: None
         """
+        '''
+        print "&&" * 30
+        print len(self.wires)
         for wire in xrange(0, len(self.wires)):
+            print wire
             bw = Wires(wire, self.md, self.components)
-
-            self.output.append(self.gd.create_bondwire.format(bw.start_x, bw.start_y, bw.start_z, bw.end_x, bw.end_y,
-                                                              bw.end_z, bw.definition, bw.name))
+        '''
+        for bw in self.components.bondwire_list:
+            self.output.append(self.gd.create_bondwire.format(bw.start_x, bw.start_y, bw.start_z,
+                                                              bw.end_x, bw.end_y, bw.end_z,
+                                                              bw.bond_def_index, bw.bond_def_name
+                                                              )
+                               )
 
     def generate_leads(self):
         """
@@ -746,8 +913,14 @@ class EMProScript(object):
             lead = Lead(leads, self.md, self.baseplate, self.substrate)
             self.output.append(self.gd.create_port.format(lead.tail, lead.head, lead.end, lead.name))
 
+# md = pickle.load(open('test2.p', 'rb'))
+# out = EMProScript(module_design=md, output_filename='test2.py')
+# out.generate()
 
 if __name__ == '__main__':
-    md = pickle.load(open('../export/output_test/ExportTest.p', 'rb'))
-    out = EMProScript(md, output_filename="../export/output_test/RD100_test.py", functions="../export/EMProFunctions.py")
+    # md = pickle.load(open('../export/output_test/ExportTest.p', 'rb'))
+    # out = EMProScript(md, output_filename="../export/output_test/RD100_test.py", functions="../export/EMProFunctions.py")
+    # out.generate()
+    md = pickle.load(open('test2.p', 'rb'))
+    out = EMProScript(module_design=md, output_filename='test2.py')
     out.generate()
