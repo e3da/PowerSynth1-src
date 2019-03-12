@@ -69,8 +69,8 @@ def output_q3d_vbscript(md, filename):
         trace = md.traces[index]
         trace.translate(sub_origin_x, sub_origin_y)
         name = "trace" + str(index+1)
-        TraceXSize = trace.width()
-        TraceYSize = trace.height()
+        TraceXSize = trace.width_eval()
+        TraceYSize = trace.height_eval()
         output += create_traces.format(name, trace.left, trace.bottom, TraceZPos, TraceXSize, TraceYSize, TraceZSize, MetalMaterial)
     
     # Lead Creation- haven't built the case for round yet. Should be a simple addition, but will have to look up circle code
@@ -131,8 +131,8 @@ def output_q3d_vbscript(md, filename):
         
         fp = device.footprint_rect
         fp.translate(sub_origin_x, sub_origin_y)
-        output += create_die.format(AttachName, fp.left, fp.bottom, AttachZPos, fp.width(), fp.height(), AttachThick,
-                                    DieName, fp.left, fp.bottom, DieZPos, fp.width(), fp.height(), DieThick, DieMaterial)
+        output += create_die.format(AttachName, fp.left, fp.bottom, AttachZPos, fp.width_eval(), fp.height_eval(), AttachThick,
+                                    DieName, fp.left, fp.bottom, DieZPos, fp.width_eval(), fp.height_eval(), DieThick, DieMaterial)
         
 
     # Bondwire Creation

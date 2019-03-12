@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file 'CS_design.ui'
 #
-# Created: Mon Nov 05 19:03:26 2018
-#      by: pyside-uic 0.2.15 running on PySide 1.2.4
+# Created: Wed Mar 06 16:17:43 2019
+#      by: pyside-uic 0.2.15 running on PySide 1.2.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -12,7 +12,7 @@ from PySide import QtCore, QtGui
 class Ui_CornerStitch_Dialog(object):
     def setupUi(self, CornerStitch_Dialog):
         CornerStitch_Dialog.setObjectName("CornerStitch_Dialog")
-        CornerStitch_Dialog.resize(1195, 820)
+        CornerStitch_Dialog.resize(1054, 709)
         self.gridLayout_7 = QtGui.QGridLayout(CornerStitch_Dialog)
         self.gridLayout_7.setObjectName("gridLayout_7")
         self.grbox_view = QtGui.QGroupBox(CornerStitch_Dialog)
@@ -36,9 +36,6 @@ class Ui_CornerStitch_Dialog(object):
         self.grview_init_layout = QtGui.QGraphicsView(self.groupBox_5)
         self.grview_init_layout.setObjectName("grview_init_layout")
         self.gridLayout_8.addWidget(self.grview_init_layout, 0, 0, 1, 1)
-        self.Node_ID = QtGui.QLabel(self.groupBox_5)
-        self.Node_ID.setObjectName("Node_ID")
-        self.gridLayout_8.addWidget(self.Node_ID, 1, 0, 1, 1)
         self.gridLayout_9.addWidget(self.groupBox_5, 1, 0, 1, 1)
         self.gridLayout_7.addWidget(self.grbox_view, 0, 0, 3, 1)
         self.grbox_modes = QtGui.QGroupBox(CornerStitch_Dialog)
@@ -112,7 +109,21 @@ class Ui_CornerStitch_Dialog(object):
         self.gridLayout_4.setObjectName("gridLayout_4")
         self.grview_sols_browser = QtGui.QGraphicsView(self.groupBox_2)
         self.grview_sols_browser.setObjectName("grview_sols_browser")
-        self.gridLayout_4.addWidget(self.grview_sols_browser, 0, 0, 1, 1)
+        self.gridLayout_4.addWidget(self.grview_sols_browser, 0, 0, 1, 2)
+        self.btn_export = QtGui.QPushButton(self.groupBox_2)
+        self.btn_export.setObjectName("btn_export")
+        self.gridLayout_4.addWidget(self.btn_export, 1, 0, 1, 1)
+        self.cmbox_export_option = QtGui.QComboBox(self.groupBox_2)
+        self.cmbox_export_option.setObjectName("cmbox_export_option")
+        self.cmbox_export_option.addItem("")
+        self.cmbox_export_option.addItem("")
+        self.cmbox_export_option.addItem("")
+        self.cmbox_export_option.addItem("")
+        self.cmbox_export_option.addItem("")
+        self.cmbox_export_option.addItem("")
+        self.cmbox_export_option.addItem("")
+        self.cmbox_export_option.setItemText(6, "")
+        self.gridLayout_4.addWidget(self.cmbox_export_option, 1, 1, 1, 1)
         self.gridLayout_7.addWidget(self.groupBox_2, 2, 1, 1, 2)
 
         self.retranslateUi(CornerStitch_Dialog)
@@ -123,21 +134,27 @@ class Ui_CornerStitch_Dialog(object):
         self.grbox_view.setTitle(QtGui.QApplication.translate("CornerStitch_Dialog", "Layout Visualization", None, QtGui.QApplication.UnicodeUTF8))
         self.groupBox_4.setTitle(QtGui.QApplication.translate("CornerStitch_Dialog", "Generated Layout", None, QtGui.QApplication.UnicodeUTF8))
         self.groupBox_5.setTitle(QtGui.QApplication.translate("CornerStitch_Dialog", "Input (initial) Layout", None, QtGui.QApplication.UnicodeUTF8))
-        self.Node_ID.setText(QtGui.QApplication.translate("CornerStitch_Dialog", "Node ID : ", None, QtGui.QApplication.UnicodeUTF8))
         self.grbox_modes.setTitle(QtGui.QApplication.translate("CornerStitch_Dialog", "Modes", None, QtGui.QApplication.UnicodeUTF8))
         self.cmb_modes.setItemText(0, QtGui.QApplication.translate("CornerStitch_Dialog", "Minimum Size Layout", None, QtGui.QApplication.UnicodeUTF8))
         self.cmb_modes.setItemText(1, QtGui.QApplication.translate("CornerStitch_Dialog", "Variable Size Layout", None, QtGui.QApplication.UnicodeUTF8))
         self.cmb_modes.setItemText(2, QtGui.QApplication.translate("CornerStitch_Dialog", "Fixed Size Layout", None, QtGui.QApplication.UnicodeUTF8))
         self.cmb_modes.setItemText(3, QtGui.QApplication.translate("CornerStitch_Dialog", "Fixed Size with Fixed Loactions", None, QtGui.QApplication.UnicodeUTF8))
-        self.grbox_flsize.setTitle(QtGui.QApplication.translate("CornerStitch_Dialog", "Floorplan size", None, QtGui.QApplication.UnicodeUTF8))
+        self.grbox_flsize.setTitle(QtGui.QApplication.translate("CornerStitch_Dialog", "Florrplan size", None, QtGui.QApplication.UnicodeUTF8))
         self.lbl_width.setText(QtGui.QApplication.translate("CornerStitch_Dialog", "Width", None, QtGui.QApplication.UnicodeUTF8))
         self.lbl_height_2.setText(QtGui.QApplication.translate("CornerStitch_Dialog", "Height", None, QtGui.QApplication.UnicodeUTF8))
         self.groupBox.setTitle(QtGui.QApplication.translate("CornerStitch_Dialog", "Layouts Solutions", None, QtGui.QApplication.UnicodeUTF8))
         self.lbl_num_layouts.setText(QtGui.QApplication.translate("CornerStitch_Dialog", "Num of layouts", None, QtGui.QApplication.UnicodeUTF8))
-        self.groupBox_3.setTitle(QtGui.QApplication.translate("CornerStitch_Dialog", "Control Buttons", None, QtGui.QApplication.UnicodeUTF8))
+        self.groupBox_3.setTitle(QtGui.QApplication.translate("CornerStitch_Dialog", "Button Box", None, QtGui.QApplication.UnicodeUTF8))
         self.btn_fixed_locs.setText(QtGui.QApplication.translate("CornerStitch_Dialog", "Fixed Locations", None, QtGui.QApplication.UnicodeUTF8))
         self.btn_constraints.setText(QtGui.QApplication.translate("CornerStitch_Dialog", "Assign Constraints", None, QtGui.QApplication.UnicodeUTF8))
         self.btn_eval_setup.setText(QtGui.QApplication.translate("CornerStitch_Dialog", "Measurement Setup", None, QtGui.QApplication.UnicodeUTF8))
         self.btn_gen_layouts.setText(QtGui.QApplication.translate("CornerStitch_Dialog", "Generate Layouts", None, QtGui.QApplication.UnicodeUTF8))
         self.groupBox_2.setTitle(QtGui.QApplication.translate("CornerStitch_Dialog", "Layout Selection", None, QtGui.QApplication.UnicodeUTF8))
+        self.btn_export.setText(QtGui.QApplication.translate("CornerStitch_Dialog", "Export solution", None, QtGui.QApplication.UnicodeUTF8))
+        self.cmbox_export_option.setItemText(0, QtGui.QApplication.translate("CornerStitch_Dialog", "Q3D", None, QtGui.QApplication.UnicodeUTF8))
+        self.cmbox_export_option.setItemText(1, QtGui.QApplication.translate("CornerStitch_Dialog", "Solidworks", None, QtGui.QApplication.UnicodeUTF8))
+        self.cmbox_export_option.setItemText(2, QtGui.QApplication.translate("CornerStitch_Dialog", "Electrical netlist ", None, QtGui.QApplication.UnicodeUTF8))
+        self.cmbox_export_option.setItemText(3, QtGui.QApplication.translate("CornerStitch_Dialog", "Thermal netlist", None, QtGui.QApplication.UnicodeUTF8))
+        self.cmbox_export_option.setItemText(4, QtGui.QApplication.translate("CornerStitch_Dialog", "FastHenry", None, QtGui.QApplication.UnicodeUTF8))
+        self.cmbox_export_option.setItemText(5, QtGui.QApplication.translate("CornerStitch_Dialog", "EMPro", None, QtGui.QApplication.UnicodeUTF8))
 

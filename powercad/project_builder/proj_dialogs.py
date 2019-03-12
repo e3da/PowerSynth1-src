@@ -55,6 +55,14 @@ import networkx as nx
 from powercad.design.module_data import *
 from powercad.corner_stitch.CornerStitch import Rectangle
 from powercad.general.data_struct.util import *
+from powercad.sol_browser.solution import Solution
+from powercad.interfaces.EMPro.EMProExport import EMProScript
+from powercad.interfaces.FastHenry.fh_layers import output_fh_script
+from powercad.interfaces.Q3D.Q3D import output_q3d_vbscript
+from powercad.interfaces.Solidworks.solidworks import output_solidworks_vbscript
+from powercad.design.module_design import ModuleDesign
+
+
 # CLASSES FOR DIALOG USAGE
 class GenericDeviceDialog(QtGui.QDialog):   
     # Author: quang le
@@ -1424,18 +1432,18 @@ class New_layout_engine_dialog(QtGui.QDialog):
         self.perf_dict={}
         self.Patches=None
         self.input_node_info={}
-
+        self.selected_ind=None
         self.fixed_x_locations={}
         self.fixed_y_locations = {}
-
+        self.default_save_dir="C:\\"
         # add buttons
         self.ui.btn_fixed_locs.pressed.connect(self.assign_fixed_locations)
         self.ui.btn_constraints.pressed.connect(self.add_constraints)
         self.ui.cmb_modes.currentIndexChanged.connect(self.mode_handler)
         self.initialize_layout(self.mainwindow_fig,self.graph)
-
         self.ui.btn_eval_setup.pressed.connect(self.eval_setup)
         self.ui.btn_gen_layouts.pressed.connect(self.gen_layouts)
+        self.ui.btn_export.pressed.connect(self.export_layout)
         # initialize for mode 0
         self.ui.txt_num_layouts.setEnabled(False)
         self.ui.txt_width.setEnabled(False)
@@ -1443,6 +1451,98 @@ class New_layout_engine_dialog(QtGui.QDialog):
         self.ui.btn_fixed_locs.setEnabled(False)
         self.ui.btn_gen_layouts.setEnabled(False)
         self.ui.btn_eval_setup.setEnabled(False)
+
+    def export_layout(self):
+        if self.current_mode != 0:
+            choice = 'Layout ' + str(self.selected_ind)
+        selected = str(self.ui.cmbox_export_option.currentText())
+        # select and convert layout
+        sym_info = self.form_sym_obj_rect_dict()
+        self.sym_layout = self.engine.sym_layout
+        symb_rect_dict = sym_info[choice]['sym_info']
+        dims = sym_info[choice]['Dims']
+        # print dims,symb_rect_dict
+        bp_dims = [dims[0] + 4, dims[1] + 4]
+        self._sym_update_layout(sym_info=symb_rect_dict)
+        update_sym_baseplate_dims(sym_layout=self.sym_layout, dims=bp_dims)
+        update_substrate_dims(sym_layout=self.sym_layout, dims=dims)
+        self.sym_layout.layout_ready=True
+
+        self.canvas_sols.draw()
+        if selected == 'Q3D':
+            self.export_q3d()
+        elif selected == 'Solidworks':
+            self.export_solidworks()
+        elif selected == 'Electrical netlist ':
+            print "add later"
+        elif selected == 'Thermal netlist':
+            print "add later"
+        elif selected == 'FastHenry':
+            self.export_FH()
+        elif selected == 'EMPro':
+            self.export_empro()
+
+    def export_FH(self):
+        fn = QtGui.QFileDialog.getSaveFileName(self, dir=self.default_save_dir, options=QtGui.QFileDialog.ShowDirsOnly)
+        outname = fn[0]
+        if len(outname) > 0:
+            try:
+                md = ModuleDesign(self.sym_layout)
+                # output_fh_script_mesh(md,outname)
+                output_fh_script(self.sym_layout, outname)
+                QtGui.QMessageBox.about(None, "FH Script", "Export successful.")
+            except:
+                QtGui.QMessageBox.warning(None, "FH Script", "Failed to export FH script! Check log/console.")
+                print traceback.format_exc()
+
+    def export_empro(self):
+        fn = QtGui.QFileDialog.getSaveFileName(self, dir=self.default_save_dir, options=QtGui.QFileDialog.ShowDirsOnly)
+        print fn
+        outname = fn[0]
+
+        if len(outname) > 0:
+            try:
+                md = ModuleDesign(self.sym_layout)
+                empro_script = EMProScript(md, outname + ".py")
+                empro_script.generate()
+                QtGui.QMessageBox.about(None, "EMPro Script", "Export successful.")
+            except:
+                QtGui.QMessageBox.warning(None, "EMPro Script", "Failed to export script! Check log/console.")
+                print traceback.format_exc()
+
+    def export_q3d(self):
+        fn = QtGui.QFileDialog.getSaveFileName(self, dir=self.default_save_dir, options=QtGui.QFileDialog.ShowDirsOnly)
+        print fn
+        outname = fn[0]
+
+        if len(outname) > 0:
+            try:
+                md = ModuleDesign(self.sym_layout)
+                output_q3d_vbscript(md, outname)
+                QtGui.QMessageBox.about(None, "Q3D VB Script", "Export successful.")
+            except:
+                QtGui.QMessageBox.warning(None, "Q3D VB Script", "Failed to export vb script! Check log/console.")
+                print traceback.format_exc()
+
+    def export_solidworks(self):
+        version = SolidworkVersionCheckDialog(self)
+        if version.exec_():
+            version = version.version_output()
+        fn = QtGui.QFileDialog.getSaveFileName(self, dir=self.default_save_dir, options=QtGui.QFileDialog.ShowDirsOnly)
+        outname = fn[0]
+
+        if len(outname) > 0:
+            print 'exporting solidworks file'
+            try:
+                md = ModuleDesign(self.sym_layout)
+
+                data_dir = 'C:/ProgramData/SolidWorks/SolidWorks ' + version
+                output_solidworks_vbscript(md, os.path.basename(outname), data_dir, os.path.dirname(outname))
+                QtGui.QMessageBox.about(None, "SolidWorks Script", "Export successful.")
+            except:
+                QtGui.QMessageBox.warning(None, "SolidWorks Script", "Failed to export vb script! Check log/console.")
+                print traceback.format_exc()
+
 
 
     def getPatches(self,Patches):
@@ -1513,7 +1613,6 @@ class New_layout_engine_dialog(QtGui.QDialog):
 
 
 
-
     def add_constraints(self):
 
         constraints = ConsDialog(self)
@@ -1552,11 +1651,13 @@ class New_layout_engine_dialog(QtGui.QDialog):
 
     def on_pick(self, event):
         self.update_sol_browser()
-        ind = event.ind[0]
-        self.ax3.plot(self.perf1['data'][ind], self.perf2['data'][ind], 'o',c='red')
-        self.layout_plot(layout_ind=ind)
+        self.selected_ind = event.ind[0]
+        self.ax3.plot(self.perf1['data'][self.selected_ind], self.perf2['data'][self.selected_ind], 'o',c='red')
+        self.layout_plot(layout_ind=self.selected_ind)
         self.canvas_sols.draw()
         self.canvas_sol_browser.draw()
+
+
     def gen_layouts(self):
         self.generated_layouts = {}
         self.layout_data={}
