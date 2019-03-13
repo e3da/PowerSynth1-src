@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'CS_design.ui'
 #
-# Created: Wed Mar 06 16:17:43 2019
+# Created: Tue Mar 12 12:05:05 2019
 #      by: pyside-uic 0.2.15 running on PySide 1.2.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -37,6 +37,10 @@ class Ui_CornerStitch_Dialog(object):
         self.grview_init_layout.setObjectName("grview_init_layout")
         self.gridLayout_8.addWidget(self.grview_init_layout, 0, 0, 1, 1)
         self.gridLayout_9.addWidget(self.groupBox_5, 1, 0, 1, 1)
+        self.Node_ID = QtGui.QLabel(self.grbox_view)
+        self.Node_ID.setText("")
+        self.Node_ID.setObjectName("Node_ID")
+        self.gridLayout_9.addWidget(self.Node_ID, 2, 0, 1, 1)
         self.gridLayout_7.addWidget(self.grbox_view, 0, 0, 3, 1)
         self.grbox_modes = QtGui.QGroupBox(CornerStitch_Dialog)
         self.grbox_modes.setMaximumSize(QtCore.QSize(16777215, 50))
