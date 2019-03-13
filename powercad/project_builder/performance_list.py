@@ -326,10 +326,19 @@ class PerformanceListUI(object):
         elif self.ui.cmb_perform_elecTherm.currentText() == "Thermal":
             # get type
             # get type
+            matlab_engine = None
             if self.ui.cmb_thermal_model.currentText() == "Fast Thermal (FEM)":
                 model = 'TFSM_MODEL'
             elif self.ui.cmb_thermal_model.currentText() == "Rectangle Flux":
                 model = 'RECT_FLUX_MODEL'
+            elif self.ui.cmb_thermal_model.currentText() == "ParaPower Thermal":
+                model = 'ParaPowerThermal'
+                import powercad.design.MDConverter as mdc
+                try:
+                    from powercad.general.settings import MATLAB_PATH
+                except:
+                    MATLAB_PATH = 'C:/Users/tmevans/Documents/MATLAB/ParaPower/ARL_ParaPower/ARL_ParaPower'
+                matlab_engine = mdc.init_matlab(MATLAB_PATH)
 
             if self.ui.cmb_perform_type.currentText() == "Max":
                 stat_fn = ThermalMeasure.FIND_MAX
@@ -341,7 +350,8 @@ class PerformanceListUI(object):
                 print "Error"
                 return 1
             # create performace measure
-            performance_measure = ThermalMeasure(stat_fn,self.perform_devices,self.ui.txt_perform_name.text(),model)
+            performance_measure = ThermalMeasure(stat_fn,self.perform_devices, self.ui.txt_perform_name.text(),
+                                                 mdl=model, matlab_engine=matlab_engine)
         
         performance_measure.disp = (self.ui.cmb_perform_elecTherm.currentText(),self.ui.cmb_perform_type.currentText())
             

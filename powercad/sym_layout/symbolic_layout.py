@@ -103,6 +103,7 @@ class ThermalMeasure(object):
             FIND_STD_DEV -> find standard deviation of device temperatures
         devices -- list of SymPoint objects which represent devices
         name -- user given name to performance measure
+        mdl -- integer reference to
         """
         self.stat_fn = stat_fn
         self.devices = devices
@@ -2371,7 +2372,7 @@ class SymbolicLayout(object):
         # RECT_FLUX_MODEL
         temps = perform_thermal_analysis(self, type, matlab_engine=matlab_engine)#<--RECT_FLUX_MODEL
 
-        if isinstance(measure,int):
+        if isinstance(measure, int):
             return temps
         else:
             if measure.stat_fn == ThermalMeasure.FIND_MAX:

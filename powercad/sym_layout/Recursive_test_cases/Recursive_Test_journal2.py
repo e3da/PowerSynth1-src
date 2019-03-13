@@ -219,7 +219,7 @@ def plot_lumped_graph(sym_layout):
 
 def make_test_setup2(f, directory):
 
-    matlab_path = 'C:/Users/tmevans/Documents/MATLAB/ParaPower/ARLParaPower2.0/ARLParaPower/'
+    matlab_path = 'C:/Users/tmevans/Documents/MATLAB/ParaPower/ARL_ParaPower/ARL_ParaPower'
     matlab_engine = mdc.init_matlab(matlab_path)
 
     temp_dir = os.path.abspath(settings.TEMP_DIR)  # The directory where thermal characterization files are stored
@@ -288,7 +288,7 @@ def make_test_setup2(f, directory):
     # for r in results:
     #     print r
     ax = plt.subplot('111', adjustable='box', aspect=1.0)
-    plot_layout(sym_layout,filletFlag=False,ax=ax)
+    plot_layout(sym_layout, filletFlag=False, ax=ax)
     plot_compare_temp(powers, ps_results, pp_results)
     return md.ModuleDesign(sym_layout), np.array(ps_time), np.array(pp_time)
 # The test goes here, moddify the path below as you wish...
@@ -308,20 +308,20 @@ def plot_compare_temp(power_list, ps_results, pp_results):
     print 'ParaPower Results', pp_results
     print '=_=' * 30
 
-    ps_results = np.array(ps_results) - 273.5
-    pp_results = np.array(pp_results) - 273.5
+    ps_results = np.array(ps_results) - 273.5 - 20.
+    pp_results = np.array(pp_results) - 273.5 - 20.
 
     error = np.abs((ps_results - pp_results)/ps_results)*100
 
-    font_small = 16
-    font_large = 18
-    lw = 3
-    fig, ax = plt.subplots(1, 1)
+    font_small = 14
+    font_large = 16
+    lw = 4
+    fig, ax = plt.subplots(1, 1, figsize=(9, 5))
     ax.plot(power, ps_results, color='navy', linewidth=lw, label='PowerSynth')
     ax.scatter(power, ps_results, color='navy', s=40)
-    ax.plot(power, pp_results, color='darkorange', linewidth=lw, label='ParaPower')
+    ax.plot(power, pp_results, color='darkorange', linewidth=lw, linestyle=':', label='ParaPower')
     ax.scatter(power, pp_results, color='darkorange', s=40)
-    ax.set_ylabel('Temperature ($^\circ$C)', fontsize=font_small)
+    ax.set_ylabel('Temperature Rise $\Delta T_J$ ($^\circ$C)', fontsize=font_small)
     ax.set_xlabel('Total Power Dissipation (W)', fontsize=font_small)
     ax2 = ax.twinx()
     ax2.plot(power, error, color='green', linestyle='--', linewidth=lw, label='Rel. Difference')
@@ -330,19 +330,19 @@ def plot_compare_temp(power_list, ps_results, pp_results):
     ax.legend(loc='upper left', fontsize=12)
     ax2.legend(loc='lower right', fontsize=12)
     plt.title('PowerSynth and ParaPower\nThermal Model Comparison', weight='bold', fontsize=font_large)
-    ax2.set_ylim(4, 9)
-    ax.set_ylim(30, 130)
+    ax2.set_ylim(0.2, 0.26)
+    ax.set_ylim(10, 100)
     ax.set_xlim(5, 55)
     ax.grid(which='major', axis='both')
     ax.tick_params(labelsize=12)
-    ax2.set_yticks([4.5, 5.5, 6.5, 7.5, 8.5], minor=True)
-    ax2.tick_params(axis='y', which='minor', labelsize=12)
-    plt.savefig('0_2_PS_PP_Compare_Thermal.png', dpi=200)
+    ax2.set_yticks([0.2, 0.22, 0.24, 0.25, 0.26], minor=True)
+    # ax2.tick_params(axis='y', which='minor', labelsize=12)
+    plt.savefig('0_3_PS_PP_Compare_Thermal.png', dpi=200)
     plt.plot()
 
 
-directory ='Layout/journal_2(v2).psc' # directory to layout script
-md, ps_time, pp_time = make_test_setup2(100.0, directory)
+# directory ='Layout/journal_2(v2).psc' # directory to layout script
+# md, ps_time, pp_time = make_test_setup2(100.0, directory)
 # pp = mdc.ParaPowerWrapper(md)
 # pp.parapower.save_parapower()
 #maxtemp = pp.parapower.run_parapower_thermal()

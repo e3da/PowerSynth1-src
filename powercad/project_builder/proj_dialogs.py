@@ -782,6 +782,7 @@ class ModelSelectionDialog(QtGui.QDialog):
         except:
             InputError(msg="Unexpected error:"+str(sys.exc_info()[0]))
 
+
 class EnvironmentSetupDialog(QtGui.QDialog):
 
     def __init__(self, parent):
@@ -2174,7 +2175,7 @@ class ET_standalone_Dialog(QtGui.QDialog):
                 if mdl_str =="Fast Approximation with FEM":
                     mdl = 1
                 elif mdl_str == "Analytical Rectangular Flux":
-                    mdl =2
+                    mdl = 2
 
                 if eval_type == "Maximum":
                     stat_func = 1

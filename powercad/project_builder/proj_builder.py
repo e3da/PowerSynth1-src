@@ -28,7 +28,7 @@ from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 
 from powercad.project_builder.symmetry_list import SymmetryListUI
 from powercad.project_builder.performance_list import PerformanceListUI
-from powercad.project_builder.windows.mainWindow_newlayoutengine import Ui_MainWindow
+from powercad.project_builder.windows.mainWindow_newlayoutengine_parapower import Ui_MainWindow
 from powercad.project_builder.windows.sol_window import SolutionWindow
 from powercad.project_builder.proj_dialogs import NewProjectDialog, OpenProjectDialog, EditTechLibPathDialog, \
     GenericDeviceDialog,LayoutEditorDialog, ResponseSurfaceDialog,ModelSelectionDialog,EnvironmentSetupDialog,SetupDeviceDialogs\

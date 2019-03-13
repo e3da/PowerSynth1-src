@@ -3,6 +3,7 @@ import numpy as np
 # from simplejson import JSONEncoder
 import simplejson as json
 import matlab.engine
+import cPickle as pickle
 
 
 class Feature(object):
@@ -152,20 +153,20 @@ class MaterialProperties(object):
 
 
 class ExternalConditions(object):
-    def __init__(self):
+    def __init__(self, Ta=20., hbot=100., Tproc=280.):
         self.h_Left = 0.
         self.h_Right = 0.
         self.h_Front = 0.
         self.h_Back = 0.
-        self.h_Bottom = 100.
+        self.h_Bottom = hbot
         self.h_Top = 0.
-        self.Ta_Left = 20.
-        self.Ta_Right = 20.
-        self.Ta_Front = 20.
-        self.Ta_Back = 20.
-        self.Ta_Bottom = 20.
-        self.Ta_Top = 20.
-        self.Tproc = 280.
+        self.Ta_Left = Ta
+        self.Ta_Right = Ta
+        self.Ta_Front = Ta
+        self.Ta_Back = Ta
+        self.Ta_Bottom = Ta
+        self.Ta_Top = Ta
+        self.Tproc = Tproc
 
     def to_dict(self):
         return self.__dict__
@@ -173,7 +174,7 @@ class ExternalConditions(object):
 
 class Params(object):
     def __init__(self):
-        self.Tsteps = 1
+        self.Tsteps = []
         self.DeltaT = 1
         self.Tinit = 20.
 
@@ -186,7 +187,8 @@ class ParaPowerWrapper(object):
         self.module_design = module_design
         self.device_id = self.module_design.dv_id
         self.ref_locs = self.get_ref_locs()
-        self.external_conditions = ExternalConditions()
+        self.t_amb = self.module_design.sym_layout.module.ambient_temp
+        self.external_conditions = ExternalConditions(Ta=self.t_amb)
         self.parameters = Params()
         self.features_list = self.get_features()
         self.features = [feature.to_dict() for feature in self.features_list]
@@ -195,6 +197,7 @@ class ParaPowerWrapper(object):
                                    self.parameters.to_dict(),
                                    self.features)
         # self.output = PPEncoder().encode(self.parapower)
+        # self.write_md_output()
 
     def get_ref_locs(self):
         baseplate_w, baseplate_l, baseplate_h = self.module_design.baseplate.dimensions
@@ -284,6 +287,10 @@ class ParaPowerWrapper(object):
         features_1.reverse()
         return features_1
 
+    def write_md_output(self):
+        filename = 'PPExportTestMD.p'
+        pickle.dump(self.module_design, open(filename, 'wb'), protocol=pickle.HIGHEST_PROTOCOL)
+
 
 class FeaturesClass(object):
     def __init__(self, dictionary):
@@ -293,7 +300,7 @@ class FeaturesClass(object):
 
 class ParaPower(object):
     def __init__(self, external_conditions=None, parameters=None, features=None,
-                 matlab_path='C:/Users/tmevans/Documents/MATLAB/ParaPower/ARLParaPower2.0/ARLParaPower/'):
+                 matlab_path='C:/Users/tmevans/Documents/MATLAB/ParaPower/ARL_ParaPower/ARL_ParaPower'):
         self.ExternalConditions = external_conditions
         self.Params = parameters
         self.Features = features
@@ -320,10 +327,11 @@ class ParaPower(object):
             print '=' * 50
             print 'oops, I self-started'
         md_json = json.dumps(self.to_dict())
-        temperature = matlab_engine.ImportTest(md_json)
+        temperature = matlab_engine.PowerSynthImport(md_json)
         # self.eng.workspace['test_md'] = self.eng.ImportPSModuleDesign(json.dumps(self.to_dict()), nargout=1)
         # self.eng.save('test_md_file.mat', 'test_md')
-        return temperature + 273.5
+        # return temperature + 273.5
+        return temperature
 
     def save_parapower(self):
         fname = self.path + 'Test_MD_JSON.json'
