@@ -136,12 +136,12 @@ class PerformanceListUI(object):
             self.ui.tbl_performance.setEnabled(True)
         elif self.ui.cmb_perform_elecTherm.currentText() == "":
             self.ui.cmb_perform_elecTherm.addItem("Select..")
-            self.ui.cmb_perform_elecTherm.addItem("Electrical")
+            self.ui.cmb_perform_elecTherm.addItem("electrical_mdl")
             self.ui.cmb_perform_elecTherm.addItem("Thermal")
             
     def populate_cmb_type(self):
         self.ui.cmb_perform_type.clear()
-        if self.ui.cmb_perform_elecTherm.currentText() == "Electrical":
+        if self.ui.cmb_perform_elecTherm.currentText() == "electrical_mdl":
             self.ui.cmb_perform_type.addItem("Select..")
             self.ui.cmb_perform_type.addItem("Resistance")
             self.ui.cmb_perform_type.addItem("Capacitance")
@@ -160,7 +160,7 @@ class PerformanceListUI(object):
             self.ui.lbl_perform_step3.setEnabled(True)
             self.ui.cmb_thermal_model.setEnabled(True)
             self.ui.cmb_elec_model.setEnabled(True)
-            if self.ui.cmb_perform_elecTherm.currentText() == "Electrical":
+            if self.ui.cmb_perform_elecTherm.currentText() == "electrical_mdl":
                 if perf_text == "Resistance" or perf_text == "Inductance":
                     self.ui.lbl_perform_step3.setText("Step 3: Select two devices/leads on the right to define path.")
                 elif perf_text == "Capacitance":
@@ -290,7 +290,7 @@ class PerformanceListUI(object):
     def add_performance(self):
         """Add performance item to list"""
         # create performace measure
-        if self.ui.cmb_perform_elecTherm.currentText() == "Electrical":
+        if self.ui.cmb_perform_elecTherm.currentText() == "electrical_mdl":
             # get type
             if self.ui.cmb_elec_model.currentText()=="Micro Strip":
                 model='MS'

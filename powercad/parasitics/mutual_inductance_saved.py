@@ -1,6 +1,6 @@
 from math import sqrt, atan, log
 import time
-from numba import jit
+#from numba import jit
 import numpy as np
 import csv
 import matplotlib.pyplot as plt
@@ -13,7 +13,7 @@ from mpl_toolkits.mplot3d import Axes3D
 # Test 1: Exact Inductance Equations for Rectangular Conductors With Applications to More Complicated Geometries
 # Page 5-6
 # http://nvlpubs.nist.gov/nistpubs/jres/69C/jresv69Cn2p127_A1b.pdf
-@jit
+#@jit(nopython=True)
 def inter_func1(x, y, z):
     '''
     Inner calculation of mutual inductance fucntion
@@ -39,10 +39,12 @@ def inter_func1(x, y, z):
         sum5 = -x * y * z3 / 6.0 * atan(x * y / (z * sqrt(x2 + y2 + z2))) if z != 0 else 0
         sum6 = -x * y3 * z / 6.0 * atan(x * z / (y * sqrt(x2 + y2 + z2))) if y != 0 else 0
         sum7 = -x3 * y * z / 6.0 * atan(y * z / (x * sqrt(x2 + y2 + z2))) if x != 0 else 0
-    return sum1 + sum2 + sum3 + sum4 + sum5 + sum6 + sum7
+        return sum1 + sum2 + sum3 + sum4 + sum5 + sum6 + sum7
+    else:
+        return sum4
 
 
-@jit
+#@jit(nopython=True)
 def inter_func(x, y, z, sign):
     '''
     Inner calculation of mutual inductance fucntion
@@ -71,8 +73,8 @@ def inter_func(x, y, z, sign):
     return np.sum(sign * (sum1 + sum2 + sum3 + sum4 + sum5))
 
 
-@jit
-def mutual_between_bars(w1, l1, t1, w2, l2, t2, l3, p, E):
+#@jit(nopython=True)
+def mutual_between_bars(w1, l1, t1, w2, l2, t2, l3, p, E,param_dict=None):
     '''
     This function is used to compute the mutual inductance value between 2 rectangular bars in space.
     all dimension are in mm
@@ -98,38 +100,50 @@ def mutual_between_bars(w1, l1, t1, w2, l2, t2, l3, p, E):
 
     l3 = l3 * 0.1
     p = p * 0.1
-    E=E*0.1
-
+    E = E*0.1
     Const = 0.001 / (w1 * t1 * w2 * t2)
     loop_add=outer_addition
+    add_val = loop_add(q1=E - w1, q2=E + w2 - w1, q3=E + w2, q4=E, r1=p - t1, r2=p + t2 - t1, r3=p + t2, r4=p,
+                             s1=l3 - l1, s2=l3 + l2 - l1, s3=l2 + l3, s4=l3,param_dict=param_dict)
 
-    Mb = Const * loop_add(q1=E - w1, q2=E + w2 - w1, q3=E + w2, q4=E, r1=p - t1, r2=p + t2 - t1, r3=p + t2, r4=p,
-                                s1=l3 - l1, s2=l3 + l2 - l1, s3=l2 + l3, s4=l3)
-
+    Mb = Const *  add_val
     return Mb * 1000  # in nH
 
 
-@jit
-def outer_addition(q1, q2, q3, q4, r1, r2, r3, r4, s1, s2, s3, s4, func=inter_func1):
+#@jit(nopython=True)
+def outer_addition(q1, q2, q3, q4, r1, r2, r3, r4, s1, s2, s3, s4, param_dict=None):
     '''
     Compute the out - most
     :param fxyz: function to be integrated
     :return:
     '''
-    q = [q1, q2, q3, q4]
-    r = [r1, r2, r3, r4]
-    s = [s1, s2, s3, s4]
+    q = np.abs(np.array([q1, q2, q3, q4]))
+    r = np.abs(np.array([r1, r2, r3, r4]))
+    s = np.abs(np.array([s1, s2, s3, s4]))
 
     res = 0
 
     for i in range(1,5,1):
         for j in range(1, 5, 1):
             for k in range(1, 5, 1):
-                res+=np.power(-1,(i+j+k+1))* inter_func1(q[i-1],r[j-1],s[k-1])
+                inter_val=check_val(q[i - 1], r[j - 1], s[k - 1],param_dict)
+                res+=np.power(-1,(i+j+k+1))* inter_val
 
     return res
 
 
+def check_val(q,r,s,param_dict):
+    test = False
+    if test:
+        if (q, r, s) in param_dict:
+            inter_val = param_dict[q,r,s]
+        else:
+            inter_val = inter_func1(q, r, s)
+            param_dict[(q, r, s)] = inter_val
+    else:
+        inter_val = inter_func1(q, r, s)
+
+    return inter_val
 def bar_ind(w, l, t, fxyz=inter_func):
     # convert to cm
     w1 = w * 0.1

@@ -1,18 +1,19 @@
 #@authors: Quang Le
 import os
 
+import matplotlib.pyplot as plt
 import networkx as nx
 
 from powercad.design.module_data import gen_test_module_data
 from powercad.general.settings import settings
-from powercad.parasitics.analysis import parasitic_analysis
+from powercad.parasitics.analytical.analysis import parasitic_analysis
 from powercad.sym_layout.plot import plot_layout
 from powercad.sym_layout.symbolic_layout import SymbolicLayout, DeviceInstance, SymLine, SymPoint, ElectricalMeasure, \
     ThermalMeasure
 from powercad.tech_lib.test_techlib import get_device, get_dieattach
 from powercad.tech_lib.test_techlib import get_power_bondwire, get_signal_bondwire
 from powercad.tech_lib.test_techlib import get_signal_lead
-import matplotlib.pyplot as plt
+
 
 def make_test_symmetries(sym_layout):
     symm1 = []

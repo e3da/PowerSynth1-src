@@ -1,16 +1,17 @@
+import copy
+import math
+
+import matplotlib.pyplot as plt
 import networkx as nx
 import pandas as pd
-from powercad.parasitics.analysis import parasitic_analysis
 from powercad.parasitics.mdl_compare import trace_cap_krige, trace_ind_krige, trace_res_krige
-from powercad.parasitics.models_bk import trace_inductance, trace_resistance, trace_capacitance, wire_inductance, \
-    wire_resistance
-from powercad.general.data_struct.util import Rect, complex_rot_vec, get_overlap_interval, distance
-import math
-from powercad.design.project_structures import DeviceInstance
 from powercad.design.library_structures import Lead, BondWire
-import matplotlib.pyplot as plt
-import copy
-from powercad.sym_layout.symbolic_layout import LayoutLine,LayoutPoint
+from powercad.design.project_structures import DeviceInstance
+from powercad.general.data_struct.util import Rect, distance
+from powercad.parasitics.models_bk import trace_inductance, trace_resistance, trace_capacitance, \
+    wire_inductance, \
+    wire_resistance
+
 DEVICE_POI = 1
 BAR_LEAD_POI = 2
 RND_LEAD_POI = 3

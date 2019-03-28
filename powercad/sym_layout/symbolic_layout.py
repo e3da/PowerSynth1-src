@@ -41,29 +41,26 @@ from copy import copy, deepcopy
 import networkx as nx
 import numpy as np
 from numpy.linalg.linalg import LinAlgError
-
+from powercad.parasitics.analysis import parasitic_analysis
+from powercad.parasitics.mdl_compare import trace_ind_krige, trace_res_krige
 import powercad.general.settings.settings as settings
 from powercad.design.library_structures import Lead, BondWire
 from powercad.design.module_data import gen_test_module_data
 from powercad.design.project_structures import DeviceInstance
 from powercad.drc.design_rule_check import DesignRuleCheck
-from powercad.general.data_struct.util import Rect, complex_rot_vec, get_overlap_interval, distance
+from powercad.general.data_struct.util import Rect, complex_rot_vec, get_overlap_interval
 from powercad.general.settings.save_and_load import load_file
 from powercad.opt.optimizer import NSGAII_Optimizer, DesignVar
-from powercad.parasitics.analysis import parasitic_analysis
-from powercad.parasitics.mdl_compare import trace_cap_krige, trace_ind_krige, trace_res_krige
-from powercad.parasitics.models_bk import trace_inductance, trace_resistance, trace_capacitance, wire_inductance, \
-    wire_resistance
+from powercad.parasitics.models_bk import trace_inductance, trace_resistance, trace_capacitance
 from powercad.sol_browser.solution_lib import SolutionLibrary
+from powercad.sym_layout.Electrical_meshing.Lumped_Graph import E_graph
 from powercad.sym_layout.svg import LayoutLine, LayoutPoint
 from powercad.sym_layout.svg import load_svg, normalize_layout, check_for_overlap, load_script
 from powercad.thermal.analysis import perform_thermal_analysis
 from powercad.thermal.elmer_characterize import characterize_devices
-import matplotlib.pyplot as plt
-from powercad.parasitics.mdl_compare import load_mdl
-from powercad.sym_layout.Electrical_meshing.Lumped_Graph import E_graph
+
+
 # test bondwire:
-from powercad.sym_layout.plot import plot_layout
 #Used in Pycharm only
 
 
@@ -121,7 +118,7 @@ class ElectricalMeasure(object):
 
     def __init__(self, pt1=None, pt2=None, measure=None, freq=10, name=None, lines=[], mdl=None,src_sink_type=[None,None],device_state=[1,0,0]):
         """
-        Electrical parasitic measure object
+        electrical_mdl parasitic measure object
 
         Keyword Arguments:
         pt1 -- SymPoint object which represents start of electrical path

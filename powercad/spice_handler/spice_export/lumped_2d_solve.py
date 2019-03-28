@@ -5,9 +5,9 @@ from numba import jitclass
 import networkx as nx
 import numpy as np
 import pandas as pd
-from powercad.Spice_handler.spice_export.Touchstone import write_touchstone_v1
+from powercad.spice_handler.spice_export.Touchstone import write_touchstone_v1
 from powercad.sym_layout.Recursive_test_cases.Netlist.LTSPICE import LTSPICE
-from powercad.Spice_handler.spice_export.raw_read import SimData
+from powercad.spice_handler.spice_export.raw_read import SimData
 from sympy import *
 from IPython.display import display
 import scipy

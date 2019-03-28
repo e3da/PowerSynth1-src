@@ -103,7 +103,7 @@ class Ui_layout_form(object):
         self.btn_run_drc.setText(QtGui.QApplication.translate("layout_form", "Run DRC", None, QtGui.QApplication.UnicodeUTF8))
         self.cmbox_export_option.setItemText(0, QtGui.QApplication.translate("layout_form", "Q3D", None, QtGui.QApplication.UnicodeUTF8))
         self.cmbox_export_option.setItemText(1, QtGui.QApplication.translate("layout_form", "Solidworks", None, QtGui.QApplication.UnicodeUTF8))
-        self.cmbox_export_option.setItemText(2, QtGui.QApplication.translate("layout_form", "Electrical netlist ", None, QtGui.QApplication.UnicodeUTF8))
+        self.cmbox_export_option.setItemText(2, QtGui.QApplication.translate("layout_form", "electrical_mdl netlist ", None, QtGui.QApplication.UnicodeUTF8))
         self.cmbox_export_option.setItemText(3, QtGui.QApplication.translate("layout_form", "Thermal netlist", None, QtGui.QApplication.UnicodeUTF8))
         self.cmbox_export_option.setItemText(4, QtGui.QApplication.translate("layout_form", "FastHenry", None, QtGui.QApplication.UnicodeUTF8))
         self.cmbox_export_option.setItemText(5, QtGui.QApplication.translate("layout_form", "EMPro", None, QtGui.QApplication.UnicodeUTF8))

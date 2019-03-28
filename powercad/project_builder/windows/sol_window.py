@@ -15,9 +15,9 @@ import numpy as np
 from PySide import QtGui
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
-from powercad.Spice_handler.spice_import.NetlistImport import Netlist, Netlis_export_ADS
-from powercad.Spice_handler.spice_export.thermal_netlist_graph import Module_Full_Thermal_Netlist_Graph
-from powercad.Spice_handler.spice_export.netlist_graph import Module_SPICE_netlist_graph_v2, Module_SPICE_lumped_graph
+from powercad.spice_handler.spice_import.NetlistImport import Netlist, Netlis_export_ADS
+from powercad.spice_handler.spice_export.thermal_netlist_graph import Module_Full_Thermal_Netlist_Graph
+from powercad.spice_handler.spice_export.netlist_graph import Module_SPICE_netlist_graph_v2, Module_SPICE_lumped_graph
 from powercad.design.module_design import ModuleDesign
 from powercad.drc.design_rule_check import DesignRuleCheck
 from powercad.electro_thermal.ElectroThermal_toolbox import ET_analysis
@@ -28,7 +28,7 @@ from powercad.interfaces.Solidworks.solidworks import output_solidworks_vbscript
 from powercad.project_builder.dialogs.solutionWindow_ui import Ui_layout_form
 from powercad.project_builder.proj_dialogs import SolidworkVersionCheckDialog
 from powercad.sym_layout.plot import plot_layout
-from powercad.Spice_handler.spice_export.circuit import Circuit
+from powercad.spice_handler.spice_export.circuit import Circuit
 
 class SolutionWindow(QtGui.QWidget):
     """Solution windows that show up in MDI area"""
@@ -81,7 +81,7 @@ class SolutionWindow(QtGui.QWidget):
             self.export_q3d()
         elif selected== 'Solidworks':
             self.export_solidworks()
-        elif selected == 'Electrical netlist ':
+        elif selected == 'electrical_mdl netlist ':
             self.export_spice_parasitics(self.sym_layout)
         elif selected == 'Thermal netlist':
             self.export_spice_thermal()
@@ -168,9 +168,9 @@ class SolutionWindow(QtGui.QWidget):
                 spice_netlist._graph_read(sym_layout.lumped_graph)
                 ads_net = Netlis_export_ADS(df=spice_netlist.df_circuit_info, pm=spice_netlist.portmap)
                 ads_net.export_ads2(outname)
-                QtGui.QMessageBox.about(None, "SPICE Electrical Parasitics Netlist", "Export successful.")
+                QtGui.QMessageBox.about(None, "SPICE electrical_mdl Parasitics Netlist", "Export successful.")
             except:
-                QtGui.QMessageBox.warning(None, "SPICE Electrical Parasitics Netlist", "Failed to export netlist! Check log/console.")
+                QtGui.QMessageBox.warning(None, "SPICE electrical_mdl Parasitics Netlist", "Failed to export netlist! Check log/console.")
                 print traceback.format_exc()
 
     def Run_Sucessive_approximation(self):
@@ -204,9 +204,9 @@ class SolutionWindow(QtGui.QWidget):
             try:
                 spice_reduced_netlist_graph = Module_SPICE_lumped_graph(os.path.basename(outname), self.sym_layout, self.solution.index, template_graph=None)
                 spice_reduced_netlist_graph.write_SPICE_reduced_subcircuit(os.path.dirname(outname))
-                QtGui.QMessageBox.about(None, "SPICE Electrical Parasitics (reduced) Netlist", "Export successful.")
+                QtGui.QMessageBox.about(None, "SPICE electrical_mdl Parasitics (reduced) Netlist", "Export successful.")
             except:
-                QtGui.QMessageBox.warning(None, "SPICE Electrical Parasitics (reduced) Netlist", "Failed to export netlist! Check log/console.")
+                QtGui.QMessageBox.warning(None, "SPICE electrical_mdl Parasitics (reduced) Netlist", "Failed to export netlist! Check log/console.")
                 print traceback.format_exc()
 
 

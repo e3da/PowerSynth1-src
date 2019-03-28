@@ -1,23 +1,26 @@
 '''
 @ qmle: This routine is used to connect the layer stack format to formulate the appropriate response surface model
 '''
-from powercad.layer_stack.layer_stack_import import *
-from powercad.interfaces.Q3D.Ipy_script import Q3D_ipy_script
-from powercad.interfaces.Q3D.Electrical import rect_q3d_box
-from powercad.response_surface.Response_Surface import RS_model
-from powercad.response_surface.Layer_Stack import Layer_Stack
+import subprocess
 from copy import *
-from powercad.general.settings.save_and_load import save_file
+
+from scipy.interpolate import InterpolatedUnivariateSpline
+from scipy.interpolate import interp1d
+
 from powercad.general.data_struct.Unit import Unit
 from powercad.general.settings.Error_messages import InputError, Notifier
-from powercad.parasitics.mdl_compare import trace_cap_krige, trace_ind_krige, trace_res_krige, load_mdl
-import subprocess
-from scipy.interpolate import InterpolatedUnivariateSpline
-from powercad.interfaces.FastHenry.fh_layers import  *
+from powercad.general.settings.save_and_load import save_file
 from powercad.interfaces.FastHenry.Standard_Trace_Model import *
+from powercad.interfaces.FastHenry.fh_layers import *
+from powercad.interfaces.Q3D.Electrical import rect_q3d_box
+from powercad.interfaces.Q3D.Ipy_script import Q3D_ipy_script
+from powercad.layer_stack.layer_stack_import import *
+from powercad.parasitics.mdl_compare import trace_ind_krige, trace_res_krige, load_mdl
+from powercad.response_surface.Layer_Stack import Layer_Stack
 from powercad.response_surface.RS_build_function import *
-from scipy.interpolate import interp1d
-import time
+from powercad.response_surface.Response_Surface import RS_model
+
+
 def form_trace_model(layer_stack, Width=[1.2, 40], Length=[1.2, 40], freq=[10, 100, 10], wdir=None, savedir=None,
                      mdl_name=None
                      , env=None, options=['Q3D', 'mesh', False]):
@@ -1166,10 +1169,10 @@ def test_build_trace_model_fh():
     metal_cond = 5.96*1e7
     sd_met = math.sqrt(1 / (math.pi * 1e6 * u * metal_cond * 1e6))
 
-    Width = [0.2,2]
-    Length = [0.2,8.33]
+    Width = [1,4]
+    Length = [0.2,5]
     #freq = [0.01, 100000, 100] # in kHz
-    freq = [3,6,100]
+    freq = [3,9,100]
     form_fasthenry_trace_response_surface(layer_stack=ls, Width=Width, Length=Length, freq=freq, wdir=w_dir,
                                           savedir=w_dir
                                           , mdl_name='1trace', env=env, doe_mode=2,mode='log')
@@ -1240,7 +1243,7 @@ def test_build_corner_correction():
                                  , env=env_dir, options=options, trace_model=rs_mdl)
 
 def test_bw_group(l):
-    from powercad.parasitics.models_bk import wire_group
+    from powercad.parasitics.analytical.models_bk import wire_group
     mdl=load_mdl('C://Users//qmle//Desktop//Testing//FastHenry//Fasthenry3_test_gp//WorkSpace_bw',mdl_name='bw.mdl')
     t1=time.time()
     R,L=wire_group(mdl,l)

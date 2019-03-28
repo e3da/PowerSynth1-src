@@ -1,7 +1,8 @@
 '''
-Created on Sep 27, 2012
+Created on March 25, 2019
 
-@author: bxs003
+@author: qmle
+Modified Brett's code to make interface with new electrical model
 '''
 
 from copy import copy
@@ -35,10 +36,11 @@ class ModuleDesign(object):
         self.substrate = None
         self.substrate_attach = None
         self.baseplate = None
-        self.zpos = []  # Note: this is for fixed dimension only. solder, metal 1, dielectric, metal 2(trace), component
+        
         self.sym_layout = sym_layout # reference of symbolic layout object
         if sym_layout!=None:
             self._symbolic_layout_to_design() # convert layout to full design object
+        self.zpos = [] # Note: this is for fixed dimension only. solder, metal 1, dielectric, metal 2(trace), component
     def _update_zpos(self):
         ''' temp function to get z positions of a simple power moudle stack
         Need to be updated for more generic cases (from layer stack input file)
@@ -48,7 +50,7 @@ class ModuleDesign(object):
         MetalZPos = self.substrate_attach.thickness + SolderZPos
         DielectricZPos = self.substrate.substrate_tech.metal_thickness + MetalZPos
         TraceZPos = self.substrate.substrate_tech.isolation_thickness + DielectricZPos
-        MetalZSize = self.substrate.substrate_tech.metal_thickness
+        MetalZSize = md.substrate.substrate_tech.metal_thickness
         ComponentZPos = TraceZPos + MetalZSize
         self.zpos = [SolderZPos,MetalZPos,DielectricZPos,TraceZPos,ComponentZPos]
 

@@ -1,19 +1,20 @@
 # This will test the new lumped graph structure along with Kelvin connection
 #@authors: Quang Le
 
-from powercad.design.module_data import gen_test_module_data
-from powercad.general.settings import settings
-from powercad.parasitics.analysis import parasitic_analysis
-from powercad.sym_layout.symbolic_layout import SymbolicLayout, DeviceInstance, SymLine, SymPoint, ElectricalMeasure, \
-    ThermalMeasure
-from powercad.tech_lib.test_techlib import get_power_bondwire, get_signal_bondwire
-from powercad.tech_lib.test_techlib import get_signal_lead, get_power_lead
-from PySide import QtGui
-from PySide.QtGui import QFileDialog,QMainWindow
-from powercad.tech_lib.test_techlib import get_mosfet, get_dieattach
-from powercad.cons_aware_en.cons_engine import *
 import sys
 
+from PySide import QtGui
+from PySide.QtGui import QMainWindow
+
+from powercad.cons_aware_en.cons_engine import *
+from powercad.design.module_data import gen_test_module_data
+from powercad.general.settings import settings
+from powercad.parasitics.analytical.analysis import parasitic_analysis
+from powercad.sym_layout.symbolic_layout import SymbolicLayout, DeviceInstance, SymLine, SymPoint, ElectricalMeasure, \
+    ThermalMeasure
+from powercad.tech_lib.test_techlib import get_mosfet, get_dieattach
+from powercad.tech_lib.test_techlib import get_power_bondwire, get_signal_bondwire
+from powercad.tech_lib.test_techlib import get_signal_lead
 
 
 def make_test_symmetries(sym_layout):

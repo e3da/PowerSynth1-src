@@ -12,19 +12,22 @@ import pickle
 
 import matplotlib.pyplot as plt
 from matplotlib import lines
+from pyDOE import *
 from pykrige.ok import OrdinaryKriging as ok
 from pykrige.uk import UniversalKriging as uk
 from scipy.interpolate import *
 from scipy.optimize import curve_fit
-from RS_build_function import *
-from powercad.general.data_struct.Unit import Unit
-from powercad.general.settings.Error_messages import InputError,Notifier
-from powercad.parasitics.mdl_compare import trace_inductance
 from sklearn.kernel_ridge import KernelRidge
 from sklearn.svm import SVR
+
+from RS_build_function import *
 from powercad.general.data_struct.Abstract_Data import *
 from powercad.general.data_struct.BasicsFunction import *
-from pyDOE import *
+from powercad.general.data_struct.Unit import Unit
+from powercad.general.settings.Error_messages import InputError, Notifier
+from powercad.parasitics.mdl_compare import trace_inductance
+
+
 class RS_model:
     '''Surrogate/Response Surface model 
     '''

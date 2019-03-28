@@ -4,22 +4,20 @@ Created on Oct 12, 2012
 @author: Peter N. Tucker, qmle, Imam Al Razi
 '''
 # IMPORT METHODS
-import os
 import traceback
-import pandas as pd
-import random
 import types
-from PySide.QtGui import QFileDialog, QStandardItemModel,QStandardItem, QMessageBox,QFont
-from matplotlib.figure import Figure
-from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
-import powercad.sym_layout.plot as plot
-from powercad.project_builder.dialogs.propertiesDeviceDialog import Ui_device_propeties
-from powercad.Spice_handler.spice_import.NetlistImport import Netlist
 
+import pandas as pd
+from PySide.QtGui import QFileDialog, QStandardItemModel, QStandardItem, QMessageBox, QFont
+from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
+
+import powercad.sym_layout.plot as plot
+from powercad.spice_handler.spice_import.NetlistImport import Netlist
+from powercad.project_builder.dialogs.propertiesDeviceDialog import Ui_device_propeties
 
 #plot.plt.matplotlib.use('Qt4Agg')
 plot.plt.matplotlib.rcParams['backend.qt4']='PySide'
-from powercad.design.project_structures import *
 from powercad.project_builder.dialogs.device_states import Ui_dev_state_dialog
 from powercad.project_builder.dialogs.newProjectDialog import Ui_newProjectDialog
 from powercad.project_builder.dialogs.openProjectDialog_ui import Ui_openProjectDialog
@@ -34,7 +32,7 @@ from powercad.project_builder.dialogs.CS_design_ui import Ui_CornerStitch_Dialog
 from powercad.project_builder.dialogs.Fixed_loc_ui import Ui_Fixed_location_Dialog
 from powercad.project_builder.project import Project
 from powercad.sym_layout.symbolic_layout import SymbolicLayout,plot_layout
-from powercad.general.settings.settings import DEFAULT_TECH_LIB_DIR,EXPORT_DATA_PATH,ANSYS_IPY64,FASTHENRY_FOLDER,GMSH_BIN_PATH,ELMER_BIN_PATH
+from powercad.general.settings.settings import DEFAULT_TECH_LIB_DIR,EXPORT_DATA_PATH,ANSYS_IPY64,FASTHENRY_FOLDER,GMSH_BIN_PATH
 from powercad.electro_thermal.ElectroThermal_toolbox import rdson_fit_transistor, list2float, csv_load_file,Vth_fit,fCRSS_fit
 from powercad.general.settings.save_and_load import save_file, load_file
 from powercad.project_builder.dialogs.ResponseSurface import Ui_ResponseSurface
@@ -47,7 +45,7 @@ from PySide import QtCore, QtGui
 from powercad.sym_layout.symbolic_layout import SymPoint,ElectricalMeasure,ThermalMeasure, LayoutError
 from powercad.project_builder.dialogs.cons_setup_ui import Ui_Constraint_setup
 from powercad.response_surface.Model_Formulation import form_trace_model_optimetric,form_fasthenry_trace_response_surface
-from powercad.parasitics.analysis import parasitic_analysis
+from powercad.parasitics.analytical.analysis import parasitic_analysis
 import psidialogs
 from numpy.linalg.linalg import LinAlgError
 
@@ -1892,7 +1890,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
 
                     val = sym_layout ._thermal_analysis(measure, mdl)
                     pdraw['data'].append(val)
-                elif perf['type'] == 'Electrical':
+                elif perf['type'] == 'electrical_mdl':
                     type_dict = {ElectricalMeasure.MEASURE_RES: 'res',
                                  ElectricalMeasure.MEASURE_IND: 'ind',
                                  ElectricalMeasure.MEASURE_CAP: 'cap'}
@@ -2177,7 +2175,7 @@ class ET_standalone_Dialog(QtGui.QDialog):
                                 devices.append(dev)
                 if mdl_str =="Fast Approximation with FEM":
                     mdl = 1
-                elif mdl_str == "Analytical Rectangular Flux":
+                elif mdl_str == "analytical Rectangular Flux":
                     mdl =2
 
                 if eval_type == "Maximum":
@@ -2202,7 +2200,7 @@ class ET_standalone_Dialog(QtGui.QDialog):
             if self.ui.Tab_model_select.currentIndex() == 1:
                 print "Add electrical performance"
                 perf_name = str(self.ui.txt_perfname.text())
-                type = 'Electrical'
+                type = 'electrical_mdl'
                 mdl_str = str(self.ui.cmb_electrical_mdl.currentText())
                 eval_type = str(self.ui.cmb_electrical_type.currentText())
                 src_type= None

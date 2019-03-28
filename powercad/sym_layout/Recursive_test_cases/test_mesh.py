@@ -1,20 +1,22 @@
 # @authors: Quang Le
-import networkx as nx
+
+import cProfile
+import pstats
 
 from powercad.design.module_data import gen_test_module_data
+from powercad.design.module_design import ModuleDesign
+from powercad.electrical_mdl.e_mesh import *
+from powercad.electrical_mdl.e_struct import *
+from powercad.electrical_mdl.spice_eval.rl_mat_eval import *
 from powercad.general.settings import settings
 from powercad.parasitics.analysis import parasitic_analysis
-from powercad.sym_layout.Electrical.E_mesh import *
-from powercad.sym_layout.Electrical.E_plate import *
-from powercad.design.module_design import ModuleDesign
-
+from powercad.parasitics.mdl_compare import *
 from powercad.sym_layout.plot import plot_layout
 from powercad.sym_layout.symbolic_layout import SymbolicLayout, DeviceInstance, SymLine, SymPoint, ElectricalMeasure, \
     ThermalMeasure
 from powercad.tech_lib.test_techlib import get_device, get_dieattach
 from powercad.tech_lib.test_techlib import get_power_bondwire, get_signal_bondwire
 from powercad.tech_lib.test_techlib import get_signal_lead
-from powercad.Spice_handler.spice_export.PEEC_num_solver import *
 
 
 def make_test_symmetries(sym_layout):
@@ -252,7 +254,7 @@ def make_test_setup2(f, directory):
     sym_layout.generate_layout()
     #plot_layout(sym_layout)
     md = ModuleDesign(sym_layout)
-    plates = load_traces(md)
+    plates = get_traces_from_md(md)
     # ADD SHEET
     # First bw group
     x1=16.5
@@ -262,45 +264,55 @@ def make_test_setup2(f, directory):
     #es = E_stack(file="C:\Users\qmle\Desktop\Documents\Conferences\IWIPP\ELayerStack//2_layers.csv")
     #es.load_layer_stack()
     bw11 = Rect(40.5, 38.5, x1, x2)
-    BW1s = Sheet(rect=bw11, net='bw11', type='point', n=(0, 0, 1), z=1.04)
+    BW1s = Sheet(rect=bw11, net_name='bw11', type='point', n=(0, 0, 1), z=1.04)
     bw12 = Rect(45.5, 44.5, x1, x2)
-    BW1e = Sheet(rect=bw12, net='bw12', type='point', n=(0, 0, 1), z=1.04)
+    BW1e = Sheet(rect=bw12, net_name='bw12', type='point', n=(0, 0, 1), z=1.04)
     # Second bw group
     bw21 = Rect(14.5, 12.5, x3, x4)
-    BW2s = Sheet(rect=bw21, net='bw21', type='point', n=(0, 0, 1), z=1.04)
+    BW2s = Sheet(rect=bw21, net_name='bw21', type='point', n=(0, 0, 1), z=1.04)
     bw22 = Rect(8.5, 7.5, x3, x4)
-    BW2e = Sheet(rect=bw22, net='bw22', type='point', n=(0, 0, 1), z=1.04)
+    BW2e = Sheet(rect=bw22, net_name='bw22', type='point', n=(0, 0, 1), z=1.04)
     # First Pad
     p1 = Rect(37.5, 36.5, 4, 6)
-    P1 = Sheet(rect=p1, net='P1', type='point', n=(0, 0, 1), z=1.04)
+    P1 = Sheet(rect=p1, net_name='P1', type='point', n=(0, 0, 1), z=1.04)
     p2 = Rect(6.5, 5.5, 4, 6)
-    P2 = Sheet(rect=p2, net='P2', type='point', n=(0, 0, 1), z=1.04)
+    P2 = Sheet(rect=p2, net_name='P2', type='point', n=(0, 0, 1), z=1.04)
 
-    Bw1 = E_comp(sheet=[BW1s, BW1e], conn=[['bw11', 'bw12']], val={'R':0.6e-3, 'L':1e-9})
-    Bw2 = E_comp(sheet=[BW2s, BW2e], conn=[['bw21', 'bw22']], val={'R': 0.6 - 3, 'L': 1e-9})
+    Bw1 = EComp(sheet=[BW1s, BW1e], conn=[['bw11', 'bw12']], val={'R':0.6e-3, 'L':1e-9})
+    Bw2 = EComp(sheet=[BW2s, BW2e], conn=[['bw21', 'bw22']], val={'R':0.6e-3, 'L': 1e-9})
     bs_copper = Rect(50, 0, 0, 40)
     #bs_plate=E_plate(rect=bs_copper, z=0, dz=0.2)
     #plates.append(bs_plate)
     sheets = [P1,P2]
-    new_module = E_module(plate=plates, components = [Bw1,Bw2],sheet=sheets)#,layer_stack=es)
+    new_module = EModule(plate=plates, components = [Bw1, Bw2], sheet=sheets)#,layer_stack=es)
     new_module.form_group()
     new_module.split_layer_group()
 
 
-    hier = Hier_E(module=new_module)
+    hier = EHier(module=new_module)
     hier.form_hierachy()
     freqs=[10,20,50,100,500,1000]
+    mdl_dir = "C:\Users\qmle\Desktop\Documents\Conferences\IWIPP\Model\workspace"
+    mdl_name = '2d_high_freq_journal.rsmdl'
+    rsmdl = load_mdl(mdl_dir, mdl_name)
     for freq in freqs:
-        emesh = ElectricalMesh(hier_E=hier, freq=freq, mdl_name='2d_high_freq_journal.rsmdl')
+        pr = cProfile.Profile()
+
+        pr.enable()
+        emesh = EMesh(hier_E=hier, freq=freq, mdl=rsmdl)
         #fig = plt.figure(1)
-        start = time.time()
-        emesh.mesh_grid_hier(Nx=4, Ny=4)
+        emesh.mesh_grid_hier(Nx=3, Ny=3)
         #ax = plt.subplot('111', adjustable='box', aspect=1.0)
-        emesh.plot_lumped_graph()
-        plt.show()
+        #emesh.plot_lumped_graph()
+        #plt.show()
+        start = time.time()
+
+        emesh.update_trace_RL_val()
+        emesh.update_hier_edge_RL()
         emesh.update_mutual()
+
         # EVALUATION
-        circuit = Circuit()
+        circuit = RL_circuit()
         pt1 = (4, 37,0.84)
         pt2 = (4, 6,0.84)
         src1 = emesh.find_node(pt1)
@@ -311,13 +323,20 @@ def make_test_setup2(f, directory):
         circuit.m_graph_read(emesh.m_graph)
         circuit.assign_freq(freq*1000)
         circuit.Rport=1e-10
-        circuit._assign_vsource(src1, vname='Vs1', volt=1)
+        circuit.indep_current_source(src1, 0, 1)
         circuit._add_termial(sink1)
+
         circuit.build_current_info()
         circuit.solve_iv()
         print time.time()-start,'s'
         print 'f',freq,'kHz'
-        print "model",circuit._compute_imp(src1, sink1, sink1)
+        pr.disable()
+        pr.create_stats()
+        file = open('mystats.txt', 'w')
+        stats = pstats.Stats(pr, stream=file)
+        stats.sort_stats('cumulative')
+        stats.print_stats()
+        #print "model",circuit._compute_imp(src1, sink1, sink1)
 
         '''
         all_I=[]

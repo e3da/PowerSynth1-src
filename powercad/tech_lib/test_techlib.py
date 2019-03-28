@@ -58,7 +58,7 @@ def get_dieattach():
     thermal_cond -- W/(m*K) -- "Thermal Conductivity"
     spec_heat_cap -- J/(kg*K) -- "Specific Heat Capacity"
     density -- kg/m^3 -- "Material Density"
-    electrical_res -- (ohm*m) -- "Electrical Resistivity"
+    electrical_res -- (ohm*m) -- "electrical_mdl Resistivity"
     rel_permit -- (unitless) -- "Relative Permittivity"
     rel_permeab -- (unitless) -- "Relative Permeability"'''
     die_attach_props = MaterialProperties('Pb-Sn Solder Alloy', 35.8, 130.0, 11020.0, None, None, None)
