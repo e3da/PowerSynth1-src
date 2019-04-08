@@ -582,8 +582,8 @@ class SymbolicLayout(object):
                                 else:
                                     bw.trace2=sym
                                 sym.conn_bonds.append(bw)
-            #if bw.trace==None and bw.trace2==None:
-            #    raise FormulationError('A bondwire is not connected to a trace or device!')
+            if bw.trace==None and bw.trace2==None:
+                raise FormulationError('A bondwire is not connected to a trace or device!')
             self.bondwires.append(bw)
         self.all_sym+=self.bondwires
     def _check_formulation(self):
