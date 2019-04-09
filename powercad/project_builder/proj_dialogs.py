@@ -30,7 +30,7 @@ from powercad.project_builder.dialogs.device_setup_dialog import Ui_setup_device
 from powercad.project_builder.dialogs.Env_setup import Ui_EnvSetup
 from powercad.project_builder.dialogs.bondwire_setup import Ui_Bondwire_setup
 from powercad.project_builder.dialogs.layoutEditor_ui import Ui_layouteditorDialog
-from powercad.project_builder.dialogs.CS_design_ui import Ui_CornerStitch_Dialog
+from powercad.project_builder.dialogs.CS_design_up_ui import Ui_CornerStitch_Dialog  #CS_design_ui
 from powercad.project_builder.dialogs.Fixed_loc_ui import Ui_Fixed_location_Dialog
 from powercad.project_builder.project import Project
 from powercad.sym_layout.symbolic_layout import SymbolicLayout,plot_layout
@@ -1327,13 +1327,13 @@ class Fixed_locations_Dialog(QtGui.QDialog):
         self.ui.table_Fixedloc.setItem(row_id, 2, QtGui.QTableWidgetItem())
         self.ui.table_Fixedloc.item(row_id, 0).setText(str(self.current_node))
         if str(self.ui.txt_inputx.text())!='':
-            self.X = int(self.ui.txt_inputx.text()) * 1000
+            self.X = float(self.ui.txt_inputx.text()) * 1000
             self.ui.table_Fixedloc.item(row_id, 1).setText(str(float(self.X) / 1000))
         else:
             self.ui.table_Fixedloc.item(row_id, 1).setText('None')
 
         if str(self.ui.txt_inputy.text()) != '':
-            self.Y = int(self.ui.txt_inputy.text()) * 1000
+            self.Y = float(self.ui.txt_inputy.text()) * 1000
             self.ui.table_Fixedloc.item(row_id, 2).setText(str(float(self.Y) / 1000))
 
         else:
