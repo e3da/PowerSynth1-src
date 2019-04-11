@@ -164,14 +164,14 @@ class New_layout_engine():
 
         CG1 = CS_to_CG(0)
         CG1.getConstraints(self.cons_df)
-        Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=None, W=None, H=None, XLoc=None, YLoc=None)
+        Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=None, W=None, H=None, XLoc=None, YLoc=None,seed=None,individual=None)
 
 
         return Evaluated_X, Evaluated_Y
 
 
     # generate layout solutions using constraint graph edge weights randomization for different modes(level)
-    def generate_solutions(self, level, num_layouts=1, W=None, H=None, fixed_x_location=None, fixed_y_location=None):
+    def generate_solutions(self, level, num_layouts=1, W=None, H=None, fixed_x_location=None, fixed_y_location=None,seed=None,individual=None):
         """
 
         :param level: mode of operation: mode-0(minimum sized layout), mode-1(variable sized layouts), mode-2(fixed sized layouts), mode-3(fixed sized with fixed component locations)
@@ -189,9 +189,8 @@ class New_layout_engine():
         scaler = 1000  # to get back original dimensions all coordinated will be scaled down by 1000
         #mode-0
         if level == 0:
-            Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=None, W=None, H=None, XLoc=None, YLoc=None) # for minimum sized layout only one solution is generated
-
-            CS_SYM_information, Layout_Rects = CG1.UPDATE_min(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree ,sym_to_cs,scaler)  # CS_SYM_information is a dictionary where key=path_id(component name) and value=list of updated rectangles, Layout Rects is a dictionary for minimum HCS and VCS evaluated rectangles (used for plotting only)
+            Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=None, W=None, H=None, XLoc=None, YLoc=None,seed=None,individual=None) # for minimum sized layout only one solution is generated
+            CS_SYM_information, Layout_Rects = CG1.UPDATE_min(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree ,sym_to_cs)  # CS_SYM_information is a dictionary where key=path_id(component name) and value=list of updated rectangles, Layout Rects is a dictionary for minimum HCS and VCS evaluated rectangles (used for plotting only)
             self.cur_fig_data = plot_layout(Layout_Rects, level)
             CS_SYM_Updated = {}
             for i in self.cur_fig_data:
@@ -202,8 +201,8 @@ class New_layout_engine():
         #mode-1
         elif level == 1:
 
-            Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=num_layouts, W=None, H=None
-                                                      , XLoc=None, YLoc=None)
+            Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=num_layouts, W=None, H=None,
+                                                      XLoc=None, YLoc=None, seed=seed, individual=None)
             CS_SYM_Updated, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree, sym_to_cs,scaler)
             CS_SYM_Updated = CS_SYM_Updated['H']
             self.cur_fig_data = plot_layout(Layout_Rects, level)
@@ -241,15 +240,23 @@ class New_layout_engine():
 
             for k, v in Min_X_Loc.items(): # checking if the given width is greater or equal minimum width
                 if W >= v:
-                    Min_X_Loc[0] = 0
-                    Min_X_Loc[k] = W
+                    #Min_X_Loc[0] = 0
+                    #Min_X_Loc[k] = W
+                    Min_X_Loc[0] = -2000
+                    Min_X_Loc[1] = 0
+                    Min_X_Loc[k - 1] = W
+                    Min_X_Loc[k] = W + 2000
                 else:
                     print"Enter Width greater than or equal Minimum Width"
                     return
             for k, v in Min_Y_Loc.items():# checking if the given height is greater or equal minimum width
                 if H >= v:
-                    Min_Y_Loc[0] = 0
-                    Min_Y_Loc[k] = H
+                    #Min_Y_Loc[0] = 0
+                    #Min_Y_Loc[k] = H
+                    Min_Y_Loc[0] = -2000
+                    Min_Y_Loc[1] = 0
+                    Min_Y_Loc[k - 1] = H
+                    Min_Y_Loc[k] = H + 2000
                 else:
                     print"Enter Height greater than or equal Minimum Height"
                     return
@@ -258,7 +265,7 @@ class New_layout_engine():
             Min_Y_Loc = collections.OrderedDict(sorted(Min_Y_Loc.items()))
 
             Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=num_layouts, W=W, H=H,
-                                                      XLoc=Min_X_Loc, YLoc=Min_Y_Loc) # evaluates and finds updated locations for each coordinate
+                                                      XLoc=Min_X_Loc, YLoc=Min_Y_Loc, seed=seed, individual=None) # evaluates and finds updated locations for each coordinate
 
             CS_SYM_Updated, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree, sym_to_cs,scaler)
             CS_SYM_Updated = CS_SYM_Updated['H'] # takes only horizontal corner stitch data
@@ -301,7 +308,14 @@ class New_layout_engine():
                 if W > v:
                     Min_X_Loc[0] = 0
                     Min_X_Loc[k] = W
-                    fixed_x_location[k]=W
+                    fixed_x_location[k] = W
+                    '''
+                    Min_X_Loc[0] = -2000
+                    Min_X_Loc[1] = 0
+                    Min_X_Loc[k - 1] = W
+                    Min_X_Loc[k] = W + 2000
+                    fixed_x_location[k]=W + 2000
+                    '''
 
                 else:
                     print"Enter Width greater than or equal Minimum Width"
@@ -311,6 +325,13 @@ class New_layout_engine():
                     Min_Y_Loc[0] = 0
                     Min_Y_Loc[k] = H
                     fixed_y_location[k]=H
+                    '''
+                    Min_Y_Loc[0] = -2000
+                    Min_Y_Loc[1] = 0
+                    Min_Y_Loc[k - 1] = H
+                    Min_Y_Loc[k] = H + 2000
+                    fixed_y_location[k] = H+2000
+                    '''
                 else:
                     print"Enter Height greater than or equal Minimum Height"
                     return None,None
@@ -352,7 +373,9 @@ class New_layout_engine():
                         print"Invalid Location for Y coordinate"
                         return None,None
 
-            Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=num_layouts, W=W, H=H,XLoc=Min_X_Loc, YLoc=Min_Y_Loc)
+            Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=num_layouts,
+                                                      W=W, H=H, XLoc=Min_X_Loc, YLoc=Min_Y_Loc, seed=seed,
+                                                      individual=None)
 
             CS_SYM_Updated, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree, sym_to_cs,scaler)
 
@@ -391,6 +414,7 @@ def plot_layout(Layout_Rects,level):
         type=['EMPTY','Type_1','Type_2','Type_3','Type_4']
         ALL_Patches={}
         key=(max_x,max_y)
+        print key
         ALL_Patches.setdefault(key,[])
         for i in Rectangles:
             for t in type:

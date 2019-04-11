@@ -9,6 +9,7 @@ import traceback
 import pandas as pd
 import random
 import types
+import copy
 from PySide.QtGui import QFileDialog, QStandardItemModel,QStandardItem, QMessageBox,QFont
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
@@ -31,7 +32,7 @@ from powercad.project_builder.dialogs.Env_setup import Ui_EnvSetup
 from powercad.project_builder.dialogs.bondwire_setup import Ui_Bondwire_setup
 from powercad.project_builder.dialogs.layoutEditor_ui import Ui_layouteditorDialog
 from powercad.project_builder.dialogs.CS_design_up_ui import Ui_CornerStitch_Dialog  #CS_design_ui
-from powercad.project_builder.dialogs.Fixed_loc_ui import Ui_Fixed_location_Dialog
+from powercad.project_builder.dialogs.Fixed_loc_up_ui import Ui_Fixed_location_Dialog   #Fixed_loc_ui
 from powercad.project_builder.project import Project
 from powercad.sym_layout.symbolic_layout import SymbolicLayout,plot_layout
 from powercad.general.settings.settings import DEFAULT_TECH_LIB_DIR,EXPORT_DATA_PATH,ANSYS_IPY64,FASTHENRY_FOLDER,GMSH_BIN_PATH,ELMER_BIN_PATH
@@ -1218,11 +1219,38 @@ class Fixed_locations_Dialog(QtGui.QDialog):
         self.current_node = None
         self.X = None
         self.Y = None
+        self.x_space=None  # horizontal room
+        self.y_space=None  # vertical room
         self.init_table()
         self.new_node_dict = {}
 
         self.Min_X,self.Min_Y=self.parent.engine.mode_zero()
+        self.initial_range_x={}  # finding each node's initial range of x  coordinate {Node ID:(xmin,xmax)}
+        self.initial_range_y = {}  # finding each node's initial range of y  coordinate {Node ID:(ymin,ymax)}
+        self.dynamic_range_x = {}  # finding each node's dynamic range of x  coordinate {Node ID:(xmin,xmax)}
+        self.dynamic_range_y = {}  # finding each node's dynamic range of y  coordinate {Node ID:(ymin,ymax)}
+        self.x_init_range={}  # initial x range mapped to each x coordinate{x_coord:(x_min,x_max)}
+        self.y_init_range={}  # initial y range mapped to each y coordinate{y_coord:(y_min,y_max)}
+        self.x_dynamic_range = {}  # dynamic x range mapped to each x coordinate{x_coord:(x_min,x_max)}
+        self.y_dynamic_range = {}  # dynamic y range mapped to each y coordinate{y_coord:(y_min,y_max)}
         #print self.Min_X,self.Min_Y
+        self.current_range={}  # to check if the input coordinate is within the valid range
+
+        #print "L", len(self.parent.input_node_info.keys())
+        if len(self.parent.input_node_info.keys())==0:
+            self.setup_initial_range()
+            self.inserted_order = []
+
+        else:
+            self.new_node_dict=dict(self.parent.input_node_info)
+            self.inserted_order=[i for i in self.parent.inserted_order]
+            self.setup_initial_range()
+            self.x_dynamic_range = dict(self.parent.x_dynamic_range)
+            self.y_dynamic_range = dict(self.parent.y_dynamic_range)
+            self.dynamic_range_x = dict(self.parent.dynamic_range_x)
+            self.dynamic_range_y = dict(self.parent.dynamic_range_y)
+
+
         self.ui.cmb_nodes.currentIndexChanged.connect(self.node_handler)
         self.ui.txt_inputx.setEnabled(False)
         self.ui.txt_inputy.setEnabled(False)
@@ -1233,6 +1261,474 @@ class Fixed_locations_Dialog(QtGui.QDialog):
 
 
     #def show_nodeID(self,Nodelist):
+    def setup_initial_range(self):
+        x_values=self.Min_X[1].values()
+        x_values.sort()
+        max_x=x_values[-1]
+        if self.parent.mode3_width!=None and self.parent.mode3_width>=max_x:
+            self.x_space=self.parent.mode3_width-max_x
+        else:
+            print "Please enter floorplan width greater or equal to minimum width ", float(max_x)/1000
+        y_values = self.Min_Y[1].values()
+        y_values.sort()
+        max_y = y_values[-1]
+        if self.parent.mode3_height!=None and self.parent.mode3_height >= max_y:
+            self.y_space = self.parent.mode3_height - max_y
+        else:
+            print "Please enter floorplan height greater or equal to minimum height ", float(max_y)/1000
+        #print x_values, max_x, self.parent.fp_width, self.parent.fp_length
+        for k,v in self.parent.graph[1].items():
+            for k1,v1 in self.Min_X.items():
+                for k2,v2 in v1.items():
+                    if k2==v[0]:
+                        x_min=v2
+
+                        if self.x_space!=None:
+                            x_max=v2+self.x_space
+                        else:
+                            print "No horizontal space is allocated"
+                        self.initial_range_x[k]=(x_min,x_max)
+                        self.x_init_range[k2]=(x_min,x_max)
+                        self.dynamic_range_x[k]=(x_min,x_max)
+                        self.x_dynamic_range[k2]=(x_min,x_max)
+                for k1, v1 in self.Min_Y.items():
+                    for k2, v2 in v1.items():
+                        if k2 == v[1]:
+                            y_min = v2
+                            if self.y_space != None:
+                                y_max = v2 + self.y_space
+                            else:
+                                print "No vertical space is allocated"
+                            self.initial_range_y[k]=(y_min, y_max)
+                            self.y_init_range[k2] = (y_min, y_max)
+                            self.dynamic_range_y[k]=(y_min, y_max)
+                            self.y_dynamic_range[k2] = (y_min, y_max)
+
+        '''
+        #print self.Min_X
+        #print self.Min_Y
+        #print self.parent.graph[1]
+        print "init"
+        print self.initial_range_x
+        print self.initial_range_y
+        print "init_x",self.x_init_range
+        print "init_y",self.y_init_range
+        '''
+
+    def dynamic_update(self):
+
+        x_fixed=[]
+        y_fixed=[]
+        if len(self.new_node_dict.keys()) > 0:
+            for k,v in self.new_node_dict.items():
+                if v[0]!=None:
+                    for k1, v1 in self.node_dict.items():
+                        if k1==k:
+                            x_fixed.append(v1[0])
+
+
+                if v[1]!=None:
+                    for k1, v1 in self.node_dict.items():
+                        if k1==k:
+                            y_fixed.append(v1[1])
+
+        x_fixed.sort()
+        y_fixed.sort()
+        #print "init",x_fixed,y_fixed
+        if len(x_fixed)>0:
+            for k,v in self.node_dict.items():
+                if k==self.current_node:
+                    x_fixed.append(v[0])
+                    current_x=v[0]
+                else:
+                    continue
+                    #y_fixed.append(v[1])
+            x_fixed.sort()
+            #print "app_cur", x_fixed,current_x
+            if x_fixed.index(current_x)==0:
+                start=x_fixed[1]
+                for k1, v1 in self.node_dict.items():
+                    if v1[0] > start:
+                        x_fixed.append(v1[0])
+            elif x_fixed.index(current_x)==len(x_fixed)-1:
+                start=x_fixed[-2]
+                for k1, v1 in self.node_dict.items():
+                    if v1[0] < start:
+                        x_fixed.append(v1[0])
+
+                    else:
+                        continue
+            else:
+                start=x_fixed.index(current_x)-1
+                end=x_fixed.index(current_x)+1
+                for k1, v1 in self.node_dict.items():
+                    if v1[0] < x_fixed[start] or v1[0] > x_fixed[end]:
+                        x_fixed.append(v1[0])
+                    else:
+                        continue
+        if len(y_fixed) > 0:
+            for k, v in self.node_dict.items():
+                if k == self.current_node:
+                    y_fixed.append(v[1])
+                    current_y=v[1]
+                else:
+                    continue
+                    # y_fixed.append(v[1])
+            y_fixed.sort()
+            #print"Y", y_fixed
+            if y_fixed.index(current_y) == 0:
+                for k1, v1 in self.node_dict.items():
+                    if v1[1] > y_fixed[1]:
+                        y_fixed.append(v1[1])
+                    else:
+                        continue
+            elif y_fixed.index(current_y) == len(y_fixed)-1:
+                for k1, v1 in self.node_dict.items():
+                    if v1[1] < y_fixed[-2]:
+                        y_fixed.append(v1[1])
+                    else:
+                        continue
+            else:
+                start = y_fixed.index(current_y) - 1
+                end = y_fixed.index(current_y) + 1
+                for k1, v1 in self.node_dict.items():
+                    if v1[1] < y_fixed[start] or v1[1] > y_fixed[end]:
+                        y_fixed.append(v1[1])
+                    else:
+                        continue
+
+
+        x_fixed=list(set(x_fixed))
+        y_fixed = list(set(y_fixed))
+
+        #print "Fixed", x_fixed
+        #print y_fixed
+        x0=self.X
+        y0=self.Y
+        #y0=self.new_node_dict[self.current_node][1]
+        min_x_change=[]
+        max_x_change=[]
+        x_unchange=[]
+        min_y_change = []
+        max_y_change = []
+        y_unchange = []
+        for k,v in self.node_dict.items():
+            if x0!=None:
+                if v[0]>self.node_dict[self.current_node][0] and v[0] not in x_fixed:
+                    min_x_change.append(v[0])
+                elif v[0]<self.node_dict[self.current_node][0] and v[0] not in x_fixed:
+                    max_x_change.append(v[0])
+                elif v[0]==self.node_dict[self.current_node][0]:
+                    x_unchange.append(v[0])
+            if y0!=None:
+                if v[1]>self.node_dict[self.current_node][1] and v[1] not in y_fixed:
+                    min_y_change.append(v[1])
+                elif v[1]<self.node_dict[self.current_node][1] and v[1] not in y_fixed:
+                    max_y_change.append(v[1])
+                elif v[1]==self.node_dict[self.current_node][1]:
+                    y_unchange.append(v[1])
+
+        #print self.current_node
+        min_x_change=list(set(min_x_change))
+        max_x_change=list(set(max_x_change))
+        x_unchange=list(set(x_unchange))
+        min_y_change = list(set(min_y_change))
+        max_y_change = list(set(max_y_change))
+        y_unchange = list(set(y_unchange))
+        #print min_x_change,max_x_change,x_unchange
+        #print min_y_change,max_y_change,y_unchange
+        if x0!=None:
+            if len(min_x_change) > 0:
+                for x in min_x_change:
+
+                    x_min=self.x_dynamic_range[x][0]+ (x0- self.x_dynamic_range[self.node_dict[self.current_node][0]][0])
+                    x_max=self.x_dynamic_range[x][1]
+                    for k,v in self.node_dict.items():
+                        if v[0]==x:
+                            self.dynamic_range_x[k]=(x_min,x_max)
+                            self.x_dynamic_range[x]=(x_min,x_max)
+                        else:
+                            continue
+            if len(max_x_change) > 0:
+                for x in max_x_change:
+                    x_min=self.x_dynamic_range[x][0]
+                    x_max= (x0- (self.x_dynamic_range[self.node_dict[self.current_node][0]][0]-x_min))
+                    for k,v in self.node_dict.items():
+                        if v[0]==x:
+                            self.dynamic_range_x[k]=(x_min,x_max)
+                            self.x_dynamic_range[x] = (x_min, x_max)
+                        else:
+                            continue
+            if len(x_unchange) > 0:
+                for x in x_unchange:
+                    x_min=x_max=x0
+                    for k,v in self.node_dict.items():
+                        if v[0]==x:
+                            self.dynamic_range_x[k]=(x_min,x_max)
+                            self.x_dynamic_range[x] = (x_min, x_max)
+                        else:
+                            continue
+        #print self.dynamic_range_x
+        #print"x_dynamic" ,self.x_dynamic_range
+        if y0!=None:
+            if len(min_y_change)>0:
+                for y in min_y_change:
+                    y_min=self.y_dynamic_range[y][0]+ (y0- self.y_dynamic_range[self.node_dict[self.current_node][1]][0])
+                    y_max=self.y_dynamic_range[y][1]
+                    for k,v in self.node_dict.items():
+                        if v[1]==y:
+                            self.dynamic_range_y[k]=(y_min,y_max)
+                            self.y_dynamic_range[y] = (y_min, y_max)
+                        else:
+                            continue
+            if len(max_y_change) > 0:
+                for y in max_y_change:
+                    y_min=self.y_dynamic_range[y][0]
+                    y_max=(y0- abs(self.y_dynamic_range[self.node_dict[self.current_node][1]][0]-y_min))
+                    for k,v in self.node_dict.items():
+                        if v[1]==y:
+                            self.dynamic_range_y[k]=(y_min,y_max)
+                            self.y_dynamic_range[y] = (y_min, y_max)
+                        else:
+                            continue
+            if len(y_unchange) > 0:
+                for y in y_unchange:
+                    y_min=y_max=y0
+                    for k,v in self.node_dict.items():
+                        if v[1]==y:
+                            self.dynamic_range_y[k]=(y_min,y_max)
+                            self.y_dynamic_range[y] = (y_min, y_max)
+                        else:
+                            continue
+        #print self.y_dynamic_range
+
+    def dynamic_remove(self):
+        #print len(self.new_node_dict.keys()),self.new_node_dict.keys()
+        if len(self.new_node_dict.keys())==0:
+            for k, v in self.x_init_range.items():
+                self.x_dynamic_range[k] = v
+            for k, v in self.y_init_range.items():
+                self.y_dynamic_range[k] = v
+            for k, v in self.initial_range_x.items():
+                self.dynamic_range_x[k] = v
+            for k, v in self.initial_range_y.items():
+                self.dynamic_range_y[k] = v
+            #print"IN Remove x_dynamic", self.x_dynamic_range
+            #print "IN Remove", self.y_dynamic_range
+        else:
+
+            for k, v in self.x_init_range.items():
+                self.x_dynamic_range[k] = v
+            for k, v in self.y_init_range.items():
+                self.y_dynamic_range[k] = v
+            for k, v in self.initial_range_x.items():
+                self.dynamic_range_x[k] = v
+            for k, v in self.initial_range_y.items():
+                self.dynamic_range_y[k] = v
+
+            Keys=[i for i in self.inserted_order]
+
+            x_fixed = []
+            y_fixed = []
+
+
+            for i in range(len(Keys)):
+                x0 = self.new_node_dict[Keys[i]][0]
+                y0 = self.new_node_dict[Keys[i]][1]
+
+                #print "Removed_node", Keys[i],x_fixed,y_fixed
+                #if len(x_fixed) > 0:
+
+                for k, v in self.node_dict.items():
+                    if k == Keys[i]:
+                        x_fixed.append(v[0])
+                        current_x = v[0]
+                    else:
+                        continue
+                x_fixed.sort()
+
+                #print "IN Remove app_cur", x_fixed, current_x
+                if len(x_fixed)>1:
+                    if x_fixed.index(current_x) == 0:
+                        start = x_fixed[1]
+                        for k1, v1 in self.node_dict.items():
+                            if v1[0] > start:
+                                x_fixed.append(v1[0])
+                    elif x_fixed.index(current_x) == len(x_fixed) - 1:
+                        start = x_fixed[-2]
+                        for k1, v1 in self.node_dict.items():
+                            if v1[0] < start:
+                                x_fixed.append(v1[0])
+
+                            else:
+                                continue
+                    else:
+
+                        start = x_fixed.index(current_x) - 1
+                        end = x_fixed.index(current_x) + 1
+                        for k1, v1 in self.node_dict.items():
+                            if v1[0] < x_fixed[start] or v1[0] > x_fixed[end]:
+                                x_fixed.append(v1[0])
+                            else:
+                                continue
+                #if len(y_fixed) > 0:
+                for k, v in self.node_dict.items():
+                    if k == Keys[i]:
+                        y_fixed.append(v[1])
+                        current_y = v[1]
+                    else:
+                        continue
+                        # y_fixed.append(v[1])
+                y_fixed.sort()
+                if len(y_fixed) > 1:
+                    if y_fixed.index(current_y) == 0:
+                        for k1, v1 in self.node_dict.items():
+                            if v1[1] > y_fixed[1]:
+                                y_fixed.append(v1[1])
+                            else:
+                                continue
+                    elif y_fixed.index(current_y) == len(y_fixed) - 1:
+                        for k1, v1 in self.node_dict.items():
+                            if v1[1] < y_fixed[-2]:
+                                y_fixed.append(v1[1])
+                            else:
+                                continue
+                    else:
+                        start = y_fixed.index(current_y) - 1
+                        end = y_fixed.index(current_y) + 1
+                        for k1, v1 in self.node_dict.items():
+                            if v1[1] < y_fixed[start] or v1[1] > y_fixed[end]:
+                                y_fixed.append(v1[1])
+                            else:
+                                continue
+
+                '''
+                if len(x_fixed) > 0:
+
+                    #for i in range(len(x_fixed)-1):
+                    for k1, v1 in self.node_dict.items():
+                        if v1[0]<x_fixed[0]:
+                            x_fixed.append(v1[0])
+
+                if len(y_fixed) > 0:
+                    #for i in y_fixed:
+                    for k1, v1 in self.node_dict.items():
+                        if v1[1] < y_fixed[0]:
+                            y_fixed.append(v1[0])
+                '''
+                x_fixed = list(set(x_fixed))
+                y_fixed = list(set(y_fixed))
+
+                #print "IN Remove Fixed", x_fixed
+                #print y_fixed
+                # y0=self.new_node_dict[self.current_node][1]
+                min_x_change = []
+                max_x_change = []
+                x_unchange = []
+                min_y_change = []
+                max_y_change = []
+                y_unchange = []
+                for k, v in self.node_dict.items():
+                    if x0 != None:
+                        if v[0] > self.node_dict[Keys[i]][0] and v[0] not in x_fixed :
+                            min_x_change.append(v[0])
+                        elif v[0] < self.node_dict[Keys[i]][0] and v[0] not in x_fixed:
+                            max_x_change.append(v[0])
+                        elif v[0] == self.node_dict[Keys[i]][0]:
+                            x_unchange.append(v[0])
+                    if y0 != None:
+                        if v[1] > self.node_dict[Keys[i]][1] and v[1] not in y_fixed :
+                            min_y_change.append(v[1])
+                        elif v[1] < self.node_dict[Keys[i]][1] and v[1] not in y_fixed:
+                            max_y_change.append(v[1])
+                        elif v[1] == self.node_dict[Keys[i]][1]:
+                            y_unchange.append(v[1])
+
+                # print self.current_node
+                min_x_change = list(set(min_x_change))
+                max_x_change = list(set(max_x_change))
+                x_unchange = list(set(x_unchange))
+                min_y_change = list(set(min_y_change))
+                max_y_change = list(set(max_y_change))
+                y_unchange = list(set(y_unchange))
+                #print "IN Remove",min_x_change, max_x_change, x_unchange
+                #print "IN Remove",min_y_change, max_y_change, y_unchange
+                if x0 != None:
+                    if len(min_x_change) > 0:
+                        for x in min_x_change:
+
+                            x_min = self.x_dynamic_range[x][0] + (
+                                    x0 - self.x_dynamic_range[self.node_dict[Keys[i]][0]][0])
+                            x_max = self.x_dynamic_range[x][1]
+                            for k, v in self.node_dict.items():
+                                if v[0] == x:
+                                    self.dynamic_range_x[k] = (x_min, x_max)
+                                    self.x_dynamic_range[x] = (x_min, x_max)
+                                else:
+                                    continue
+                    if len(max_x_change) > 0:
+                        for x in max_x_change:
+                            x_min = self.x_dynamic_range[x][0]
+                            x_max = (x0 - (self.x_dynamic_range[self.node_dict[Keys[i]][0]][0] - x_min))
+                            for k, v in self.node_dict.items():
+                                if v[0] == x:
+                                    self.dynamic_range_x[k] = (x_min, x_max)
+                                    self.x_dynamic_range[x] = (x_min, x_max)
+                                else:
+                                    continue
+                    if len(x_unchange) > 0:
+                        for x in x_unchange:
+                            x_min = x_max = x0
+                            for k, v in self.node_dict.items():
+                                if v[0] == x:
+                                    self.dynamic_range_x[k] = (x_min, x_max)
+                                    self.x_dynamic_range[x] = (x_min, x_max)
+                                else:
+                                    continue
+                # print self.dynamic_range_x
+
+                if y0 != None:
+                    if len(min_y_change) > 0:
+                        for y in min_y_change:
+                            y_min = self.y_dynamic_range[y][0] + (
+                                    y0 - self.y_dynamic_range[self.node_dict[Keys[i]][1]][0])
+                            y_max = self.y_dynamic_range[y][1]
+                            for k, v in self.node_dict.items():
+                                if v[1] == y:
+                                    self.dynamic_range_y[k] = (y_min, y_max)
+                                    self.y_dynamic_range[y] = (y_min, y_max)
+                                else:
+                                    continue
+                    if len(max_y_change) > 0:
+                        for y in max_y_change:
+                            y_min = self.y_dynamic_range[y][0]
+                            y_max = (y0 - abs(self.y_dynamic_range[self.node_dict[Keys[i]][1]][0] - y_min))
+                            for k, v in self.node_dict.items():
+                                if v[1] == y:
+                                    self.dynamic_range_y[k] = (y_min, y_max)
+                                    self.y_dynamic_range[y] = (y_min, y_max)
+                                else:
+                                    continue
+                    if len(y_unchange) > 0:
+                        for y in y_unchange:
+                            y_min = y_max = y0
+                            for k, v in self.node_dict.items():
+                                if v[1] == y:
+                                    self.dynamic_range_y[k] = (y_min, y_max)
+                                    self.y_dynamic_range[y] = (y_min, y_max)
+                                else:
+                                    continue
+                #print"IN Remove x_dynamic", self.x_dynamic_range
+                #print "IN Remove", self.y_dynamic_range
+            #print"IN Remove_end x_dynamic", self.x_dynamic_range
+            #print "IN Remove", self.y_dynamic_range
+
+
+
+
+
+
+
     def init_table(self):
 
         if self.parent.input_node_info!=None:
@@ -1270,25 +1766,54 @@ class Fixed_locations_Dialog(QtGui.QDialog):
             self.Nodes.append(item)
 
     def set_label(self,x,y,div=1000):
-        label="Node min location X:"+str(float(x)/div)+"   "+"Y:"+str(float(y)/div)
+        # updated version (showing dynamic range)
+        label = "Node location range  X:"+ "("+str((float(x[0])/div))+","+str(float(x[1])/div)+")  "+"Y:("+str((float(y[0])/div))+","+str(float(y[1])/div)+")"
         self.ui.lbl_minxy.setText(label)
         self.ui.txt_inputx.setEnabled(True)
         self.ui.txt_inputy.setEnabled(True)
 
+
+
+        #old version
+        '''
+        label="Node min location X:"+str(float(x)/div)+"   "+"Y:"+str(float(y)/div)
+        self.ui.lbl_minxy.setText(label)
+        self.ui.txt_inputx.setEnabled(True)
+        self.ui.txt_inputy.setEnabled(True)
+        '''
+
+
     def node_handler(self):
         #self.ui.txt_inputx.clear()
         #self.ui.txt_inputy.clear()
+
         choice = self.ui.cmb_nodes.currentText()
 
         for i in self.Nodes:
             if choice==i:
-                #self.ui.txt_inputx.clear()
-                #self.ui.txt_inputy.clear()
+
                 self.X=None
                 self.Y=None
                 node_id=int(i.split()[1])
                 self.current_node = node_id
-                #print"node_id", node_id
+                #print self.current_node
+
+
+                # updated version (showing dynamic range)
+                #print self.new_node_dict
+
+                if len(self.new_node_dict.keys())==0:
+                    xrange = self.initial_range_x[self.current_node]
+                    yrange = self.initial_range_y[self.current_node]
+                else:
+                    xrange = self.dynamic_range_x[self.current_node]
+                    yrange = self.dynamic_range_y[self.current_node]
+
+
+                self.set_label(xrange, yrange)
+                self.current_range[self.current_node]=(xrange,yrange)
+                # old version
+                '''
                 for k,v in self.node_dict.items():
                     #print "node_dict",k,v[0],v[1]
                     if k==node_id:
@@ -1316,6 +1841,26 @@ class Fixed_locations_Dialog(QtGui.QDialog):
                         else:
                             continue
                 self.set_label(x_min,y_min)
+                '''
+    def valid_check(self):
+        invalid_x = 0
+        invalid_y = 0
+        for k, v in self.current_range.items():
+            if k == self.current_node:
+                if self.X != None:
+                    if self.X < v[0][0] or self.X > v[0][1]:
+
+                        invalid_x = 1
+                    else:
+                        invalid_x = 0
+                if self.Y != None:
+                    if self.Y < v[1][0] or self.Y > v[1][1]:
+
+                        invalid_y = 1
+                    else:
+                        invalid_y = 0
+        return invalid_x,invalid_y
+
     def add_row(self):
 
         row_id = self.ui.table_Fixedloc.rowCount()
@@ -1328,20 +1873,39 @@ class Fixed_locations_Dialog(QtGui.QDialog):
         self.ui.table_Fixedloc.item(row_id, 0).setText(str(self.current_node))
         if str(self.ui.txt_inputx.text())!='':
             self.X = float(self.ui.txt_inputx.text()) * 1000
-            self.ui.table_Fixedloc.item(row_id, 1).setText(str(float(self.X) / 1000))
+            x_check,y_check=self.valid_check()
+            if x_check == 0:
+                self.ui.table_Fixedloc.item(row_id, 1).setText(str(float(self.X) / 1000))
+            else:
+                self.ui.table_Fixedloc.item(row_id, 1).setText('Invalid')
+                print" X value is out of valid range"
+                print "Please remove the row and try again"
         else:
             self.ui.table_Fixedloc.item(row_id, 1).setText('None')
 
         if str(self.ui.txt_inputy.text()) != '':
             self.Y = float(self.ui.txt_inputy.text()) * 1000
-            self.ui.table_Fixedloc.item(row_id, 2).setText(str(float(self.Y) / 1000))
+            x_check, y_check = self.valid_check()
+            if y_check == 0:
+                self.ui.table_Fixedloc.item(row_id, 2).setText(str(float(self.Y) / 1000))
+            else:
+                self.ui.table_Fixedloc.item(row_id, 2).setText('Invalid')
+                print" Y value is out of valid range"
+                print "Please remove the row and try again"
 
         else:
             self.ui.table_Fixedloc.item(row_id, 2).setText('None')
 
 
+        #if x_check == 0 and y_check == 0:
+        self.dynamic_update()
+        self.inserted_order.append(self.current_node)
+        self.new_node_dict[self.current_node] = (self.X, self.Y)
 
-        self.new_node_dict[self.current_node]=(self.X,self.Y)
+
+
+
+
 
 
     def remove_row(self):
@@ -1356,8 +1920,9 @@ class Fixed_locations_Dialog(QtGui.QDialog):
         for k,v in self.new_node_dict.items():
             if k==int(node_id):
                 del self.new_node_dict[k]
+                self.inserted_order.remove(k)
 
-
+        self.dynamic_remove()
 
         #print "RP", self.parent.input_node_info,self.new_node_dict,self.node_dict
 
@@ -1401,7 +1966,11 @@ class Fixed_locations_Dialog(QtGui.QDialog):
                         continue
                 else:
                     continue
-
+        self.parent.x_dynamic_range=dict(self.x_dynamic_range)
+        self.parent.y_dynamic_range=dict(self.y_dynamic_range)
+        self.parent.dynamic_range_x=dict(self.dynamic_range_x)
+        self.parent.dynamic_range_y = dict(self.dynamic_range_y)
+        self.parent.inserted_order=[i for i in self.inserted_order]
 
         #self.parent.input_node_info=self.new_node_dict
         #print"XY", self.parent.fixed_x_locations,self.parent.fixed_y_locations
@@ -1425,6 +1994,13 @@ class New_layout_engine_dialog(QtGui.QDialog):
         self.graph=graph
         self.fp_width=W
         self.fp_length=H
+        self.mode3_width=None  # To update mode3 floorplan size
+        self.mode3_height=None # To update mode3 floorplan size
+        self.x_dynamic_range=None # To store saved information from the fixed location table
+        self.y_dynamic_range=None # To store saved information from the fixed location table
+        self.dynamic_range_x=None # To store saved information from the fixed location table
+        self.dynamic_range_y=None # To store saved information from the fixed location table
+        self.inserted_order=None
         self.cons_df=None
         self.current_mode = 0
         self.generated_layouts = {}
@@ -1437,6 +2013,8 @@ class New_layout_engine_dialog(QtGui.QDialog):
         self.fixed_y_locations = {}
         self.default_save_dir="C:\\"
         # add buttons
+        self.ui.cmb_modes.setEnabled(False)
+        self.ui.btn_fixed_locs.setEnabled(False)
         self.ui.btn_fixed_locs.pressed.connect(self.assign_fixed_locations)
         self.ui.btn_constraints.pressed.connect(self.add_constraints)
         self.ui.cmb_modes.currentIndexChanged.connect(self.mode_handler)
@@ -1451,6 +2029,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
         self.ui.btn_fixed_locs.setEnabled(False)
         self.ui.btn_gen_layouts.setEnabled(False)
         self.ui.btn_eval_setup.setEnabled(False)
+        self.ui.txt_seed.setEnabled(False)
 
     def export_layout(self):
         if self.current_mode != 0:
@@ -1556,12 +2135,23 @@ class New_layout_engine_dialog(QtGui.QDialog):
         self.ui.btn_gen_layouts.pressed.connect(self.gen_layouts)
         self.ui.cmb_sols.currentIndexChanged.connect(self.layout_plot)
     def width_edit_text_changed(self):
-        W = int(self.ui.txt_width.text())
-        return W
-    def height_edit_text_changed(self):
+        try:
+            W = float(self.ui.txt_width.text()) * 1000
+        except ValueError:
+            W=None
+        if W!=None:
 
-        H = int(self.ui.txt_height.text())
-        return H
+            self.mode3_width=W
+
+
+    def height_edit_text_changed(self):
+        try:
+            H = float(self.ui.txt_height.text()) * 1000
+        except ValueError:
+            H=None
+        if H!=None:
+            self.mode3_height=H
+
     def mode_handler(self): # Modes combobox
         choice = str(self.ui.cmb_modes.currentText())
 
@@ -1572,6 +2162,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
             self.ui.txt_width.setEnabled(False)
             self.ui.txt_height.setEnabled(False)
             self.ui.btn_fixed_locs.setEnabled(False)
+            self.ui.txt_seed.setEnabled(False)
             self.refresh_layout()
 
         elif choice == 'Variable Size Layout':
@@ -1580,6 +2171,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
 
             self.current_mode=1
             self.ui.txt_num_layouts.setEnabled(True)
+            self.ui.txt_seed.setEnabled(True)
             self.ui.txt_width.setEnabled(False)
             self.ui.txt_height.setEnabled(False)
             self.ui.btn_fixed_locs.setEnabled(False)
@@ -1588,6 +2180,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
         elif choice == 'Fixed Size Layout':
             self.current_mode=2
             self.ui.txt_num_layouts.setEnabled(True)
+            self.ui.txt_seed.setEnabled(True)
             self.ui.txt_width.setEnabled(True)
             self.ui.txt_height.setEnabled(True)
             self.ui.btn_fixed_locs.setEnabled(False)
@@ -1596,10 +2189,16 @@ class New_layout_engine_dialog(QtGui.QDialog):
         elif choice == 'Fixed Size with Fixed Loactions':
             self.current_mode=3
             self.ui.txt_num_layouts.setEnabled(True)
+            self.ui.txt_seed.setEnabled(True)
             self.ui.txt_width.setEnabled(True)
             self.ui.txt_height.setEnabled(True)
             self.ui.btn_fixed_locs.setEnabled(True)
             self.refresh_layout_mode3()
+            #print self.fp_width
+            self.mode3_width=float(self.ui.txt_width.text()) * 1000
+            self.mode3_height=float(self.ui.txt_height.text()) * 1000
+            self.ui.txt_width.textChanged.connect(self.width_edit_text_changed)
+            self.ui.txt_height.textChanged.connect(self.height_edit_text_changed)
 
         return
 
@@ -1629,6 +2228,8 @@ class New_layout_engine_dialog(QtGui.QDialog):
 
         self.ui.btn_eval_setup.setEnabled(True)
         self.ui.btn_gen_layouts.setEnabled(True)
+        self.ui.cmb_modes.setEnabled(True)
+
     def update_sol_browser(self):
         self.ax3.clear()
         print "plot sol browser"
@@ -1670,14 +2271,15 @@ class New_layout_engine_dialog(QtGui.QDialog):
             if self.current_mode!=0:
                 try:
                     N = int(self.ui.txt_num_layouts.text())
+                    seed=float(self.ui.txt_seed.text())
                 except:
                     print "Please enter Num of Layouts greater than 0"
                     print "ERROR: Invalid Information"
                     return
 
-                W = int(self.ui.txt_width.text())*1000
-                H = int(self.ui.txt_height.text())*1000
-                Patches, cs_sym_data=self.engine.generate_solutions(self.current_mode,num_layouts=N,W=W,H=H,fixed_x_location=self.fixed_x_locations,fixed_y_location=self.fixed_y_locations)
+                W = float(self.ui.txt_width.text())*1000
+                H = float(self.ui.txt_height.text())*1000
+                Patches, cs_sym_data=self.engine.generate_solutions(self.current_mode,num_layouts=N,W=W,H=H,fixed_x_location=self.fixed_x_locations,fixed_y_location=self.fixed_y_locations,seed=seed)
                 if Patches==None or cs_sym_data==None:
                     print "ERROR: Invalid Information"
                     return
@@ -1741,23 +2343,37 @@ class New_layout_engine_dialog(QtGui.QDialog):
             for k,v in self.generated_layouts.items():
                 if choice==k:
                     for k1,v1 in v['Patches'].items():
-                        W=(k1[0]/1000)
-                        H=(k1[1]/1000)
+
+                        W=(float(k1[0])/1000)
+                        H=(float(k1[1])/1000)
+
                         self.ui.txt_width.setText(str(W))
                         self.ui.txt_height.setText(str(H))
 
         if mode == 'cs': # corner stitch plotting engine (has some issues)
-            for k,v in self.generated_layouts.items():
-                if choice==k:
-                    for k1,v1 in v['Patches'].items():
-                        for p in v1:
+            if self.current_mode==2:
+                for k,v in self.generated_layouts.items():
+                    if choice==k:
+                        for k1,v1 in v['Patches'].items():
+                            for p in v1:
 
-                            self.ax1.add_patch(p)
-                        self.ax1.set_xlim(0, k1[0])
-                        self.ax1.set_ylim(0, k1[1])
-                        self.ui.txt_width.setText(str(k1[0]))
-                        self.ui.txt_height.setText(str(k1[1]))
-                    self.canvas_sols.draw()
+                                self.ax1.add_patch(p)
+                            self.ax1.set_xlim(-2, k1[0])
+                            self.ax1.set_ylim(-2, k1[1])
+                            self.ui.txt_width.setText(str(k1[0]-2))
+                            self.ui.txt_height.setText(str(k1[1]-2))
+                        self.canvas_sols.draw()
+            else:
+                for k, v in self.generated_layouts.items():
+                    if choice == k:
+                        for k1, v1 in v['Patches'].items():
+                            for p in v1:
+                                self.ax1.add_patch(p)
+                            self.ax1.set_xlim(0, k1[0])
+                            self.ax1.set_ylim(0, k1[1])
+                            self.ui.txt_width.setText(str(k1[0]))
+                            self.ui.txt_height.setText(str(k1[1]))
+                        self.canvas_sols.draw()
         elif mode == 'ps':
             sym_info = self.form_sym_obj_rect_dict()
             sym_layout = self.engine.sym_layout

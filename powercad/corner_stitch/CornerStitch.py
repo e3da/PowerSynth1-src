@@ -2418,7 +2418,7 @@ class CS_to_CG():
         return SYM_CS
 
     ## Evaluates constraint graph depending on modes of operation
-    def evaluation(self,Htree,Vtree,N,W,H,XLoc,YLoc):
+    def evaluation(self,Htree,Vtree,N,W,H,XLoc,YLoc,seed,individual):
         '''
         :param Htree: Horizontal tree
         :param Vtree: Vertical tree
@@ -2431,7 +2431,7 @@ class CS_to_CG():
         '''
         if self.level==1:
             CG = constraintGraph( W=None, H=None,XLocation=None, YLocation=None)
-            CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList,self.level, N)
+            CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList,self.level, N,seed,individual)
         elif self.level==2 or self.level==3:
             if W==None or H ==None:
                 print"Please enter Width and Height of the floorplan"
@@ -2439,10 +2439,10 @@ class CS_to_CG():
                 print"Please enter Number of layouts to be generated"
             else:
                 CG = constraintGraph(W, H, XLoc, YLoc)
-                CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList, self.level, N)
+                CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList, self.level, N,seed,individual)
         else:
             CG = constraintGraph( W=None, H=None,XLocation=None, YLocation=None)
-            CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList, self.level,N=None)
+            CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList, self.level)
         MIN_X, MIN_Y = CG.minValueCalculation(Htree.hNodeList, Vtree.vNodeList, self.level)
         return MIN_X, MIN_Y
 
@@ -2491,9 +2491,9 @@ class CS_to_CG():
                         rect = [(MINX[i.id][k[0]]), (MINY[i.id][k[1]]), (MINX[i.id][k[2]]) - (MINX[i.id][k[0]]),
                                (MINY[i.id][k[3]]) - (MINY[i.id][k[1]]), j.cell.type]
                         r1=Rectangle(x=rect[0],y=rect[1],width=rect[2],height=rect[3],type=rect[4])
-                        r2 = [(MINX[i.id][k[0]]) / s, (MINY[i.id][k[1]]) / s,
-                                (MINX[i.id][k[2]]) / s - (MINX[i.id][k[0]]) / s,
-                                (MINY[i.id][k[3]]) / s - (MINY[i.id][k[1]]) / s, j.cell.type]
+                        r2 = [float(MINX[i.id][k[0]]) / s, float(MINY[i.id][k[1]]) / s,
+                                float(MINX[i.id][k[2]]) / s - float(MINX[i.id][k[0]]) / s,
+                                float(MINY[i.id][k[3]]) / s - float(MINY[i.id][k[1]]) / s, j.cell.type]
                     for k1,v in sym_to_cs.items():
 
                         key=k1
@@ -2526,8 +2526,8 @@ class CS_to_CG():
                     k = [j.cell.x, j.cell.y, j.EAST.cell.x, j.NORTH.cell.y]
                     if k[0] in MINX[i.id].keys() and k[1] in MINY[i.id].keys() and k[2] in MINX[i.id].keys() and k[3] in \
                             MINY[i.id].keys():
-                        rect = [MINX[i.id][k[0]]/s, MINY[i.id][k[1]]/s, MINX[i.id][k[2]]/s - MINX[i.id][k[0]]/s,
-                                MINY[i.id][k[3]]/s - MINY[i.id][k[1]]/s, j.cell.type]
+                        rect = [float(MINX[i.id][k[0]])/s, float(MINY[i.id][k[1]])/s, float(MINX[i.id][k[2]])/s - float(MINX[i.id][k[0]])/s,
+                                float(MINY[i.id][k[3]])/s - float(MINY[i.id][k[1]])/s, j.cell.type]
 
 
 
@@ -2584,8 +2584,8 @@ class CS_to_CG():
                 if k[0] in MIN_X[i].keys() and k[1] in MIN_Y[i].keys() and k[2] in MIN_X[i].keys() and k[3] in MIN_Y[i].keys():
                     rect = [MIN_X[i][k[0]], MIN_Y[i][k[1]], MIN_X[i][k[2]] - MIN_X[i][k[0]],MIN_Y[i][k[3]] - MIN_Y[i][k[1]],k[4]]
                     r1 = Rectangle(x=rect[0], y=rect[1], width=rect[2], height=rect[3], type=rect[4])
-                    r2 = [MIN_X[i][k[0]] / s, MIN_Y[i][k[1]] / s, MIN_X[i][k[2]] / s - MIN_X[i][k[0]] / s,
-                            MIN_Y[i][k[3]] / s - MIN_Y[i][k[1]] / s, k[4]]
+                    r2 = [float(MIN_X[i][k[0]]) / s, float(MIN_Y[i][k[1]]) / s, float(MIN_X[i][k[2]]) / s - float(MIN_X[i][k[0]]) / s,
+                          float(MIN_Y[i][k[3]]) / s - float(MIN_Y[i][k[1]]) / s, k[4]]
                     for k1,v in sym_to_cs.items():
 
                         key1=k1
@@ -2618,7 +2618,7 @@ class CS_to_CG():
 
                 k=DIM[j]
                 if k[0] in MIN_X[i].keys() and k[1] in MIN_Y[i].keys() and k[2] in MIN_X[i].keys() and k[3] in MIN_Y[i].keys():
-                    rect = [MIN_X[i][k[0]]/s, MIN_Y[i][k[1]]/s, MIN_X[i][k[2]]/s - MIN_X[i][k[0]]/s,MIN_Y[i][k[3]]/s - MIN_Y[i][k[1]]/s,k[4]]
+                    rect = [float(MIN_X[i][k[0]])/s, float(MIN_Y[i][k[1]])/s, float(MIN_X[i][k[2]])/s - float(MIN_X[i][k[0]])/s,float(MIN_Y[i][k[3]])/s - float(MIN_Y[i][k[1]])/s,k[4]]
                     Dimensions.append(rect)
             Recatngles_V[key].append(Dimensions)
 
