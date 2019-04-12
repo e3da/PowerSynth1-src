@@ -40,7 +40,7 @@ from powercad.electro_thermal.ElectroThermal_toolbox import rdson_fit_transistor
 from powercad.general.settings.save_and_load import save_file, load_file
 from powercad.project_builder.dialogs.ResponseSurface import Ui_ResponseSurface
 from powercad.project_builder.dialogs.ModelSelection import Ui_ModelSelection
-from powercad.project_builder.dialogs.ET_evaluate_ui import Ui_ET_Evaluation_Dialog
+from powercad.project_builder.dialogs.ET_evaluate_up_ui import Ui_ET_Evaluation_Dialog #ET_evaluate_ui
 from powercad.project_builder.dialogs.waiting_ui import Ui_waiting_dialog
 from powercad.layer_stack.layer_stack_import import *
 from powercad.general.settings.Error_messages import *
@@ -1994,13 +1994,6 @@ class New_layout_engine_dialog(QtGui.QDialog):
         self.graph=graph
         self.fp_width=W
         self.fp_length=H
-        self.mode3_width=None  # To update mode3 floorplan size
-        self.mode3_height=None # To update mode3 floorplan size
-        self.x_dynamic_range=None # To store saved information from the fixed location table
-        self.y_dynamic_range=None # To store saved information from the fixed location table
-        self.dynamic_range_x=None # To store saved information from the fixed location table
-        self.dynamic_range_y=None # To store saved information from the fixed location table
-        self.inserted_order=None
         self.cons_df=None
         self.current_mode = 0
         self.generated_layouts = {}
@@ -2011,6 +2004,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
         self.selected_ind=None
         self.fixed_x_locations={}
         self.fixed_y_locations = {}
+        self.opt_algo=None # optimization algorithm
         self.default_save_dir="C:\\"
         # add buttons
         self.ui.cmb_modes.setEnabled(False)
@@ -2030,6 +2024,14 @@ class New_layout_engine_dialog(QtGui.QDialog):
         self.ui.btn_gen_layouts.setEnabled(False)
         self.ui.btn_eval_setup.setEnabled(False)
         self.ui.txt_seed.setEnabled(False)
+
+        self.mode3_width = None  # To update mode3 floorplan size
+        self.mode3_height = None  # To update mode3 floorplan size
+        self.x_dynamic_range = None  # To store saved information from the fixed location table
+        self.y_dynamic_range = None  # To store saved information from the fixed location table
+        self.dynamic_range_x = None  # To store saved information from the fixed location table
+        self.dynamic_range_y = None  # To store saved information from the fixed location table
+        self.inserted_order = None
 
     def export_layout(self):
         if self.current_mode != 0:
@@ -2817,6 +2819,7 @@ class ET_standalone_Dialog(QtGui.QDialog):
         self.tbl_thermal=None
         self.tbl_elec=None
         self.dev_df = None
+        self.ui.cmb_opt_algo.currentIndexChanged.connect(self.opt_algo_handler)
         self.perf_dict=self.parent.perf_dict
         self.ui.Tab_model_select.setEnabled(False)
         self.ui.txt_perfname.textChanged.connect(self.perf_name)
@@ -2831,6 +2834,20 @@ class ET_standalone_Dialog(QtGui.QDialog):
         self.init_table()
         self.reload_table()
         self.load_src_sink()
+
+    def opt_algo_handler(self):
+        choice = str(self.ui.cmb_opt_algo.currentText())
+
+        if choice=="NSGAII":
+            self.method="NSGAII"
+            self.parent.opt_algo="NSGAII"
+
+
+        else:
+            self.method="NG-RANDOM"
+            self.parent.opt_algo="NG-RANDOM"
+
+
     def current_model(self):
         if str(self.ui.cmb_electrical_mdl.currentText())== "Response Surface Model":
             self.ui.btn_select_mdl.setEnabled(True)

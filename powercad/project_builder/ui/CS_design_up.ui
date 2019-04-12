@@ -220,7 +220,7 @@
       <item row="1" column="0">
        <widget class="QPushButton" name="btn_eval_setup">
         <property name="text">
-         <string>Measurement Setup</string>
+         <string>Optimization Setup</string>
         </property>
        </widget>
       </item>

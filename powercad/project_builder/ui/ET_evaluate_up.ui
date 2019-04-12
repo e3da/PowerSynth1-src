@@ -101,23 +101,44 @@
       </font>
      </property>
      <property name="title">
-      <string>Performance Setup</string>
+      <string>Optimization Setup</string>
      </property>
      <layout class="QGridLayout" name="gridLayout">
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_opt_algo">
+        <property name="text">
+         <string>Optimization Algorithm</string>
+        </property>
+       </widget>
+      </item>
       <item row="0" column="1">
+       <widget class="QComboBox" name="cmb_opt_algo">
+        <item>
+         <property name="text">
+          <string>NSGAII</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Non-Guided Randomization</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="QLabel" name="label_2">
+        <property name="text">
+         <string>Performance Name:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="3">
        <widget class="QLineEdit" name="txt_perfname">
         <property name="maximumSize">
          <size>
           <width>100</width>
           <height>16777215</height>
          </size>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="0">
-       <widget class="QLabel" name="label_2">
-        <property name="text">
-         <string>Performance Name:</string>
         </property>
        </widget>
       </item>
@@ -243,36 +264,6 @@
           <string>Electrical</string>
          </attribute>
          <layout class="QGridLayout" name="gridLayout_3">
-          <item row="1" column="1">
-           <widget class="QPushButton" name="btn_select_mdl">
-            <property name="text">
-             <string>Select Model</string>
-            </property>
-           </widget>
-          </item>
-          <item row="5" column="1">
-           <widget class="QComboBox" name="cmb_src_select">
-            <property name="minimumSize">
-             <size>
-              <width>100</width>
-              <height>0</height>
-             </size>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>50</width>
-              <height>16777215</height>
-             </size>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="0">
-           <widget class="QLabel" name="lbl_electrical_mdl">
-            <property name="text">
-             <string>Model:</string>
-            </property>
-           </widget>
-          </item>
           <item row="0" column="1" colspan="2">
            <widget class="QComboBox" name="cmb_electrical_mdl">
             <property name="minimumSize">
@@ -298,6 +289,27 @@
             </item>
            </widget>
           </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="lbl_electrical_mdl">
+            <property name="text">
+             <string>Model:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="0">
+           <widget class="QLabel" name="label_3">
+            <property name="text">
+             <string>Source</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QPushButton" name="btn_select_mdl">
+            <property name="text">
+             <string>Select Model</string>
+            </property>
+           </widget>
+          </item>
           <item row="0" column="4">
            <widget class="QComboBox" name="cmb_electrical_type">
             <item>
@@ -317,20 +329,6 @@
             </item>
            </widget>
           </item>
-          <item row="5" column="0">
-           <widget class="QLabel" name="label_3">
-            <property name="text">
-             <string>Source</string>
-            </property>
-           </widget>
-          </item>
-          <item row="6" column="0" colspan="2">
-           <widget class="QPushButton" name="btn_dv_states">
-            <property name="text">
-             <string>Setup Device States</string>
-            </property>
-           </widget>
-          </item>
           <item row="5" column="4">
            <widget class="QComboBox" name="cmb_sink_select">
             <property name="minimumSize">
@@ -347,10 +345,19 @@
             </property>
            </widget>
           </item>
-          <item row="6" column="4">
-           <widget class="QPushButton" name="btn_add_elec_perf">
-            <property name="text">
-             <string>Add Performance &gt;&gt;&gt;</string>
+          <item row="5" column="1">
+           <widget class="QComboBox" name="cmb_src_select">
+            <property name="minimumSize">
+             <size>
+              <width>100</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>50</width>
+              <height>16777215</height>
+             </size>
             </property>
            </widget>
           </item>
@@ -358,6 +365,20 @@
            <widget class="QLabel" name="label_4">
             <property name="text">
              <string>Sink</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="4">
+           <widget class="QPushButton" name="btn_add_elec_perf">
+            <property name="text">
+             <string>Add Performance &gt;&gt;&gt;</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="0" colspan="2">
+           <widget class="QPushButton" name="btn_dv_states">
+            <property name="text">
+             <string>Setup Device States</string>
             </property>
            </widget>
           </item>
