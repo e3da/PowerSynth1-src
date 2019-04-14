@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ET_evaluate_up.ui'
 #
-# Created: Fri Apr 12 09:49:40 2019
+# Created: Sat Apr 13 16:21:49 2019
 #      by: pyside-uic 0.2.15 running on PySide 1.2.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -54,21 +54,12 @@ class Ui_ET_Evaluation_Dialog(object):
         self.groupBox_2.setObjectName("groupBox_2")
         self.gridLayout = QtGui.QGridLayout(self.groupBox_2)
         self.gridLayout.setObjectName("gridLayout")
-        self.label_opt_algo = QtGui.QLabel(self.groupBox_2)
-        self.label_opt_algo.setObjectName("label_opt_algo")
-        self.gridLayout.addWidget(self.label_opt_algo, 0, 0, 1, 1)
-        self.cmb_opt_algo = QtGui.QComboBox(self.groupBox_2)
-        self.cmb_opt_algo.setObjectName("cmb_opt_algo")
-        self.cmb_opt_algo.addItem("")
-        self.cmb_opt_algo.addItem("")
-        self.gridLayout.addWidget(self.cmb_opt_algo, 0, 1, 1, 1)
+        self.rb_plot_pareto = QtGui.QRadioButton(self.groupBox_2)
+        self.rb_plot_pareto.setObjectName("rb_plot_pareto")
+        self.gridLayout.addWidget(self.rb_plot_pareto, 2, 2, 1, 1)
         self.label_2 = QtGui.QLabel(self.groupBox_2)
         self.label_2.setObjectName("label_2")
         self.gridLayout.addWidget(self.label_2, 0, 2, 1, 1)
-        self.txt_perfname = QtGui.QLineEdit(self.groupBox_2)
-        self.txt_perfname.setMaximumSize(QtCore.QSize(100, 16777215))
-        self.txt_perfname.setObjectName("txt_perfname")
-        self.gridLayout.addWidget(self.txt_perfname, 0, 3, 1, 1)
         self.Tab_model_select = QtGui.QTabWidget(self.groupBox_2)
         self.Tab_model_select.setEnabled(True)
         self.Tab_model_select.setMinimumSize(QtCore.QSize(450, 0))
@@ -160,11 +151,29 @@ class Ui_ET_Evaluation_Dialog(object):
         self.btn_dv_states.setObjectName("btn_dv_states")
         self.gridLayout_3.addWidget(self.btn_dv_states, 6, 0, 1, 2)
         self.Tab_model_select.addTab(self.Electrical, "")
-        self.gridLayout.addWidget(self.Tab_model_select, 1, 0, 1, 4)
+        self.gridLayout.addWidget(self.Tab_model_select, 3, 0, 1, 4)
+        self.txt_perfname = QtGui.QLineEdit(self.groupBox_2)
+        self.txt_perfname.setMaximumSize(QtCore.QSize(100, 16777215))
+        self.txt_perfname.setObjectName("txt_perfname")
+        self.gridLayout.addWidget(self.txt_perfname, 0, 3, 1, 1)
+        self.label_opt_algo = QtGui.QLabel(self.groupBox_2)
+        self.label_opt_algo.setObjectName("label_opt_algo")
+        self.gridLayout.addWidget(self.label_opt_algo, 0, 0, 1, 1)
+        self.cmb_opt_algo = QtGui.QComboBox(self.groupBox_2)
+        self.cmb_opt_algo.setObjectName("cmb_opt_algo")
+        self.cmb_opt_algo.addItem("")
+        self.cmb_opt_algo.addItem("")
+        self.gridLayout.addWidget(self.cmb_opt_algo, 0, 1, 1, 1)
+        self.btn_save_setup = QtGui.QPushButton(self.groupBox_2)
+        self.btn_save_setup.setObjectName("btn_save_setup")
+        self.gridLayout.addWidget(self.btn_save_setup, 4, 0, 1, 1)
+        self.btn_load_setup = QtGui.QPushButton(self.groupBox_2)
+        self.btn_load_setup.setObjectName("btn_load_setup")
+        self.gridLayout.addWidget(self.btn_load_setup, 4, 1, 1, 1)
         self.gridLayout_5.addWidget(self.groupBox_2, 0, 0, 1, 1)
 
         self.retranslateUi(ET_Evaluation_Dialog)
-        self.Tab_model_select.setCurrentIndex(1)
+        self.Tab_model_select.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(ET_Evaluation_Dialog)
 
     def retranslateUi(self, ET_Evaluation_Dialog):
@@ -176,9 +185,7 @@ class Ui_ET_Evaluation_Dialog(object):
         self.btn_done.setText(QtGui.QApplication.translate("ET_Evaluation_Dialog", "Done", None, QtGui.QApplication.UnicodeUTF8))
         self.btn_remove.setText(QtGui.QApplication.translate("ET_Evaluation_Dialog", "Remove", None, QtGui.QApplication.UnicodeUTF8))
         self.groupBox_2.setTitle(QtGui.QApplication.translate("ET_Evaluation_Dialog", "Optimization Setup", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_opt_algo.setText(QtGui.QApplication.translate("ET_Evaluation_Dialog", "Optimization Algorithm", None, QtGui.QApplication.UnicodeUTF8))
-        self.cmb_opt_algo.setItemText(0, QtGui.QApplication.translate("ET_Evaluation_Dialog", "NSGAII", None, QtGui.QApplication.UnicodeUTF8))
-        self.cmb_opt_algo.setItemText(1, QtGui.QApplication.translate("ET_Evaluation_Dialog", "Non-Guided Randomization", None, QtGui.QApplication.UnicodeUTF8))
+        self.rb_plot_pareto.setText(QtGui.QApplication.translate("ET_Evaluation_Dialog", "Plot Pareto Set", None, QtGui.QApplication.UnicodeUTF8))
         self.label_2.setText(QtGui.QApplication.translate("ET_Evaluation_Dialog", "Performance Name:", None, QtGui.QApplication.UnicodeUTF8))
         self.cmb_thermal_type.setItemText(0, QtGui.QApplication.translate("ET_Evaluation_Dialog", "Maximum", None, QtGui.QApplication.UnicodeUTF8))
         self.cmb_thermal_type.setItemText(1, QtGui.QApplication.translate("ET_Evaluation_Dialog", "Average", None, QtGui.QApplication.UnicodeUTF8))
@@ -204,4 +211,9 @@ class Ui_ET_Evaluation_Dialog(object):
         self.btn_add_elec_perf.setText(QtGui.QApplication.translate("ET_Evaluation_Dialog", "Add Performance >>>", None, QtGui.QApplication.UnicodeUTF8))
         self.btn_dv_states.setText(QtGui.QApplication.translate("ET_Evaluation_Dialog", "Setup Device States", None, QtGui.QApplication.UnicodeUTF8))
         self.Tab_model_select.setTabText(self.Tab_model_select.indexOf(self.Electrical), QtGui.QApplication.translate("ET_Evaluation_Dialog", "Electrical", None, QtGui.QApplication.UnicodeUTF8))
+        self.label_opt_algo.setText(QtGui.QApplication.translate("ET_Evaluation_Dialog", "Optimization Algorithm", None, QtGui.QApplication.UnicodeUTF8))
+        self.cmb_opt_algo.setItemText(0, QtGui.QApplication.translate("ET_Evaluation_Dialog", "NSGAII", None, QtGui.QApplication.UnicodeUTF8))
+        self.cmb_opt_algo.setItemText(1, QtGui.QApplication.translate("ET_Evaluation_Dialog", "Non-Guided Randomization", None, QtGui.QApplication.UnicodeUTF8))
+        self.btn_save_setup.setText(QtGui.QApplication.translate("ET_Evaluation_Dialog", "Save Optimization Setup", None, QtGui.QApplication.UnicodeUTF8))
+        self.btn_load_setup.setText(QtGui.QApplication.translate("ET_Evaluation_Dialog", "Load Optimization Setup", None, QtGui.QApplication.UnicodeUTF8))
 

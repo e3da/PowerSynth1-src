@@ -38,18 +38,20 @@ class SolutionWindow(QtGui.QWidget):
         self.ui = Ui_layout_form()
         self.ui.setupUi(self)
         self.setWindowTitle(solution.name)
-
         self.ui.btn_run_drc.pressed.connect(self.run_drc)
         self.ui.btn_export_selected.pressed.connect(self.export_script)
         #self.ui.btn_run_succesive_approxomation.pressed.connect(self.Run_Sucessive_approximation)#sxm; new button function added based on self.export_spice_parasitics
 
         self.solution = solution
+        #print self.solution
+
         self.sym_layout = sym_layout
         self.default_save_dir=dir # This will make all save functions default to project dir
         # display objective data in table widget
         self.ui.tbl_info.setRowCount(len(solution.params))
         self.i = 0
         for objective in solution.params:
+            #print objective
             self.tbl_item = QtGui.QTableWidgetItem(objective[0])
             self.ui.tbl_info.setItem(self.i,0,self.tbl_item)
             self.tbl_item = QtGui.QTableWidgetItem(str(round(objective[1],4)))

@@ -1662,26 +1662,58 @@ class constraintGraph:
 
     # randomize uniformly edge weights within fixed minimum and maximum locations
     def randomvaluegenerator(self, Range, value,Random,sid):
-        variable = []
-        D_V_Newval = [0]
-        V=copy.deepcopy(value)
-        while (len(value) > 1):
-            i = 0
-            n = len(value)
-            v = Range - sum(D_V_Newval)
-            if ((2 * v) / n) > 0:
-                random.seed(self.seed_h[sid])
-                x =  randrange(0, (int(2 * v) / n))
+        #print "R",Random,sid
+        if Random!=None:
+            Sum=sum(Random)
+            if Sum>0:
+                Vi=[]
+                for i in Random:
+                    Vi.append(Range*(i/Sum))
             else:
-                x = 0
-            p = value.pop(i)
-            D_V_Newval.append(x)
-        del D_V_Newval[0]
-        D_V_Newval.append(Range - sum(D_V_Newval))
-        random.shuffle(D_V_Newval)
-        for i in range(len(V)):
-            x=V[i]+D_V_Newval[i]
-            variable.append(x) # randomized edge weights without violating minimum constraint values
+                Vi = [0 for i in Random]
+            #print Random
+            #Vi=[0 for i in Vi]
+            variable=[]
+            for i in range(len(value)):
+                variable.append(value[i]+Vi[i])
+
+        #print "Vy",len(Vy_s),sum(Vy_s),Vy_s
+
+
+
+        else:
+            '''
+            variable = []
+            Total = sum(value)
+            V = copy.deepcopy(value)
+            Prob = []
+
+            for i in value:
+                Prob.append(i / float(Total))
+            
+            random.seed(self.seed_h[sid])
+            D_V_Newval = list(np.random.multinomial(Range, Prob))
+            '''
+            variable = []
+            D_V_Newval = [0]
+            V=copy.deepcopy(value)
+            while (len(value) > 1):
+                i = 0
+                n = len(value)
+                v = Range - sum(D_V_Newval)
+                if ((2 * v) / n) > 0:
+                    random.seed(self.seed_h[sid])
+                    x =  random.uniform(0, (int(2 * v) / n))
+                else:
+                    x = 0
+                p = value.pop(i)
+                D_V_Newval.append(x)
+            del D_V_Newval[0]
+            D_V_Newval.append(Range - sum(D_V_Newval))
+            random.shuffle(D_V_Newval)
+            for i in range(len(V)):
+                x=V[i]+D_V_Newval[i]
+                variable.append(x) # randomized edge weights without violating minimum constraint values
         return variable
 
     #longest path evaluation function
@@ -2033,33 +2065,67 @@ class constraintGraph:
         :param value: list of minimum constraint values associated with the room
         :return: list of randomized value corresponding to each minimum constraint value
         """
-        variable = []
-        D_V_Newval = [0]
-        V = copy.deepcopy(value)
+        if Random!=None:
+            Sum = sum(Random)
 
-        while (len(value) > 1):
-
-            i = 0
-            n = len(value)
-
-            v = Range - sum(D_V_Newval)
-
-            if ((2 * v) / n) > 0:
-                random.seed(self.seed_v[sid])
-
-                x = randrange(0, (int(2 * v) / n))
+            if Sum>0:
+                Vi=[]
+                for i in Random:
+                    Vi.append(Range*(i/Sum))
             else:
-                x = 0
-            p = value.pop(i)
+                Vi = [0 for i in Random]
+            '''
+            Vi = []
+            for i in Random:
+                Vi.append(Range * (i / Sum))
+            '''
 
-            D_V_Newval.append(x)
+            variable = []
+            for i in range(len(value)):
+                variable.append(value[i] + Vi[i])
 
-        del D_V_Newval[0]
-        D_V_Newval.append(Range - sum(D_V_Newval))
-        random.shuffle(D_V_Newval)
-        for i in range(len(V)):
-            x = V[i] + D_V_Newval[i]
-            variable.append(x)
+
+
+        else:
+            '''
+            variable = []
+            Total = sum(value)
+            V = copy.deepcopy(value)
+            Prob = []
+
+            for i in value:
+                Prob.append(i / float(Total))
+            random.seed(self.seed_v[sid])
+            D_V_Newval = list(np.random.multinomial(Range, Prob))
+
+            '''
+            variable = []
+            D_V_Newval = [0]
+            V = copy.deepcopy(value)
+
+            while (len(value) > 1):
+
+                i = 0
+                n = len(value)
+
+                v = Range - sum(D_V_Newval)
+
+                if ((2 * v) / n) > 0:
+                    random.seed(self.seed_v[sid])
+
+                    x = random.uniform(0, (int(2 * v) / n))
+                else:
+                    x = 0
+                p = value.pop(i)
+
+                D_V_Newval.append(x)
+
+            del D_V_Newval[0]
+            D_V_Newval.append(Range - sum(D_V_Newval))
+            random.shuffle(D_V_Newval)
+            for i in range(len(V)):
+                x = V[i] + D_V_Newval[i]
+                variable.append(x)
         return variable
 
 

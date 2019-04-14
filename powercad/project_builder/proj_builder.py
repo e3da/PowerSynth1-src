@@ -80,7 +80,7 @@ class ProjectBuilder(QtGui.QMainWindow):
         self.ui.setupUi(self)
         # display logo
 #        self.ui.label_4.setPixmap(self.LOGO_PATH)
-        
+
         # display module stack image
 #        self.ui.lbl_modStackImg.setPixmap(self.STACK_IMG_PATH) 
         # connect actions
@@ -90,10 +90,11 @@ class ProjectBuilder(QtGui.QMainWindow):
         self.ui.btn_runSim.pressed.connect(self.start_optimization)
         self.ui.btn_open_sol_browser.pressed.connect(self.open_sol_browser)
         self.ui.lst_categories.clicked.connect(self.display_categ_items)
-        self.ui.lst_solution.itemDoubleClicked.connect(self.show_sol_doc)
+        self.ui.lst_solution.itemDoubleClicked.connect(self.load_single_sol)
         self.ui.cmb_elec_model.currentIndexChanged.connect(self.model_selection)
         self.ui.btn_previous.pressed.connect(self.previous)
         self.ui.btn_next.pressed.connect(self.next)
+        self.ui.btn_clr_all.pressed.connect(self.clear_projet_solutions)
         self.ui.tbl_projDevices.cellPressed.connect(self.component_pressed)
         self.ui.btn_modify.pressed.connect(self.modify_component)
         self.ui.btn_removeDevice.pressed.connect(self.remove_component)
@@ -143,7 +144,6 @@ class ProjectBuilder(QtGui.QMainWindow):
                             QtGui.QColor(0,128,128)]
 
         self.default_color = '#454545'
-        
         # setup widgets used for plotting symbolic layouts
         self.setup_layout_plots()
         
@@ -1374,10 +1374,10 @@ class ProjectBuilder(QtGui.QMainWindow):
             run_optimization = False
 
         if run_optimization:
+            self.project.layout_engine='SL'
             self.ui.btn_runSim.setEnabled(False)
             # clear out saved project solutions
             self.clear_saved_solutions_ui()
-            self.project.solutions = []
 
 
             try:
@@ -1436,61 +1436,83 @@ class ProjectBuilder(QtGui.QMainWindow):
         else:
             QtGui.QMessageBox.warning(self, "Solution Browser", "No solutions exist.")
         
-    def add_solution(self, solution):
+    def add_solution(self, solution=None,flag=1,sym_layout=None):
+        '''
+        add solution to main window
+        :param solution: the solution information
+        :param flag: 0 for old engine 1 fore new engine
+        :return: nothing
+        '''
         # save solution in project
-        self.project.add_solution(solution)
-        self.add_to_solution_list(solution)
+        if flag==0:
+            self.project.add_solution(solution)
+            self.add_to_solution_list(solution)
+        elif flag==1:
+            #print "new functions"
+            self.project.add_solution(solution)
+            self.project.add_symb(sym_layout)
+            id = self.project.symb_layouts.index(sym_layout)
+            print "id inside", id
+            self.add_to_solution_list(solution,id=id,flag=flag)
         
-    def add_to_solution_list(self, solution):
+    def add_to_solution_list(self, solution,flag=0,id=None):
         # add solution to solution list
+
         self.ui.sol = QtGui.QListWidgetItem(solution.name)
         self.ui.lst_solution.addItem(self.ui.sol)
-        self.show_sol_doc(self.ui.sol)
-        
-    def show_sol_doc(self, item):
-        # add mdi window for viewing
+        if flag==0:
+            self.show_sol_doc(self.ui.sol)
+        elif flag ==1:
+            self.show_sol_doc(self.ui.sol,id=id)
 
+
+    def load_single_sol(self):
+        if self.project.layout_engine=='CS':
+            id = self.ui.lst_solution.currentRow()
+            item = self.ui.lst_solution.currentItem()
+            self.show_sol_doc(item=item,id=id)
+        elif self.project.layout_engine=='SL':
+            item = self.ui.lst_solution.currentItem()
+            self.show_sol_doc(item=item)
+
+    def show_sol_doc(self, item=None,id=None):
+        # add mdi window for viewing
         sol = self.project.solutions[self.ui.lst_solution.row(item)]
-        print sol.index
-        self.project.symb_layout.gen_solution_layout(sol.index)
-        filletFlag = self.ui.checkBox_fillet.isChecked() # Show filleted layout if fillet checkbox is checked
-        m = SolutionWindow(solution=sol, sym_layout=self.project.symb_layout,filletFlag= filletFlag,dir=self.project.directory)
+        filletFlag = self.ui.checkBox_fillet.isChecked()  # Show filleted layout if fillet checkbox is checked
+        if id ==None:
+            self.project.symb_layout.gen_solution_layout(sol.index)
+            m = SolutionWindow(solution=sol, sym_layout=self.project.symb_layout,filletFlag= filletFlag,dir=self.project.directory)
+        else:
+            m = SolutionWindow(solution=sol, sym_layout=self.project.symb_layouts[id],filletFlag= filletFlag,dir=self.project.directory)
+
         self.ui.mdiArea.addSubWindow(m)
         m.show()
-        
-        '''
-        # create hspice export netlist (test)
-        from powercad.spice_export.netlist_graph import Module_SPICE_netlist_graph
-        from powercad.spice_export.hspice_interface import write_SPICE_netlist
-        from powercad.spice_export.simulations import TransientSimulation
-        
-        export_path = 'C:\Users\jhmain\Dropbox\Spice Import and Export files\spice export\R&D 100'
-        
-        spice_netlist_graph = Module_SPICE_netlist_graph('netlist_test', self.project.symb_layout, sol.index, template_graph=None)
-        spice_netlist_graph.write_SPICE_subcircuit(export_path)
-
-        #trans_sim = TransientSimulation('Trans Simulation 1', 'NL1', 'NL2', 'NL1', 'NL3')
-        #netlist = write_SPICE_netlist(export_path,trans_sim, spice_netlist_graph)
-
-        #spice_netlist_graph.run_hspice()
-        #spice_netlist_graph.draw_HSPICE_output()
-        
-        print 'SPICE export path:', export_path
-        print 'SPICE export complete.'
-        '''
         
     def clear_saved_solutions_ui(self):
         # close windows in the mdi area
         self.ui.mdiArea.closeAllSubWindows()
         # remove solutions from list area
         self.ui.lst_solution.clear()
-        
+    def clear_projet_solutions(self):
+        self.clear_saved_solutions_ui()
+        self.project.symb_layouts=[]
+        self.project.solutions = []
+
     def load_saved_solutions_list(self):
         self.clear_saved_solutions_ui()
+        if self.project.layout_engine=="CS":
+            flag =1
+            # loads the list of previously saved solutions into the list display
+            for id in range(len(self.project.solutions)):
+                sol = self.project.solutions[id]
+                self.add_to_solution_list(solution=sol, flag=flag, id=id)
+        elif self.project.layout_engine=='SL':
+            flag=0
+            # loads the list of previously saved solutions into the list display
+            for id in range(len(self.project.solutions)):
+                sol = self.project.solutions[id]
+                self.add_to_solution_list(solution=sol, flag=flag)
 
-        # loads the list of previously saved solutions into the list display
-        for sol in self.project.solutions:
-            self.add_to_solution_list(sol)
             
         # display the number of generations ran in the last optimization run here
         self.ui.txt_numGenerations.setText(str(self.project.num_gen))

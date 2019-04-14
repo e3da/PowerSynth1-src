@@ -20,16 +20,17 @@ class Project:
             num_gen -- number of generations for optimization run
             deviceTable -- list of components in system
         """
-
+        self.layout_engine = "SL"
         self.netlist=netlist
         self.name = name
         self.directory = directory
         self.tech_lib_dir = tech_lib_dir
         self.tbl_bondwire_connect=None
 
-        self.symb_layout = symb_layout
+        self.symb_layout = symb_layout # this is for old layout engine
         self.module_data = ModuleData()
-        
+        self.symb_layouts=[] # This is for new layout engine
+
         self.solutions = [] # list of saved solutions obtained from Solution Browser
 #        self.curr_sol = None # solution object to get passed back to main window
 
@@ -41,6 +42,8 @@ class Project:
             self.solutions = [solution]
         else:
             self.solutions.append(solution)
+    def add_symb(self,symblayout):
+        self.symb_layouts.append(symblayout)
 
 if __name__ == '__main__':
     print 'unit testing the project'

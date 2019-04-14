@@ -33,6 +33,7 @@ class New_layout_engine():
         patches = self.init_data[0]
         graph = self.init_data[2]
         self.new_layout_engine = New_layout_engine_dialog(self.window, patches, W=self.W + 20, H=self.H + 20 , engine=self,graph=graph)
+        self.new_layout_engine.show()
         self.new_layout_engine.exec_()
 
     def cons_from_ps(self):
@@ -202,7 +203,7 @@ class New_layout_engine():
         elif level == 1:
 
             Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=num_layouts, W=None, H=None,
-                                                      XLoc=None, YLoc=None, seed=seed, individual=None)
+                                                      XLoc=None, YLoc=None, seed=seed, individual=individual)
             CS_SYM_Updated, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree, sym_to_cs,scaler)
             CS_SYM_Updated = CS_SYM_Updated['H']
             self.cur_fig_data = plot_layout(Layout_Rects, level)
@@ -242,10 +243,10 @@ class New_layout_engine():
                 if W >= v:
                     #Min_X_Loc[0] = 0
                     #Min_X_Loc[k] = W
-                    Min_X_Loc[0] = -2000
-                    Min_X_Loc[1] = 0
-                    Min_X_Loc[k - 1] = W
-                    Min_X_Loc[k] = W + 2000
+                    Min_X_Loc[0] = 0
+                    Min_X_Loc[1] = 2000
+                    Min_X_Loc[k - 1] = W-2000
+                    Min_X_Loc[k] = W
                 else:
                     print"Enter Width greater than or equal Minimum Width"
                     return
@@ -253,10 +254,10 @@ class New_layout_engine():
                 if H >= v:
                     #Min_Y_Loc[0] = 0
                     #Min_Y_Loc[k] = H
-                    Min_Y_Loc[0] = -2000
-                    Min_Y_Loc[1] = 0
-                    Min_Y_Loc[k - 1] = H
-                    Min_Y_Loc[k] = H + 2000
+                    Min_Y_Loc[0] = 0
+                    Min_Y_Loc[1] = 2000
+                    Min_Y_Loc[k - 1] = H-2000
+                    Min_Y_Loc[k] = H
                 else:
                     print"Enter Height greater than or equal Minimum Height"
                     return
@@ -265,7 +266,7 @@ class New_layout_engine():
             Min_Y_Loc = collections.OrderedDict(sorted(Min_Y_Loc.items()))
 
             Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=num_layouts, W=W, H=H,
-                                                      XLoc=Min_X_Loc, YLoc=Min_Y_Loc, seed=seed, individual=None) # evaluates and finds updated locations for each coordinate
+                                                      XLoc=Min_X_Loc, YLoc=Min_Y_Loc, seed=seed, individual=individual) # evaluates and finds updated locations for each coordinate
 
             CS_SYM_Updated, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree, sym_to_cs,scaler)
             CS_SYM_Updated = CS_SYM_Updated['H'] # takes only horizontal corner stitch data
@@ -375,7 +376,7 @@ class New_layout_engine():
 
             Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=num_layouts,
                                                       W=W, H=H, XLoc=Min_X_Loc, YLoc=Min_Y_Loc, seed=seed,
-                                                      individual=None)
+                                                      individual=individual)
 
             CS_SYM_Updated, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree, sym_to_cs,scaler)
 

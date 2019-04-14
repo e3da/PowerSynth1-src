@@ -104,25 +104,11 @@
       <string>Optimization Setup</string>
      </property>
      <layout class="QGridLayout" name="gridLayout">
-      <item row="0" column="0">
-       <widget class="QLabel" name="label_opt_algo">
+      <item row="2" column="2">
+       <widget class="QRadioButton" name="rb_plot_pareto">
         <property name="text">
-         <string>Optimization Algorithm</string>
+         <string>Plot Pareto Set</string>
         </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="QComboBox" name="cmb_opt_algo">
-        <item>
-         <property name="text">
-          <string>NSGAII</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>Non-Guided Randomization</string>
-         </property>
-        </item>
        </widget>
       </item>
       <item row="0" column="2">
@@ -132,17 +118,7 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="3">
-       <widget class="QLineEdit" name="txt_perfname">
-        <property name="maximumSize">
-         <size>
-          <width>100</width>
-          <height>16777215</height>
-         </size>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0" colspan="4">
+      <item row="3" column="0" colspan="4">
        <widget class="QTabWidget" name="Tab_model_select">
         <property name="enabled">
          <bool>true</bool>
@@ -166,7 +142,7 @@
          </font>
         </property>
         <property name="currentIndex">
-         <number>1</number>
+         <number>0</number>
         </property>
         <widget class="QWidget" name="Thermal">
          <attribute name="title">
@@ -384,6 +360,51 @@
           </item>
          </layout>
         </widget>
+       </widget>
+      </item>
+      <item row="0" column="3">
+       <widget class="QLineEdit" name="txt_perfname">
+        <property name="maximumSize">
+         <size>
+          <width>100</width>
+          <height>16777215</height>
+         </size>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_opt_algo">
+        <property name="text">
+         <string>Optimization Algorithm</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QComboBox" name="cmb_opt_algo">
+        <item>
+         <property name="text">
+          <string>NSGAII</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Non-Guided Randomization</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QPushButton" name="btn_save_setup">
+        <property name="text">
+         <string>Save Optimization Setup</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QPushButton" name="btn_load_setup">
+        <property name="text">
+         <string>Load Optimization Setup</string>
+        </property>
        </widget>
       </item>
      </layout>

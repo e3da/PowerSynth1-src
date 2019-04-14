@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'CS_design_up.ui'
 #
-# Created: Fri Apr 12 09:53:04 2019
+# Created: Fri Apr 12 16:11:50 2019
 #      by: pyside-uic 0.2.15 running on PySide 1.2.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -119,9 +119,6 @@ class Ui_CornerStitch_Dialog(object):
         self.grview_sols_browser = QtGui.QGraphicsView(self.groupBox_2)
         self.grview_sols_browser.setObjectName("grview_sols_browser")
         self.gridLayout_4.addWidget(self.grview_sols_browser, 0, 0, 1, 2)
-        self.btn_export = QtGui.QPushButton(self.groupBox_2)
-        self.btn_export.setObjectName("btn_export")
-        self.gridLayout_4.addWidget(self.btn_export, 1, 0, 1, 1)
         self.cmbox_export_option = QtGui.QComboBox(self.groupBox_2)
         self.cmbox_export_option.setObjectName("cmbox_export_option")
         self.cmbox_export_option.addItem("")
@@ -131,6 +128,15 @@ class Ui_CornerStitch_Dialog(object):
         self.cmbox_export_option.addItem("")
         self.cmbox_export_option.addItem("")
         self.gridLayout_4.addWidget(self.cmbox_export_option, 1, 1, 1, 1)
+        self.btn_export = QtGui.QPushButton(self.groupBox_2)
+        self.btn_export.setObjectName("btn_export")
+        self.gridLayout_4.addWidget(self.btn_export, 1, 0, 1, 1)
+        self.btn_sel_sol = QtGui.QPushButton(self.groupBox_2)
+        self.btn_sel_sol.setObjectName("btn_sel_sol")
+        self.gridLayout_4.addWidget(self.btn_sel_sol, 2, 0, 1, 1)
+        self.btn_save_all = QtGui.QPushButton(self.groupBox_2)
+        self.btn_save_all.setObjectName("btn_save_all")
+        self.gridLayout_4.addWidget(self.btn_save_all, 2, 1, 1, 1)
         self.gridLayout_7.addWidget(self.groupBox_2, 2, 1, 1, 2)
 
         self.retranslateUi(CornerStitch_Dialog)
@@ -159,11 +165,13 @@ class Ui_CornerStitch_Dialog(object):
         self.btn_eval_setup.setText(QtGui.QApplication.translate("CornerStitch_Dialog", "Optimization Setup", None, QtGui.QApplication.UnicodeUTF8))
         self.btn_gen_layouts.setText(QtGui.QApplication.translate("CornerStitch_Dialog", "Generate Layouts", None, QtGui.QApplication.UnicodeUTF8))
         self.groupBox_2.setTitle(QtGui.QApplication.translate("CornerStitch_Dialog", "Layout Selection", None, QtGui.QApplication.UnicodeUTF8))
-        self.btn_export.setText(QtGui.QApplication.translate("CornerStitch_Dialog", "Export solution", None, QtGui.QApplication.UnicodeUTF8))
         self.cmbox_export_option.setItemText(0, QtGui.QApplication.translate("CornerStitch_Dialog", "Q3D", None, QtGui.QApplication.UnicodeUTF8))
         self.cmbox_export_option.setItemText(1, QtGui.QApplication.translate("CornerStitch_Dialog", "Solidworks", None, QtGui.QApplication.UnicodeUTF8))
         self.cmbox_export_option.setItemText(2, QtGui.QApplication.translate("CornerStitch_Dialog", "Electrical netlist", None, QtGui.QApplication.UnicodeUTF8))
         self.cmbox_export_option.setItemText(3, QtGui.QApplication.translate("CornerStitch_Dialog", "Thermal netlist", None, QtGui.QApplication.UnicodeUTF8))
         self.cmbox_export_option.setItemText(4, QtGui.QApplication.translate("CornerStitch_Dialog", "FastHenry", None, QtGui.QApplication.UnicodeUTF8))
         self.cmbox_export_option.setItemText(5, QtGui.QApplication.translate("CornerStitch_Dialog", "EMPro", None, QtGui.QApplication.UnicodeUTF8))
+        self.btn_export.setText(QtGui.QApplication.translate("CornerStitch_Dialog", "Export solution to other tools", None, QtGui.QApplication.UnicodeUTF8))
+        self.btn_sel_sol.setText(QtGui.QApplication.translate("CornerStitch_Dialog", "Save Selected Solutions", None, QtGui.QApplication.UnicodeUTF8))
+        self.btn_save_all.setText(QtGui.QApplication.translate("CornerStitch_Dialog", "Save All Solutions", None, QtGui.QApplication.UnicodeUTF8))
 
