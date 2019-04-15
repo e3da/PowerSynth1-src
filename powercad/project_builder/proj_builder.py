@@ -1481,9 +1481,9 @@ class ProjectBuilder(QtGui.QMainWindow):
         filletFlag = self.ui.checkBox_fillet.isChecked()  # Show filleted layout if fillet checkbox is checked
         if id ==None:
             self.project.symb_layout.gen_solution_layout(sol.index)
-            m = SolutionWindow(solution=sol, sym_layout=self.project.symb_layout,filletFlag= filletFlag,dir=self.project.directory)
+            m = SolutionWindow(solution=sol, sym_layout=self.project.symb_layout,filletFlag= filletFlag,dir=self.project.directory,parent=self)
         else:
-            m = SolutionWindow(solution=sol, sym_layout=self.project.symb_layouts[id],filletFlag= filletFlag,dir=self.project.directory)
+            m = SolutionWindow(solution=sol, sym_layout=self.project.symb_layouts[id],filletFlag= filletFlag,dir=self.project.directory,parent=self)
 
         self.ui.mdiArea.addSubWindow(m)
         m.show()

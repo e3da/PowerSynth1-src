@@ -2079,6 +2079,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
                     solution.name = sol_name[0]
                 # ----> what if the name already exists?
                 sym_layout = copy.deepcopy(self.engine.sym_layout)
+                sym_layout.layout_ready =True
                 solution.index = self.selected_ind
                 solution.params = self.sol_params
                 self.parent.add_solution(solution=solution, flag=1, sym_layout=sym_layout)

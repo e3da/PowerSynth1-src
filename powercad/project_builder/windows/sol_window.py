@@ -32,7 +32,7 @@ from powercad.Spice_handler.spice_export.circuit import Circuit
 
 class SolutionWindow(QtGui.QWidget):
     """Solution windows that show up in MDI area"""
-    def __init__(self, solution=None, sym_layout=None, filletFlag=None,dir=None):
+    def __init__(self, solution=None, sym_layout=None, filletFlag=None,dir=None,parent=None):
         """Set up the solution window"""
         QtGui.QWidget.__init__(self)
         self.ui = Ui_layout_form()
@@ -40,6 +40,7 @@ class SolutionWindow(QtGui.QWidget):
         self.setWindowTitle(solution.name)
         self.ui.btn_run_drc.pressed.connect(self.run_drc)
         self.ui.btn_export_selected.pressed.connect(self.export_script)
+        self.parent=parent
         #self.ui.btn_run_succesive_approxomation.pressed.connect(self.Run_Sucessive_approximation)#sxm; new button function added based on self.export_spice_parasitics
 
         self.solution = solution
@@ -79,6 +80,8 @@ class SolutionWindow(QtGui.QWidget):
             QtGui.QMessageBox.warning(None, "Design Rule Check", "DRC errors found! Check log/console.")
     def export_script(self):
         selected=str(self.ui.cmbox_export_option.currentText())
+        if self.parent.project.layout_engine=="SL":
+            self.sym_layout.gen_solution_layout(self.solution.index)
         if selected == 'Q3D':
             self.export_q3d()
         elif selected== 'Solidworks':
@@ -96,7 +99,6 @@ class SolutionWindow(QtGui.QWidget):
         outname = fn[0]
         if len(outname) > 0:
             try:
-                self.sym_layout.gen_solution_layout(self.solution.index)
                 md = ModuleDesign(self.sym_layout)
                 #output_fh_script_mesh(md,outname)
                 output_fh_script(self.sym_layout,outname)
@@ -112,7 +114,6 @@ class SolutionWindow(QtGui.QWidget):
 
         if len(outname) > 0:
             try:
-                self.sym_layout.gen_solution_layout(self.solution.index)
                 md = ModuleDesign(self.sym_layout)
                 empro_script = EMProScript(md, outname+".py")
                 empro_script.generate()
@@ -128,7 +129,6 @@ class SolutionWindow(QtGui.QWidget):
 
         if len(outname) > 0:
             try:
-                self.sym_layout.gen_solution_layout(self.solution.index)
                 md = ModuleDesign(self.sym_layout)
                 output_q3d_vbscript(md, outname)
                 QtGui.QMessageBox.about(None, "Q3D VB Script", "Export successful.")
@@ -146,7 +146,6 @@ class SolutionWindow(QtGui.QWidget):
         if len(outname) > 0:
             print 'exporting solidworks file'
             try:
-                self.sym_layout.gen_solution_layout(self.solution.index)
                 md = ModuleDesign(self.sym_layout)
 
                 data_dir = 'C:/ProgramData/SolidWorks/SolidWorks '+version
