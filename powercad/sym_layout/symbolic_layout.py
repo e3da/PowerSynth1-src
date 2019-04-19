@@ -269,7 +269,6 @@ class SymLine(object):
 class SymPoint(object):
     def __init__(self, point=None, raw_point=None):
         self.raw_element = raw_point
-
         self.element = point
         self.name = self.element.path_id
         self.tech = None # holds a reference to either a DeviceInstance or Lead object
@@ -472,6 +471,8 @@ class SymbolicLayout(object):
 
 
         self.gap = self.design_rules.min_trace_trace_width  # minimum gap between two traces
+        for symbol in self.all_sym:                          # going through all the symbolic lines and points to reset it
+            symbol.reset_to_pre_analysis()
         self._check_sym_elements()
         self._build_trace_layout()  # Go through only traces and collect SymLine to a list object
         self._find_trace_connections()  # Search in the list of traces built above to create a connection list  >go to this method to read more
@@ -967,86 +968,6 @@ class SymbolicLayout(object):
 
             if pt.parent_line is None:
                 raise LayoutError("Not all layout points are connected to a layout line!")
-
-    def _find_bondwire_connection(self, sym_wire):
-        self.bondwires.append(sym_wire)
-
-        sym_wire.dev_pt = None
-        # Check against devices classify if this is a power or signal connection
-        for point in self.points:
-            if isinstance(point.tech, DeviceInstance):
-                dev = point.element
-                line = sym_wire.element
-                pt1_hit = (dev.pt[0] == line.pt1[0] and dev.pt[1] == line.pt1[1])
-                pt2_hit = (dev.pt[0] == line.pt2[0] and dev.pt[1] == line.pt2[1])
-                if pt1_hit:
-                    point.sym_bondwires.append(sym_wire)
-                    sym_wire.device = point
-                    sym_wire.dev_pt = 1
-                elif pt2_hit:
-                    point.sym_bondwires.append(sym_wire)
-                    sym_wire.device = point
-                    sym_wire.dev_pt = 2
-
-        # Note: sym_wire.dev_pt will be None if no device is connected
-        if sym_wire.dev_pt is None:
-            # check both points for trace connection
-            trace1 = self._find_bondwire_trace_connection(sym_wire, sym_wire.element.pt1)
-            trace2 = self._find_bondwire_trace_connection(sym_wire, sym_wire.element.pt2)
-            if trace1 is None or trace2 is None:
-                raise FormulationError('A bondwire is not connected to a trace or device!')
-            else:
-                # connect the traces
-                sym_wire.trace = trace1
-                trace1.conn_bonds.append(sym_wire)
-                sym_wire.trace2 = trace2
-                trace2.conn_bonds.append(sym_wire)
-        else:
-            # only check the other point for trace connection
-            if sym_wire.dev_pt == 1:
-                pt = sym_wire.element.pt2 # check at pt2
-            else:
-                pt = sym_wire.element.pt1 # check at pt1
-
-            # Check against traces
-            trace = self._find_bondwire_trace_connection(sym_wire, pt)
-            if trace is None:
-                raise FormulationError('A bondwire is connected to a device but not a trace!')
-            else:
-                # connect the trace
-                sym_wire.trace = trace
-                trace.conn_bonds.append(sym_wire)
-
-    def _find_bondwire_trace_connection(self, sym_wire, pt):
-        x, y = pt
-        for trace in self.all_trace_lines:
-            if trace.is_supertrace():
-                # If trace is a part of a supertrace pair of traces
-                # only take a look at the vertical element of the pair
-                # so, the connection is only checked once.
-                if trace.element.vertical:
-                    partner = trace.intersecting_trace
-                    region = Rect(trace.element.pt2[1], trace.element.pt1[1], \
-                                  partner.element.pt1[0], partner.element.pt2[0])
-                    if region.encloses(x, y):
-                        return trace
-            else:
-                tele = trace.element
-                '''
-                if tele.vertical:
-                    if x == tele.pt1[0] and (y > tele.pt1[1] and y < tele.pt2[1]): # review this to > or <
-                        return trace
-                else:
-                    if y == tele.pt1[1] and (x > tele.pt1[0] and x < tele.pt2[0]): # review this to > or <
-                        return trace
-                '''
-
-                if x == tele.pt1[0] and (y >= tele.pt1[1] and y <= tele.pt2[1]):  # review this to > or <
-                    return  trace
-                elif y == tele.pt1[1] and (x >= tele.pt1[0] and x <= tele.pt2[0]): # review this to > or <
-                    return trace
-
-        return None
 
     def _trace_device_intersection(self, trace):
         """ Finds what devices/leads reside on a trace. """

@@ -16,6 +16,8 @@ class New_layout_engine():
         self.Min_X = None
         self.Min_Y = None
         self.cons_info = None
+        self.ledge_width=1000.0
+        self.ledge_height=1000.0
 
         # for initialize only
         self.init_data = []
@@ -84,6 +86,7 @@ class New_layout_engine():
         if sym_layout != None:
             self.cons_info = self.collect_sym_cons_info(sym_layout)
             self.cons_df = self.cons_from_ps()
+
 
         # ------------------------------------------
         input_rects, self.W, self.H = input_conversion(sym_layout)  # converts symbolic layout lines and points into rectangles
@@ -165,6 +168,10 @@ class New_layout_engine():
 
         CG1 = CS_to_CG(0)
         CG1.getConstraints(self.cons_df)
+        self.ledge_width=float(self.cons_df.iat[10,2])
+        self.ledge_height=float(self.cons_df.iat[10,2])
+        #print "L",self.ledge_width
+        #self.cons_df.to_csv('out_2.csv', sep=',', header=None, index=None)
         Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=None, W=None, H=None, XLoc=None, YLoc=None,seed=None,individual=None)
 
 
@@ -186,18 +193,21 @@ class New_layout_engine():
 
         CG1 = CS_to_CG(level)
         CG1.getConstraints(self.cons_df)
+        #self.cons_df.to_csv('out_2.csv', sep=',', header=None, index=None)
         sym_to_cs = self.init_data[1]
         scaler = 1000  # to get back original dimensions all coordinated will be scaled down by 1000
         #mode-0
         if level == 0:
             Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=None, W=None, H=None, XLoc=None, YLoc=None,seed=None,individual=None) # for minimum sized layout only one solution is generated
-            CS_SYM_information, Layout_Rects = CG1.UPDATE_min(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree ,sym_to_cs)  # CS_SYM_information is a dictionary where key=path_id(component name) and value=list of updated rectangles, Layout Rects is a dictionary for minimum HCS and VCS evaluated rectangles (used for plotting only)
+            CS_SYM_information, Layout_Rects = CG1.UPDATE_min(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree ,sym_to_cs,scaler)  # CS_SYM_information is a dictionary where key=path_id(component name) and value=list of updated rectangles, Layout Rects is a dictionary for minimum HCS and VCS evaluated rectangles (used for plotting only)
             self.cur_fig_data = plot_layout(Layout_Rects, level)
             CS_SYM_Updated = {}
             for i in self.cur_fig_data:
                 for k, v in i.items():
+                    k=(k[0]*scaler,k[1]*scaler)
                     CS_SYM_Updated[k] = CS_SYM_information
             CS_SYM_Updated = [CS_SYM_Updated] # mapped solution layout information to symbolic layout objects
+
 
         #mode-1
         elif level == 1:
@@ -206,6 +216,7 @@ class New_layout_engine():
                                                       XLoc=None, YLoc=None, seed=seed, individual=individual)
             CS_SYM_Updated, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree, sym_to_cs,scaler)
             CS_SYM_Updated = CS_SYM_Updated['H']
+
             self.cur_fig_data = plot_layout(Layout_Rects, level)
 
         #mode-2
@@ -244,8 +255,8 @@ class New_layout_engine():
                     #Min_X_Loc[0] = 0
                     #Min_X_Loc[k] = W
                     Min_X_Loc[0] = 0
-                    Min_X_Loc[1] = 2000
-                    Min_X_Loc[k - 1] = W-2000
+                    Min_X_Loc[1] = self.ledge_width*scaler
+                    Min_X_Loc[k - 1] = W-self.ledge_width*scaler
                     Min_X_Loc[k] = W
                 else:
                     print"Enter Width greater than or equal Minimum Width"
@@ -254,9 +265,10 @@ class New_layout_engine():
                 if H >= v:
                     #Min_Y_Loc[0] = 0
                     #Min_Y_Loc[k] = H
+
                     Min_Y_Loc[0] = 0
-                    Min_Y_Loc[1] = 2000
-                    Min_Y_Loc[k - 1] = H-2000
+                    Min_Y_Loc[1] = self.ledge_height*scaler
+                    Min_Y_Loc[k - 1] = H-self.ledge_height*scaler
                     Min_Y_Loc[k] = H
                 else:
                     print"Enter Height greater than or equal Minimum Height"
@@ -271,6 +283,7 @@ class New_layout_engine():
             CS_SYM_Updated, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree, sym_to_cs,scaler)
             CS_SYM_Updated = CS_SYM_Updated['H'] # takes only horizontal corner stitch data
             self.cur_fig_data = plot_layout(Layout_Rects, level) #collects the layout patches
+
 
         #mode-3
         elif level == 3:
@@ -415,7 +428,7 @@ def plot_layout(Layout_Rects,level):
         type=['EMPTY','Type_1','Type_2','Type_3','Type_4']
         ALL_Patches={}
         key=(max_x,max_y)
-        print key
+        #print key
         ALL_Patches.setdefault(key,[])
         for i in Rectangles:
             for t in type:
@@ -464,6 +477,7 @@ def plot_layout(Layout_Rects,level):
                         if i[1] < min_y:
                             min_y = i[1]
                     key=(max_x,max_y)
+
                     Total_H.setdefault(key,[])
                     Total_H[(max_x,max_y)].append(Rectangles)
         j = 0

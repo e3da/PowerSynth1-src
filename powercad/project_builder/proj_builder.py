@@ -48,7 +48,9 @@ from powercad.general.settings.settings import *
 from powercad.general.settings.Error_messages import *
 from powercad.cons_aware_en.cons_engine import New_layout_engine
 import copy
-
+from powercad.sym_layout.symbolic_layout import LayoutError
+from powercad.general.data_struct.util import Rect
+from powercad.design.module_data import *
 class ProjectBuilder(QtGui.QMainWindow):
     
     # Relative paths -> use forward slashes for platform independence
@@ -284,7 +286,8 @@ class ProjectBuilder(QtGui.QMainWindow):
             self.symmetry_ui.load_symmetries()
             self.perf_list.load_measures()
             self.load_saved_solutions_list()
-            self.fill_material_cmbBoxes() #Quang 
+            self.fill_material_cmbBoxes() #Quang
+            #self.project.sym_info={}
             if self.project.module_data.design_rules is None:
                 QtGui.QMessageBox.warning(self, "Defualt Setup", "Process design rules is set to defaults got to Projects-> Design Rule to edit.")
                 self.project.module_data.design_rules = ProcessDesignRules(1.2, 1.2, 0.2, 0.1, 1.0, 0.2, 0.2, 0.2)
@@ -297,10 +300,9 @@ class ProjectBuilder(QtGui.QMainWindow):
         if not self.build_module_stack(flag=flag):
             QtGui.QMessageBox.warning(self, "Module Stack Error",
                                       "One or more settings on the module stack page have an error.")
-
-        self.project.symb_layout.form_api_cs(self.project.module_data, self.project.tbl_bondwire_connect, self.TEMP_DIR)
-        new_layout_engine = New_layout_engine()
         symlayout = copy.deepcopy(self.project.symb_layout)
+        symlayout.form_api_cs(self.project.module_data, self.project.tbl_bondwire_connect, self.TEMP_DIR)
+        new_layout_engine = New_layout_engine()
         new_layout_engine.init_layout_from_symlayout(symlayout)
         new_layout_engine.open_new_layout_engine(self)
 
@@ -1436,7 +1438,7 @@ class ProjectBuilder(QtGui.QMainWindow):
         else:
             QtGui.QMessageBox.warning(self, "Solution Browser", "No solutions exist.")
         
-    def add_solution(self, solution=None,flag=1,sym_layout=None):
+    def add_solution(self, solution=None,flag=1,sym_info=None):
         '''
         add solution to main window
         :param solution: the solution information
@@ -1444,15 +1446,17 @@ class ProjectBuilder(QtGui.QMainWindow):
         :return: nothing
         '''
         # save solution in project
+
         if flag==0:
             self.project.add_solution(solution)
             self.add_to_solution_list(solution)
         elif flag==1:
             #print "new functions"
             self.project.add_solution(solution)
-            self.project.add_symb(sym_layout)
-            id = self.project.symb_layouts.index(sym_layout)
-            print "id inside", id
+            name=solution.name
+            self.project.add_symb(sym_info,name)
+            id = name
+            #print "id inside", id
             self.add_to_solution_list(solution,id=id,flag=flag)
         
     def add_to_solution_list(self, solution,flag=0,id=None):
@@ -1483,11 +1487,156 @@ class ProjectBuilder(QtGui.QMainWindow):
             self.project.symb_layout.gen_solution_layout(sol.index)
             m = SolutionWindow(solution=sol, sym_layout=self.project.symb_layout,filletFlag= filletFlag,dir=self.project.directory,parent=self)
         else:
-            m = SolutionWindow(solution=sol, sym_layout=self.project.symb_layouts[id],filletFlag= filletFlag,dir=self.project.directory,parent=self)
+            sym_layout = self.project.symb_layout
+            sym_info = self.project.sym_info[id]
+            symb_rect_dict = sym_info['sym_info']
+            dims = sym_info['Dims']
+            bp_dims = [dims[0] + 4, dims[1] + 4]
+            self._sym_update_layout(sym_info=symb_rect_dict)
+            update_sym_baseplate_dims(sym_layout=sym_layout, dims=bp_dims)
+            update_substrate_dims(sym_layout=sym_layout, dims=dims)
+            sym_layout.layout_ready = True
+            m = SolutionWindow(solution=sol, sym_layout=sym_layout,filletFlag= filletFlag,dir=self.project.directory,parent=self)
 
         self.ui.mdiArea.addSubWindow(m)
         m.show()
-        
+    def _sym_update_layout(self, sym_info=None):
+        # ToDo:Here we can add the automate symbolic layout - Corner Stitch interface to update thermal
+        self._sym_update_trace_lines(sym_info=sym_info)
+        self._sym_place_devices(sym_info=sym_info)
+        self._sym_place_leads(sym_info=sym_info)
+        self._sym_place_bondwires()
+
+    def _sym_update_trace_lines(self, sym_info=None):
+        '''
+        *Only used when a symbolic layout is introduced
+        Use the rectangles built from corner stitch to make trace rectangles in sym layout
+        '''
+        # Handle traces
+        sym_layout = self.project.symb_layout
+        sym_layout.trace_rects = []
+
+        for tr in sym_layout.all_trace_lines:
+            rect = sym_info[tr.element.path_id]
+            sym_layout.trace_rects.append(rect)
+            tr.trace_rect = rect
+
+    def _sym_place_devices(self, sym_info=None):
+        '''
+        *Only used when a symbolic layout is introduced
+        Use the rectangles built from corner stitch to update device locations in sym layout
+        '''
+        sym_layout = self.project.symb_layout
+
+
+        for dev in sym_layout.devices:
+
+            dev_region = sym_info[dev.name]
+            width, height, thickness = dev.tech.device_tech.dimensions
+
+            line = dev.parent_line
+            trace_rect = line.trace_rect
+            if line.element.vertical:
+                dev.orientation = 1
+                dev.footprint_rect = Rect(dev_region.bottom + height, dev_region.bottom, dev_region.left,
+                                          dev_region.left + width)
+                xpos = trace_rect.center_x()
+                ypos = dev_region.bottom + height / 2
+            else:
+                dev.footprint_rect = Rect(dev_region.bottom + width, dev_region.bottom, dev_region.left,
+                                          dev_region.left + height)
+
+                xpos = dev_region.left + height / 2
+                ypos = trace_rect.center_y()
+                dev.orientation = 3
+            dev.center_position = (xpos, ypos)
+            if len(dev.sym_bondwires) > 0:
+                powerbond = None
+                for bw in dev.sym_bondwires:
+                    if bw.tech.wire_type == BondWire.POWER:
+                        powerbond = bw
+                        break
+
+                if powerbond is None:
+                    raise LayoutError('No connected power bondwire!')
+
+                if dev.orientation == 1:
+
+                    # On vertical trace
+                    # orient device by power bonds
+                    if powerbond.trace.trace_rect.left < trace_rect.left:
+                        dev.orientation = 2  # 180 degrees from ref.
+                    else:
+                        dev.orientation = 1  # 0 degrees from ref.
+                elif dev.orientation == 3:
+                    if powerbond.trace.trace_rect.top < trace_rect.top:
+                        dev.orientation = 3  # 180 degrees from ref.
+                    else:
+                        dev.orientation = 4  # 0 degrees from ref.
+
+    def _sym_place_leads(self, sym_info=None):
+        sym_layout = self.project.symb_layout
+
+
+        for lead in sym_layout.leads:
+            if lead.tech.shape == Lead.BUSBAR:
+                line = lead.parent_line
+                trace_rect = line.trace_rect
+
+                if line.element.vertical:
+                    hwidth = 0.5 * lead.tech.dimensions[1]
+                    hlength = 0.5 * lead.tech.dimensions[0]
+                    lead.orientation = 3
+
+                    # find if near left or right (decide orientation)
+                    # for power leads only right now
+                    edge_dist = sym_layout.sub_dim[0] - 0.5 * (trace_rect.left + trace_rect.right)
+                    if edge_dist < 0.5 * sym_layout.sub_dim[0]:
+                        # right
+                        xpos = trace_rect.right - hwidth
+                        lead.orientation = 3
+                    else:
+                        # left
+                        xpos = trace_rect.left + hwidth
+                        lead.orientation = 4
+
+                    ypos = 0.5 * (trace_rect.bottom + trace_rect.top)
+                    lead.footprint_rect = Rect(ypos + hlength, ypos - hlength, xpos - hwidth, xpos + hwidth)
+                else:
+                    # find if near top or bottom (decide orientation)
+                    hwidth = 0.5 * lead.tech.dimensions[0]
+                    hlength = 0.5 * lead.tech.dimensions[1]
+                    lead.orientation = 1
+
+                    edge_dist = sym_layout.sub_dim[1] - 0.5 * (trace_rect.top + trace_rect.bottom)
+                    if edge_dist < 0.5 * sym_layout.sub_dim[1]:
+                        # top
+                        ypos = trace_rect.top - hlength
+                        lead.orientation = 1
+                    else:
+                        # bottom
+                        ypos = trace_rect.bottom + hlength
+                        lead.orientation = 2
+
+                    xpos = 0.5 * (trace_rect.left + trace_rect.right)
+                    lead.footprint_rect = Rect(ypos + hlength, ypos - hlength, xpos - hwidth, xpos + hwidth)
+
+                lead.center_position = (xpos, ypos)
+            elif lead.tech.shape == Lead.ROUND:
+                lead_region = sym_info[lead.element.path_id]
+                radius = 0.5 * lead.tech.dimensions[0]
+                center = [lead_region.left + radius, lead_region.bottom]
+                lead.footprint_rect = Rect(center[1] + radius, center[1] - radius,
+                                           center[0] - radius, center[0] + radius)
+                lead.center_position = center
+
+    def _sym_place_bondwires(self):
+        sym_layout = self.project.symb_layout
+
+        for wire in sym_layout.bondwires:
+            if wire.dev_pt is not None:
+                sym_layout._place_device_bondwire(wire)
+
     def clear_saved_solutions_ui(self):
         # close windows in the mdi area
         self.ui.mdiArea.closeAllSubWindows()

@@ -1633,7 +1633,7 @@ class constraintGraph:
                 if len(G.edges()) == 0:
                     return
                 else:
-                    self.FUNCTION(G)
+                    self.FUNCTION(G,Random,sid)
 
         # if the whole graph can be split into disconnected subgraphs
         else:
@@ -1657,7 +1657,7 @@ class constraintGraph:
                 return
 
             else:
-                self.FUNCTION(G)
+                self.FUNCTION(G, Random,sid)
 
 
     # randomize uniformly edge weights within fixed minimum and maximum locations
@@ -1676,6 +1676,8 @@ class constraintGraph:
             variable=[]
             for i in range(len(value)):
                 variable.append(value[i]+Vi[i])
+
+            #print "var", Vi
 
         #print "Vy",len(Vy_s),sum(Vy_s),Vy_s
 
@@ -1697,6 +1699,7 @@ class constraintGraph:
             variable = []
             D_V_Newval = [0]
             V=copy.deepcopy(value)
+
             while (len(value) > 1):
                 i = 0
                 n = len(value)
@@ -1708,12 +1711,15 @@ class constraintGraph:
                     x = 0
                 p = value.pop(i)
                 D_V_Newval.append(x)
+
             del D_V_Newval[0]
             D_V_Newval.append(Range - sum(D_V_Newval))
+
             random.shuffle(D_V_Newval)
             for i in range(len(V)):
                 x=V[i]+D_V_Newval[i]
                 variable.append(x) # randomized edge weights without violating minimum constraint values
+
         return variable
 
     #longest path evaluation function
@@ -1777,6 +1783,7 @@ class constraintGraph:
         for i in range(len(PATH) - 1):
             if (PATH[i], PATH[i + 1]) in X.keys():
                 Value.append(X[(PATH[i], PATH[i + 1])])
+        #print "Val",Value
         Max = sum(Value)
 
         # returns longest path, list of minimum constraint values in that path and summation of the values
@@ -1873,6 +1880,7 @@ class constraintGraph:
             self.Evaluation_connected(B, PATH, SOURCE, TARGET,sid)
         else:
             Max = self.Loc_X[end] - self.Loc_X[start]
+
             Range = Max - Sum
             variable = self.randomvaluegenerator(Range, Value,Random,sid)
             loc = {}
@@ -2031,7 +2039,7 @@ class constraintGraph:
                 if len(G.edges()) == 0:
                     return
                 else:
-                    self.FUNCTION_V(G)
+                    self.FUNCTION_V(G, Random, sid)
         else:
             H = []
             for i in range(len(Node_List)):
@@ -2055,7 +2063,7 @@ class constraintGraph:
 
                 return
             else:
-                self.FUNCTION_V(G)
+                self.FUNCTION_V(G,Random,sid)
 
 
     def randomvaluegenerator_V(self, Range, value,Random,sid):

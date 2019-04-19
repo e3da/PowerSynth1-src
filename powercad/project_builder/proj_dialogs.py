@@ -1169,7 +1169,7 @@ class ConsDialog(QtGui.QDialog):
             # return
         # print"con", self.cons_df
         table_df = self.cons_df
-        # print table_df
+        #print table_df
         total_cols = len(table_df.axes[1])
         r_sp = 4  # row of min spacing
         r_encl = r_sp + total_cols  # row of min encl
@@ -2027,34 +2027,36 @@ class New_layout_engine_dialog(QtGui.QDialog):
         self.selected_ind = None
         self.fixed_x_locations = {}
         self.fixed_y_locations = {}
+        self.pareto_plot_flag=0
         self.opt_algo = None  # optimization algorithm
         self.individual = None  # for NSGAII
         self.W = None  # for NSGAII cost_func
         self.H = None  # for NSGAII cost_func
-        self.solutions = []  # for NSGAII cost_func
+        self.solutions = {}  # for NSGAII cost_func
         self.seed = None
         self.default_save_dir = "C:\\"
         # add buttons
         self.ui.cmb_modes.setEnabled(False)
         self.ui.btn_fixed_locs.setEnabled(False)
+        self.ui.btn_sel_sol.setEnabled(False)
+        self.ui.btn_save_all.setEnabled(False)
         self.ui.btn_fixed_locs.pressed.connect(self.assign_fixed_locations)
         self.ui.btn_constraints.pressed.connect(self.add_constraints)
         self.ui.cmb_modes.currentIndexChanged.connect(self.mode_handler)
         self.initialize_layout(self.mainwindow_fig, self.graph)
         self.ui.btn_eval_setup.pressed.connect(self.eval_setup)
         self.ui.btn_gen_layouts.pressed.connect(self.gen_layouts)
-        self.ui.btn_export.pressed.connect(self.export_layout)
         self.ui.btn_sel_sol.pressed.connect(self.save_solution)
         self.ui.btn_save_all.pressed.connect(self.save_solution_set)
 
         # initialize for mode 0
-        self.ui.txt_num_layouts.setEnabled(False)
+        #self.ui.txt_num_layouts.setEnabled(False)
         self.ui.txt_width.setEnabled(False)
         self.ui.txt_height.setEnabled(False)
         self.ui.btn_fixed_locs.setEnabled(False)
         self.ui.btn_gen_layouts.setEnabled(False)
         self.ui.btn_eval_setup.setEnabled(False)
-        self.ui.txt_seed.setEnabled(False)
+        #self.ui.txt_seed.setEnabled(False)
 
         self.mode3_width = None  # To update mode3 floorplan size
         self.mode3_height = None  # To update mode3 floorplan size
@@ -2079,106 +2081,31 @@ class New_layout_engine_dialog(QtGui.QDialog):
                     solution.name = sol_name[0]
                 # ----> what if the name already exists?
                 sym_layout = copy.deepcopy(self.engine.sym_layout)
+                self.parent.project.symb_layout=copy.deepcopy(self.engine.sym_layout)
                 sym_layout.layout_ready =True
                 solution.index = self.selected_ind
+                choice = 'Layout ' + str(self.selected_ind)
+                layout_symb_dict = self.form_sym_obj_rect_dict()
                 solution.params = self.sol_params
-                self.parent.add_solution(solution=solution, flag=1, sym_layout=sym_layout)
+                self.parent.add_solution(solution=solution, flag=1, sym_info=layout_symb_dict[choice])
             else:
                 self.sol_count -= 1
 
     def save_solution_set(self):
-        print "implement later"
+        #print "implement later"
+        self.parent.clear_projet_solutions()
+        self.parent.project.symb_layout = copy.deepcopy(self.engine.sym_layout)
+        layout_symb_dict = self.form_sym_obj_rect_dict()
+        num_layouts = len(self.perf1['data']) #layout_symb_dict.keys()  # to handle pareto-plot only
+        for i in range(num_layouts):
+            choice = 'Layout ' + str(i)
+            solution = Solution()
+            solution.params = [[self.perf1['type'], self.perf1['data'][i], self.perf1['unit']],
+                               [self.perf2['type'], self.perf2['data'][i], self.perf2['unit']]]
+            solution.index=i
+            solution.name = "Solution " + str(i)
+            self.parent.add_solution(solution=solution, flag=1, sym_info=layout_symb_dict[choice])
 
-    def export_layout(self):
-        if self.current_mode != 0:
-            choice = 'Layout ' + str(self.selected_ind)
-        selected = str(self.ui.cmbox_export_option.currentText())
-        # select and convert layout
-        sym_info = self.form_sym_obj_rect_dict()
-        self.sym_layout = self.engine.sym_layout
-        symb_rect_dict = sym_info[choice]['sym_info']
-        dims = sym_info[choice]['Dims']
-        # print dims,symb_rect_dict
-        bp_dims = [dims[0] + 4, dims[1] + 4]
-        self._sym_update_layout(sym_info=symb_rect_dict)
-        update_sym_baseplate_dims(sym_layout=self.sym_layout, dims=bp_dims)
-        update_substrate_dims(sym_layout=self.sym_layout, dims=dims)
-        self.sym_layout.layout_ready = True
-
-        self.canvas_sols.draw()
-        if selected == 'Q3D':
-            self.export_q3d()
-        elif selected == 'Solidworks':
-            self.export_solidworks()
-        elif selected == 'Electrical netlist ':
-            print "add later"
-        elif selected == 'Thermal netlist':
-            print "add later"
-        elif selected == 'FastHenry':
-            self.export_FH()
-        elif selected == 'EMPro':
-            self.export_empro()
-
-    def export_FH(self):
-        fn = QtGui.QFileDialog.getSaveFileName(self, dir=self.default_save_dir, options=QtGui.QFileDialog.ShowDirsOnly)
-        outname = fn[0]
-        if len(outname) > 0:
-            try:
-                md = ModuleDesign(self.sym_layout)
-                # output_fh_script_mesh(md,outname)
-                output_fh_script(self.sym_layout, outname)
-                QtGui.QMessageBox.about(None, "FH Script", "Export successful.")
-            except:
-                QtGui.QMessageBox.warning(None, "FH Script", "Failed to export FH script! Check log/console.")
-                print traceback.format_exc()
-
-    def export_empro(self):
-        fn = QtGui.QFileDialog.getSaveFileName(self, dir=self.default_save_dir, options=QtGui.QFileDialog.ShowDirsOnly)
-        print fn
-        outname = fn[0]
-
-        if len(outname) > 0:
-            try:
-                md = ModuleDesign(self.sym_layout)
-                empro_script = EMProScript(md, outname + ".py")
-                empro_script.generate()
-                QtGui.QMessageBox.about(None, "EMPro Script", "Export successful.")
-            except:
-                QtGui.QMessageBox.warning(None, "EMPro Script", "Failed to export script! Check log/console.")
-                print traceback.format_exc()
-
-    def export_q3d(self):
-        fn = QtGui.QFileDialog.getSaveFileName(self, dir=self.default_save_dir, options=QtGui.QFileDialog.ShowDirsOnly)
-        print fn
-        outname = fn[0]
-
-        if len(outname) > 0:
-            try:
-                md = ModuleDesign(self.sym_layout)
-                output_q3d_vbscript(md, outname)
-                QtGui.QMessageBox.about(None, "Q3D VB Script", "Export successful.")
-            except:
-                QtGui.QMessageBox.warning(None, "Q3D VB Script", "Failed to export vb script! Check log/console.")
-                print traceback.format_exc()
-
-    def export_solidworks(self):
-        version = SolidworkVersionCheckDialog(self)
-        if version.exec_():
-            version = version.version_output()
-        fn = QtGui.QFileDialog.getSaveFileName(self, dir=self.default_save_dir, options=QtGui.QFileDialog.ShowDirsOnly)
-        outname = fn[0]
-
-        if len(outname) > 0:
-            print 'exporting solidworks file'
-            try:
-                md = ModuleDesign(self.sym_layout)
-
-                data_dir = 'C:/ProgramData/SolidWorks/SolidWorks ' + version
-                output_solidworks_vbscript(md, os.path.basename(outname), data_dir, os.path.dirname(outname))
-                QtGui.QMessageBox.about(None, "SolidWorks Script", "Export successful.")
-            except:
-                QtGui.QMessageBox.warning(None, "SolidWorks Script", "Failed to export vb script! Check log/console.")
-                print traceback.format_exc()
 
     def getPatches(self, Patches):
         if self.Patches == None:
@@ -2213,11 +2140,10 @@ class New_layout_engine_dialog(QtGui.QDialog):
 
         if choice == 'Minimum Size Layout':
             self.current_mode = 0
-            self.ui.txt_num_layouts.setEnabled(False)
             self.ui.txt_width.setEnabled(False)
             self.ui.txt_height.setEnabled(False)
             self.ui.btn_fixed_locs.setEnabled(False)
-            self.ui.txt_seed.setEnabled(False)
+            self.ui.btn_eval_setup.setEnabled(False)
             self.refresh_layout()
 
         elif choice == 'Variable Size Layout':
@@ -2225,29 +2151,32 @@ class New_layout_engine_dialog(QtGui.QDialog):
                                       "Thermal model is set to analytical for fast evaluation")
 
             self.current_mode = 1
-            self.ui.txt_num_layouts.setEnabled(True)
-            self.ui.txt_seed.setEnabled(True)
+            #self.ui.txt_num_layouts.setEnabled(True)
+            #self.ui.txt_seed.setEnabled(True)
             self.ui.txt_width.setEnabled(False)
             self.ui.txt_height.setEnabled(False)
             self.ui.btn_fixed_locs.setEnabled(False)
+            self.ui.btn_eval_setup.setEnabled(True)
             self.refresh_layout()
 
         elif choice == 'Fixed Size Layout':
             self.current_mode = 2
-            self.ui.txt_num_layouts.setEnabled(True)
-            self.ui.txt_seed.setEnabled(True)
+            #self.ui.txt_num_layouts.setEnabled(True)
+            #self.ui.txt_seed.setEnabled(True)
             self.ui.txt_width.setEnabled(True)
             self.ui.txt_height.setEnabled(True)
             self.ui.btn_fixed_locs.setEnabled(False)
+            self.ui.btn_eval_setup.setEnabled(True)
             self.refresh_layout()
 
         elif choice == 'Fixed Size with Fixed Loactions':
             self.current_mode = 3
-            self.ui.txt_num_layouts.setEnabled(True)
-            self.ui.txt_seed.setEnabled(True)
+            #self.ui.txt_num_layouts.setEnabled(True)
+            #self.ui.txt_seed.setEnabled(True)
             self.ui.txt_width.setEnabled(True)
             self.ui.txt_height.setEnabled(True)
             self.ui.btn_fixed_locs.setEnabled(True)
+            self.ui.btn_eval_setup.setEnabled(True)
             self.refresh_layout_mode3()
             # print self.fp_width
             self.mode3_width = float(self.ui.txt_width.text()) * 1000
@@ -2269,20 +2198,23 @@ class New_layout_engine_dialog(QtGui.QDialog):
         constraints = ConsDialog(self)
         self.constraint = True
 
-        self.cons_df = self.engine.cons_df
+        #self.cons_df = self.engine.cons_df
 
         constraints.exec_()
 
         self.constraint = True
 
         self.engine.cons_df = self.cons_df
-
+        #self.engine.cons_df.to_csv('out_1.csv', sep=',', header=None, index=None)
+        self.parent.cons_df=self.cons_df
         self.ui.btn_eval_setup.setEnabled(True)
         self.ui.btn_gen_layouts.setEnabled(True)
         self.ui.cmb_modes.setEnabled(True)
 
     def update_sol_browser(self):
         self.ax3.clear()
+        self.ui.btn_sel_sol.setEnabled(True)
+        self.ui.btn_save_all.setEnabled(True)
         print "plot sol browser"
         if self.perf_dict == {}:
             self.perf1 = {"label": 'layout index', 'data': []}
@@ -2292,8 +2224,23 @@ class New_layout_engine_dialog(QtGui.QDialog):
                 id = self.generated_layouts.keys().index(layout)
                 self.perf1['data'].append(id)
                 self.perf2['data'].append(id)
-
-        self.ax3.plot(self.perf1['data'], self.perf2['data'], 'o', picker=5)
+        if self.pareto_plot_flag==0:
+            self.ax3.plot(self.perf1['data'], self.perf2['data'], 'o', picker=5)
+        elif self.pareto_plot_flag==1:
+            x=self.perf1_pareto['data']
+            x=list(set(x))
+            x.sort()
+            y=self.perf2_pareto['data']
+            y=list(set(y))
+            y.sort()
+            #print x
+            #print y
+            if len(x)==1:
+                x.append(x[0])
+                y.append(y[0])
+            self.ax3.plot(self.perf1_pareto['data'], self.perf2_pareto['data'], 'o', picker=5)
+            self.ax3.set_xlim(x[1]-0.001,x[-1]+0.001)
+            self.ax3.set_ylim(y[1]-0.001,y[-1]+0.001)
         self.ax3.set_xlabel(self.perf1['label'])
         self.ax3.set_ylabel(self.perf2['label'])
         self.canvas_sol_browser.draw()
@@ -2306,10 +2253,60 @@ class New_layout_engine_dialog(QtGui.QDialog):
         self.layout_plot(layout_ind=self.selected_ind)
         self.canvas_sols.draw()
         self.canvas_sol_browser.draw()
-        self.sol_params = [[self.perf1['type'], self.perf1['data'][self.selected_ind], self.perf1['unit']],
-                           [self.perf2['type'], self.perf2['data'][self.selected_ind], self.perf2['unit']]]
+        if len(self.perf_dict.keys())>0:
+            self.sol_params = [[self.perf1['type'], self.perf1['data'][self.selected_ind], self.perf1['unit']],
+                       [self.perf2['type'], self.perf2['data'][self.selected_ind], self.perf2['unit']]]
+
+    def pareto_frontiter2D(self, data_in=None, layouts=None, sym_layouts=None, size=None, MinX=True, MinY=True):
+            '''
+
+            :param data: nx2 nd array for the data [f1,f2]
+            :param MinX: If find minX
+            :param MinY: If find minY
+            :return: pareto frontier
+            '''
+            # Display only the pareto front solution
+            # ID=data[:, 0].tolist()
+            data_1 = data_in.values()
+            data=np.array(data_1)
+            X = data[:, 0].tolist()
+            Y = data[:, 1].tolist()
+
+            raw_list = [[X[i], Y[i]] for i in range(len(X))]
+            data_list = sorted(raw_list, reverse=not (MinX))
+            p_front_id = []
+            p_front = [data_list[0]]
+            for pair in data_list[1:]:
+                if MinY:
+                    if pair[1] <= p_front[-1][1]:  # Look for higher values of Y
+                        p_front.append(pair)  # and add them to the Pareto frontier
+
+                else:
+                    if pair[1] >= p_front[-1][1]:  # Look for lower values of Y
+                        p_front.append(pair)  # and add them to the Pareto frontie
+
+            print len(p_front)
+            pareto_data = np.array(p_front)
+
+            plot = False
+            if plot:
+
+                plt.scatter(pareto_data[:, 0], pareto_data[:, 1])
+                #plt.plot(pareto_data[:, 0], pareto_data[:, 1], 'r')
+                # path = os.path.join('D:\Demo\BondWire\Bond_Wire\Restart\Final_test\Journal\PS\Compare', 'pareto.png')
+                # plt.savefig(path)
+                plt.show()
+            pareto_dataset=[]
+            for k,v in data_in.items():
+                p_data={}
+                if v in p_front:
+                    p_data[k]=v
+                    pareto_dataset.append(p_data)
+            #;pprint pareto_data
+            return pareto_dataset
 
     def cost_func_NSGAII(self, individual):
+        item = 'Layout ' + str(self.count)
         self.count += 1
         if not (isinstance(individual, list)):
             individual = np.asarray(individual).tolist()
@@ -2318,6 +2315,10 @@ class New_layout_engine_dialog(QtGui.QDialog):
                                                               fixed_x_location=self.fixed_x_locations,
                                                               fixed_y_location=self.fixed_y_locations, seed=self.seed,
                                                               individual=individual)
+        print"Added solution no.", self.count
+        self.layout_data[item] = {'Rects': cs_sym_data[0]}
+
+        self.generated_layouts[item] = {'Patches': Patches[0]}
         # print "P",Patches
         # print cs_sym_data
         if self.engine.sym_layout != None:
@@ -2327,47 +2328,37 @@ class New_layout_engine_dialog(QtGui.QDialog):
             self._sym_update_layout(sym_info=sym_info)
             dims = layout_data.keys()[0]
             bp_dims = [dims[0] + 4, dims[1] + 4]
-            self._sym_update_layout(sym_info=sym_info)
             update_sym_baseplate_dims(sym_layout=self.engine.sym_layout, dims=bp_dims)
             update_substrate_dims(sym_layout=self.engine.sym_layout, dims=dims)
             plot = False  # Change this flag
             if plot == True and self.count > 100:
                 fig, ax = plt.subplots()
                 plot_layout(sym_layout=self.engine.sym_layout, ax=ax)
-                plt.show
-
-            '''
-            # Evaluate performace for all all layouts
-            for p in self.perf_dict.keys():
-                perf = self.perf_dict[p]
-                measure = perf['measure']
-                if perf['type'] == 'Thermal' and measure.mdl == 1 and self.current_mode != 1:
-                    self.engine.sym_layout.thermal_characterize()
-            '''
-            ret = self.one_measure(sym_info=sym_info)
-            print ret, Patches
-            solution = [ret, Patches, cs_sym_data]
-            self.solutions.append(solution)
-            return ret
+                plt.show()
+            ret = self._sym_eval_perf()
+            #print ret, Patches
+            #solution = [ret, Patches, cs_sym_data]
+            self.solutions[item]=ret
+        return ret
 
     def gen_layouts(self):
-        self.parent.project.layout_engine = "CS"
+        try:
+            self.parent.project.layout_engine = "CS"
+        except:
+            print "debug mode"
+
         if not (self.constraint):
-            print "cant generate layouts"
+            print "can't generate layouts"
             return
         else:
             print "generate layout"
-
+            self.perf1 = {"label": None, 'data': [], 'unit': '', 'type': ''}
+            self.perf2 = {"label": None, 'data': [], 'unit': '', 'type': ''}
+            self.generated_layouts = {}
+            self.layout_data = {}
             if self.current_mode != 0:
                 # if self.opt_algo=="NG-RANDOM":
-                try:
-                    N = int(self.ui.txt_num_layouts.text())
-                    self.seed = int(self.ui.txt_seed.text())
-                except:
-                    print "Please enter Num of Layouts greater than 0"
-                    print "ERROR: Invalid Information"
-                    return
-
+                N=self.num_layouts
                 W = float(self.ui.txt_width.text()) * 1000
                 H = float(self.ui.txt_height.text()) * 1000
                 if self.opt_algo == "NSGAII" and self.current_mode == 2:
@@ -2388,121 +2379,63 @@ class New_layout_engine_dialog(QtGui.QDialog):
                     opt = NSGAII_Optimizer(design_vars=Design_Vars, eval_fn=self.cost_func_NSGAII, num_measures=2,
                                            seed=self.seed, num_gen=N)
                     opt.run()
-                    Num_sols = len(self.solutions)
-                    Patches = []
-                    cs_sym_data = []
-                    Meausrements = []
-                    for i in range(Num_sols):
-                        Patch = self.solutions[i][1]
-                        Patches.append(Patch[0])
-                        cs_sym = self.solutions[i][2]
-                        cs_sym_data.append(cs_sym[0])
-                        Meausrements.append(self.solutions[i][0])
+                    if self.pareto_plot_flag==1:
+
+                        Pareto_data = self.pareto_frontiter2D(data_in=self.solutions)
+                        self.update_pareto_solutions(pareto_data=Pareto_data)
+
+                        #print self.layout_data
+                        #self.layout_data=dict(layout_data)
+                        #self.generated_layouts=dict(generated_layout)
+
+                elif self.opt_algo=="NG-RANDOM":
+                    Patches, cs_sym_data = self.engine.generate_solutions(self.current_mode, num_layouts=N, W=W, H=H,
+                                                                          fixed_x_location=self.fixed_x_locations,
+                                                                          fixed_y_location=self.fixed_y_locations,
+                                                                          seed=self.seed)
+
+                    if Patches == None or cs_sym_data == None:
+                        print "ERROR: Invalid Information"
+                        return
                     Layouts = []
-                    for i in range(int(Num_sols)):
+                    for i in range(int(N)):
                         item = 'Layout ' + str(i)
                         Layouts.append(item)
-
                     if Patches != None:
-
                         # UPDATE layout sols for plotting
-                        for i in range(int(Num_sols)):
-
-                            '''
-                            Plot real Layout here
-                            '''
-
+                        for i in range(int(N)):
                             if self.engine.sym_layout != None:
                                 self.layout_data[Layouts[i]] = {'Rects': cs_sym_data[i]}
 
                                 self.generated_layouts[Layouts[i]] = {'Patches': Patches[i]}
                     else:
                         print"Patches not found"
-                    self.perf1 = {"label": None, 'data': [], 'unit': '', 'type': ''}
-                    self.perf2 = {"label": None, 'data': [], 'unit': '', 'type': ''}
-                    perf_plot = [self.perf1, self.perf2]
-                    for p, pdraw in zip(self.perf_dict.keys(), perf_plot):
-                        perf = self.perf_dict[p]
-                        measure = perf['measure']
-                        for i in range(Num_sols):
-                            ax = plt.subplot('111', adjustable='box', aspect=1.0)
-
-                            if perf['type'] == 'Thermal':
-                                lbl = measure.name + '(K)'
-                                pdraw["label"] = (lbl)
-                                pdraw['data'].append(Meausrements[i][0])
-                                pdraw['unit'] = 'K'
-                                pdraw['type'] = 'Temperature'
-                            elif perf['type'] == 'Electrical':
-                                type_dict = {ElectricalMeasure.MEASURE_RES: 'res',
-                                             ElectricalMeasure.MEASURE_IND: 'ind',
-                                             ElectricalMeasure.MEASURE_CAP: 'cap'}
-                                measure_type = type_dict[measure.measure]
-
-                                if measure_type == 'res':
-                                    lbl = measure.name + ' (mOhm)'
-                                    pdraw['unit'] = '(mOhm)'
-                                    pdraw['type'] = 'R'
-                                if measure_type == 'ind':
-                                    lbl = measure.name + ' (nH)'
-                                    pdraw['unit'] = '(nH)'
-                                    pdraw['type'] = 'L'
-
-                                if measure_type == 'cap':
-                                    lbl = measure.name + ' (pF)'
-                                    pdraw['unit'] = '(pF)'
-                                    pdraw['type'] = 'C'
-
-                                pdraw["label"] = (lbl)
-                                pdraw['data'].append(Meausrements[i][1])
-
-                    self.update_sol_browser()
-
-
-
-
-
-
-                else:
-
-                    Patches, cs_sym_data = self.engine.generate_solutions(self.current_mode, num_layouts=N, W=W, H=H,
-                                                                          fixed_x_location=self.fixed_x_locations,
-                                                                          fixed_y_location=self.fixed_y_locations,
-                                                                          seed=self.seed)
-
-                if Patches == None or cs_sym_data == None:
-                    print "ERROR: Invalid Information"
-                    return
             else:
                 N = 1
+                #item = 'Layout 0'
                 Patches, cs_sym_data = self.engine.generate_solutions(self.current_mode, num_layouts=N)
-
-            Layouts = []
-            for i in range(int(N)):
-                item = 'Layout ' + str(i)
-                Layouts.append(item)
-
-            if Patches != None:
-
-                # UPDATE layout sols for plotting
+                #self.layout_data[item] = {'Rects': cs_sym_data[0]}
+                #self.generated_layouts[item] = {'Patches': Patches[0]}
+                Layouts = []
                 for i in range(int(N)):
+                    item = 'Layout ' + str(i)
+                    Layouts.append(item)
+                if Patches != None:
+                    # UPDATE layout sols for plotting
+                    for i in range(int(N)):
+                        if self.engine.sym_layout != None:
+                            self.layout_data[Layouts[i]] = {'Rects': cs_sym_data[i]}
 
-                    '''
-                    Plot real Layout here
-                    '''
+                            self.generated_layouts[Layouts[i]] = {'Patches': Patches[i]}
+                else:
+                    print"Patches not found"
 
-                    if self.engine.sym_layout != None:
-                        self.layout_data[Layouts[i]] = {'Rects': cs_sym_data[i]}
-
-                        self.generated_layouts[Layouts[i]] = {'Patches': Patches[i]}
-            else:
-                print"Patches not found"
 
         # Convert Data info to Symb object for evaluation
-        if self.opt_algo == "NG-RANDOM":
+        if self.opt_algo == "NG-RANDOM" or self.opt_algo==None:
             if self.engine.sym_layout != None:
                 sym_info = self.form_sym_obj_rect_dict()
-
+                #print sym_info['dims']
                 # Evaluate performace for all all layouts
                 for p in self.perf_dict.keys():
                     perf = self.perf_dict[p]
@@ -2510,16 +2443,56 @@ class New_layout_engine_dialog(QtGui.QDialog):
                     if perf['type'] == 'Thermal' and measure.mdl == 1 and self.current_mode != 1:
                         self.engine.sym_layout.thermal_characterize()
                 self._sym_eval_perf(sym_info=sym_info)
+            if self.pareto_plot_flag == 1:
+                measurements=zip(self.perf1['data'],self.perf2['data'])
+                for i in range(len(measurements)):
+                    item='Layout ' + str(i)
+                    self.solutions[item]=[measurements[i][0],measurements[i][1]]
+                #solutions=[[i[0],i[1]] for i in measurements]
+                Pareto_data = self.pareto_frontiter2D(data_in=self.solutions)
+                self.update_pareto_solutions(pareto_data=Pareto_data)
 
-            # Update the solution browser
-            self.update_sol_browser()
 
-            if self.current_mode == 0:
-                self.layout_plot()
-        return
+        self.update_sol_browser()
+    def update_pareto_solutions(self,pareto_data=None):
+        layout_data = {}
+        generated_layout = {}
+        perf_data = []
+        self.perf1_pareto = {"label": None, 'data': [], 'unit': '', 'type': ''}
+        self.perf2_pareto = {"label": None, 'data': [], 'unit': '', 'type': ''}
+        self.perf1_pareto['label']=self.perf1['label']
+        self.perf2_pareto['label']=self.perf2['label']
+        self.perf1_pareto['unit'] = self.perf1['unit']
+        self.perf2_pareto['unit'] = self.perf2['unit']
+        self.perf1_pareto['type'] = self.perf1['type']
+        self.perf2_pareto['type'] = self.perf2['type']
+        for i in pareto_data:
+            for k, v in i.items():
+                for k1, v1 in self.layout_data.items():
+                    if k1 == k:
+                        layout_data[k] = v1
+                        perf_data.append(v)
+
+                for k1, v1 in self.generated_layouts.items():
+                    if k1 == k:
+                        generated_layout[k] = v1
+        for j in zip(self.perf1['data'], self.perf2['data']):
+            if [j[0], j[1]] not in perf_data:
+                self.perf1_pareto['data'].append(0)
+                self.perf2_pareto['data'].append(0)
+            else:
+                self.perf1_pareto['data'].append(j[0])
+                self.perf2_pareto['data'].append(j[1])
+
+
+
 
     def eval_setup(self):
         eval = ET_standalone_Dialog(self)
+        if self.num_layouts!=0:
+            eval.ui.txt_num_layouts.setText(str(self.num_layouts))
+        if self.seed!=None:
+            eval.ui.txt_seed.setText(str(self.seed))
         eval.exec_()
 
     def layout_plot(self, layout_ind=0, mode='cs'):
@@ -2768,7 +2741,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
         for layout in self.layout_data.keys():
             symb_rect_dict = {}
             p_data = self.layout_data[layout]['Rects']
-            # print "p_data",p_data
+
             W, H = p_data.keys()[0]
             W = float(W) / div
             H = float(H) / div
@@ -2795,181 +2768,124 @@ class New_layout_engine_dialog(QtGui.QDialog):
                         top = float(max_y)
                 symb_rect_dict[r_id] = Rectangle(x=left, y=bottom, width=right - left, height=top - bottom, type=type)
             layout_symb_dict[layout] = {'sym_info': symb_rect_dict, 'Dims': [W, H]}
+            #print layout_symb_dict[layout]
         return layout_symb_dict
 
-    def one_measure(self, sym_info=None):
-        ret = []
-        sym_layout = self.engine.sym_layout
-        # print"PER", self.perf_dict
-        for p in (self.perf_dict.keys()):
-            perf = self.perf_dict[p]
-            measure = perf['measure']
 
-            if perf['type'] == 'Thermal':
-                for layout in sym_info.keys():
-                    if self.current_mode == 1:
-                        mdl = 2
-                    else:
-                        mdl = measure.mdl
-                val = sym_layout._thermal_analysis(measure, mdl)
-                ret.append(val)
-            elif perf['type'] == 'Electrical':
-
-                type_dict = {ElectricalMeasure.MEASURE_RES: 'res',
-                             ElectricalMeasure.MEASURE_IND: 'ind',
-                             ElectricalMeasure.MEASURE_CAP: 'cap'}
-                measure_type = type_dict[measure.measure]
-                if measure.measure == ElectricalMeasure.MEASURE_CAP:
-                    val = sym_layout._measure_capacitance(measure)
-                else:
-
-                    # load device states table
-                    tbl_states = measure.dev_state
-                    for row in range(len(tbl_states.axes[0])):
-                        dev_name = tbl_states.loc[row, 0]
-                        for dev in sym_layout.devices:
-                            if (dev.name == dev_name) or dev.element.path_id == dev_name:
-                                if dev.is_transistor():
-                                    dev.states = [tbl_states.loc[row, 1], tbl_states.loc[row, 2],
-                                                  tbl_states.loc[row, 3]]
-                                if dev.is_diode():
-                                    dev.states = [tbl_states.loc[row, 1]]
-                    sym_layout.mdl_type['E'] = measure.mdl
-
-                    sym_layout._build_lumped_graph()  # Rebuild the lumped graph for different device state.
-
-                    # plot_lumped_graph(sym_layout)
-                    # Measure res. or ind. from src node to sink node
-                    source_terminal = measure.src_term
-                    sink_terminal = measure.sink_term
-
-                    src = measure.pt1.lumped_node
-                    sink = measure.pt2.lumped_node
-
-                    if source_terminal != None:
-                        if source_terminal == 'S' or source_terminal == 'Anode':
-                            src = src * 1000 + 1
-                        elif source_terminal == 'G':
-                            src = src * 1000 + 2
-
-                    if sink_terminal != None:
-                        if sink_terminal == 'S' or source_terminal == 'Anode':
-                            sink = sink * 1000 + 1
-                        elif sink_terminal == 'G':
-                            sink = sink * 1000 + 2
-
-                    node_dict = {}
-                    index = 0
-                    for n in sym_layout.lumped_graph.nodes():
-                        node_dict[n] = index
-                        index += 1
-
-                    val = parasitic_analysis(sym_layout.lumped_graph, src, sink, measure_type, node_dict)
-                    # print 'ind',val
-
-                ret.append(val)
-
-        return ret
 
     def _sym_eval_perf(self, sym_info=None):
-        self.perf1 = {"label": None, 'data': [], 'unit': '', 'type': ''}
-        self.perf2 = {"label": None, 'data': [], 'unit': '', 'type': ''}
         sym_layout = self.engine.sym_layout
         perf_plot = [self.perf1, self.perf2]
-        for p, pdraw in zip(self.perf_dict.keys(), perf_plot):
-            perf = self.perf_dict[p]
-            measure = perf['measure']
-            for layout in sym_info.keys():
-                ax = plt.subplot('111', adjustable='box', aspect=1.0)
-                symb_rect_dict = sym_info[layout]['sym_info']
-                dims = sym_info[layout]['Dims']
-                bp_dims = [dims[0] + 4, dims[1] + 4]
-                self._sym_update_layout(sym_info=symb_rect_dict)
-                update_sym_baseplate_dims(sym_layout=sym_layout, dims=bp_dims)
-                update_substrate_dims(sym_layout=sym_layout, dims=dims)
+        if self.opt_algo=="NG-RANDOM": # multiple evaluation
+            for p, pdraw in zip(self.perf_dict.keys(), perf_plot):
+                perf = self.perf_dict[p]
+                measure = perf['measure']
+                for layout in sym_info.keys():
+                    symb_rect_dict = sym_info[layout]['sym_info']
+                    dims = sym_info[layout]['Dims']
+                    bp_dims = [dims[0] + 4, dims[1] + 4]
 
-                if perf['type'] == 'Thermal':
-                    lbl = measure.name + '(K)'
-                    pdraw["label"] = (lbl)
-                    pdraw["unit"] = '(K)'
-                    pdraw["type"] = 'Temperature'
-                    if self.current_mode == 1:
-                        mdl = 2
-                    else:
-                        mdl = measure.mdl
+                    self._sym_update_layout(sym_info=symb_rect_dict)
+                    update_sym_baseplate_dims(sym_layout=sym_layout, dims=bp_dims)
+                    update_substrate_dims(sym_layout=sym_layout, dims=dims)
+                    self.update_perf_values(perf=perf,pdraw=pdraw,measure=measure,sym_layout=sym_layout)
 
-                    val = sym_layout._thermal_analysis(measure, mdl)
-                    pdraw['data'].append(val)
-                elif perf['type'] == 'Electrical':
-                    type_dict = {ElectricalMeasure.MEASURE_RES: 'res',
-                                 ElectricalMeasure.MEASURE_IND: 'ind',
-                                 ElectricalMeasure.MEASURE_CAP: 'cap'}
-                    measure_type = type_dict[measure.measure]
+        elif self.opt_algo=="NSGAII": # single evaluation
+            ret = []
+            for p, pdraw in zip(self.perf_dict.keys(), perf_plot):
+                perf = self.perf_dict[p]
+                measure = perf['measure']
+                val= self.update_perf_values(perf=perf, pdraw=pdraw, measure=measure, sym_layout=sym_layout)
+                ret.append(val)
+            #print "result",ret
+            return ret
+    def update_perf_values(self,perf={},pdraw={},measure=None,sym_layout=None):
+        if perf['type'] == 'Thermal':
+            lbl = measure.name + '(K)'
+            pdraw["label"] = (lbl)
+            pdraw["unit"] = '(K)'
+            pdraw["type"] = 'Temperature'
+            if self.current_mode == 1:
+                mdl = 2
+            else:
+                mdl = measure.mdl
 
-                    if measure_type == 'res':
-                        lbl = measure.name + ' (mOhm)'
-                        pdraw["unit"] = '(mOhm)'
-                        pdraw["type"] = 'R'
+            val = sym_layout._thermal_analysis(measure, mdl)
+            pdraw['data'].append(val)
+        elif perf['type'] == 'Electrical':
+            type_dict = {ElectricalMeasure.MEASURE_RES: 'res',
+                         ElectricalMeasure.MEASURE_IND: 'ind',
+                         ElectricalMeasure.MEASURE_CAP: 'cap'}
+            measure_type = type_dict[measure.measure]
 
-                    if measure_type == 'ind':
-                        lbl = measure.name + ' (nH)'
-                        pdraw["unit"] = '(nH)'
-                        pdraw["type"] = 'L'
+            if measure_type == 'res':
+                lbl = measure.name + ' (mOhm)'
+                pdraw["unit"] = '(mOhm)'
+                pdraw["type"] = 'R'
 
-                    if measure_type == 'cap':
-                        lbl = measure.name + ' (pF)'
-                        pdraw["unit"] = '(pF)'
-                        pdraw["type"] = 'C'
+            if measure_type == 'ind':
+                lbl = measure.name + ' (nH)'
+                pdraw["unit"] = '(nH)'
+                pdraw["type"] = 'L'
 
-                    pdraw["label"] = (lbl)
-                    if measure.measure == ElectricalMeasure.MEASURE_CAP:
-                        val = sym_layout._measure_capacitance(measure)
-                    else:
+            if measure_type == 'cap':
+                lbl = measure.name + ' (pF)'
+                pdraw["unit"] = '(pF)'
+                pdraw["type"] = 'C'
 
-                        # load device states table
-                        tbl_states = measure.dev_state
-                        for row in range(len(tbl_states.axes[0])):
-                            dev_name = tbl_states.loc[row, 0]
-                            for dev in sym_layout.devices:
-                                if (dev.name == dev_name) or dev.element.path_id == dev_name:
-                                    if dev.is_transistor():
-                                        dev.states = [tbl_states.loc[row, 1], tbl_states.loc[row, 2],
-                                                      tbl_states.loc[row, 3]]
-                                    if dev.is_diode():
-                                        dev.states = [tbl_states.loc[row, 1]]
-                        sym_layout.mdl_type['E'] = measure.mdl
+            pdraw["label"] = (lbl)
+            if measure.measure == ElectricalMeasure.MEASURE_CAP:
+                val = sym_layout._measure_capacitance(measure)
+            else:
 
-                        sym_layout._build_lumped_graph()  # Rebuild the lumped graph for different device state.
+                # load device states table
+                tbl_states = measure.dev_state
+                for row in range(len(tbl_states.axes[0])):
+                    dev_name = tbl_states.loc[row, 0]
+                    for dev in sym_layout.devices:
+                        if (dev.name == dev_name) or dev.element.path_id == dev_name:
+                            if dev.is_transistor():
+                                dev.states = [tbl_states.loc[row, 1], tbl_states.loc[row, 2],
+                                              tbl_states.loc[row, 3]]
+                            if dev.is_diode():
+                                dev.states = [tbl_states.loc[row, 1]]
+                sym_layout.mdl_type['E'] = measure.mdl
 
-                        # Measure res. or ind. from src node to sink node
-                        source_terminal = measure.src_term
-                        sink_terminal = measure.sink_term
+                sym_layout._build_lumped_graph()  # Rebuild the lumped graph for different device state.
 
-                        src = measure.pt1.lumped_node
-                        sink = measure.pt2.lumped_node
+                # Measure res. or ind. from src node to sink node
+                source_terminal = measure.src_term
+                sink_terminal = measure.sink_term
 
-                        if source_terminal != None:
-                            if source_terminal == 'S' or source_terminal == 'Anode':
-                                src = src * 1000 + 1
-                            elif source_terminal == 'G':
-                                src = src * 1000 + 2
+                src = measure.pt1.lumped_node
+                sink = measure.pt2.lumped_node
+                #print "evaluation"
+                #print src,sink
+                #print id(measure.pt1),id(measure.pt2)
+                if source_terminal != None:
+                    if source_terminal == 'S' or source_terminal == 'Anode':
+                        src = src * 1000 + 1
+                    elif source_terminal == 'G':
+                        src = src * 1000 + 2
 
-                        if sink_terminal != None:
-                            if sink_terminal == 'S' or source_terminal == 'Anode':
-                                sink = sink * 1000 + 1
-                            elif sink_terminal == 'G':
-                                sink = sink * 1000 + 2
+                if sink_terminal != None:
+                    if sink_terminal == 'S' or source_terminal == 'Anode':
+                        sink = sink * 1000 + 1
+                    elif sink_terminal == 'G':
+                        sink = sink * 1000 + 2
+                #print src,sink
+                node_dict = {}
+                index = 0
+                for n in sym_layout.lumped_graph.nodes():
+                    node_dict[n] = index
+                    index += 1
 
-                        node_dict = {}
-                        index = 0
-                        for n in sym_layout.lumped_graph.nodes():
-                            node_dict[n] = index
-                            index += 1
-                        try:
-                            val = parasitic_analysis(sym_layout.lumped_graph, src, sink, measure_type, node_dict)
-                        except LinAlgError:
-                            val = 1e6
-                    pdraw['data'].append(val)
+                val = parasitic_analysis(sym_layout.lumped_graph, src, sink, measure_type, node_dict)
+
+            pdraw['data'].append(val)
+
+        return val
+
 
     def _sym_update_layout(self, sym_info=None):
         # ToDo:Here we can add the automate symbolic layout - Corner Stitch interface to update thermal
@@ -3115,14 +3031,43 @@ class ET_standalone_Dialog(QtGui.QDialog):
         self.tbl_thermal = None
         self.tbl_elec = None
         self.dev_df = None
-        self.method = "NSGAII"
-        self.parent.opt_algo = "NSGAII"
+        self.num_of_layouts=0
+        self.seed=None
+        if self.parent.opt_algo==None:
+            self.parent.opt_algo = "NG-RANDOM"
+        else:
+            if self.parent.opt_algo=="NSGAII":
+                self.ui.cmb_opt_algo.setCurrentIndex(1)
+            if self.parent.opt_algo=="NG-RANDOM":
+                self.ui.cmb_opt_algo.setCurrentIndex(0)
+        if self.parent.pareto_plot_flag==1:
+            self.ui.rb_plot_pareto.setChecked(True)
+
         self.ui.cmb_opt_algo.currentIndexChanged.connect(self.opt_algo_handler)
         self.perf_dict = self.parent.perf_dict
         self.ui.Tab_model_select.setEnabled(False)
+        if self.parent.current_mode==0:
+            self.ui.txt_num_layouts.setEnabled(False)
+            self.ui.txt_seed.setEnabled(False)
+            self.ui.cmb_opt_algo.setEnabled(False)
+            self.ui.rb_plot_pareto.setEnabled(False)
+        elif self.parent.current_mode==2:
+            self.ui.cmb_opt_algo.setEnabled(True)
+            self.ui.txt_num_layouts.setEnabled(True)
+            self.ui.txt_seed.setEnabled(True)
+            self.ui.rb_plot_pareto.setEnabled(True)
+        else:
+            self.ui.cmb_opt_algo.setEnabled(False)
+            self.ui.txt_num_layouts.setEnabled(True)
+            self.ui.txt_seed.setEnabled(True)
+            self.ui.rb_plot_pareto.setEnabled(True)
+        self.ui.txt_num_layouts.textChanged.connect(self.layout_gen_param_setup)
+        self.ui.txt_seed.textChanged.connect(self.seed_setup)
         self.ui.txt_perfname.textChanged.connect(self.perf_name)
         self.ui.btn_thermal_perf.pressed.connect(self.add_perf)
         self.ui.btn_add_elec_perf.pressed.connect(self.add_perf)
+        self.ui.rb_plot_pareto.clicked.connect(self.pareto_plt_set)
+        #self.ui.rb_plot_pareto.isChecked(self.pareto_plt_set)
         # buttons
         self.ui.btn_done.pressed.connect(self.finished)
         self.ui.btn_remove.pressed.connect(self.remove_row)
@@ -3137,15 +3082,46 @@ class ET_standalone_Dialog(QtGui.QDialog):
         self.reload_table()
         self.load_src_sink()
 
+
+
+
+    def seed_setup(self):
+        try:
+            self.seed = int(self.ui.txt_seed.text())
+            self.parent.seed=self.seed
+
+        except:
+            print "Please enter an integer seed"
+            print "ERROR: Invalid Information"
+            return
+    def layout_gen_param_setup(self):
+        #if self.parent.num_layouts==0:
+        try:
+            self.num_of_layouts = int(self.ui.txt_num_layouts.text())
+            self.parent.num_layouts=self.num_of_layouts
+
+        except:
+            print "Please enter Num of Layouts greater than 0"
+            print "ERROR: Invalid Information"
+            return
+
     def opt_algo_handler(self):
         choice = str(self.ui.cmb_opt_algo.currentText())
-        print "A", choice
+        #print "A", choice
         if choice == "NSGAII":
             self.method = "NSGAII"
             self.parent.opt_algo = "NSGAII"
+
         else:
             self.method = "NG-RANDOM"
             self.parent.opt_algo = "NG-RANDOM"
+
+    def pareto_plt_set(self):
+        if self.ui.rb_plot_pareto.isChecked()==True:
+            self.parent.pareto_plot_flag = 1
+        else:
+            self.parent.pareto_plot_flag = 0
+        #print "FLAG",self.parent.pareto_plot_flag
 
     def current_model(self):
         if str(self.ui.cmb_electrical_mdl.currentText()) == "Response Surface Model":
@@ -3270,6 +3246,7 @@ class ET_standalone_Dialog(QtGui.QDialog):
                     measure = ElectricalMeasure(pt1=pt1, pt2=pt2, name=perf_name, mdl=mdl,
                                                 src_sink_type=[src_type, sink_type],
                                                 device_state=self.dev_df, measure=measure_type)
+                print "add to perf", measure.pt1,measure.pt2
                 self.perf_dict[perf_name] = {'type': type, 'measure': measure, 'Eval': eval_type}
                 row_id = self.ui.tbl_perf_list.rowCount()
 
@@ -3289,6 +3266,8 @@ class ET_standalone_Dialog(QtGui.QDialog):
         dv_state.exec_()
 
     def finished(self):
+
+        #print self.parent.pareto_plot_flag
         self.parent.perf_dict = self.perf_dict
         self.close()
 
@@ -3317,9 +3296,12 @@ class ET_standalone_Dialog(QtGui.QDialog):
 
 
     def load_opt_setup(self):
-        filename = QFileDialog.getOpenFileName(caption=r"Optimization log file", filter="log file (*.log)")
+        try:
+            filename = QFileDialog.getOpenFileName(caption=r"Optimization log file", filter="log file (*.log)")
 
-        opt_setup = load_file(filename[0])
+            opt_setup = load_file(filename[0])
+        except:
+            print "upload a valid optimization setup file"
         # thermal
         self.ui.cmb_thermal_mdl.setCurrentIndex(opt_setup.thermal_mode)
         self.ui.cmb_thermal_type.setCurrentIndex(opt_setup.thermal_func)
@@ -3336,29 +3318,24 @@ class ET_standalone_Dialog(QtGui.QDialog):
 
         self.ui.cmb_electrical_mdl.setCurrentIndex(opt_setup.electrical_mode)
         self.ui.cmb_electrical_type.setCurrentIndex(opt_setup.electrical_func)
-        try:
-            index1 = self.ui.cmb_src_select.findText(opt_setup.e_src, QtCore.Qt.MatchFixedString)
-            self.ui.cmb_src_select.setCurrentIndex(index1)
-            index2=self.ui.cmb_src_select.findText(opt_setup.e_sink, QtCore.Qt.MatchFixedString)
-            self.ui.cmb_sink_select.setCurrentIndex(index2)
-        except:
-            print "WRONG SETUP"
 
         #print type(opt_setup.electrical_dev_state)
         self.dev_df=opt_setup.electrical_dev_state
-        dv_state = Device_states_dialog(parent=self, mode=2)
-        for row in range(dv_state.ui.tbl_states.rowCount()):
-            for col in range(dv_state.ui.tbl_states.columnCount()):
-                if self.dev_df.iat[row,col]==1:
-                    print "Here"
-                    dv_state.ui.tbl_states.cellWidget(row, col).setChecked(1)
+        #print"in load \n", self.dev_df
+
         # Performances
         self.perf_dict= opt_setup.perf_table
+        for p in self.perf_dict:
 
-        # Optimization Options
-        if opt_setup.plot_pareto ==1:
-            self.ui.rb_plot_pareto.setChecked(1)
-        self.ui.cmb_opt_algo.setCurrentIndex(opt_setup.algorithm)
+            m = self.perf_dict[p]['measure']
+            if isinstance(m,ElectricalMeasure):
+                #print m.pt1.name,m.pt2.name
+                # update to new sym
+                pt1 = self._sym_find_pt_obj(self.parent.engine.sym_layout, m.pt1.name)
+                m.pt1 = pt1
+                pt2 = self._sym_find_pt_obj(self.parent.engine.sym_layout, m.pt2.name)
+                m.pt2=pt2
+        self.reload_table()
 
 
 
@@ -3366,11 +3343,14 @@ class ET_standalone_Dialog(QtGui.QDialog):
     def save_opt_setup(self):
         print "save setup"
 
-        filename = QFileDialog.getSaveFileName(self,"Select Image to Save", "C://", "Opt Setup (*.log)")
+
 
         opt_setup = OptSetup()
         # Thermal
-        opt_setup.thermal_dev_tbl = self.thermal_dev_sel
+        try:
+            opt_setup.thermal_dev_tbl = self.thermal_dev_sel
+        except:
+            print "ERROR in optimization setup"
         mdl_str = str(self.ui.cmb_thermal_mdl.currentText())
         eval_type = str(self.ui.cmb_thermal_type.currentText())
 
@@ -3406,19 +3386,34 @@ class ET_standalone_Dialog(QtGui.QDialog):
         elif eval_type == "Resistance":
             opt_setup.electrical_func = 1  # 1 R, 0 L, 2 C
 
-        opt_setup.e_src = str(self.ui.cmb_src_select.currentText())
-        opt_setup.e_sink = str(self.ui.cmb_sink_select.currentText())
-        # Performances
-        opt_setup.perf_table = self.perf_dict
 
+        # Performances
+        for p in self.perf_dict:
+            m = self.perf_dict[p]['measure']
+            #if isinstance(m,ElectricalMeasure):
+                #print"in save", m.pt1.name,m.pt2.name
+        opt_setup.perf_table = self.perf_dict
+        '''
         # Optimization Options
-        opt_setup.plot_pareto = self.ui.rb_plot_pareto.isChecked()
+        if self.ui.rb_plot_pareto.isChecked():
+            opt_setup.plot_pareto = 1
+        else:
+            opt_setup.plot_pareto=0
         algorithm = str(self.ui.cmb_opt_algo.currentText())
         if algorithm=="NSGAII":
-            opt_setup.algorithm = 0  # 0: NSGAII , 1: NG-RANDOM
+            opt_setup.algorithm = 1  # 1: NSGAII , 0: NG-RANDOM
         elif algorithm=="Non-Guided Randomization":
-            opt_setup.algorithm = 1  # 0: NSGAII , 1: NG-RANDOM
-        save_file(opt_setup,filename[0])
+            opt_setup.algorithm = 0  # 1: NSGAII , 0: NG-RANDOM
+        '''
+        try:
+            filename = QFileDialog.getSaveFileName(self, "Save optimziation options", "C://", "Opt Setup (*.log)")
+            save_file(opt_setup,filename[0])
+        except:
+            print"Try to save optimization setup file in a valid format"
+
+        #filename = QFileDialog.getSaveFileName(self,"Save symlayout", "C://", "Opt Setup (*.sol)")
+        #save_file(self.parent.engine.sym_layout,filename[0])
+
 class Waiting_dialog(QtGui.QDialog):
     def __init__(self, parent, txt_msg="none"):
         QtGui.QDialog.__init__(self, parent)
