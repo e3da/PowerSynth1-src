@@ -2562,6 +2562,8 @@ class CS_to_CG():
                '''
         MIN_X=MINX.values()[0]
         MIN_Y=MINY.values()[0]
+        #print "L",len(MIN_X)
+        #print MIN_Y
         DIM = []
         Recatngles_H={}
         key=MINX.keys()[0]
@@ -2580,22 +2582,22 @@ class CS_to_CG():
             Dimensions = []
             UP_Dim={}
             for j in range(len(DIM)):
-
                 k=DIM[j]
-                if k[0] in MIN_X[i].keys() and k[1] in MIN_Y[i].keys() and k[2] in MIN_X[i].keys() and k[3] in MIN_Y[i].keys():
-                    rect = [MIN_X[i][k[0]], MIN_Y[i][k[1]], MIN_X[i][k[2]] - MIN_X[i][k[0]],MIN_Y[i][k[3]] - MIN_Y[i][k[1]],k[4]]
-                    r1 = Rectangle(x=rect[0], y=rect[1], width=rect[2], height=rect[3], type=rect[4])
-                    r2 = [float(MIN_X[i][k[0]]) / s, float(MIN_Y[i][k[1]]) / s, float(MIN_X[i][k[2]]) / s - float(MIN_X[i][k[0]]) / s,
-                          float(MIN_Y[i][k[3]]) / s - float(MIN_Y[i][k[1]]) / s, k[4]]
-                    for k1,v in sym_to_cs.items():
+                #if k[0] in MIN_X[i].keys() and k[1] in MIN_Y[i].keys() and k[2] in MIN_X[i].keys() and k[3] in MIN_Y[i].keys():
+                rect = [MIN_X[i][k[0]], MIN_Y[i][k[1]], MIN_X[i][k[2]] - MIN_X[i][k[0]],MIN_Y[i][k[3]] - MIN_Y[i][k[1]]]
+                r1 = Rectangle(type=k[4],x=rect[0], y=rect[1], width=rect[2], height=rect[3])
+                #r2 = [float(MIN_X[i][k[0]]) / s, float(MIN_Y[i][k[1]]) / s, float(MIN_X[i][k[2]]) / s - float(MIN_X[i][k[0]]) / s,float(MIN_Y[i][k[3]]) / s - float(MIN_Y[i][k[1]]) / s, k[4]]
+                r2=[d/float(s) for d in rect]
+                r2.append(k[4])
+                for k1,v in sym_to_cs.items():
 
-                        key1=k1
-                        UP_Dim.setdefault(key1,[])
-                        for r in v:
+                    key1=k1
+                    UP_Dim.setdefault(key1,[])
+                    for r in v:
 
-                            if r[0]==k[0] and r[1]==k[1]:
-                                UP_Dim[key1].append(r1)
-                    Dimensions.append(r2)
+                        if r[0]==k[0] and r[1]==k[1]:
+                            UP_Dim[key1].append(r1)
+                Dimensions.append(r2)
                 W = max(MIN_X[i].values())
                 H = max(MIN_Y[i].values())
                 KEY = (W, H)
@@ -2606,6 +2608,7 @@ class CS_to_CG():
             ALL_HRECTS[key2].append(Size)
 
 
+        '''
         DIM = []
         Recatngles_V = {}
         key = MINX.keys()[0]
@@ -2614,22 +2617,34 @@ class CS_to_CG():
             k = [j.cell.x, j.cell.y, j.EAST.cell.x, j.NORTH.cell.y,j.cell.type]
             DIM.append(k)
         for i in range(len(MIN_X)):
+            print "i",i
             Dimensions = []
             for j in range(len(DIM)):
 
                 k=DIM[j]
+
+
                 if k[0] in MIN_X[i].keys() and k[1] in MIN_Y[i].keys() and k[2] in MIN_X[i].keys() and k[3] in MIN_Y[i].keys():
-                    rect = [float(MIN_X[i][k[0]])/s, float(MIN_Y[i][k[1]])/s, float(MIN_X[i][k[2]])/s - float(MIN_X[i][k[0]])/s,float(MIN_Y[i][k[3]])/s - float(MIN_Y[i][k[1]])/s,k[4]]
-                    Dimensions.append(rect)
+                    #rect3 = [float(MIN_X[i][k[0]])/s, float(MIN_Y[i][k[1]])/s, float(MIN_X[i][k[2]])/s - float(MIN_X[i][k[0]])/s,float(MIN_Y[i][k[3]])/s - float(MIN_Y[i][k[1]])/s,k[4]]
+                    rect3 = [float(MIN_X[i][k[0]]) / s, float(MIN_Y[i][k[1]]) / s,
+                          float(MIN_X[i][k[2]]) / s - float(MIN_X[i][k[0]]) / s,
+                          float(MIN_Y[i][k[3]]) / s - float(MIN_Y[i][k[1]]) / s, k[4]]
+                    #print rect
+                    Dimensions.append(rect3)
+            #print "Dim",len(Dimensions),Dimensions
             Recatngles_V[key].append(Dimensions)
+        '''
+        #print Recatngles_V
 
         ALL_RECTS = {} # to plot resultatnt layouts
         for k, v in Recatngles_H.items():
             ALL_RECTS['H']=v
-
+        '''
         Recatngles_V = collections.OrderedDict(sorted(Recatngles_V.items()))
         for k, v in Recatngles_V.items():
             ALL_RECTS['V']=v
+        #print"Key", len(ALL_RECTS.values())
+        '''
 
         return ALL_HRECTS,ALL_RECTS
 

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>874</width>
-    <height>571</height>
+    <width>885</width>
+    <height>523</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -31,9 +31,21 @@
      <property name="title">
       <string>Design Performance List</string>
      </property>
-     <layout class="QGridLayout" name="gridLayout_4">
-      <item row="0" column="0" colspan="3">
+     <layout class="QGridLayout" name="gridLayout_6">
+      <item row="0" column="0" colspan="2">
        <widget class="QTableWidget" name="tbl_perf_list">
+        <property name="minimumSize">
+         <size>
+          <width>320</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>300</width>
+          <height>500</height>
+         </size>
+        </property>
         <column>
          <property name="text">
           <string>Name</string>
@@ -51,20 +63,7 @@
         </column>
        </widget>
       </item>
-      <item row="1" column="2">
-       <widget class="QPushButton" name="btn_done">
-        <property name="maximumSize">
-         <size>
-          <width>100</width>
-          <height>16777215</height>
-         </size>
-        </property>
-        <property name="text">
-         <string>Done</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
+      <item row="1" column="0">
        <widget class="QPushButton" name="btn_remove">
         <property name="maximumSize">
          <size>
@@ -74,6 +73,19 @@
         </property>
         <property name="text">
          <string>Remove</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QPushButton" name="btn_done">
+        <property name="maximumSize">
+         <size>
+          <width>100</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>Done</string>
         </property>
        </widget>
       </item>
@@ -103,22 +115,100 @@
      <property name="title">
       <string>Optimization Setup</string>
      </property>
-     <layout class="QGridLayout" name="gridLayout">
-      <item row="2" column="2">
+     <layout class="QGridLayout" name="gridLayout_4">
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_opt_algo">
+        <property name="text">
+         <string>Optimization Algorithm</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QComboBox" name="cmb_opt_algo">
+        <item>
+         <property name="text">
+          <string>Non-Guided Randomization</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>NSGAII</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="0" column="2">
        <widget class="QRadioButton" name="rb_plot_pareto">
         <property name="text">
          <string>Plot Pareto Set</string>
         </property>
        </widget>
       </item>
-      <item row="0" column="2">
-       <widget class="QLabel" name="label_2">
-        <property name="text">
-         <string>Performance Name:</string>
+      <item row="1" column="0" colspan="3">
+       <widget class="QGroupBox" name="groupBox_3">
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>150</height>
+         </size>
         </property>
+        <property name="title">
+         <string>Layouts Solutions</string>
+        </property>
+        <layout class="QGridLayout" name="gridLayout">
+         <item row="0" column="0">
+          <widget class="QLabel" name="lbl_num_layouts">
+           <property name="maximumSize">
+            <size>
+             <width>250</width>
+             <height>100</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Num of layouts/ Num of generations</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QLineEdit" name="txt_num_layouts"/>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label">
+           <property name="text">
+            <string>Seed</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QLineEdit" name="txt_seed"/>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="label_2">
+           <property name="text">
+            <string>Performance Name:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QLineEdit" name="txt_perfname">
+           <property name="maximumSize">
+            <size>
+             <width>300</width>
+             <height>16777215</height>
+            </size>
+           </property>
+          </widget>
+         </item>
+        </layout>
+        <zorder>txt_num_layouts</zorder>
+        <zorder>lbl_num_layouts</zorder>
+        <zorder>label</zorder>
+        <zorder>txt_seed</zorder>
+        <zorder>label_2</zorder>
+        <zorder>txt_perfname</zorder>
        </widget>
       </item>
-      <item row="3" column="0" colspan="4">
+      <item row="2" column="0" colspan="3">
        <widget class="QTabWidget" name="Tab_model_select">
         <property name="enabled">
          <bool>true</bool>
@@ -126,13 +216,13 @@
         <property name="minimumSize">
          <size>
           <width>450</width>
-          <height>0</height>
+          <height>300</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
           <width>450</width>
-          <height>16777215</height>
+          <height>300</height>
          </size>
         </property>
         <property name="font">
@@ -142,7 +232,7 @@
          </font>
         </property>
         <property name="currentIndex">
-         <number>0</number>
+         <number>1</number>
         </property>
         <widget class="QWidget" name="Thermal">
          <attribute name="title">
@@ -255,11 +345,6 @@
             </item>
             <item>
              <property name="text">
-              <string>3D Hierarchical PEEC</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
               <string>Microstrip Equations</string>
              </property>
             </item>
@@ -362,45 +447,14 @@
         </widget>
        </widget>
       </item>
-      <item row="0" column="3">
-       <widget class="QLineEdit" name="txt_perfname">
-        <property name="maximumSize">
-         <size>
-          <width>100</width>
-          <height>16777215</height>
-         </size>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="0">
-       <widget class="QLabel" name="label_opt_algo">
-        <property name="text">
-         <string>Optimization Algorithm</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="QComboBox" name="cmb_opt_algo">
-        <item>
-         <property name="text">
-          <string>NSGAII</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>Non-Guided Randomization</string>
-         </property>
-        </item>
-       </widget>
-      </item>
-      <item row="4" column="0">
+      <item row="3" column="0">
        <widget class="QPushButton" name="btn_save_setup">
         <property name="text">
          <string>Save Optimization Setup</string>
         </property>
        </widget>
       </item>
-      <item row="4" column="1">
+      <item row="3" column="1">
        <widget class="QPushButton" name="btn_load_setup">
         <property name="text">
          <string>Load Optimization Setup</string>

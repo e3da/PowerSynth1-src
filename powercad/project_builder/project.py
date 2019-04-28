@@ -26,7 +26,7 @@ class Project:
         self.directory = directory
         self.tech_lib_dir = tech_lib_dir
         self.tbl_bondwire_connect=None
-
+        self.layer_stack_file =None
         self.symb_layout = symb_layout # this is for old layout engine
         self.module_data = ModuleData()
         self.sym_info={} # This is for new layout engine

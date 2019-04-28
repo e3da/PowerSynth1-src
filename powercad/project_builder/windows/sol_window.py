@@ -32,7 +32,7 @@ from powercad.Spice_handler.spice_export.circuit import Circuit
 
 class SolutionWindow(QtGui.QWidget):
     """Solution windows that show up in MDI area"""
-    def __init__(self, solution=None, sym_layout=None, filletFlag=None,dir=None,parent=None):
+    def __init__(self, solution=None, sym_layout=None, flag=0,filletFlag=None,dir=None,parent=None):
         """Set up the solution window"""
         QtGui.QWidget.__init__(self)
         self.ui = Ui_layout_form()
@@ -41,6 +41,7 @@ class SolutionWindow(QtGui.QWidget):
         self.ui.btn_run_drc.pressed.connect(self.run_drc)
         self.ui.btn_export_selected.pressed.connect(self.export_script)
         self.parent=parent
+        self.flag=flag # plotting new layout engine layout 0:old engine, 1:new engine
         #self.ui.btn_run_succesive_approxomation.pressed.connect(self.Run_Sucessive_approximation)#sxm; new button function added based on self.export_spice_parasitics
 
         self.solution = solution
@@ -69,7 +70,7 @@ class SolutionWindow(QtGui.QWidget):
         self.ui.preview_layout.addWidget(canvas,0,0,1,1)
 
         ax = fig.add_subplot(111, aspect=1.0)
-        plot_layout(sym_layout, filletFlag, ax, new_window=False)
+        plot_layout(sym_layout,flag, filletFlag, ax, new_window=False)
         canvas.draw()
 
     def run_drc(self):

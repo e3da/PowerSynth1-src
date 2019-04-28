@@ -10,7 +10,7 @@ import shutil
 import sys
 import time
 import traceback
-
+import csv
 import psidialogs
 from PySide import QtCore, QtGui
 import webbrowser
@@ -37,7 +37,7 @@ from powercad.project_builder.proj_dialogs import NewProjectDialog, OpenProjectD
 from powercad.drc.process_design_rules_editor import ProcessDesignRulesEditor
 from powercad.tech_lib.tech_lib_wiz import TechLibWizDialog
 
-from powercad.layer_stack.layer_stack_import import LayerStackImport
+from powercad.layer_stack.layer_stack_import import LayerStackHandler
 from powercad.sym_layout.symbolic_layout import SymLine,SymPoint
 from powercad.design.library_structures import BondWire, Lead
 from powercad.sol_browser.graph_app import GrapheneWindow
@@ -51,6 +51,8 @@ import copy
 from powercad.sym_layout.symbolic_layout import LayoutError
 from powercad.general.data_struct.util import Rect
 from powercad.design.module_data import *
+from shutil import copyfile
+import filecmp
 class ProjectBuilder(QtGui.QMainWindow):
     
     # Relative paths -> use forward slashes for platform independence
@@ -73,6 +75,7 @@ class ProjectBuilder(QtGui.QMainWindow):
         QtGui.QMainWindow.__init__(self, None)
         # current project
         self.project = None
+
         self.init()
         
     def init(self):
@@ -84,7 +87,10 @@ class ProjectBuilder(QtGui.QMainWindow):
 #        self.ui.label_4.setPixmap(self.LOGO_PATH)
 
         # display module stack image
-#        self.ui.lbl_modStackImg.setPixmap(self.STACK_IMG_PATH) 
+#        self.ui.lbl_modStackImg.setPixmap(self.STACK_IMG_PATH)
+        # Disable project interfaces until a project is loaded or created
+        self.enable_project_interfaces(False)
+        self.ui.btn_new_layout_engine.setEnabled(False)  # turn on until bondwires are defined
         # connect actions
         self.ui.navigation.currentChanged.connect(self.change_stacked)
         self.ui.btn_newProject.pressed.connect(self.new_project)
@@ -126,8 +132,7 @@ class ProjectBuilder(QtGui.QMainWindow):
         self.ui.actionResponse_Surface_Setup.triggered.connect(self.open_response_surface_dialog)
         self.ui.actionInterface_Setup.triggered.connect(self.setup_env)
         self.ui.actionOpen_User_Manual.triggered.connect(self.open_user_manual)
-        # Disable project interfaces until a project is loaded or created
-        self.enable_project_interfaces(False)
+
 
         # This is the current color wheel.
         # This is a temporary fix for something that should probably be more dynamic later. 
@@ -170,7 +175,7 @@ class ProjectBuilder(QtGui.QMainWindow):
         self.ui.action_open_tech_lib_editor.setEnabled(enable)
         self.ui.action_edit_tech_path.setEnabled(enable)
         self.ui.action_load_symbolic_layout.setEnabled(enable)
-        self.ui.btn_new_layout_engine.setEnabled(enable)
+        #self.ui.btn_new_layout_engine.setEnabled(enable)
 
 
     def refresh_ui(self): #Quang: clear all the old project  data when new project is loaded
@@ -274,29 +279,45 @@ class ProjectBuilder(QtGui.QMainWindow):
         open_dialog = OpenProjectDialog(self)
         if(open_dialog.exec_()):
             self.project.tech_lib_dir=DEFAULT_TECH_LIB_DIR#Quang
+            #self.project.layer_stack_file = None
+
             self.export_layout_script()           # Export layout script to project directory
             self.reload_ui()
             # set navigation to first step
             self.ui.navigation.setCurrentIndex(0)
             self.ui.stackedWidget.setCurrentIndex(0)
             self.enable_project_interfaces(True)
+
             self.load_layout_plots(mode=0)
             self.load_moduleStack()
             self.load_deviceTable()
             self.symmetry_ui.load_symmetries()
             self.perf_list.load_measures()
+            #if self.project.layout_engine!='CS':
             self.load_saved_solutions_list()
             self.fill_material_cmbBoxes() #Quang
+            self.load_project_layer_stack()
             #self.project.sym_info={}
             if self.project.module_data.design_rules is None:
                 QtGui.QMessageBox.warning(self, "Defualt Setup", "Process design rules is set to defaults got to Projects-> Design Rule to edit.")
                 self.project.module_data.design_rules = ProcessDesignRules(1.2, 1.2, 0.2, 0.1, 1.0, 0.2, 0.2, 0.2)
+
+
+    def load_project_layer_stack(self):
+        try:
+            if self.project.layer_stack_file==None:
+                return
+            else:
+                self.import_layer_stack(self.project.layer_stack_file)
+        except:
+            self.project.layer_stack_file = None
 
     def open_new_layout_engine(self):
         if self.layer_stack_import!=None:
             flag=False
         else:
             flag=True
+        print "FLAG",flag
         if not self.build_module_stack(flag=flag):
             QtGui.QMessageBox.warning(self, "Module Stack Error",
                                       "One or more settings on the module stack page have an error.")
@@ -404,7 +425,10 @@ class ProjectBuilder(QtGui.QMainWindow):
         """Selects next navigation section"""
         if self.ui.navigation.isEnabled():
             index = self.ui.navigation.currentIndex()
+            if index==1:
+                self.ui.btn_new_layout_engine.setEnabled(True)
             if index < (self.ui.navigation.count()-1):
+
                 self.ui.navigation.setCurrentIndex(index+1)
         
     def setup_layout_plots(self):
@@ -531,17 +555,23 @@ class ProjectBuilder(QtGui.QMainWindow):
         # ------------------------------------------------------------------------------------------
 # ------ Module Stack ----------------------------------------------------------------------
 
-    def import_layer_stack(self):   # Import layer stack from CSV file
+    def import_layer_stack(self,filename=None):   # Import layer stack from CSV file
         prev_folder = 'C://'
+        #print filename
         # Open a layer stack CSV file and extract the layer stack data from it
         try:
-            layer_stack_csv_file = QFileDialog.getOpenFileName(self, "Select Layer Stack File", prev_folder, "CSV Files (*.csv)")
-            layer_stack_csv_file=layer_stack_csv_file[0]
-            self.layer_stack_import = LayerStackImport(layer_stack_csv_file)
+            if filename==None:
+                layer_stack_csv_file = QFileDialog.getOpenFileName(self, "Select Layer Stack File", prev_folder, "CSV Files (*.csv)")
+                layer_stack_csv_file=layer_stack_csv_file[0]
+                new_flag = True
+            else:
+                new_flag=False
+                layer_stack_csv_file = filename
+            self.layer_stack_import = LayerStackHandler(layer_stack_csv_file)
             self.layer_stack_import.import_csv()
         except:
             QtGui.QMessageBox.warning(self, "Layer Stack Import Failed", "ERROR: Could not import layer stack from CSV.")
-
+            return
         if self.layer_stack_import.compatible:
             # Layer stack compatible - fill module stack UI fields with imported values
             self.ui.txt_baseWidth.setText(str(self.layer_stack_import.baseplate.dimensions[0]))
@@ -582,7 +612,20 @@ class ProjectBuilder(QtGui.QMainWindow):
                     for warning in self.layer_stack_import.warnings:
                         warnings_msg += ("WARNING: " + warning + "\n")
                     QtGui.QMessageBox.warning(self, "Layer Stack Import Warnings", warnings_msg)
+            self.project.layer_stack_file = os.path.join(self.project.directory, "layer_stack.csv")
+            if not os.path.exists(os.path.dirname(self.project.layer_stack_file)):
+                try:
+                    os.makedirs(os.path.dirname(self.project.layer_stack_file))
+                except :
+                    print "No File exist"
 
+            if new_flag:
+
+                try:
+                    copyfile(layer_stack_csv_file, self.project.layer_stack_file)
+                except:
+                    print "No file exists. First save the project."
+                #copyfile(layer_stack_csv_file, self.project.layer_stack_file)
         else:
             # Layer stack not compatible - notify the user of import failure
             QtGui.QMessageBox.warning(self, "Layer Stack Import Failed", "ERROR: " + layer_stack_import.error_msg)
@@ -619,7 +662,7 @@ class ProjectBuilder(QtGui.QMainWindow):
         # Add materials to substrate combobox
         substrate_dir = os.path.join(self.project.tech_lib_dir, "Substrates")
         self.substrate_model = QtGui.QFileSystemModel()
-        filter=("pickle (*.p)")
+        filter=["*.p"]
         self.substrate_model.setRootPath(substrate_dir)
         self.ui.cmb_subMaterial.setModel(self.substrate_model)
         self.ui.cmb_subMaterial.setRootModelIndex(self.substrate_model.setRootPath(substrate_dir))
@@ -1153,7 +1196,8 @@ class ProjectBuilder(QtGui.QMainWindow):
                     if match:
                         patch.set_facecolor(color)
                         self.component_row_dict[patch] = row_count
-
+        if len(self.project.deviceTable)>0:
+            self.ui.btn_new_layout_engine.setEnabled(True)  # make sure bondwire connections are there
 # ------------------------------------------------------------------------------------------
 # ------ Constraint Creation ---------------------------------------------------------------
 
@@ -1438,7 +1482,7 @@ class ProjectBuilder(QtGui.QMainWindow):
         else:
             QtGui.QMessageBox.warning(self, "Solution Browser", "No solutions exist.")
         
-    def add_solution(self, solution=None,flag=1,sym_info=None):
+    def add_solution(self, solution=None,flag=0,sym_info=None):
         '''
         add solution to main window
         :param solution: the solution information
@@ -1461,7 +1505,7 @@ class ProjectBuilder(QtGui.QMainWindow):
         
     def add_to_solution_list(self, solution,flag=0,id=None):
         # add solution to solution list
-
+        #print "add",solution.index,solution.name
         self.ui.sol = QtGui.QListWidgetItem(solution.name)
         self.ui.lst_solution.addItem(self.ui.sol)
         if flag==0:
@@ -1474,29 +1518,37 @@ class ProjectBuilder(QtGui.QMainWindow):
         if self.project.layout_engine=='CS':
             id = self.ui.lst_solution.currentRow()
             item = self.ui.lst_solution.currentItem()
+            id='Solution '+str(id+1)
             self.show_sol_doc(item=item,id=id)
         elif self.project.layout_engine=='SL':
             item = self.ui.lst_solution.currentItem()
-            self.show_sol_doc(item=item)
+            self.show_sol_doc(item=item) #item=item
 
     def show_sol_doc(self, item=None,id=None):
         # add mdi window for viewing
+
         sol = self.project.solutions[self.ui.lst_solution.row(item)]
         filletFlag = self.ui.checkBox_fillet.isChecked()  # Show filleted layout if fillet checkbox is checked
         if id ==None:
+            #print "sol_doc", sol.index,sol.name
+            for solution in self.project.solutions:
+                if solution.name==sol.name:
+                    sol.index=solution.index
+                    #print sol.index
             self.project.symb_layout.gen_solution_layout(sol.index)
-            m = SolutionWindow(solution=sol, sym_layout=self.project.symb_layout,filletFlag= filletFlag,dir=self.project.directory,parent=self)
+            m = SolutionWindow(solution=sol, sym_layout=self.project.symb_layout,flag=0,filletFlag= filletFlag,dir=self.project.directory,parent=self)
         else:
             sym_layout = self.project.symb_layout
             sym_info = self.project.sym_info[id]
             symb_rect_dict = sym_info['sym_info']
             dims = sym_info['Dims']
-            bp_dims = [dims[0] + 4, dims[1] + 4]
+            #print "D",dims
+            bp_dims = [dims[0], dims[1]]
             self._sym_update_layout(sym_info=symb_rect_dict)
             update_sym_baseplate_dims(sym_layout=sym_layout, dims=bp_dims)
             update_substrate_dims(sym_layout=sym_layout, dims=dims)
             sym_layout.layout_ready = True
-            m = SolutionWindow(solution=sol, sym_layout=sym_layout,filletFlag= filletFlag,dir=self.project.directory,parent=self)
+            m = SolutionWindow(solution=sol, sym_layout=sym_layout,flag=1,filletFlag= filletFlag,dir=self.project.directory,parent=self)
 
         self.ui.mdiArea.addSubWindow(m)
         m.show()
@@ -1648,12 +1700,13 @@ class ProjectBuilder(QtGui.QMainWindow):
         self.project.solutions = []
 
     def load_saved_solutions_list(self):
-        self.clear_saved_solutions_ui()
+        #self.clear_saved_solutions_ui()
         if self.project.layout_engine=="CS":
             flag =1
             # loads the list of previously saved solutions into the list display
             for id in range(len(self.project.solutions)):
                 sol = self.project.solutions[id]
+                id=sol.name
                 self.add_to_solution_list(solution=sol, flag=flag, id=id)
         elif self.project.layout_engine=='SL':
             flag=0

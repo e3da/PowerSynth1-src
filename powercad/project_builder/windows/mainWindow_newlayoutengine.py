@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'mainWindow_newlayoutengine.ui'
 #
-# Created: Sat Apr 13 14:42:02 2019
+# Created: Tue Apr 23 23:07:11 2019
 #      by: pyside-uic 0.2.15 running on PySide 1.2.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -302,7 +302,7 @@ class Ui_MainWindow(object):
         self.navigation.setLineWidth(2)
         self.navigation.setObjectName("navigation")
         self.page_12 = QtGui.QWidget()
-        self.page_12.setGeometry(QtCore.QRect(0, 0, 479, 614))
+        self.page_12.setGeometry(QtCore.QRect(0, 0, 276, 653))
         self.page_12.setObjectName("page_12")
         self.gridLayout_22 = QtGui.QGridLayout(self.page_12)
         self.gridLayout_22.setObjectName("gridLayout_22")
@@ -682,7 +682,7 @@ class Ui_MainWindow(object):
         self.gridLayout_22.addWidget(self.box_system_props, 5, 0, 1, 2)
         self.navigation.addItem(self.page_12, "")
         self.page = QtGui.QWidget()
-        self.page.setGeometry(QtCore.QRect(0, 0, 479, 620))
+        self.page.setGeometry(QtCore.QRect(0, 0, 270, 698))
         self.page.setObjectName("page")
         self.gridLayout_3 = QtGui.QGridLayout(self.page)
         self.gridLayout_3.setObjectName("gridLayout_3")
@@ -837,7 +837,7 @@ class Ui_MainWindow(object):
         self.gridLayout_3.addWidget(self.btn_modify, 8, 1, 1, 1)
         self.navigation.addItem(self.page, "")
         self.page_2 = QtGui.QWidget()
-        self.page_2.setGeometry(QtCore.QRect(0, 0, 596, 402))
+        self.page_2.setGeometry(QtCore.QRect(0, 0, 125, 655))
         self.page_2.setObjectName("page_2")
         self.gridLayout_5 = QtGui.QGridLayout(self.page_2)
         self.gridLayout_5.setObjectName("gridLayout_5")
@@ -939,7 +939,7 @@ class Ui_MainWindow(object):
         self.gridLayout_5.addWidget(self.groupBox_3, 0, 0, 1, 2)
         self.navigation.addItem(self.page_2, "")
         self.page_10 = QtGui.QWidget()
-        self.page_10.setGeometry(QtCore.QRect(0, 0, 496, 440))
+        self.page_10.setGeometry(QtCore.QRect(0, 0, 215, 386))
         self.page_10.setObjectName("page_10")
         self.gridLayout_6 = QtGui.QGridLayout(self.page_10)
         self.gridLayout_6.setObjectName("gridLayout_6")
@@ -1004,7 +1004,7 @@ class Ui_MainWindow(object):
         self.gridLayout_6.addWidget(self.btn_remove_constraint, 11, 2, 1, 1)
         self.navigation.addItem(self.page_10, "")
         self.page_3 = QtGui.QWidget()
-        self.page_3.setGeometry(QtCore.QRect(0, 0, 479, 549))
+        self.page_3.setGeometry(QtCore.QRect(0, 0, 450, 549))
         self.page_3.setObjectName("page_3")
         self.gridLayout_7 = QtGui.QGridLayout(self.page_3)
         self.gridLayout_7.setObjectName("gridLayout_7")
@@ -1181,7 +1181,7 @@ class Ui_MainWindow(object):
         self.gridLayout_7.addWidget(self.tbl_performance, 11, 0, 1, 5)
         self.navigation.addItem(self.page_3, "")
         self.page_4 = QtGui.QWidget()
-        self.page_4.setGeometry(QtCore.QRect(0, -12, 579, 414))
+        self.page_4.setGeometry(QtCore.QRect(0, 0, 579, 414))
         self.page_4.setObjectName("page_4")
         self.gridLayout_4 = QtGui.QGridLayout(self.page_4)
         self.gridLayout_4.setObjectName("gridLayout_4")
@@ -1464,7 +1464,7 @@ class Ui_MainWindow(object):
 "p, li { white-space: pre-wrap; }\n"
 "</style></head><body style=\" font-family:\'MS Shell Dlg 2\'; font-size:8.25pt; font-weight:400; font-style:normal;\">\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">Welcome to PowerSynth!</span></p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
-        self.btn_new_layout_engine.setText(QtGui.QApplication.translate("MainWindow", "Test New Layout Engine", None, QtGui.QApplication.UnicodeUTF8))
+        self.btn_new_layout_engine.setText(QtGui.QApplication.translate("MainWindow", "Constraint-Aware Layout Engine", None, QtGui.QApplication.UnicodeUTF8))
         self.btn_previous.setText(QtGui.QApplication.translate("MainWindow", "Previous", None, QtGui.QApplication.UnicodeUTF8))
         self.btn_next.setText(QtGui.QApplication.translate("MainWindow", "Next", None, QtGui.QApplication.UnicodeUTF8))
         self.groupBox_5.setTitle(QtGui.QApplication.translate("MainWindow", "Instructions", None, QtGui.QApplication.UnicodeUTF8))

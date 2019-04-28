@@ -6,6 +6,7 @@ class OptSetup:
         self.thermal_dev_tbl = None
         # Electrical
         self.electrical_mode = 0 # 0 for MS, 1 for RS, 2 for PEEC
+        self.rs_mdl=None
         self.electrical_dev_state= None
         self.electrical_func = 0 # 0 R, 1 L, 2 C
         self.e_src=None

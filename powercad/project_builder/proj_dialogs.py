@@ -66,8 +66,8 @@ from powercad.interfaces.Q3D.Q3D import output_q3d_vbscript
 from powercad.interfaces.Solidworks.solidworks import output_solidworks_vbscript
 from powercad.design.module_design import ModuleDesign
 from powercad.opt.optimizer import NSGAII_Optimizer, DesignVar
-
-
+import matplotlib
+import glob
 # CLASSES FOR DIALOG USAGE
 class GenericDeviceDialog(QtGui.QDialog):
     # Author: quang le
@@ -697,7 +697,7 @@ class ResponseSurfaceDialog(QtGui.QDialog):
         layer_stack_csv_file = QFileDialog.getOpenFileName(self, "Select Layer Stack File", prev_folder,
                                                            "CSV Files (*.csv)")
         layer_stack_csv_file = layer_stack_csv_file[0]
-        self.layer_stack_import = LayerStackImport(layer_stack_csv_file)
+        self.layer_stack_import = LayerStackHandler(layer_stack_csv_file)
         self.layer_stack_import.import_csv()
         if self.layer_stack_import.compatible:
             Notifier(msg="Sucessfully Imported Layer Stack File", msg_name="Success!!!")
@@ -814,6 +814,7 @@ class ModelSelectionDialog(QtGui.QDialog):
         self.ui.list_mdl_choices.currentIndex()
 
     def select_mdl(self):
+
         try:
             self.model = load_file(
                 os.path.join(self.model_dir, self.rs_model.fileName(self.ui.list_mdl_choices.currentIndex())))
@@ -821,6 +822,8 @@ class ModelSelectionDialog(QtGui.QDialog):
                 self.parent.project.symb_layout.set_RS_model(self.model)
             elif self.mode == 2:
                 self.parent.parent.engine.sym_layout.set_RS_model(self.model)
+                self.parent.rs_model=self.model
+                #self.parent.project.symb_layout.sym_layout.set_RS_model(self.model)
 
             Notifier(msg="model is set to: " + str(self.rs_model.fileName(self.ui.list_mdl_choices.currentIndex())),
                      msg_name="model selected")
@@ -2034,6 +2037,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
         self.H = None  # for NSGAII cost_func
         self.solutions = {}  # for NSGAII cost_func
         self.seed = None
+        self.min_dimensions={}
         self.default_save_dir = "C:\\"
         # add buttons
         self.ui.cmb_modes.setEnabled(False)
@@ -2068,9 +2072,92 @@ class New_layout_engine_dialog(QtGui.QDialog):
         self.sol_count = 0
         self.sol_params = None
 
+    def save_layouts(self,Layout_Rects,count):
+        for k,v in Layout_Rects.items():
+
+            if k=='H':
+                Total_H = {}
+
+                for j in range(len(v)):
+
+
+                    Rectangles = []
+                    for rect in v[j]:  # rect=[x,y,width,height,type]
+
+                        Rectangles.append(rect)
+                    max_x = 0
+                    max_y = 0
+                    min_x = 1e30
+                    min_y = 1e30
+
+                    for i in Rectangles:
+
+                        if i[0] + i[2] > max_x:
+                            max_x = i[0] + i[2]
+                        if i[1] + i[3] > max_y:
+                            max_y = i[1] + i[3]
+                        if i[0] < min_x:
+                            min_x = i[0]
+                        if i[1] < min_y:
+                            min_y = i[1]
+                    key=(max_x,max_y)
+
+                    Total_H.setdefault(key,[])
+                    Total_H[(max_x,max_y)].append(Rectangles)
+        colors = ['White', 'green', 'red', 'blue', 'yellow', 'pink']
+        type = ['EMPTY', 'Type_1', 'Type_2', 'Type_3', 'Type_4']
+
+        for k, v in Total_H.items():
+            #print v, len(v)
+            for c in range(len(v)):
+                #print "C",c,len(v)
+                data = []
+                item = 'Layout ' + str(count)
+                # data.append(item)
+                Rectangles = v[c]
+
+                for i in Rectangles:
+                    for t in type:
+                        if i[4] == t:
+                            type_ind = type.index(t)
+                            colour = colors[type_ind]
+                            if type_ind>1:
+                                w=self.min_dimensions[t][0]
+                                h=self.min_dimensions[t][1]
+                            else:
+                                w=None
+                                h=None
+                    if w==None and h==None:
+                        R_in=[i[0],i[1],i[2],i[3],colour,1,'None','None']
+                    else:
+
+                        center_x=(i[0]+i[0]+i[2])/float(2)
+                        center_y=(i[1]+i[1]+i[3])/float(2)
+                        x=center_x-w/float(2)
+                        y=center_y-h/float(2)
+                        R_in = [i[0], i[1], i[2], i[3],'green',1,'--','black']
+                        R_in1 = [x, y, w, h, colour, 2,'None','None']
+                        data.append(R_in1)
+                    data.append(R_in)
+
+                file_name = self.directory+'/' + item + '.csv'
+
+                with open(file_name, 'wb') as my_csv:
+                    csv_writer = csv.writer(my_csv, delimiter=',')
+                    data.append([k[0], k[1]])
+                    # csv_writer.writerow(data) #Name, [x,y,w,h,color,zorder],......,W,H
+                    for i in data:
+                        csv_writer.writerow(i)
+
+                my_csv.close()
+
+
     def save_solution(self):
+        if len(self.parent.project.solutions) == 0:
+            self.sol_count = 0
         if self.parent is not None:
             self.sol_count += 1
+
             sol_name = QtGui.QInputDialog.getText(self, "Solution Name", "Enter a name for this solution:",
                                                   QtGui.QLineEdit.Normal, "Solution " + str(self.sol_count))
             solution = Solution()
@@ -2093,7 +2180,81 @@ class New_layout_engine_dialog(QtGui.QDialog):
 
     def save_solution_set(self):
         #print "implement later"
+        directory = self.parent.project.directory
+        sol_path = directory + '/Layout_Solutions'
+        pareto_path= directory + '/Pareto_Solutions'
+        if not os.path.exists(sol_path):
+            #print "path doesn't exist. trying to make"
+            os.makedirs(sol_path)
+        layout_symb_dict = self.form_sym_obj_rect_dict()
+
+        for i in range(len(layout_symb_dict.keys())):
+
+            item = 'Layout ' + str(i)
+            file_name =sol_path+'/'+ item + '.csv'
+            with open(file_name, 'wb') as my_csv:
+                csv_writer = csv.writer(my_csv, delimiter=',')
+                csv_writer.writerow(["Size", "Performance_1", "Unit", "Performance_2", "Unit"])
+                # for k, v in _fetch_currencies.iteritems():
+                Size = layout_symb_dict[item]['Dims']
+                Perf_1 = self.perf1['data'][i]
+                unit_1 = self.perf1['unit']
+                Perf_2 = self.perf2['data'][i]
+                unit_2 = self.perf2['unit']
+                data = [Size, Perf_1, unit_1, Perf_2, unit_2]
+                csv_writer.writerow(data)
+                csv_writer.writerow(["Component_Name", "x_coordinate", "y_coordinate", "width", "length"])
+                for k, v in layout_symb_dict[item]['sym_info'].items():
+                    layout_data = [k, v.x, v.y, v.width, v.height]
+                    csv_writer.writerow(layout_data)
+            my_csv.close()
+        if self.pareto_plot_flag == 1:
+            if not os.path.exists(pareto_path):
+                # print "path doesn't exist. trying to make"
+                os.makedirs(pareto_path)
+            for i in range(len(layout_symb_dict.keys())):
+                if self.perf1_pareto['data'][i]!=0:
+                    item = 'Layout ' + str(i)
+                    file_name = pareto_path + '/' + item + '.csv'
+                    with open(file_name, 'wb') as my_csv:
+                        csv_writer = csv.writer(my_csv, delimiter=',')
+                        csv_writer.writerow(["Size", "Performance_1", "Unit", "Performance_2", "Unit"])
+                        # for k, v in _fetch_currencies.iteritems():
+                        Size = layout_symb_dict[item]['Dims']
+                        Perf_1 = self.perf1_pareto['data'][i]
+                        unit_1 = self.perf1_pareto['unit']
+                        Perf_2 = self.perf2_pareto['data'][i]
+                        unit_2 = self.perf2_pareto['unit']
+                        data = [Size, Perf_1, unit_1, Perf_2, unit_2]
+                        csv_writer.writerow(data)
+                        csv_writer.writerow(["Component_Name", "x_coordinate", "y_coordinate", "width", "length"])
+                        for k, v in layout_symb_dict[item]['sym_info'].items():
+                            layout_data = [k, v.x, v.y, v.width, v.height]
+                            csv_writer.writerow(layout_data)
+                    my_csv.close()
+        try:
+            filename = QFileDialog.getSaveFileName(self, "Save Solution Data", "C://", "Save Solution set (*.csv)")
+            #file_name = pareto_path + '/' + item + '.csv'
+            filename=filename[0]
+            with open(filename, 'wb') as my_csv:
+                csv_writer = csv.writer(my_csv, delimiter=',')
+                csv_writer.writerow(["Layout_ID",self.perf1['unit'],self.perf2['unit']])
+                data=[]
+                num_layouts = len(self.perf1['data'])  # layout_symb_dict.keys()  # to handle pareto-plot only
+                for i in range(num_layouts):
+                    choice = 'Layout ' + str(i)
+                    sol_info=[int(i),self.perf1['data'][i],self.perf2['data'][i]]
+                    csv_writer.writerow(sol_info)
+                    #data.append(sol_info)
+            my_csv.close()
+        #np.array(data)
+        #np.savetxt(filename[0],data,delimiter=',')
+            #save_file(data, filename[0])
+        except:
+            print "Please save a valid format"
+
         self.parent.clear_projet_solutions()
+        '''
         self.parent.project.symb_layout = copy.deepcopy(self.engine.sym_layout)
         layout_symb_dict = self.form_sym_obj_rect_dict()
         num_layouts = len(self.perf1['data']) #layout_symb_dict.keys()  # to handle pareto-plot only
@@ -2106,7 +2267,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
             solution.name = "Solution " + str(i)
             self.parent.add_solution(solution=solution, flag=1, sym_info=layout_symb_dict[choice])
 
-
+        '''
     def getPatches(self, Patches):
         if self.Patches == None:
             self.Patches = Patches
@@ -2143,7 +2304,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
             self.ui.txt_width.setEnabled(False)
             self.ui.txt_height.setEnabled(False)
             self.ui.btn_fixed_locs.setEnabled(False)
-            self.ui.btn_eval_setup.setEnabled(False)
+            #self.ui.btn_eval_setup.setEnabled(False)
             self.refresh_layout()
 
         elif choice == 'Variable Size Layout':
@@ -2198,7 +2359,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
         constraints = ConsDialog(self)
         self.constraint = True
 
-        #self.cons_df = self.engine.cons_df
+        self.cons_df = self.engine.cons_df
 
         constraints.exec_()
 
@@ -2227,20 +2388,23 @@ class New_layout_engine_dialog(QtGui.QDialog):
         if self.pareto_plot_flag==0:
             self.ax3.plot(self.perf1['data'], self.perf2['data'], 'o', picker=5)
         elif self.pareto_plot_flag==1:
-            x=self.perf1_pareto['data']
-            x=list(set(x))
-            x.sort()
-            y=self.perf2_pareto['data']
-            y=list(set(y))
-            y.sort()
-            #print x
-            #print y
-            if len(x)==1:
-                x.append(x[0])
-                y.append(y[0])
-            self.ax3.plot(self.perf1_pareto['data'], self.perf2_pareto['data'], 'o', picker=5)
-            self.ax3.set_xlim(x[1]-0.001,x[-1]+0.001)
-            self.ax3.set_ylim(y[1]-0.001,y[-1]+0.001)
+            try:
+                x=self.perf1_pareto['data']
+                x=list(set(x))
+                x.sort()
+                y=self.perf2_pareto['data']
+                y=list(set(y))
+                y.sort()
+                #print x
+                #print y
+                if len(x)==1:
+                    x.append(x[0])
+                    y.append(y[0])
+                self.ax3.plot(self.perf1_pareto['data'], self.perf2_pareto['data'], 'o', picker=5)
+                self.ax3.set_xlim(x[1]-0.001,x[-1]+0.001)
+                self.ax3.set_ylim(y[1]-0.001,y[-1]+0.001)
+            except:
+                print"Please Generate Layouts First."
         self.ax3.set_xlabel(self.perf1['label'])
         self.ax3.set_ylabel(self.perf2['label'])
         self.canvas_sol_browser.draw()
@@ -2285,7 +2449,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
                     if pair[1] >= p_front[-1][1]:  # Look for lower values of Y
                         p_front.append(pair)  # and add them to the Pareto frontie
 
-            print len(p_front)
+            print "No of Solutions", len(p_front)
             pareto_data = np.array(p_front)
 
             plot = False
@@ -2307,18 +2471,20 @@ class New_layout_engine_dialog(QtGui.QDialog):
 
     def cost_func_NSGAII(self, individual):
         item = 'Layout ' + str(self.count)
-        self.count += 1
+
         if not (isinstance(individual, list)):
             individual = np.asarray(individual).tolist()
-        # print"inside cost",individual
+        #print"inside cost",individual
         Patches, cs_sym_data = self.engine.generate_solutions(self.current_mode, num_layouts=1, W=self.W, H=self.H,
                                                               fixed_x_location=self.fixed_x_locations,
                                                               fixed_y_location=self.fixed_y_locations, seed=self.seed,
                                                               individual=individual)
+        self.save_layouts(Patches,count=self.count)
+        self.count += 1
         print"Added solution no.", self.count
         self.layout_data[item] = {'Rects': cs_sym_data[0]}
 
-        self.generated_layouts[item] = {'Patches': Patches[0]}
+        #self.generated_layouts[item] = {'Patches': Patches[0]}
         # print "P",Patches
         # print cs_sym_data
         if self.engine.sym_layout != None:
@@ -2336,7 +2502,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
                 plot_layout(sym_layout=self.engine.sym_layout, ax=ax)
                 plt.show()
             ret = self._sym_eval_perf()
-            #print ret, Patches
+
             #solution = [ret, Patches, cs_sym_data]
             self.solutions[item]=ret
         return ret
@@ -2351,17 +2517,33 @@ class New_layout_engine_dialog(QtGui.QDialog):
             print "can't generate layouts"
             return
         else:
+            cwd = os.getcwd()
+            self.directory = cwd + "/Mode_" + str(self.current_mode)
+            if not os.path.exists(self.directory):
+                os.makedirs(self.directory)  # creating directory
+
+            filelist = glob.glob(os.path.join(self.directory, "*.csv"))
+            for f in filelist:
+                os.remove(f)
+
+
             print "generate layout"
             self.perf1 = {"label": None, 'data': [], 'unit': '', 'type': ''}
             self.perf2 = {"label": None, 'data': [], 'unit': '', 'type': ''}
             self.generated_layouts = {}
             self.layout_data = {}
+
             if self.current_mode != 0:
                 # if self.opt_algo=="NG-RANDOM":
                 N=self.num_layouts
                 W = float(self.ui.txt_width.text()) * 1000
                 H = float(self.ui.txt_height.text()) * 1000
+
                 if self.opt_algo == "NSGAII" and self.current_mode == 2:
+
+
+
+
                     X, Y = self.engine.mode_zero()
                     x_nodes = [i for i in range(len(X[1]))]
                     y_nodes = [i for i in range(len(Y[1]))]
@@ -2394,22 +2576,22 @@ class New_layout_engine_dialog(QtGui.QDialog):
                                                                           fixed_y_location=self.fixed_y_locations,
                                                                           seed=self.seed)
 
-                    if Patches == None or cs_sym_data == None:
+                    if cs_sym_data == None: #Patches!=None or
                         print "ERROR: Invalid Information"
                         return
                     Layouts = []
                     for i in range(int(N)):
                         item = 'Layout ' + str(i)
                         Layouts.append(item)
-                    if Patches != None:
+                    if self.current_mode > 0: #Patches != None
                         # UPDATE layout sols for plotting
                         for i in range(int(N)):
                             if self.engine.sym_layout != None:
                                 self.layout_data[Layouts[i]] = {'Rects': cs_sym_data[i]}
+                                #self.generated_layouts[Layouts[i]] = {'Patches': Patches[i]}
 
-                                self.generated_layouts[Layouts[i]] = {'Patches': Patches[i]}
                     else:
-                        print"Patches not found"
+                        print "Patches not found"
             else:
                 N = 1
                 #item = 'Layout 0'
@@ -2512,31 +2694,71 @@ class New_layout_engine_dialog(QtGui.QDialog):
                         self.ui.txt_height.setText(str(H))
 
         if mode == 'cs':  # corner stitch plotting engine (has some issues)
-            '''
-            if self.current_mode==2:
-                for k,v in self.generated_layouts.items():
-                    if choice==k:
-                        for k1,v1 in v['Patches'].items():
-                            for p in v1:
 
+            if self.current_mode>0:
+                filename=self.directory+"/"+choice+".csv"
+                v1=[]
+
+                with open(filename) as csv_file:
+                    csv_reader = csv.reader(csv_file, delimiter=',')
+                    for row in csv_reader:
+                        if len(row)<4:
+                            k1=(float(row[0]),float(row[1]))
+                        else:
+                            x=float(row[0])
+                            y=float(row[1])
+                            w=float(row[2])
+                            h=float(row[3])
+                            colour=row[4]
+                            order=int(row[5])
+                            if row[6]!='None':
+                                linestyle=row[6]
+                                edgecolor=row[7]
+                            if row[6]=='None':
+                                R1 = matplotlib.patches.Rectangle(
+                                    (x, y),  # (x,y)
+                                    w,  # width
+                                    h,  # height
+                                    facecolor=colour,
+                                    zorder=order
+
+                                )
+                            else:
+                                R1 = matplotlib.patches.Rectangle(
+                                    (x, y),  # (x,y)
+                                    w,  # width
+                                    h,  # height
+                                    facecolor=colour,
+                                    linestyle=linestyle,
+                                    edgecolor=edgecolor,
+                                    zorder=order
+
+                                )
+                            v1.append(R1)
+
+                for p in v1:
+                    self.ax1.add_patch(p)
+                self.ax1.set_xlim(0, k1[0])
+                self.ax1.set_ylim(0, k1[1])
+                self.ui.txt_width.setText(str(k1[0]))
+                self.ui.txt_height.setText(str(k1[1]))
+                self.ax1.set_aspect('equal')
+                self.canvas_sols.draw()
+
+            else:
+
+                for k, v in self.generated_layouts.items():
+                    if choice == k:
+                        for k1, v1 in v['Patches'].items():
+                            for p in v1:
                                 self.ax1.add_patch(p)
-                            self.ax1.set_xlim(-2, k1[0])
-                            self.ax1.set_ylim(-2, k1[1])
-                            self.ui.txt_width.setText(str(k1[0]-2))
-                            self.ui.txt_height.setText(str(k1[1]-2))
+                            self.ax1.set_xlim(0, k1[0])
+                            self.ax1.set_ylim(0, k1[1])
+                            self.ui.txt_width.setText(str(k1[0]))
+                            self.ui.txt_height.setText(str(k1[1]))
+                        self.ax1.set_aspect('equal')
                         self.canvas_sols.draw()
-            #else:
-            '''
-            for k, v in self.generated_layouts.items():
-                if choice == k:
-                    for k1, v1 in v['Patches'].items():
-                        for p in v1:
-                            self.ax1.add_patch(p)
-                        self.ax1.set_xlim(0, k1[0])
-                        self.ax1.set_ylim(0, k1[1])
-                        self.ui.txt_width.setText(str(k1[0]))
-                        self.ui.txt_height.setText(str(k1[1]))
-                    self.canvas_sols.draw()
+
         elif mode == 'ps':
             sym_info = self.form_sym_obj_rect_dict()
             sym_layout = self.engine.sym_layout
@@ -2552,6 +2774,8 @@ class New_layout_engine_dialog(QtGui.QDialog):
 
     def refresh_layout(self):
         self.ax2.clear()
+        label="Node ID: "
+        self.ui.Node_ID.setText(label)
         self.ax2.set_position([0.07, 0.07, 0.9, 0.9])
 
         Names = self.init_fig.keys()
@@ -2614,11 +2838,12 @@ class New_layout_engine_dialog(QtGui.QDialog):
         self.canvas_init.callbacks.connect('pick_event', self.on_click)
 
     def on_click(self, event):
-        # self.ax3.plot(self.perf1['data'][self.selected_ind], self.perf2['data'][self.selected_ind], 'o', c='red')
-
+        #self.ax3.plot(self.perf1['data'][self.selected_ind], self.perf2['data'][self.selected_ind], 'o', c='red')
+        self.refresh_layout_mode3()
         x = round(event.mouseevent.xdata, 2)
         y = round(event.mouseevent.ydata, 2)
         self.ax2.plot(x, y, 'o', c='red')
+        self.canvas_init.draw()
         for k, v in self.init_graph[1].items():
             if ((abs(x - v[0]) <= 0.99 and abs(y - v[1]) <= 0.99)):
                 self.show_node_id(k)
@@ -2797,7 +3022,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
                 measure = perf['measure']
                 val= self.update_perf_values(perf=perf, pdraw=pdraw, measure=measure, sym_layout=sym_layout)
                 ret.append(val)
-            #print "result",ret
+
             return ret
     def update_perf_values(self,perf={},pdraw={},measure=None,sym_layout=None):
         if perf['type'] == 'Thermal':
@@ -2821,17 +3046,17 @@ class New_layout_engine_dialog(QtGui.QDialog):
             if measure_type == 'res':
                 lbl = measure.name + ' (mOhm)'
                 pdraw["unit"] = '(mOhm)'
-                pdraw["type"] = 'R'
+                pdraw["type"] = 'Resistance'
 
             if measure_type == 'ind':
                 lbl = measure.name + ' (nH)'
                 pdraw["unit"] = '(nH)'
-                pdraw["type"] = 'L'
+                pdraw["type"] = 'Inductance'
 
             if measure_type == 'cap':
                 lbl = measure.name + ' (pF)'
                 pdraw["unit"] = '(pF)'
-                pdraw["type"] = 'C'
+                pdraw["type"] = 'Capacitance'
 
             pdraw["label"] = (lbl)
             if measure.measure == ElectricalMeasure.MEASURE_CAP:
@@ -3030,16 +3255,19 @@ class ET_standalone_Dialog(QtGui.QDialog):
         self.parent = parent
         self.tbl_thermal = None
         self.tbl_elec = None
+        self.rs_model=None
         self.dev_df = None
         self.num_of_layouts=0
         self.seed=None
-        if self.parent.opt_algo==None:
+        if self.parent.opt_algo==None :
             self.parent.opt_algo = "NG-RANDOM"
         else:
-            if self.parent.opt_algo=="NSGAII":
+            if self.parent.opt_algo=="NSGAII" and self.parent.current_mode==2:
                 self.ui.cmb_opt_algo.setCurrentIndex(1)
-            if self.parent.opt_algo=="NG-RANDOM":
+            else:
+                self.parent.opt_algo == "NG-RANDOM"
                 self.ui.cmb_opt_algo.setCurrentIndex(0)
+
         if self.parent.pareto_plot_flag==1:
             self.ui.rb_plot_pareto.setChecked(True)
 
@@ -3057,7 +3285,7 @@ class ET_standalone_Dialog(QtGui.QDialog):
             self.ui.txt_seed.setEnabled(True)
             self.ui.rb_plot_pareto.setEnabled(True)
         else:
-            self.ui.cmb_opt_algo.setEnabled(False)
+            #self.ui.cmb_opt_algo.setEnabled(False)
             self.ui.txt_num_layouts.setEnabled(True)
             self.ui.txt_seed.setEnabled(True)
             self.ui.rb_plot_pareto.setEnabled(True)
@@ -3128,8 +3356,9 @@ class ET_standalone_Dialog(QtGui.QDialog):
             self.ui.btn_select_mdl.setEnabled(True)
 
     def select_RS_model(self):
+        #print "DIR",DEFAULT_TECH_LIB_DIR
         rs_settings = ModelSelectionDialog(self,
-                                           techlib_dir="C:\PowerSynth_git\CornerStitch_fixed\PowerCAD-full\\tech_lib",
+                                           techlib_dir=DEFAULT_TECH_LIB_DIR,
                                            mode=2)
         rs_settings.exec_()
 
@@ -3268,6 +3497,7 @@ class ET_standalone_Dialog(QtGui.QDialog):
     def finished(self):
 
         #print self.parent.pareto_plot_flag
+        self.opt_algo_handler()
         self.parent.perf_dict = self.perf_dict
         self.close()
 
@@ -3301,10 +3531,13 @@ class ET_standalone_Dialog(QtGui.QDialog):
 
             opt_setup = load_file(filename[0])
         except:
+            opt_setup=None
             print "upload a valid optimization setup file"
-        # thermal
-        self.ui.cmb_thermal_mdl.setCurrentIndex(opt_setup.thermal_mode)
-        self.ui.cmb_thermal_type.setCurrentIndex(opt_setup.thermal_func)
+        if opt_setup!=None:
+            print opt_setup.perf_table
+            # thermal
+            self.ui.cmb_thermal_mdl.setCurrentIndex(opt_setup.thermal_mode)
+            self.ui.cmb_thermal_type.setCurrentIndex(opt_setup.thermal_func)
         try:
             self.thermal_dev_sel= opt_setup.thermal_dev_tbl
             for dev in self.thermal_dev_sel:
@@ -3315,27 +3548,29 @@ class ET_standalone_Dialog(QtGui.QDialog):
         except:
             print "WRONG SETUP"
         # electrical
+        if opt_setup != None:
+            self.ui.cmb_electrical_mdl.setCurrentIndex(opt_setup.electrical_mode)
+            self.ui.cmb_electrical_type.setCurrentIndex(opt_setup.electrical_func)
 
-        self.ui.cmb_electrical_mdl.setCurrentIndex(opt_setup.electrical_mode)
-        self.ui.cmb_electrical_type.setCurrentIndex(opt_setup.electrical_func)
+            #print type(opt_setup.electrical_dev_state)
+            self.dev_df=opt_setup.electrical_dev_state
+            if opt_setup.rs_mdl!=None:
+                self.parent.engine.sym_layout.set_RS_model(opt_setup.rs_mdl)
+            #print"in load \n", self.dev_df
 
-        #print type(opt_setup.electrical_dev_state)
-        self.dev_df=opt_setup.electrical_dev_state
-        #print"in load \n", self.dev_df
+            # Performances
+            self.perf_dict= opt_setup.perf_table
+            for p in self.perf_dict:
 
-        # Performances
-        self.perf_dict= opt_setup.perf_table
-        for p in self.perf_dict:
-
-            m = self.perf_dict[p]['measure']
-            if isinstance(m,ElectricalMeasure):
-                #print m.pt1.name,m.pt2.name
-                # update to new sym
-                pt1 = self._sym_find_pt_obj(self.parent.engine.sym_layout, m.pt1.name)
-                m.pt1 = pt1
-                pt2 = self._sym_find_pt_obj(self.parent.engine.sym_layout, m.pt2.name)
-                m.pt2=pt2
-        self.reload_table()
+                m = self.perf_dict[p]['measure']
+                if isinstance(m,ElectricalMeasure):
+                    #print m.pt1.name,m.pt2.name
+                    # update to new sym
+                    pt1 = self._sym_find_pt_obj(self.parent.engine.sym_layout, m.pt1.name)
+                    m.pt1 = pt1
+                    pt2 = self._sym_find_pt_obj(self.parent.engine.sym_layout, m.pt2.name)
+                    m.pt2=pt2
+            self.reload_table()
 
 
 
@@ -3368,16 +3603,16 @@ class ET_standalone_Dialog(QtGui.QDialog):
 
         # Electrical
         opt_setup.electrical_dev_state = self.dev_df
-
+        opt_setup.rs_mdl=self.rs_model
         mdl_str = str(self.ui.cmb_electrical_mdl.currentText())
         eval_type = str(self.ui.cmb_electrical_type.currentText())
 
         if mdl_str == "Response Surface Model":
             opt_setup.electrical_mode = 0  # 0 for RS, 1 for MS, 2 for PEEC
         elif mdl_str == "Microstrip Equations":
-            opt_setup.electrical_mode = 2 # 0 for RS, 1 for MS, 2 for PEEC
-        elif mdl_str == "3D Hierarchical PEEC":
-            opt_setup.electrical_mode = 1  # 0 for RS, 1 for MS, 2 for PEEC
+            opt_setup.electrical_mode = 1 # 0 for RS, 1 for MS, 2 for PEEC
+        #elif mdl_str == "3D Hierarchical PEEC":
+            #opt_setup.electrical_mode = 2  # 0 for RS, 1 for MS, 2 for PEEC
 
         if eval_type == "Capacitance":
             opt_setup.electrical_func = 2  # 1 R, 0 L, 2 C

@@ -531,11 +531,23 @@ class SymbolicLayout(object):
         self.bondwire_design_values = [None]*len(self.bondwire_dv_list)
 
         # Check Device Thermal Characterizations (checks for cached characterizations)
-        self.thermal_characterize()
+        thermal_char=False
+        for m in self.perf_measures:
+
+            if isinstance(m,ThermalMeasure):
+                if m.mdl!='RECT_FLUX_MODEL':  #if m.mdl==1
+                    thermal_char=True
+                    break
+
+
+        if thermal_char:
+            self.thermal_characterize()
 
 
     def thermal_characterize(self):
+
         dev_char_dict, sub_tf = characterize_devices(self, self.temp_dir)
+
         self.module.sublayers_thermal = sub_tf
         for dev in self.devices:
             dev.tech.thermal_features = dev_char_dict[dev.tech]
@@ -1695,6 +1707,7 @@ class SymbolicLayout(object):
             lead.center_position = center
     def _place_bondwires(self):
         for wire in self.bondwires:
+            #print"bw_id", id(wire)
             if wire.dev_pt is not None:
                 self._place_device_bondwire(wire)
             elif wire.trace2 is not None:
@@ -2140,6 +2153,7 @@ class SymbolicLayout(object):
                 self.bondwire_design_values[index] = individual[i]
 
     def gen_solution_layout(self, solution_index):
+
         individual = self.solution_lib.individuals[solution_index]
         self.rev_map_design_vars(individual)
         self._opt_eval(individual)
@@ -2231,8 +2245,11 @@ class SymbolicLayout(object):
                         type_id=1
                     elif type == 'RECT_FLUX_MODEL':
                         type_id=2
-                    elif type == 'Matlab':
+                    elif type=='Successive_approximation_model':
                         type_id=3
+                    elif type == 'Matlab':
+                        type_id=4
+
                     val = self._thermal_analysis(measure,type_id)
                     ret.append(val)
         # Update progress bar and eval count
@@ -2271,9 +2288,9 @@ class SymbolicLayout(object):
 
         return total_cap
     '''-----------------------------------------------------------------------------------------------------------------------------------------------------'''
-    def _thermal_analysis(self, measure,type):
+    def _thermal_analysis(self, measure,type_id):
         # RECT_FLUX_MODEL
-        temps = perform_thermal_analysis(self, type)#<--RECT_FLUX_MODEL
+        temps = perform_thermal_analysis(self, type_id)#<--RECT_FLUX_MODEL
 
         if isinstance(measure,int):
             return temps
@@ -2519,7 +2536,7 @@ def make_test_setup_journal_paper(p1,p2,f,h,tamb):
     #individual=[0.0, 19.993549748550485, 7.83473968924208, 2.0, 2.0, 7.83024382580129, 4.076805904566642, 0.353346526599453, 0.9966022253587258]
 
     #print 'individual', individual
-    print "opt_to_sym_index" ,sym_layout.opt_to_sym_index
+    #print "opt_to_sym_index" ,sym_layout.opt_to_sym_index
     sym_layout.rev_map_design_vars(individual)
     sym_layout.generate_layout()
     sym_layout._build_lumped_graph()

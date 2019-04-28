@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ET_evaluate_up.ui'
 #
-# Created: Tue Apr 16 15:45:05 2019
+# Created: Tue Apr 23 23:47:06 2019
 #      by: pyside-uic 0.2.15 running on PySide 1.2.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -147,7 +147,6 @@ class Ui_ET_Evaluation_Dialog(object):
         self.cmb_electrical_mdl.setObjectName("cmb_electrical_mdl")
         self.cmb_electrical_mdl.addItem("")
         self.cmb_electrical_mdl.addItem("")
-        self.cmb_electrical_mdl.addItem("")
         self.gridLayout_3.addWidget(self.cmb_electrical_mdl, 0, 1, 1, 2)
         self.lbl_electrical_mdl = QtGui.QLabel(self.Electrical)
         self.lbl_electrical_mdl.setObjectName("lbl_electrical_mdl")
@@ -194,7 +193,7 @@ class Ui_ET_Evaluation_Dialog(object):
         self.gridLayout_5.addWidget(self.groupBox_2, 0, 0, 1, 1)
 
         self.retranslateUi(ET_Evaluation_Dialog)
-        self.Tab_model_select.setCurrentIndex(0)
+        self.Tab_model_select.setCurrentIndex(1)
         QtCore.QMetaObject.connectSlotsByName(ET_Evaluation_Dialog)
 
     def retranslateUi(self, ET_Evaluation_Dialog):
@@ -226,8 +225,7 @@ class Ui_ET_Evaluation_Dialog(object):
         self.cmb_thermal_mdl.setItemText(1, QtGui.QApplication.translate("ET_Evaluation_Dialog", "Analytical Rectangular Flux", None, QtGui.QApplication.UnicodeUTF8))
         self.Tab_model_select.setTabText(self.Tab_model_select.indexOf(self.Thermal), QtGui.QApplication.translate("ET_Evaluation_Dialog", "Thermal", None, QtGui.QApplication.UnicodeUTF8))
         self.cmb_electrical_mdl.setItemText(0, QtGui.QApplication.translate("ET_Evaluation_Dialog", "Response Surface Model", None, QtGui.QApplication.UnicodeUTF8))
-        self.cmb_electrical_mdl.setItemText(1, QtGui.QApplication.translate("ET_Evaluation_Dialog", "3D Hierarchical PEEC", None, QtGui.QApplication.UnicodeUTF8))
-        self.cmb_electrical_mdl.setItemText(2, QtGui.QApplication.translate("ET_Evaluation_Dialog", "Microstrip Equations", None, QtGui.QApplication.UnicodeUTF8))
+        self.cmb_electrical_mdl.setItemText(1, QtGui.QApplication.translate("ET_Evaluation_Dialog", "Microstrip Equations", None, QtGui.QApplication.UnicodeUTF8))
         self.lbl_electrical_mdl.setText(QtGui.QApplication.translate("ET_Evaluation_Dialog", "Model:", None, QtGui.QApplication.UnicodeUTF8))
         self.label_3.setText(QtGui.QApplication.translate("ET_Evaluation_Dialog", "Source", None, QtGui.QApplication.UnicodeUTF8))
         self.btn_select_mdl.setText(QtGui.QApplication.translate("ET_Evaluation_Dialog", "Select Model", None, QtGui.QApplication.UnicodeUTF8))
