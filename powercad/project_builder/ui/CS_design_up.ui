@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>PowerSynth (v1.2) Layout Engine </string>
+   <string>Constraint-Aware Layout Engine </string>
   </property>
   <layout class="QGridLayout" name="gridLayout_7">
    <item row="0" column="0" rowspan="3">

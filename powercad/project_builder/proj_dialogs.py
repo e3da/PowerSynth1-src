@@ -1163,16 +1163,10 @@ class ConsDialog(QtGui.QDialog):
             cons_file = QFileDialog.getOpenFileName(self, "Select Constraint File", 'C://', "Constraints Files (*.csv)")
             self.cons_df = pd.read_csv(cons_file[0])
         elif mode == 0:
-
             cons_file = 'out.csv'
             if cons_file is not None:
                 self.cons_df = pd.read_csv(cons_file)
-                # self.cons_df = self.parent.cons_df
-            # else:
-            # return
-        # print"con", self.cons_df
         table_df = self.cons_df
-        #print table_df
         total_cols = len(table_df.axes[1])
         r_sp = 4  # row of min spacing
         r_encl = r_sp + total_cols  # row of min encl
@@ -1246,7 +1240,6 @@ class ConsDialog(QtGui.QDialog):
             loc_id += 1
 
         self.parent.cons_df = self.cons_df
-        # print "DFs",self.parent.cons_df
         self.close()
 
     def save_cons(self):
@@ -1271,7 +1264,6 @@ class Fixed_locations_Dialog(QtGui.QDialog):
         self.y_space = None  # vertical room
         self.init_table()
         self.new_node_dict = {}
-
         self.Min_X, self.Min_Y = self.parent.engine.mode_zero()
         self.initial_range_x = {}  # finding each node's initial range of x  coordinate {Node ID:(xmin,xmax)}
         self.initial_range_y = {}  # finding each node's initial range of y  coordinate {Node ID:(ymin,ymax)}
@@ -1281,10 +1273,7 @@ class Fixed_locations_Dialog(QtGui.QDialog):
         self.y_init_range = {}  # initial y range mapped to each y coordinate{y_coord:(y_min,y_max)}
         self.x_dynamic_range = {}  # dynamic x range mapped to each x coordinate{x_coord:(x_min,x_max)}
         self.y_dynamic_range = {}  # dynamic y range mapped to each y coordinate{y_coord:(y_min,y_max)}
-        # print self.Min_X,self.Min_Y
         self.current_range = {}  # to check if the input coordinate is within the valid range
-
-        # print "L", len(self.parent.input_node_info.keys())
         if len(self.parent.input_node_info.keys()) == 0:
             self.setup_initial_range()
             self.inserted_order = []
@@ -1306,7 +1295,7 @@ class Fixed_locations_Dialog(QtGui.QDialog):
         self.ui.btn_rmvnode.pressed.connect(self.remove_row)
         self.ui.btn_save.pressed.connect(self.finished)
 
-    # def show_nodeID(self,Nodelist):
+    #sets up initial range for each node in the layout based on minimum location
     def setup_initial_range(self):
         x_values = self.Min_X[1].values()
         x_values.sort()
@@ -1322,13 +1311,11 @@ class Fixed_locations_Dialog(QtGui.QDialog):
             self.y_space = self.parent.mode3_height - max_y
         else:
             print "Please enter floorplan height greater or equal to minimum height ", float(max_y) / 1000
-        # print x_values, max_x, self.parent.fp_width, self.parent.fp_length
         for k, v in self.parent.graph[1].items():
             for k1, v1 in self.Min_X.items():
                 for k2, v2 in v1.items():
                     if k2 == v[0]:
                         x_min = v2
-
                         if self.x_space != None:
                             x_max = v2 + self.x_space
                         else:
@@ -1350,17 +1337,8 @@ class Fixed_locations_Dialog(QtGui.QDialog):
                             self.dynamic_range_y[k] = (y_min, y_max)
                             self.y_dynamic_range[k2] = (y_min, y_max)
 
-        '''
-        #print self.Min_X
-        #print self.Min_Y
-        #print self.parent.graph[1]
-        print "init"
-        print self.initial_range_x
-        print self.initial_range_y
-        print "init_x",self.x_init_range
-        print "init_y",self.y_init_range
-        '''
 
+    # dynamically update each node's location range based on given fixed location of some nodes.
     def dynamic_update(self):
 
         x_fixed = []
@@ -1379,7 +1357,6 @@ class Fixed_locations_Dialog(QtGui.QDialog):
 
         x_fixed.sort()
         y_fixed.sort()
-        # print "init",x_fixed,y_fixed
         if len(x_fixed) > 0:
             for k, v in self.node_dict.items():
                 if k == self.current_node:
@@ -1387,9 +1364,7 @@ class Fixed_locations_Dialog(QtGui.QDialog):
                     current_x = v[0]
                 else:
                     continue
-                    # y_fixed.append(v[1])
             x_fixed.sort()
-            # print "app_cur", x_fixed,current_x
             if x_fixed.index(current_x) == 0:
                 start = x_fixed[1]
                 for k1, v1 in self.node_dict.items():
@@ -1418,9 +1393,9 @@ class Fixed_locations_Dialog(QtGui.QDialog):
                     current_y = v[1]
                 else:
                     continue
-                    # y_fixed.append(v[1])
+
             y_fixed.sort()
-            # print"Y", y_fixed
+
             if y_fixed.index(current_y) == 0:
                 for k1, v1 in self.node_dict.items():
                     if v1[1] > y_fixed[1]:
@@ -1445,11 +1420,8 @@ class Fixed_locations_Dialog(QtGui.QDialog):
         x_fixed = list(set(x_fixed))
         y_fixed = list(set(y_fixed))
 
-        # print "Fixed", x_fixed
-        # print y_fixed
         x0 = self.X
         y0 = self.Y
-        # y0=self.new_node_dict[self.current_node][1]
         min_x_change = []
         max_x_change = []
         x_unchange = []
@@ -1472,15 +1444,12 @@ class Fixed_locations_Dialog(QtGui.QDialog):
                 elif v[1] == self.node_dict[self.current_node][1]:
                     y_unchange.append(v[1])
 
-        # print self.current_node
         min_x_change = list(set(min_x_change))
         max_x_change = list(set(max_x_change))
         x_unchange = list(set(x_unchange))
         min_y_change = list(set(min_y_change))
         max_y_change = list(set(max_y_change))
         y_unchange = list(set(y_unchange))
-        # print min_x_change,max_x_change,x_unchange
-        # print min_y_change,max_y_change,y_unchange
         if x0 != None:
             if len(min_x_change) > 0:
                 for x in min_x_change:
@@ -1513,8 +1482,7 @@ class Fixed_locations_Dialog(QtGui.QDialog):
                             self.x_dynamic_range[x] = (x_min, x_max)
                         else:
                             continue
-        # print self.dynamic_range_x
-        # print"x_dynamic" ,self.x_dynamic_range
+
         if y0 != None:
             if len(min_y_change) > 0:
                 for y in min_y_change:
@@ -1546,10 +1514,10 @@ class Fixed_locations_Dialog(QtGui.QDialog):
                             self.y_dynamic_range[y] = (y_min, y_max)
                         else:
                             continue
-        # print self.y_dynamic_range
 
+
+    # dynamically updates the location range upon removal of any fixed location.
     def dynamic_remove(self):
-        # print len(self.new_node_dict.keys()),self.new_node_dict.keys()
         if len(self.new_node_dict.keys()) == 0:
             for k, v in self.x_init_range.items():
                 self.x_dynamic_range[k] = v
@@ -1559,8 +1527,6 @@ class Fixed_locations_Dialog(QtGui.QDialog):
                 self.dynamic_range_x[k] = v
             for k, v in self.initial_range_y.items():
                 self.dynamic_range_y[k] = v
-            # print"IN Remove x_dynamic", self.x_dynamic_range
-            # print "IN Remove", self.y_dynamic_range
         else:
 
             for k, v in self.x_init_range.items():
@@ -1580,10 +1546,6 @@ class Fixed_locations_Dialog(QtGui.QDialog):
             for i in range(len(Keys)):
                 x0 = self.new_node_dict[Keys[i]][0]
                 y0 = self.new_node_dict[Keys[i]][1]
-
-                # print "Removed_node", Keys[i],x_fixed,y_fixed
-                # if len(x_fixed) > 0:
-
                 for k, v in self.node_dict.items():
                     if k == Keys[i]:
                         x_fixed.append(v[0])
@@ -1592,7 +1554,6 @@ class Fixed_locations_Dialog(QtGui.QDialog):
                         continue
                 x_fixed.sort()
 
-                # print "IN Remove app_cur", x_fixed, current_x
                 if len(x_fixed) > 1:
                     if x_fixed.index(current_x) == 0:
                         start = x_fixed[1]
@@ -1616,14 +1577,12 @@ class Fixed_locations_Dialog(QtGui.QDialog):
                                 x_fixed.append(v1[0])
                             else:
                                 continue
-                # if len(y_fixed) > 0:
                 for k, v in self.node_dict.items():
                     if k == Keys[i]:
                         y_fixed.append(v[1])
                         current_y = v[1]
                     else:
                         continue
-                        # y_fixed.append(v[1])
                 y_fixed.sort()
                 if len(y_fixed) > 1:
                     if y_fixed.index(current_y) == 0:
@@ -1647,26 +1606,8 @@ class Fixed_locations_Dialog(QtGui.QDialog):
                             else:
                                 continue
 
-                '''
-                if len(x_fixed) > 0:
-
-                    #for i in range(len(x_fixed)-1):
-                    for k1, v1 in self.node_dict.items():
-                        if v1[0]<x_fixed[0]:
-                            x_fixed.append(v1[0])
-
-                if len(y_fixed) > 0:
-                    #for i in y_fixed:
-                    for k1, v1 in self.node_dict.items():
-                        if v1[1] < y_fixed[0]:
-                            y_fixed.append(v1[0])
-                '''
                 x_fixed = list(set(x_fixed))
                 y_fixed = list(set(y_fixed))
-
-                # print "IN Remove Fixed", x_fixed
-                # print y_fixed
-                # y0=self.new_node_dict[self.current_node][1]
                 min_x_change = []
                 max_x_change = []
                 x_unchange = []
@@ -1689,19 +1630,16 @@ class Fixed_locations_Dialog(QtGui.QDialog):
                         elif v[1] == self.node_dict[Keys[i]][1]:
                             y_unchange.append(v[1])
 
-                # print self.current_node
+
                 min_x_change = list(set(min_x_change))
                 max_x_change = list(set(max_x_change))
                 x_unchange = list(set(x_unchange))
                 min_y_change = list(set(min_y_change))
                 max_y_change = list(set(max_y_change))
                 y_unchange = list(set(y_unchange))
-                # print "IN Remove",min_x_change, max_x_change, x_unchange
-                # print "IN Remove",min_y_change, max_y_change, y_unchange
                 if x0 != None:
                     if len(min_x_change) > 0:
                         for x in min_x_change:
-
                             x_min = self.x_dynamic_range[x][0] + (
                                     x0 - self.x_dynamic_range[self.node_dict[Keys[i]][0]][0])
                             x_max = self.x_dynamic_range[x][1]
@@ -1730,8 +1668,6 @@ class Fixed_locations_Dialog(QtGui.QDialog):
                                     self.x_dynamic_range[x] = (x_min, x_max)
                                 else:
                                     continue
-                # print self.dynamic_range_x
-
                 if y0 != None:
                     if len(min_y_change) > 0:
                         for y in min_y_change:
@@ -1763,19 +1699,14 @@ class Fixed_locations_Dialog(QtGui.QDialog):
                                     self.y_dynamic_range[y] = (y_min, y_max)
                                 else:
                                     continue
-                # print"IN Remove x_dynamic", self.x_dynamic_range
-                # print "IN Remove", self.y_dynamic_range
-            # print"IN Remove_end x_dynamic", self.x_dynamic_range
-            # print "IN Remove", self.y_dynamic_range
 
+
+    # Initializes fixed location insertion table.
     def init_table(self):
 
         if self.parent.input_node_info != None:
             self.new_node_dict = self.parent.input_node_info
-        # print"P", self.parent.input_node_info
         row_id = self.ui.table_Fixedloc.rowCount()
-
-        # print"R", row_id
         if len(self.parent.input_node_info.keys()) > 0:
             for k, v in self.parent.input_node_info.items():
 
@@ -1795,6 +1726,7 @@ class Fixed_locations_Dialog(QtGui.QDialog):
                     self.ui.table_Fixedloc.item(row_id, 2).setText("None")
                 row_id += 1
 
+    # adding node ids in the combobox
     def set_node_id(self, node_dict):
         self.node_dict = node_dict
 
@@ -1804,8 +1736,8 @@ class Fixed_locations_Dialog(QtGui.QDialog):
             self.ui.cmb_nodes.addItem(item)
             self.Nodes.append(item)
 
+    # shows selected node id on GUI
     def set_label(self, x, y, div=1000):
-        # updated version (showing dynamic range)
         label = "Node location range  X:" + "(" + str((float(x[0]) / div)) + "," + str(
             float(x[1]) / div) + ")  " + "Y:(" + str((float(y[0]) / div)) + "," + str(float(y[1]) / div) + ")"
         self.ui.lbl_minxy.setText(label)
@@ -1820,9 +1752,8 @@ class Fixed_locations_Dialog(QtGui.QDialog):
         self.ui.txt_inputy.setEnabled(True)
         '''
 
+    # takes the user's choice and shows the updated location range for each choice.
     def node_handler(self):
-        # self.ui.txt_inputx.clear()
-        # self.ui.txt_inputy.clear()
 
         choice = self.ui.cmb_nodes.currentText()
 
@@ -1833,11 +1764,6 @@ class Fixed_locations_Dialog(QtGui.QDialog):
                 self.Y = None
                 node_id = int(i.split()[1])
                 self.current_node = node_id
-                # print self.current_node
-
-                # updated version (showing dynamic range)
-                # print self.new_node_dict
-
                 if len(self.new_node_dict.keys()) == 0:
                     xrange = self.initial_range_x[self.current_node]
                     yrange = self.initial_range_y[self.current_node]
@@ -1878,6 +1804,7 @@ class Fixed_locations_Dialog(QtGui.QDialog):
                 self.set_label(x_min,y_min)
                 '''
 
+    # checks whether the given fixed location is valid or not
     def valid_check(self):
         invalid_x = 0
         invalid_y = 0
@@ -1897,11 +1824,10 @@ class Fixed_locations_Dialog(QtGui.QDialog):
                         invalid_y = 0
         return invalid_x, invalid_y
 
-    def add_row(self):
 
+    # adds new row upon clicking on "Add" button
+    def add_row(self):
         row_id = self.ui.table_Fixedloc.rowCount()
-        # self.ui.table_Fixedloc.insertRow(rowPosition)
-        # self.ui.table_Fixedloc.setItem(rowPosition, self.current_node, self.X, self.Y)
         self.ui.table_Fixedloc.insertRow(row_id)
         self.ui.table_Fixedloc.setItem(row_id, 0, QtGui.QTableWidgetItem())
         self.ui.table_Fixedloc.setItem(row_id, 1, QtGui.QTableWidgetItem())
@@ -1931,12 +1857,11 @@ class Fixed_locations_Dialog(QtGui.QDialog):
 
         else:
             self.ui.table_Fixedloc.item(row_id, 2).setText('None')
-
-        # if x_check == 0 and y_check == 0:
         self.dynamic_update()
         self.inserted_order.append(self.current_node)
         self.new_node_dict[self.current_node] = (self.X, self.Y)
 
+    # removes a row upon clicking on "Remove" button
     def remove_row(self):
         selected_row = self.ui.table_Fixedloc.currentRow()
         row_id = self.ui.table_Fixedloc.selectionModel().selectedIndexes()[0].row()
@@ -1953,9 +1878,8 @@ class Fixed_locations_Dialog(QtGui.QDialog):
 
         self.dynamic_remove()
 
-        # print "RP", self.parent.input_node_info,self.new_node_dict,self.node_dict
 
-    # def set_locations(self):
+    # Saves the given fixed locations to the parent node dictionary upon clicking on "Save" button
     def finished(self):
         # self.parent.input_node_info = self.new_node_dict
         self.parent.fixed_x_locations = {}
@@ -1998,15 +1922,11 @@ class Fixed_locations_Dialog(QtGui.QDialog):
         self.parent.dynamic_range_x = dict(self.dynamic_range_x)
         self.parent.dynamic_range_y = dict(self.dynamic_range_y)
         self.parent.inserted_order = [i for i in self.inserted_order]
-
-        # self.parent.input_node_info=self.new_node_dict
-        # print"XY", self.parent.fixed_x_locations,self.parent.fixed_y_locations
-
         self.close()
 
 
 class New_layout_engine_dialog(QtGui.QDialog):
-    # Test New LAyout Engine
+    # Test New Layout Engine
     def __init__(self, parent, fig, W, H, engine=None, graph=None):
         QtGui.QDialog.__init__(self, parent)
         self.ui = Ui_CornerStitch_Dialog()
@@ -2060,7 +1980,6 @@ class New_layout_engine_dialog(QtGui.QDialog):
         self.ui.btn_fixed_locs.setEnabled(False)
         self.ui.btn_gen_layouts.setEnabled(False)
         self.ui.btn_eval_setup.setEnabled(False)
-        #self.ui.txt_seed.setEnabled(False)
 
         self.mode3_width = None  # To update mode3 floorplan size
         self.mode3_height = None  # To update mode3 floorplan size
@@ -2072,6 +1991,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
         self.sol_count = 0
         self.sol_params = None
 
+    # saves layout patch data in csv file for NSGAII generated solutions
     def save_layouts(self,Layout_Rects,count):
         for k,v in Layout_Rects.items():
 
@@ -2152,6 +2072,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
                 my_csv.close()
 
 
+    # saves a single solution upon clicking on "Save Selected Solution" button
     def save_solution(self):
         if len(self.parent.project.solutions) == 0:
             self.sol_count = 0
@@ -2178,18 +2099,19 @@ class New_layout_engine_dialog(QtGui.QDialog):
             else:
                 self.sol_count -= 1
 
+    # Saves all solution information in a folder as individual csv file.
+    # If pareto-flag is on,pareto solutions are also saved in another folder.
+    # Only evaluated values are also saved as a csv file.
     def save_solution_set(self):
-        #print "implement later"
         directory = self.parent.project.directory
         sol_path = directory + '/Layout_Solutions'
         pareto_path= directory + '/Pareto_Solutions'
         if not os.path.exists(sol_path):
-            #print "path doesn't exist. trying to make"
             os.makedirs(sol_path)
         layout_symb_dict = self.form_sym_obj_rect_dict()
-
+        if len(layout_symb_dict.keys())>1000:
+            QtGui.QMessageBox.about(self,"Caution:Memory issue might occur!!","Thousands of csv files are going to be generated.")
         for i in range(len(layout_symb_dict.keys())):
-
             item = 'Layout ' + str(i)
             file_name =sol_path+'/'+ item + '.csv'
             with open(file_name, 'wb') as my_csv:
@@ -2234,22 +2156,18 @@ class New_layout_engine_dialog(QtGui.QDialog):
                     my_csv.close()
         try:
             filename = QFileDialog.getSaveFileName(self, "Save Solution Data", "C://", "Save Solution set (*.csv)")
-            #file_name = pareto_path + '/' + item + '.csv'
             filename=filename[0]
             with open(filename, 'wb') as my_csv:
                 csv_writer = csv.writer(my_csv, delimiter=',')
                 csv_writer.writerow(["Layout_ID",self.perf1['unit'],self.perf2['unit']])
-                data=[]
+                #data=[]
                 num_layouts = len(self.perf1['data'])  # layout_symb_dict.keys()  # to handle pareto-plot only
                 for i in range(num_layouts):
-                    choice = 'Layout ' + str(i)
+                    #choice = 'Layout ' + str(i)
                     sol_info=[int(i),self.perf1['data'][i],self.perf2['data'][i]]
                     csv_writer.writerow(sol_info)
                     #data.append(sol_info)
             my_csv.close()
-        #np.array(data)
-        #np.savetxt(filename[0],data,delimiter=',')
-            #save_file(data, filename[0])
         except:
             print "Please save a valid format"
 
@@ -2268,18 +2186,8 @@ class New_layout_engine_dialog(QtGui.QDialog):
             self.parent.add_solution(solution=solution, flag=1, sym_info=layout_symb_dict[choice])
 
         '''
-    def getPatches(self, Patches):
-        if self.Patches == None:
-            self.Patches = Patches
-            print "self.Patches"
-        return
 
-    def setPatches(self):
-        return self.Patches
-
-        self.ui.btn_gen_layouts.pressed.connect(self.gen_layouts)
-        self.ui.cmb_sols.currentIndexChanged.connect(self.layout_plot)
-
+    # captures change of width on gui
     def width_edit_text_changed(self):
         try:
             W = float(self.ui.txt_width.text()) * 1000
@@ -2288,6 +2196,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
         if W != None:
             self.mode3_width = W
 
+    # captures change of height on gui
     def height_edit_text_changed(self):
         try:
             H = float(self.ui.txt_height.text()) * 1000
@@ -2296,6 +2205,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
         if H != None:
             self.mode3_height = H
 
+    # changes necessary settings upon choosing of different mode
     def mode_handler(self):  # Modes combobox
         choice = str(self.ui.cmb_modes.currentText())
 
@@ -2347,13 +2257,14 @@ class New_layout_engine_dialog(QtGui.QDialog):
 
         return
 
+    # opens fixed location insertion dialog upon clicking on "Fixed Locations" button.
     def assign_fixed_locations(self):  # Fixed Locations (for mode-3)
-
         fixed_locations = Fixed_locations_Dialog(self)
         fixed_locations.set_node_id(self.graph[1])
         fixed_locations.show()
         fixed_locations.exec_()
 
+    # opens constraint table upon clicking on "Add Constraints".
     def add_constraints(self):
 
         constraints = ConsDialog(self)
@@ -2366,12 +2277,12 @@ class New_layout_engine_dialog(QtGui.QDialog):
         self.constraint = True
 
         self.engine.cons_df = self.cons_df
-        #self.engine.cons_df.to_csv('out_1.csv', sep=',', header=None, index=None)
         self.parent.cons_df=self.cons_df
         self.ui.btn_eval_setup.setEnabled(True)
         self.ui.btn_gen_layouts.setEnabled(True)
         self.ui.cmb_modes.setEnabled(True)
 
+    # updates solution browser
     def update_sol_browser(self):
         self.ax3.clear()
         self.ui.btn_sel_sol.setEnabled(True)
@@ -2410,6 +2321,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
         self.canvas_sol_browser.draw()
         self.canvas_sol_browser.callbacks.connect('pick_event', self.on_pick)
 
+    # shows layout upon clicking a dot on solution browser
     def on_pick(self, event):
         self.update_sol_browser()
         self.selected_ind = event.ind[0]
@@ -2421,6 +2333,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
             self.sol_params = [[self.perf1['type'], self.perf1['data'][self.selected_ind], self.perf1['unit']],
                        [self.perf2['type'], self.perf2['data'][self.selected_ind], self.perf2['unit']]]
 
+    # Performs non-dominated sorting on solution set
     def pareto_frontiter2D(self, data_in=None, layouts=None, sym_layouts=None, size=None, MinX=True, MinY=True):
             '''
 
@@ -2449,16 +2362,14 @@ class New_layout_engine_dialog(QtGui.QDialog):
                     if pair[1] >= p_front[-1][1]:  # Look for lower values of Y
                         p_front.append(pair)  # and add them to the Pareto frontie
 
-            print "No of Solutions", len(p_front)
+            print "No of Solutions on Pareto-front", len(p_front)
+            print "Total solutions", len(data_1)
             pareto_data = np.array(p_front)
 
             plot = False
             if plot:
 
                 plt.scatter(pareto_data[:, 0], pareto_data[:, 1])
-                #plt.plot(pareto_data[:, 0], pareto_data[:, 1], 'r')
-                # path = os.path.join('D:\Demo\BondWire\Bond_Wire\Restart\Final_test\Journal\PS\Compare', 'pareto.png')
-                # plt.savefig(path)
                 plt.show()
             pareto_dataset=[]
             for k,v in data_in.items():
@@ -2466,9 +2377,9 @@ class New_layout_engine_dialog(QtGui.QDialog):
                 if v in p_front:
                     p_data[k]=v
                     pareto_dataset.append(p_data)
-            #;pprint pareto_data
             return pareto_dataset
 
+    # cost function for NSGAII
     def cost_func_NSGAII(self, individual):
         item = 'Layout ' + str(self.count)
 
@@ -2484,9 +2395,6 @@ class New_layout_engine_dialog(QtGui.QDialog):
         print"Added solution no.", self.count
         self.layout_data[item] = {'Rects': cs_sym_data[0]}
 
-        #self.generated_layouts[item] = {'Patches': Patches[0]}
-        # print "P",Patches
-        # print cs_sym_data
         if self.engine.sym_layout != None:
             layout_data = self.form_sym_obj_rect_dict_opt(layout_data=cs_sym_data)
             for k, v in layout_data.items():
@@ -2502,11 +2410,10 @@ class New_layout_engine_dialog(QtGui.QDialog):
                 plot_layout(sym_layout=self.engine.sym_layout, ax=ax)
                 plt.show()
             ret = self._sym_eval_perf()
-
-            #solution = [ret, Patches, cs_sym_data]
             self.solutions[item]=ret
         return ret
 
+    # generates layout
     def gen_layouts(self):
         try:
             self.parent.project.layout_engine = "CS"
@@ -2526,7 +2433,10 @@ class New_layout_engine_dialog(QtGui.QDialog):
             for f in filelist:
                 os.remove(f)
 
-
+            if len(self.perf_dict.keys()) < 2:
+                QtGui.QMessageBox.about(self, "Caution:Optimization setup is wrong!!",
+                                        "Check design peformance setup.")
+                return
             print "generate layout"
             self.perf1 = {"label": None, 'data': [], 'unit': '', 'type': ''}
             self.perf2 = {"label": None, 'data': [], 'unit': '', 'type': ''}
@@ -2534,16 +2444,16 @@ class New_layout_engine_dialog(QtGui.QDialog):
             self.layout_data = {}
 
             if self.current_mode != 0:
-                # if self.opt_algo=="NG-RANDOM":
                 N=self.num_layouts
+                if N>1000:
+                    QtGui.QMessageBox.about(self, "Caution:Memory issue might occur!!","Thousands of csv files are going to be generated.")
                 W = float(self.ui.txt_width.text()) * 1000
                 H = float(self.ui.txt_height.text()) * 1000
 
                 if self.opt_algo == "NSGAII" and self.current_mode == 2:
 
-
-
-
+                    if N>400:
+                        QtGui.QMessageBox.about(self, "Caution:Memory issue might occur!!","Thousands of csv files are going to be generated.")
                     X, Y = self.engine.mode_zero()
                     x_nodes = [i for i in range(len(X[1]))]
                     y_nodes = [i for i in range(len(Y[1]))]
@@ -2558,6 +2468,11 @@ class New_layout_engine_dialog(QtGui.QDialog):
                     self.W = W
                     self.H = H
                     self.count = 0
+                    if self.W==None or self.H==None or N==0 or self.seed==None:
+                        QtGui.QMessageBox.about(self, "Caution:Something is missing!!",
+                                                "Check input parameters.")
+                        print "Check input parameters. Something is missing."
+                        return
                     opt = NSGAII_Optimizer(design_vars=Design_Vars, eval_fn=self.cost_func_NSGAII, num_measures=2,
                                            seed=self.seed, num_gen=N)
                     opt.run()
@@ -2566,11 +2481,12 @@ class New_layout_engine_dialog(QtGui.QDialog):
                         Pareto_data = self.pareto_frontiter2D(data_in=self.solutions)
                         self.update_pareto_solutions(pareto_data=Pareto_data)
 
-                        #print self.layout_data
-                        #self.layout_data=dict(layout_data)
-                        #self.generated_layouts=dict(generated_layout)
-
                 elif self.opt_algo=="NG-RANDOM":
+                    if N==0 or self.seed==None:
+                        QtGui.QMessageBox.about(self, "Caution:Something is missing!!",
+                                                "Check input parameters.")
+                        print "Check input parameters. Something is missing."
+                        return
                     Patches, cs_sym_data = self.engine.generate_solutions(self.current_mode, num_layouts=N, W=W, H=H,
                                                                           fixed_x_location=self.fixed_x_locations,
                                                                           fixed_y_location=self.fixed_y_locations,
@@ -2617,7 +2533,6 @@ class New_layout_engine_dialog(QtGui.QDialog):
         if self.opt_algo == "NG-RANDOM" or self.opt_algo==None:
             if self.engine.sym_layout != None:
                 sym_info = self.form_sym_obj_rect_dict()
-                #print sym_info['dims']
                 # Evaluate performace for all all layouts
                 for p in self.perf_dict.keys():
                     perf = self.perf_dict[p]
@@ -2630,12 +2545,12 @@ class New_layout_engine_dialog(QtGui.QDialog):
                 for i in range(len(measurements)):
                     item='Layout ' + str(i)
                     self.solutions[item]=[measurements[i][0],measurements[i][1]]
-                #solutions=[[i[0],i[1]] for i in measurements]
                 Pareto_data = self.pareto_frontiter2D(data_in=self.solutions)
                 self.update_pareto_solutions(pareto_data=Pareto_data)
 
-
         self.update_sol_browser()
+
+
     def update_pareto_solutions(self,pareto_data=None):
         layout_data = {}
         generated_layout = {}
@@ -3335,7 +3250,6 @@ class ET_standalone_Dialog(QtGui.QDialog):
 
     def opt_algo_handler(self):
         choice = str(self.ui.cmb_opt_algo.currentText())
-        #print "A", choice
         if choice == "NSGAII":
             self.method = "NSGAII"
             self.parent.opt_algo = "NSGAII"

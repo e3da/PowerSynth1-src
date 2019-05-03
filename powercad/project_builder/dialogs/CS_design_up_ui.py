@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'CS_design_up.ui'
 #
-# Created: Tue Apr 16 19:20:49 2019
+# Created: Fri May 03 10:28:56 2019
 #      by: pyside-uic 0.2.15 running on PySide 1.2.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -112,7 +112,7 @@ class Ui_CornerStitch_Dialog(object):
         QtCore.QMetaObject.connectSlotsByName(CornerStitch_Dialog)
 
     def retranslateUi(self, CornerStitch_Dialog):
-        CornerStitch_Dialog.setWindowTitle(QtGui.QApplication.translate("CornerStitch_Dialog", "PowerSynth (v1.2) Layout Engine ", None, QtGui.QApplication.UnicodeUTF8))
+        CornerStitch_Dialog.setWindowTitle(QtGui.QApplication.translate("CornerStitch_Dialog", "Constraint-Aware Layout Engine ", None, QtGui.QApplication.UnicodeUTF8))
         self.grbox_view.setTitle(QtGui.QApplication.translate("CornerStitch_Dialog", "Layout Visualization", None, QtGui.QApplication.UnicodeUTF8))
         self.groupBox_4.setTitle(QtGui.QApplication.translate("CornerStitch_Dialog", "Generated Layout", None, QtGui.QApplication.UnicodeUTF8))
         self.groupBox_5.setTitle(QtGui.QApplication.translate("CornerStitch_Dialog", "Input (initial) Layout", None, QtGui.QApplication.UnicodeUTF8))
