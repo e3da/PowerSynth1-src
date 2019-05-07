@@ -3,6 +3,7 @@ import pandas as pd
 from powercad.corner_stitch.API_PS import *
 from powercad.corner_stitch.CornerStitch import *
 from powercad.design.library_structures import *
+from powercad.cons_aware_en.database import *
 import glob
 import os
 
@@ -504,6 +505,17 @@ class New_layout_engine():
                         data.append(R_in1)
                     data.append(R_in)
 
+                data.append([k[0], k[1], 'None', 'None', 'None', 'None', 'None', 'None'])
+
+                conn = create_connection(self.new_layout_engine.db)
+                with conn:
+                    # create a new project
+                    table = 'Layout_' + str(j)
+                    create_table(conn, name=table)
+                    for d in data:
+                        insert_record(conn, table, d)
+
+                '''
                 file_name = self.new_layout_engine.directory+'/' + item + '.csv'
 
                 with open(file_name, 'wb') as my_csv:
@@ -514,6 +526,9 @@ class New_layout_engine():
                         csv_writer.writerow(i)
 
                 my_csv.close()
+                
+                '''
+
                 j+=1
 
 def plot_layout(Layout_Rects,level,Min_X_Loc=None,Min_Y_Loc=None):

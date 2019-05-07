@@ -17,7 +17,7 @@ import powercad.sym_layout.plot as plot
 from powercad.project_builder.dialogs.propertiesDeviceDialog import Ui_device_propeties
 from powercad.Spice_handler.spice_import.NetlistImport import Netlist
 import copy
-
+import sqlite3
 # plot.plt.matplotlib.use('Qt4Agg')
 plot.plt.matplotlib.rcParams['backend.qt4'] = 'PySide'
 from powercad.design.project_structures import *
@@ -51,6 +51,7 @@ from powercad.sym_layout.symbolic_layout import SymPoint, ElectricalMeasure, The
 from powercad.project_builder.dialogs.cons_setup_ui import Ui_Constraint_setup
 from powercad.response_surface.Model_Formulation import form_trace_model_optimetric, \
     form_fasthenry_trace_response_surface
+from powercad.cons_aware_en.database import *
 from powercad.parasitics.analysis import parasitic_analysis
 import psidialogs
 from numpy.linalg.linalg import LinAlgError
@@ -2059,7 +2060,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
                         R_in1 = [x, y, w, h, colour, 2,'None','None']
                         data.append(R_in1)
                     data.append(R_in)
-
+                '''
                 file_name = self.directory+'/' + item + '.csv'
 
                 with open(file_name, 'wb') as my_csv:
@@ -2070,7 +2071,17 @@ class New_layout_engine_dialog(QtGui.QDialog):
                         csv_writer.writerow(i)
 
                 my_csv.close()
+                '''
+                #saving in database
+                data.append([k[0], k[1],'None','None','None','None','None','None'])
 
+                conn = create_connection(self.db)
+                with conn:
+                    # create a new project
+                    table = 'Layout_'+str(self.count)
+                    create_table(conn, name=table)
+                    for d in data:
+                        insert_record(conn, table, d)
 
     # saves a single solution upon clicking on "Save Selected Solution" button
     def save_solution(self):
@@ -2425,14 +2436,24 @@ class New_layout_engine_dialog(QtGui.QDialog):
             return
         else:
             cwd = os.getcwd()
+            database = cwd + "\\" + "sqlite\db"
+            if not os.path.exists(database):
+                os.makedirs(database)
+            filelist = glob.glob(os.path.join(database+'/*'))
+            for f in filelist:
+                os.remove(f)
+            self.db = database + '/' + 'python.db'
+            '''
+            cwd = os.getcwd()
             self.directory = cwd + "/Mode_" + str(self.current_mode)
+
             if not os.path.exists(self.directory):
                 os.makedirs(self.directory)  # creating directory
 
             filelist = glob.glob(os.path.join(self.directory, "*.csv"))
             for f in filelist:
                 os.remove(f)
-
+            '''
             if len(self.perf_dict.keys()) < 2:
                 QtGui.QMessageBox.about(self, "Caution:Optimization setup is wrong!!",
                                         "Check design peformance setup.")
@@ -2445,15 +2466,18 @@ class New_layout_engine_dialog(QtGui.QDialog):
 
             if self.current_mode != 0:
                 N=self.num_layouts
+                '''
                 if N>1000:
                     QtGui.QMessageBox.about(self, "Caution:Memory issue might occur!!","Thousands of csv files are going to be generated.")
+                '''
                 W = float(self.ui.txt_width.text()) * 1000
                 H = float(self.ui.txt_height.text()) * 1000
 
                 if self.opt_algo == "NSGAII" and self.current_mode == 2:
-
+                    '''
                     if N>400:
                         QtGui.QMessageBox.about(self, "Caution:Memory issue might occur!!","Thousands of csv files are going to be generated.")
+                    '''
                     X, Y = self.engine.mode_zero()
                     x_nodes = [i for i in range(len(X[1]))]
                     y_nodes = [i for i in range(len(Y[1]))]
@@ -2611,6 +2635,67 @@ class New_layout_engine_dialog(QtGui.QDialog):
         if mode == 'cs':  # corner stitch plotting engine (has some issues)
 
             if self.current_mode>0:
+                #database = os.getcwd()
+                #db=database+'\sqlite\db\python.db'
+                conn = create_connection(self.db)
+                v1=[]
+                with conn:
+                    # create a new project
+                    table = 'Layout_' + str(layout_ind)
+                    all_data = retrieve_data(conn, table)
+                    last_data=all_data[-1]
+                    #3print"B", len(all_data)
+                    k1 = (float(last_data[0]), float(last_data[1]))
+                    all_data.remove(last_data)
+                    #print len(all_data)
+                    for row in all_data:
+                        '''
+                                                if len(row) < 4:
+                            k1 = (float(row[0]), float(row[1]))
+                        else:
+                        '''
+
+                        x = float(row[0])
+                        y = float(row[1])
+                        w = float(row[2])
+                        h = float(row[3])
+                        colour = row[4]
+                        order = int(row[5])
+                        if row[6] != 'None':
+                            linestyle = row[6]
+                            edgecolor = row[7]
+                        if row[6] == 'None':
+                            R1 = matplotlib.patches.Rectangle(
+                                (x, y),  # (x,y)
+                                w,  # width
+                                h,  # height
+                                facecolor=colour,
+                                zorder=order
+
+                            )
+                        else:
+                            R1 = matplotlib.patches.Rectangle(
+                                (x, y),  # (x,y)
+                                w,  # width
+                                h,  # height
+                                facecolor=colour,
+                                linestyle=linestyle,
+                                edgecolor=edgecolor,
+                                zorder=order
+
+                            )
+                        v1.append(R1)
+
+                    for p in v1:
+                        self.ax1.add_patch(p)
+                    self.ax1.set_xlim(0, k1[0])
+                    self.ax1.set_ylim(0, k1[1])
+                    self.ui.txt_width.setText(str(k1[0]))
+                    self.ui.txt_height.setText(str(k1[1]))
+                    self.ax1.set_aspect('equal')
+                    self.canvas_sols.draw()
+
+                '''
                 filename=self.directory+"/"+choice+".csv"
                 v1=[]
 
@@ -2659,7 +2744,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
                 self.ui.txt_height.setText(str(k1[1]))
                 self.ax1.set_aspect('equal')
                 self.canvas_sols.draw()
-
+                '''
             else:
 
                 for k, v in self.generated_layouts.items():
