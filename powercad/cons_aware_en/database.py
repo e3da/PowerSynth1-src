@@ -12,7 +12,7 @@ def create_connection(db_file):
     return conn
 
 def create_table(conn,name):
-    print "Saved to database: ",name
+    #print "Saved to database: ",name
     cur = conn.cursor()
     sql_command="""CREATE TABLE IF NOT EXISTS """+name+""" (x           REAL    NOT NULL,
                      y            REAL    NOT NULL,

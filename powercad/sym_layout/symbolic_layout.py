@@ -2164,7 +2164,7 @@ class SymbolicLayout(object):
         self.generate_layout()
         ret = []
         drc = DesignRuleCheck(self)
-        drc_count = drc.count_drc_errors(True)
+        drc_count = drc.count_drc_errors(False)
         #fig, ax = plt.subplots()
         #plot_layout(self, ax=ax)
         #plt.show()

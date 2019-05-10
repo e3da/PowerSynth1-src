@@ -6,7 +6,7 @@ from powercad.design.library_structures import *
 from powercad.cons_aware_en.database import *
 import glob
 import os
-
+from tqdm import tqdm
 class New_layout_engine():
     def __init__(self):
         self.W = None
@@ -31,7 +31,6 @@ class New_layout_engine():
         # only activate when the sym_layout API is used
         self.sym_layout = None
         self.layout_sols = {}
-
     def open_new_layout_engine(self, window):
         self.window = window
         patches = self.init_data[0]
@@ -187,7 +186,7 @@ class New_layout_engine():
 
 
     # generate layout solutions using constraint graph edge weights randomization for different modes(level)
-    def generate_solutions(self, level, num_layouts=1, W=None, H=None, fixed_x_location=None, fixed_y_location=None,seed=None,individual=None):
+    def generate_solutions(self, level, num_layouts=1, W=None, H=None, fixed_x_location=None, fixed_y_location=None,seed=None,individual=None,bar=False):
         """
 
         :param level: mode of operation: mode-0(minimum sized layout), mode-1(variable sized layouts), mode-2(fixed sized layouts), mode-3(fixed sized with fixed component locations)
@@ -196,9 +195,14 @@ class New_layout_engine():
         :param H: floorplan height (for mode 2-3)
         :param fixed_x_location: user defined fixed x locations (for mode 3)
         :param fixed_y_location: user given fixed y locations (for mode 3)
+        :param bar: show progress bar if True
         :return: Layout solutions and mapped  new layout engine solutions back to symbolic layout (old engine) objects
         """
         #global min_dimensions
+        if bar:
+            p_bar = tqdm(total=num_layouts)
+        else:
+            p_bar=None
         CG1 = CS_to_CG(level)
         CG1.getConstraints(self.cons_df)
 
@@ -243,7 +247,7 @@ class New_layout_engine():
             CS_SYM_Updated = CS_SYM_Updated['H']
             #self.cur_fig_data = plot_layout(Layout_Rects, level)
             #self.cur_fig_data=None
-            self.save_layouts(Layout_Rects, level)
+            self.save_layouts(Layout_Rects, p_bar)
             self.cur_fig_data = None
 
         #mode-2
@@ -311,7 +315,7 @@ class New_layout_engine():
             CS_SYM_Updated = CS_SYM_Updated['H'] # takes only horizontal corner stitch data
             #self.cur_fig_data = plot_layout(Layout_Rects, level) #collects the layout patches
             if self.new_layout_engine.opt_algo!="NSGAII":
-                self.save_layouts(Layout_Rects, level)
+                self.save_layouts(Layout_Rects, p_bar)
                 self.cur_fig_data = None
             else:
                 self.cur_fig_data=Layout_Rects
@@ -430,14 +434,18 @@ class New_layout_engine():
 
             CS_SYM_Updated = CS_SYM_Updated['H'] # takes only horizontal corner stitch data
             #self.cur_fig_data = plot_layout(Layout_Rects, level,Min_X_Loc,Min_Y_Loc)
-            self.save_layouts(Layout_Rects, level)
+            self.save_layouts(Layout_Rects, p_bar)
+
+
+
             self.cur_fig_data = None
 
-
+        if bar:
+            p_bar.close()
 
         return self.cur_fig_data, CS_SYM_Updated
 
-    def save_layouts(self,Layout_Rects,level):
+    def save_layouts(self,Layout_Rects,p_bar=None):
         for k,v in Layout_Rects.items():
 
             if k=='H':
@@ -511,6 +519,10 @@ class New_layout_engine():
                 with conn:
                     # create a new project
                     table = 'Layout_' + str(j)
+                    try:
+                        p_bar.update(j)
+                    except:
+                        print table
                     create_table(conn, name=table)
                     for d in data:
                         insert_record(conn, table, d)

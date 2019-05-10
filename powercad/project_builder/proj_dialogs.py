@@ -69,6 +69,9 @@ from powercad.design.module_design import ModuleDesign
 from powercad.opt.optimizer import NSGAII_Optimizer, DesignVar
 import matplotlib
 import glob
+from tqdm import tqdm
+
+import time
 # CLASSES FOR DIALOG USAGE
 class GenericDeviceDialog(QtGui.QDialog):
     # Author: quang le
@@ -2431,29 +2434,28 @@ class New_layout_engine_dialog(QtGui.QDialog):
         except:
             print "debug mode"
 
+        # Evaluate performace for all all layouts
+        if len(self.perf_dict.keys())!=0:
+            for p in self.perf_dict.keys():
+                perf = self.perf_dict[p]
+                measure = perf['measure']
+            try: # Attempt to characterize the structure
+                if perf['type'] == 'Thermal' and measure.mdl == 1 and self.current_mode != 1:
+                    self.engine.sym_layout.thermal_characterize()
+            except:
+                self.mdl = 2
         if not (self.constraint):
             print "can't generate layouts"
             return
         else:
-            cwd = os.getcwd()
-            database = cwd + "\\" + "sqlite\db"
+            database = os.path.join(self.parent.project.directory,'layouts_db')
             if not os.path.exists(database):
                 os.makedirs(database)
             filelist = glob.glob(os.path.join(database+'/*'))
             for f in filelist:
                 os.remove(f)
-            self.db = database + '/' + 'python.db'
-            '''
-            cwd = os.getcwd()
-            self.directory = cwd + "/Mode_" + str(self.current_mode)
+            self.db = database + '/' + 'layout.db'
 
-            if not os.path.exists(self.directory):
-                os.makedirs(self.directory)  # creating directory
-
-            filelist = glob.glob(os.path.join(self.directory, "*.csv"))
-            for f in filelist:
-                os.remove(f)
-            '''
             if len(self.perf_dict.keys()) < 2:
                 QtGui.QMessageBox.about(self, "Caution:Optimization setup is wrong!!",
                                         "Check design peformance setup.")
@@ -2514,7 +2516,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
                     Patches, cs_sym_data = self.engine.generate_solutions(self.current_mode, num_layouts=N, W=W, H=H,
                                                                           fixed_x_location=self.fixed_x_locations,
                                                                           fixed_y_location=self.fixed_y_locations,
-                                                                          seed=self.seed)
+                                                                          seed=self.seed,bar=True)
 
                     if cs_sym_data == None: #Patches!=None or
                         print "ERROR: Invalid Information"
@@ -2557,12 +2559,6 @@ class New_layout_engine_dialog(QtGui.QDialog):
         if self.opt_algo == "NG-RANDOM" or self.opt_algo==None:
             if self.engine.sym_layout != None:
                 sym_info = self.form_sym_obj_rect_dict()
-                # Evaluate performace for all all layouts
-                for p in self.perf_dict.keys():
-                    perf = self.perf_dict[p]
-                    measure = perf['measure']
-                    if perf['type'] == 'Thermal' and measure.mdl == 1 and self.current_mode != 1:
-                        self.engine.sym_layout.thermal_characterize()
                 self._sym_eval_perf(sym_info=sym_info)
             if self.pareto_plot_flag == 1:
                 measurements=zip(self.perf1['data'],self.perf2['data'])
@@ -3005,16 +3001,20 @@ class New_layout_engine_dialog(QtGui.QDialog):
             for p, pdraw in zip(self.perf_dict.keys(), perf_plot):
                 perf = self.perf_dict[p]
                 measure = perf['measure']
-                for layout in sym_info.keys():
+                t = tqdm(total=len(sym_info.keys()))
+
+                for i in range(len(sym_info.keys())):
+                    layout = sym_info.keys()[i]
                     symb_rect_dict = sym_info[layout]['sym_info']
                     dims = sym_info[layout]['Dims']
                     bp_dims = [dims[0] + 4, dims[1] + 4]
+                    t.update(i)
 
                     self._sym_update_layout(sym_info=symb_rect_dict)
                     update_sym_baseplate_dims(sym_layout=sym_layout, dims=bp_dims)
                     update_substrate_dims(sym_layout=sym_layout, dims=dims)
                     self.update_perf_values(perf=perf,pdraw=pdraw,measure=measure,sym_layout=sym_layout)
-
+                t.close()
         elif self.opt_algo=="NSGAII": # single evaluation
             ret = []
             for p, pdraw in zip(self.perf_dict.keys(), perf_plot):

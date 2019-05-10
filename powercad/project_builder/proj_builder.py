@@ -15,6 +15,10 @@ import psidialogs
 from PySide import QtCore, QtGui
 import webbrowser
 from PySide.QtGui import QFileDialog
+import warnings
+import matplotlib.cbook
+warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)
+
 from matplotlib import colors
 
 import powercad.sym_layout.plot as plot
@@ -53,8 +57,10 @@ from powercad.general.data_struct.util import Rect
 from powercad.design.module_data import *
 from shutil import copyfile
 import filecmp
+
+
 class ProjectBuilder(QtGui.QMainWindow):
-    
+
     # Relative paths -> use forward slashes for platform independence
     TEMP_DIR = os.path.abspath(TEMP_DIR)
     
@@ -72,6 +78,7 @@ class ProjectBuilder(QtGui.QMainWindow):
     
     """Main Window"""
     def __init__(self):
+
         QtGui.QMainWindow.__init__(self, None)
         # current project
         self.project = None
