@@ -8,6 +8,8 @@ import os
 import traceback
 import pandas as pd
 import random
+import shutil
+import json
 import types
 import numpy as np
 from PySide.QtGui import QFileDialog, QStandardItemModel, QStandardItem, QMessageBox, QFont
@@ -1961,6 +1963,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
         self.H = None  # for NSGAII cost_func
         self.solutions = {}  # for NSGAII cost_func
         self.seed = None
+        #self.cols=cols # database columns
         self.min_dimensions={}
         self.default_save_dir = "C:\\"
         # add buttons
@@ -2076,15 +2079,30 @@ class New_layout_engine_dialog(QtGui.QDialog):
                 my_csv.close()
                 '''
                 #saving in database
-                data.append([k[0], k[1],'None','None','None','None','None','None'])
-
-                conn = create_connection(self.db)
+                '''
+                #data.append([k[0], k[1],'None','None','None','None','None','None'])
                 with conn:
                     # create a new project
                     table = 'Layout_'+str(self.count)
                     create_table(conn, name=table)
                     for d in data:
                         insert_record(conn, table, d)
+                
+                '''
+
+
+                data.append([k[0], k[1]])
+
+                l_data=[self.count,data]
+
+                with open('out.txt', 'wb') as f:
+                    f.writelines(["%s\n" % item for item in data])
+                    # f.write(''.join(chr(i) for i in range(data)))
+                conn = create_connection(self.db)
+                with conn:
+                    insert_record(conn, l_data)
+
+
 
     # saves a single solution upon clicking on "Save Selected Solution" button
     def save_solution(self):
@@ -2449,12 +2467,25 @@ class New_layout_engine_dialog(QtGui.QDialog):
             return
         else:
             database = os.path.join(self.parent.project.directory,'layouts_db')
-            if not os.path.exists(database):
-                os.makedirs(database)
-            filelist = glob.glob(os.path.join(database+'/*'))
+            filelist = glob.glob(os.path.join(database + '/*'))
+            # print filelist
             for f in filelist:
                 os.remove(f)
+
+            if not os.path.exists(database):
+                os.makedirs(database)
+            '''
+            filelist = glob.glob(os.path.join(database+'/*'))
+            #print filelist
+            for f in filelist:
+                os.remove(f)
+            '''
+
+
             self.db = database + '/' + 'layout.db'
+            conn = create_connection(self.db)
+            with conn:
+                create_table(conn)
 
             if len(self.perf_dict.keys()) < 2:
                 QtGui.QMessageBox.about(self, "Caution:Optimization setup is wrong!!",
@@ -2637,50 +2668,81 @@ class New_layout_engine_dialog(QtGui.QDialog):
                 v1=[]
                 with conn:
                     # create a new project
-                    table = 'Layout_' + str(layout_ind)
-                    all_data = retrieve_data(conn, table)
+                    #table = 'Layout_' + str(layout_ind)
+                    all_data = retrieve_data(conn,layout_ind)
+                    #all_data=json.loads(all_data)
+
+                    #print "A",all_data
+                    data=str(all_data[0])
+                    lines=data.split()
+                    all_lines=[]
+                    for i in lines:
+                        if i[-1]!=']':
+                            if i[0]=='[':
+                                l=[i[1:-1]]
+
+                            else:
+                                l.append(i[0:-1])
+                        else:
+                            j=i[0:-1]
+                            l.append(j)
+                        all_lines.append(l)
+
+                    '''
+                    print"A", all_data
+                    for row in all_data:
+                        print row
                     last_data=all_data[-1]
                     #3print"B", len(all_data)
                     k1 = (float(last_data[0]), float(last_data[1]))
                     all_data.remove(last_data)
-                    #print len(all_data)
-                    for row in all_data:
-                        '''
-                                                if len(row) < 4:
+                    '''
+                    colors = ['White', 'green', 'red', 'blue', 'yellow', 'pink','black']
+                    colours=["'White'","'green'","'red'","'blue'","'yellow'","'pink'","'black'"]
+                    for row in all_lines:
+                        #print"R", row
+                        if len(row) < 4:
                             k1 = (float(row[0]), float(row[1]))
                         else:
-                        '''
 
-                        x = float(row[0])
-                        y = float(row[1])
-                        w = float(row[2])
-                        h = float(row[3])
-                        colour = row[4]
-                        order = int(row[5])
-                        if row[6] != 'None':
-                            linestyle = row[6]
-                            edgecolor = row[7]
-                        if row[6] == 'None':
-                            R1 = matplotlib.patches.Rectangle(
-                                (x, y),  # (x,y)
-                                w,  # width
-                                h,  # height
-                                facecolor=colour,
-                                zorder=order
+                            x = float(row[0])
+                            y = float(row[1])
+                            w = float(row[2])
+                            h = float(row[3])
+                            colour = str(row[4])
+                            ind=colours.index(colour)
+                            colour=colors[ind]
+                            order = int(row[5])
+                            if row[6] != "'None'":
+                                #linestyle = row[6]
+                                edgecolor = row[7]
+                                ind = colours.index(edgecolor)
+                                edgecolor = colors[ind]
 
-                            )
-                        else:
-                            R1 = matplotlib.patches.Rectangle(
-                                (x, y),  # (x,y)
-                                w,  # width
-                                h,  # height
-                                facecolor=colour,
-                                linestyle=linestyle,
-                                edgecolor=edgecolor,
-                                zorder=order
+                            if row[6] == "'None'":
+                                #print "IN"
+                                R1 = matplotlib.patches.Rectangle(
+                                    (x, y),  # (x,y)
+                                    w,  # width
+                                    h,  # height
+                                    facecolor=colour,
+                                    zorder=order
 
-                            )
-                        v1.append(R1)
+                                )
+                            else:
+                                #print x, y, w, h, colour, order, row[6], row[7]
+                                #print "here"
+                                R1 = matplotlib.patches.Rectangle(
+                                    (x, y),  # (x,y)
+                                    w,  # width
+                                    h,  # height
+                                    facecolor=colour,
+                                    linestyle='--',
+                                    edgecolor=edgecolor,
+                                    zorder=order
+
+                                )
+                            v1.append(R1)
 
                     for p in v1:
                         self.ax1.add_patch(p)
@@ -2690,6 +2752,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
                     self.ui.txt_height.setText(str(k1[1]))
                     self.ax1.set_aspect('equal')
                     self.canvas_sols.draw()
+                conn.close()
 
                 '''
                 filename=self.directory+"/"+choice+".csv"

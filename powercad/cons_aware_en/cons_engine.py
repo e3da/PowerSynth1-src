@@ -7,6 +7,9 @@ from powercad.cons_aware_en.database import *
 import glob
 import os
 from tqdm import tqdm
+import json
+from jsonobject import *
+
 class New_layout_engine():
     def __init__(self):
         self.W = None
@@ -35,6 +38,7 @@ class New_layout_engine():
         self.window = window
         patches = self.init_data[0]
         graph = self.init_data[2]
+        num_cols=self.init_data[-1]
         self.new_layout_engine = New_layout_engine_dialog(self.window, patches, W=self.W + 20, H=self.H + 20 , engine=self,graph=graph)
         self.new_layout_engine.show()
         self.new_layout_engine.exec_()
@@ -94,11 +98,12 @@ class New_layout_engine():
         input = self.cornerstitch.read_input('list', Rect_list=input_rects) # Makes the rectangles compaitble to new layout engine input format
 
         self.Htree, self.Vtree = self.cornerstitch.input_processing(input, self.W + 20, self.H + 20) # creates horizontal and vertical corner stitch layouts
+        num_columns=len(self.Htree.hNodeList[0].stitchList)
 
         patches, combined_graph = self.cornerstitch.draw_layout(rects=input_rects,Htree=self.Htree,Vtree=self.Vtree) # collects initial layout patches and combined HCS,VCS points as a graph for mode-3 representation
         sym_to_cs = Sym_to_CS(input_rects, self.Htree, self.Vtree) # maps corner stitch tiles to symbolic layout objects
 
-        self.init_data = [patches, sym_to_cs, combined_graph]
+        self.init_data = [patches, sym_to_cs, combined_graph,num_columns]
 
     def collect_sym_cons_info(self, sym_layout):
         '''
@@ -512,7 +517,7 @@ class New_layout_engine():
                         R_in1 = [x, y, w, h, colour, 2,'None','None']
                         data.append(R_in1)
                     data.append(R_in)
-
+                '''
                 data.append([k[0], k[1], 'None', 'None', 'None', 'None', 'None', 'None'])
 
                 conn = create_connection(self.new_layout_engine.db)
@@ -526,6 +531,20 @@ class New_layout_engine():
                     create_table(conn, name=table)
                     for d in data:
                         insert_record(conn, table, d)
+                
+                
+                
+                '''
+
+                data.append([k[0], k[1]])
+                l_data = [j, data]
+                #data_s=json.dumps(l_data)
+                with open('out.txt', 'wb') as f:
+                    f.writelines(["%s\n" % item for item in data])
+                    #f.write(''.join(chr(i) for i in range(data)))
+                conn = create_connection(self.new_layout_engine.db)
+                with conn:
+                    insert_record(conn, l_data)
 
                 '''
                 file_name = self.new_layout_engine.directory+'/' + item + '.csv'

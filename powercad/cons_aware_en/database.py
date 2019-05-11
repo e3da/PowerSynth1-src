@@ -11,9 +11,14 @@ def create_connection(db_file):
         print "unable to create a file"
     return conn
 
-def create_table(conn,name):
+
+
+
+def create_table(conn,name=None):
     #print "Saved to database: ",name
     cur = conn.cursor()
+    sql_command="""CREATE TABLE IF NOT EXISTS LAYOUT_DATA (ID INTEGER PRIMARY KEY, Layout_info BLOB NOT NULL); """
+    '''
     sql_command="""CREATE TABLE IF NOT EXISTS """+name+""" (x           REAL    NOT NULL,
                      y            REAL    NOT NULL,
                      width        REAL    NOT NULL,
@@ -23,6 +28,9 @@ def create_table(conn,name):
                      linewidth TEXT,
                      edgecolor TEXT
                      );"""
+    
+    '''
+
     cur.execute(sql_command)
     """
     cur.execute('''CREATE TABLE '''+name+''' (
@@ -39,7 +47,7 @@ def create_table(conn,name):
     conn.commit()
     #conn.close()
 
-def insert_record(conn,table,data):
+def insert_record(conn,data,table=None):
 
     """
     Create a new project into the projects table
@@ -47,13 +55,25 @@ def insert_record(conn,table,data):
     :param project:
     :return: project id
     """
-    sql = ''' INSERT INTO '''+table+'''(x,y,width,height,facecolor,zorder,linewidth,edgecolor)
+
+
+    sql = ''' INSERT INTO LAYOUT_DATA (ID, Layout_info)
+                  VALUES(?,?) '''
+    """
+     sql = ''' INSERT INTO '''+table+'''(x,y,width,height,facecolor,zorder,linewidth,edgecolor)
               VALUES(?,?,?,?,?,?,?,?) '''
+    """
+
     cur = conn.cursor()
-    cur.execute(sql, data)
+
+    with open('out.txt', 'rb') as f:
+        ablob = f.read()
+    #cur.execute(sql, (data[0],(sqlite3.Binary(data[1]),)))
+    cur.execute("INSERT INTO LAYOUT_DATA(ID,Layout_info) VALUES (?,?)",[data[0],buffer(ablob)])
+                #[id,buffer(info)])
     conn.commit()
     return cur.lastrowid
-def retrieve_data(conn,table):
+def retrieve_data(conn,ID,table=None):
     """
     retrieve a table
     :param conn:
@@ -61,8 +81,14 @@ def retrieve_data(conn,table):
     :return:
     """
     cur = conn.cursor()
-    cur.execute("SELECT * FROM " +table)
-    return cur.fetchall()
+    #cur.execute("SELECT * FROM " +table)
+    #return cur.fetchall()
+
+    #cur.execute("SELECT Layout_info FROM LAYOUT_DATA where ID=?",ID )
+    sql = "SELECT Layout_info FROM LAYOUT_DATA WHERE ID = :id"
+    param = {'id': ID}
+    cur.execute(sql, param)
+    return cur.fetchone()
 
 
 def main():
