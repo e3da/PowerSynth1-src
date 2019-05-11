@@ -59,11 +59,7 @@ from powercad.sym_layout.svg import LayoutLine, LayoutPoint
 from powercad.sym_layout.svg import load_svg, normalize_layout, check_for_overlap, load_script
 from powercad.thermal.analysis import perform_thermal_analysis
 from powercad.thermal.elmer_characterize import characterize_devices
-import matplotlib.pyplot as plt
-from powercad.parasitics.mdl_compare import load_mdl
 from powercad.sym_layout.Electrical_meshing.Lumped_Graph import E_graph
-# test bondwire:
-from powercad.sym_layout.plot import plot_layout
 #Used in Pycharm only
 
 

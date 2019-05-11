@@ -4,12 +4,8 @@ Created on Oct 12, 2012
 @author: Peter N. Tucker, qmle, Imam Al Razi
 '''
 # IMPORT METHODS
-import os
 import traceback
 import pandas as pd
-import random
-import shutil
-import json
 import types
 import numpy as np
 from PySide.QtGui import QFileDialog, QStandardItemModel, QStandardItem, QMessageBox, QFont
@@ -19,10 +15,7 @@ import powercad.sym_layout.plot as plot
 from powercad.project_builder.dialogs.propertiesDeviceDialog import Ui_device_propeties
 from powercad.Spice_handler.spice_import.NetlistImport import Netlist
 import copy
-import sqlite3
-# plot.plt.matplotlib.use('Qt4Agg')
 plot.plt.matplotlib.rcParams['backend.qt4'] = 'PySide'
-from powercad.design.project_structures import *
 from powercad.project_builder.dialogs.device_states import Ui_dev_state_dialog
 from powercad.project_builder.dialogs.newProjectDialog import Ui_newProjectDialog
 from powercad.project_builder.dialogs.openProjectDialog_ui import Ui_openProjectDialog
@@ -36,7 +29,7 @@ from powercad.project_builder.dialogs.layoutEditor_ui import Ui_layouteditorDial
 from powercad.project_builder.dialogs.CS_design_up_ui import Ui_CornerStitch_Dialog  # CS_design_ui
 from powercad.project_builder.dialogs.Fixed_loc_up_ui import Ui_Fixed_location_Dialog  # Fixed_loc_ui
 from powercad.project_builder.project import Project
-from powercad.sym_layout.symbolic_layout import SymbolicLayout, plot_layout
+from powercad.sym_layout.symbolic_layout import SymbolicLayout
 from powercad.general.settings.settings import DEFAULT_TECH_LIB_DIR, EXPORT_DATA_PATH, ANSYS_IPY64, FASTHENRY_FOLDER, \
     GMSH_BIN_PATH, ELMER_BIN_PATH
 from powercad.electro_thermal.ElectroThermal_toolbox import rdson_fit_transistor, list2float, csv_load_file, Vth_fit, \
@@ -56,24 +49,17 @@ from powercad.response_surface.Model_Formulation import form_trace_model_optimet
 from powercad.cons_aware_en.database import *
 from powercad.parasitics.analysis import parasitic_analysis
 import psidialogs
-from numpy.linalg.linalg import LinAlgError
 from powercad.corner_stitch.optimization_setup import OptSetup
 import networkx as nx
 from powercad.design.module_data import *
 from powercad.corner_stitch.CornerStitch import Rectangle
 from powercad.general.data_struct.util import *
 from powercad.sol_browser.solution import Solution
-from powercad.interfaces.EMPro.EMProExport import EMProScript
-from powercad.interfaces.FastHenry.fh_layers import output_fh_script
-from powercad.interfaces.Q3D.Q3D import output_q3d_vbscript
-from powercad.interfaces.Solidworks.solidworks import output_solidworks_vbscript
-from powercad.design.module_design import ModuleDesign
 from powercad.opt.optimizer import NSGAII_Optimizer, DesignVar
 import matplotlib
 import glob
 from tqdm import tqdm
-
-import time
+from time import sleep
 # CLASSES FOR DIALOG USAGE
 class GenericDeviceDialog(QtGui.QDialog):
     # Author: quang le
@@ -2319,7 +2305,6 @@ class New_layout_engine_dialog(QtGui.QDialog):
         self.ax3.clear()
         self.ui.btn_sel_sol.setEnabled(True)
         self.ui.btn_save_all.setEnabled(True)
-        print "plot sol browser"
         if self.perf_dict == {}:
             self.perf1 = {"label": 'layout index', 'data': []}
             self.perf2 = {"label": 'layout index', 'data': []}
@@ -3061,23 +3046,27 @@ class New_layout_engine_dialog(QtGui.QDialog):
         sym_layout = self.engine.sym_layout
         perf_plot = [self.perf1, self.perf2]
         if self.opt_algo=="NG-RANDOM": # multiple evaluation
+            print "performance evaluation"
+            t = tqdm(total=len(sym_info.keys()*len(self.perf_dict.keys())), ncols=50)
+            count = 0
+
             for p, pdraw in zip(self.perf_dict.keys(), perf_plot):
                 perf = self.perf_dict[p]
+
                 measure = perf['measure']
-                t = tqdm(total=len(sym_info.keys()))
 
                 for i in range(len(sym_info.keys())):
                     layout = sym_info.keys()[i]
                     symb_rect_dict = sym_info[layout]['sym_info']
                     dims = sym_info[layout]['Dims']
                     bp_dims = [dims[0] + 4, dims[1] + 4]
-                    t.update(i)
-
+                    t.update(count)
+                    count+=1
+                    sleep(0.01)
                     self._sym_update_layout(sym_info=symb_rect_dict)
                     update_sym_baseplate_dims(sym_layout=sym_layout, dims=bp_dims)
                     update_substrate_dims(sym_layout=sym_layout, dims=dims)
                     self.update_perf_values(perf=perf,pdraw=pdraw,measure=measure,sym_layout=sym_layout)
-                t.close()
         elif self.opt_algo=="NSGAII": # single evaluation
             ret = []
             for p, pdraw in zip(self.perf_dict.keys(), perf_plot):

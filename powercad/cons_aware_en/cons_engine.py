@@ -4,11 +4,7 @@ from powercad.corner_stitch.API_PS import *
 from powercad.corner_stitch.CornerStitch import *
 from powercad.design.library_structures import *
 from powercad.cons_aware_en.database import *
-import glob
-import os
 from tqdm import tqdm
-import json
-from jsonobject import *
 
 class New_layout_engine():
     def __init__(self):
@@ -205,7 +201,7 @@ class New_layout_engine():
         """
         #global min_dimensions
         if bar:
-            p_bar = tqdm(total=num_layouts)
+            p_bar = tqdm(total=num_layouts,ncols=50)
         else:
             p_bar=None
         CG1 = CS_to_CG(level)
@@ -535,7 +531,11 @@ class New_layout_engine():
                 
                 
                 '''
-
+                table = 'Layout_' + str(j)
+                try:
+                    p_bar.update(j)
+                except:
+                    print table
                 data.append([k[0], k[1]])
                 l_data = [j, data]
                 #data_s=json.dumps(l_data)

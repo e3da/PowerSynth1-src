@@ -7,10 +7,8 @@ Brett Shook - Added separate Component Selection system 3/21/2014
 '''
 '''----------------------------------'''
 import shutil
-import sys
 import time
 import traceback
-import csv
 import psidialogs
 from PySide import QtCore, QtGui
 import webbrowser
@@ -23,7 +21,6 @@ from matplotlib import colors
 
 import powercad.sym_layout.plot as plot
 
-#plot.plt.matplotlib.use('Qt4Agg')
 plot.plt.matplotlib.rcParams['backend.qt4']='PySide'
 
 from matplotlib.patches import Rectangle, Circle
@@ -43,9 +40,7 @@ from powercad.tech_lib.tech_lib_wiz import TechLibWizDialog
 
 from powercad.layer_stack.layer_stack_import import LayerStackHandler
 from powercad.sym_layout.symbolic_layout import SymLine,SymPoint
-from powercad.design.library_structures import BondWire, Lead
 from powercad.sol_browser.graph_app import GrapheneWindow
-from powercad.design.project_structures import *
 from powercad.sym_layout.svg import LayoutLine, LayoutPoint
 from powercad.general.settings.save_and_load import save_file, load_file
 from powercad.general.settings.settings import *
@@ -56,7 +51,6 @@ from powercad.sym_layout.symbolic_layout import LayoutError
 from powercad.general.data_struct.util import Rect
 from powercad.design.module_data import *
 from shutil import copyfile
-import filecmp
 
 
 class ProjectBuilder(QtGui.QMainWindow):
