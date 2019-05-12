@@ -4,21 +4,14 @@ Updated from December,2017
 '''
 
 from sets import Set
-import numpy as np
 import constraint
 import networkx as nx
-from matplotlib import pylab
-import matplotlib.pyplot as plt
 from collections import defaultdict
 import collections
-import json
 import copy
 import random
 from random import randrange
-import timeit
-import csv
-import cProfile
-import re
+
 #########################################################################################################################
 
 

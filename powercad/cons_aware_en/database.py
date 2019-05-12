@@ -1,6 +1,7 @@
 import sqlite3
 import csv
 
+
 def create_connection(db_file):
 
     try:
@@ -47,7 +48,7 @@ def create_table(conn,name=None):
     conn.commit()
     #conn.close()
 
-def insert_record(conn,data,table=None):
+def insert_record(conn,data,temp_file):
 
     """
     Create a new project into the projects table
@@ -65,9 +66,11 @@ def insert_record(conn,data,table=None):
     """
 
     cur = conn.cursor()
-
-    with open('out.txt', 'rb') as f:
-        ablob = f.read()
+    try:
+        with open(temp_file, 'rb') as f:
+            ablob = f.read()
+    except:
+        print "layout_info not found"
     #cur.execute(sql, (data[0],(sqlite3.Binary(data[1]),)))
     cur.execute("INSERT INTO LAYOUT_DATA(ID,Layout_info) VALUES (?,?)",[data[0],buffer(ablob)])
                 #[id,buffer(info)])

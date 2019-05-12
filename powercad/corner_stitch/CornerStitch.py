@@ -9,13 +9,11 @@ Updated from Aug,2017
 '''
 import os
 import matplotlib
-#matplotlib.use('Agg')
 import matplotlib.patches as patches
 from abc import ABCMeta
 from constraintGraph_Dev import *
 import constraint as ct
 import collections
-import csv
 import networkx as nx
 from powercad.general.data_struct.util import *
 

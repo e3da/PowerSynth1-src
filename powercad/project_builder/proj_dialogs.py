@@ -2080,13 +2080,14 @@ class New_layout_engine_dialog(QtGui.QDialog):
                 data.append([k[0], k[1]])
 
                 l_data=[self.count,data]
+                temp_file=self.parent.project.directory+'/out.txt'
 
-                with open('out.txt', 'wb') as f:
+                with open(temp_file, 'wb') as f:
                     f.writelines(["%s\n" % item for item in data])
                     # f.write(''.join(chr(i) for i in range(data)))
                 conn = create_connection(self.db)
                 with conn:
-                    insert_record(conn, l_data)
+                    insert_record(conn, l_data,temp_file)
 
 
 
@@ -3585,7 +3586,7 @@ class ET_standalone_Dialog(QtGui.QDialog):
             opt_setup=None
             print "upload a valid optimization setup file"
         if opt_setup!=None:
-            print opt_setup.perf_table
+            #print opt_setup.perf_table
             # thermal
             self.ui.cmb_thermal_mdl.setCurrentIndex(opt_setup.thermal_mode)
             self.ui.cmb_thermal_type.setCurrentIndex(opt_setup.thermal_func)

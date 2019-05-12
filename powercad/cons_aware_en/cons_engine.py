@@ -539,12 +539,12 @@ class New_layout_engine():
                 data.append([k[0], k[1]])
                 l_data = [j, data]
                 #data_s=json.dumps(l_data)
-                with open('out.txt', 'wb') as f:
+                temp_file=self.new_layout_engine.parent.project.directory+'/out.txt'
+                with open(temp_file, 'wb') as f:
                     f.writelines(["%s\n" % item for item in data])
-                    #f.write(''.join(chr(i) for i in range(data)))
                 conn = create_connection(self.new_layout_engine.db)
                 with conn:
-                    insert_record(conn, l_data)
+                    insert_record(conn, l_data,temp_file)
 
                 '''
                 file_name = self.new_layout_engine.directory+'/' + item + '.csv'

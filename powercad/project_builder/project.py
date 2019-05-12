@@ -4,8 +4,6 @@ Created on Oct 10, 2012
 @author: pxt002
 '''
 
-from powercad.tech_lib.test_techlib import *
-from powercad.design.project_structures import *
 from powercad.design.module_data import ModuleData
 from powercad.general.settings.settings import DEFAULT_TECH_LIB_DIR
 
