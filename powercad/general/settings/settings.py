@@ -19,7 +19,8 @@ if POWERSYNTH_RELEASE:  # For packaged versions
     EXPORT_DATA_PATH = os.path.abspath("export_data")
     ANSYS_IPY64 = "C://Program Files//AnsysEM//AnsysEM18.0//Win64//common//IronPython"
     FASTHENRY_FOLDER = 'FastHenry'
-    MANUAL="PowerSynth User Tutorial.html"
+    #MANUAL="PowerSynth User Tutorial.html"
+    MANUAL = "PowerSynthUserManual.pdf"
 else:   # For debugging and running PowerSynth from Eclipse
     DEFAULT_TECH_LIB_DIR = os.path.abspath("D:\PS\\tech_lib")
     LAST_ENTRIES_PATH = os.path.abspath("../../../export_data/app_data/last_entries.p")
