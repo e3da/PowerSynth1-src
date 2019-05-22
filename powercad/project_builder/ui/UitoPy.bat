@@ -5,11 +5,11 @@ for /r %%i in (*.ui) do (
 set name=%%~ni
 set newext=.py
 set oldext=.ui
-set "newname=!name!!newext!"
+set "newname=!name!_ui!newext!"
 echo. !newname!
 set "oldname=!name!!oldext!"
 echo. !oldname!
 pyside-uic -o !newname! !oldname!
 
 )
-move *.py .\UI_py\
+move *.py ..\UI_py\

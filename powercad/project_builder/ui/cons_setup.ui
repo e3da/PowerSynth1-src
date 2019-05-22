@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>Bondwire_setup</class>
- <widget class="QDialog" name="Bondwire_setup">
+ <class>Constraint_setup</class>
+ <widget class="QDialog" name="Constraint_setup">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>675</width>
-    <height>693</height>
+    <width>959</width>
+    <height>876</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>BondwireSetup</string>
+   <string>Constraints setup</string>
   </property>
   <layout class="QGridLayout" name="gridLayout_2">
    <item row="0" column="0">
@@ -23,35 +23,76 @@
       <enum>QFrame::Raised</enum>
      </property>
      <layout class="QGridLayout" name="gridLayout">
-      <item row="1" column="0">
-       <widget class="QGroupBox" name="groupBox_2">
-        <property name="title">
-         <string>GroupBox</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="0">
-       <widget class="QGroupBox" name="groupBox">
-        <property name="title">
-         <string>Min Width</string>
-        </property>
-       </widget>
-      </item>
       <item row="3" column="0">
+       <widget class="QTableWidget" name="tbl_cons_gaps"/>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_3">
+        <property name="font">
+         <font>
+          <weight>75</weight>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>Spacing Constraints</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="0">
        <layout class="QHBoxLayout" name="horizontalLayout">
         <item>
-         <widget class="QPushButton" name="btn_add">
+         <widget class="QPushButton" name="btn_apply">
           <property name="text">
-           <string>Apply</string>
+           <string>Apply to layout</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="btn_load">
+          <property name="text">
+           <string>Load DRC</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="btn_save">
+          <property name="text">
+           <string>Save DRC</string>
           </property>
          </widget>
         </item>
        </layout>
       </item>
-      <item row="2" column="0">
-       <widget class="QGroupBox" name="groupBox_3">
-        <property name="title">
-         <string>GroupBox</string>
+      <item row="1" column="0">
+       <widget class="QTableWidget" name="tbl_cons_dims"/>
+      </item>
+      <item row="5" column="0">
+       <widget class="QTableWidget" name="tbl_cons_encl"/>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="label_4">
+        <property name="font">
+         <font>
+          <weight>75</weight>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>Enclosure Constraints</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_2">
+        <property name="font">
+         <font>
+          <weight>75</weight>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>Dimensions Constraints</string>
         </property>
        </widget>
       </item>
