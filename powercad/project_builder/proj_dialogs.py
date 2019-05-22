@@ -12,19 +12,19 @@ from PySide.QtGui import QFileDialog, QStandardItemModel, QStandardItem, QMessag
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 import powercad.sym_layout.plot as plot
-from powercad.project_builder.dialogs.propertiesDeviceDialog import Ui_device_propeties
+from powercad.project_builder.dialogs.propertiesDeviceDialog_ui import Ui_device_propeties
 from powercad.Spice_handler.spice_import.NetlistImport import Netlist
 import copy
 plot.plt.matplotlib.rcParams['backend.qt4'] = 'PySide'
-from powercad.project_builder.dialogs.device_states import Ui_dev_state_dialog
-from powercad.project_builder.dialogs.newProjectDialog import Ui_newProjectDialog
+from powercad.project_builder.dialogs.device_states_ui import Ui_dev_state_dialog
+from powercad.project_builder.dialogs.newProjectDialog_ui import Ui_newProjectDialog
 from powercad.project_builder.dialogs.openProjectDialog_ui import Ui_openProjectDialog
 from powercad.project_builder.dialogs.edit_tech_lib_dir_ui import Ui_EditTechLibDirDialog
 from powercad.project_builder.dialogs.solidwork_version_check_ui import Ui_checkversion_dialog
 from powercad.project_builder.dialogs.genericDeviceDialog_ui import Ui_generic_device_builder
-from powercad.project_builder.dialogs.device_setup_dialog import Ui_setup_device
-from powercad.project_builder.dialogs.Env_setup import Ui_EnvSetup
-from powercad.project_builder.dialogs.bondwire_setup import Ui_Bondwire_setup
+from powercad.project_builder.dialogs.device_setup_dialog_ui import Ui_setup_device
+from powercad.project_builder.dialogs.Env_setup_ui import Ui_EnvSetup
+from powercad.project_builder.dialogs.bondwire_setup_ui import Ui_Bondwire_setup
 from powercad.project_builder.dialogs.layoutEditor_ui import Ui_layouteditorDialog
 from powercad.project_builder.dialogs.CS_design_up_ui import Ui_CornerStitch_Dialog  # CS_design_ui
 from powercad.project_builder.dialogs.Fixed_loc_up_ui import Ui_Fixed_location_Dialog  # Fixed_loc_ui
@@ -35,8 +35,8 @@ from powercad.general.settings.settings import DEFAULT_TECH_LIB_DIR, EXPORT_DATA
 from powercad.electro_thermal.ElectroThermal_toolbox import rdson_fit_transistor, list2float, csv_load_file, Vth_fit, \
     fCRSS_fit
 from powercad.general.settings.save_and_load import save_file, load_file
-from powercad.project_builder.dialogs.ResponseSurface import Ui_ResponseSurface
-from powercad.project_builder.dialogs.ModelSelection import Ui_ModelSelection
+from powercad.project_builder.dialogs.ResponseSurface_ui import Ui_ResponseSurface
+from powercad.project_builder.dialogs.ModelSelection_ui import Ui_ModelSelection
 from powercad.project_builder.dialogs.ET_evaluate_up_ui import Ui_ET_Evaluation_Dialog  # ET_evaluate_ui
 from powercad.project_builder.dialogs.waiting_ui import Ui_waiting_dialog
 from powercad.layer_stack.layer_stack_import import *
