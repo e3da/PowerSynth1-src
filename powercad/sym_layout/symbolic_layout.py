@@ -59,7 +59,11 @@ from powercad.sym_layout.svg import LayoutLine, LayoutPoint
 from powercad.sym_layout.svg import load_svg, normalize_layout, check_for_overlap, load_script
 from powercad.thermal.analysis import perform_thermal_analysis
 from powercad.thermal.elmer_characterize import characterize_devices
+import matplotlib.pyplot as plt
+from powercad.parasitics.mdl_compare import load_mdl
 from powercad.sym_layout.Electrical_meshing.Lumped_Graph import E_graph
+# test bondwire:
+from powercad.sym_layout.plot import plot_layout
 #Used in Pycharm only
 
 
@@ -265,6 +269,7 @@ class SymLine(object):
 class SymPoint(object):
     def __init__(self, point=None, raw_point=None):
         self.raw_element = raw_point
+
         self.element = point
         self.name = self.element.path_id
         self.tech = None # holds a reference to either a DeviceInstance or Lead object
@@ -467,8 +472,6 @@ class SymbolicLayout(object):
 
 
         self.gap = self.design_rules.min_trace_trace_width  # minimum gap between two traces
-        for symbol in self.all_sym:                          # going through all the symbolic lines and points to reset it
-            symbol.reset_to_pre_analysis()
         self._check_sym_elements()
         self._build_trace_layout()  # Go through only traces and collect SymLine to a list object
         self._find_trace_connections()  # Search in the list of traces built above to create a connection list  >go to this method to read more
@@ -527,23 +530,11 @@ class SymbolicLayout(object):
         self.bondwire_design_values = [None]*len(self.bondwire_dv_list)
 
         # Check Device Thermal Characterizations (checks for cached characterizations)
-        thermal_char=False
-        for m in self.perf_measures:
-
-            if isinstance(m,ThermalMeasure):
-                if m.mdl!='RECT_FLUX_MODEL':  #if m.mdl==1
-                    thermal_char=True
-                    break
-
-
-        if thermal_char:
-            self.thermal_characterize()
+        self.thermal_characterize()
 
 
     def thermal_characterize(self):
-
         dev_char_dict, sub_tf = characterize_devices(self, self.temp_dir)
-
         self.module.sublayers_thermal = sub_tf
         for dev in self.devices:
             dev.tech.thermal_features = dev_char_dict[dev.tech]
@@ -976,6 +967,86 @@ class SymbolicLayout(object):
 
             if pt.parent_line is None:
                 raise LayoutError("Not all layout points are connected to a layout line!")
+
+    def _find_bondwire_connection(self, sym_wire):
+        self.bondwires.append(sym_wire)
+
+        sym_wire.dev_pt = None
+        # Check against devices classify if this is a power or signal connection
+        for point in self.points:
+            if isinstance(point.tech, DeviceInstance):
+                dev = point.element
+                line = sym_wire.element
+                pt1_hit = (dev.pt[0] == line.pt1[0] and dev.pt[1] == line.pt1[1])
+                pt2_hit = (dev.pt[0] == line.pt2[0] and dev.pt[1] == line.pt2[1])
+                if pt1_hit:
+                    point.sym_bondwires.append(sym_wire)
+                    sym_wire.device = point
+                    sym_wire.dev_pt = 1
+                elif pt2_hit:
+                    point.sym_bondwires.append(sym_wire)
+                    sym_wire.device = point
+                    sym_wire.dev_pt = 2
+
+        # Note: sym_wire.dev_pt will be None if no device is connected
+        if sym_wire.dev_pt is None:
+            # check both points for trace connection
+            trace1 = self._find_bondwire_trace_connection(sym_wire, sym_wire.element.pt1)
+            trace2 = self._find_bondwire_trace_connection(sym_wire, sym_wire.element.pt2)
+            if trace1 is None or trace2 is None:
+                raise FormulationError('A bondwire is not connected to a trace or device!')
+            else:
+                # connect the traces
+                sym_wire.trace = trace1
+                trace1.conn_bonds.append(sym_wire)
+                sym_wire.trace2 = trace2
+                trace2.conn_bonds.append(sym_wire)
+        else:
+            # only check the other point for trace connection
+            if sym_wire.dev_pt == 1:
+                pt = sym_wire.element.pt2 # check at pt2
+            else:
+                pt = sym_wire.element.pt1 # check at pt1
+
+            # Check against traces
+            trace = self._find_bondwire_trace_connection(sym_wire, pt)
+            if trace is None:
+                raise FormulationError('A bondwire is connected to a device but not a trace!')
+            else:
+                # connect the trace
+                sym_wire.trace = trace
+                trace.conn_bonds.append(sym_wire)
+
+    def _find_bondwire_trace_connection(self, sym_wire, pt):
+        x, y = pt
+        for trace in self.all_trace_lines:
+            if trace.is_supertrace():
+                # If trace is a part of a supertrace pair of traces
+                # only take a look at the vertical element of the pair
+                # so, the connection is only checked once.
+                if trace.element.vertical:
+                    partner = trace.intersecting_trace
+                    region = Rect(trace.element.pt2[1], trace.element.pt1[1], \
+                                  partner.element.pt1[0], partner.element.pt2[0])
+                    if region.encloses(x, y):
+                        return trace
+            else:
+                tele = trace.element
+                '''
+                if tele.vertical:
+                    if x == tele.pt1[0] and (y > tele.pt1[1] and y < tele.pt2[1]): # review this to > or <
+                        return trace
+                else:
+                    if y == tele.pt1[1] and (x > tele.pt1[0] and x < tele.pt2[0]): # review this to > or <
+                        return trace
+                '''
+
+                if x == tele.pt1[0] and (y >= tele.pt1[1] and y <= tele.pt2[1]):  # review this to > or <
+                    return  trace
+                elif y == tele.pt1[1] and (x >= tele.pt1[0] and x <= tele.pt2[0]): # review this to > or <
+                    return trace
+
+        return None
 
     def _trace_device_intersection(self, trace):
         """ Finds what devices/leads reside on a trace. """
@@ -1703,7 +1774,6 @@ class SymbolicLayout(object):
             lead.center_position = center
     def _place_bondwires(self):
         for wire in self.bondwires:
-            #print"bw_id", id(wire)
             if wire.dev_pt is not None:
                 self._place_device_bondwire(wire)
             elif wire.trace2 is not None:
@@ -2014,7 +2084,7 @@ class SymbolicLayout(object):
     '''-----------------------------------------------------------------------------------------------------------------------------------------------------'''
     def optimize(self, iseed=None, inum_gen=800, mu=15, ilambda=30, progress_fn=None):
 
-
+        self.trial=0
         self.eval_count = 0
         self.eval_total = inum_gen*ilambda    # check this... this sounds not correct to me -- Quang
         self.opt_progress_fn = progress_fn
@@ -2149,7 +2219,6 @@ class SymbolicLayout(object):
                 self.bondwire_design_values[index] = individual[i]
 
     def gen_solution_layout(self, solution_index):
-
         individual = self.solution_lib.individuals[solution_index]
         self.rev_map_design_vars(individual)
         self._opt_eval(individual)
@@ -2160,10 +2229,11 @@ class SymbolicLayout(object):
         self.generate_layout()
         ret = []
         drc = DesignRuleCheck(self)
-        drc_count = drc.count_drc_errors(False)
+        drc_count = drc.count_drc_errors(True)
         #fig, ax = plt.subplots()
         #plot_layout(self, ax=ax)
         #plt.show()
+        self.trial+=1
         if drc_count > 0:   # Non-convergence case
             #Brett's method
             for i in xrange(len(self.perf_measures)):
@@ -2241,16 +2311,13 @@ class SymbolicLayout(object):
                         type_id=1
                     elif type == 'RECT_FLUX_MODEL':
                         type_id=2
-                    elif type=='Successive_approximation_model':
-                        type_id=3
                     elif type == 'Matlab':
-                        type_id=4
-
+                        type_id=3
                     val = self._thermal_analysis(measure,type_id)
                     ret.append(val)
         # Update progress bar and eval count
         self.eval_count += 1
-        print "Running... Current number of evaluations:", self.eval_count
+        print "Running... Current number of evaluations:", self.eval_count,self.trial
         return ret
     '''-----------------------------------------------------------------------------------------------------------------------------------------------------'''
     def _measure_capacitance(self, measure):
@@ -2284,9 +2351,9 @@ class SymbolicLayout(object):
 
         return total_cap
     '''-----------------------------------------------------------------------------------------------------------------------------------------------------'''
-    def _thermal_analysis(self, measure,type_id):
+    def _thermal_analysis(self, measure,type):
         # RECT_FLUX_MODEL
-        temps = perform_thermal_analysis(self, type_id)#<--RECT_FLUX_MODEL
+        temps = perform_thermal_analysis(self, type)#<--RECT_FLUX_MODEL
 
         if isinstance(measure,int):
             return temps
@@ -2532,7 +2599,7 @@ def make_test_setup_journal_paper(p1,p2,f,h,tamb):
     #individual=[0.0, 19.993549748550485, 7.83473968924208, 2.0, 2.0, 7.83024382580129, 4.076805904566642, 0.353346526599453, 0.9966022253587258]
 
     #print 'individual', individual
-    #print "opt_to_sym_index" ,sym_layout.opt_to_sym_index
+    print "opt_to_sym_index" ,sym_layout.opt_to_sym_index
     sym_layout.rev_map_design_vars(individual)
     sym_layout.generate_layout()
     sym_layout._build_lumped_graph()
