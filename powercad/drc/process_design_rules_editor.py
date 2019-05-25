@@ -12,7 +12,7 @@ from PySide.QtGui import QFileDialog
 
 from powercad.design.project_structures import ProcessDesignRules
 from powercad.general.settings.save_and_load import load_file
-from powercad.project_builder.dialogs.process_design_rules_editor_ui import Ui_design_rule_dialog
+from powercad.project_builder.UI_py.process_design_rules_editor_ui import Ui_design_rule_dialog
 
 
 class ProcessDesignRulesEditor(QtGui.QDialog):

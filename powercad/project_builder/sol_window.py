@@ -26,7 +26,7 @@ from powercad.interfaces.FastHenry.fh_layers import output_fh_script
 from powercad.interfaces.Q3D.Q3D import output_q3d_vbscript
 from powercad.interfaces.Solidworks.solidworks import output_solidworks_vbscript
 from powercad.project_builder.UI_py.solutionWindow_ui import Ui_layout_form
-from powercad.project_builder.UI_py import Solidworkversioncheck_ui
+from powercad.project_builder.proj_dialogs import SolidworkVersionCheckDialog
 from powercad.sym_layout.plot import plot_layout
 from powercad.Spice_handler.spice_export.circuit import Circuit
 
