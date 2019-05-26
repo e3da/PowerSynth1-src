@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1118</width>
-    <height>733</height>
+    <width>1484</width>
+    <height>983</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -71,13 +71,13 @@
      <property name="maximumSize">
       <size>
        <width>16777215</width>
-       <height>50</height>
+       <height>100</height>
       </size>
      </property>
      <property name="title">
       <string>Modes</string>
      </property>
-     <layout class="QGridLayout" name="gridLayout_5">
+     <layout class="QGridLayout" name="gridLayout_3">
       <item row="0" column="0">
        <widget class="QComboBox" name="cmb_modes">
         <item>
@@ -117,6 +117,19 @@
       <string>Floorplan size</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_2">
+      <item row="0" column="3">
+       <widget class="QLineEdit" name="txt_height"/>
+      </item>
+      <item row="0" column="1">
+       <widget class="QLineEdit" name="txt_width"/>
+      </item>
+      <item row="0" column="2">
+       <widget class="QLabel" name="lbl_height_2">
+        <property name="text">
+         <string>Height</string>
+        </property>
+       </widget>
+      </item>
       <item row="0" column="0">
        <widget class="QLabel" name="lbl_width">
         <property name="minimumSize">
@@ -135,19 +148,6 @@
          <string>Width</string>
         </property>
        </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="QLineEdit" name="txt_width"/>
-      </item>
-      <item row="0" column="2">
-       <widget class="QLabel" name="lbl_height_2">
-        <property name="text">
-         <string>Height</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="3">
-       <widget class="QLineEdit" name="txt_height"/>
       </item>
      </layout>
     </widget>
@@ -184,10 +184,10 @@
       <string>Control Buttons</string>
      </property>
      <layout class="QGridLayout" name="gridLayout">
-      <item row="0" column="0">
-       <widget class="QPushButton" name="btn_fixed_locs">
+      <item row="1" column="0">
+       <widget class="QPushButton" name="btn_eval_setup">
         <property name="text">
-         <string>Fixed Locations</string>
+         <string>Optimization Setup</string>
         </property>
        </widget>
       </item>
@@ -198,29 +198,29 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="0">
-       <widget class="QPushButton" name="btn_eval_setup">
-        <property name="text">
-         <string>Optimization Setup</string>
-        </property>
-       </widget>
-      </item>
       <item row="1" column="1">
        <widget class="QPushButton" name="btn_gen_layouts">
         <property name="minimumSize">
          <size>
-          <width>100</width>
-          <height>23</height>
+          <width>0</width>
+          <height>0</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
           <width>16777215</width>
-          <height>23</height>
+          <height>16777215</height>
          </size>
         </property>
         <property name="text">
          <string>Generate Layouts</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QPushButton" name="btn_fixed_locs">
+        <property name="text">
+         <string>Fixed Locations</string>
         </property>
        </widget>
       </item>

@@ -533,7 +533,8 @@ class New_layout_engine():
                 '''
                 table = 'Layout_' + str(j)
                 try:
-                    p_bar.update(j)
+                    #p_bar.update(j)
+                    p_bar.update(1)
                 except:
                     print table
                 data.append([k[0], k[1]])
@@ -561,6 +562,7 @@ class New_layout_engine():
                 '''
 
                 j+=1
+            conn.close()
 
 def plot_layout(Layout_Rects,level,Min_X_Loc=None,Min_Y_Loc=None):
     #global min_dimensions

@@ -19,34 +19,12 @@ def create_table(conn,name=None):
     #print "Saved to database: ",name
     cur = conn.cursor()
     sql_command="""CREATE TABLE IF NOT EXISTS LAYOUT_DATA (ID INTEGER PRIMARY KEY, Layout_info BLOB NOT NULL); """
-    '''
-    sql_command="""CREATE TABLE IF NOT EXISTS """+name+""" (x           REAL    NOT NULL,
-                     y            REAL    NOT NULL,
-                     width        REAL    NOT NULL,
-                     height      REAL    NOT NULL,
-                     facecolor TEXT,
-                     zorder INTEGER,
-                     linewidth TEXT,
-                     edgecolor TEXT
-                     );"""
-    
-    '''
+
 
     cur.execute(sql_command)
-    """
-    cur.execute('''CREATE TABLE '''+name+''' (
-                     x           REAL    NOT NULL,
-                     y            REAL    NOT NULL,
-                     width        REAL    NOT NULL,
-                     height      REAL    NOT NULL,
-                     facecolor TEXT,
-                     zorder INTEGER,
-                     linewidth TEXT,
-                     edgecolor TEXT
-                     );''')
-    """
+
     conn.commit()
-    #conn.close()
+
 
 def insert_record(conn,data,temp_file):
 
@@ -60,21 +38,19 @@ def insert_record(conn,data,temp_file):
 
     sql = ''' INSERT INTO LAYOUT_DATA (ID, Layout_info)
                   VALUES(?,?) '''
-    """
-     sql = ''' INSERT INTO '''+table+'''(x,y,width,height,facecolor,zorder,linewidth,edgecolor)
-              VALUES(?,?,?,?,?,?,?,?) '''
-    """
+
 
     cur = conn.cursor()
     try:
         with open(temp_file, 'rb') as f:
             ablob = f.read()
+            cur.execute("INSERT INTO LAYOUT_DATA(ID,Layout_info) VALUES (?,?)", [data[0], buffer(ablob)])
+            # [id,buffer(info)])
+            conn.commit()
+        f.close()
     except:
         print "layout_info not found"
-    #cur.execute(sql, (data[0],(sqlite3.Binary(data[1]),)))
-    cur.execute("INSERT INTO LAYOUT_DATA(ID,Layout_info) VALUES (?,?)",[data[0],buffer(ablob)])
-                #[id,buffer(info)])
-    conn.commit()
+
     return cur.lastrowid
 def retrieve_data(conn,ID,table=None):
     """

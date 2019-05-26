@@ -207,7 +207,7 @@ class E_graph():
             for w, l in self.trace_info:
                 w_all.append(w)
                 l_all.append(l)
-            # print 'width,length', w_all,l_all
+            #print 'width,length', w_all,l_all,self.LAC_mdl
             ind1 = trace_ind_krige(f, w_all, l_all, self.LAC_mdl).tolist()
             res1 = trace_res_krige(f, w_all, l_all, trace_data[1], trace_data[5], self.RAC_mdl).tolist()
             if self.C_mdl != None:

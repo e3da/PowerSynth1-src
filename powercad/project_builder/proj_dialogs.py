@@ -2087,6 +2087,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
                 conn = create_connection(self.db)
                 with conn:
                     insert_record(conn, l_data,temp_file)
+            conn.close()
 
 
 
@@ -2455,7 +2456,11 @@ class New_layout_engine_dialog(QtGui.QDialog):
             filelist = glob.glob(os.path.join(database + '/*'))
             # print filelist
             for f in filelist:
-                os.remove(f)
+                try:
+                    os.remove(f)
+                except:
+                    print "can't remove file"
+
 
             if not os.path.exists(database):
                 os.makedirs(database)
@@ -2471,6 +2476,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
             conn = create_connection(self.db)
             with conn:
                 create_table(conn)
+            conn.close()
 
             if len(self.perf_dict.keys()) < 2:
                 QtGui.QMessageBox.about(self, "Caution:Optimization setup is wrong!!",
@@ -3047,6 +3053,8 @@ class New_layout_engine_dialog(QtGui.QDialog):
         perf_plot = [self.perf1, self.perf2]
         if self.opt_algo=="NG-RANDOM": # multiple evaluation
             print "performance evaluation"
+            #total = len(sym_info.keys() * len(self.perf_dict.keys()))
+            #print "T",total
             t = tqdm(total=len(sym_info.keys()*len(self.perf_dict.keys())), ncols=50)
             count = 0
 
@@ -3060,7 +3068,8 @@ class New_layout_engine_dialog(QtGui.QDialog):
                     symb_rect_dict = sym_info[layout]['sym_info']
                     dims = sym_info[layout]['Dims']
                     bp_dims = [dims[0] + 4, dims[1] + 4]
-                    t.update(count)
+                    #t.update(count)
+                    t.update(1)
                     count+=1
                     sleep(0.01)
                     self._sym_update_layout(sym_info=symb_rect_dict)
