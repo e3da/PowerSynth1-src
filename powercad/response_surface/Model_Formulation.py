@@ -1128,7 +1128,7 @@ def test_build_trace_cornermodel_fh():
     mdk_dir = "C://Users//qmle//Google Drive//MSCAD PowerSynth Archives//Internal//MDK//Layer Stack Quang//MDK_Validation.csv"
     w_dir = "C://Users//qmle//Desktop//Testing//FastHenry//Fasthenry3_test_gp//WorkSpace1"
     rs_mdl = load_mdl(dir='C://Users//qmle//Desktop//Testing//FastHenry//Fasthenry3_test_gp//WorkSpace',
-                      mdl_name='test5.rsmdl')
+                      mdl_name='model_tutorial.rsmdl')
     fh_env_dir = "C://Users//qmle//Desktop//Testing//FastHenry//Fasthenry3_test_gp//WorkSpace//fasthenry.exe"
     read_output_dir = "C://Users//qmle//Desktop//Testing//FastHenry//Fasthenry3_test_gp//ReadOutput.exe"
     env = [fh_env_dir, read_output_dir]

@@ -2588,7 +2588,7 @@ def make_test_setup_journal_paper(p1,p2,f,h,tamb):
     module = gen_test_module_data(f,h,tamb)
     sym_layout.form_design_problem(module, temp_dir)
     #mdl = load_file("C://PowerSynth_git//Response_Surface//PowerCAD-full//tech_lib//Model//Trace//t1.rsmdl")
-    mdl = load_file("C://Users//qmle//Desktop//Testing//FastHenry//Fasthenry3_test_gp//WorkSpace//test5.rsmdl")
+    mdl = load_file("C://Users//qmle//Desktop//Testing//FastHenry//Fasthenry3_test_gp//WorkSpace//model_tutorial.rsmdl")
     sym_layout.set_RS_model(mdl)
     sym_layout._map_design_vars()
     setup_model(sym_layout)
@@ -2744,7 +2744,7 @@ def corner_overestimate(w1,w2,l,f):
     return sum(ind_corner)
 
 def continuity_test(w,l1,l2,f):
-    mdl = load_file("C://Users//qmle//Desktop//Testing//FastHenry//Fasthenry3_test_gp//WorkSpace//test5.rsmdl")
+    mdl = load_file("C://Users//qmle//Desktop//Testing//FastHenry//Fasthenry3_test_gp//WorkSpace//model_tutorial.rsmdl")
     print "discontinuous",trace_ind_krige(f,w,l1,mdl['L'])+trace_ind_krige(f,w,l2,mdl['L'])
     print "continuous",trace_ind_krige(f,w,l1+l2,mdl['L'])
 
@@ -2809,7 +2809,7 @@ if __name__ == '__main__':
 
 
     '''
-    mdl = load_file("C://Users//qmle//Desktop//Testing//FastHenry//Fasthenry3_test_gp//WorkSpace//test5.rsmdl")
+    mdl = load_file("C://Users//qmle//Desktop//Testing//FastHenry//Fasthenry3_test_gp//WorkSpace//model_tutorial.rsmdl")
     #mdl = load_file("C://PowerSynth_git//Response_Surface//PowerCAD-full//tech_lib//Model//Trace//t1.rsmdl")
     sym_layout = SymbolicLayout()
     sym_layout.set_RS_model(mdl)
