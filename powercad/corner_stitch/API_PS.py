@@ -410,7 +410,6 @@ def input_conversion(sym_layout):
             name = obj.path_id
 
         Input_rects.append(Rectangle(type, x, y, width, height, name, Schar='/', Echar='/'))
-
     return Input_rects,x_max,y_max # Input_rects are input to corner stitch insert function, max_x,max_y are maximum x and y coordinate of the layout
 
 
