@@ -102,6 +102,8 @@ class constraintGraph:
             else:
                 self.VerticalNodeList.append(node)# only appending all vertical tree nodes which have children. Nodes having no children are not included
 
+
+
         Key = []
         ValueH = []
         ValueV = []
