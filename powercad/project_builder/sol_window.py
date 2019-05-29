@@ -25,31 +25,35 @@ from powercad.interfaces.EMPro.EMProExport import EMProScript
 from powercad.interfaces.FastHenry.fh_layers import output_fh_script
 from powercad.interfaces.Q3D.Q3D import output_q3d_vbscript
 from powercad.interfaces.Solidworks.solidworks import output_solidworks_vbscript
-from powercad.project_builder.dialogs.solutionWindow_ui import Ui_layout_form
+from powercad.project_builder.UI_py.solutionWindow_ui import Ui_layout_form
 from powercad.project_builder.proj_dialogs import SolidworkVersionCheckDialog
 from powercad.sym_layout.plot import plot_layout
 from powercad.Spice_handler.spice_export.circuit import Circuit
 
 class SolutionWindow(QtGui.QWidget):
     """Solution windows that show up in MDI area"""
-    def __init__(self, solution=None, sym_layout=None, filletFlag=None,dir=None):
+    def __init__(self, solution=None, sym_layout=None, flag=0,filletFlag=None,dir=None,parent=None):
         """Set up the solution window"""
         QtGui.QWidget.__init__(self)
         self.ui = Ui_layout_form()
         self.ui.setupUi(self)
         self.setWindowTitle(solution.name)
-
         self.ui.btn_run_drc.pressed.connect(self.run_drc)
         self.ui.btn_export_selected.pressed.connect(self.export_script)
+        self.parent=parent
+        self.flag=flag # plotting new layout engine layout 0:old engine, 1:new engine
         #self.ui.btn_run_succesive_approxomation.pressed.connect(self.Run_Sucessive_approximation)#sxm; new button function added based on self.export_spice_parasitics
 
         self.solution = solution
+        #print self.solution
+
         self.sym_layout = sym_layout
         self.default_save_dir=dir # This will make all save functions default to project dir
         # display objective data in table widget
         self.ui.tbl_info.setRowCount(len(solution.params))
         self.i = 0
         for objective in solution.params:
+            #print objective
             self.tbl_item = QtGui.QTableWidgetItem(objective[0])
             self.ui.tbl_info.setItem(self.i,0,self.tbl_item)
             self.tbl_item = QtGui.QTableWidgetItem(str(round(objective[1],4)))
@@ -66,7 +70,7 @@ class SolutionWindow(QtGui.QWidget):
         self.ui.preview_layout.addWidget(canvas,0,0,1,1)
 
         ax = fig.add_subplot(111, aspect=1.0)
-        plot_layout(sym_layout, filletFlag, ax, new_window=False)
+        plot_layout(sym_layout,flag, filletFlag, ax, new_window=False)
         canvas.draw()
 
     def run_drc(self):
@@ -77,6 +81,8 @@ class SolutionWindow(QtGui.QWidget):
             QtGui.QMessageBox.warning(None, "Design Rule Check", "DRC errors found! Check log/console.")
     def export_script(self):
         selected=str(self.ui.cmbox_export_option.currentText())
+        if self.parent.project.layout_engine=="SL":
+            self.sym_layout.gen_solution_layout(self.solution.index)
         if selected == 'Q3D':
             self.export_q3d()
         elif selected== 'Solidworks':
@@ -94,7 +100,6 @@ class SolutionWindow(QtGui.QWidget):
         outname = fn[0]
         if len(outname) > 0:
             try:
-                self.sym_layout.gen_solution_layout(self.solution.index)
                 md = ModuleDesign(self.sym_layout)
                 #output_fh_script_mesh(md,outname)
                 output_fh_script(self.sym_layout,outname)
@@ -110,7 +115,6 @@ class SolutionWindow(QtGui.QWidget):
 
         if len(outname) > 0:
             try:
-                self.sym_layout.gen_solution_layout(self.solution.index)
                 md = ModuleDesign(self.sym_layout)
                 empro_script = EMProScript(md, outname+".py")
                 empro_script.generate()
@@ -126,7 +130,6 @@ class SolutionWindow(QtGui.QWidget):
 
         if len(outname) > 0:
             try:
-                self.sym_layout.gen_solution_layout(self.solution.index)
                 md = ModuleDesign(self.sym_layout)
                 output_q3d_vbscript(md, outname)
                 QtGui.QMessageBox.about(None, "Q3D VB Script", "Export successful.")
@@ -144,7 +147,6 @@ class SolutionWindow(QtGui.QWidget):
         if len(outname) > 0:
             print 'exporting solidworks file'
             try:
-                self.sym_layout.gen_solution_layout(self.solution.index)
                 md = ModuleDesign(self.sym_layout)
 
                 data_dir = 'C:/ProgramData/SolidWorks/SolidWorks '+version

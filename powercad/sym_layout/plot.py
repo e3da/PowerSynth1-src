@@ -38,7 +38,7 @@ def plot_svg_objs(layout):
     plt.show()
     #print "plot_svg_objs() completed."
 
-def plot_layout(sym_layout, filletFlag=False, ax = plt.subplot('111', adjustable='box', aspect=1.0), new_window=True, plot_row_col=False):
+def plot_layout(sym_layout, flag=0,filletFlag=False, ax = plt.subplot('111', adjustable='box', aspect=1.0), new_window=True, plot_row_col=False):
     #print "plot_layout() started."
     hlist = sym_layout.h_rowcol_list
     vlist = sym_layout.v_rowcol_list
@@ -53,9 +53,11 @@ def plot_layout(sym_layout, filletFlag=False, ax = plt.subplot('111', adjustable
     patches = []
     # Plot substrate boundary first
     sub_w, sub_l = sym_layout.module.substrate.dimensions
+    #print "W-h",sub_w, sub_l
     ledge = sym_layout.module.substrate.ledge_width
     sub_rect = Rect(sub_l, 0.0, 0.0, sub_w)
-    sub_rect.translate(-ledge, -ledge)
+    if flag==0:
+        sub_rect.translate(-ledge, -ledge)
     r = Rectangle((sub_rect.left, sub_rect.bottom), sub_rect.width, sub_rect.height, facecolor='#B87333', edgecolor='#616161')
     ax.add_patch(r)
     # Detect corners for filleting
@@ -67,6 +69,8 @@ def plot_layout(sym_layout, filletFlag=False, ax = plt.subplot('111', adjustable
     # Setup viewing bounds
     ax.set_xlim(sub_rect.left - 1.0, sub_rect.right + 1.0)
     ax.set_ylim(sub_rect.bottom - 1.0, sub_rect.top + 1.0)
+    #print "xy",sub_rect.left - 1.0,sub_rect.right + 1.0
+    #print"y",sub_rect.bottom - 1.0, sub_rect.top + 1.0
     ax.set_axis_on()  # sxm: originally ax.set_axis_off()
 
 

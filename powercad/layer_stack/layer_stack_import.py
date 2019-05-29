@@ -18,7 +18,8 @@ from powercad.design.project_structures import BaseplateInstance, SubstrateAttac
 from powercad.design.library_structures import *
 from powercad.general.material.material import *
 from powercad.general.settings.settings import MATERIAL_LIB_PATH
-class LayerStackImport:
+
+class LayerStackHandler:
     
     def __init__(self, csv_file):
         self.csv_file = csv_file
@@ -58,8 +59,8 @@ class LayerStackImport:
     def import_csv(self):   # Top level function
         self.read_from_csv()
         self.check_layer_stack_compatibility()
-        
-        
+
+
     def read_from_csv(self):    # Get layer stack in list form from the CSV file
         infile = open(os.path.abspath(self.csv_file))
         self.layer_list = []
@@ -196,7 +197,7 @@ if __name__ == '__main__':
     #layer_list_test.append(['M:', '7', 'M3', '7', '100', '100'])
     #layer_list_test.append(['M:', '8', 'M4', '0', '100', '100'])
     
-    test = LayerStackImport(None)
+    test = LayerStackHandler(None)
     #print 'compatible layer order' + str(test.compatible_layer_order)
     test.layer_list = layer_list_test
     test.check_layer_stack_compatibility()

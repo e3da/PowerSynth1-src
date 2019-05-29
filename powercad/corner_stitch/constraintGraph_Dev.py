@@ -4,21 +4,14 @@ Updated from December,2017
 '''
 
 from sets import Set
-import numpy as np
 import constraint
 import networkx as nx
-from matplotlib import pylab
-import matplotlib.pyplot as plt
 from collections import defaultdict
 import collections
-import json
 import copy
 import random
 from random import randrange
-import timeit
-import csv
-import cProfile
-import re
+
 #########################################################################################################################
 
 
@@ -73,10 +66,12 @@ class constraintGraph:
         self.YLoc= YLocation
         self.voltage_constraint={}
         self.current_constraint = {}
+        self.seed_h=[]
+        self.seed_v=[]
 
 
 
-    def graphFromLayer(self, H_NODELIST, V_NODELIST, level,N=None):
+    def graphFromLayer(self, H_NODELIST, V_NODELIST, level,N=None,seed=None,individual=None):
         """
 
         :param H_NODELIST: Horizontal node list from horizontal tree
@@ -149,7 +144,13 @@ class constraintGraph:
                         parent = None
 
             # Function to create horizontal constraint graph using edge information
-            self.cgToGraph_h(ID, self.edgesh_new[ID], parent, level,N)
+            #print "ind", individual
+            if individual!=None:
+                individual_h = individual[:len(self.ZDL_H[ID])]
+            else:
+                individual_h=None
+
+            self.cgToGraph_h(ID, self.edgesh_new[ID], parent, level,N,seed,individual_h)
 
         for k, v in list(self.edgesv_new.iteritems())[::-1]:
             ID, edgev = k, v
@@ -159,7 +160,14 @@ class constraintGraph:
                         parent = i.parent.id
 
             # Function to create vertical constraint graph using edge information
-            self.cgToGraph_v(ID, self.edgesv_new[ID], parent, level,N)
+
+            if individual!=None:
+                #print len(individual), len(self.ZDL_H[ID]), len(self.ZDL_V[ID])
+                individual_v = individual[len(self.ZDL_H[ID]):]
+                #print "ind",individual_v
+            else:
+                individual_v=None
+            self.cgToGraph_v(ID, self.edgesv_new[ID], parent, level,N,seed,individual_v)
 
     #####  constraint graph evaluation after randomization to determine each node new location
     def minValueCalculation(self, hNodeList, vNodeList, level):
@@ -791,7 +799,7 @@ class constraintGraph:
         self.edgesv[ID] = edgesv
 
 
-    def cgToGraph_h(self, ID, edgeh, parentID, level,N):
+    def cgToGraph_h(self, ID, edgeh, parentID, level,N,seed,individual):
         '''
         :param ID: Node ID
         :param edgeh: horizontal edges for that node's constraint graph
@@ -854,34 +862,47 @@ class constraintGraph:
             # In the HCG (horizontal constraint graph), all edge weights are randomized based on different type of tiles
             D = []
             for i in range(N):
+                seed = seed + i * 1000
+                count=0
                 EDGEH = []
                 if (N<150):
                     SD=N*300 # standard deviation for randomization
                 else:
                     SD=N*100
                 for (k1), v in edgelabels.items():
+                    count+=1
                     edge = {}
                     if v[2] == 0:
                         if v[1] == '1':
-                            val = int(min(100* v[0], max(v[0], random.gauss(v[0], SD))))
+                            random.seed(seed + count * 1000)
+                            val = int(min(10* v[0], max(v[0], random.gauss(v[0], SD))))
                         elif v[1] == '2':
+                            random.seed(seed + count * 1000)
                             val = int(min(2 * v[0], max(v[0], random.gauss(v[0], SD))))
                         elif v[1] == '3':
+                            random.seed(seed + count * 1000)
                             val = int(min(v[0] * 2, max(v[0], random.gauss(v[0], SD))))
                         elif v[1] == '4':
+                            random.seed(seed + count * 1000)
                             val = int(min(2 * v[0], max(v[0], random.gauss(v[0], SD))))
                         elif v[1] == '0':
-                            val = int(min(v[0] * 100, max(v[0], random.gauss(v[0], SD))))
+                            random.seed(seed + count * 1000)
+                            val = int(min(v[0] * 10, max(v[0], random.gauss(v[0], SD))))
                         elif (isinstance(v[1], int)):
-                            val = int(min(100 * v[0], max(v[0], random.gauss(v[0], SD))))
+                            random.seed(seed + count * 1000)
+                            val = int(min(10 * v[0], max(v[0], random.gauss(v[0], SD))))
                     elif v[2] == 1:
                         if v[1] == 'missing':
-                            val = int(min(1000 * v[0], max(v[0], random.gauss(v[0], SD))))
+                            random.seed(seed + count * 1000)
+                            val = int(min(10 * v[0], max(v[0], random.gauss(v[0], SD))))
                         else:
-                            val = int(min(1000* v[0], max(v[0], random.gauss(v[0], SD))))
+                            random.seed(seed + count * 1000)
+                            val = int(min(10* v[0], max(v[0], random.gauss(v[0], SD))))
                     elif v[2] == 2:
-                        val=int(min(100 * v[0], max(v[0], random.gauss(v[0], SD/50))))
+                        random.seed(seed + count * 1000)
+                        val=int(min(10 * v[0], max(v[0], random.gauss(v[0], SD/50))))
                     else:
+                        random.seed(seed + count * 1000)
                         val = int(min(10* v[0], max(v[0], random.gauss(v[0], SD))))
 
                     edge[(k1)] = val
@@ -995,6 +1016,10 @@ class constraintGraph:
             for k, v in X.items():
                 H.append((k[0], k[1], v))
             loct = []
+            #setting up seed
+            s=seed
+            for i in range(N):
+                self.seed_h.append(s+i*1000)
             for i in range(N):
                 self.Loc_X={}
                 G = nx.MultiDiGraph()
@@ -1005,7 +1030,7 @@ class constraintGraph:
                     if k in n:
                         self.Loc_X[k] = v # a dictionary where vertices are keys and evaluated locations are values. As it's fixed floorplan already source and sink vertex location
                         #is given. So those are set here. Rest of the vertices locations are evaluated using FUNCTION and the self.Loc_X is updated from that function.
-                self.FUNCTION(G)
+                self.FUNCTION(G,individual,sid=i)#added individual for optimization
                 loct.append(self.Loc_X) # after evaluation a new floorplan locations are found. There are N number of location sets
 
             for i in loct:
@@ -1043,7 +1068,6 @@ class constraintGraph:
             A = nx.adjacency_matrix(G)
             B = A.toarray()
             Location = {}
-
             # longest path evaluation
             for i in range(len(n)):
                 if n[i] == 0:
@@ -1097,7 +1121,7 @@ class constraintGraph:
                 self.edgesh_new[parentID] = edgelist
 
 
-    def cgToGraph_v(self,ID, edgev, parentID, level,N):
+    def cgToGraph_v(self,ID, edgev, parentID, level,N,seed,individual):
 
         '''
                 :param ID: Node ID
@@ -1159,37 +1183,50 @@ class constraintGraph:
                         edgelabels[(k)] = v[j]
             D = []
             for i in range(N):
+                seed = seed + i * 1000
+                count = 0
                 EDGEV = []
                 if (N<150):
                     SD=N*300
                 else:
                     SD=N*100
                 for (k1), v in edgelabels.items():
+                    count+=1
                     edge = {}
                     if v[2] == 4:
                         if v[1] == '1':
-                            val = int(min(100 * v[0], max(v[0], random.gauss(v[0], SD))))
+                            random.seed(seed + count * 1000)
+                            val = int(min(10 * v[0], max(v[0], random.gauss(v[0], SD))))
                         elif v[1] == '2':
+                            random.seed(seed + count * 1000)
                             val = int(min(2 * v[0], max(v[0], random.gauss(v[0], SD))))
                         elif v[1] == '3':
+                            random.seed(seed + count * 1000)
                             val = int(min(v[0] * 2, max(v[0], random.gauss(v[0], SD))))
                         elif v[1] == '4':
+                            random.seed(seed + count * 1000)
                             val = int(min(2 * v[0], max(v[0], random.gauss(v[0], SD))))
                         elif v[1] == '0':
-                            val = int(min(v[0] * 100, max(v[0], random.gauss(v[0],SD))))
+                            random.seed(seed + count * 1000)
+                            val = int(min(v[0] * 10, max(v[0], random.gauss(v[0],SD))))
                         elif (isinstance(v[1], int)):
-                            val = int(min(100 * v[0], max(v[0], random.gauss(v[0], SD))))
+                            random.seed(seed + count * 1000)
+                            val = int(min(10 * v[0], max(v[0], random.gauss(v[0], SD))))
                     elif v[2] == 1:
                         if v[1] == 'missing':
-                            val = int(min(1000* v[0], max(v[0], random.gauss(v[0], SD))))
+                            random.seed(seed + count * 1000)
+                            val = int(min(10* v[0], max(v[0], random.gauss(v[0], SD))))
                         else:
+                            random.seed(seed + count * 1000)
 
-                            val = int(min( 1000*v[0], max(v[0], random.gauss(v[0], SD))))
+                            val = int(min( 10*v[0], max(v[0], random.gauss(v[0], SD))))
 
                     elif v[2] == 2:
-                        val=int(min(100 * v[0], max(v[0], random.gauss(v[0], SD/50))))
+                        random.seed(seed + count * 1000)
+                        val=int(min(10 * v[0], max(v[0], random.gauss(v[0], SD/50))))
                     else:
-                        val = int(min(100 * v[0], max(v[0], random.gauss(v[0], SD))))
+                        random.seed(seed + count * 1000)
+                        val = int(min(10 * v[0], max(v[0], random.gauss(v[0], SD))))
 
                     edge[(k1)] = val
                     EDGEV.append(edge)
@@ -1300,6 +1337,9 @@ class constraintGraph:
             for k, v in Y.items():
                 V.append((k[0], k[1], v))
             loct = []
+            s = seed
+            for i in range(N):
+                self.seed_v.append(s + i*1000)
             for i in range(N):
                 self.Loc_Y = {}
                 G = nx.MultiDiGraph()
@@ -1309,7 +1349,7 @@ class constraintGraph:
                 for k, v in self.YLoc.items():
                     if k in n:
                         self.Loc_Y[k] = v
-                self.FUNCTION_V(G)
+                self.FUNCTION_V(G,individual,sid=i)
                 loct.append(self.Loc_Y)
             for i in loct:
                 new_y_loc = []
@@ -1401,7 +1441,7 @@ class constraintGraph:
 
 
     # Applies algorithms for evaluating mode-2 and mode-3 solutions
-    def FUNCTION(self, G):
+    def FUNCTION(self, G,Random,sid):
         A = nx.adjacency_matrix(G)
         B = A.toarray()
         Fixed_Node = self.Loc_X.keys() # list of vertices which are given from user as fixed vertices (vertices with user defined locations)
@@ -1444,6 +1484,8 @@ class constraintGraph:
 
 
         nodes = list(G.nodes())
+        nodes.sort()
+
 
         # Creates all possible disconnected subgraph vertices
         Node_List = []
@@ -1470,7 +1512,7 @@ class constraintGraph:
                 n.sort()
                 start = n[0]
                 end = n[-1]
-                self.Location_finding(B, start, end, SOURCE=None, TARGET=None, flag=False)  # evaluates each subgraph
+                self.Location_finding(B, start, end,Random, SOURCE=None, TARGET=None, flag=False,sid=sid)  # evaluates each subgraph (Random is added to test optimization)
             Fixed_Node = self.Loc_X.keys()
             for i in Fixed_Node:
                 for j in Fixed_Node:
@@ -1479,7 +1521,7 @@ class constraintGraph:
             if len(G.edges()) == 0:
                 return
             else:
-                self.FUNCTION(G)
+                self.FUNCTION(G,Random,sid)
         else:
             Connected_List = []
             for k in range(len(Node_List)):
@@ -1574,7 +1616,7 @@ class constraintGraph:
                 for i in range(1, len(PATH)):
                     if PATH[i] in self.Loc_X.keys():
                         TARGET.append(PATH[i])
-                self.Location_finding(B, start, end, SOURCE, TARGET, flag=True) # if split into subgraph is not possible and there is edge in the longest path which is bypassing a fixed vertex,
+                self.Location_finding(B, start, end,Random, SOURCE, TARGET, flag=True,sid=sid) # if split into subgraph is not possible and there is edge in the longest path which is bypassing a fixed vertex,
                 # then evaluation with flag=true is performed
                 Fixed_Node = self.Loc_X.keys()
 
@@ -1586,7 +1628,7 @@ class constraintGraph:
                 if len(G.edges()) == 0:
                     return
                 else:
-                    self.FUNCTION(G)
+                    self.FUNCTION(G,Random,sid)
 
         # if the whole graph can be split into disconnected subgraphs
         else:
@@ -1598,7 +1640,7 @@ class constraintGraph:
                 n.sort()
                 start = n[0]
                 end = n[-1]
-                self.Location_finding(B, start, end, SOURCE=None, TARGET=None, flag=False)
+                self.Location_finding(B, start, end,Random, SOURCE=None, TARGET=None, flag=False,sid=sid)
             Fixed_Node = self.Loc_X.keys()
             for i in Fixed_Node:
                 for j in Fixed_Node:
@@ -1610,30 +1652,70 @@ class constraintGraph:
                 return
 
             else:
-                self.FUNCTION(G)
+                self.FUNCTION(G, Random,sid)
 
 
     # randomize uniformly edge weights within fixed minimum and maximum locations
-    def randomvaluegenerator(self, Range, value):
-        variable = []
-        D_V_Newval = [0]
-        V=copy.deepcopy(value)
-        while (len(value) > 1):
-            i = 0
-            n = len(value)
-            v = Range - sum(D_V_Newval)
-            if ((2 * v) / n) > 0:
-                x =  randrange(0, (int(2 * v) / n))
+    def randomvaluegenerator(self, Range, value,Random,sid):
+        #print "R",Random,sid
+        if Random!=None:
+            Sum=sum(Random)
+
+            if Sum>0:
+                Vi=[]
+                for i in Random:
+                    Vi.append(Range*(i/Sum))
             else:
-                x = 0
-            p = value.pop(i)
-            D_V_Newval.append(x)
-        del D_V_Newval[0]
-        D_V_Newval.append(Range - sum(D_V_Newval))
-        random.shuffle(D_V_Newval)
-        for i in range(len(V)):
-            x=V[i]+D_V_Newval[i]
-            variable.append(x) # randomized edge weights without violating minimum constraint values
+                Vi = [0 for i in Random]
+            #print Random
+            #Vi=[0 for i in Vi]
+            variable=[]
+            for i in range(len(value)):
+                variable.append(value[i]+Vi[i])
+
+            #print "var", Vi
+
+        #print "Vy",len(Vy_s),sum(Vy_s),Vy_s
+
+
+
+        else:
+            '''
+            variable = []
+            Total = sum(value)
+            V = copy.deepcopy(value)
+            Prob = []
+
+            for i in value:
+                Prob.append(i / float(Total))
+            
+            random.seed(self.seed_h[sid])
+            D_V_Newval = list(np.random.multinomial(Range, Prob))
+            '''
+            variable = []
+            D_V_Newval = [0]
+            V=copy.deepcopy(value)
+
+            while (len(value) > 1):
+                i = 0
+                n = len(value)
+                v = Range - sum(D_V_Newval)
+                if ((2 * v) / n) > 0:
+                    random.seed(self.seed_h[sid])
+                    x =  random.uniform(0, (int(2 * v) / n))
+                else:
+                    x = 0
+                p = value.pop(i)
+                D_V_Newval.append(x)
+
+            del D_V_Newval[0]
+            D_V_Newval.append(Range - sum(D_V_Newval))
+
+            random.shuffle(D_V_Newval)
+            for i in range(len(V)):
+                x=V[i]+D_V_Newval[i]
+                variable.append(x) # randomized edge weights without violating minimum constraint values
+
         return variable
 
     #longest path evaluation function
@@ -1697,6 +1779,7 @@ class constraintGraph:
         for i in range(len(PATH) - 1):
             if (PATH[i], PATH[i + 1]) in X.keys():
                 Value.append(X[(PATH[i], PATH[i + 1])])
+        #print "Val",Value
         Max = sum(Value)
 
         # returns longest path, list of minimum constraint values in that path and summation of the values
@@ -1723,7 +1806,7 @@ class constraintGraph:
 
 
     # this function evaluates the case where the connected whole graph has edges bypassing fixed node in the longest path
-    def Evaluation_connected(self, B, PATH, SOURCE, TARGET):
+    def Evaluation_connected(self, B, PATH, SOURCE, TARGET,sid):
         """
 
         :param B: Adjacency matrix
@@ -1766,6 +1849,7 @@ class constraintGraph:
 
             # finds randomized location for each non-fixed node between minimum and maximum possible location
             if v1 < v2:
+                random.seed(self.seed_h[sid])
                 self.Loc_X[i] = randrange(v1, v2)
             else:
                 self.Loc_X[i] = max(v1, v2)
@@ -1774,7 +1858,7 @@ class constraintGraph:
 
 
 
-    def Location_finding(self, B, start, end, SOURCE, TARGET, flag):
+    def Location_finding(self, B, start, end,Random, SOURCE, TARGET, flag,sid):
         """
 
         :param B: Adjacency matrix
@@ -1789,11 +1873,12 @@ class constraintGraph:
         PATH, Value, Sum = self.LONGEST_PATH(B, start, end)
 
         if flag == True:
-            self.Evaluation_connected(B, PATH, SOURCE, TARGET)
+            self.Evaluation_connected(B, PATH, SOURCE, TARGET,sid)
         else:
             Max = self.Loc_X[end] - self.Loc_X[start]
+
             Range = Max - Sum
-            variable = self.randomvaluegenerator(Range, Value)
+            variable = self.randomvaluegenerator(Range, Value,Random,sid)
             loc = {}
             for i in range(len(PATH)):
                 if PATH[i] in self.Loc_X:
@@ -1807,7 +1892,7 @@ class constraintGraph:
 
 
     # this function has the same purpose and algorithms as for horizontal FUNCTION(G). It's just for VCG evaluation
-    def FUNCTION_V(self, G):
+    def FUNCTION_V(self, G,Random,sid):
         A = nx.adjacency_matrix(G)
         B = A.toarray()
         Fixed_Node = self.Loc_Y.keys()
@@ -1847,6 +1932,7 @@ class constraintGraph:
                     G.remove_edge(i, j)
 
         nodes = list(G.nodes())
+        nodes.sort()
         Node_List = []
         for i in range(len(Fixed_Node) - 1):
             node = [Fixed_Node[i]]
@@ -1910,8 +1996,7 @@ class constraintGraph:
                     n.sort()
                     start = n[0]
                     end = n[-1]
-                    self.Location_finding_V(B, start, end, SOURCE=None, TARGET=None, flag=False)
-
+                self.Location_finding_V(B, start, end,Random, SOURCE=None, TARGET=None, flag=False,sid=sid)  # evaluates each subgraph (Random is added tot est optimization)
                 Fixed_Node = self.Loc_Y.keys()
                 for i in Fixed_Node:
                     for j in Fixed_Node:
@@ -1923,7 +2008,7 @@ class constraintGraph:
                 if len(G.edges()) == 0:
                     return
                 else:
-                    self.FUNCTION_V(G)
+                    self.FUNCTION_V(G,Random,sid)
 
         elif len(Connected_List) > 1:
             for i in range(len(Connected_List)):
@@ -1941,7 +2026,7 @@ class constraintGraph:
                     if PATH[i] in self.Loc_Y.keys():
                         TARGET.append(PATH[i])
                 TARGET.sort()
-                self.Location_finding_V(B, start, end, SOURCE, TARGET, flag=True)
+                self.Location_finding_V(B, start, end,Random, SOURCE, TARGET, flag=True,sid=sid)
                 Fixed_Node = self.Loc_Y.keys()
                 for i in Fixed_Node:
                     for j in Fixed_Node:
@@ -1950,7 +2035,7 @@ class constraintGraph:
                 if len(G.edges()) == 0:
                     return
                 else:
-                    self.FUNCTION_V(G)
+                    self.FUNCTION_V(G, Random, sid)
         else:
             H = []
             for i in range(len(Node_List)):
@@ -1960,7 +2045,7 @@ class constraintGraph:
                 n.sort()
                 start = n[0]
                 end = n[-1]
-                self.Location_finding_V(B, start, end, SOURCE=None, TARGET=None, flag=False)
+                self.Location_finding_V(B, start, end,Random, SOURCE=None, TARGET=None, flag=False,sid=sid)
 
 
             Fixed_Node = self.Loc_Y.keys()
@@ -1974,42 +2059,83 @@ class constraintGraph:
 
                 return
             else:
-                self.FUNCTION_V(G)
+                self.FUNCTION_V(G,Random,sid)
 
 
-    def randomvaluegenerator_V(self, Range, value):
+    def randomvaluegenerator_V(self, Range, value,Random,sid):
         """
 
         :param Range: Randomization room excluding minimum constraint values
         :param value: list of minimum constraint values associated with the room
         :return: list of randomized value corresponding to each minimum constraint value
         """
-        variable = []
-        D_V_Newval = [0]
-        V = copy.deepcopy(value)
 
-        while (len(value) > 1):
+        if Random!=None:
+            Sum = sum(Random)
 
-            i = 0
-            n = len(value)
-
-            v = Range - sum(D_V_Newval)
-
-            if ((2 * v) / n) > 0:
-
-                x = randrange(0, (int(2 * v) / n))
+            if Sum>0:
+                Vi=[]
+                for i in Random:
+                    Vi.append(Range*(i/Sum))
             else:
-                x = 0
-            p = value.pop(i)
+                Vi = [0 for i in Random]
+            '''
+            Vi = []
+            for i in Random:
+                Vi.append(Range * (i / Sum))
+            '''
 
-            D_V_Newval.append(x)
+            variable = []
+            for i in range(len(value)):
+                variable.append(value[i] + Vi[i])
 
-        del D_V_Newval[0]
-        D_V_Newval.append(Range - sum(D_V_Newval))
-        random.shuffle(D_V_Newval)
-        for i in range(len(V)):
-            x = V[i] + D_V_Newval[i]
-            variable.append(x)
+
+
+        else:
+            '''
+            variable = []
+            Total = sum(value)
+            V = copy.deepcopy(value)
+            Prob = []
+
+            for i in value:
+                Prob.append(i / float(Total))
+            random.seed(self.seed_v[sid])
+            D_V_Newval = list(np.random.multinomial(Range, Prob))
+
+            '''
+            variable = []
+            D_V_Newval = [0]
+            V = copy.deepcopy(value)
+            #print "Range",Range
+            #print "value",value
+            while (len(value) > 1):
+
+                i = 0
+                n = len(value)
+
+                v = Range - sum(D_V_Newval)
+
+                if ((2 * v) / n) > 0:
+                    random.seed(self.seed_v[sid])
+
+                    x = random.uniform(0, (int(2 * v) / n))
+                else:
+                    x = 0
+                p = value.pop(i)
+
+                D_V_Newval.append(x)
+
+            del D_V_Newval[0]
+            #print "Var", D_V_Newval
+            D_V_Newval.append(Range - sum(D_V_Newval))
+
+            random.shuffle(D_V_Newval)
+
+            for i in range(len(V)):
+                x = V[i] + D_V_Newval[i]
+                variable.append(x)
+            #print "Var", variable
         return variable
 
 
@@ -2119,7 +2245,7 @@ class constraintGraph:
 
         return B
 
-    def Evaluation_connected_V(self, B, PATH, SOURCE, TARGET):
+    def Evaluation_connected_V(self, B, PATH, SOURCE, TARGET,sid):
         """
 
         :param B: Adjacency matrix
@@ -2161,13 +2287,14 @@ class constraintGraph:
             v1 = v_low
             v2 = v_h2
             if v1 < v2:
+                random.seed(self.seed_v[sid])
                 self.Loc_Y[i] = randrange(v1, v2)
             else:
                 self.Loc_Y[i] = max(v1, v2)
             SOURCE.append(i)
             TARGET.append(i)
 
-    def Location_finding_V(self, B, start, end, SOURCE, TARGET, flag):
+    def Location_finding_V(self, B, start, end,Random, SOURCE, TARGET, flag,sid):
         """
 
            :param B: Adjacency matrix
@@ -2180,12 +2307,12 @@ class constraintGraph:
         """
         PATH, Value, Sum = self.LONGEST_PATH_V(B, start, end)
         if flag == True:
-            self.Evaluation_connected_V(B, PATH, SOURCE, TARGET)
+            self.Evaluation_connected_V(B, PATH, SOURCE, TARGET,sid)
         else:
             Max = self.Loc_Y[end] - self.Loc_Y[start]
 
             Range = Max - Sum
-            variable = self.randomvaluegenerator_V(Range, Value)
+            variable = self.randomvaluegenerator_V(Range, Value,Random,sid)
             loc = {}
             for i in range(len(PATH)):
                 if PATH[i] in self.Loc_Y:
