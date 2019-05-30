@@ -2160,22 +2160,23 @@ class CornerStitch():
 
     # function to generate initial layout
     def draw_layout(self,rects=None,Htree=None,Vtree=None):
-        colors = ['green', 'red', 'blue', 'yellow', 'pink']
-        type = ['Type_1', 'Type_2', 'Type_3', 'Type_4','Type_5']
-        zorders = [1,2,3,4,5]
+        colors = ['green', 'red', 'blue', 'yellow','purple', 'pink','magenta','orange','violet']
+        type = ['Type_1', 'Type_2', 'Type_3', 'Type_4','Type_5','Type_6','Type_7','Type_8','Type_9']
+        #zorders = [1,2,3,4,5]
         Patches={}
 
         for r in rects:
             i = type.index(r.type)
+            #print i,r.name
             P=matplotlib.patches.Rectangle(
                     (r.x, r.y),  # (x,y)
                     r.width,  # width
                     r.height,  # height
                     facecolor=colors[i],
                     alpha=0.5,
-                    zorder=zorders[i],
+                    #zorder=zorders[i],
                     edgecolor='black',
-                    linewidth=2,
+                    linewidth=1,
                 )
             Patches[r.name]=P
         CG = constraintGraph()
