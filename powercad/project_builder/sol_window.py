@@ -167,7 +167,8 @@ class SolutionWindow(QtGui.QWidget):
                 #spice_netlist_graph.write_SPICE_subcircuit(os.path.dirname(outname))
 
                 spice_netlist=Circuit()
-                spice_netlist._graph_read(sym_layout.lumped_graph)
+                self.sym_layout.build_lumped_graph()
+                spice_netlist._graph_read(self.sym_layout.lumped_graph)
                 ads_net = Netlis_export_ADS(df=spice_netlist.df_circuit_info, pm=spice_netlist.portmap)
                 ads_net.export_ads2(outname)
                 QtGui.QMessageBox.about(None, "SPICE Electrical Parasitics Netlist", "Export successful.")
