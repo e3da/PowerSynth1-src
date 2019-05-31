@@ -9,6 +9,7 @@ from PySide import QtCore, QtGui
 import sys
 from powercad.project_builder.proj_dialogs import ConsDialog
 from powercad.design.parts import *
+from powercad.cons_aware_en.cons_engine import New_layout_engine
 class ConstraintWindow(QtGui.QMainWindow):
     # A fake window to call the constraint dialog object
     def __init__(self):
@@ -77,6 +78,26 @@ def gather_part_route_info(Definition=None,layout_info=None):
         key = i[0]
         all_parts_info.setdefault(key, [])
         info_files[key] = i[1]
+    '''
+    get_all_cons_comp = constraint.constraint()
+    for i in Definition:
+
+        if i[0] not in get_all_cons_comp.all_component_types:
+            get_all_cons_comp.add_component_type(i[0])
+    all_components_list = get_all_cons_comp.all_component_types  # set of all components considered so far
+    all_components_type_mapped_dict = get_all_cons_comp.component_to_component_type  # dict to map component type and cs type
+    
+    
+    '''
+    # updates type list according to definition input
+
+    for i in Definition:
+
+        if i[0] not in constraint.constraint.all_component_types:
+            c=constraint.constraint()
+            constraint.constraint.add_component_type(c,i[0])
+    all_components_list =  constraint.constraint.all_component_types  # set of all components considered so far
+    all_components_type_mapped_dict =  constraint.constraint.component_to_component_type  # dict to map component type and cs type
 
 
     all_route_info = {}
@@ -93,6 +114,8 @@ def gather_part_route_info(Definition=None,layout_info=None):
 
 
     for j in range (1,len(layout_info)):
+
+        #updates routing path components
         if layout_info[j][1][0]=='T' and layout_info[j][2]=='power':
             element=RoutingPath(name='trace',type=0,layout_component_id=layout_info[j][1])
             all_route_info['trace'].append(element)
@@ -105,6 +128,28 @@ def gather_part_route_info(Definition=None,layout_info=None):
         elif layout_info[j][1][0]=='B' and layout_info[j][2]=='power':
             element = RoutingPath(name='bonding wire pad', type=0, layout_component_id=layout_info[j][1])
             all_route_info['trace'].append(element)
+
+        elif layout_info[j][1][0] == 'D' and layout_info[j][2] in all_components_list:
+            element = Part(name= layout_info[j][2],info_file=info_files[layout_info[j][2]], layout_component_id=layout_info[j][1])
+            element.load_part()
+            all_parts_info[layout_info[j][2]].append(element)
+        elif layout_info[j][1][0] == 'L' and layout_info[j][2] == 'power_lead':
+            element = Part(name=layout_info[j][2], info_file=info_files[layout_info[j][2]], layout_component_id=layout_info[j][1])
+            element.load_part()
+            all_parts_info[layout_info[j][2]].append(element)
+        elif layout_info[j][1][0] == 'L' and layout_info[j][2] == 'signal_lead':
+            element = Part(name=layout_info[j][2], info_file=info_files[layout_info[j][2]], layout_component_id=layout_info[j][1])
+            element.load_part()
+            all_parts_info[layout_info[j][2]].append(element)
+        else:
+            name=layout_info[j][0]+'_'+layout_info[j][2]
+            constraint.constraint.add_component_type(name)
+            element=  RoutingPath(name=name, type=1, layout_component_id=layout_info[j][1])
+            all_route_info[name].append(element)
+
+
+
+        '''
         elif layout_info[j][1][0]=='D'and layout_info[j][2]=='MOS':
             element= Part(name='MOS',type=1,info_file=info_files['MOS'],layout_component_id=layout_info[j][1])
             all_parts_info['MOS'].append(element)
@@ -120,6 +165,10 @@ def gather_part_route_info(Definition=None,layout_info=None):
         elif layout_info[j][1][0]=='L'and layout_info[j][2]=='signal_lead':
             element = Part(name='signal_lead', type=0, info_file=info_files['signal_lead'], layout_component_id=layout_info[j][1])
             all_parts_info['signal_lead'].append(element)
+        
+        
+        '''
+
 
         #print layout_info[j][1][0],layout_info[j][2]
     print all_parts_info, info_files
@@ -127,13 +176,24 @@ def gather_part_route_info(Definition=None,layout_info=None):
 
 
 
-    return all_parts_info,info_files,all_route_info
+    return all_parts_info,info_files,all_route_info,all_components_type_mapped_dict
 
-def gather_layout_info(layout_info=None,all_parts_info=None,all_route_info=None):
+
+def gather_layout_info(layout_info=None,all_parts_info=None,all_route_info=None,all_components_mapped_type_dict=None):
     size = [float(i) for i in layout_info[0]]  # extracts layout size (1st line of the layout_info)
     cs_info = []  # list of rectanges to be used as cornerstitch input information
+
+
+
     component_to_cs_type = {}
     # all_components=['EMPTY','power_trace','signal_trace','signal_lead', 'power_lead', 'MOS', 'IGBT', 'Diode','bonding wire pad','via']
+
+    all_components_type_mapped_dict=all_components_mapped_type_dict # dict to map component type and cs type
+    all_components_list= all_components_type_mapped_dict.keys()
+
+    print all_components_list
+    print all_components_type_mapped_dict
+
 
     all_component_type_names = ["EMPTY"]
     all_components = []
@@ -141,7 +201,7 @@ def gather_layout_info(layout_info=None,all_parts_info=None,all_route_info=None)
         for k, v in all_parts_info.items():
             for element in v:
                 if element.layout_component_id == layout_info[j][1]:
-                    # print layout_info[j]
+                    print layout_info[j]
                     if element not in all_components:
                         all_components.append(element)
                     if element.name not in all_component_type_names:
@@ -158,16 +218,12 @@ def gather_layout_info(layout_info=None,all_parts_info=None,all_route_info=None)
                         type_name = 'signal_trace'
                 if type_name not in all_component_type_names:
                     all_component_type_names.append(type_name)
-    # print all_component_type_names
-    types = ["EMPTY"]
-    for i in range(1,len(all_component_type_names)):
-        type = 'Type_' + str(i)
-        types.append(type)
+    print all_component_type_names
 
-    # print types
 
-    for i in range(len(types)):
-        component_to_cs_type[all_component_type_names[i]] = types[i]
+    for i in range(len(all_component_type_names)):
+        #print all_component_type_names[i]
+            component_to_cs_type[all_component_type_names[i]] = all_components_type_mapped_dict[all_component_type_names[i]]
 
     print"CS", component_to_cs_type
 
@@ -175,7 +231,6 @@ def gather_layout_info(layout_info=None,all_parts_info=None,all_route_info=None)
         for k, v in all_parts_info.items():
             for element in v:
                 if element.layout_component_id == layout_info[j][1]:
-                    # print layout_info[j]
                     type = component_to_cs_type[element.name]
                     x = float(layout_info[j][3])
                     y = float(layout_info[j][4])
@@ -213,11 +268,24 @@ def gather_layout_info(layout_info=None,all_parts_info=None,all_route_info=None)
 def update_constraint_table(all_components=None,component_to_cs_type=None):
 
 
-    init_constraint=constraint.constraint()
-    init_constraint.update_constraints(all_components=all_components, component_to_cs_type=component_to_cs_type)
+    #init_constraint=constraint.constraint()
+    #init_constraint.update_constraints(all_components=all_components, component_to_cs_type=component_to_cs_type)
 
-    Types=init_constraint.Type
-    print Types
+    #Types=init_constraint.Type
+
+    Types_init=component_to_cs_type.values()
+    print Types_init
+    Types = [0 for i in range(len(Types_init))]
+    for i in Types_init:
+        if i=='EMPTY':
+            Types[0]=i
+        else:
+            t=i.strip('Type_')
+            ind=int(t)
+            Types[ind]=i
+
+
+    #print Types
 
     all_rows = []
     r1 = ['Min Dimensions']
@@ -241,6 +309,7 @@ def update_constraint_table(all_components=None,component_to_cs_type=None):
                 if v==Types[i]:
                     for comp in all_components:
                         if k==comp.name:
+                            #print "H",k,v,comp.footprint
                             if r2_c[i]==0:
                                 r2_c[i]=comp.footprint[0]
                                 break
@@ -348,7 +417,7 @@ def update_constraint_table(all_components=None,component_to_cs_type=None):
     df = pd.DataFrame(all_rows)
 
     df.to_csv('out.csv', sep=',', header=None, index=None)
-    return df
+    return df,Types
 
 
 def show_constraint_table(cons_df=None):
@@ -401,19 +470,7 @@ def plot_layout(fig=None,size=None):
     ax2.set_ylim(0, size[1])
     plt.show()
 
-def create_cornerstitch(input_rects,size):
-    cornerstitch = CornerStitch()
-    input = cornerstitch.read_input('list',Rect_list=input_rects)  # Makes the rectangles compaitble to new layout engine input format
-    Htree, Vtree = cornerstitch.input_processing(input, size[0],size[1])  # creates horizontal and vertical corner stitch layouts
-    patches, combined_graph = cornerstitch.draw_layout(rects=input_rects, Htree=Htree,Vtree=Vtree)  # collects initial layout patches and combined HCS,VCS points as a graph for mode-3 representation
-    plot=True
-    if plot:
-        plot_layout(fig=patches,size=size)
 
-    sym_to_cs = Sym_to_CS(input_rects, Htree, Vtree)  # maps corner stitch tiles to symbolic layout objects
-    print sym_to_cs
-    init_data = [patches, sym_to_cs, combined_graph]
-    return init_data,Htree,Vtree
 
 def mode_zero(cons_df,Htree,Vtree): # evaluates mode 0(minimum sized layouts)
 
@@ -429,6 +486,16 @@ def mode_zero(cons_df,Htree,Vtree): # evaluates mode 0(minimum sized layouts)
     print "Y",Evaluated_Y
     return Evaluated_X, Evaluated_Y
 
+def plot_solution(Patches=None):
+    fig, ax1 = plt.subplots()
+    for k, v in Patches[0].items():
+        for p in v:
+            ax1.add_patch(p)
+        ax1.set_xlim(0, k[0])
+        ax1.set_ylim(0, k[1])
+
+    ax1.set_aspect('equal')
+    plt.show()
 
 
 if __name__ == '__main__':
@@ -436,18 +503,30 @@ if __name__ == '__main__':
     input_file="C:\Users\ialrazi\Desktop\REU_Data_collection_input\h-bridge.txt"  # input script location
 
     definition,layout_info=read_input_script(input_file)
-    all_parts_info,info_files,all_route_info=gather_part_route_info(Definition=definition,layout_info=layout_info)
-    size,cs_info,component_to_cs_type,all_components=gather_layout_info(layout_info,all_parts_info,all_route_info)
+    all_parts_info,info_files,all_route_info,all_components_mapped_type_dict=gather_part_route_info(Definition=definition,layout_info=layout_info)
+    size,cs_info,component_to_cs_type,all_components=gather_layout_info(layout_info,all_parts_info,all_route_info,all_components_mapped_type_dict)
     print size
-    print cs_info
+    print len(cs_info),cs_info
     print component_to_cs_type
 
-    df=update_constraint_table(all_components,component_to_cs_type)
+    df,Types=update_constraint_table(all_components,component_to_cs_type)
 
     cons_df=show_constraint_table(df)
     input_rects=convert_rectangle(cs_info)
-    init_data,Htree,Vtree=create_cornerstitch(input_rects, size)
-    mode_zero(cons_df,Htree,Vtree)
+
+
+
+    #init_data,Htree,Vtree=create_cornerstitch(input_rects, size)
+    #mode_zero(cons_df,Htree,Vtree)
+    engine=New_layout_engine()
+    engine.cons_df=cons_df
+    engine.create_cornerstitch(input_rects,size)
+    engine.Types=Types
+
+
+    Patches, cs_sym_data = engine.generate_solutions(level=0, num_layouts=1)
+    print Patches
+    plot_solution(Patches)
 
 
     """

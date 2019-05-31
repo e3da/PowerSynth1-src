@@ -2372,6 +2372,9 @@ class CS_to_CG():
         CONSTRAINT.setupMinSpacing(minSpacing)
         CONSTRAINT.setupMinEnclosure(minEnclosure)
 
+        
+
+
     def Sym_to_CS(self,Input_rects, Htree, Vtree):
         '''
 
@@ -2417,7 +2420,7 @@ class CS_to_CG():
         return SYM_CS
 
     ## Evaluates constraint graph depending on modes of operation
-    def evaluation(self,Htree,Vtree,N,W,H,XLoc,YLoc,seed,individual):
+    def evaluation(self,Htree,Vtree,N,W,H,XLoc,YLoc,seed,individual,Types):
         '''
         :param Htree: Horizontal tree
         :param Vtree: Vertical tree
@@ -2440,8 +2443,9 @@ class CS_to_CG():
                 CG = constraintGraph(W, H, XLoc, YLoc)
                 CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList, self.level, N,seed,individual)
         else:
+
             CG = constraintGraph( W=None, H=None,XLocation=None, YLocation=None)
-            CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList, self.level)
+            CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList, self.level,Types=Types)
         MIN_X, MIN_Y = CG.minValueCalculation(Htree.hNodeList, Vtree.vNodeList, self.level)
         return MIN_X, MIN_Y
 

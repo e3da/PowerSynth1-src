@@ -12,6 +12,7 @@ import copy
 import random
 from random import randrange
 
+
 #########################################################################################################################
 
 
@@ -71,7 +72,7 @@ class constraintGraph:
 
 
 
-    def graphFromLayer(self, H_NODELIST, V_NODELIST, level,N=None,seed=None,individual=None):
+    def graphFromLayer(self, H_NODELIST, V_NODELIST, level,N=None,seed=None,individual=None,Types=None):
         """
 
         :param H_NODELIST: Horizontal node list from horizontal tree
@@ -128,7 +129,7 @@ class constraintGraph:
 
         # setting up edges for constraint graph from corner stitch tiles using minimum constraint values
         for i in range(len(self.HorizontalNodeList)):
-            self.setEdgesFromLayer(self.HorizontalNodeList[i], self.VerticalNodeList[i])
+            self.setEdgesFromLayer(self.HorizontalNodeList[i], self.VerticalNodeList[i],Types)
 
         # _new are after adding missing edges
         self.edgesh_new = collections.OrderedDict(sorted(self.edgesh_new.items()))
@@ -421,7 +422,9 @@ class constraintGraph:
         return Final_List_H,Final_List_V
 
     ## creating edges from corner stitched tiles
-    def setEdgesFromLayer(self, cornerStitch_h, cornerStitch_v):
+    def setEdgesFromLayer(self, cornerStitch_h, cornerStitch_v,Types):
+
+
         ID = cornerStitch_h.id # node id
         Horizontal_patterns, Vertical_patterns = self.shared_coordinate_pattern(cornerStitch_h, cornerStitch_v, ID)
         n1 = len(self.ZDL_H[ID])
@@ -440,62 +443,154 @@ class constraintGraph:
         """
         for rect in cornerStitch_v.stitchList:
             Extend_h = 0 # to find if horizontal extension is there
-            if rect.nodeId != ID:
-                origin = self.ZDL_H[ID].index(rect.cell.x) # if horizontal extension needs to set up node in horizontal constraint graph
-                dest = self.ZDL_H[ID].index(rect.getEast().cell.x) # if horizontal extension needs to set up node in horizontal constraint graph
-                origin1=self.ZDL_V[ID].index(rect.cell.y) # finding origin node in vertical constraint graph for min height constraned edge
-                dest1=self.ZDL_V[ID].index(rect.getNorth().cell.y)# finding destination node in vertical constraint graph for min height constraned edge
-                id = rect.cell.id
-                # if a tile has completely shared right edge with another tile of same type it should be a horizontal extension
-                if rect.getEast().nodeId == rect.nodeId:
-                    East = rect.getEast().cell.id
-                    if rect.southEast(rect).nodeId == rect.nodeId:
-                        if rect.southEast(rect).cell==rect.getEast().cell and rect.NORTH.nodeId==ID and rect.SOUTH.nodeId==ID:
-                            Extend_h=1
-                else:
-                    East = None
-
-                # if a tile has completely shared left edge with another tile of same type it should be a horizontal extension
-                if rect.getWest().nodeId == rect.nodeId:
-                    West = rect.getWest().cell.id
-                    if rect.northWest(rect).nodeId == rect.nodeId:
-                        if rect.northWest(rect).cell==rect.getWest().cell and rect.NORTH.nodeId==ID and rect.SOUTH.nodeId==ID:
-                            Extend_h=1
-
-                else:
-                    West = None
-                if rect.northWest(rect).nodeId == rect.nodeId:
-                    northWest = rect.northWest(rect).cell.id
-                else:
-                    northWest = None
+            #if rect.nodeId != ID:
+            origin = self.ZDL_H[ID].index(rect.cell.x) # if horizontal extension needs to set up node in horizontal constraint graph
+            dest = self.ZDL_H[ID].index(rect.getEast().cell.x) # if horizontal extension needs to set up node in horizontal constraint graph
+            origin1=self.ZDL_V[ID].index(rect.cell.y) # finding origin node in vertical constraint graph for min height constraned edge
+            dest1=self.ZDL_V[ID].index(rect.getNorth().cell.y)# finding destination node in vertical constraint graph for min height constraned edge
+            id = rect.cell.id
+            # if a tile has completely shared right edge with another tile of same type it should be a horizontal extension
+            if rect.getEast().nodeId == rect.nodeId:
+                East = rect.getEast().cell.id
                 if rect.southEast(rect).nodeId == rect.nodeId:
-                    southEast = rect.southEast(rect).cell.id
-                else:
-                    southEast = None
+                    if rect.southEast(rect).cell==rect.getEast().cell and rect.NORTH.nodeId==ID and rect.SOUTH.nodeId==ID:
+                        Extend_h=1
+            else:
+                East = None
 
-                # this tile has a minheight constraint between it's bottom and top edge
-                c = constraint.constraint(4) # index=4 means minheight constraint
+            # if a tile has completely shared left edge with another tile of same type it should be a horizontal extension
+            if rect.getWest().nodeId == rect.nodeId:
+                West = rect.getWest().cell.id
+                if rect.northWest(rect).nodeId == rect.nodeId:
+                    if rect.northWest(rect).cell==rect.getWest().cell and rect.NORTH.nodeId==ID and rect.SOUTH.nodeId==ID:
+                        Extend_h=1
+
+            else:
+                West = None
+            if rect.northWest(rect).nodeId == rect.nodeId:
+                northWest = rect.northWest(rect).cell.id
+            else:
+                northWest = None
+            if rect.southEast(rect).nodeId == rect.nodeId:
+                southEast = rect.southEast(rect).cell.id
+            else:
+                southEast = None
+
+            # this tile has a minheight constraint between it's bottom and top edge
+            c = constraint.constraint(4) # index=4 means minheight constraint
+            index = 4
+
+
+            value = constraint.constraint.getConstraintVal(c,type=rect.cell.type,Types=Types)
+
+
+            e = Edge(origin1, dest1, value, index, str(Types.index(rect.cell.type)), id, East,West, northWest, southEast)
+
+            edgesv.append(Edge(origin1, dest1, value, index, str(Types.index(rect.cell.type)), id, East,West, northWest, southEast)) # appending edge for vertical constraint graph
+
+            self.vertexMatrixv[ID][origin1][dest1].append(Edge.getEdgeWeight(e, origin, dest)) # updating vertical constraint graph adjacency matrix
+
+
+            if Extend_h==1: # if its a horizontal extension
+                c = constraint.constraint(3) # index=3 means minextension type constraint
+                index = 3
+                rect.vertex1 = origin
+                rect.vertex2 = dest
+                value = constraint.constraint.getConstraintVal(c, type=rect.cell.type,Types=Types)
+                e = Edge(origin, dest, value, index, str(Types.index(rect.cell.type)), id, East,West, northWest, southEast)
+                edgesh.append(Edge(origin, dest, value, index, str(Types.index(rect.cell.type)), id, East,West, northWest, southEast)) # appending in horizontal constraint graph edges
+                self.vertexMatrixh[ID][origin][dest].append(Edge.getEdgeWeight(e, origin, dest)) # updating horizontal constraint graph matrix
+
+            origin = origin1
+            dest = dest1
+            id = rect.cell.id
+
+            if rect.getNorth().nodeId == rect.nodeId:
+                North = rect.getNorth().cell.id
+
+            else:
+                North = None
+            if rect.getSouth().nodeId == rect.nodeId:
+                South = rect.getSouth().cell.id
+            else:
+                South = None
+            if rect.westNorth(rect).nodeId == rect.nodeId:
+                westNorth = rect.westNorth(rect).cell.id
+            else:
+                westNorth = None
+            if rect.eastSouth(rect).nodeId == rect.nodeId:
+                eastSouth = rect.eastSouth(rect).cell.id
+            else:
+                eastSouth = None
+
+            # checking if its min spacing or not: if its spacing current tile's north and south tile should be foreground tiles (nodeid should be different)
+            if rect.NORTH.nodeId != ID and rect.SOUTH.nodeId != ID and rect.NORTH in cornerStitch_v.stitchList and rect.SOUTH in cornerStitch_v.stitchList:
+
+                t2 = Types.index(rect.NORTH.cell.type)
+                t1 = Types.index(rect.SOUTH.cell.type)
+
+                c = constraint.constraint(1)  # index=1 means min spacing constraint
+                index = 1
+                value = constraint.constraint.getConstraintVal(c, source=t1, dest=t2,Types=Types)
+                e = Edge(origin, dest, value, index, str(Types.index(rect.cell.type)), id, North,
+                         South, westNorth, eastSouth)
+                edgesv.append(
+                    Edge(origin, dest, value, index, str(Types.index(rect.cell.type)), id,
+                         North, South, westNorth, eastSouth))
+                self.vertexMatrixv[ID][origin][dest].append(Edge.getEdgeWeight(e, origin, dest))
+
+            # checking for minimum enclosure constraint: if current tile is bottom tile its north tile should be foreground tile and south tile should be boundary tile and not in stitchlist
+
+            #elif rect.NORTH.nodeId != ID and rect.SOUTH not in cornerStitch_v.stitchList and rect.NORTH in cornerStitch_v.stitchList:
+            elif rect.NORTH.nodeId != ID and (rect.SOUTH.cell.type == "EMPTY" or rect.SOUTH not in cornerStitch_v.stitchList):
+
+
+                t2 = Types.index(rect.NORTH.cell.type)
+                t1 = Types.index(rect.cell.type)
+                c = constraint.constraint(2)  # index=2 means enclosure constraint
+                index = 2
+                value = constraint.constraint.getConstraintVal(c, source=t1, dest=t2,Types=Types)
+                e = Edge(origin, dest, value, index, str(Types.index(rect.cell.type)), id,
+                         North, South, westNorth, eastSouth)
+                edgesv.append(
+                    Edge(origin, dest, value, index, str(Types.index(rect.cell.type)), id,
+                         North, South, westNorth, eastSouth))
+                self.vertexMatrixv[ID][origin][dest].append(Edge.getEdgeWeight(e, origin, dest))
+
+            # checking for minimum enclosure constraint: if current tile is top tile its south tile should be foreground tile and north tile should be boundary tile and not in stitchlist
+            #elif rect.SOUTH.nodeId != ID and rect.NORTH not in cornerStitch_v.stitchList and rect.SOUTH in cornerStitch_v.stitchList:
+            elif rect.SOUTH.nodeId != ID and (rect.NORTH.cell.type == "EMPTY" or rect.NORTH not in cornerStitch_v.stitchList):
+                t2 = Types.index(rect.SOUTH.cell.type)
+                t1 =Types.index(rect.cell.type)
+                c = constraint.constraint(2)  # index=2 means min enclosure constraint
+                index = 2
+                value =constraint.constraint.getConstraintVal(c, source=t1, dest=t2,Types=Types)
+                e = Edge(origin, dest, value, index, str(Types.index(rect.cell.type)), id,
+                         North, South, westNorth, eastSouth)
+
+                edgesv.append(
+                    Edge(origin, dest, value, index, str(Types.index(rect.cell.type)), id,
+                         North, South, westNorth, eastSouth))
+                self.vertexMatrixv[ID][origin][dest].append(Edge.getEdgeWeight(e, origin, dest))
+
+            # if current tile is stretched from bottom to top, it's a complete background tile and should be a min height constraint generator. It's redundant actually as this tile will be considered
+            # as foreground tile in its background plane's cornerstitched layout, there it will be again considered as min height constraint generator.
+            elif rect.NORTH not in cornerStitch_v.stitchList and rect.SOUTH not in cornerStitch_v.stitchList:
+                c = constraint.constraint(4)  # index=4 means minheight constraint
                 index = 4
 
-                value = constraint.constraint.getConstraintVal(c, type=rect.cell.type)
+                value = constraint.constraint.getConstraintVal(c, type=rect.cell.type,Types=Types)
+                e = Edge(origin, dest, value, index, str(Types.index(rect.cell.type)), id,
+                         North, South, westNorth, eastSouth)
+                edgesv.append(
+                    Edge(origin, dest, value, index, str(Types.index(rect.cell.type)), id,
+                         North, South, westNorth, eastSouth))
+                self.vertexMatrixv[ID][origin][dest].append(Edge.getEdgeWeight(e, origin, dest))
 
-                e = Edge(origin1, dest1, value, index, str(constraint.constraint.Type.index(rect.cell.type)), id, East,West, northWest, southEast)
-
-                edgesv.append(Edge(origin1, dest1, value, index, str(constraint.constraint.Type.index(rect.cell.type)), id, East,West, northWest, southEast)) # appending edge for vertical constraint graph
-
-                self.vertexMatrixv[ID][origin1][dest1].append(Edge.getEdgeWeight(e, origin, dest)) # updating vertical constraint graph adjacency matrix
 
 
-                if Extend_h==1: # if its a horizontal extension
-                    c = constraint.constraint(3) # index=3 means minextension type constraint
-                    index = 3
-                    rect.vertex1 = origin
-                    rect.vertex2 = dest
-                    value = constraint.constraint.getConstraintVal(c, type=rect.cell.type)
-                    e = Edge(origin, dest, value, index, str(constraint.constraint.Type.index(rect.cell.type)), id, East,West, northWest, southEast)
-                    edgesh.append(Edge(origin, dest, value, index, str(constraint.constraint.Type.index(rect.cell.type)), id, East,West, northWest, southEast)) # appending in horizontal constraint graph edges
-                    self.vertexMatrixh[ID][origin][dest].append(Edge.getEdgeWeight(e, origin, dest)) # updating horizontal constraint graph matrix
 
+            '''
             else: # if current tile has same id as current node: means current tile is a background tile. for a background tile there are 2 options:1.min spacing,2.min enclosure
                 origin = self.ZDL_V[ID].index(rect.cell.y)
                 dest = self.ZDL_V[ID].index(rect.getNorth().cell.y)
@@ -521,43 +616,43 @@ class constraintGraph:
 
                 # checking if its min spacing or not: if its spacing current tile's north and south tile should be foreground tiles (nodeid should be different)
                 if rect.NORTH.nodeId != ID and rect.SOUTH.nodeId != ID and rect.NORTH in cornerStitch_v.stitchList and rect.SOUTH in cornerStitch_v.stitchList:
-                    t2 = constraint.constraint.Type.index(rect.NORTH.cell.type)
-                    t1 = constraint.constraint.Type.index(rect.SOUTH.cell.type)
+                    t2 = constraint.Types.index(rect.NORTH.cell.type)
+                    t1 = constraint.Types.index(rect.SOUTH.cell.type)
 
                     c = constraint.constraint(1) # index=1 means min spacing constraint
                     index = 1
-                    value = constraint.constraint.getConstraintVal(c, source=t1, dest=t2)
-                    e = Edge(origin, dest, value, index, str(constraint.constraint.Type.index(rect.cell.type)), id, North, South, westNorth, eastSouth)
-                    edgesv.append(Edge(origin, dest, value, index, str(constraint.constraint.Type.index(rect.cell.type)), id,
+                    value = constraint.constraint.getConstraintVal(c, source=t1, dest=t2,Types=Types)
+                    e = Edge(origin, dest, value, index, str(constraint.Types.index(rect.cell.type)), id, North, South, westNorth, eastSouth)
+                    edgesv.append(Edge(origin, dest, value, index, str(constraint.Types.index(rect.cell.type)), id,
                              North, South, westNorth, eastSouth))
                     self.vertexMatrixv[ID][origin][dest].append(Edge.getEdgeWeight(e, origin, dest))
 
                 # checking for minimum enclosure constraint: if current tile is bottom tile its north tile should be foreground tile and south tile should be boundary tile and not in stitchlist
                 elif rect.NORTH.nodeId != ID and rect.SOUTH not in cornerStitch_v.stitchList and rect.NORTH in cornerStitch_v.stitchList:
-                    t2 = constraint.constraint.Type.index(rect.NORTH.cell.type)
-                    t1 = constraint.constraint.Type.index(rect.cell.type)
+                    t2 = constraint.Types.index(rect.NORTH.cell.type)
+                    t1 = constraint.Types.index(rect.cell.type)
                     c = constraint.constraint(2) # index=2 means enclosure constraint
                     index = 2
-                    value = constraint.constraint.getConstraintVal(c, source=t1, dest=t2)
-                    e = Edge(origin, dest, value, index, str(constraint.constraint.Type.index(rect.cell.type)), id,
+                    value = constraint.constraint.getConstraintVal(c, source=t1, dest=t2,Types=Types)
+                    e = Edge(origin, dest, value, index, str(constraint.Types.index(rect.cell.type)), id,
                              North, South, westNorth, eastSouth)
                     edgesv.append(
-                        Edge(origin, dest, value, index, str(constraint.constraint.Type.index(rect.cell.type)), id,
+                        Edge(origin, dest, value, index, str(constraint.Types.index(rect.cell.type)), id,
                              North, South, westNorth, eastSouth))
                     self.vertexMatrixv[ID][origin][dest].append(Edge.getEdgeWeight(e, origin, dest))
 
                 # checking for minimum enclosure constraint: if current tile is top tile its south tile should be foreground tile and north tile should be boundary tile and not in stitchlist
                 elif rect.SOUTH.nodeId != ID and rect.NORTH not in cornerStitch_v.stitchList and rect.SOUTH in cornerStitch_v.stitchList:
-                    t2 = constraint.constraint.Type.index(rect.SOUTH.cell.type)
-                    t1 = constraint.constraint.Type.index(rect.cell.type)
+                    t2 = constraint.Types.index(rect.SOUTH.cell.type)
+                    t1 = constraint.Types.index(rect.cell.type)
                     c = constraint.constraint(2) # index=2 means min enclosure constraint
                     index = 2
-                    value = constraint.constraint.getConstraintVal(c, source=t1, dest=t2)
-                    e = Edge(origin, dest, value, index, str(constraint.constraint.Type.index(rect.cell.type)), id,
+                    value = constraint.constraint.getConstraintVal(c, source=t1, dest=t2,Types=Types)
+                    e = Edge(origin, dest, value, index, str(constraint.Types.index(rect.cell.type)), id,
                              North, South, westNorth, eastSouth)
 
                     edgesv.append(
-                        Edge(origin, dest, value, index, str(constraint.constraint.Type.index(rect.cell.type)), id,
+                        Edge(origin, dest, value, index, str(constraint.Types.index(rect.cell.type)), id,
                              North, South, westNorth, eastSouth))
                     self.vertexMatrixv[ID][origin][dest].append(Edge.getEdgeWeight(e, origin, dest))
 
@@ -567,13 +662,16 @@ class constraintGraph:
                     c = constraint.constraint(4) # index=4 means minheight constraint
                     index = 4
 
-                    value = constraint.constraint.getConstraintVal(c, type=rect.cell.type)
-                    e = Edge(origin, dest, value, index, str(constraint.constraint.Type.index(rect.cell.type)), id,
+                    value = constraint.constraint.getConstraintVal(c, type=rect.cell.type,Types=Types)
+                    e = Edge(origin, dest, value, index, str(constraint.Types.index(rect.cell.type)), id,
                              North, South, westNorth, eastSouth)
                     edgesv.append(
-                        Edge(origin, dest, value, index, str(constraint.constraint.Type.index(rect.cell.type)), id,
+                        Edge(origin, dest, value, index, str(constraint.Types.index(rect.cell.type)), id,
                              North, South, westNorth, eastSouth))
                     self.vertexMatrixv[ID][origin][dest].append(Edge.getEdgeWeight(e, origin, dest))
+
+            
+            '''
 
         '''
         creating edges for horizontal constraint graph from horizontal cornerstitched tiles. index=0: min width, index=1: min spacing, index=2: min Enclosure, index=3: min extension
@@ -583,61 +681,137 @@ class constraintGraph:
         '''
         for rect in cornerStitch_h.stitchList:
             Extend_v = 0
-            if rect.nodeId != ID:
-                origin = self.ZDL_V[ID].index(rect.cell.y)
-                dest = self.ZDL_V[ID].index(rect.getNorth().cell.y)
-                origin1 = self.ZDL_H[ID].index(rect.cell.x)
-                dest1 = self.ZDL_H[ID].index(rect.getEast().cell.x)
-                id = rect.cell.id
-                if rect.getNorth().nodeId == rect.nodeId:
-                    North = rect.getNorth().cell.id
-                    if rect.westNorth(rect).nodeId == rect.nodeId:
-                        if rect.westNorth(rect).cell==rect.getNorth().cell and rect.EAST.nodeId==ID and rect.WEST.nodeId==ID:
-                            Extend_v=1
-                else:
-                    North = None
-                if rect.getSouth().nodeId == rect.nodeId:
-                    South = rect.getSouth().cell.id
-                    if rect.eastSouth(rect).nodeId == rect.nodeId:
-                        if rect.eastSouth(rect).cell==rect.getSouth().cell and rect.EAST.nodeId==ID and rect.WEST.nodeId==ID:
-                            Extend_v=1
-                else:
-                    South = None
+            #if rect.nodeId != ID:
+            origin = self.ZDL_V[ID].index(rect.cell.y)
+            dest = self.ZDL_V[ID].index(rect.getNorth().cell.y)
+            origin1 = self.ZDL_H[ID].index(rect.cell.x)
+            dest1 = self.ZDL_H[ID].index(rect.getEast().cell.x)
+            id = rect.cell.id
+            if rect.getNorth().nodeId == rect.nodeId:
+                North = rect.getNorth().cell.id
                 if rect.westNorth(rect).nodeId == rect.nodeId:
-                    westNorth = rect.westNorth(rect).cell.id
-                else:
-                    westNorth = None
+                    if rect.westNorth(rect).cell==rect.getNorth().cell and rect.EAST.nodeId==ID and rect.WEST.nodeId==ID:
+                        Extend_v=1
+            else:
+                North = None
+            if rect.getSouth().nodeId == rect.nodeId:
+                South = rect.getSouth().cell.id
                 if rect.eastSouth(rect).nodeId == rect.nodeId:
-                    eastSouth = rect.eastSouth(rect).cell.id
-                else:
-                    eastSouth = None
+                    if rect.eastSouth(rect).cell==rect.getSouth().cell and rect.EAST.nodeId==ID and rect.WEST.nodeId==ID:
+                        Extend_v=1
+            else:
+                South = None
+            if rect.westNorth(rect).nodeId == rect.nodeId:
+                westNorth = rect.westNorth(rect).cell.id
+            else:
+                westNorth = None
+            if rect.eastSouth(rect).nodeId == rect.nodeId:
+                eastSouth = rect.eastSouth(rect).cell.id
+            else:
+                eastSouth = None
 
-                c = constraint.constraint(0)
-                index = 0 # min width constraint
+            c = constraint.constraint(0)
+            index = 0 # min width constraint
 
-                value = constraint.constraint.getConstraintVal(c, type=rect.cell.type)
-                e = Edge(origin1, dest1, value, index, str(constraint.constraint.Type.index(rect.cell.type)), id, North,
+            value = constraint.constraint.getConstraintVal(c, type=rect.cell.type,Types=Types)
+            e = Edge(origin1, dest1, value, index, str(Types.index(rect.cell.type)), id, North,
+                     South, westNorth, eastSouth)
+
+            edgesh.append(Edge(origin1, dest1, value, index, str(Types.index(rect.cell.type)), id, North,South, westNorth, eastSouth))
+            self.vertexMatrixh[ID][origin1][dest1].append(Edge.getEdgeWeight(e, origin, dest))
+
+
+            if Extend_v==1:
+                c = constraint.constraint(3)
+                index = 3 # min extension
+                rect.vertex1 = origin
+                rect.vertex2 = dest
+                value = constraint.constraint.getConstraintVal(c, type=rect.cell.type,Types=Types)
+                e = Edge(origin, dest, value, index, str(Types.index(rect.cell.type)), id, North,
                          South, westNorth, eastSouth)
 
-                edgesh.append(Edge(origin1, dest1, value, index, str(constraint.constraint.Type.index(rect.cell.type)), id, North,South, westNorth, eastSouth))
-                self.vertexMatrixh[ID][origin1][dest1].append(Edge.getEdgeWeight(e, origin, dest))
+                edgesv.append(
+                    Edge(origin, dest, value, index, str(Types.index(rect.cell.type)), id, North,
+                         South, westNorth, eastSouth))
+                self.vertexMatrixv[ID][origin][dest].append(Edge.getEdgeWeight(e, origin, dest))
 
+            origin = origin1
+            dest = dest1
+            id = rect.cell.id
 
-                if Extend_v==1:
-                    c = constraint.constraint(3)
-                    index = 3 # min extension
-                    rect.vertex1 = origin
-                    rect.vertex2 = dest
-                    value = constraint.constraint.getConstraintVal(c, type=rect.cell.type)
-                    e = Edge(origin, dest, value, index, str(constraint.constraint.Type.index(rect.cell.type)), id, North,
-                             South, westNorth, eastSouth)
+            if rect.getEast().nodeId == rect.nodeId:
+                East = rect.getEast().cell.id
+            else:
+                East = None
+            if rect.getWest().nodeId == rect.nodeId:
+                West = rect.getWest().cell.id
+            else:
+                West = None
+            if rect.northWest(rect).nodeId == rect.nodeId:
+                northWest = rect.northWest(rect).cell.id
+            else:
+                northWest = None
+            if rect.southEast(rect).nodeId == rect.nodeId:
+                southEast = rect.southEast(rect).cell.id
+            else:
+                southEast = None
 
-                    edgesv.append(
-                        Edge(origin, dest, value, index, str(constraint.constraint.Type.index(rect.cell.type)), id, North,
-                             South, westNorth, eastSouth))
-                    self.vertexMatrixv[ID][origin][dest].append(Edge.getEdgeWeight(e, origin, dest))
+            if rect.EAST.nodeId != ID and rect.WEST.nodeId != ID and rect.EAST in cornerStitch_h.stitchList and rect.WEST in cornerStitch_h.stitchList:
+                t2 = Types.index(rect.EAST.cell.type)
+                t1 = Types.index(rect.WEST.cell.type)
 
+                c = constraint.constraint(1)
+                index = 1
+                value = constraint.constraint.getConstraintVal(c, source=t1, dest=t2,Types=Types)
+                e = Edge(origin, dest, value, index, str(Types.index(rect.cell.type)), id, East,
+                         West, northWest, southEast)
 
+                edgesh.append(
+                    Edge(origin, dest, value, index, str(Types.index(rect.cell.type)), id,
+                         East, West, northWest, southEast))
+                self.vertexMatrixh[ID][origin][dest].append(Edge.getEdgeWeight(e, origin, dest))
+            #elif rect.EAST.nodeId != ID and rect.WEST not in cornerStitch_h.stitchList and rect.EAST in cornerStitch_h.stitchList:
+            elif rect.EAST.nodeId != ID and (rect.WEST.cell.type == "EMPTY" or rect.WEST not in cornerStitch_h.stitchList):
+                t2 = Types.index(rect.EAST.cell.type)
+                t1 = Types.index(rect.cell.type)
+                c = constraint.constraint(2)  # min enclosure constraint
+                index = 2
+                value = constraint.constraint.getConstraintVal(c, source=t1, dest=t2,Types=Types)
+                e = Edge(origin, dest, value, index, str(Types.index(rect.cell.type)), id,
+                         East, West, northWest, southEast)
+
+                edgesh.append(
+                    Edge(origin, dest, value, index, str(Types.index(rect.cell.type)), id,
+                         East, West, northWest, southEast))
+                self.vertexMatrixh[ID][origin][dest].append(Edge.getEdgeWeight(e, origin, dest))
+            #elif rect.WEST.nodeId != ID and rect.EAST not in cornerStitch_h.stitchList and rect.WEST in cornerStitch_h.stitchList:
+            elif rect.WEST.nodeId != ID and (rect.EAST.cell.type == "EMPTY" or rect.EAST not in cornerStitch_h.stitchList):
+                t2 = Types.index(rect.WEST.cell.type)
+                t1 = Types.index(rect.cell.type)
+                c = constraint.constraint(2)  # min enclosure constraint
+                index = 2
+                value = constraint.constraint.getConstraintVal(c, source=t1, dest=t2,Types=Types)
+                e = Edge(origin, dest, value, index, str(Types.index(rect.cell.type)), id,
+                         East, West, northWest, southEast)
+
+                edgesh.append(
+                    Edge(origin, dest, value, index, str(Types.index(rect.cell.type)), id,
+                         East, West, northWest, southEast))
+                self.vertexMatrixh[ID][origin][dest].append(Edge.getEdgeWeight(e, origin, dest))
+            elif rect.EAST not in cornerStitch_h.stitchList and rect.WEST not in cornerStitch_h.stitchList:
+
+                c = constraint.constraint(0)
+                index = 0
+
+                value = constraint.constraint.getConstraintVal(c, type=rect.cell.type,Types=Types)
+                e = Edge(origin, dest, value, index, str(Types.index(rect.cell.type)), id,
+                         East, West, northWest, southEast)
+
+                edgesh.append(
+                    Edge(origin, dest, value, index, str(Types.index(rect.cell.type)), id,
+                         East, West, northWest, southEast))
+                self.vertexMatrixh[ID][origin][dest].append(Edge.getEdgeWeight(e, origin, dest))
+            '''
             else:
                 origin = self.ZDL_H[ID].index(rect.cell.x)
                 dest = self.ZDL_H[ID].index(rect.getEast().cell.x)
@@ -661,41 +835,41 @@ class constraintGraph:
                     southEast = None
 
                 if rect.EAST.nodeId != ID and rect.WEST.nodeId != ID and rect.EAST in cornerStitch_h.stitchList and rect.WEST in cornerStitch_h.stitchList:
-                    t2 = constraint.constraint.Type.index(rect.EAST.cell.type)
-                    t1 = constraint.constraint.Type.index(rect.WEST.cell.type)
+                    t2 = constraint.Types.index(rect.EAST.cell.type)
+                    t1 = constraint.Types.index(rect.WEST.cell.type)
 
                     c = constraint.constraint(1)
                     index = 1
-                    value = constraint.constraint.getConstraintVal(c, source=t1, dest=t2)
-                    e = Edge(origin, dest, value, index, str(constraint.constraint.Type.index(rect.cell.type)), id, East, West, northWest, southEast)
+                    value = constraint.constraint.getConstraintVal(c, source=t1, dest=t2,Types=Types)
+                    e = Edge(origin, dest, value, index, str(constraint.Types.index(rect.cell.type)), id, East, West, northWest, southEast)
 
-                    edgesh.append( Edge(origin, dest, value, index, str(constraint.constraint.Type.index(rect.cell.type)), id,
+                    edgesh.append( Edge(origin, dest, value, index, str(constraint.Types.index(rect.cell.type)), id,
                              East, West, northWest, southEast))
                     self.vertexMatrixh[ID][origin][dest].append(Edge.getEdgeWeight(e, origin, dest))
                 elif rect.EAST.nodeId != ID and rect.WEST not in cornerStitch_h.stitchList and rect.EAST in cornerStitch_h.stitchList:
-                    t2 = constraint.constraint.Type.index(rect.EAST.cell.type)
-                    t1 = constraint.constraint.Type.index(rect.cell.type)
+                    t2 = constraint.Types.index(rect.EAST.cell.type)
+                    t1 = constraint.Types.index(rect.cell.type)
                     c = constraint.constraint(2) # min enclosure constraint
                     index = 2
-                    value = constraint.constraint.getConstraintVal(c, source=t1, dest=t2)
-                    e = Edge(origin, dest, value, index, str(constraint.constraint.Type.index(rect.cell.type)), id,
+                    value = constraint.constraint.getConstraintVal(c, source=t1, dest=t2,Types=Types)
+                    e = Edge(origin, dest, value, index, str(constraint.Types.index(rect.cell.type)), id,
                              East, West, northWest, southEast)
 
                     edgesh.append(
-                        Edge(origin, dest, value, index, str(constraint.constraint.Type.index(rect.cell.type)), id,
+                        Edge(origin, dest, value, index, str(constraint.Types.index(rect.cell.type)), id,
                              East, West, northWest, southEast))
                     self.vertexMatrixh[ID][origin][dest].append(Edge.getEdgeWeight(e, origin, dest))
                 elif rect.WEST.nodeId != ID and rect.EAST not in cornerStitch_h.stitchList and rect.WEST in cornerStitch_h.stitchList:
-                    t2 = constraint.constraint.Type.index(rect.WEST.cell.type)
-                    t1 = constraint.constraint.Type.index(rect.cell.type)
+                    t2 = constraint.Types.index(rect.WEST.cell.type)
+                    t1 = constraint.Types.index(rect.cell.type)
                     c = constraint.constraint(2) #min enclosure constraint
                     index = 2
-                    value = constraint.constraint.getConstraintVal(c, source=t1, dest=t2)
-                    e = Edge(origin, dest, value, index, str(constraint.constraint.Type.index(rect.cell.type)), id,
+                    value = constraint.constraint.getConstraintVal(c, source=t1, dest=t2,Types=Types)
+                    e = Edge(origin, dest, value, index, str(constraint.Types.index(rect.cell.type)), id,
                              East, West, northWest, southEast)
 
                     edgesh.append(
-                        Edge(origin, dest, value, index, str(constraint.constraint.Type.index(rect.cell.type)), id,
+                        Edge(origin, dest, value, index, str(constraint.Types.index(rect.cell.type)), id,
                              East, West, northWest, southEast))
                     self.vertexMatrixh[ID][origin][dest].append(Edge.getEdgeWeight(e, origin, dest))
                 elif rect.EAST not in cornerStitch_h.stitchList and rect.WEST not in cornerStitch_h.stitchList:
@@ -703,27 +877,27 @@ class constraintGraph:
                     c = constraint.constraint(0)
                     index = 0
 
-                    value = constraint.constraint.getConstraintVal(c, type=rect.cell.type)
-                    e = Edge(origin, dest, value, index, str(constraint.constraint.Type.index(rect.cell.type)), id,
+                    value = constraint.constraint.getConstraintVal(c, type=rect.cell.type,Types=Types)
+                    e = Edge(origin, dest, value, index, str(constraint.Types.index(rect.cell.type)), id,
                              East, West, northWest, southEast)
 
                     edgesh.append(
-                        Edge(origin, dest, value, index, str(constraint.constraint.Type.index(rect.cell.type)), id,
+                        Edge(origin, dest, value, index, str(constraint.Types.index(rect.cell.type)), id,
                              East, West, northWest, southEast))
                     self.vertexMatrixh[ID][origin][dest].append(Edge.getEdgeWeight(e, origin, dest))
-
+            '''
         ## adding missing edges for shaed coordinate patterns
         for i in Horizontal_patterns:
             r1=i[0]
             r2=i[1]
             origin=self.ZDL_H[ID].index(r1.EAST.cell.x)
             dest=self.ZDL_H[ID].index(r2.cell.x)
-            t2 = constraint.constraint.Type.index(r2.cell.type)
-            t1 = constraint.constraint.Type.index(r1.cell.type)
+            t2 = Types.index(r2.cell.type)
+            t1 = Types.index(r1.cell.type)
             c = constraint.constraint(1) #sapcing constraints
             index = 1
 
-            value = constraint.constraint.getConstraintVal(c, source=t1, dest=t2)
+            value = constraint.constraint.getConstraintVal(c, source=t1, dest=t2,Types=Types)
             e = Edge(origin, dest, value, index, type=None,id=None)
             edgesh.append(Edge(origin, dest, value, index, type=None,id=None))
             self.vertexMatrixh[ID][origin][dest].append(Edge.getEdgeWeight(e, origin, dest))
@@ -733,12 +907,12 @@ class constraintGraph:
             r2 = i[1]
             origin = self.ZDL_V[ID].index(r1.NORTH.cell.y)
             dest = self.ZDL_V[ID].index(r2.cell.y)
-            t2 = constraint.constraint.Type.index(r2.cell.type)
-            t1 = constraint.constraint.Type.index(r1.cell.type)
+            t2 = Types.index(r2.cell.type)
+            t1 = Types.index(r1.cell.type)
             c = constraint.constraint(1)
             index = 1
 
-            value = constraint.constraint.getConstraintVal(c, source=t1, dest=t2)
+            value = constraint.constraint.getConstraintVal(c, source=t1, dest=t2,Types=Types)
             e = Edge(origin, dest, value, index,type=None,id=None)
 
             edgesv.append(
@@ -747,7 +921,7 @@ class constraintGraph:
 
 
         dictList1 = []
-
+        types = [str(i) for i in range(len(Types))]
         edgesh_new = copy.deepcopy(edgesh)
         for foo in edgesh_new:
             dictList1.append(foo.getEdgeDict())
@@ -763,9 +937,9 @@ class constraintGraph:
                 destination = nodes[i + 1]
                 for edge in edgesh:
                     if (edge.dest == source or edge.source == source) and edge.index == 0:
-                        t1 = constraint.constraint.type.index(edge.type)
+                        t1 = types.index(edge.type)
                     elif (edge.source == destination or edge.dest == destination) and edge.index == 0:
-                        t2 = constraint.constraint.type.index(edge.type)
+                        t2 = types.index(edge.type)
                 c = constraint.constraint(1)
                 index = 1
                 value = 1000      # still there maybe some missing edges .Adding a value of spacing to maintain relative  location
@@ -780,6 +954,7 @@ class constraintGraph:
             k, v = list(i.items())[0]
             d2[k].append(v)
 
+
         nodes = [x for x in range(len(self.ZDL_V[ID]))]
         for i in range(len(nodes) - 1):
             if (nodes[i], nodes[i + 1]) not in d2.keys():
@@ -787,9 +962,9 @@ class constraintGraph:
                 destination = nodes[i + 1]
                 for edge in edgesv:
                     if (edge.dest == source or edge.source == source) and edge.index == 0:
-                        t1 = constraint.constraint.type.index(edge.type)
+                        t1 = types.index(edge.type)
                     elif (edge.source == destination or edge.dest == destination) and edge.index == 0:
-                        t2 = constraint.constraint.type.index(edge.type)
+                        t2 = types.index(edge.type)
                 c = constraint.constraint(1)
                 index = 1
                 value = 1000 # still there maybe some missing edges .Adding a value of spacing to maintain relative  location

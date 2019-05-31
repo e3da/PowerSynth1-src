@@ -160,7 +160,7 @@ def test_load():
             P = Part(info_file=file_dir)
             P.load_part()
 def test_setup():
-    dir = "C:\Users\qmle\Desktop\New Layout Engine\Component"
+    dir = "C:\Users\ialrazi\Desktop\REU_Data_collection_input"
     Parts = []
 
     for file in os.listdir(dir):
