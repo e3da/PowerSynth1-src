@@ -227,6 +227,13 @@ def gather_layout_info(layout_info=None,all_parts_info=None,all_route_info=None,
 
     print"CS", component_to_cs_type
 
+    for k, v in all_parts_info.items():
+        for comp in v:
+            comp.cs_type=component_to_cs_type[k]
+            print comp.cs_type
+
+
+
     for j in range(1, len(layout_info)):
         for k, v in all_parts_info.items():
             for element in v:
@@ -487,15 +494,16 @@ def mode_zero(cons_df,Htree,Vtree): # evaluates mode 0(minimum sized layouts)
     return Evaluated_X, Evaluated_Y
 
 def plot_solution(Patches=None):
-    fig, ax1 = plt.subplots()
-    for k, v in Patches[0].items():
-        for p in v:
-            ax1.add_patch(p)
-        ax1.set_xlim(0, k[0])
-        ax1.set_ylim(0, k[1])
+    for i in range(len(Patches)):
+        fig, ax1 = plt.subplots()
+        for k, v in Patches[i].items():
+            for p in v:
+                ax1.add_patch(p)
+            ax1.set_xlim(0, k[0])
+            ax1.set_ylim(0, k[1])
 
-    ax1.set_aspect('equal')
-    plt.show()
+        ax1.set_aspect('equal')
+        plt.savefig('C:/Users/ialrazi/Desktop/REU_Data_collection_input/Figs/'+str(i)+'.png')
 
 
 if __name__ == '__main__':
@@ -522,12 +530,14 @@ if __name__ == '__main__':
     engine.cons_df=cons_df
     engine.create_cornerstitch(input_rects,size)
     engine.Types=Types
-    engine.all_parts=all_parts_info.keys()
 
 
-    Patches, cs_sym_data = engine.generate_solutions(level=1, num_layouts=10,seed=100)
+    engine.all_components=all_components
+
+
+    Patches, cs_sym_data = engine.generate_solutions(level=1, num_layouts=1,seed=100)
     print Patches
-    #plot_solution(Patches)
+    plot_solution(Patches)
 
 
     """
