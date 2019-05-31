@@ -2433,7 +2433,7 @@ class CS_to_CG():
         '''
         if self.level==1:
             CG = constraintGraph( W=None, H=None,XLocation=None, YLocation=None)
-            CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList,self.level, N,seed,individual)
+            CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList,self.level, N,seed,individual,Types=Types)
         elif self.level==2 or self.level==3:
             if W==None or H ==None:
                 print"Please enter Width and Height of the floorplan"
@@ -2441,7 +2441,7 @@ class CS_to_CG():
                 print"Please enter Number of layouts to be generated"
             else:
                 CG = constraintGraph(W, H, XLoc, YLoc)
-                CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList, self.level, N,seed,individual)
+                CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList, self.level, N,seed,individual,Types=Types)
         else:
 
             CG = constraintGraph( W=None, H=None,XLocation=None, YLocation=None)

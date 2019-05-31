@@ -19,7 +19,10 @@ class New_layout_engine():
         self.cons_info = None
         self.ledge_width=1000.0
         self.ledge_height=1000.0
-        self.Types=None
+
+
+        self.Types=None  # added for new flow
+        self.all_prts=None #added for new flow
 
         # for initialize only
         self.init_data = []
@@ -219,6 +222,13 @@ class New_layout_engine():
         return Evaluated_X, Evaluated_Y
 
 
+    def get_min_dimensions(self):
+        for comp in self.all_prts:
+            name=comp.name
+            type=comp.cs_type
+            
+
+
     # generate layout solutions using constraint graph edge weights randomization for different modes(level)
     def generate_solutions(self, level, num_layouts=1, W=None, H=None, fixed_x_location=None, fixed_y_location=None,seed=None,individual=None,bar=False):
         """
@@ -279,7 +289,7 @@ class New_layout_engine():
         elif level == 1:
 
             Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=num_layouts, W=None, H=None,
-                                                      XLoc=None, YLoc=None, seed=seed, individual=individual)
+                                                      XLoc=None, YLoc=None, seed=seed, individual=individual,Types=self.Types)
             CS_SYM_Updated, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree, sym_to_cs,scaler)
             CS_SYM_Updated = CS_SYM_Updated['H']
             #self.cur_fig_data = plot_layout(Layout_Rects, level)
@@ -346,7 +356,7 @@ class New_layout_engine():
             Min_Y_Loc = collections.OrderedDict(sorted(Min_Y_Loc.items()))
 
             Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=num_layouts, W=W, H=H,
-                                                      XLoc=Min_X_Loc, YLoc=Min_Y_Loc, seed=seed, individual=individual) # evaluates and finds updated locations for each coordinate
+                                                      XLoc=Min_X_Loc, YLoc=Min_Y_Loc, seed=seed, individual=individual,Types=self.Types) # evaluates and finds updated locations for each coordinate
 
             CS_SYM_Updated, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree, sym_to_cs,scaler)
             CS_SYM_Updated = CS_SYM_Updated['H'] # takes only horizontal corner stitch data
@@ -464,7 +474,7 @@ class New_layout_engine():
 
             Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=num_layouts,
                                                       W=W, H=H, XLoc=Min_X_Loc, YLoc=Min_Y_Loc, seed=seed,
-                                                      individual=individual)
+                                                      individual=individual,Types=self.Types)
 
             CS_SYM_Updated, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree, sym_to_cs,scaler)
 

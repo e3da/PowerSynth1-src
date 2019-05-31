@@ -522,11 +522,12 @@ if __name__ == '__main__':
     engine.cons_df=cons_df
     engine.create_cornerstitch(input_rects,size)
     engine.Types=Types
+    engine.all_parts=all_parts_info.keys()
 
 
-    Patches, cs_sym_data = engine.generate_solutions(level=0, num_layouts=1)
+    Patches, cs_sym_data = engine.generate_solutions(level=1, num_layouts=10,seed=100)
     print Patches
-    plot_solution(Patches)
+    #plot_solution(Patches)
 
 
     """

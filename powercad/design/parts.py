@@ -75,11 +75,11 @@ class Part:
         self.layout_component_id = layout_component_id
         self.datasheet_link = datasheet_link  # link for datasheet
         self.footprint = [0, 0]  # W,H of the components
-        self.object = None  # Depends on whether this is a component type for connector type
         self.pin_name = []  # list of pins name
         self.conn_dict = {}  # form a relationship between internal parasitic values and connections
         self.pin_locs = {}  # store pin location for later use. for each pins name the info is [left,bot,width,height,dz]
         self.thickness = 0  # define part thickness
+        self.cs_type=None # corner stitch type (Type_1,Type_2...)
 
     def load_part(self):
         # Update part info from file
