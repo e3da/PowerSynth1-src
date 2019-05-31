@@ -1,6 +1,8 @@
 import os
 from Tkinter import *
 import copy
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
 
 
 class Connection_Table:
@@ -76,7 +78,7 @@ class Part:
         self.datasheet_link = datasheet_link  # link for datasheet
         self.footprint = [0, 0]  # W,H of the components
         self.pin_name = []  # list of pins name
-        self.conn_dict = {}  # form a relationship between internal parasitic values and connections
+        self.conn_dict = {} # form a relationship between internal parasitic values and connections
         self.pin_locs = {}  # store pin location for later use. for each pins name the info is [left,bot,width,height,dz]
         self.thickness = 0  # define part thickness
         self.cs_type=None # corner stitch type (Type_1,Type_2...)
@@ -140,17 +142,86 @@ class Part:
                 else:
                     para_read = False
 
-        #self.show_info()
+        # self.show_info()
+
+    def rotate_90(self):
+        # Rotate the part by 90 degree and update pin locations accordingly
+        width = self.footprint[0]
+        height = self.footprint[1]
+        self.footprint = [height, width]  # perform rotation
+        # Update pins location
+        for pin_name in self.pin_locs:
+            locs = self.pin_locs[pin_name]
+            old_x, old_y, old_w, old_h, side = locs
+            new_w = old_h
+            new_h = old_w
+            new_x = old_y
+            new_y = width - old_w - old_x
+            self.pin_locs[pin_name] = [new_x, new_y, new_w, new_h, side]
+
+    def rotate_180(self):
+        # Rotate the part by 90 degree 2 times
+        self.rotate_90()
+        self.rotate_90()
+
+    def rotate_270(self):
+        # Rotate the part by 90 degree 3 times
+        self.rotate_90()
+        self.rotate_90()
+        self.rotate_90()
 
     def show_info(self):
         print "raw_name", self.raw_name
         print "footprint", self.footprint
         print "pins name", self.pin_name
-        print "pins locations",self.pin_locs
+        print "pins locations", self.pin_locs
 
         print "connection dictionary"
         for k in self.conn_dict:
             print k, self.conn_dict[k]
+
+    def show_2D(self):
+        #Top down view of the part with left and bottom and origin (0,0)
+
+
+
+        print "type: [-ori]: for original foot print, [-r90][-r180][-r270] for rotation by 90,180 270 degrees accordingly"
+        print "[-quit] to exit"
+        option = raw_input("Enter option here:")
+
+        while option!="-quit" and (option in ["-ori", "-r90", "-r180", "-r270", "-quit"]):
+            fig,ax =plt.subplots()
+            if option=='-r90':
+                self.rotate_90()
+            if option == '-r180':
+                self.rotate_180()
+            if option == '-r270':
+                self.rotate_270()
+
+
+            footprint = patches.Rectangle((0, 0), self.footprint[0], self.footprint[1], fill=True,
+                                         edgecolor='black', facecolor='blue', hatch='//',alpha=0.5,zorder=0)
+
+            ax.add_patch(footprint)
+
+            for pin_name in self.pin_locs:
+                locs = self.pin_locs[pin_name]
+                x, y, width, height, side= locs
+                if side == "T":
+                    color = 'green'
+                    z_order = 1
+                elif side =="B":
+                    color = 'red'
+                    z_order = 0
+                pin = patches.Rectangle((x, y), width, height, fill=True,
+                                      edgecolor='black', facecolor=color, hatch=' ',alpha=0.5,zorder=z_order)
+                ax.add_patch(pin)
+            plt.xlim(-1, self.footprint[0] + 1)
+            plt.ylim(-1, self.footprint[1] + 1)
+            plt.gca().set_aspect('equal', adjustable='box')
+            plt.show()
+            option = raw_input("Enter option here:")
+
 
 def test_load():
     dir = "C:\Users\qmle\Desktop\New Layout Engine\Component"
@@ -178,9 +249,20 @@ def test_setup():
 
     set_up_pins_connections(NewParts)
 
+def test_rotate():
+    dir = "C:\Users\qmle\Desktop\New Layout Engine\Component"
+    print "type a file name from a list below to select a device:"
+    for file in os.listdir(dir):
+        if file.endswith(".part"):
+            print file
+    file =raw_input("Enter file name:")
+    file_dir = os.path.join(dir, file)
 
-
+    P = Part(info_file=file_dir)
+    P.load_part()
+    P.show_2D()
 
 if __name__ == "__main__":
     #test_load()
-    test_setup()
+    #test_setup()
+    test_rotate()
