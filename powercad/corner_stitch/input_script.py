@@ -635,14 +635,18 @@ def test_file(input_script=None):
 
     engine.all_components = all_components
 
-    Patches, cs_sym_data = engine.generate_solutions(level=0, num_layouts=1, W=None, H=None, fixed_x_location=None,
-                                                     fixed_y_location=None, seed=None, individual=None)
+    Patches, cs_sym_data = engine.generate_solutions(level=0, num_layouts=1, W=None, H=None, fixed_x_location=None,fixed_y_location=None, seed=None, individual=None)
     print Patches
     plot_solution(Patches)
+    return all_components,cs_sym_data
 
 
 if __name__ == '__main__':
-    test_file()
+
+    component_list,layout_info=test_file()
+
+    print len(component_list),component_list
+    print len(layout_info),layout_info
 
 
 
