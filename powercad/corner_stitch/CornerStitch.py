@@ -2343,8 +2343,9 @@ class CS_to_CG():
         SP = []
         EN = []
         width = [int(math.floor(float(w)* mult)) for w in ((data.iloc[0, 1:]).values.tolist())]
-        extension = [int(math.floor(float(ext) * mult)) for ext in ((data.iloc[1, 1:]).values.tolist())]
-        height = [int(math.floor(float(h) * mult)) for h in ((data.iloc[2, 1:]).values.tolist())]
+        height = [int(math.floor(float(h) * mult)) for h in ((data.iloc[1, 1:]).values.tolist())]
+        extension = [int(math.floor(float(ext) * mult)) for ext in ((data.iloc[2, 1:]).values.tolist())]
+
 
         for j in range(len(data)):
             if j >3 and j < (3+Types):

@@ -1050,6 +1050,9 @@ class constraintGraph:
 
                     count+=1
                     edge = {}
+                    random.seed(seed + count * 1000)
+                    val = int(min(10 * v[0], max(v[0], random.gauss(v[0], SD))))
+
                     '''
                     if v[2] == 0:
                         
@@ -1243,6 +1246,7 @@ class constraintGraph:
             H = []
             for i, j in d3.items():
                 X[i] = max(j)   # keeping dominated edge values
+
             for k, v in X.items():
                 H.append((k[0], k[1], v))
             G = nx.MultiDiGraph()
@@ -1377,6 +1381,9 @@ class constraintGraph:
                 for (k1), v in edgelabels.items():
                     count+=1
                     edge = {}
+                    random.seed(seed + count * 1000)
+                    val = int(min(10 * v[0], max(v[0], random.gauss(v[0], SD))))
+                    '''
                     if v[2] == 4:
                         if v[1] == '1':
                             random.seed(seed + count * 1000)
@@ -1411,7 +1418,7 @@ class constraintGraph:
                     else:
                         random.seed(seed + count * 1000)
                         val = int(min(10 * v[0], max(v[0], random.gauss(v[0], SD))))
-
+                    '''
                     edge[(k1)] = val
                     EDGEV.append(edge)
                 D.append(EDGEV)

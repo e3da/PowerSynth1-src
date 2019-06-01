@@ -82,6 +82,7 @@ class Part:
         self.pin_locs = {}  # store pin location for later use. for each pins name the info is [left,bot,width,height,dz]
         self.thickness = 0  # define part thickness
         self.cs_type=None # corner stitch type (Type_1,Type_2...)
+        self.rotate_angle= 0 #0:0 degree, 1:90 degree, 2:180 degree, 3:270 degree
 
     def load_part(self):
         # Update part info from file

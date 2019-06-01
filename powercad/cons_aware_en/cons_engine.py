@@ -116,11 +116,31 @@ class New_layout_engine():
         input = self.cornerstitch.read_input('list',Rect_list=input_rects)  # Makes the rectangles compaitble to new layout engine input format
         self.Htree, self.Vtree = self.cornerstitch.input_processing(input, size[0],size[1])  # creates horizontal and vertical corner stitch layouts
         patches, combined_graph = self.cornerstitch.draw_layout(rects=input_rects, Htree=self.Htree,Vtree=self.Vtree)  # collects initial layout patches and combined HCS,VCS points as a graph for mode-3 representation
-        '''
+
         plot = True
         if plot:
-            plot_layout(fig=patches, size=size)
-        '''
+            fig2, ax2 = plt.subplots()
+            Names = patches.keys()
+            Names.sort()
+            for k, p in patches.items():
+
+                if k[0] == 'T':
+                    x = p.get_x()
+                    y = p.get_y()
+                    ax2.text(x + 0.1, y + 0.1, k)
+                    ax2.add_patch(p)
+
+            for k, p in patches.items():
+
+                if k[0] != 'T':
+                    x = p.get_x()
+                    y = p.get_y()
+                    ax2.text(x + 0.1, y + 0.1, k, weight='bold')
+                    ax2.add_patch(p)
+            ax2.set_xlim(0, size[0])
+            ax2.set_ylim(0, size[1])
+            plt.savefig('C:/Users/ialrazi/Desktop/REU_Data_collection_input/Figs'+'/_initial_layout.png')
+
 
 
         sym_to_cs = Sym_to_CS(input_rects, self.Htree, self.Vtree)  # maps corner stitch tiles to symbolic layout objects
@@ -657,6 +677,7 @@ def plot_layout(Layout_Rects,level,min_dimensions=None,Min_X_Loc=None,Min_Y_Loc=
         for i in Rectangles:
             for t in type:
                 if i[4]==t:
+
                     type_ind=type.index(t)
                     colour=colors[type_ind]
             R=matplotlib.patches.Rectangle(
@@ -729,7 +750,7 @@ def plot_layout(Layout_Rects,level,min_dimensions=None,Min_X_Loc=None,Min_Y_Loc=
                             colour = colors[type_ind]
 
                             if type[type_ind] in min_dimensions:
-                                print i
+
                                 w=min_dimensions[t][0]
                                 h=min_dimensions[t][1]
                             else:
