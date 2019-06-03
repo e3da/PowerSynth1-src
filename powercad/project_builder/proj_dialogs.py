@@ -1968,7 +1968,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
         self.ui.btn_fixed_locs.pressed.connect(self.assign_fixed_locations)
         self.ui.btn_constraints.pressed.connect(self.add_constraints)
         self.ui.cmb_modes.currentIndexChanged.connect(self.mode_handler)
-        self.initialize_layout(self.mainwindow_fig, self.graph)
+        #self.initialize_layout(self.mainwindow_fig, self.graph)
         self.ui.btn_eval_setup.pressed.connect(self.eval_setup)
         self.ui.btn_gen_layouts.pressed.connect(self.gen_layouts)
         self.ui.btn_sel_sol.pressed.connect(self.save_solution)
@@ -2461,6 +2461,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
             print "can't generate layouts"
             return
         else:
+
             database = os.path.join(self.parent.project.directory,'layouts_db')
             filelist = glob.glob(os.path.join(database + '/*'))
             # print filelist

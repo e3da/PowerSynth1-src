@@ -67,7 +67,10 @@ def read_input_script(input_file=None):
         line = line.split(',')
         layout_info.append(line)
     #print part2, Definition
-    print layout_info
+    #print layout_info
+    for i in layout_info:
+        print len(i),i
+
 
     return Definition,layout_info
 
@@ -97,7 +100,16 @@ def gather_part_route_info(Definition=None,layout_info=None):
             c=constraint.constraint()
             constraint.constraint.add_component_type(c,i[0])
     all_components_list =  constraint.constraint.all_component_types  # set of all components considered so far
-    all_components_type_mapped_dict =  constraint.constraint.component_to_component_type  # dict to map component type and cs type
+
+    '''
+    all_components_type_mapped_dict={}
+    for k,v in constraint.constraint.component_to_component_type.items():
+        key=k
+        all_components_type_mapped_dict.setdefault(key,[])
+        all_components_type_mapped_dict[key].append(v)  # dict to map component type and cs type
+    
+    '''
+
 
 
     all_route_info = {}
@@ -124,28 +136,92 @@ def gather_part_route_info(Definition=None,layout_info=None):
             all_route_info['trace'].append(element)
         elif layout_info[j][1][0]=='B' and layout_info[j][2]=='signal':
             element = RoutingPath(name='bonding wire pad', type=1, layout_component_id=layout_info[j][1])
-            all_route_info['trace'].append(element)
+            all_route_info['bonding wire pad'].append(element)
         elif layout_info[j][1][0]=='B' and layout_info[j][2]=='power':
             element = RoutingPath(name='bonding wire pad', type=0, layout_component_id=layout_info[j][1])
-            all_route_info['trace'].append(element)
+            all_route_info['bonding wire pad'].append(element)
 
-        elif layout_info[j][1][0] == 'D' and layout_info[j][2] in all_components_list:
+        elif layout_info[j][1][0] == 'D' and layout_info[j][2] in all_components_list and len(layout_info[j])<6:
             element = Part(name= layout_info[j][2],info_file=info_files[layout_info[j][2]], layout_component_id=layout_info[j][1])
             element.load_part()
             all_parts_info[layout_info[j][2]].append(element)
-        elif layout_info[j][1][0] == 'L' and layout_info[j][2] == 'power_lead':
+        elif layout_info[j][1][0] == 'L' and layout_info[j][2] == 'power_lead' and layout_info[j][2] in all_components_list and len(layout_info[j])<6:
             element = Part(name=layout_info[j][2], info_file=info_files[layout_info[j][2]], layout_component_id=layout_info[j][1])
             element.load_part()
             all_parts_info[layout_info[j][2]].append(element)
-        elif layout_info[j][1][0] == 'L' and layout_info[j][2] == 'signal_lead':
+        elif layout_info[j][1][0] == 'L' and layout_info[j][2] == 'signal_lead' and layout_info[j][2] in all_components_list and len(layout_info[j])<6:
             element = Part(name=layout_info[j][2], info_file=info_files[layout_info[j][2]], layout_component_id=layout_info[j][1])
             element.load_part()
             all_parts_info[layout_info[j][2]].append(element)
+        elif layout_info[j][1][0] == 'D' and layout_info[j][2] in all_components_list and len(layout_info[j])==6 and layout_info[j][5][0]=='R':
+            element = Part(info_file=info_files[layout_info[j][2]],layout_component_id=layout_info[j][1])
+            element.load_part()
+            #print element.footprint
+            if layout_info[j][5].strip('R')=='90':
+                name=layout_info[j][2]+'_'+'90'
+                element.name=name
+                element.rotate_angle=1
+                element.rotate_90()
+            elif layout_info[j][5].strip('R')=='180':
+                name = layout_info[j][2] + '_' + '180'
+                element.name = name
+                element.rotate_angle = 2
+                element.rotate_180()
+            elif layout_info[j][5].strip('R')=='270':
+                name = layout_info[j][2] + '_' + '270'
+                element.name = name
+                element.rotate_angle = 3
+                element.rotate_270()
+            #print element.footprint
+            all_parts_info[layout_info[j][2]].append(element)
+        elif layout_info[j][1][0] == 'L' and layout_info[j][2] == 'power_lead' and layout_info[j][2] in all_components_list and len(layout_info[j])==6 and layout_info[j][5][0]=='R':
+            element = Part( info_file=info_files[layout_info[j][2]], layout_component_id=layout_info[j][1])
+            element.load_part()
+
+            if layout_info[j][5].strip('R')=='90':
+                name = layout_info[j][2] + '_' + '90'
+                element.name = name
+                element.rotate_angle=1
+                element.rotate_90()
+            elif layout_info[j][5].strip('R')=='180':
+                name = layout_info[j][2] + '_' + '180'
+                element.name = name
+                element.rotate_angle = 2
+                element.rotate_180()
+            elif layout_info[j][5].strip('R')=='270':
+                name = layout_info[j][2] + '_' + '270'
+                element.name = name
+                element.rotate_angle = 3
+                element.rotate_270()
+            all_parts_info[layout_info[j][2]].append(element)
+        elif layout_info[j][1][0] == 'L' and layout_info[j][2] == 'signal_lead' and layout_info[j][2] in all_components_list and len(layout_info[j])==6 and layout_info[j][5][0]=='R':
+            element = Part( info_file=info_files[layout_info[j][2]], layout_component_id=layout_info[j][1])
+            element.load_part()
+            if layout_info[j][5].strip('R')=='90':
+                name = layout_info[j][2] + '_' + '90'
+                element.name = name
+                element.rotate_angle=1
+                element.rotate_90()
+            elif layout_info[j][5].strip('R')=='180':
+                name = layout_info[j][2] + '_' + '180'
+                element.name = name
+                element.rotate_angle = 2
+                element.rotate_180()
+            elif layout_info[j][5].strip('R')=='270':
+                name = layout_info[j][2] + '_' + '270'
+                element.name = name
+                element.rotate_angle = 3
+                element.rotate_270()
+            all_parts_info[layout_info[j][2]].append(element)
+
         else:
-            name=layout_info[j][0]+'_'+layout_info[j][2]
-            constraint.constraint.add_component_type(name)
+            name=layout_info[j][1][0]+'_'+layout_info[j][2]
+            c=constraint.constraint()
+            constraint.constraint.add_component_type(c,name)
             element=  RoutingPath(name=name, type=1, layout_component_id=layout_info[j][1])
-            all_route_info[name].append(element)
+            key=name
+            all_route_info.setdefault(key,[])
+            all_route_info[key].append(element)
 
 
 
@@ -171,11 +247,29 @@ def gather_part_route_info(Definition=None,layout_info=None):
 
 
         #print layout_info[j][1][0],layout_info[j][2]
+
+
+    for key,comp in all_parts_info.items():
+        for element in comp:
+            if element.rotate_angle==1:
+                c = constraint.constraint()
+                name=element.name
+                constraint.constraint.add_component_type(c, name)
+
+    all_components_type_mapped_dict = constraint.constraint.component_to_component_type
+
+
+
     print all_parts_info, info_files
     print all_route_info
+    print "map",all_components_type_mapped_dict
 
 
 
+    #all_parts_info= {'MOS': [M1, M2], 'power_lead': [L1,L2,,,]}
+    #info_files={'MOS':file1,'power_lead':file2}
+    #all_route_info={'trace': [T1,t2,...],'bonding wire pad':[B1,B2...]}
+    #all_components_type_mapped_dict={'MOS': 'Type_5', 'signal_lead': 'Type_4', 'power_lead': 'Type_3', 'EMPTY': 'EMPTY', 'signal_trace': 'Type_2','power_trace': 'Type_1', 'MOS_90': 'Type_6'}
     return all_parts_info,info_files,all_route_info,all_components_type_mapped_dict
 
 
@@ -191,8 +285,10 @@ def gather_layout_info(layout_info=None,all_parts_info=None,all_route_info=None,
     all_components_type_mapped_dict=all_components_mapped_type_dict # dict to map component type and cs type
     all_components_list= all_components_type_mapped_dict.keys()
 
-    print all_components_list
+
+    print all_components_list #all_components_list=['MOS', 'signal_lead', 'power_lead', 'EMPTY', 'signal_trace', 'power_trace', 'MOS_90']
     print all_components_type_mapped_dict
+
 
 
     all_component_type_names = ["EMPTY"]
@@ -201,7 +297,6 @@ def gather_layout_info(layout_info=None,all_parts_info=None,all_route_info=None,
         for k, v in all_parts_info.items():
             for element in v:
                 if element.layout_component_id == layout_info[j][1]:
-                    print layout_info[j]
                     if element not in all_components:
                         all_components.append(element)
                     if element.name not in all_component_type_names:
@@ -218,14 +313,27 @@ def gather_layout_info(layout_info=None,all_parts_info=None,all_route_info=None,
                         type_name = 'signal_trace'
                 if type_name not in all_component_type_names:
                     all_component_type_names.append(type_name)
-    print all_component_type_names
+
+
+    print all_component_type_names #['EMPTY', 'power_trace', 'signal_trace', 'MOS_90', 'MOS', 'power_lead', 'signal_lead']
+
 
 
     for i in range(len(all_component_type_names)):
         #print all_component_type_names[i]
             component_to_cs_type[all_component_type_names[i]] = all_components_type_mapped_dict[all_component_type_names[i]]
 
-    print"CS", component_to_cs_type
+    print"CS", component_to_cs_type #{'MOS': 'Type_5', 'signal_lead': 'Type_4', 'power_lead': 'Type_3', 'EMPTY': 'EMPTY', 'signal_trace': 'Type_2', 'power_trace': 'Type_1', 'MOS_90': 'Type_6'}
+
+
+    for k, v in all_parts_info.items():
+        for comp in v:
+            comp.cs_type = component_to_cs_type[comp.name]
+
+
+            print comp.cs_type
+
+
 
     for j in range(1, len(layout_info)):
         for k, v in all_parts_info.items():
@@ -234,13 +342,14 @@ def gather_layout_info(layout_info=None,all_parts_info=None,all_route_info=None,
                     type = component_to_cs_type[element.name]
                     x = float(layout_info[j][3])
                     y = float(layout_info[j][4])
-                    width = float(layout_info[j][5])
-                    height = float(layout_info[j][6])
+                    width = element.footprint[0]
+                    height = element.footprint[1]
                     name = layout_info[j][1]
                     Schar = '/'
                     Echar = '/'
                     rect_info = [type, x, y, width, height, name, Schar, Echar]
                     cs_info.append(rect_info)
+
         for k, v in all_route_info.items():
             for element in v:
                 if element.layout_component_id == layout_info[j][1]:
@@ -487,47 +596,62 @@ def mode_zero(cons_df,Htree,Vtree): # evaluates mode 0(minimum sized layouts)
     return Evaluated_X, Evaluated_Y
 
 def plot_solution(Patches=None):
-    fig, ax1 = plt.subplots()
-    for k, v in Patches[0].items():
-        for p in v:
-            ax1.add_patch(p)
-        ax1.set_xlim(0, k[0])
-        ax1.set_ylim(0, k[1])
+    for i in range(len(Patches)):
+        fig, ax1 = plt.subplots()
+        for k, v in Patches[i].items():
+            for p in v:
+                ax1.add_patch(p)
+            ax1.set_xlim(0, k[0])
+            ax1.set_ylim(0, k[1])
 
-    ax1.set_aspect('equal')
-    plt.show()
+        ax1.set_aspect('equal')
+        plt.savefig('C:/Users/ialrazi/Desktop/REU_Data_collection_input/Figs/'+str(i)+'.png')
+
+def test_file(input_script=None):
+    if input_script==None:
+        input_file = "C:\Users\ialrazi\Desktop\REU_Data_collection_input\h-bridge.txt"  # input script location
+    else:
+        input_file=input_script
+
+    definition, layout_info = read_input_script(input_file)
+    all_parts_info, info_files, all_route_info, all_components_mapped_type_dict = gather_part_route_info(Definition=definition, layout_info=layout_info)
+
+    size, cs_info, component_to_cs_type, all_components = gather_layout_info(layout_info, all_parts_info,all_route_info,all_components_mapped_type_dict)
+    print size
+    print len(cs_info), cs_info
+    print component_to_cs_type
+
+    df, Types = update_constraint_table(all_components, component_to_cs_type)
+
+    cons_df = show_constraint_table(df)
+    input_rects = convert_rectangle(cs_info)
+
+    # init_data,Htree,Vtree=create_cornerstitch(input_rects, size)
+    # mode_zero(cons_df,Htree,Vtree)
+    engine = New_layout_engine()
+    engine.cons_df = cons_df
+    engine.create_cornerstitch(input_rects, size)
+    engine.Types = Types
+
+    engine.all_components = all_components
+
+    Patches, cs_sym_data = engine.generate_solutions(level=0, num_layouts=1, W=None, H=None, fixed_x_location=None,fixed_y_location=None, seed=None, individual=None)
+    print Patches
+    plot_solution(Patches)
+    return all_components,cs_sym_data
 
 
 if __name__ == '__main__':
 
-    input_file="C:\Users\ialrazi\Desktop\REU_Data_collection_input\h-bridge.txt"  # input script location
+    component_list,layout_info=test_file()
 
-    definition,layout_info=read_input_script(input_file)
-    all_parts_info,info_files,all_route_info,all_components_mapped_type_dict=gather_part_route_info(Definition=definition,layout_info=layout_info)
-    size,cs_info,component_to_cs_type,all_components=gather_layout_info(layout_info,all_parts_info,all_route_info,all_components_mapped_type_dict)
-    print size
-    print len(cs_info),cs_info
-    print component_to_cs_type
-
-    df,Types=update_constraint_table(all_components,component_to_cs_type)
-
-    cons_df=show_constraint_table(df)
-    input_rects=convert_rectangle(cs_info)
+    print len(component_list),component_list
+    print len(layout_info),layout_info
 
 
 
-    #init_data,Htree,Vtree=create_cornerstitch(input_rects, size)
-    #mode_zero(cons_df,Htree,Vtree)
-    engine=New_layout_engine()
-    engine.cons_df=cons_df
-    engine.create_cornerstitch(input_rects,size)
-    engine.Types=Types
-    engine.all_parts=all_parts_info.keys()
 
 
-    Patches, cs_sym_data = engine.generate_solutions(level=1, num_layouts=10,seed=100)
-    print Patches
-    #plot_solution(Patches)
 
 
     """
