@@ -31,8 +31,10 @@ class Connection_Table:
         self.table.mainloop()
 
     def get_var_states(self):
-        self.table.destroy()
-        self.states= [v.get() for v in self.vars]
+        #self.table.destroy()
+        print "stucked here"
+        print [v.get() for v in self.vars]
+        #self.states= [v.get() for v in self.vars]
 
 
 def set_up_pins_connections(parts=[]):
@@ -232,7 +234,7 @@ def test_load():
             P = Part(info_file=file_dir)
             P.load_part()
 def test_setup():
-    dir = "C:\Users\ialrazi\Desktop\REU_Data_collection_input"
+    dir = "C:\Users\qmle\Desktop\New_Layout_Engine\Component"
     Parts = []
 
     for file in os.listdir(dir):
@@ -251,7 +253,7 @@ def test_setup():
     set_up_pins_connections(NewParts)
 
 def test_rotate():
-    dir = "C:\Users\qmle\Desktop\New Layout Engine\Component"
+    dir = "C:\Users\qmle\Desktop\New_Layout_Engine\Component"
     print "type a file name from a list below to select a device:"
     for file in os.listdir(dir):
         if file.endswith(".part"):
@@ -265,5 +267,5 @@ def test_rotate():
 
 if __name__ == "__main__":
     #test_load()
-    #test_setup()
-    test_rotate()
+    test_setup()
+    #test_rotate()

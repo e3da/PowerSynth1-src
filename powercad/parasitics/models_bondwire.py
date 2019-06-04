@@ -22,7 +22,7 @@ LOWEST_ASPECT_IND = 1.0
 
 # Constants:
 c = 3.0e8                       # speed of light
-u_0 = 4.0*math.pi*1e-7          # permeability of vaccum;
+u_0 = 4.0 * math.pi * 1e-7  # permeability of vaccum;
 e_0 = 8.85e-12                  # permittivity of vaccum;
 save_path = 'C:\Users\qmle\Desktop\SingleFEM'
 #es_mdl=pickle.load(open(os.path.join(save_path,'res_0.64_0.4_[5,50].mdl'),'rb'))
@@ -73,44 +73,6 @@ def trace_resistance(f, w, l, t, h, p=1.724e-8):             # see main for unit
     else:                                                    # Quang's method... if the values are out of range, we compute it recursively multiple times to improve the accuracy
         w=w/2
         return trace_resistance(f, w, l, t, h, p)/2          # Recursive method
-
-
-def trace_resistance_svr(f,w,l,t,h,p=1.724e-8):       # Quang's model SVR ,KR based just for testing now
-    save_path='C:\Users\qmle\Desktop\SingleFEM'
-    KR_mdl=pickle.load(open(os.path.join(save_path,'KR_mdl.mdl'),'rb'))
-    ht_fixed = True
-    if ht_fixed:
-        X = [w,l]
-    else:
-        X = [w,l,h,t]
-    X = np.asarray(X)
-    X.reshape(-1,1)
-    Y = KR_mdl.predict(X)
-    if f != 300000 or p != 1.724e-8:
-        Y = Y*math.sqrt(f*p)/math.sqrt(300e3*1.724e-8)
-        if Y[0] < 0:
-            print X
-            Y[0]=0
-    return Y[0]
-
-
-
-def res_bound(w,a,b,c):
-    return a/w**b+c
-
-
-def trace_resistance_not_released(f,w,l,t,h,p=1.724e-8):
-    [a1, b1, c1] = res_mdl[0]
-    [a2, b2, c2] = res_mdl[1]
-    lrange=res_mdl[2]
-    p_l = res_bound(w, a1, b1, c1)
-    p_h = res_bound(w, a2, b2, c2)
-    slope = (p_h - p_l) / (lrange[1] - lrange[0])
-    b = p_h - slope * lrange[1]
-    res = slope * l + b
-    if f != 300000 or p != 1.724e-8:
-        res = res * math.sqrt(f * p) / math.sqrt(300e3 * 1.724e-8)
-    return res
 
 #--------------------------------------------------------------------------
 #-----------  inductance  model of traces on ground plane-- ---------------
@@ -248,7 +210,7 @@ def wire_inductance(l, r):
 #-----------------------------------------------------------------
 #----------- mutual-partial inductance of wire-bond --------------
 #-----------------------------------------------------------------
-def wire_partial_mutual_ind(l, r, d):
+def wire_partial_mutual_ind(l, d):
     # l: mm (length of wires)
     # r: mm (radius of wires)
     # d: mm (distance between wires)
@@ -259,6 +221,46 @@ def wire_partial_mutual_ind(l, r, d):
     if m <= 0.0:
         m = 0.00001
     return m
+
+
+# -----------------------------------------------------------------
+# ----------- self inductance of solderball -------------
+# -----------------------------------------------------------------
+def ball_self_inductance(h,r):
+    '''
+
+    Args:
+        h: height in mm
+        r: radius in mm
+    '''
+    h1 = h * 1e-3
+    r1 = r * 1e-3
+    ind = u_0/(2*np.pi)*(h1*np.log(np.sqrt(h1**2+r1**2)+h1)-h1*(np.log(h1)-0.25)- np.sqrt(h1 ** 2 + r1 ** 2)+0.905415*r1)
+
+    return ind
+
+
+# -----------------------------------------------------------------
+# ----------- mutual-partial inductance of solderball --------------
+# -----------------------------------------------------------------
+def ball_mutual_indutance(h,r,d):
+    '''
+
+    Args:
+        h: height in mm
+        r: radius in mm
+        d: distance between midpoint in mm
+
+    '''
+    h1 = h * 1e-3
+    r1 = r * 1e-3
+    d1 = d * 1e-3
+    W = np.sqrt(h1**2+d1**2+r1**2)
+    M = u_0 / (2 * np.pi) * (h1*np.log(W+h1)-h1*np.log(d1)-W+d1+r1**2/(4*d1))
+    return M
+
+
+
 
 #-------------------------------------------------------------
 #----------- single wire-bond resistance----------------------

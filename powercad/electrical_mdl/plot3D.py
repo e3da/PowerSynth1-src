@@ -9,8 +9,6 @@ import pandas as pd
 #import pygame
 #from pygame.locals import *
 
-from OpenGL.GL import *
-from OpenGL.GLU import *
 
 # PLOT 3 D GRAPHs, WILL BE USED TO DEMONSTRATE MESH PLOTS
 

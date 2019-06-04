@@ -12,7 +12,7 @@ from PySide.QtGui import QFileDialog, QStandardItemModel, QStandardItem, QMessag
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 import powercad.sym_layout.plot as plot
-from powercad.Spice_handler.spice_import.NetlistImport import Netlist
+from powercad.spice_handler.spice_import.NetlistImport import Netlist
 import copy
 plot.plt.matplotlib.rcParams['backend.qt4'] = 'PySide'
 from powercad.project_builder.UI_py.propertiesDeviceDialog_ui import Ui_device_propeties

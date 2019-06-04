@@ -5,7 +5,6 @@ from scipy.sparse.linalg import gmres
 from sympy import *
 
 from powercad.electrical_mdl.e_mesh import plot_combined_I_quiver_map_layer
-from powercad.spice_handler.spice_export.HSPICE import *
 from powercad.spice_handler.spice_export.LTSPICE import *
 from powercad.spice_handler.spice_export.raw_read import *
 

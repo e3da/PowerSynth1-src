@@ -12,7 +12,7 @@ from powercad.electrical_mdl.plot3D import *
 from powercad.general.data_struct.util import Rect
 from powercad.parasitics.mdl_compare import trace_ind_krige, trace_res_krige, trace_capacitance, trace_resistance, \
     trace_inductance
-from powercad.parasitics.mutual_inductance import *
+from powercad.parasitics.mutual_inductance.mutual_inductance import *
 
 class MeshNode:
 

@@ -5,7 +5,7 @@ import os
 import matplotlib.pyplot as plt
 import networkx as nx
 
-from powercad.Spice_handler.spice_import.NetlistImport import Netlist, Netlis_export_ADS
+from powercad.spice_handler.spice_import.NetlistImport import Netlist, Netlis_export_ADS
 from powercad.design.module_data import gen_test_module_data_BL
 from powercad.general.settings import settings
 from powercad.interfaces.FastHenry.fh_layers import output_fh_script, read_result
