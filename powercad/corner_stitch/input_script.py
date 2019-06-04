@@ -75,10 +75,10 @@ class ScriptInputMethod():
         for i in range(len(table_info)):
             name=table_info[i][0]
             for j in bond_wire_objects:
+
                 if j.name==table_info[i][1]:
                     wires[name]={'BW_object':j,'Source':table_info[i][2],'Destination':table_info[i][3],'num_wires':table_info[i][4],'spacing':table_info[i][5]}
-                else:
-                    print"Wire is not defined in Definition"
+
 
         #for i in bond_wire_objects:
             #print i.printWire()
@@ -86,6 +86,7 @@ class ScriptInputMethod():
         #print wires
 
         #raw_input()
+        return wires
 
 
 

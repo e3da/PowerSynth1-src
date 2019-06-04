@@ -44,7 +44,11 @@ class CS_API:
         for k in self.layout_data:
             data = self.layout_data[k]
             for rect in data:
-                x, y, w, h = rect / 1000.0  # convert from integer to float TODO: send in correct data
+                x, y, w, h = [rect.x,rect.y,rect.width,rect.height]   # convert from integer to float TODO: send in correct data
+                x = x / 1000.0
+                y = y / 1000.0
+                w = w / 1000.0
+                h = h / 1000.0
                 new_rect = Rect(top=y + h, bottom=y, left=x, right=x + w)
                 p = E_plate(rect=new_rect, z=self.layer_to_z['T'][0], dz=self.layer_to_z['T'][1])
                 self.e_plates.append(p)

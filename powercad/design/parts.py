@@ -31,10 +31,8 @@ class Connection_Table:
         self.table.mainloop()
 
     def get_var_states(self):
-        #self.table.destroy()
-        print "stucked here"
-        print [v.get() for v in self.vars]
-        #self.states= [v.get() for v in self.vars]
+        self.table.destroy()
+        self.states= [v.get() for v in self.vars]
 
 
 def set_up_pins_connections(parts=[]):
@@ -52,7 +50,6 @@ def set_up_pins_connections(parts=[]):
             table = Connection_Table(name=name,cons=p.conn_dict)
             table.set_up_table()
             conn_dict[name]=table.states
-    print conn_dict
 
     return conn_dict
 
@@ -75,7 +72,7 @@ class Part:
         self.name = name  # this is used in layout engine for name_id
         self.raw_name = None  # Raw datasheet name
         self.type = type
-        self.info_file = info_file
+        self.info_file = os.path.abspath(info_file).replace(" ", "\\ ")
         self.layout_component_id = layout_component_id
         self.datasheet_link = datasheet_link  # link for datasheet
         self.footprint = [0, 0]  # W,H of the components
@@ -253,7 +250,7 @@ def test_setup():
     set_up_pins_connections(NewParts)
 
 def test_rotate():
-    dir = "C:\Users\qmle\Desktop\New_Layout_Engine\Component"
+    dir = "C:\Users\ialrazi\Desktop\REU_Data_collection_input"
     print "type a file name from a list below to select a device:"
     for file in os.listdir(dir):
         if file.endswith(".part"):
@@ -267,5 +264,5 @@ def test_rotate():
 
 if __name__ == "__main__":
     #test_load()
-    test_setup()
-    #test_rotate()
+    #test_setup()
+    test_rotate()
