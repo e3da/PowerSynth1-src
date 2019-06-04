@@ -78,7 +78,7 @@ class ScriptInputMethod():
 
                 if j.name==table_info[i][1]:
                     wires[name]={'BW_object':j,'Source':table_info[i][2],'Destination':table_info[i][3],'num_wires':table_info[i][4],'spacing':table_info[i][5]}
-                
+
 
         #for i in bond_wire_objects:
             #print i.printWire()

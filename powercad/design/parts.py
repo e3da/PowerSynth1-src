@@ -253,7 +253,7 @@ def test_setup():
     set_up_pins_connections(NewParts)
 
 def test_rotate():
-    dir = "C:\Users\qmle\Desktop\New_Layout_Engine\Component"
+    dir = "C:\Users\ialrazi\Desktop\REU_Data_collection_input"
     print "type a file name from a list below to select a device:"
     for file in os.listdir(dir):
         if file.endswith(".part"):
@@ -267,5 +267,5 @@ def test_rotate():
 
 if __name__ == "__main__":
     #test_load()
-    test_setup()
-    #test_rotate()
+    #test_setup()
+    test_rotate()
