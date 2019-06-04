@@ -30,7 +30,6 @@ class CS_API:
             if isinstance(comp,Part):
                 if comp.type==1:
                     name = comp.layout_component_id
-                    print comp.conn_dict
                     table = Connection_Table(name=name, cons=comp.conn_dict)
                     table.set_up_table()
                     self.conn_dict[name] = table.states
