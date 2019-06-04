@@ -41,7 +41,7 @@ class New_layout_engine():
         patches = self.init_data[0]
         graph = self.init_data[2]
         num_cols=self.init_data[-1]
-        self.new_layout_engine = New_layout_engine_dialog(self.window, patches, W=self.W + 20, H=self.H + 20 , engine=self,graph=graph)
+        self.new_layout_engine = New_layout_engine_dialog(self.window, patches, W=self.W, H=self , engine=self,graph=graph)
         self.new_layout_engine.show()
         self.new_layout_engine.exec_()
 
@@ -80,8 +80,8 @@ class New_layout_engine():
         df.to_csv('out.csv', sep=',', header=None, index=None) # writing to a file out.csv for further reading
 
         return
-    '''
-    def init_layout_from_symlayout(self, sym_layout=None):
+
+    def init_layout(self, sym_layout=None,input_format=None):
         
         #initialize new layout engine with old symlayout data structure
         #Returns:
@@ -93,22 +93,35 @@ class New_layout_engine():
         if sym_layout != None:
             self.cons_info = self.collect_sym_cons_info(sym_layout)
             self.cons_df = self.cons_from_ps()
+            input_rects, self.W, self.H = input_conversion(
+                sym_layout)  # converts symbolic layout lines and points into rectangles
+            input = self.cornerstitch.read_input('list',
+                                                 Rect_list=input_rects)  # Makes the rectangles compaitble to new layout engine input format
+
+            self.Htree, self.Vtree = self.cornerstitch.input_processing(input, self.W + 20,
+                                                                        self.H + 20)  # creates horizontal and vertical corner stitch layouts
+            num_columns = len(self.Htree.hNodeList[0].stitchList)
+
+            patches, combined_graph = self.cornerstitch.draw_layout(rects=input_rects, Htree=self.Htree,
+                                                                    Vtree=self.Vtree)  # collects initial layout patches and combined HCS,VCS points as a graph for mode-3 representation
+            sym_to_cs = Sym_to_CS(input_rects, self.Htree,
+                                  self.Vtree)  # maps corner stitch tiles to symbolic layout objects
+
+            self.init_data = [patches, sym_to_cs, combined_graph, num_columns]
+        else:
+            input_rects=input_format[0]
+            size=input_format[1]
+            self.W=size[0]
+            self.H=size[1]
+            self.create_cornerstitch(input_rects,size)
+
 
 
         # ------------------------------------------
-        input_rects, self.W, self.H = input_conversion(sym_layout)  # converts symbolic layout lines and points into rectangles
-        input = self.cornerstitch.read_input('list', Rect_list=input_rects) # Makes the rectangles compaitble to new layout engine input format
 
-        self.Htree, self.Vtree = self.cornerstitch.input_processing(input, self.W + 20, self.H + 20) # creates horizontal and vertical corner stitch layouts
-        num_columns=len(self.Htree.hNodeList[0].stitchList)
-
-        patches, combined_graph = self.cornerstitch.draw_layout(rects=input_rects,Htree=self.Htree,Vtree=self.Vtree) # collects initial layout patches and combined HCS,VCS points as a graph for mode-3 representation
-        sym_to_cs = Sym_to_CS(input_rects, self.Htree, self.Vtree) # maps corner stitch tiles to symbolic layout objects
-
-        self.init_data = [patches, sym_to_cs, combined_graph,num_columns]
 
     
-    '''
+
 
 
     def create_cornerstitch(self,input_rects=None, size=None):
@@ -139,6 +152,7 @@ class New_layout_engine():
                     ax2.add_patch(p)
             ax2.set_xlim(0, size[0])
             ax2.set_ylim(0, size[1])
+            ax2.set_aspect('equal')
             plt.savefig('C:/Users/ialrazi/Desktop/REU_Data_collection_input/Figs'+'/_initial_layout.png')
 
 
@@ -310,6 +324,7 @@ class New_layout_engine():
                     k=(k[0]*scaler,k[1]*scaler)
                     CS_SYM_Updated[k] = CS_SYM_information
             CS_SYM_Updated = [CS_SYM_Updated] # mapped solution layout information to symbolic layout objects
+
 
 
         #mode-1
