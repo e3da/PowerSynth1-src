@@ -22,10 +22,11 @@ def test_file(input_script=None,bond_wire_info=None):
 
     input_info = [input_rects, ScriptMethod.size]
     if bond_wire_info!=None:
-        ScriptMethod.bond_wire_table(bondwire_info=bond_wire_info)
+        bondwires=ScriptMethod.bond_wire_table(bondwire_info=bond_wire_info)
+    # Bond wire table={'BW1': {'BW_object': <powercad.design.Routing_paths.BondingWires instance at 0x16F4D648>, 'Source': 'D1_Drain', 'num_wires': '4', 'Destination': 'B1', 'spacing': '0.1'}, 'BW2': {'BW....}
 
-    #for i in ScriptMethod.all_components:
-        #print "H",i.layout_component_id
+    print bondwires
+
     app = QtGui.QApplication(sys.argv)
     window = QMainWindow()
     New_engine = New_layout_engine()
