@@ -139,7 +139,7 @@ class New_layout_engine():
                     ax2.add_patch(p)
             ax2.set_xlim(0, size[0])
             ax2.set_ylim(0, size[1])
-            plt.savefig('C:/Users/ialrazi/Desktop/REU_Data_collection_input/Figs'+'/_initial_layout.png')
+            plt.savefig('C:\Users\qmle\Desktop\New_Layout_Engine\New_design_flow'+'/initial_layout.png')
 
 
 
