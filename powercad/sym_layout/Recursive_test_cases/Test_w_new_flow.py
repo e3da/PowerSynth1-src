@@ -24,8 +24,6 @@ def test_file(input_script=None,bond_wire_info=None):
     if bond_wire_info!=None:
         ScriptMethod.bond_wire_table(bondwire_info=bond_wire_info)
 
-    #for i in ScriptMethod.all_components:
-        #print "H",i.layout_component_id
     app = QtGui.QApplication(sys.argv)
     window = QMainWindow()
     New_engine = New_layout_engine()
@@ -33,7 +31,6 @@ def test_file(input_script=None,bond_wire_info=None):
     cons_df = show_constraint_table(parent=window,cons_df=ScriptMethod.df)
     New_engine.cons_df = cons_df
     New_engine.Types = ScriptMethod.Types
-    New_engine.all_components = ScriptMethod.all_components
     New_engine.open_new_layout_engine(window=window)
 
     # engine = New_layout_engine()

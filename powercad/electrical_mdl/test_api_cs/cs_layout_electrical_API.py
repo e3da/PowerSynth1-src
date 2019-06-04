@@ -12,13 +12,21 @@ from powercad.general.data_struct.util import draw_rect_list
 
 
 # This is the initial attempt to link between layout engine and electrical model
-
-
+def init_script():
+    file = os.path.abspath("C:\PowerSynth Git\New_Layout_Engine\New_design_flow\Halfbridge1.txt")
+    ScriptMethod = ScriptInputMethod(file)
+    ScriptMethod.read_input_script()
+    ScriptMethod.gather_part_route_info()
+    ScriptMethod.gather_layout_info()
+    ScriptMethod.update_constraint_table()
 
 def test_half_bridge1():
     print "test half bridge 1"
-    file = os.path.abspath("C:\Users\qmle\Desktop\New_Layout_Engine\New_design_flow\Halfbridge1.txt")
-    component_list, layout_info = test_file(input_script=file)
+    init_script()
+
+
+
+    component_list, layout_info
     layer_to_z = {'T': [0, 0.2], 'D': [0.2, 0], 'B': [0.2, 0],
                   'L': [0.2, 0]}  # key is info for layout type, value --[z,dz]
 
