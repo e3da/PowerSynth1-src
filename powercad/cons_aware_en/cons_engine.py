@@ -130,7 +130,7 @@ class New_layout_engine():
         self.Htree, self.Vtree = self.cornerstitch.input_processing(input, size[0],size[1])  # creates horizontal and vertical corner stitch layouts
         patches, combined_graph = self.cornerstitch.draw_layout(rects=input_rects, Htree=self.Htree,Vtree=self.Vtree)  # collects initial layout patches and combined HCS,VCS points as a graph for mode-3 representation
 
-        plot = True
+        plot = False
         if plot:
             fig2, ax2 = plt.subplots()
             Names = patches.keys()
@@ -371,6 +371,7 @@ class New_layout_engine():
             Min_Y_Loc[len(YLoc) - 1] = max_y
 
             for k, v in Min_X_Loc.items(): # checking if the given width is greater or equal minimum width
+                print W,v
                 if W >= v:
                     #Min_X_Loc[0] = 0
                     #Min_X_Loc[k] = W
