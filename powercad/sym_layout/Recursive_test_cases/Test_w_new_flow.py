@@ -646,7 +646,7 @@ def generate_optimize_layout(New_engine,optimization=True):
 def refresh_layout_mode3(New_engine):
 
     #self.canvas_init = FigureCanvas(fig2)
-    fig2, ax2 = plt.subplots()
+    fig1, ax1 = plt.subplots()
 
 
     init_fig = New_engine.init_data[0]
@@ -655,18 +655,19 @@ def refresh_layout_mode3(New_engine):
     Names.sort()
     for k, p in init_fig.items():
 
+
         if k[0] == 'T':
             x = p.get_x()
             y = p.get_y()
-            #ax2.text(x + 1, y + 1, k)
-            ax2.add_patch(p)
+            #ax1.text(x + 1, y + 1, k)
+            ax1.add_patch(p)
     for k, p in init_fig.items():
 
         if k[0] != 'T':
             x = p.get_x()
             y = p.get_y()
-            #ax2.text(x + 1, y + 1, k, weight='bold')
-            ax2.add_patch(p)
+            #ax1.text(x + 1, y + 1, k, weight='bold')
+            ax1.add_patch(p)
 
     data = {"x": [], "y": [], "label": []}
     for label, coord in init_graph[1].items():
@@ -674,12 +675,12 @@ def refresh_layout_mode3(New_engine):
         data["y"].append(coord[1])
         data["label"].append(label)
 
-    ax2.plot(data['x'], data['y'], 'o', picker=5)
+    ax1.plot(data['x'], data['y'], 'o', picker=5)
     for k, v in init_graph[1].items():
-        ax2.annotate(k, (v[0], v[1]),size=8)
+        ax1.annotate(k, (v[0], v[1]),size=8)
     size = New_engine.init_size
-    ax2.set_xlim(0, size[0])
-    ax2.set_ylim(0, size[1])
+    ax1.set_xlim(0, size[0])
+    ax1.set_ylim(0, size[1])
 
     #self.canvas_init.callbacks.connect('pick_event', self.on_click)
     plt.savefig("C:\Users\ialrazi\Desktop\REU_Data_collection_input\Figs"+'/mode3.png')
@@ -705,6 +706,6 @@ def test_case(layout_script,bond_wire_script):
 
 
 if __name__ == '__main__':
-    cmd_mode(layout_script="C:\Users\ialrazi\Desktop\REU_Data_collection_input\Layout2_NEW.txt",bond_wire_script='C:\Users\ialrazi\Desktop\REU_Data_collection_input\\bond_wires.txt')
+    cmd_mode(layout_script="C:\Users\ialrazi\Desktop\REU_Data_collection_input\h-bridge.txt",bond_wire_script='C:\Users\ialrazi\Desktop\REU_Data_collection_input\\bond_wires.txt')
     #test_case(layout_script="C:\Users\ialrazi\Desktop\REU_Data_collection_input\h-bridge.txt",bond_wire_script='C:\Users\ialrazi\Desktop\REU_Data_collection_input\\bond_wires.txt')
 

@@ -1939,7 +1939,7 @@ class constraintGraph:
         start = nodes[0]
         end = nodes[-1]
         LONGESTPATH, Value, Sum = self.LONGEST_PATH(B, start, end)
-
+        print LONGESTPATH
         if (len(LONGESTPATH)) == len(nodes):
             H = []
             for i in range(len(Node_List)):
