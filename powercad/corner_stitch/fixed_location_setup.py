@@ -95,7 +95,7 @@ class Fixed_locations_Dialog(QtGui.QDialog):
                             self.dynamic_range_y[k] = (y_min, y_max)
                             self.y_dynamic_range[k2] = (y_min, y_max)
 
-        print self.x_dynamic_range
+        #print self.x_dynamic_range
 
     # dynamically update each node's location range based on given fixed location of some nodes.
     def dynamic_update(self):

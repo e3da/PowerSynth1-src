@@ -5,29 +5,7 @@ from PySide.QtGui import QFileDialog,QMainWindow
 import glob
 from powercad.corner_stitch.optimization_algorithm_support import new_engine_opt
 from powercad.corner_stitch.fixed_location_setup import *
-from powercad.project_builder.UI_py.Fixed_loc_up_ui import Ui_Fixed_location_Dialog  # Fixed_loc_ui
-#from powercad.project_builder.proj_dialogs import Fixed_locations_Dialog
-def optimization_setup(level=None,choice=None):
-    if level!=0:
 
-        if choice=='Non-guided randomization':
-            print "Enter number of layouts:"
-
-        elif choice=='NSGAII':
-            print "Enter number of generations:"
-
-        num_layouts = raw_input()
-
-        if level==2 or level==3:
-            print "Enter floorplan width:"
-            W=raw_input()
-            print "Enter floorplan height:"
-            H=raw_input()
-            size=[W,H]
-        else:
-            size=[None,None]
-
-        return num_layouts,size
 
 
 
@@ -57,8 +35,10 @@ def test_file(input_script=None,bond_wire_info=None):
     # Bond wire table={'BW1': {'BW_object': <powercad.design.Routing_paths.BondingWires instance at 0x16F4D648>, 'Source': 'D1_Drain', 'num_wires': '4', 'Destination': 'B1', 'spacing': '0.1'}, 'BW2': {'BW....}
 
 
-
-    app = QtGui.QApplication(sys.argv)
+    try:
+        app = QtGui.QApplication(sys.argv)
+    except:
+        pass
     window = QMainWindow()
     New_engine = New_layout_engine()
     New_engine.init_layout(input_format=input_info)
@@ -100,9 +80,29 @@ def save_layouts(Layout_Rects, count,db):
 
 def assign_fixed_locations(parent,New_engine):  # Fixed Locations (for mode-3)
     fixed_locations = Fixed_locations_Dialog(parent=parent,engine=New_engine)
-    fixed_locations.set_node_id(New_engine.init_data[2][1])
+    fixed_locations.set_node_id(New_engine.init_data[2][1]) # passing the graph
     fixed_locations.show()
     fixed_locations.exec_()
+
+def settingup_db():
+    database = os.path.join(os.getcwd(), 'layouts_db')
+    filelist = glob.glob(os.path.join(database + '/*'))
+    # print filelist
+    for f in filelist:
+        try:
+            os.remove(f)
+        except:
+            print "can't remove file"
+
+    if not os.path.exists(database):
+        os.makedirs(database)
+
+    db = database + '/' + 'layout.db'
+    conn = create_connection(db)
+    with conn:
+        create_table(conn)
+    conn.close()
+    return db
 
 def cmd_mode(layout_script=None,bond_wire_script=None):
     '''
@@ -124,19 +124,102 @@ def cmd_mode(layout_script=None,bond_wire_script=None):
     all_components, layout_info,bondwires,New_engine =test_case(layout_script=layout_input,bond_wire_script=bondwire_info)
 
     print layout_info
-    '''
-    for i in layout_info:
-        for k,v in i.items():
-            for id,rect in v.items():
-                for j in rect:
-                    print j.x/1000.0,j.y/1000.0,j.width/1000.0,j.height/1000.0
-    
-    '''
+
 
 
     #optimization_setup() # implement later
 
-    layout_data = {}
+
+
+    while(1):
+        msg = "Enter your choice:"
+        title = "PowerSynth Usage Options"
+        choices = ["Layout generation", "Single layout evaluation", "Layout Optimization","Quit"]
+        choice = choicebox(msg, title, choices)
+
+        if choice=="Layout generation":
+            Solutions=generate_optimize_layout(New_engine,optimization=False)
+            print "Sol",Solutions
+        elif choice=="Single layout evaluation":
+            msg = "Enter your choice:"
+            title = "Single layout evaluation"
+            choices = ["Initial input layout evaluation", "Upload new layout"]
+            choice = choicebox(msg, title, choices)
+            if choice=="Initial input layout evaluation":
+                patch_dict=New_engine.init_data[0]
+
+                fig_dict={(New_engine.init_size[0],New_engine.init_size[1]):[]}
+                for k,v in patch_dict:
+                    fig_dict[(New_engine.init_size[0],New_engine.init_size[1])].append(v)
+                fig_data = [fig_dict]
+                init_rects={}
+                for k,v in New_engine.init_data[1].items():
+                    rects=[]
+                    for i in v:
+                        rect=Rectangle(x=i[0],y=i[1],width=i[2],height=i[3],type=i[4])
+                        rects.append(rect)
+                    init_rects[k]=rects
+
+                cs_sym_info = [{(New_engine.init_size[0]*1000,New_engine.init_size[1]*1000):init_rects}]
+                print cs_sym_info
+                opt_problem = new_engine_opt(engine=New_engine, W=New_engine.init_size[0], H=New_engine.init_size[1], seed=None, level=2, method=None)
+
+                perf_values=opt_problem.eval_layout()
+                #print perf_values
+
+
+            else:
+                print "Enter layout input script location:"
+                layout_input = raw_input()
+                print "Enter Bonding wire script location"
+                bondwire_info = raw_input()
+                all_components, layout_info, bondwires, New_engine = test_case(layout_script=layout_input,bond_wire_script=bondwire_info)
+                patch_dict = New_engine.init_data[0]
+
+                fig_dict = {(New_engine.init_size[0], New_engine.init_size[1]): []}
+                for k, v in patch_dict:
+                    fig_dict[(New_engine.init_size[0], New_engine.init_size[1])].append(v)
+                fig_data = [fig_dict]
+                init_rects = {}
+                for k, v in New_engine.init_data[1].items():
+                    rects = []
+                    for i in v:
+                        rect = Rectangle(x=i[0], y=i[1], width=i[2], height=i[3], type=i[4])
+                        rects.append(rect)
+                    init_rects[k] = rects
+
+                cs_sym_info = [{(New_engine.init_size[0] * 1000, New_engine.init_size[1] * 1000): init_rects}]
+
+                opt_problem = new_engine_opt(engine=New_engine, W=New_engine.init_size[0], H=New_engine.init_size[1], seed=None,
+                                             level=2, method=None)
+                perf_values = opt_problem.eval_layout()
+                #print perf_values
+
+            Solutions = []
+            for i in range(len(cs_sym_info)):
+                name = 'Layout_' + str(i)
+                solution = CornerStitchSolution(name=name)
+                solution.params = None  # perf_values should go here
+                solution.layout_info = cs_sym_info[i]
+                solution.abstract_info = solution.form_abs_obj_rect_dict()
+                Solutions.append(solution)
+
+            db=settingup_db()
+            print fig_data
+            for i in range(len(fig_data)):
+                save_layouts(fig_data[i], count=i, db=db)
+
+            print "Sol",Solutions
+        elif choice=="Layout Optimization":
+            Solutions=generate_optimize_layout(New_engine, optimization=True)  # list of cs_solution objects
+            print "Sol",Solutions
+        elif choice=="Quit":
+            break
+            exit()
+
+def generate_optimize_layout(New_engine,optimization=True):
+
+
     msg = "Enter the mode of operation:"
     title = "Layout Generation Modes"
     choices = ["Minimum-sized layout", "Variable-sized layout", "Fixed-sized layout", "Fixed-sized with fixed location"]
@@ -152,39 +235,31 @@ def cmd_mode(layout_script=None,bond_wire_script=None):
     elif choice=="Fixed-sized with fixed location":
         level=3
 
-    database = os.path.join(os.getcwd(), 'layouts_db')
-    filelist = glob.glob(os.path.join(database + '/*'))
-    # print filelist
-    for f in filelist:
-        try:
-            os.remove(f)
-        except:
-            print "can't remove file"
-
-    if not os.path.exists(database):
-        os.makedirs(database)
-
-
-    db = database + '/' + 'layout.db'
-    conn = create_connection(db)
-    with conn:
-        create_table(conn)
-    conn.close()
-
+    db=settingup_db()
 
     if level == 0:
 
         fig_data, cs_sym_info = New_engine.generate_solutions(level, num_layouts=1, W=None, H=None,fixed_x_location=None, fixed_y_location=None, seed=None,individual=None, bar=False)
 
-        print fig_data
+
+        if optimization==True:
+            opt_problem = new_engine_opt(engine=New_engine, W=None, H=None, seed=None, level=level, method=None)
+            results = []
+            for i in range(len(cs_sym_info)):
+                perf_values = opt_problem.eval_layout()
+                results.append([fig_data[i], cs_sym_info[i]])
+                for j in range(len(perf_values)):
+                    results[i].append(perf_values[j])
         Solutions=[]
         for i in range(len(cs_sym_info)):
             name='Layout_'+str(i)
             solution=CornerStitchSolution(name=name)
             solution.params=None
             solution.layout_info=cs_sym_info[i]
+            solution.abstract_info=solution.form_abs_obj_rect_dict()
             Solutions.append(solution)
-            layout_data[name] = {'Rects': cs_sym_info[i]}
+
+
         for i in range(len(fig_data)):
             save_layouts(fig_data[i],count=i,db=db)
 
@@ -199,123 +274,146 @@ def cmd_mode(layout_script=None,bond_wire_script=None):
         except:
             print "Please enter an integer"
 
-        msg = "Choose an optimization algorithm:"
-        title = "Optimization Algorithm Options"
-        choices = ["Non-guided randomization", "Genetic Algorithm (NSGAII)", "Weighted sum", "Simulated annealing"]
-        choice = choicebox(msg, title, choices)
+        if optimization==True:
+            msg = "Choose an optimization algorithm:"
+            title = "Optimization Algorithm Options"
+            choices = ["Non-guided randomization", "Genetic Algorithm (NSGAII)", "Weighted sum", "Simulated annealing"]
+            choice = choicebox(msg, title, choices)
 
-        if choice=="Non-guided randomization":
-            optimization_algorithm="NG_RANDOM"
+            if choice=="Non-guided randomization":
+                optimization_algorithm="NG_RANDOM"
+                print "Enter desired number of solutions:"
+                num_layouts = raw_input()
+                try:
+                    num_layouts = int(num_layouts)
+                except:
+                    print "Please enter an integer"
+                fig_data, cs_sym_info = New_engine.generate_solutions(level, num_layouts=num_layouts, W=None, H=None,fixed_x_location=None, fixed_y_location=None,seed=seed,individual=None, bar=False)
+
+
+                opt_problem = new_engine_opt(engine=New_engine, W=None, H=None, seed=seed, level=level, method=None)
+                results=[]
+                for i in range(len(cs_sym_info)):
+                    perf_values=opt_problem.eval_layout()
+                    results.append([fig_data[i],cs_sym_info[i]])
+                    for j in range(len(perf_values)):
+                        results[i].append(perf_values[j])
+
+
+                #fig_data, cs_sym_info = New_engine.generate_solutions(level, num_layouts=num_layouts, W=None, H=None,fixed_x_location=None, fixed_y_location=None, seed=seed,individual=None, bar=False)
+
+                Solutions = []
+                for i in range(len(cs_sym_info)):
+                    name = 'Layout_' + str(i)
+                    solution = CornerStitchSolution(name=name)
+                    solution.params = None
+                    solution.layout_info = cs_sym_info[i]
+                    solution.abstract_info = solution.form_abs_obj_rect_dict()
+                    Solutions.append(solution)
+
+                for i in range(len(fig_data)):
+                    save_layouts(fig_data[i], count=i, db=db)
+
+            else:
+                if choice=="Genetic Algorithm (NSGAII)":
+                    print "Enter desired number of generations:"
+                    num_layouts = raw_input()
+                    try:
+                        num_layouts = int(num_layouts)
+                    except:
+                        print "Please enter an integer"
+                    #optimization_algorithm="NSGAII"
+                    opt_problem = new_engine_opt(engine=New_engine, W=None, H=None,seed=seed,level=level,method="NSGAII")
+                    opt_problem.num_measure=2 #number of performance metrics
+                    opt_problem.num_gen=num_layouts # number of generations
+                    results=opt_problem.optimize() # results=list of list, where each element=[fig,cs_sym_info,perf1_value,perf2_value,...]
+
+
+                elif choice== "Weighted sum":
+                    #optimization_algorithm="W_S"
+                    print "Enter desired number of maximum iterations:"
+                    num_layouts = raw_input()
+                    try:
+                        num_layouts = int(num_layouts)
+                    except:
+                        print "Please enter an integer"
+                    print "Enter number of interval for weights to the objectives:"
+                    num_disc=raw_input()
+                    try:
+                        num_disc = int(num_disc)
+                    except:
+                        print "Please enter an integer"
+
+                    opt_problem = new_engine_opt(engine=New_engine, W=None, H=None, seed=seed, level=level, method="FMINCON")
+                    opt_problem.num_measure = 2  # number of performance metrics
+                    opt_problem.num_gen = num_layouts  # number of generations
+                    opt_problem.num_disc=num_disc
+                    results = opt_problem.optimize()  # results=list of list, where each element=[fig,cs_sym_info,perf1_value,perf2_value,...]
+
+                elif choice=="Simulated annealing":
+                    #optimization_algorithm="SA"
+                    print "Enter desired number of steps:"
+                    num_layouts = raw_input()
+                    try:
+                        num_layouts = int(num_layouts)
+                    except:
+                        print "Please enter an integer"
+                    print "Enter initial temperature (High):"
+                    temp_init = raw_input()
+                    try:
+                        temp_init = float(temp_init)
+                    except:
+                        print "Please enter a valid Temperature"
+                    opt_problem = new_engine_opt(engine=New_engine, W=None, H=None, seed=seed, level=level, method="SA")
+                    opt_problem.num_measure = 2  # number of performance metrics
+                    opt_problem.num_gen = num_layouts  # number of generations
+                    opt_problem.T_init=temp_init # initial temperature
+                    results = opt_problem.optimize()  # results=list of list, where each element=[fig,cs_sym_info,perf1_value,perf2_value,...]
+
+
+                cs_sym_info = []
+                fig_data = []
+                for i in range(len(results)):
+                    cs_sym_info.append(results[i][1])
+                    fig_data.append(results[i][0])
+
+
+                Solutions = []
+                for i in range(len(cs_sym_info)):
+                    name = 'Layout_' + str(i)
+                    solution = CornerStitchSolution(name=name)
+                    solution.params = None
+                    solution.layout_info = cs_sym_info[i][0]
+                    solution.abstract_info = solution.form_abs_obj_rect_dict()
+                    Solutions.append(solution)
+
+                for i in range(len(fig_data)):
+                    save_layouts(fig_data[i][0], count=i, db=db)
+        else:
             print "Enter desired number of solutions:"
             num_layouts = raw_input()
             try:
                 num_layouts = int(num_layouts)
             except:
                 print "Please enter an integer"
-            fig_data, cs_sym_info = New_engine.generate_solutions(level, num_layouts=num_layouts, W=None, H=None,fixed_x_location=None, fixed_y_location=None,seed=seed,individual=None, bar=False)
-
-
-            opt_problem = new_engine_opt(engine=New_engine, W=None, H=None, seed=seed, level=level, method=None)
-            results=[]
-            for i in range(len(cs_sym_info)):
-                perf_values=opt_problem.eval_layout()
-                results.append([fig_data[i],cs_sym_info[i]])
-                for j in range(len(perf_values)):
-                    results[i].append(perf_values[j])
-
-
             fig_data, cs_sym_info = New_engine.generate_solutions(level, num_layouts=num_layouts, W=None, H=None,
-                                                                  fixed_x_location=None, fixed_y_location=None, seed=seed,
-                                                                  individual=None, bar=False)
-            
+                                                                  fixed_x_location=None, fixed_y_location=None,
+                                                                  seed=seed, individual=None, bar=False)
+
+
+            # fig_data, cs_sym_info = New_engine.generate_solutions(level, num_layouts=num_layouts, W=None, H=None,fixed_x_location=None, fixed_y_location=None, seed=seed,individual=None, bar=False)
+
             Solutions = []
             for i in range(len(cs_sym_info)):
                 name = 'Layout_' + str(i)
                 solution = CornerStitchSolution(name=name)
                 solution.params = None
                 solution.layout_info = cs_sym_info[i]
+                solution.abstract_info = solution.form_abs_obj_rect_dict()
                 Solutions.append(solution)
-                layout_data[name] = {'Rects': cs_sym_info[i]}
+
             for i in range(len(fig_data)):
                 save_layouts(fig_data[i], count=i, db=db)
-
-        else:
-            if choice=="Genetic Algorithm (NSGAII)":
-                print "Enter desired number of generations:"
-                num_layouts = raw_input()
-                try:
-                    num_layouts = int(num_layouts)
-                except:
-                    print "Please enter an integer"
-                #optimization_algorithm="NSGAII"
-                opt_problem = new_engine_opt(engine=New_engine, W=None, H=None,seed=seed,level=level,method="NSGAII")
-                opt_problem.num_measure=2 #number of performance metrics
-                opt_problem.num_gen=num_layouts # number of generations
-                results=opt_problem.optimize() # results=list of list, where each element=[fig,cs_sym_info,perf1_value,perf2_value,...]
-
-
-            elif choice== "Weighted sum":
-                #optimization_algorithm="W_S"
-                print "Enter desired number of maximum iterations:"
-                num_layouts = raw_input()
-                try:
-                    num_layouts = int(num_layouts)
-                except:
-                    print "Please enter an integer"
-                print "Enter number of interval for weights to the objectives:"
-                num_disc=raw_input()
-                try:
-                    num_disc = int(num_disc)
-                except:
-                    print "Please enter an integer"
-
-                opt_problem = new_engine_opt(engine=New_engine, W=None, H=None, seed=seed, level=level, method="FMINCON")
-                opt_problem.num_measure = 2  # number of performance metrics
-                opt_problem.num_gen = num_layouts  # number of generations
-                opt_problem.num_disc=num_disc
-                results = opt_problem.optimize()  # results=list of list, where each element=[fig,cs_sym_info,perf1_value,perf2_value,...]
-
-            elif choice=="Simulated annealing":
-                #optimization_algorithm="SA"
-                print "Enter desired number of steps:"
-                num_layouts = raw_input()
-                try:
-                    num_layouts = int(num_layouts)
-                except:
-                    print "Please enter an integer"
-                print "Enter initial temperature (High):"
-                temp_init = raw_input()
-                try:
-                    temp_init = float(temp_init)
-                except:
-                    print "Please enter a valid Temperature"
-                opt_problem = new_engine_opt(engine=New_engine, W=None, H=None, seed=seed, level=level, method="SA")
-                opt_problem.num_measure = 2  # number of performance metrics
-                opt_problem.num_gen = num_layouts  # number of generations
-                opt_problem.T_init=temp_init # initial temperature
-                results = opt_problem.optimize()  # results=list of list, where each element=[fig,cs_sym_info,perf1_value,perf2_value,...]
-
-
-            cs_sym_info = []
-            fig_data = []
-            for i in range(len(results)):
-                cs_sym_info.append(results[i][1])
-                fig_data.append(results[i][0])
-
-
-            Solutions = []
-            for i in range(len(cs_sym_info)):
-                name = 'Layout_' + str(i)
-                solution = CornerStitchSolution(name=name)
-                solution.params = None
-                solution.layout_info = cs_sym_info[i]
-                Solutions.append(solution)
-                layout_data[name] = {'Rects': cs_sym_info[i]}
-            for i in range(len(fig_data)):
-                save_layouts(fig_data[i][0], count=i, db=db)
-
-
-
 
     elif level==2:
 
@@ -333,28 +431,130 @@ def cmd_mode(layout_script=None,bond_wire_script=None):
         except:
             print "Please enter an integer"
 
-        msg = "Choose an optimization algorithm:"
-        title = "Optimization Algorithm Options"
-        choices = ["Non-guided randomization", "Genetic Algorithm (NSGAII)", "Weighted sum","Simulated annealing"]
-        choice = choicebox(msg, title, choices)
-        if choice=="Non-guided randomization":
-            optimization_algorithm="NG_RANDOM"
+        if optimization==True:
+            msg = "Choose an optimization algorithm:"
+            title = "Optimization Algorithm Options"
+            choices = ["Non-guided randomization", "Genetic Algorithm (NSGAII)", "Weighted sum","Simulated annealing"]
+            choice = choicebox(msg, title, choices)
+            if choice=="Non-guided randomization":
+                optimization_algorithm="NG_RANDOM"
+                print "Enter desired number of solutions:"
+                num_layouts = raw_input()
+                try:
+                    num_layouts = int(num_layouts)
+                except:
+                    print "Please enter an integer"
+                fig_data, cs_sym_info = New_engine.generate_solutions(level, num_layouts=num_layouts, W=width, H=height,fixed_x_location=None, fixed_y_location=None,
+                                                                      seed=seed,individual=None, bar=False)
+
+                opt_problem = new_engine_opt(engine=New_engine, W=width, H=height, seed=seed, level=level, method=None)
+                results=[]
+                for i in range(len(cs_sym_info)):
+                    perf_values=opt_problem.eval_layout()
+                    results.append([fig_data[i],cs_sym_info[i]])
+                    for j in range(len(perf_values)):
+                        results[i].append(perf_values[j])
+
+
+                Solutions = []
+                for i in range(len(cs_sym_info)):
+                    name = 'Layout_' + str(i)
+                    solution = CornerStitchSolution(name=name)
+                    solution.params = None
+                    solution.layout_info = cs_sym_info[i]
+                    solution.abstract_info = solution.form_abs_obj_rect_dict()
+                    Solutions.append(solution)
+
+                for i in range(len(fig_data)):
+                    save_layouts(fig_data[i], count=i, db=db)
+
+            else:
+                if choice=="Genetic Algorithm (NSGAII)":
+                    print "Enter desired number of generations:"
+                    num_layouts = raw_input()
+                    try:
+                        num_layouts = int(num_layouts)
+                    except:
+                        print "Please enter an integer"
+                    #optimization_algorithm="NSGAII"
+                    opt_problem = new_engine_opt(engine=New_engine, W=width, H=height,seed=seed,level=level,method="NSGAII")
+                    opt_problem.num_measure=2 #number of performance metrics
+                    opt_problem.num_gen=num_layouts # number of generations
+                    results=opt_problem.optimize() # results=list of list, where each element=[fig,cs_sym_info,perf1_value,perf2_value,...]
+
+
+
+
+                elif choice== "Weighted sum":
+                    #optimization_algorithm="W_S"
+                    print "Enter desired number of maximum iterations:"
+                    num_layouts = raw_input()
+                    try:
+                        num_layouts = int(num_layouts)
+                    except:
+                        print "Please enter an integer"
+                    print "Enter number of interval for weights to the objectives:"
+                    num_disc=raw_input()
+                    try:
+                        num_disc = int(num_disc)
+                    except:
+                        print "Please enter an integer"
+
+                    opt_problem = new_engine_opt(engine=New_engine, W=width, H=height, seed=seed, level=level, method="FMINCON")
+                    opt_problem.num_measure = 2  # number of performance metrics
+                    opt_problem.num_gen = num_layouts  # number of generations
+                    opt_problem.num_disc=num_disc
+                    results = opt_problem.optimize()  # results=list of list, where each element=[fig,cs_sym_info,perf1_value,perf2_value,...]
+
+
+
+                elif choice=="Simulated annealing":
+                    #optimization_algorithm="SA"
+                    print "Enter desired number of steps:"
+                    num_layouts = raw_input()
+                    try:
+                        num_layouts = int(num_layouts)
+                    except:
+                        print "Please enter an integer"
+                    print "Enter initial temperature (High):"
+                    temp_init = raw_input()
+                    try:
+                        temp_init = float(temp_init)
+                    except:
+                        print "Please enter a valid Temperature"
+                    opt_problem = new_engine_opt(engine=New_engine, W=width, H=height, seed=seed, level=level, method="SA")
+                    opt_problem.num_measure = 2  # number of performance metrics
+                    opt_problem.num_gen = num_layouts  # number of generations
+                    opt_problem.T_init=temp_init # initial temperature
+                    results = opt_problem.optimize()  # results=list of list, where each element=[fig,cs_sym_info,perf1_value,perf2_value,...]
+
+                cs_sym_info = []
+                fig_data = []
+                for i in range(len(results)):
+                    cs_sym_info.append(results[i][1])
+                    fig_data.append(results[i][0])
+
+                Solutions = []
+                for i in range(len(cs_sym_info)):
+                    name = 'Layout_' + str(i)
+                    solution = CornerStitchSolution(name=name)
+                    solution.params = None
+                    solution.layout_info = cs_sym_info[i][0]
+                    solution.abstract_info = solution.form_abs_obj_rect_dict()
+                    Solutions.append(solution)
+
+                for i in range(len(fig_data)):
+                    save_layouts(fig_data[i][0], count=i, db=db)
+        else:
             print "Enter desired number of solutions:"
             num_layouts = raw_input()
             try:
                 num_layouts = int(num_layouts)
             except:
                 print "Please enter an integer"
-            fig_data, cs_sym_info = New_engine.generate_solutions(level, num_layouts=num_layouts, W=width, H=height,fixed_x_location=None, fixed_y_location=None,
-                                                                  seed=seed,individual=None, bar=False)
-
-            opt_problem = new_engine_opt(engine=New_engine, W=width, H=height, seed=seed, level=level, method=None)
-            results=[]
-            for i in range(len(cs_sym_info)):
-                perf_values=opt_problem.eval_layout()
-                results.append([fig_data[i],cs_sym_info[i]])
-                for j in range(len(perf_values)):
-                    results[i].append(perf_values[j])
+            fig_data, cs_sym_info = New_engine.generate_solutions(level, num_layouts=num_layouts, W=width, H=height,
+                                                                  fixed_x_location=None, fixed_y_location=None,
+                                                                  seed=seed, individual=None, bar=False)
 
 
             Solutions = []
@@ -363,87 +563,11 @@ def cmd_mode(layout_script=None,bond_wire_script=None):
                 solution = CornerStitchSolution(name=name)
                 solution.params = None
                 solution.layout_info = cs_sym_info[i]
+                solution.abstract_info = solution.form_abs_obj_rect_dict()
                 Solutions.append(solution)
-                layout_data[name] = {'Rects': cs_sym_info[i]}
+
             for i in range(len(fig_data)):
                 save_layouts(fig_data[i], count=i, db=db)
-
-        else:
-            if choice=="Genetic Algorithm (NSGAII)":
-                print "Enter desired number of generations:"
-                num_layouts = raw_input()
-                try:
-                    num_layouts = int(num_layouts)
-                except:
-                    print "Please enter an integer"
-                #optimization_algorithm="NSGAII"
-                opt_problem = new_engine_opt(engine=New_engine, W=width, H=height,seed=seed,level=level,method="NSGAII")
-                opt_problem.num_measure=2 #number of performance metrics
-                opt_problem.num_gen=num_layouts # number of generations
-                results=opt_problem.optimize() # results=list of list, where each element=[fig,cs_sym_info,perf1_value,perf2_value,...]
-
-
-
-
-            elif choice== "Weighted sum":
-                #optimization_algorithm="W_S"
-                print "Enter desired number of maximum iterations:"
-                num_layouts = raw_input()
-                try:
-                    num_layouts = int(num_layouts)
-                except:
-                    print "Please enter an integer"
-                print "Enter number of interval for weights to the objectives:"
-                num_disc=raw_input()
-                try:
-                    num_disc = int(num_disc)
-                except:
-                    print "Please enter an integer"
-
-                opt_problem = new_engine_opt(engine=New_engine, W=width, H=height, seed=seed, level=level, method="FMINCON")
-                opt_problem.num_measure = 2  # number of performance metrics
-                opt_problem.num_gen = num_layouts  # number of generations
-                opt_problem.num_disc=num_disc
-                results = opt_problem.optimize()  # results=list of list, where each element=[fig,cs_sym_info,perf1_value,perf2_value,...]
-
-
-
-            elif choice=="Simulated annealing":
-                #optimization_algorithm="SA"
-                print "Enter desired number of steps:"
-                num_layouts = raw_input()
-                try:
-                    num_layouts = int(num_layouts)
-                except:
-                    print "Please enter an integer"
-                print "Enter initial temperature (High):"
-                temp_init = raw_input()
-                try:
-                    temp_init = float(temp_init)
-                except:
-                    print "Please enter a valid Temperature"
-                opt_problem = new_engine_opt(engine=New_engine, W=width, H=height, seed=seed, level=level, method="SA")
-                opt_problem.num_measure = 2  # number of performance metrics
-                opt_problem.num_gen = num_layouts  # number of generations
-                opt_problem.T_init=temp_init # initial temperature
-                results = opt_problem.optimize()  # results=list of list, where each element=[fig,cs_sym_info,perf1_value,perf2_value,...]
-
-            cs_sym_info = []
-            fig_data = []
-            for i in range(len(results)):
-                cs_sym_info.append(results[i][1])
-                fig_data.append(results[i][0])
-
-            Solutions = []
-            for i in range(len(cs_sym_info)):
-                name = 'Layout_' + str(i)
-                solution = CornerStitchSolution(name=name)
-                solution.params = None
-                solution.layout_info = cs_sym_info[i]
-                Solutions.append(solution)
-                layout_data[name] = {'Rects': cs_sym_info[i]}
-            for i in range(len(fig_data)):
-                save_layouts(fig_data[i][0], count=i, db=db)
 
 
     elif level==3:
@@ -478,8 +602,8 @@ def cmd_mode(layout_script=None,bond_wire_script=None):
         window.dynamic_range_y = {}  # To store saved information from the fixed location table
         window.inserted_order = []
         assign_fixed_locations(parent=window,New_engine=New_engine)
-        print window.fixed_x_locations
-        print window.fixed_y_locations
+        #print window.fixed_x_locations
+        #print window.fixed_y_locations
 
         print "Enter desired number of solutions:"
         num_layouts = raw_input()
@@ -490,14 +614,15 @@ def cmd_mode(layout_script=None,bond_wire_script=None):
         fig_data, cs_sym_info = New_engine.generate_solutions(level, num_layouts=num_layouts, W=width, H=height,
                                                               fixed_x_location=window.fixed_x_locations, fixed_y_location=window.fixed_y_locations,
                                                               seed=seed, individual=None, bar=False)
-        print fig_data
-        opt_problem = new_engine_opt(engine=New_engine, W=width, H=height, seed=seed, level=level, method=None)
-        results = []
-        for i in range(len(cs_sym_info)):
-            perf_values = opt_problem.eval_layout()
-            results.append([fig_data[i], cs_sym_info[i]])
-            for j in range(len(perf_values)):
-                results[i].append(perf_values[j])
+        #print fig_data
+        if optimization==True:
+            opt_problem = new_engine_opt(engine=New_engine, W=width, H=height, seed=seed, level=level, method=None)
+            results = []
+            for i in range(len(cs_sym_info)):
+                perf_values = opt_problem.eval_layout()
+                results.append([fig_data[i], cs_sym_info[i]])
+                for j in range(len(perf_values)):
+                    results[i].append(perf_values[j])
 
         Solutions = []
         for i in range(len(cs_sym_info)):
@@ -505,13 +630,14 @@ def cmd_mode(layout_script=None,bond_wire_script=None):
             solution = CornerStitchSolution(name=name)
             solution.params = None
             solution.layout_info = cs_sym_info[i]
+            solution.abstract_info = solution.form_abs_obj_rect_dict()
             Solutions.append(solution)
-            layout_data[name] = {'Rects': cs_sym_info[i]}
+
         for i in range(len(fig_data)):
             save_layouts(fig_data[i], count=i, db=db)
 
 
-
+    return Solutions
 
 
 
@@ -549,7 +675,7 @@ def refresh_layout_mode3(New_engine):
 
     ax2.plot(data['x'], data['y'], 'o', picker=5)
     for k, v in init_graph[1].items():
-        ax2.annotate(k, (v[0], v[1]),size=6)
+        ax2.annotate(k, (v[0], v[1]),size=8)
     size = New_engine.init_size
     ax2.set_xlim(0, size[0])
     ax2.set_ylim(0, size[1])

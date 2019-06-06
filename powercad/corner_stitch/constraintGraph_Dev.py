@@ -1782,7 +1782,9 @@ class constraintGraph:
                 for k, v in self.YLoc.items():
                     if k in n:
                         self.Loc_Y[k] = v
+                #print self.Loc_Y
                 self.FUNCTION_V(G,individual,sid=i)
+                #print self.Loc_Y
                 loct.append(self.Loc_Y)
             for i in loct:
                 new_y_loc = []
@@ -1792,6 +1794,8 @@ class constraintGraph:
             Location = {}
             key = ID
             Location.setdefault(key, [])
+
+
             for i in range(len(self.NEWYLOCATION)):
                 loct = {}
                 for j in range(len(self.ZDL_V[ID])):
@@ -2411,37 +2415,58 @@ class constraintGraph:
                     if len(LIST) > 0:
                         Connected_List.append(list(set(LIST)))
 
-
+        #print Connected_List
 
         if len(Connected_List)==1:
+            flag=True
+            while(flag):
+                PATH = Connected_List[0]
+                start = PATH[0]
+                end = PATH[-1]
+                LONGESTPATH, Value, Sum = self.LONGEST_PATH(B, start, end)
 
-            PATH = Connected_List[0]
-            start = PATH[0]
-            end = PATH[-1]
-            LONGESTPATH, Value, Sum = self.LONGEST_PATH(B, start, end)
-            if LONGESTPATH == PATH:
-                H = []
-                for i in range(len(Node_List)):
-                    H.append(G.subgraph(Node_List[i]))
+                if LONGESTPATH == PATH:
+                    flag=False
+                    H = []
+                    for i in range(len(Node_List)):
+                        H.append(G.subgraph(Node_List[i]))
 
-                for graph in H:
-                    n = list(graph.nodes())
-                    n.sort()
-                    start = n[0]
-                    end = n[-1]
-                self.Location_finding_V(B, start, end,Random, SOURCE=None, TARGET=None, flag=False,sid=sid)  # evaluates each subgraph (Random is added tot est optimization)
-                Fixed_Node = self.Loc_Y.keys()
-                for i in Fixed_Node:
-                    for j in Fixed_Node:
-                        if G.has_edge(i, j):
-                            G.remove_edge(i, j)
+                    for graph in H:
+                        n = list(graph.nodes())
+                        n.sort()
+                        start = n[0]
+                        end = n[-1]
+                    self.Location_finding_V(B, start, end,Random, SOURCE=None, TARGET=None, flag=False,sid=sid)  # evaluates each subgraph (Random is added tot est optimization)
+                    Fixed_Node = self.Loc_Y.keys()
+                    for i in Fixed_Node:
+                        for j in Fixed_Node:
+                            if G.has_edge(i, j):
+                                G.remove_edge(i, j)
 
 
 
-                if len(G.edges()) == 0:
-                    return
+                    if len(G.edges()) == 0:
+                        return
+                    else:
+                        self.FUNCTION_V(G,Random,sid)
                 else:
-                    self.FUNCTION_V(G,Random,sid)
+                    split_candidates = []
+                    for i in range(len(LONGESTPATH) - 1):
+                        if LONGESTPATH[i + 1] - LONGESTPATH[i] > 1:
+                            split_candidates.append([LONGESTPATH[i], LONGESTPATH[i + 1]])
+                    # print split_candidates
+                    if len(split_candidates) > 0:
+                        for i in range(len(split_candidates)):
+                            pair = split_candidates[i]
+                            parts = [0 for j in range(pair[1] - pair[0])]
+                            weight = B[pair[0]][pair[1]]
+                            ind_weight = float(weight / len(parts))
+
+                            nodes = [pair[0] + i for i in range(len(parts) + 1)]
+                            for k in range(len(nodes) - 1):
+                                B[nodes[k]][nodes[k + 1]] = ind_weight
+                                B[pair[0]][pair[1]] = 0
+
 
         elif len(Connected_List) > 1:
             for i in range(len(Connected_List)):

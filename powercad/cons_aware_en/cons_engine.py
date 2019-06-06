@@ -519,7 +519,8 @@ class New_layout_engine():
                     if distance_V[k]<min_distance_V[k]or Min_Y_Loc[k]<MIN_Y[k]  :
                         print"Invalid Location for Y coordinate"
                         return None,None
-
+            print Min_X_Loc
+            print Min_Y_Loc
             Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=num_layouts,
                                                       W=W, H=H, XLoc=Min_X_Loc, YLoc=Min_Y_Loc, seed=seed,
                                                       individual=individual,Types=self.Types)
