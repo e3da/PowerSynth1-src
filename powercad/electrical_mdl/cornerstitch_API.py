@@ -140,7 +140,7 @@ class CornerStitch_Emodel_API:
         self.emesh.update_mutual(mode=0)
         pr.disable()
         pr.create_stats()
-        file = open('C:\Users\qmle\Desktop\New_Layout_Engine\New_design_flow\mystats.txt', 'w')
+        file = open('C:\New_Layout_Engine\New_design_flow\mystats.txt', 'w')
         stats = pstats.Stats(pr, stream=file)
         #stats.sort_stats('time')
         stats.print_stats()

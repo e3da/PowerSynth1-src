@@ -70,7 +70,7 @@ class Part:
         self.thickness = 0  # define part thickness
         self.cs_type=None # corner stitch type (Type_1,Type_2...)
         self.rotate_angle= 0 #0:0 degree, 1:90 degree, 2:180 degree, 3:270 degree
-
+        self.thermal_cond =0 # thermal conductivity for thermal evaluation # TODO: REPLACE WITH MATERIAL
     def load_part(self):
         # Update part info from file
         with open(self.info_file, 'rb') as inputfile:
@@ -79,6 +79,8 @@ class Part:
             for line in inputfile.readlines():
                 line = line.strip("\r\n")
                 info = line.split(" ")
+                if info[0] == "+Thermal_Conductivity":
+                    self.thermal_cond = float(info[1])
                 if info[0] == "+Name":
                     self.raw_name = info[1]
                 elif info[0] == "+Type":

@@ -221,7 +221,7 @@ class EMesh():
                 all_l = trace_ind_krige(self.f, self.all_W, self.all_L, mdl=self.mdl['L']).tolist()
 
                 #all_l = [trace_inductance(w, l, t, h) for w, l in zip(self.all_W, self.all_L)]
-                print all_l
+                #print all_l
 
                 #all_c = self.compute_all_cap()
                 for i in range(len(self.all_W)):

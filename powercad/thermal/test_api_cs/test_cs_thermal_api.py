@@ -1,16 +1,6 @@
-from powercad.corner_stitch.input_script import *
-import cProfile
-import pstats
-from timeit import default_timer as timer
-from powercad.electrical_mdl.e_mesh import *
-from powercad.electrical_mdl.spice_eval.rl_mat_eval import *
 from powercad.design.parts import *
-from powercad.electrical_mdl.cornerstitch_API import *
-from powercad.parasitics.mdl_compare import load_mdl
-from powercad.electrical_mdl.e_netlist import ENetlist
-from powercad.general.data_struct.util import draw_rect_list
-from psidialogs import *
-# This is the initial attempt to link between layout engine and electrical model
+from powercad.thermal.cornerstitch_API import *
+from powercad.corner_stitch.input_script import *
 def test_file(input_script=None, bond_wire_info=None):
     ScriptMethod = ScriptInputMethod(input_script)  # initializes the class with filename
     ScriptMethod.read_input_script()  # reads input script and make two sections
@@ -44,34 +34,6 @@ def test_file(input_script=None, bond_wire_info=None):
     # New_engine.open_new_layout_engine(window=window)
     Patches, cs_sym_data = New_engine.generate_solutions(level=0, num_layouts=1, W=None, H=None, fixed_x_location=None, fixed_y_location=None, seed=None, individual=None)
     return New_engine.all_components, cs_sym_data, bondwires
-    # Don't Delete these lines
-    '''
-    print "Enter the mode of operation:"
-    level=raw_input()
-    print level
-    if level==0:
-    
-        fig_data,cs_sym_info=New_engine.generate_solutions(level, num_layouts=1, W=None, H=None, fixed_x_location=None, fixed_y_location=None,seed=None, individual=None, bar=False)
-        print fig_data
-        print cs_sym_info
-    
-    else:
-        print "Enter randomization seed:"
-        seed=raw_input()
-        print "Choose optimization algorithm: 1. Non-guided randomization   2. NSGAII"
-        opt_algo=raw_input()
-        if int(opt_algo)==1:
-            optimization_algorithm='Non-guided randomization'
-        else:
-            optimization_algorithm='NSGAII'
-    
-        num_layouts,size=optimization_setup(level=level,choice=optimization_algorithm)
-        fig_data, cs_sym_info = New_engine.generate_solutions(level, num_layouts=num_layouts, W=size[0], H=size[1],fixed_x_location=None, fixed_y_location=None, seed=seed,individual=None, bar=False)
-        print fig_data
-        print cs_sym_info
-    
-    '''
-
 
 def test_case(layout_script, bond_wire_script):
     layout_script = os.path.abspath(layout_script)
@@ -87,15 +49,10 @@ def test_case(layout_script, bond_wire_script):
     for comp in component_list:
         comp_dict[comp.layout_component_id] = comp
 
-    flow_api = CornerStitch_Emodel_API(comp_dict=comp_dict, layer_to_z=layer_to_z, wire_conn=bondwires)
-    mdl_dir = "C:\New_Layout_Engine\New_design_flow"
-    mdl_name = 'ARL_module.rsmdl'
-    flow_api.load_rs_mode(mdl_dir,mdl_name)
-    flow_api.form_connection_table()
-    flow_api.init_layout(layout_info[0])
-    flow_api.extract_RL('L1','L4')
-    flow_api.plot_3d()
-
+    flow_api = CornerStitch_Tmodel_API(comp_dict=comp_dict)
+    flow_api.import_layer_stack()
+    flow_api.set_up_device_power()
+    flow_api.dev_result_table_eval(layout_info[0])
 
 
 if __name__ == '__main__':
