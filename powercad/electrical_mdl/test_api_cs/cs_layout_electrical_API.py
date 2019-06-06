@@ -79,27 +79,24 @@ def test_case(layout_script, bond_wire_script):
 
     component_list, layout_info, bondwires = test_file(input_script=layout_script, bond_wire_info=bond_wire_script)
 
-    # you can use these info as previously
-    print component_list
-    print layout_info
-    print bondwires
     layer_to_z = {'T': [0, 0.2], 'D': [0.2, 0], 'B': [0.2, 0],
                   'L': [0.2, 0]}  # key is info for layout type, value --[z,dz]
-
+    print bondwires
     # Prepare new data input format to make it easy to search
     comp_dict = {}
     for comp in component_list:
-        print comp.layout_component_id
         comp_dict[comp.layout_component_id] = comp
 
-    layout_data = layout_info[0].values()[0]
-    print layout_data
-    flow_api = CS_API(comp_dict=comp_dict, layout_data=layout_data, layer_to_z=layer_to_z)
+    flow_api = CornerStitch_Emodel_API(comp_dict=comp_dict, layer_to_z=layer_to_z, wire_conn=bondwires)
+    mdl_dir = "C:\Users\qmle\Desktop\ARL\Model"
+    mdl_name = 'ARL_module.rsmdl'
+    flow_api.load_rs_mode(mdl_dir,mdl_name)
     flow_api.form_connection_table()
-    flow_api.read_parts_to_sheets()
-
+    flow_api.init_layout(layout_info[0])
+    flow_api.extract_RL('L1','L4')
+    flow_api.plot_3d()
 
 
 
 if __name__ == '__main__':
-    test_case(layout_script="C:\New_Layout_Engine\New_design_flow\Halfbridge1.txt", bond_wire_script='C:\New_Layout_Engine\New_design_flow\\bond_wires.txt')
+    test_case(layout_script="C:\Users\qmle\Desktop\New_Layout_Engine\New_design_flow\Halfbridge1.txt", bond_wire_script='C:\Users\qmle\Desktop\New_Layout_Engine\New_design_flow\\bond_wires.txt')

@@ -184,35 +184,34 @@ class EWires(EComp):
         length = math.sqrt((c_s[0] - c_e[0]) ** 2 + (c_s[1] - c_e[1]) ** 2)
 
         start = 1
-        mid = 2
-
         end = 0
         if self.mode == 'analytical':
             group = {}  # all mutual inductance pair
             R_val = wire_resistance(f=self.f, r=self.r, p=self.p, l=length) * 1e-3
-            L_val = wire_inductance(r=self.r, l=length*1.4) * 1e-9
-            print "length",length*1.4
+            L_val = wire_inductance(r=self.r, l=length) * 1e-9
+            branch_val = 1j * L_val + R_val
             for i in range(self.num_wires):
-                R_name = 'R{0}'.format(i)
-                L_name = 'L{0}'.format(i)
-                self.circuit._graph_add_comp(name=R_name, pnode=start, nnode=mid, val=R_val)
-                self.circuit._graph_add_comp(name=L_name, pnode=mid, nnode=end, val=L_val)
+                RLname = 'B{0}'.format(i)
+                self.circuit._graph_add_comp(name=RLname, pnode=start, nnode=end, val=branch_val)
+            for i in range(self.num_wires):
                 for j in range(self.num_wires):
                     if i != j and not ((i, j) in group):
                         group[(i, j)] = None  # save new key
                         group[(j, i)] = None  # save new key
                         distance = abs(j - i) * self.d
-                        L1_name = 'L{0}'.format(i)
-                        L2_name = 'L{0}'.format(j)
-                        M_name = 'M{0}{1}'.format(i, j)
+                        L1_name = 'B{0}'.format(i)
+                        L2_name = 'B{0}'.format(j)
+                        M_name = 'M' + '_' + L1_name + '_' + L2_name
                         M_val = wire_partial_mutual_ind(length, distance) * 1e-9
                         self.circuit._graph_add_M(M_name, L1_name, L2_name, M_val)
             self.circuit.assign_freq(self.f)
-            self.circuit.indep_voltage_source(1, 0, val=1)
+            self.circuit.indep_current_source(0, 1, val=1)
             self.circuit.build_current_info()
             self.circuit.solve_iv()
-            R, L = self.circuit._compute_imp2(1, 0)
-            print R, L
+            imp =self.circuit.results['v1']
+            R = abs(np.real(imp))
+            L = abs(np.imag(imp) / (2 * np.pi * self.f))
+            print "wire group",R,L
             self.net_graph.add_edge(self.sheet[0].net, self.sheet[1].net, edge_data={'R': R, 'L': L, 'C': None})
             # print self.net_graph.edges(data=True)
 

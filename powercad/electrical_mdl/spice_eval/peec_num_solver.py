@@ -3,7 +3,7 @@ from matplotlib.colors import *
 from scipy import *
 from scipy.sparse.linalg import gmres
 from sympy import *
-
+import time
 from powercad.electrical_mdl.e_mesh import plot_combined_I_quiver_map_layer
 from powercad.spice_handler.spice_export.LTSPICE import *
 from powercad.spice_handler.spice_export.raw_read import *
@@ -844,10 +844,8 @@ class Circuit():
         self.D = np.zeros((i_unk, i_unk), dtype=np.complex_)
         self.Ev = np.zeros((i_unk, 1), dtype=np.complex_)
         self.J = np.chararray((i_unk, 1), itemsize=10)
-        _form_time = time.time()
         self.GBCD_mat(i_unk)
         # print "forming GBCD_mat time", time.time() - _form_time
-        _form_time = time.time()
 
         self.J_mat()
         self.V_mat(num_nodes)
@@ -856,7 +854,6 @@ class Circuit():
         self.Z_mat()
         self.X_mat()
         # print "forming J,V,I,Ev,Z,X matrices time", time.time() - _form_time
-        _form_time = time.time()
         self.A_mat(num_nodes, i_unk)
         # print "forming A matrix time", time.time() - _form_time
     def solve_iv(self):

@@ -3,38 +3,27 @@ from Tkinter import *
 import copy
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-
+import easygui as eg
 
 class Connection_Table:
     def __init__(self,name="",cons={},width=400,height=200):
-        self.table=Tk()
-        self.table.resizable(0, 0)
-        screen_width = self.table.winfo_screenwidth()
-        screen_height = self.table.winfo_screenheight()
-        x = (screen_width / 2) - (width / 2)
-        y = (screen_height / 2) - (height / 2)
-        self.table.geometry("{}x{}+{}+{}".format(width,height,x,y))
-        self.table.title("Set Connection For " + name)
-        Label(self.table, text="Connections:").grid(row=0, sticky=W)
         self.connections = cons
-        self.vars = []
-        self.states=[]
+        self.states={}
     def set_up_table(self):
-        row=1
+        ''' A simple multiple choice table to ask for the internal connections'''
+        conns_to_select={}
         for conns in self.connections:
-            var = IntVar()
-            text = conns[0]+" to " + conns[1]
-            Checkbutton(self.table, text=text, variable=var).grid(row=row, sticky=W)
-            row += 1
-            self.vars.append(var)
-        Button(self.table, text='Add Connection', command=self.get_var_states).grid(row=row, sticky=W, pady=4)
-        self.table.mainloop()
-
-    def get_var_states(self):
-        self.table.destroy()
-        self.states= [v.get() for v in self.vars]
-
-
+            self.states[conns]=0
+            conns_to_select[conns]=conns[0]+' to '+conns[1]
+        res = eg.choicebox('Select connections', '', choices=conns_to_select.values())
+        if not (isinstance(res,list)):
+            res = [res]
+        for r in res:
+            for s in self.states:
+                print s,r
+                if conns_to_select[s]==r:
+                    self.states[s]=1
+        print self.states
 def set_up_pins_connections(parts=[]):
     """
 
@@ -50,7 +39,6 @@ def set_up_pins_connections(parts=[]):
             table = Connection_Table(name=name,cons=p.conn_dict)
             table.set_up_table()
             conn_dict[name]=table.states
-
     return conn_dict
 
 
@@ -264,5 +252,5 @@ def test_rotate():
 
 if __name__ == "__main__":
     #test_load()
-    #test_setup()
-    test_rotate()
+    test_setup()
+    #test_rotate()
