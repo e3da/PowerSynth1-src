@@ -47,7 +47,7 @@ def test_file(input_script=None,bond_wire_info=None):
     New_engine.Types = ScriptMethod.Types
     New_engine.all_components = ScriptMethod.all_components
     New_engine.init_size=ScriptMethod.size
-
+    plot_layout(New_engine.init_data[0], New_engine.init_size)
 
     #New_engine.open_new_layout_engine(window=window)
     Patches, cs_sym_data =New_engine.generate_solutions(level=0, num_layouts=1, W=None, H=None, fixed_x_location=None,fixed_y_location=None, seed=None, individual=None)
@@ -55,7 +55,7 @@ def test_file(input_script=None,bond_wire_info=None):
     return New_engine,New_engine.all_components,cs_sym_data,bondwires,Patches
 
 def save_layouts(Layout_Rects, count,db):
-    print Layout_Rects
+    #print Layout_Rects
 
     data=[]
 
@@ -207,6 +207,7 @@ def cmd_mode(layout_script=None,bond_wire_script=None):
             db=settingup_db()
             print fig_data
             for i in range(len(fig_data)):
+
                 save_layouts(fig_data[i], count=i, db=db)
 
             print "Sol",Solutions
@@ -704,6 +705,6 @@ def test_case(layout_script,bond_wire_script):
 
 
 if __name__ == '__main__':
-    cmd_mode(layout_script="C:\Users\ialrazi\Desktop\REU_Data_collection_input\h-bridge.txt",bond_wire_script='C:\Users\ialrazi\Desktop\REU_Data_collection_input\\bond_wires.txt')
+    cmd_mode(layout_script="C:\Users\ialrazi\Desktop\REU_Data_collection_input\Layout2_NEW.txt",bond_wire_script='C:\Users\ialrazi\Desktop\REU_Data_collection_input\\bond_wires.txt')
     #test_case(layout_script="C:\Users\ialrazi\Desktop\REU_Data_collection_input\h-bridge.txt",bond_wire_script='C:\Users\ialrazi\Desktop\REU_Data_collection_input\\bond_wires.txt')
 
