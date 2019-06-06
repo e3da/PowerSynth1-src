@@ -74,14 +74,11 @@ cdef double inter_func2(double x, double z,double p) nogil:
     '''
     Inner calculation of mutual inductance fucntion
     '''
+    # page 4 in paper
     cdef double x2,z2, sum1, sum2, sum3, sum4, sq
-    #printf("x %f\n", x)
-    #printf("y %f\n", y)
-    #printf("z %f\n", z)
-
     x2 = x*x
     z2 = z*z
-    p2 = p*p
+    p2 = p*p+(z-x)*(z-x)
     sq = sqrt(x2 + p2 + z2)
     sum1 = 0.5*(x2-p2)*z*log(z+sq)
     sum2 = 0.5*(z2-p2)*x*log(x+sq)
