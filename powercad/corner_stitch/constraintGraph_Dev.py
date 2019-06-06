@@ -314,6 +314,7 @@ class constraintGraph:
         pointSet_h.add(max_x)
         setToList_h = list(pointSet_h)
         setToList_h.sort()
+
         return setToList_h, setToList_v
 
     # finding patterns for shared x,y coordinates tiles, where to foreground and one background tile is associated with same coordinate
@@ -1036,6 +1037,111 @@ class constraintGraph:
                     if v[j][0]==value:
                         edgelabels[(k)]=v[j] # among multiple edges the highest edge weight is dominated for evaluation
 
+            # Added to perform optimization on mode-1
+            d4 = defaultdict(list)
+            for i in edge_label:
+                k, v = list(i.items())[0]
+                d4[k].append(v)
+            X = {}
+            H = []
+            for i, j in d4.items():
+                X[i] = max(j)  # keeping dominating edge weights among multiple edges
+
+            for k, v in X.items():
+                H.append((k[0], k[1], v))
+
+            # print "LEN",H
+            G = nx.MultiDiGraph()
+            n = list(G2.nodes())
+            G.add_nodes_from(n)
+            G.add_weighted_edges_from(H)
+            A = nx.adjacency_matrix(G)
+            B = A.toarray()
+            start = n[0]
+            end = n[-1]
+            LONGESTPATH, Value, Sum = self.LONGEST_PATH(B, start, end)
+            # print LONGESTPATH, Value, Sum
+
+            # if the longest path does not consist of all nodes, distribute the weights in such a way so that longest path has all nodes.
+            split_candidates = []
+            for i in range(len(LONGESTPATH) - 1):
+                if LONGESTPATH[i + 1] - LONGESTPATH[i] > 1:
+                    split_candidates.append([LONGESTPATH[i], LONGESTPATH[i + 1]])
+            # print split_candidates
+            if len(split_candidates) > 0:
+                for i in range(len(split_candidates)):
+                    pair = split_candidates[i]
+                    parts = [0 for j in range(pair[1] - pair[0])]
+                    weight = B[pair[0]][pair[1]]
+                    ind_weight = float(weight / len(parts))
+
+                    nodes = [pair[0] + i for i in range(len(parts) + 1)]
+                    for k in range(len(nodes) - 1):
+                        B[nodes[k]][nodes[k + 1]] = ind_weight
+                        B[pair[0]][pair[1]] = 0
+                        for (k1), v in edgelabels.items():
+                            if (k1) == (nodes[k], nodes[k + 1]):
+                                v[0] = ind_weight
+                            if (k1) == (pair[0], pair[1]):
+                                v[0] = 0
+                LONGESTPATH, Value, Sum = self.LONGEST_PATH_V(B, start, end)
+
+            h_edges = {}
+            for i in range(len(LONGESTPATH) - 1):
+                h_edges[(i, i + 1)] = Value[i]
+            for (k1), v in edgelabels.items():
+                if k1 in h_edges:
+                    if v[0] == h_edges[k1]:
+                        h_edges[k1] = v
+            # print h_edges
+            H_all = []
+            vertices_list = h_edges.keys()
+            vertices_list.sort()
+
+            if individual!=None:
+                H=[]
+                individual = [i * 10000 for i in individual]
+                for (k), v in h_edges.items():
+                    for i in range(len(vertices_list)):
+                        if vertices_list[i]==k:
+                            if v[2]==2 and v[1]=='0': # ledge width
+                                val=v[0]
+                            elif v[2] == 1 and v[1] == '0':  # white spacing
+                                val = v[0]
+                            elif v[2] == 0 and int(v[1]) > 1:
+                                val = v[0]
+                            else:
+                                val = individual[i] + v[0]
+                        else:
+                            continue
+                        H.append((k[0], k[1], val))
+
+                H_all.append(H)
+            else:
+                s = seed
+                for i in range(N):
+                    seed = s + i * 1000
+                    count = 0
+                    H = []
+                    for (k), v in h_edges.items():
+                        count += 1
+                        if v[2] == 2 and v[1] == '0':  # ledge width
+                            val = v[0]
+                        elif v[2] == 1 and v[1] == '0':  # white spacing
+                            val = v[0]
+                        elif v[2] == 0 and int(v[1]) > 1:
+                            val = v[0]
+                        else:
+                            if (N < 150):
+                                SD = N * 300  # standard deviation for randomization
+                            else:
+                                SD = 10000
+                            random.seed(seed + count * 1000)
+                            val = int(min(100 * v[0], max(v[0], random.gauss(v[0], SD))))
+                        # print (k),v[0],val
+                        H.append((k[0], k[1], val))
+                    H_all.append(H)
+            """
             # In the HCG (horizontal constraint graph), all edge weights are randomized based on different type of tiles
             D = []
             for i in range(N):
@@ -1110,6 +1216,7 @@ class constraintGraph:
                 for k, v in D_3[i].items():
                     H.append((k[0],k[1],v[0]))
                 H_all.append(H)
+            """
             G_all=[]
             for i in range(len(H_all)):
                 G = nx.MultiDiGraph()
@@ -1369,6 +1476,135 @@ class constraintGraph:
                 for j in range(len(v)):
                     if v[j][0] == value:
                         edgelabels[(k)] = v[j]
+
+            # Added to perform optimization on mode-1
+            d4 = defaultdict(list)
+            for i in edge_label:
+                k, v = list(i.items())[0]
+                d4[k].append(v)
+            Y = {}
+            V = []
+            for i, j in d4.items():
+                Y[i] = max(j)  # keeping dominating edge weights among multiple edges
+
+            for k, v in Y.items():
+                V.append((k[0], k[1], v))
+
+
+            G = nx.MultiDiGraph()
+            n = list(GV.nodes())
+            n.sort()
+            G.add_nodes_from(n)
+            G.add_weighted_edges_from(V)
+
+
+            A = nx.adjacency_matrix(G)
+            B = A.toarray()
+            start = n[0]
+            end = n[-1]
+            LONGESTPATH, Value, Sum = self.LONGEST_PATH_V(B, start, end)
+            #print Sum,len(LONGESTPATH),LONGESTPATH
+            LONGESTPATH.sort()
+
+
+            # if the longest path does not consist of all nodes, distribute the weights in such a way so that longest path has all nodes.
+            split_candidates=[]
+            for i in range(len(LONGESTPATH)-1):
+                if LONGESTPATH[i+1]-LONGESTPATH[i]>1:
+                    split_candidates.append([LONGESTPATH[i],LONGESTPATH[i+1]])
+            #print split_candidates
+            if len(split_candidates)>0:
+                for i in range(len(split_candidates)):
+                    pair=split_candidates[i]
+                    parts=[0 for j in range(pair[1]-pair[0])]
+                    weight=B[pair[0]][pair[1]]
+                    ind_weight=float(weight/len(parts))
+
+                    nodes=[pair[0]+i for i in range(len(parts)+1)]
+                    for k in range(len(nodes)-1):
+                        B[nodes[k]][nodes[k+1]]=ind_weight
+                        B[pair[0]][pair[1]]=0
+                        for (k1), v in edgelabels.items():
+                            if (k1)==(nodes[k],nodes[k+1]):
+                                v[0]=ind_weight
+                            if (k1)==(pair[0],pair[1]):
+                                v[0]=0
+                LONGESTPATH, Value, Sum = self.LONGEST_PATH_V(B, start, end)
+            #print Sum, len(LONGESTPATH), LONGESTPATH
+
+
+
+
+            v_edges = {}
+            for i in range(len(LONGESTPATH)-1):
+                v_edges[(LONGESTPATH[i], LONGESTPATH[i + 1])] = Value[i]
+            for (k1), v in edgelabels.items():
+
+                if (k1) in v_edges:
+                    if v[0] == v_edges[k1]:
+                        v_edges[k1] = v
+
+
+
+
+            V_all = []
+            vertices_list = v_edges.keys()
+            vertices_list.sort()
+
+            if individual!=None:
+                H=[]
+                individual = [i * 10000 for i in individual]
+
+
+                for (k), v in v_edges.items():
+                    for i in range(len(vertices_list)):
+                        if vertices_list[i]==k:
+
+                            if v[2]==2 and v[1]=='0': # ledge width
+                                val=v[0]
+                            elif v[2] == 1 and v[1] == '0':  # white spacing
+                                val = v[0]
+                            elif v[2] == 4 and int(v[1]) > 1:
+                                val = v[0]
+                            else:
+                                val = individual[i] + v[0]
+                        else:
+                            continue
+                        H.append((k[0], k[1], val))
+                V_all.append(H)
+            else:
+
+                s = seed
+                for i in range(N):
+                    seed = s + i * 1000
+                    count = 0
+                    V = []
+                    for (k), v in v_edges.items():
+                        count += 1
+
+                        if v[2] == 2 and v[1] == '0':  # ledge width
+                            val = v[0]
+                        elif v[2] == 1 and v[1] == '0':  # white spacing
+                            val = v[0]
+                        elif v[2] == 4 and int(v[1]) > 1:
+                            val = v[0]
+                        else:
+                            if (N < 150):
+                                SD = N * 300  # standard deviation for randomization
+                            else:
+                                SD = 10000  # 7000
+                            random.seed(seed + count * 1000)
+                            val = int(min(100 * v[0], max(v[0], random.gauss(v[0], SD))))
+                        # print (k),v[0],val
+                        V.append((k[0], k[1], val))
+                    V_all.append(V)
+                
+                
+                
+
+
+
+            """
             D = []
             for i in range(N):
                 seed = seed + i * 1000
@@ -1438,6 +1674,7 @@ class constraintGraph:
                 for k, v in D_3[i].items():
                     V.append((k[0], k[1], v[0]))
                 V_all.append(V)
+            """
             GV_all = []
             for i in range(len(V_all)):
                 G = nx.MultiDiGraph()
@@ -1461,24 +1698,28 @@ class constraintGraph:
                             X[(i, j)] = B[i][j]
 
                 Pred = {}  ## Saves all predecessors of each node{node1:[p1,p2],node2:[p1,p2..]}
-                for i in range(source, target + 1):
-                    j = source
-                    while j != target:
-                        if B[j][i] != 0:
-                            key = i
-                            Pred.setdefault(key, [])
-                            Pred[key].append(j)
-                        if i == source and j == source:
-                            key = i
-                            Pred.setdefault(key, [])
-                            Pred[key].append(j)
-                        j += 1
+                for i in range(source,target+1):
+
+                        j = source
+
+                        while j != target:
+                            if B[j][i] != 0:
+                                key = i
+                                Pred.setdefault(key, [])
+                                Pred[key].append(j)
+                            if i == source and j == source:
+                                key = i
+                                Pred.setdefault(key, [])
+                                Pred[key].append(j)
+                            j += 1
 
                 n = list(Pred.keys())  ## list of all nodes
+
                 dist = {}  ## Saves each node's (cumulative maximum weight from source,predecessor) {node1:(cum weight,predecessor)}
                 position = {}
                 for j in range(source, target + 1):
                     node = j
+
                     for i in range(len(Pred[node])):
                         pred = Pred[node][i]
                         if j == source:
@@ -1498,6 +1739,7 @@ class constraintGraph:
                             key = node
                             position.setdefault(key, [])
                             position[key].append(pairs[0])
+
                 loc_i = {}
                 for key in position:
                     loc_i[key] = max(position[key])
@@ -1540,7 +1782,9 @@ class constraintGraph:
                 for k, v in self.YLoc.items():
                     if k in n:
                         self.Loc_Y[k] = v
+                #print self.Loc_Y
                 self.FUNCTION_V(G,individual,sid=i)
+                #print self.Loc_Y
                 loct.append(self.Loc_Y)
             for i in loct:
                 new_y_loc = []
@@ -1550,6 +1794,8 @@ class constraintGraph:
             Location = {}
             key = ID
             Location.setdefault(key, [])
+
+
             for i in range(len(self.NEWYLOCATION)):
                 loct = {}
                 for j in range(len(self.ZDL_V[ID])):
@@ -1693,7 +1939,7 @@ class constraintGraph:
         start = nodes[0]
         end = nodes[-1]
         LONGESTPATH, Value, Sum = self.LONGEST_PATH(B, start, end)
-
+        print LONGESTPATH
         if (len(LONGESTPATH)) == len(nodes):
             H = []
             for i in range(len(Node_List)):
@@ -2169,37 +2415,58 @@ class constraintGraph:
                     if len(LIST) > 0:
                         Connected_List.append(list(set(LIST)))
 
-
+        #print Connected_List
 
         if len(Connected_List)==1:
+            flag=True
+            while(flag):
+                PATH = Connected_List[0]
+                start = PATH[0]
+                end = PATH[-1]
+                LONGESTPATH, Value, Sum = self.LONGEST_PATH(B, start, end)
 
-            PATH = Connected_List[0]
-            start = PATH[0]
-            end = PATH[-1]
-            LONGESTPATH, Value, Sum = self.LONGEST_PATH(B, start, end)
-            if LONGESTPATH == PATH:
-                H = []
-                for i in range(len(Node_List)):
-                    H.append(G.subgraph(Node_List[i]))
+                if LONGESTPATH == PATH:
+                    flag=False
+                    H = []
+                    for i in range(len(Node_List)):
+                        H.append(G.subgraph(Node_List[i]))
 
-                for graph in H:
-                    n = list(graph.nodes())
-                    n.sort()
-                    start = n[0]
-                    end = n[-1]
-                self.Location_finding_V(B, start, end,Random, SOURCE=None, TARGET=None, flag=False,sid=sid)  # evaluates each subgraph (Random is added tot est optimization)
-                Fixed_Node = self.Loc_Y.keys()
-                for i in Fixed_Node:
-                    for j in Fixed_Node:
-                        if G.has_edge(i, j):
-                            G.remove_edge(i, j)
+                    for graph in H:
+                        n = list(graph.nodes())
+                        n.sort()
+                        start = n[0]
+                        end = n[-1]
+                    self.Location_finding_V(B, start, end,Random, SOURCE=None, TARGET=None, flag=False,sid=sid)  # evaluates each subgraph (Random is added tot est optimization)
+                    Fixed_Node = self.Loc_Y.keys()
+                    for i in Fixed_Node:
+                        for j in Fixed_Node:
+                            if G.has_edge(i, j):
+                                G.remove_edge(i, j)
 
 
 
-                if len(G.edges()) == 0:
-                    return
+                    if len(G.edges()) == 0:
+                        return
+                    else:
+                        self.FUNCTION_V(G,Random,sid)
                 else:
-                    self.FUNCTION_V(G,Random,sid)
+                    split_candidates = []
+                    for i in range(len(LONGESTPATH) - 1):
+                        if LONGESTPATH[i + 1] - LONGESTPATH[i] > 1:
+                            split_candidates.append([LONGESTPATH[i], LONGESTPATH[i + 1]])
+                    # print split_candidates
+                    if len(split_candidates) > 0:
+                        for i in range(len(split_candidates)):
+                            pair = split_candidates[i]
+                            parts = [0 for j in range(pair[1] - pair[0])]
+                            weight = B[pair[0]][pair[1]]
+                            ind_weight = float(weight / len(parts))
+
+                            nodes = [pair[0] + i for i in range(len(parts) + 1)]
+                            for k in range(len(nodes) - 1):
+                                B[nodes[k]][nodes[k + 1]] = ind_weight
+                                B[pair[0]][pair[1]] = 0
+
 
         elif len(Connected_List) > 1:
             for i in range(len(Connected_List)):

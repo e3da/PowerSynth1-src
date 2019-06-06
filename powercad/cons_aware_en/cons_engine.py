@@ -24,7 +24,7 @@ class New_layout_engine():
 
         self.Types=None  # added for new flow (list of all cs_type)
         self.all_components=None #added for new flow (holds all layout component objects)
-
+        self.init_size=[]
 
         # for initialize only
         self.init_data = []
@@ -130,7 +130,7 @@ class New_layout_engine():
         self.Htree, self.Vtree = self.cornerstitch.input_processing(input, size[0],size[1])  # creates horizontal and vertical corner stitch layouts
         patches, combined_graph = self.cornerstitch.draw_layout(rects=input_rects, Htree=self.Htree,Vtree=self.Vtree)  # collects initial layout patches and combined HCS,VCS points as a graph for mode-3 representation
 
-        plot = True
+        plot = False
         if plot:
             fig2, ax2 = plt.subplots()
             Names = patches.keys()
@@ -371,6 +371,7 @@ class New_layout_engine():
             Min_Y_Loc[len(YLoc) - 1] = max_y
 
             for k, v in Min_X_Loc.items(): # checking if the given width is greater or equal minimum width
+                print W,v
                 if W >= v:
                     #Min_X_Loc[0] = 0
                     #Min_X_Loc[k] = W
@@ -451,7 +452,7 @@ class New_layout_engine():
             Min_Y_Loc[len(YLoc) - 1] = max_y
 
             for k, v in Min_X_Loc.items():
-                if W > v:
+                if W >= v:
                     Min_X_Loc[0] = 0
                     Min_X_Loc[k] = W
                     fixed_x_location[k] = W
@@ -467,7 +468,7 @@ class New_layout_engine():
                     print"Enter Width greater than or equal Minimum Width"
                     return None,None
             for k, v in Min_Y_Loc.items():
-                if H > v:
+                if H >= v:
                     Min_Y_Loc[0] = 0
                     Min_Y_Loc[k] = H
                     fixed_y_location[k]=H
@@ -518,7 +519,8 @@ class New_layout_engine():
                     if distance_V[k]<min_distance_V[k]or Min_Y_Loc[k]<MIN_Y[k]  :
                         print"Invalid Location for Y coordinate"
                         return None,None
-
+            print Min_X_Loc
+            print Min_Y_Loc
             Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=num_layouts,
                                                       W=W, H=H, XLoc=Min_X_Loc, YLoc=Min_Y_Loc, seed=seed,
                                                       individual=individual,Types=self.Types)
@@ -532,7 +534,7 @@ class New_layout_engine():
 
 
 
-            self.cur_fig_data = None
+
 
         if bar:
             p_bar.close()
