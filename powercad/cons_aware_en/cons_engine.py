@@ -24,7 +24,7 @@ class New_layout_engine():
 
         self.Types=None  # added for new flow (list of all cs_type)
         self.all_components=None #added for new flow (holds all layout component objects)
-
+        self.init_size=[]
 
         # for initialize only
         self.init_data = []
@@ -452,7 +452,7 @@ class New_layout_engine():
             Min_Y_Loc[len(YLoc) - 1] = max_y
 
             for k, v in Min_X_Loc.items():
-                if W > v:
+                if W >= v:
                     Min_X_Loc[0] = 0
                     Min_X_Loc[k] = W
                     fixed_x_location[k] = W
@@ -468,7 +468,7 @@ class New_layout_engine():
                     print"Enter Width greater than or equal Minimum Width"
                     return None,None
             for k, v in Min_Y_Loc.items():
-                if H > v:
+                if H >= v:
                     Min_Y_Loc[0] = 0
                     Min_Y_Loc[k] = H
                     fixed_y_location[k]=H
@@ -533,7 +533,7 @@ class New_layout_engine():
 
 
 
-            self.cur_fig_data = None
+
 
         if bar:
             p_bar.close()

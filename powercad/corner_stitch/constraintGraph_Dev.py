@@ -314,6 +314,7 @@ class constraintGraph:
         pointSet_h.add(max_x)
         setToList_h = list(pointSet_h)
         setToList_h.sort()
+
         return setToList_h, setToList_v
 
     # finding patterns for shared x,y coordinates tiles, where to foreground and one background tile is associated with same coordinate

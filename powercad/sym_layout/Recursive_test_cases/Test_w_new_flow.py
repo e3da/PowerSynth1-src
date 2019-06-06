@@ -4,8 +4,9 @@ from easygui import *
 from PySide.QtGui import QFileDialog,QMainWindow
 import glob
 from powercad.corner_stitch.optimization_algorithm_support import new_engine_opt
-
-
+from powercad.corner_stitch.fixed_location_setup import *
+from powercad.project_builder.UI_py.Fixed_loc_up_ui import Ui_Fixed_location_Dialog  # Fixed_loc_ui
+#from powercad.project_builder.proj_dialogs import Fixed_locations_Dialog
 def optimization_setup(level=None,choice=None):
     if level!=0:
 
@@ -65,6 +66,7 @@ def test_file(input_script=None,bond_wire_info=None):
     New_engine.cons_df = cons_df
     New_engine.Types = ScriptMethod.Types
     New_engine.all_components = ScriptMethod.all_components
+    New_engine.init_size=ScriptMethod.size
 
 
     #New_engine.open_new_layout_engine(window=window)
@@ -96,7 +98,11 @@ def save_layouts(Layout_Rects, count,db):
     conn.close()
 
 
-
+def assign_fixed_locations(parent,New_engine):  # Fixed Locations (for mode-3)
+    fixed_locations = Fixed_locations_Dialog(parent=parent,engine=New_engine)
+    fixed_locations.set_node_id(New_engine.init_data[2][1])
+    fixed_locations.show()
+    fixed_locations.exec_()
 
 def cmd_mode(layout_script=None,bond_wire_script=None):
     '''
@@ -455,13 +461,101 @@ def cmd_mode(layout_script=None,bond_wire_script=None):
         except:
             print "Please enter an integer"
 
+        print "Choose Nodes to be fixed from figure"
+
+        refresh_layout_mode3(New_engine)
+        window = QMainWindow()
+        window.input_node_info = {}
+        window.fixed_x_locations = {}
+        window.fixed_y_locations = {}
+        window.engine=New_engine
+        window.mode3_width=width
+        window.mode3_height=height
+        window.graph=New_engine.init_data[2]
+        window.x_dynamic_range = {}  # To store saved information from the fixed location table
+        window.y_dynamic_range = {}  # To store saved information from the fixed location table
+        window.dynamic_range_x = {}  # To store saved information from the fixed location table
+        window.dynamic_range_y = {}  # To store saved information from the fixed location table
+        window.inserted_order = []
+        assign_fixed_locations(parent=window,New_engine=New_engine)
+        print window.fixed_x_locations
+        print window.fixed_y_locations
+
+        print "Enter desired number of solutions:"
+        num_layouts = raw_input()
+        try:
+            num_layouts = int(num_layouts)
+        except:
+            print "Please enter an integer"
+        fig_data, cs_sym_info = New_engine.generate_solutions(level, num_layouts=num_layouts, W=width, H=height,
+                                                              fixed_x_location=window.fixed_x_locations, fixed_y_location=window.fixed_y_locations,
+                                                              seed=seed, individual=None, bar=False)
+        print fig_data
+        opt_problem = new_engine_opt(engine=New_engine, W=width, H=height, seed=seed, level=level, method=None)
+        results = []
+        for i in range(len(cs_sym_info)):
+            perf_values = opt_problem.eval_layout()
+            results.append([fig_data[i], cs_sym_info[i]])
+            for j in range(len(perf_values)):
+                results[i].append(perf_values[j])
+
+        Solutions = []
+        for i in range(len(cs_sym_info)):
+            name = 'Layout_' + str(i)
+            solution = CornerStitchSolution(name=name)
+            solution.params = None
+            solution.layout_info = cs_sym_info[i]
+            Solutions.append(solution)
+            layout_data[name] = {'Rects': cs_sym_info[i]}
+        for i in range(len(fig_data)):
+            save_layouts(fig_data[i], count=i, db=db)
 
 
-    raw_input()
 
 
 
 
+
+def refresh_layout_mode3(New_engine):
+
+    #self.canvas_init = FigureCanvas(fig2)
+    fig2, ax2 = plt.subplots()
+
+
+    init_fig = New_engine.init_data[0]
+    init_graph = New_engine.init_data[2]
+    Names = init_fig.keys()
+    Names.sort()
+    for k, p in init_fig.items():
+
+        if k[0] == 'T':
+            x = p.get_x()
+            y = p.get_y()
+            #ax2.text(x + 1, y + 1, k)
+            ax2.add_patch(p)
+    for k, p in init_fig.items():
+
+        if k[0] != 'T':
+            x = p.get_x()
+            y = p.get_y()
+            #ax2.text(x + 1, y + 1, k, weight='bold')
+            ax2.add_patch(p)
+
+    data = {"x": [], "y": [], "label": []}
+    for label, coord in init_graph[1].items():
+        data["x"].append(coord[0])
+        data["y"].append(coord[1])
+        data["label"].append(label)
+
+    ax2.plot(data['x'], data['y'], 'o', picker=5)
+    for k, v in init_graph[1].items():
+        ax2.annotate(k, (v[0], v[1]),size=6)
+    size = New_engine.init_size
+    ax2.set_xlim(0, size[0])
+    ax2.set_ylim(0, size[1])
+
+    #self.canvas_init.callbacks.connect('pick_event', self.on_click)
+    plt.savefig("C:\Users\ialrazi\Desktop\REU_Data_collection_input\Figs"+'/mode3.png')
 
 
 def test_case(layout_script,bond_wire_script):

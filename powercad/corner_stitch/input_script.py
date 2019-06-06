@@ -359,8 +359,8 @@ class ScriptInputMethod():
                         type = self.component_to_cs_type[element.name]
                         x = float(layout_info[j][3])
                         y = float(layout_info[j][4])
-                        width = element.footprint[0]
-                        height = element.footprint[1]
+                        width = round(element.footprint[0])
+                        height = round(element.footprint[1])
                         name = layout_info[j][1]
                         Schar = '/'
                         Echar = '/'
