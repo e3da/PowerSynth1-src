@@ -207,8 +207,6 @@ class RL_circuit():
                 #if not M_val in all_vals:
 
                 all_vals.append(M_val)
-            print len(all_vals)
-            print len(m_graph.edges)
             all_vals.sort()
             plt.bar(np.arange(len(all_vals)),all_vals,align='center', alpha=0.5)
             plt.show()
@@ -483,14 +481,9 @@ class RL_circuit():
             Z = self.Z
             A = self.A
         elif case =="no_voltage":
-            #print self.Vi
+            Z = self.Vi
+            A = self.D
 
-            Z = np.linalg.multi_dot([self.M,self.Vi])
-            A = np.linalg.multi_dot([self.M, self.D, self.M_t])
-            print np.where(~A.any(axis=1))[0]
-            print 'A', A.shape
-            print "Z", Z.shape
-            print "M", self.M.shape
         t = time.time()
         method=1
         if method ==1:

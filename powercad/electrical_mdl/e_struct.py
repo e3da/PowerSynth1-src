@@ -74,7 +74,9 @@ class E_plate:
             return self.rect.intersects(E_plate.rect)
         else:
             return False
-
+    def update_rect(self,rect):
+        # update the layout info
+        self.rect=rect
 
 
 class Sheet(E_plate):

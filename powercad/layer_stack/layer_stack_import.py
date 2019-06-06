@@ -21,12 +21,15 @@ from powercad.general.settings.settings import MATERIAL_LIB_PATH
 
 class LayerStackHandler:
     
-    def __init__(self, csv_file):
+    def __init__(self, csv_file=None,mat_lib=None):
         self.csv_file = csv_file
         self.layer_list = []
         # Load Material Lib
         self.material_lib=Material_lib()
-        self.material_lib.load_csv(MATERIAL_LIB_PATH)
+        if mat_lib==None:
+            self.material_lib.load_csv(MATERIAL_LIB_PATH)
+        else:
+            self.material_lib.load_csv(mat_lib)
         # Initialize design stucture
         self.baseplate = None
         self.substrate_attach = None
@@ -119,6 +122,7 @@ class LayerStackHandler:
                     thick = float(layer[6])
                     bp_material_id=layer[7]
                     bp_tech.properties=self.material_lib.get_mat(bp_material_id)
+
                 except:
                     self.compatible = False
                     self.error_msg = 'Could not find all values in baseplate layer ' + name + '. Baseplate must contain the following fields: layer type, num, name, pos, width, length, thickness, material id.'

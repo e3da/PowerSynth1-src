@@ -17,7 +17,7 @@ ext_modules = [
     )
 ]
 
-''' python setup.py build_ext --inplace '''
+''' python setup.py build_ext --inplace --compiler=mingw32 install '''
 setup(
     name="multithreads_mutual",
     include_dirs=[numpy.get_include()],

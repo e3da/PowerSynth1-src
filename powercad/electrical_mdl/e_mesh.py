@@ -13,11 +13,11 @@ from powercad.general.data_struct.util import Rect
 from powercad.parasitics.mdl_compare import trace_ind_krige, trace_res_krige, trace_capacitance, trace_resistance, \
     trace_inductance
 from powercad.parasitics.mutual_inductance.mutual_inductance import *
-
+import time
 class MeshNode:
 
 
-    def __init__(self,pos,type, node_id, group_id=None):
+    def __init__(self,pos,type, node_id, group_id=None,mode=1):
         '''
 
         Args:
@@ -25,6 +25,8 @@ class MeshNode:
             type: "boundary" or "internal"
             node_id: an integer for node idexing
             group_id: a group where this node belong to
+            mode: 1 --> corner stitch, use integer data
+                  0 --> noremal, use float data
         '''
 
         self.node_id =node_id
@@ -211,14 +213,15 @@ class EMesh():
         return n_capt_dict
 
     def update_trace_RL_val(self, p=1.68e-8,t=0.035,h=1.5,mode='RS'):
+
         if self.f != 0: # AC mode
             if mode =='RS':
-                #all_r = trace_res_krige(self.f, self.all_W, self.all_L, t=0, p=0, mdl=self.mdl['R']).tolist()
-                all_r = [trace_resistance(self.f,w,l,t,h) for w, l in zip(self.all_W, self.all_L)]
-                #all_l = trace_ind_krige(self.f, self.all_W, self.all_L, mdl=self.mdl['L']).tolist()
+                all_r = trace_res_krige(self.f, self.all_W, self.all_L, t=0, p=0, mdl=self.mdl['R']).tolist()
+                #all_r = [trace_resistance(self.f,w,l,t,h) for w, l in zip(self.all_W, self.all_L)]
+                all_l = trace_ind_krige(self.f, self.all_W, self.all_L, mdl=self.mdl['L']).tolist()
 
-                all_l = [trace_inductance(w, l, t, h) for w, l in zip(self.all_W, self.all_L)]
-#                print all_l
+                #all_l = [trace_inductance(w, l, t, h) for w, l in zip(self.all_W, self.all_L)]
+                #print all_l
 
                 #all_c = self.compute_all_cap()
                 for i in range(len(self.all_W)):
@@ -376,68 +379,61 @@ class EMesh():
         except:
             print "cant find edge" , edge.nodeA.node_id, edge.nodeB.node_id
 
-    def update_mutual(self,mult=1):
+    def mutual_data_prepare(self,mode=0):
         '''
 
-        Args:
-            mult: multiplier for mutual
-
-        Returns:
-
+        :param mode: 0 for bar, 1 for plane
+        :return:
         '''
-        add_M_edge = self.m_graph.add_edge
         get_node = self.graph.node
         all_edges = self.graph.edges(data=True)
-        mutual_matrix = []
-        edges = []
+        has_edge = self.m_graph.has_edge
+        self.mutual_matrix = []
+        m_m_append=self.mutual_matrix.append
+        self.edges = []
+        e_append = self.edges.append
         ''' Prepare M params'''
         for e1 in all_edges:
-            data1= e1
+            data1 = e1
             n1_1 = get_node[data1[0]]['node']  # node 1 on edge 1
             n1_2 = get_node[data1[1]]['node']  # node 2 on edge 1
             p1_1 = n1_1.pos
             p1_2 = n1_2.pos
+
             ori1 = 'h' if p1_1[1] == p1_2[1] else 'v'
             edge1 = data1[2]['data']
-            if edge1.type!='hier':
-                w1= edge1.data['w']
-                diff1=0
-                #if edge1.type=='boundary':
-                #    diff1 = w1 - sd_met
-                    #w1=sd_met
+
+            if edge1.type != 'hier':
+                w1 = edge1.data['w']
+                diff1 = 0
                 l1 = edge1.data['l']
                 t1 = edge1.thick
                 z1 = edge1.z
                 rect1 = edge1.data['rect']
-                rect1_data=[w1,l1,t1,z1]
+                rect1_data = [w1, l1, t1, z1]
             else:
                 continue
 
             e1_name = edge1.data['name']
             for e2 in all_edges:
-                if e1!=e2 and edge1.type != 'hier':
-                    # First define the new edge name as a node name of Mutual graph
-                    data2 = e2
-                    edge2 = data2[2]['data']
-                    e2_name = edge2.data['name']
 
-                    if not(self.m_graph.has_edge(e1_name,e2_name)):
+                data2 = e2
+                edge2 = data2[2]['data']
+                e2_name = edge2.data['name']
+                if e1_name != e2_name and edge1.type != 'hier':
+                    # First define the new edge name as a node name of Mutual graph
+                    start = time.time()
+                    check = has_edge(e1_name, e2_name)
+                    if not (check):
                         n2_1 = get_node[data2[0]]['node']  # node 1 on edge 1
                         n2_2 = get_node[data2[1]]['node']  # node 2 on edge 1
                         p2_1 = n2_1.pos
                         p2_2 = n2_2.pos
                         ori2 = 'h' if p2_1[1] == p2_2[1] else 'v'
 
-
                         if edge2.type != 'hier':
                             w2 = edge2.data['w']
                             diff2 = 0
-
-                            #if edge2.type == 'boundary':
-                            #    diff2 = w2 - sd_met
-
-                            #    w2 = sd_met
-
                             l2 = edge2.data['l']
                             t2 = edge2.thick
                             z2 = edge2.z
@@ -445,12 +441,15 @@ class EMesh():
                             rect2_data = [w2, l2, t2, z2]
                         else:
                             continue
+                        cond1 = ori1 == 'h' and ori2 == 'h' and not (p2_2[1] == p1_2[1])
+                        cond2 = ori1 == 'v' and ori2 == 'v' and not (p2_2[0] == p1_2[0])
 
-                        if ori1=='h' and ori2 == 'h' and not(p2_2[1]== p1_2[1]): # 2 horizontal parallel pieces
-                            x1_s = [p1_1[0],p1_2[0]]  # get all x from trace 1
-                            x2_s = [p2_1[0], p2_2[0]] # get all x from trace 2
-                            x1_s.sort(),x2_s.sort()
-                            if rect1.left>=rect2.left:
+                        if cond1:  # 2 horizontal parallel pieces
+
+                            x1_s = [p1_1[0], p1_2[0]]  # get all x from trace 1
+                            x2_s = [p2_1[0], p2_2[0]]  # get all x from trace 2
+                            x1_s.sort(), x2_s.sort()
+                            if rect1.left >= rect2.left:
                                 r2 = rect1
                                 r1 = rect2
                                 w1, l1, t1, z1 = rect2_data
@@ -460,13 +459,17 @@ class EMesh():
                                 r2 = rect2
                                 w1, l1, t1, z1 = rect1_data
                                 w2, l2, t2, z2 = rect2_data
-                            p= z2-z1
-                            E= r2.bottom- r1.bottom+diff1+diff2
-                            l3= r2.left-r1.left
-                            mutual_matrix.append([w1,l1,t1,w2,l2,t2,l3,p,E])
-                            edges.append([e1_name,e2_name])
+                            p = z2 - z1
+                            E = abs(r2.bottom - r1.bottom + diff1 + diff2)
+                            l3 = abs(r2.left - r1.left)
+                            if l1 > 0.5*w1 and l2 > 0.5 *w2:
+                                if mode == 0:
+                                    m_m_append([w1, l1, t1, w2, l2, t2, l3, p, E])  # collect data for bar equation
+                                elif mode == 1:
+                                    m_m_append([w1, l1, w2, l2, l3, p, E])  # collect data for plane equation
 
-                        elif ori1 == 'v' and ori2 == 'v' and not (p2_2[0] == p1_2[0]):  # 2 vertical parallel pieces
+                        elif cond2:  # 2 vertical parallel pieces
+
                             y1_s = [p1_1[1], p1_2[1]]  # get all y from trace 1
                             y2_s = [p2_1[1], p2_2[1]]  # get all y from trace 2
                             y1_s.sort(), y2_s.sort()
@@ -481,18 +484,34 @@ class EMesh():
                                 w1, l1, t1, z1 = rect1_data
                                 w2, l2, t2, z2 = rect2_data
                             p = abs(z1 - z2)
-                            E = r2.left - r1.left + diff1 + diff2
-                            l3 = r1.top - r2.top
-                            mutual_matrix.append([w1, l1, t1, w2, l2, t2, l3, p, E])
-                            edges.append([e1_name, e2_name])
+                            E = abs(r2.left - r1.left + diff1 + diff2)
+                            l3 = abs(r1.top - r2.top)
+                            if l1> 0.5 *w1 and l2> 0.5 *w2:
+                                if mode==0:
+                                    m_m_append([w1, l1, t1, w2, l2, t2, l3, p, E]) # collect data for bar equation
+                                elif mode ==1:
+                                    m_m_append([w1, l1, w2, l2, l3, p, E]) # collect data for plane equation
+
+                                e_append([e1_name, e2_name])
+
+    def update_mutual(self,mode=0):
+        '''
+
+        Args:
+            mult: multiplier for mutual
+
+        Returns:
+
+        '''
+        add_M_edge = self.m_graph.add_edge
 
         ''' Evaluation in Cython '''
-        mutual_matrix=np.array(mutual_matrix)
-        result =np.asarray(mutual_mat_eval(mutual_matrix,12)).tolist()
-        #print result
-        for n in range(len(edges)):
-            edge = edges[n]
-            add_M_edge(edge[0],edge[1],attr={'Mval':result[n]*1e-9})
+        mutual_matrix=np.array(self.mutual_matrix)
+        result =np.asarray(mutual_mat_eval(mutual_matrix,12,mode)).tolist()
+        for n in range(len(self.edges)):
+            edge = self.edges[n]
+            if result[n]>0:
+                add_M_edge(edge[0],edge[1],attr={'Mval':result[n]*1e-9})
 
     def find_E(self,ax=None):
         bound_graph= nx.Graph()
@@ -658,7 +677,7 @@ class EMesh():
                 lines += tr.get_all_lines()
 
                 # GROUND PLANE
-                if z ==0: # TEST FOR NOW , HAVE TO SPECIFY LATER
+                if z ==-1: # TEST FOR NOW , HAVE TO SPECIFY LATER
                     num_x=5#+  int(self.f/100)
                     num_y=5#+ int(self.f / 100)
                     self.div=2
@@ -795,7 +814,7 @@ class EMesh():
 
     def mesh_edges(self,thick=None,cond=5.96e7):
         u = 4 * math.pi * 1e-7
-        err_mag =0.99  # Ensure no touching in inductance calculation
+        err_mag =0.9 # Ensure no touching in inductance calculation
 
         #if cond!=None:
         #    sd_met = math.sqrt(1 / (math.pi * self.f * u * cond * 1e6))*1000 *10# in mm
