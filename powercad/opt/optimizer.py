@@ -24,7 +24,7 @@ import numpy as np
 from powercad.general.settings.save_and_load import *
 import copy
 import math
-from simanneal import Annealer
+from powercad.opt.simulated_anneal import Annealer
 
 
 import time
