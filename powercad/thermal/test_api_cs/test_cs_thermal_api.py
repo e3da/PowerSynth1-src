@@ -56,4 +56,15 @@ def test_case(layout_script, bond_wire_script):
 
 
 if __name__ == '__main__':
-    test_case(layout_script="C:\New_Layout_Engine\New_design_flow\Halfbridge1.txt", bond_wire_script='C:\New_Layout_Engine\New_design_flow\\bond_wires.txt')
+    import getpass
+
+    user_name = getpass.getuser()
+    if user_name == 'qmle':
+        layout_script = "C:\Users\qmle\Desktop\New_Layout_Engine\New_design_flow\Halfbridge1.txt"
+        bondwire_setup = "C:\Users\qmle\Desktop\New_Layout_Engine\New_design_flow\\bond_wires.txt"
+    else:
+        layout_script = "C:\New_Layout_Engine\New_design_flow\Halfbridge1.txt"
+        bondwire_setup = 'C:\New_Layout_Engine\New_design_flow\\bond_wires.txt'
+
+    test_case(layout_script=layout_script, bond_wire_script=bondwire_setup)
+
