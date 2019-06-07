@@ -7,7 +7,7 @@ import numpy as np
 class constraint():
 
     #all_component_types = ['EMPTY', 'power_trace', 'signal_trace', 'signal_lead', 'power_lead', 'IGBT', 'Diode','bonding wire pad', 'via']
-    all_component_types = ['EMPTY', 'power_trace', 'signal_trace']
+    all_component_types = ['EMPTY', 'power_trace', 'signal_trace','bonding wire pad']
     Type=[]
     type = []
     for i in range(len(all_component_types)):

@@ -5,7 +5,7 @@ from PySide.QtGui import QFileDialog,QMainWindow
 import glob
 from powercad.corner_stitch.optimization_algorithm_support import new_engine_opt
 from powercad.corner_stitch.fixed_location_setup import *
-
+from copy import copy
 
 
 
@@ -21,6 +21,28 @@ def test_file(input_script=None,bond_wire_info=None):
     ScriptMethod.gather_layout_info() #gathers layout info
     print ScriptMethod.size
     print len(ScriptMethod.cs_info), ScriptMethod.cs_info
+    plot=False
+    if plot:
+        colors = ['green', 'red', 'blue', 'yellow', 'purple', 'pink', 'magenta', 'orange', 'violet']
+        type = ['Type_1', 'Type_2', 'Type_3', 'Type_4', 'Type_5', 'Type_6', 'Type_7', 'Type_8', 'Type_9']
+        # zorders = [1,2,3,4,5]
+        Patches = {}
+
+        for r in ScriptMethod.cs_info:
+            i = type.index(r[0])
+            # print i,r.name
+            P = matplotlib.patches.Rectangle(
+                (r[1], r[2]),  # (x,y)
+                r[3],  # width
+                r[4],  # height
+                facecolor=colors[i],
+                alpha=0.5,
+                # zorder=zorders[i],
+                edgecolor='black',
+                linewidth=1,
+            )
+            Patches[r[5]] = P
+        plot_layout(Patches,ScriptMethod.size)
     print ScriptMethod.component_to_cs_type
     ScriptMethod.update_constraint_table() # updates constraint table
 
@@ -83,6 +105,52 @@ def assign_fixed_locations(parent,New_engine):  # Fixed Locations (for mode-3)
     fixed_locations.set_node_id(New_engine.init_data[2][1]) # passing the graph
     fixed_locations.show()
     fixed_locations.exec_()
+
+
+def refresh_layout(New_engine):
+    # self.canvas_init = FigureCanvas(fig2)
+    fig4 = plt.figure()
+    ax4 = fig4.add_subplot(1, 1, 1)
+
+    init_fig = New_engine.init_data[0]
+    init_graph = New_engine.init_data[2]
+    Names = init_fig.keys()
+    Names.sort()
+
+    for k, p in init_fig.items():
+
+        if k[0] == 'T':
+            x = p.get_x()
+            y = p.get_y()
+            ax4.text(x + 1, y + 1, k)
+            ax4.add_patch(p)
+            print ax4.artists
+
+    for k, p2 in init_fig.items():
+
+        if k[0] != 'T':
+            x = p2.get_x()
+            y = p2.get_y()
+            ax4.text(x + 1, y + 1, k, weight='bold')
+            p = copy(p2)
+            ax4.add_patch(p)
+
+    data = {"x": [], "y": [], "label": []}
+    for label, coord in init_graph[1].items():
+        data["x"].append(coord[0])
+        data["y"].append(coord[1])
+        data["label"].append(label)
+
+    ax4.plot(data['x'], data['y'], 'o', picker=5)
+    for k, v in init_graph[1].items():
+        ax4.annotate(k, (v[0], v[1]), size=8)
+    size = New_engine.init_size
+    ax4.set_xlim(0, size[0])
+    ax4.set_ylim(0, size[1])
+
+    # self.canvas_init.callbacks.connect('pick_event', self.on_click)
+    plt.savefig("C:\Users\ialrazi\Desktop\REU_Data_collection_input\Figs" + '/mode3.png')
+
 
 def settingup_db():
     database = os.path.join(os.getcwd(), 'layouts_db')
@@ -149,7 +217,7 @@ def cmd_mode(layout_script=None,bond_wire_script=None):
                 patch_dict=New_engine.init_data[0]
 
                 fig_dict={(New_engine.init_size[0],New_engine.init_size[1]):[]}
-                for k,v in patch_dict:
+                for k,v in patch_dict.items():
                     fig_dict[(New_engine.init_size[0],New_engine.init_size[1])].append(v)
                 fig_data = [fig_dict]
                 init_rects={}
@@ -177,7 +245,7 @@ def cmd_mode(layout_script=None,bond_wire_script=None):
                 patch_dict = New_engine.init_data[0]
 
                 fig_dict = {(New_engine.init_size[0], New_engine.init_size[1]): []}
-                for k, v in patch_dict:
+                for k, v in patch_dict.items():
                     fig_dict[(New_engine.init_size[0], New_engine.init_size[1])].append(v)
                 fig_data = [fig_dict]
                 init_rects = {}
@@ -588,7 +656,7 @@ def generate_optimize_layout(New_engine,optimization=True):
 
         print "Choose Nodes to be fixed from figure"
 
-        refresh_layout_mode3(New_engine)
+        refresh_layout(New_engine)
         window = QMainWindow()
         window.input_node_info = {}
         window.fixed_x_locations = {}
@@ -643,47 +711,6 @@ def generate_optimize_layout(New_engine,optimization=True):
 
 
 
-def refresh_layout_mode3(New_engine):
-
-    #self.canvas_init = FigureCanvas(fig2)
-    fig1, ax1 = plt.subplots()
-
-
-    init_fig = New_engine.init_data[0]
-    init_graph = New_engine.init_data[2]
-    Names = init_fig.keys()
-    Names.sort()
-    for k, p in init_fig.items():
-
-
-        if k[0] == 'T':
-            x = p.get_x()
-            y = p.get_y()
-            #ax1.text(x + 1, y + 1, k)
-            ax1.add_patch(p)
-    for k, p in init_fig.items():
-
-        if k[0] != 'T':
-            x = p.get_x()
-            y = p.get_y()
-            #ax1.text(x + 1, y + 1, k, weight='bold')
-            ax1.add_patch(p)
-
-    data = {"x": [], "y": [], "label": []}
-    for label, coord in init_graph[1].items():
-        data["x"].append(coord[0])
-        data["y"].append(coord[1])
-        data["label"].append(label)
-
-    ax1.plot(data['x'], data['y'], 'o', picker=5)
-    for k, v in init_graph[1].items():
-        ax1.annotate(k, (v[0], v[1]),size=8)
-    size = New_engine.init_size
-    ax1.set_xlim(0, size[0])
-    ax1.set_ylim(0, size[1])
-
-    #self.canvas_init.callbacks.connect('pick_event', self.on_click)
-    plt.savefig("C:\Users\ialrazi\Desktop\REU_Data_collection_input\Figs"+'/mode3.png')
 
 
 def test_case(layout_script,bond_wire_script):
@@ -706,6 +733,6 @@ def test_case(layout_script,bond_wire_script):
 
 
 if __name__ == '__main__':
-    cmd_mode(layout_script="C:\Users\ialrazi\Desktop\REU_Data_collection_input\h-bridge.txt",bond_wire_script='C:\Users\ialrazi\Desktop\REU_Data_collection_input\\bond_wires.txt')
+    cmd_mode(layout_script="C:\Users\ialrazi\Desktop\REU_Data_collection_input\Layout2_NEW.txt",bond_wire_script='C:\Users\ialrazi\Desktop\REU_Data_collection_input\\bond_wires.txt')
     #test_case(layout_script="C:\Users\ialrazi\Desktop\REU_Data_collection_input\h-bridge.txt",bond_wire_script='C:\Users\ialrazi\Desktop\REU_Data_collection_input\\bond_wires.txt')
 

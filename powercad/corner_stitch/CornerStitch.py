@@ -2365,7 +2365,6 @@ class CS_to_CG():
         minHeight = map(int, height)
         minSpacing = [map(int, i) for i in SP]
         minEnclosure = [map(int, i) for i in EN]
-
         CONSTRAINT = ct.constraint()
         CONSTRAINT.setupMinWidth(minWidth)
         CONSTRAINT.setupMinHeight(minHeight)

@@ -303,7 +303,7 @@ class ScriptInputMethod():
         self.all_components_list= self.all_components_type_mapped_dict.keys()
 
 
-        print self.all_components_list #all_components_list=['MOS', 'signal_lead', 'power_lead', 'EMPTY', 'signal_trace', 'power_trace', 'MOS_90']
+        print "comp_list",self.all_components_list #all_components_list=['MOS', 'signal_lead', 'power_lead', 'EMPTY', 'signal_trace', 'power_trace', 'MOS_90']
         print self.all_components_type_mapped_dict
 
 
@@ -328,6 +328,8 @@ class ScriptInputMethod():
                             type_name = 'power_trace'
                         elif element.type == 1 and element.name == 'trace':
                             type_name = 'signal_trace'
+                        elif element.name=='bonding wire pad':
+                            type_name= 'bonding wire pad'
                     if type_name not in all_component_type_names:
                         all_component_type_names.append(type_name)
 
@@ -374,6 +376,8 @@ class ScriptInputMethod():
                             type_name = 'power_trace'
                         elif element.type == 1 and element.name == 'trace':
                             type_name = 'signal_trace'
+                        else:
+                            type_name=element.name
                         type = self.component_to_cs_type[type_name]
                         x = float(layout_info[j][3])
                         y = float(layout_info[j][4])
@@ -434,7 +438,7 @@ class ScriptInputMethod():
 
                     if v==Types[i]:
                         for comp in self.all_components:
-                            if k==comp.name:
+                            if k==comp.name and isinstance(comp,Part):
                                 #print "H",k,v,comp.footprint
                                 if r2_c[i]==0:
                                     r2_c[i]=comp.footprint[0]
@@ -461,7 +465,7 @@ class ScriptInputMethod():
                 for k, v in self.component_to_cs_type.items():
                     if v == Types[i]:
                         for comp in self.all_components:
-                            if k == comp.name:
+                            if k == comp.name and isinstance(comp,Part):
                                 if r3_c[i] == 0:
                                     r3_c[i] = comp.footprint[1]
                                     break
@@ -482,7 +486,7 @@ class ScriptInputMethod():
                 for k, v in self.component_to_cs_type.items():
                     if v == Types[i]:
                         for comp in self.all_components:
-                            if k == comp.name:
+                            if k == comp.name and isinstance(comp,Part):
                                 if r4_c[i] == 0:
                                     val = max(comp.footprint)
                                     r4_c[i] = val
@@ -598,7 +602,7 @@ def plot_layout(fig=None,size=None):
     ax2.set_xlim(0, size[0])
     ax2.set_ylim(0, size[1])
     ax2.set_aspect('equal')
-    plt.show()
+    plt.savefig('C:/Users/ialrazi/Desktop/REU_Data_collection_input/Figs/' + '_init_layout' + '.png')
 
 
 

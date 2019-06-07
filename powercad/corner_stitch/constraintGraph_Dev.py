@@ -773,6 +773,7 @@ class constraintGraph:
                 self.vertexMatrixh[ID][origin][dest].append(Edge.getEdgeWeight(e, origin, dest))
             #elif rect.EAST.nodeId != ID and rect.WEST not in cornerStitch_h.stitchList and rect.EAST in cornerStitch_h.stitchList:
             elif rect.EAST.nodeId != ID and (rect.WEST.cell.type == "EMPTY" or rect.WEST not in cornerStitch_h.stitchList):
+
                 t2 = Types.index(rect.EAST.cell.type)
                 t1 = Types.index(rect.cell.type)
                 c = constraint.constraint(2)  # min enclosure constraint
@@ -1939,7 +1940,6 @@ class constraintGraph:
         start = nodes[0]
         end = nodes[-1]
         LONGESTPATH, Value, Sum = self.LONGEST_PATH(B, start, end)
-        print LONGESTPATH
         if (len(LONGESTPATH)) == len(nodes):
             H = []
             for i in range(len(Node_List)):
