@@ -336,8 +336,8 @@ def get_overlap_interval(interval1, interval2):
 
 def draw_rect_list(rectlist,color,pattern,text=None,ax=None):
     patch=[]
-    plt.xlim(-5, 50)
-    plt.ylim(-5, 50)
+    plt.xlim(0, 50000)
+    plt.ylim(0, 80000)
     for r in rectlist:
         p = patches.Rectangle((r.left, r.bottom), r.width_eval(), r.height_eval(),fill=True,
             edgecolor='black',facecolor=color,hatch=pattern,linewidth=2,alpha=0.5)

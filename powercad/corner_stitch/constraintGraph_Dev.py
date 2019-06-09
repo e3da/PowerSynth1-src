@@ -2139,7 +2139,7 @@ class constraintGraph:
                 v = Range - sum(D_V_Newval)
                 if ((2 * v) / n) > 0:
                     random.seed(self.seed_h[sid])
-                    x =  random.uniform(0, (int(2 * v) / n))
+                    x =  random.randint(0, (int(2 * v) / n))
                 else:
                     x = 0
                 p = value.pop(i)
@@ -2577,7 +2577,7 @@ class constraintGraph:
                 if ((2 * v) / n) > 0:
                     random.seed(self.seed_v[sid])
 
-                    x = random.uniform(0, (int(2 * v) / n))
+                    x = random.randint(0, (int(2 * v) / n))
                 else:
                     x = 0
                 p = value.pop(i)

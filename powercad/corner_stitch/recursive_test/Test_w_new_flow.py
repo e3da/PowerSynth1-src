@@ -1,4 +1,3 @@
-from powercad.corner_stitch.input_script import *
 from powercad.corner_stitch.cs_solution import *
 from easygui import *
 from PySide.QtGui import QFileDialog,QMainWindow
@@ -6,10 +5,11 @@ import glob
 from powercad.corner_stitch.optimization_algorithm_support import new_engine_opt
 from powercad.corner_stitch.fixed_location_setup import *
 from copy import copy
+from powercad.electrical_mdl.cornerstitch_API import *
+from powercad.thermal.cornerstitch_API import *
 
 
-
-def test_file(input_script=None,bond_wire_info=None):
+def script_translator(input_script=None, bond_wire_info=None):
     if input_script == None:
         input_file = "C:\Users\ialrazi\Desktop\REU_Data_collection_input\h-bridge.txt"  # input script location
     else:
@@ -172,6 +172,29 @@ def settingup_db():
     conn.close()
     return db
 
+def setup_thermal(comp_list):
+    comp_dict = {}
+    for comp in comp_list:
+        comp_dict[comp.layout_component_id] = comp
+    thermal_api = CornerStitch_Tmodel_API(comp_dict=comp_dict)
+    thermal_api.import_layer_stack()
+    thermal_api.set_up_device_power()
+    return thermal_api
+
+def setup_electrical(comp_list,bondwires_setup):
+    comp_dict = {}
+    for comp in comp_list:
+        comp_dict[comp.layout_component_id] = comp
+    layer_to_z = {'T': [0, 0.2], 'D': [0.2, 0], 'B': [0.2, 0],
+                  'L': [0.2, 0]}
+    electrical_api = CornerStitch_Emodel_API(comp_dict=comp_dict, layer_to_z=layer_to_z, wire_conn=bondwires_setup)
+    mdl_dir = "C:\Users\qmle\Desktop\New_Layout_Engine\New_design_flow"
+    mdl_name = 'ARL_module.rsmdl'
+    electrical_api.load_rs_model(os.path.join(mdl_dir,mdl_name))
+    electrical_api.form_connection_table()
+    return electrical_api
+
+
 def cmd_mode(layout_script=None,bond_wire_script=None):
     '''
 
@@ -190,8 +213,14 @@ def cmd_mode(layout_script=None,bond_wire_script=None):
         layout_input = layout_script
         bondwire_info = bond_wire_script
     all_components, layout_info,bondwires,New_engine =test_case(layout_script=layout_input,bond_wire_script=bondwire_info)
-
-    print layout_info
+    e_api=setup_electrical(all_components, bondwires)
+    t_api=setup_thermal(all_components)
+    # Test evaluation
+    e_api.init_layout(layout_info[0])
+    e_api.extract_RL('L1', 'L4')
+    e_api.plot_3d()
+    t_api.dev_result_table_eval(layout_info[0])
+    raw_input()
 
 
 
@@ -715,7 +744,7 @@ def generate_optimize_layout(New_engine,optimization=True):
 
 def test_case(layout_script,bond_wire_script):
 
-    New_engine,all_components,layout_info,bondwires,patches=test_file(input_script=layout_script,bond_wire_info=bond_wire_script)
+    New_engine,all_components,layout_info,bondwires,patches=script_translator(input_script=layout_script, bond_wire_info=bond_wire_script)
     plot_solution(patches) # minimum-sized layout plot
 
     # you can use these info as previously
@@ -733,6 +762,19 @@ def test_case(layout_script,bond_wire_script):
 
 
 if __name__ == '__main__':
-    cmd_mode(layout_script="C:\Users\ialrazi\Desktop\REU_Data_collection_input\Layout2_NEW.txt",bond_wire_script='C:\Users\ialrazi\Desktop\REU_Data_collection_input\\bond_wires.txt')
+    import getpass
+
+    user_name = getpass.getuser()
+    if user_name == 'qmle':
+        layout_script = "C:\Users\qmle\Desktop\New_Layout_Engine\New_design_flow\Halfbridge1.txt"
+        bondwire_setup = "C:\Users\qmle\Desktop\New_Layout_Engine\New_design_flow\\bond_wires.txt"
+    elif user_name == 'ialrazi':
+        layout_script= "C:\Users\ialrazi\Desktop\REU_Data_collection_input\Layout2_NEW.txt"
+        bondwire_setup = "'C:\Users\ialrazi\Desktop\REU_Data_collection_input\\bond_wires.txt'"
+    else:
+        layout_script = "C:\New_Layout_Engine\New_design_flow\Halfbridge1.txt"
+        bondwire_setup = 'C:\New_Layout_Engine\New_design_flow\\bond_wires.txt'
+
+    cmd_mode(layout_script=layout_script,bond_wire_script=bondwire_setup)
     #test_case(layout_script="C:\Users\ialrazi\Desktop\REU_Data_collection_input\h-bridge.txt",bond_wire_script='C:\Users\ialrazi\Desktop\REU_Data_collection_input\\bond_wires.txt')
 

@@ -1,18 +1,18 @@
-from scipy.sparse.linalg import gmres
-
-from powercad.electrical_mdl.spice_eval.peec_num_solver import *
-
+import numpy as np
+import matplotlib.pyplot as plt
+import time
+import scipy
 
 class diag_prec:
     def __init__(self, A):
         self.shape = A.shape
         n = self.shape[0]
-        self.dinv = numpy.empty(n)
+        self.dinv = np.empty(n)
         for i in xrange(n):
             self.dinv[i] = 1.0 / A[i, i]
 
     def precon(self, x, y):
-        numpy.multiply(x, self.dinv, y)
+        np.multiply(x, self.dinv, y)
 
 
 class RL_circuit():
@@ -485,7 +485,7 @@ class RL_circuit():
             A = self.D
 
         t = time.time()
-        method=1
+        method=2
         if method ==1:
             self.results= scipy.sparse.linalg.spsolve(A,Z)
         elif method ==2:
@@ -504,16 +504,16 @@ class RL_circuit():
         #print "RESULTS",self.results
         if debug: # for debug and time analysis
             print 'RL', np.shape(A)
-            numpy.savetxt("M.csv", self.M_t, delimiter=",")
-            numpy.savetxt("Mt.csv", self.M, delimiter=",")
-            numpy.savetxt("D.csv", self.D, delimiter=",")
+            np.savetxt("M.csv", self.M_t, delimiter=",")
+            np.savetxt("Mt.csv", self.M, delimiter=",")
+            np.savetxt("D.csv", self.D, delimiter=",")
             print self.J
             print self.V
             print self.Z
 
-            numpy.savetxt("M.csv", self.M_t, delimiter=",")
-            numpy.savetxt("A.csv", self.A, delimiter=",")
-            numpy.savetxt("Z.csv", Z, delimiter=",")
+            np.savetxt("M.csv", self.M_t, delimiter=",")
+            np.savetxt("A.csv", self.A, delimiter=",")
+            np.savetxt("Z.csv", Z, delimiter=",")
             print "solve", time.time() - t, "s"
         results_dict={}
         rlmode=True

@@ -2,21 +2,21 @@ from powercad.corner_stitch.CornerStitch import Rectangle
 
 class CornerStitchSolution:
 
-    def __init__(self, name='', index=None, params=None):
+    def __init__(self, name='', index=None, params=None,fig_data=None):
         """Describes a solution saved from the Solution Browser
 
         Keyword arguments:
         name -- solution name
         index -- cs solution index
         params -- list of objectives in tuples (name, unit, value)
-        layout_info -- dictionary holding layout_info for a solution with key=size of layout
-        abstract_info -- dictionary with solution name as a key and layout_symb_dict as a value
+        fig_data -- list of matplotlib patches to plot the layout
         """
         self.name = name
         self.index = index
         self.params = params
-        self.layout_info={}
-        self.abstract_info={}
+        self.fig_data = fig_data
+        self.layout_info={}   # dictionary holding layout_info for a solution with key=size of layout
+        self.abstract_info={} # dictionary with solution name as a key and layout_symb_dict as a value
 
 
     def form_abs_obj_rect_dict(self, div=1000):

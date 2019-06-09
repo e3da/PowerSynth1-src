@@ -14,6 +14,7 @@ from powercad.project_builder.proj_dialogs import ConsDialog
 from powercad.design.parts import *
 from powercad.design.Routing_paths import *
 from powercad.cons_aware_en.cons_engine import New_layout_engine
+import getpass
 
 '''
 class ConstraintWindow(QtGui.QMainWindow):
@@ -121,8 +122,8 @@ class ScriptInputMethod():
             line = line.split(',')
             self.layout_info.append(line)
 
-        for i in self.layout_info:
-            print len(i),i
+        #for i in self.layout_info:
+            #print len(i),i
 
 
         return self.Definition,self.layout_info
@@ -278,9 +279,9 @@ class ScriptInputMethod():
 
 
 
-        print self.all_parts_info, self.info_files
-        print self.all_route_info
-        print "map",self.all_components_type_mapped_dict
+        #print self.all_parts_info, self.info_files
+        #print self.all_route_info
+        #print "map",self.all_components_type_mapped_dict
 
 
 
@@ -303,8 +304,8 @@ class ScriptInputMethod():
         self.all_components_list= self.all_components_type_mapped_dict.keys()
 
 
-        print "comp_list",self.all_components_list #all_components_list=['MOS', 'signal_lead', 'power_lead', 'EMPTY', 'signal_trace', 'power_trace', 'MOS_90']
-        print self.all_components_type_mapped_dict
+        #print "comp_list",self.all_components_list #all_components_list=['MOS', 'signal_lead', 'power_lead', 'EMPTY', 'signal_trace', 'power_trace', 'MOS_90']
+        #print self.all_components_type_mapped_dict
 
 
 
@@ -334,7 +335,7 @@ class ScriptInputMethod():
                         all_component_type_names.append(type_name)
 
 
-        print all_component_type_names #['EMPTY', 'power_trace', 'signal_trace', 'MOS_90', 'MOS', 'power_lead', 'signal_lead']
+        #print all_component_type_names #['EMPTY', 'power_trace', 'signal_trace', 'MOS_90', 'MOS', 'power_lead', 'signal_lead']
 
 
 
@@ -350,7 +351,7 @@ class ScriptInputMethod():
                 comp.cs_type = self.component_to_cs_type[comp.name]
 
 
-                print comp.cs_type
+                #print comp.cs_type
 
 
 
@@ -404,7 +405,7 @@ class ScriptInputMethod():
         #Types=init_constraint.Type
 
         Types_init=self.component_to_cs_type.values()
-        print Types_init
+        #print Types_init
         Types = [0 for i in range(len(Types_init))]
         for i in Types_init:
             if i=='EMPTY':
@@ -426,7 +427,7 @@ class ScriptInputMethod():
                     r1_c.append(k)
         r1+=r1_c
         all_rows.append(r1)
-        print r1
+        #print r1
 
         r2 = ['Min Width']
         r2_c=[0 for i in range(len(Types))]
@@ -453,7 +454,7 @@ class ScriptInputMethod():
         r2+=r2_c
         all_rows.append(r2)
 
-        print r2
+        #print r2
 
 
         r3 = ['Min Height']
@@ -475,7 +476,7 @@ class ScriptInputMethod():
 
         r3 += r3_c
         all_rows.append(r3)
-        print r3
+        #print r3
 
         r4 = ['Min Extension']
         r4_c = [0 for i in range(len(Types))]
@@ -498,7 +499,7 @@ class ScriptInputMethod():
 
         r4 += r4_c
         all_rows.append(r4)
-        print r4
+        #print r4
 
         r5 = ['Min Spacing']
         r5_c = []
@@ -508,10 +509,10 @@ class ScriptInputMethod():
                     r5_c.append(k)
         r5 += r5_c
         all_rows.append(r5)
-        print r5
+        #print r5
 
         space_rows=[]
-        print Types
+        #print Types
         for i in range(len(Types)):
             for k,v in self.component_to_cs_type.items():
 
@@ -522,7 +523,7 @@ class ScriptInputMethod():
                         row.append(2.0)
                     space_rows.append(row)
                     all_rows.append(row)
-        print space_rows
+        #print space_rows
 
         r6 = ['Min Enclosure']
         r6_c = []
@@ -532,7 +533,7 @@ class ScriptInputMethod():
                     r6_c.append(k)
         r6 += r6_c
         all_rows.append(r6)
-        print r6
+        #print r6
         enclosure_rows=[]
         for i in range(len(Types)):
             for k,v in self.component_to_cs_type.items():
@@ -543,7 +544,7 @@ class ScriptInputMethod():
                         row.append(1.0)
                     enclosure_rows.append(row)
                     all_rows.append(row)
-        print enclosure_rows
+        #print enclosure_rows
         df = pd.DataFrame(all_rows)
 
         df.to_csv('out.csv', sep=',', header=None, index=None)
@@ -581,7 +582,32 @@ def show_constraint_table(parent,cons_df=None):
 
 
 def plot_layout(fig=None,size=None):
+    if isinstance(fig,list):
+        rects=fig
+        colors = ['green', 'red', 'blue', 'yellow', 'purple', 'pink', 'magenta', 'orange', 'violet']
+        type = ['Type_1', 'Type_2', 'Type_3', 'Type_4', 'Type_5', 'Type_6', 'Type_7', 'Type_8', 'Type_9']
+        # zorders = [1,2,3,4,5]
+        Patches = {}
+
+        for r in rects:
+            i = type.index(r[0])
+            # print i,r.name
+            P = matplotlib.patches.Rectangle(
+                (r[1], r[2]),  # (x,y)
+                r[3],  # width
+                r[4],  # height
+                facecolor=colors[i],
+                alpha=0.5,
+                # zorder=zorders[i],
+                edgecolor='black',
+                linewidth=1,
+            )
+            Patches[r[5]] = P
+        fig=Patches
+
     fig2, ax2 = plt.subplots()
+
+
     Names = fig.keys()
     Names.sort()
     for k, p in fig.items():
@@ -602,7 +628,13 @@ def plot_layout(fig=None,size=None):
     ax2.set_xlim(0, size[0])
     ax2.set_ylim(0, size[1])
     ax2.set_aspect('equal')
-    plt.savefig('C:/Users/ialrazi/Desktop/REU_Data_collection_input/Figs/' + '_init_layout' + '.png')
+
+    user_name = getpass.getuser()
+    if user_name == 'qmle':
+        fig_dir = "C:\Users\qmle\Desktop\New_Layout_Engine\New_design_flow\\"
+    elif user_name=='ialrazi':
+        fig_dir = 'C:/Users/ialrazi/Desktop/REU_Data_collection_input/Figs/'
+    plt.savefig( fig_dir+ '_init_layout' + '.png')
 
 
 
@@ -616,11 +648,16 @@ def mode_zero(cons_df,Htree,Vtree): # evaluates mode 0(minimum sized layouts)
     #self.cons_df.to_csv('out_2.csv', sep=',', header=None, index=None)
     Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=Htree, Vtree=Vtree, N=None, W=None, H=None, XLoc=None, YLoc=None,seed=None,individual=None)
 
-    print "X",Evaluated_X
-    print "Y",Evaluated_Y
+    #print "X",Evaluated_X
+    #print "Y",Evaluated_Y
     return Evaluated_X, Evaluated_Y
 
 def plot_solution(Patches=None):
+    user_name = getpass.getuser()
+    if user_name == 'qmle':
+        fig_dir = "C:\Users\qmle\Desktop\New_Layout_Engine\New_design_flow\\"
+    elif user_name == 'ialrazi':
+        fig_dir = 'C:/Users/ialrazi/Desktop/REU_Data_collection_input/Figs/'
     for i in range(len(Patches)):
         fig, ax1 = plt.subplots()
         for k, v in Patches[i].items():
@@ -630,7 +667,7 @@ def plot_solution(Patches=None):
             ax1.set_ylim(0, k[1])
 
         ax1.set_aspect('equal')
-        plt.savefig('C:/Users/ialrazi/Desktop/REU_Data_collection_input/Figs/'+str(i)+'.png')
+        plt.savefig(fig_dir+str(i)+'.png')
 
 
 
