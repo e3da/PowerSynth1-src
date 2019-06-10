@@ -4,7 +4,7 @@ import copy
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import easygui as eg
-
+from collections import OrderedDict
 class Connection_Table:
     def __init__(self,name="",cons={},width=400,height=200):
         self.connections = cons
@@ -81,7 +81,7 @@ class Part:
         self.datasheet_link = datasheet_link  # link for datasheet
         self.footprint = [0, 0]  # W,H of the components
         self.pin_name = []  # list of pins name
-        self.conn_dict = {} # form a relationship between internal parasitic values and connections
+        self.conn_dict = OrderedDict() # form a relationship between internal parasitic values and connections
         self.pin_locs = {}  # store pin location for later use. for each pins name the info is [left,bot,width,height,dz]
         self.thickness = 0  # define part thickness
         self.cs_type=None # corner stitch type (Type_1,Type_2...)
@@ -89,6 +89,8 @@ class Part:
         self.thermal_cond =0 # thermal conductivity for thermal evaluation # TODO: REPLACE WITH MATERIAL
     def load_part(self):
         # Update part info from file
+        all_parasitic =[]
+        all_conn =[]
         with open(self.info_file, 'rb') as inputfile:
             pin_read = False
             para_read = False
@@ -144,10 +146,13 @@ class Part:
                         elif "C:" in para_val:
                             val = para_val.strip("C:")
                             parasitc["R"] = float(val)
-                    self.conn_dict[connection] = parasitc
+                    all_conn.append(connection)
+                    all_parasitic.append(parasitc)
                 else:
                     para_read = False
-
+        # SET UP CONNECTION TABLE
+        for i in range(len(all_conn)):
+            self.conn_dict[all_conn[i]]=all_parasitic[i]
         # self.show_info()
 
     def rotate_90(self):
