@@ -208,6 +208,7 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
 
     :return: list of CornerStitch Solution objects
     '''
+    plot = False
 
     # GET MEASUREMENT NAME:
     measure_names = []
@@ -236,8 +237,10 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
                 solution.params = None
                 solution.layout_info = cs_sym_info[i]
                 solution.abstract_info = solution.form_abs_obj_rect_dict()
-                solution.layout_plot(layout_ind=i, db=db_file, fig_dir=fig_dir)
                 Solutions.append(solution)
+                if plot:
+                    solution.layout_plot(layout_ind=i, db=db_file, fig_dir=fig_dir)
+
 
 
     elif mode == 1:
@@ -300,8 +303,7 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
 
                 Solutions = update_solution_data(layout_dictionary=opt_problem.layout_data, measure_names=measure_names,
                                                  perf_results=opt_problem.perf_results)
-                plot=False
-                if plot==True:
+                if plot:
                     for solution in Solutions:
                         solution.layout_plot(layout_ind=solution.index, db=db_file, fig_dir=fig_dir)
 
@@ -319,8 +321,10 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
                 solution.params = None
                 solution.layout_info = cs_sym_info[i]
                 solution.abstract_info = solution.form_abs_obj_rect_dict()
-                solution.layout_plot(layout_ind=i, db=db_file, fig_dir=fig_dir)
                 Solutions.append(solution)
+                if plot:
+                    solution.layout_plot(layout_ind=i, db=db_file, fig_dir=fig_dir)
+
 
 
     elif mode == 2:
@@ -383,8 +387,7 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
                     opt_problem.T_init = temp_init  # initial temperature
                     opt_problem.optimize()  # perform optimization
                 Solutions = update_solution_data(layout_dictionary=opt_problem.layout_data, measure_names=measure_names, perf_results=opt_problem.perf_results)
-                plot = False
-                if plot == True:
+                if plot:
                     for solution in Solutions:
                         solution.layout_plot(layout_ind=solution.index, db=db_file, fig_dir=fig_dir)
 
@@ -402,8 +405,9 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
                 solution.params = None
                 solution.layout_info = cs_sym_info[i]
                 solution.abstract_info = solution.form_abs_obj_rect_dict()
-                solution.layout_plot(layout_ind=i, db=db_file, fig_dir=fig_dir)
                 Solutions.append(solution)
+                if plot:
+                    solution.layout_plot(layout_ind=i, db=db_file, fig_dir=fig_dir)
 
     '''
     elif mode == 3:
