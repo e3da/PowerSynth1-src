@@ -2096,9 +2096,10 @@ class constraintGraph:
     # randomize uniformly edge weights within fixed minimum and maximum locations
     def randomvaluegenerator(self, Range, value,Random,sid):
         #print "R",Random,sid
-        Range=Range/1000
+
 
         if Random!=None:
+            Range = Range / 1000
             Sum=sum(Random)
 
             if Sum>0:
@@ -2110,7 +2111,7 @@ class constraintGraph:
                 Vi = [0 for i in Random]
             #print Random
             Vi = [int(round(i, 3) * 1000) for i in Vi]
-            
+
             variable=[]
             for i in range(len(value)):
                 variable.append(value[i]+Vi[i])
@@ -2533,9 +2534,10 @@ class constraintGraph:
         :return: list of randomized value corresponding to each minimum constraint value
         """
 
-        Range=Range/1000
+
 
         if Random!=None:
+            Range = Range / 1000
             Sum = sum(Random)
 
             if Sum>0:
@@ -2598,7 +2600,6 @@ class constraintGraph:
             D_V_Newval.append(Range - sum(D_V_Newval))
 
             random.shuffle(D_V_Newval)
-
             for i in range(len(V)):
                 x = V[i] + D_V_Newval[i]
                 variable.append(x)

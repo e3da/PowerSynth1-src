@@ -289,7 +289,7 @@ class Cmd_Handler:
         Initialize some CS objects
         :return:
         '''
-        self.engine, self.raw_layout_info, self.wire_table, self.min_size_rect_patches = script_translator(
+        self.engine, self.raw_layout_info, self.wire_table = script_translator(
             input_script=self.layout_script, bond_wire_info=self.bondwire_setup, fig_dir=self.fig_dir)
         for comp in self.engine.all_components:
             self.comp_dict[comp.layout_component_id] = comp
@@ -364,8 +364,9 @@ class Cmd_Handler:
             if opt == 0:  # Perform layout generation only without evaluation
                 cont, layout_mode = self.option_layout_gen()
                 if layout_mode in range(3):
+                    self.set_up_db()
                     self.soluions = generate_optimize_layout(layout_engine=self.engine, mode=layout_mode,
-                                                             optimization=False, db_file=self.db_file,
+                                                             optimization=False, db_file=self.db_file,fig_dir=self.fig_dir,
                                                              apis={'E': self.e_api, 'T': self.t_api})
 
             if opt == 1:
@@ -393,8 +394,9 @@ class Cmd_Handler:
                 self.init_apis()  # Setup measurement
                 cont, layout_mode = self.option_layout_gen()
                 if layout_mode in range(3):
+                    self.set_up_db()
                     self.soluions = generate_optimize_layout(layout_engine=self.engine, mode=layout_mode,
-                                                             optimization=True, db_file=self.db_file,
+                                                             optimization=True, db_file=self.db_file,fig_dir=self.fig_dir,
                                                              apis={'E': self.e_api, 'T': self.t_api},
                                                              measures=self.measures)
 
