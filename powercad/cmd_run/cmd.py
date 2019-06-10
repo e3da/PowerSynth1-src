@@ -39,12 +39,14 @@ class Cmd_Handler:
             for line in inputfile.readlines():
                 line = line.strip("\r\n")
                 info = line.split(" ")
+                if line =='':
+                    continue
                 if line[0] == '#': # Comments
                     continue
                 if info[0] == "Layout_script:":
                     self.layout_script = info[1]
                 if info[0] == "Bondwire_setup:":
-                    self.wire_table = info[1]
+                    self.bondwire_setup = info[1]
                 if info[0] == "Layer_stack:":
                     self.layer_stack_file = info[1]
                 if info[0] == "Parasitic_model:":
@@ -56,14 +58,17 @@ class Cmd_Handler:
                 if info[0] == "Option:": # engine option
                     run_opt = info[1]
 
-        check_file = os.path.isfile()
-        check_dir = os.path.isdir()
+        check_file = os.path.isfile
+        check_dir = os.path.isdir
         # Check if these files exist
-        cont = check_file(self.layout_script) and check_file(self.wire_table) and check_file(
+        cont = check_file(self.layout_script) and check_file(self.bondwire_setup) and check_file(
             self.layer_stack_file) and check_file(self.rs_model_file) and check_dir(self.fig_dir) and check_dir(
             self.db_dir)
         if cont:
             print "run the optimization"
+            self.init_cs_objects()
+            self.set_up_db()
+            self.cmd_loop()
         else:
             return cont
     # ------------------ File Resquest -------------------------------------------------

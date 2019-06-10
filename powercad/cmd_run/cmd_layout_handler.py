@@ -7,8 +7,6 @@ import matplotlib.patches as patches
 from powercad.corner_stitch.input_script import *
 
 
-
-
 # --------------Plot function---------------------
 def plot_layout(fig_data=None, rects=None, size=None, fig_dir=None):
     if rects != None:
@@ -97,20 +95,20 @@ def save_solution(rects, id, db):
     conn.close()
 
 
-def eval_single_layout(layout_engine=None,layout_data=None, apis={}, measures=[]):
+def eval_single_layout(layout_engine=None, layout_data=None, apis={}, measures=[]):
     opt_problem = new_engine_opt(engine=layout_engine, W=layout_engine.init_size[0], H=layout_engine.init_size[1],
-                                 seed=None, level=2, method=None,apis=apis,measures=measures)
+                                 seed=None, level=2, method=None, apis=apis, measures=measures)
 
     results = opt_problem.eval_layout(layout_data)
     print results
 
-def update_solution_data(layout_dictionary=None, opt_problem=None, measure_names=[], fig_data=None, perf_results=[]):
+
+def update_solution_data(layout_dictionary=None, opt_problem=None, measure_names=[], perf_results=[]):
     '''
 
     :param layout_dictionary: list of CS layout data
     :param opt_problem: optimization object for different modes
     :param measure_names: list of performance names
-    :param fig_data: list of list for matplotlib rectangle patches of each layout
     :param perf_results: if in data collection mode
     :return:
     '''
@@ -125,7 +123,6 @@ def update_solution_data(layout_dictionary=None, opt_problem=None, measure_names
         solution.params = dict(zip(measure_names, results))  # A dictionary formed by result and measurement name
         solution.layout_info = layout_dictionary[i]
         solution.abstract_info = solution.form_abs_obj_rect_dict()
-        solution.fig_data = fig_data[i]
         Solutions.append(solution)
     return Solutions
 
@@ -156,7 +153,7 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
             opt_problem = new_engine_opt(engine=layout_engine, W=None, H=None, seed=None, level=mode, method=None,
                                          apis=apis, measures=measures)
             Solutions = update_solution_data(layout_dictionary=cs_sym_info, opt_problem=opt_problem,
-                                             measure_names=measure_names,fig_data=fig_data)
+                                             measure_names=measure_names)
 
 
 
@@ -186,7 +183,7 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
                 opt_problem = new_engine_opt(engine=layout_engine, W=None, H=None, seed=seed, level=mode, method=None,
                                              apis=apis, measures=measures)
                 Solutions = update_solution_data(layout_dictionary=cs_sym_info, opt_problem=opt_problem,
-                                                 measure_names=measure_names,fig_data=fig_data)
+                                                 measure_names=measure_names)
 
             else:
                 if choice == "Genetic Algorithm (NSGAII)":
@@ -250,9 +247,9 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
                     opt_problem.optimize()  # results=list of list, where each element=[fig,cs_sym_info,perf1_value,perf2_value,...]
 
                 Solutions = update_solution_data(layout_dictionary=opt_problem.layout_data, measure_names=measure_names,
-                                                 fig_data=opt_problem.fig_data, perf_results=opt_problem.perf_results)
+                                                 perf_results=opt_problem.perf_results)
 
-        else: # Layout generation only
+        else:  # Layout generation only
             print "Enter desired number of solutions:"
             num_layouts = raw_input()
             try:
@@ -270,7 +267,7 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
                 solution.params = None
                 solution.layout_info = cs_sym_info[i]
                 solution.abstract_info = solution.form_abs_obj_rect_dict()
-                solution.fig_data=fig_data[i]
+                solution.fig_data = fig_data[i]
                 Solutions.append(solution)
 
 
@@ -310,7 +307,7 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
                                              apis=apis, measures=measures)
 
                 Solutions = update_solution_data(layout_dictionary=cs_sym_info, opt_problem=opt_problem,
-                                                 measure_names=measure_names,fig_data=fig_data)
+                                                 measure_names=measure_names)
             else:
                 if choice == "Genetic Algorithm (NSGAII)":
                     print "Enter desired number of generations:"
@@ -371,8 +368,7 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
                     opt_problem.num_gen = num_layouts  # number of generations
                     opt_problem.T_init = temp_init  # initial temperature
                     opt_problem.optimize()  # perform optimization
-                Solutions = update_solution_data(layout_dictionary=opt_problem.layout_data, measure_names=measure_names,
-                                                 fig_data=opt_problem.fig_data, perf_results=opt_problem.perf_results)
+                Solutions = update_solution_data(layout_dictionary=opt_problem.layout_data, measure_names=measure_names, perf_results=opt_problem.perf_results)
         else:
             print "Enter desired number of solutions:"
             num_layouts = raw_input()
@@ -391,7 +387,6 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
                 solution.params = None
                 solution.layout_info = cs_sym_info[i]
                 solution.abstract_info = solution.form_abs_obj_rect_dict()
-                solution.fig_data=fig_data[i]
                 Solutions.append(solution)
 
     '''

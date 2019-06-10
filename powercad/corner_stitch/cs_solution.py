@@ -9,12 +9,10 @@ class CornerStitchSolution:
         name -- solution name
         index -- cs solution index
         params -- list of objectives in tuples (name, unit, value)
-        fig_data -- list of matplotlib patches to plot the layout
         """
         self.name = name
         self.index = index
         self.params = params
-        self.fig_data = fig_data
         self.layout_info={}   # dictionary holding layout_info for a solution with key=size of layout
         self.abstract_info={} # dictionary with solution name as a key and layout_symb_dict as a value
 
