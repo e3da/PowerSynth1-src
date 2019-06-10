@@ -2,9 +2,7 @@
 from powercad.electrical_mdl.cornerstitch_API import *
 from powercad.thermal.cornerstitch_API import *
 from glob import glob
-from powercad.cmd_run.cmd_layout_handler import generate_optimize_layout, script_translator
-
-
+from powercad.cmd_run.cmd_layout_handler import generate_optimize_layout, script_translator, eval_single_layout
 
 
 class Cmd_Handler:
@@ -20,7 +18,6 @@ class Cmd_Handler:
         # Data storage
         self.db_file = None  # A file to store layout database
 
-
         # CornerStitch Initial Objects
         self.engine = None
         self.comp_dict = {}
@@ -33,6 +30,43 @@ class Cmd_Handler:
         self.t_api = None
         # Solutions
         self.soluions = None
+
+    def load_macro_file(self,file):
+
+        with open(file, 'rb') as inputfile:
+            pin_read = False
+            para_read = False
+            for line in inputfile.readlines():
+                line = line.strip("\r\n")
+                info = line.split(" ")
+                if line[0] == '#': # Comments
+                    continue
+                if info[0] == "Layout_script:":
+                    self.layout_script = info[1]
+                if info[0] == "Bondwire_setup:":
+                    self.wire_table = info[1]
+                if info[0] == "Layer_stack:":
+                    self.layer_stack_file = info[1]
+                if info[0] == "Parasitic_model:":
+                    self.rs_model_file = info[1]
+                if info[0] == "Fig_dir:":
+                    self.fig_dir = info[1]
+                if info[0] == "Solution_dir:":
+                    self.db_dir = info[1]
+                if info[0] == "Option:": # engine option
+                    run_opt = info[1]
+
+        check_file = os.path.isfile()
+        check_dir = os.path.isdir()
+        # Check if these files exist
+        cont = check_file(self.layout_script) and check_file(self.wire_table) and check_file(
+            self.layer_stack_file) and check_file(self.rs_model_file) and check_dir(self.fig_dir) and check_dir(
+            self.db_dir)
+        if cont:
+            print "run the optimization"
+        else:
+            return cont
+    # ------------------ File Resquest -------------------------------------------------
     def database_dir_request(self):
         print "Please enter a directory to save layout database"
         correct = True
@@ -169,11 +203,9 @@ class Cmd_Handler:
         :return:
         '''
         self.engine, self.raw_layout_info, self.wire_table, self.min_size_rect_patches = script_translator(
-            input_script=self.layout_script, bond_wire_info=self.bondwire_setup,fig_dir=self.fig_dir)
+            input_script=self.layout_script, bond_wire_info=self.bondwire_setup, fig_dir=self.fig_dir)
         for comp in self.engine.all_components:
             self.comp_dict[comp.layout_component_id] = comp
-
-
 
     # --------------- API --------------------------------
     def setup_electrical(self):
@@ -183,14 +215,15 @@ class Cmd_Handler:
         self.e_api = CornerStitch_Emodel_API(comp_dict=self.comp_dict, layer_to_z=layer_to_z, wire_conn=self.wire_table)
         self.e_api.load_rs_model(self.rs_model_file)
         self.e_api.form_connection_table()
-        self.measures+=self.e_api.measurement_setup()
+        self.e_api.get_frequency()
+        self.measures += self.e_api.measurement_setup()
 
     def setup_thermal(self):
 
         self.t_api = CornerStitch_Tmodel_API(comp_dict=self.comp_dict)
         self.t_api.import_layer_stack(self.layer_stack_file)
         self.t_api.set_up_device_power()
-        self.measures +=self.t_api.measurement_setup()
+        self.measures += self.t_api.measurement_setup()
 
     def init_apis(self):
         '''
@@ -201,11 +234,36 @@ class Cmd_Handler:
         self.setup_electrical()
 
     def cmd_handler_flow(self):
-        self.input_request()
-        self.init_cs_objects()
-        self.set_up_db()
-        self.cmd_loop()
+        print "This is the command line mode for PowerSynth layout optimization"
+        print "Type -m [macro file] to run a macro file"
+        print "Type -f to go through a step by step setup"
+        print "Type -quit to quit"
 
+        cont = True
+        while (cont):
+            mode = raw_input("Enter command here")
+            if mode =='-f':
+                self.input_request()
+                self.init_cs_objects()
+                self.set_up_db()
+                self.cmd_loop()
+                cont = False
+            elif mode == '-quit':
+                cont = False
+            elif mode[0:2] == '-m':
+                print "Loading macro file"
+                m, file = mode.split(" ")
+                if os.path.isfile(file):
+                    # macro file exists
+                    checked = self.load_macro_file(file)
+                    if not (checked):
+                        continue
+                else:
+                    print "wrong macro file format or wrong directory, please try again !"
+
+
+            else:
+                print "Wrong Input, please double check and try again !"
     def cmd_loop(self):
         cont = True
         while (cont):
@@ -213,16 +271,39 @@ class Cmd_Handler:
             if opt == 0:  # Perform layout generation only without evaluation
                 cont, layout_mode = self.option_layout_gen()
                 if layout_mode in range(3):
-                    self.soluions=generate_optimize_layout(layout_engine=self.engine,mode=layout_mode,optimization=False,db_file=self.db_file,
-                                             apis ={'E':self.e_api,'T':self.t_api})
+                    self.soluions = generate_optimize_layout(layout_engine=self.engine, mode=layout_mode,
+                                                             optimization=False, db_file=self.db_file,
+                                                             apis={'E': self.e_api, 'T': self.t_api})
 
-            elif opt==2: # Peform layout evaluation based on the list of measures
-                self.init_apis() # Setup measurement
+            if opt == 1:
+                self.init_apis()  # Setup measurement
+                # Convert a list of patch to rectangles
+                patch_dict = self.engine.init_data[0]
+                width, height = self.engine.init_size
+                fig_dict = {(width, height): []}
+                for k, v in patch_dict.items():
+                    fig_dict[(width, height)].append(v)
+                fig_data = [fig_dict]
+                init_rects = {}
+                for k, v in self.engine.init_data[1].items():
+                    rects = []
+                    for i in v:
+                        rect = Rectangle(x=i[0]*1000, y=i[1] * 1000, width=i[2] * 1000, height=i[3] * 1000, type=i[4])
+                        rects.append(rect)
+                    init_rects[k] = rects
+                cs_sym_info = {(width * 1000, height * 1000): init_rects}
+                eval_single_layout(layout_engine=self.engine, layout_data=cs_sym_info, apis={'E': self.e_api,
+                                                                                             'T': self.t_api},
+                                   measures=self.measures)
+
+            elif opt == 2:  # Peform layout evaluation based on the list of measures
+                self.init_apis()  # Setup measurement
                 cont, layout_mode = self.option_layout_gen()
                 if layout_mode in range(3):
                     self.soluions = generate_optimize_layout(layout_engine=self.engine, mode=layout_mode,
                                                              optimization=True, db_file=self.db_file,
-                                                             apis={'E': self.e_api, 'T': self.t_api},measures=self.measures)
+                                                             apis={'E': self.e_api, 'T': self.t_api},
+                                                             measures=self.measures)
 
 
 

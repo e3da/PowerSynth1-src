@@ -7,6 +7,8 @@ import matplotlib.patches as patches
 from powercad.corner_stitch.input_script import *
 
 
+
+
 # --------------Plot function---------------------
 def plot_layout(fig_data=None, rects=None, size=None, fig_dir=None):
     if rects != None:
@@ -94,6 +96,13 @@ def save_solution(rects, id, db):
         insert_record(conn, l_data, temp_file)
     conn.close()
 
+
+def eval_single_layout(layout_engine=None,layout_data=None, apis={}, measures=[]):
+    opt_problem = new_engine_opt(engine=layout_engine, W=layout_engine.init_size[0], H=layout_engine.init_size[1],
+                                 seed=None, level=2, method=None,apis=apis,measures=measures)
+
+    results = opt_problem.eval_layout(layout_data)
+    print results
 
 def update_solution_data(layout_dictionary=None, opt_problem=None, measure_names=[], fig_data=None, perf_results=[]):
     '''

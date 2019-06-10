@@ -24,9 +24,6 @@ class ElectricalMeasure(object):
         self.source = source
         self.sink = sink
 
-
-
-
 class CornerStitch_Emodel_API:
     # This is an API with NewLayout Engine
     def __init__(self, comp_dict={}, layer_to_z={}, wire_conn={}):
@@ -48,6 +45,7 @@ class CornerStitch_Emodel_API:
         self.width = 0
         self.height = 0
         self.measure = []
+
     def form_connection_table(self):
         '''
         Form a connection table only once, which can be reused for multiple evaluation
@@ -62,7 +60,9 @@ class CornerStitch_Emodel_API:
                     table.set_up_table_cmd()
                     self.conn_dict[name] = table.states
         print self.conn_dict
-
+    def get_frequency(self):
+        freq=raw_input("Frequency for the extraction in kHz:")
+        self.freq=float(freq)
 
     def load_rs_model(self, mdl_file):
         self.rs_model = load_mdl(file=mdl_file)
@@ -74,8 +74,8 @@ class CornerStitch_Emodel_API:
         '''
         sig = 4
         # UPDATE ALL PLATES and SHEET FOR THE LAYOUT
-        #print "data"
-        #print layout_data
+        print "data"
+        print layout_data
         self.layout_data = layout_data.values()[0]
         self.width, self.height = layout_data.keys()[0]
         #self.width = round(self.width/1000.0, sig)
@@ -257,4 +257,4 @@ class CornerStitch_Emodel_API:
         R = abs(np.real(imp)*1e3)
         L = abs(np.imag(imp)) * 1e9 / (2 * np.pi * circuit.freq)
         print R,L
-        return R,L
+        return R[0],L[0]
