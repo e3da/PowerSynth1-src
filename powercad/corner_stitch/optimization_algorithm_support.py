@@ -12,7 +12,7 @@ from powercad.electrical_mdl.cornerstitch_API import ElectricalMeasure
 from powercad.thermal.cornerstitch_API import ThermalMeasure
 import matplotlib.pyplot as plt
 class new_engine_opt:
-    def __init__(self, engine, W, H, seed, level, method=None, apis={}, measures=[]):
+    def __init__(self, engine, W, H, seed, level, method=None,db=None, apis={}, measures=[]):
         self.engine = engine
         self.W = W
         self.H = H
@@ -21,6 +21,7 @@ class new_engine_opt:
         self.layout_data = []
         self.fig_data = []
         self.perf_results = []
+        self.db=db
 
         self.gen_layout_func = self.engine.generate_solutions
         self.method = method
@@ -37,6 +38,7 @@ class new_engine_opt:
         self.t_api = apis['T']
         # List of measure object
         self.measures = measures
+
 
     def eval_layout(self, layout_data=None):
         result = []
@@ -91,19 +93,19 @@ class new_engine_opt:
     def cost_func_NSGAII(self, individual):
         if not (isinstance(individual, list)):
             individual = np.asarray(individual).tolist()
-        print "cost",individual
-        fig_data, cs_sym_info = self.gen_layout_func(level=self.level, num_layouts=1, W=self.W, H=self.H,
+
+        cs_sym_info = self.gen_layout_func(level=self.level, num_layouts=1, W=self.W, H=self.H,
                                                      fixed_x_location=None, fixed_y_location=None, seed=self.seed,
-                                                     individual=individual)
+                                                     individual=individual,db=self.db,count=self.count)
 
         result = self.eval_layout(cs_sym_info[0])
         self.count += 1
         # self.solutions[(ret[0], ret[1])] = figure
         # if ret not in self.solution_data:
-        self.fig_data.append(fig_data)
+        #self.fig_data.append(fig_data)
         self.layout_data.append(cs_sym_info)
         self.perf_results.append(result)
-        print "res",result
+
         return result
 
     """
@@ -223,15 +225,15 @@ class new_engine_opt:
         if not (isinstance(individual, list)):
             individual = np.asarray(individual).tolist()
 
-        fig_data, cs_sym_info = self.gen_layout_func(level=self.level, num_layouts=1, W=self.W, H=self.H,
+        cs_sym_info = self.gen_layout_func(level=self.level, num_layouts=1, W=self.W, H=self.H,
                                               fixed_x_location=None, fixed_y_location=None, seed=self.seed,
-                                              individual=individual)
+                                              individual=individual,db=self.db,count=self.count)
 
         result = self.eval_layout(cs_sym_info[0])
         self.count += 1
         # self.solutions[(ret[0], ret[1])] = figure
         # if ret not in self.solution_data:
-        self.fig_data.append(fig_data)
+        #self.fig_data.append(fig_data)
         self.layout_data.append(cs_sym_info)
         self.perf_results.append(result)
         return result
@@ -283,15 +285,15 @@ class new_engine_opt:
         return XSEND
 
     def cost_func_SA(self, individual):
-        fig_data, cs_sym_info = self.gen_layout_func(level=self.level, num_layouts=1, W=self.W, H=self.H,
+        cs_sym_info = self.gen_layout_func(level=self.level, num_layouts=1, W=self.W, H=self.H,
                                               fixed_x_location=None, fixed_y_location=None, seed=self.seed,
-                                              individual=individual)
+                                              individual=individual,db=self.db,count=self.count)
 
         result = self.eval_layout(cs_sym_info[0])
         self.count += 1
         # self.solutions[(ret[0], ret[1])] = figure
         # if ret not in self.solution_data:
-        self.fig_data.append(fig_data)
+        #self.fig_data.append(fig_data)
         self.layout_data.append(cs_sym_info)
         self.perf_results.append(result)
         return result[0], result[1]

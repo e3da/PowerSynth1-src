@@ -119,7 +119,7 @@ def update_solution_data(layout_dictionary=None, opt_problem=None, measure_names
         else:
             results = perf_results[i]
         name = 'Layout_' + str(i)
-        solution = CornerStitchSolution(name=name)
+        solution = CornerStitchSolution(name=name,index=i)
         solution.params = dict(zip(measure_names, results))  # A dictionary formed by result and measurement name
         solution.layout_info = layout_dictionary[i]
         solution.abstract_info = solution.form_abs_obj_rect_dict()
@@ -127,7 +127,7 @@ def update_solution_data(layout_dictionary=None, opt_problem=None, measure_names
     return Solutions
 
 
-def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_file=None, apis={}, measures=[]):
+def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_file=None,fig_dir=None, apis={}, measures=[]):
     '''
 
     :param layout_engine: Layout engine object for layout generation
@@ -144,10 +144,12 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
         measure_names.append(m.name)
 
     if mode == 0:
-        fig_data, cs_sym_info = layout_engine.generate_solutions(mode, num_layouts=1, W=None, H=None,
+        cs_sym_info = layout_engine.generate_solutions(mode, num_layouts=1, W=None, H=None,
                                                                  fixed_x_location=None, fixed_y_location=None,
                                                                  seed=None,
-                                                                 individual=None, bar=False)
+                                                                 individual=None,db=db_file, bar=False)
+
+
 
         if optimization == True:
             opt_problem = new_engine_opt(engine=layout_engine, W=None, H=None, seed=None, level=mode, method=None,
@@ -155,6 +157,16 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
             Solutions = update_solution_data(layout_dictionary=cs_sym_info, opt_problem=opt_problem,
                                              measure_names=measure_names)
 
+        else:
+            Solutions = []
+            for i in range(len(cs_sym_info)):
+                name = 'Layout_' + str(i)
+                solution = CornerStitchSolution(name=name)
+                solution.params = None
+                solution.layout_info = cs_sym_info[i]
+                solution.abstract_info = solution.form_abs_obj_rect_dict()
+                solution.layout_plot(layout_ind=i, db=db_file, fig_dir=fig_dir)
+                Solutions.append(solution)
 
 
     elif mode == 1:
@@ -176,9 +188,9 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
                     num_layouts = int(num_layouts)
                 except:
                     print "Please enter an integer"
-                fig_data, cs_sym_info = layout_engine.generate_solutions(mode, num_layouts=num_layouts, W=None, H=None,
+                cs_sym_info = layout_engine.generate_solutions(mode, num_layouts=num_layouts, W=None, H=None,
                                                                          fixed_x_location=None, fixed_y_location=None,
-                                                                         seed=seed, individual=None, bar=False)
+                                                                         seed=seed, individual=None,db=db_file,count=None, bar=False)
 
                 opt_problem = new_engine_opt(engine=layout_engine, W=None, H=None, seed=seed, level=mode, method=None,
                                              apis=apis, measures=measures)
@@ -195,7 +207,7 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
                         print "Please enter an integer"
                     # optimization_algorithm="NSGAII"
                     opt_problem = new_engine_opt(engine=layout_engine, W=None, H=None, seed=seed, level=mode,
-                                                 method="NSGAII",
+                                                 method="NSGAII",db=db_file,
                                                  apis=apis, measures=measures)
                     opt_problem.num_measure = 2  # number of performance metrics
                     opt_problem.num_gen = num_layouts  # number of generations
@@ -217,7 +229,7 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
                         print "Please enter an integer"
 
                     opt_problem = new_engine_opt(engine=layout_engine, W=None, H=None, seed=seed, level=mode,
-                                                 method="FMINCON",
+                                                 method="FMINCON",db=db_file,
                                                  apis=apis, measures=measures)
                     opt_problem.num_measure = 2  # number of performance metrics
                     opt_problem.num_gen = num_layouts  # number of generations
@@ -239,7 +251,7 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
                     except:
                         print "Please enter a valid Temperature"
                     opt_problem = new_engine_opt(engine=layout_engine, W=None, H=None, seed=seed, level=mode,
-                                                 method="SA",
+                                                 method="SA",db=db_file,
                                                  apis=apis, measures=measures)
                     opt_problem.num_measure = 2  # number of performance metrics
                     opt_problem.num_gen = num_layouts  # number of generations
@@ -248,6 +260,10 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
 
                 Solutions = update_solution_data(layout_dictionary=opt_problem.layout_data, measure_names=measure_names,
                                                  perf_results=opt_problem.perf_results)
+                plot=False
+                if plot==True:
+                    for solution in Solutions:
+                        solution.layout_plot(layout_ind=solution.index, db=db_file, fig_dir=fig_dir)
 
         else:  # Layout generation only
             print "Enter desired number of solutions:"
@@ -256,9 +272,9 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
                 num_layouts = int(num_layouts)
             except:
                 print "Please enter an integer"
-            fig_data, cs_sym_info = layout_engine.generate_solutions(mode, num_layouts=num_layouts, W=None, H=None,
+            cs_sym_info = layout_engine.generate_solutions(mode, num_layouts=num_layouts, W=None, H=None,
                                                                      fixed_x_location=None, fixed_y_location=None,
-                                                                     seed=seed, individual=None, bar=False)
+                                                                     seed=seed, individual=None,db=db_file, bar=False)
 
             Solutions = []
             for i in range(len(cs_sym_info)):
@@ -267,7 +283,7 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
                 solution.params = None
                 solution.layout_info = cs_sym_info[i]
                 solution.abstract_info = solution.form_abs_obj_rect_dict()
-                solution.fig_data = fig_data[i]
+                solution.layout_plot(layout_ind=i, db=db_file, fig_dir=fig_dir)
                 Solutions.append(solution)
 
 
@@ -297,10 +313,10 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
                     num_layouts = int(num_layouts)
                 except:
                     print "Please enter an integer"
-                fig_data, cs_sym_info = layout_engine.generate_solutions(mode, num_layouts=num_layouts, W=width,
+                cs_sym_info = layout_engine.generate_solutions(mode, num_layouts=num_layouts, W=width,
                                                                          H=height,
                                                                          fixed_x_location=None, fixed_y_location=None,
-                                                                         seed=seed, individual=None, bar=False)
+                                                                         seed=seed, individual=None,db=db_file, bar=False)
 
                 opt_problem = new_engine_opt(engine=layout_engine, W=width, H=height, seed=seed, level=mode,
                                              method=None,
@@ -318,7 +334,7 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
                         print "Please enter an integer"
                     # optimization_algorithm="NSGAII"
                     opt_problem = new_engine_opt(engine=layout_engine, W=width, H=height, seed=seed, level=mode,
-                                                 method="NSGAII",
+                                                 method="NSGAII",db=db_file,
                                                  apis=apis, measures=measures)
                     opt_problem.num_measure = 2  # number of performance metrics
                     opt_problem.num_gen = num_layouts  # number of generations
@@ -340,7 +356,7 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
                         print "Please enter an integer"
 
                     opt_problem = new_engine_opt(engine=layout_engine, W=width, H=height, seed=seed, level=mode,
-                                                 method="FMINCON",
+                                                 method="FMINCON",db=db_file,
                                                  apis=apis, measures=measures)
                     opt_problem.num_measure = 2  # number of performance metrics
                     opt_problem.num_gen = num_layouts  # number of generations
@@ -362,23 +378,27 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
                     except:
                         print "Please enter a valid Temperature"
                     opt_problem = new_engine_opt(engine=layout_engine, W=width, H=height, seed=seed, level=mode,
-                                                 method="SA",
+                                                 method="SA",db=db_file,
                                                  apis=apis, measures=measures)
                     opt_problem.num_measure = 2  # number of performance metrics
                     opt_problem.num_gen = num_layouts  # number of generations
                     opt_problem.T_init = temp_init  # initial temperature
                     opt_problem.optimize()  # perform optimization
                 Solutions = update_solution_data(layout_dictionary=opt_problem.layout_data, measure_names=measure_names, perf_results=opt_problem.perf_results)
-        else:
+                plot = False
+                if plot == True:
+                    for solution in Solutions:
+                        solution.layout_plot(layout_ind=solution.index, db=db_file, fig_dir=fig_dir)
+        else: #layout generation only
             print "Enter desired number of solutions:"
             num_layouts = raw_input()
             try:
                 num_layouts = int(num_layouts)
             except:
                 print "Please enter an integer"
-            fig_data, cs_sym_info = layout_engine.generate_solutions(mode, num_layouts=num_layouts, W=width, H=height,
+            cs_sym_info = layout_engine.generate_solutions(mode, num_layouts=num_layouts, W=width, H=height,
                                                                      fixed_x_location=None, fixed_y_location=None,
-                                                                     seed=seed, individual=None, bar=False)
+                                                                     seed=seed, individual=None,db=db_file, bar=False)
 
             Solutions = []
             for i in range(len(cs_sym_info)):
@@ -386,7 +406,9 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
                 solution = CornerStitchSolution(name=name)
                 solution.params = None
                 solution.layout_info = cs_sym_info[i]
+                #print cs_sym_info[i]
                 solution.abstract_info = solution.form_abs_obj_rect_dict()
+                solution.layout_plot(layout_ind=i, db=db_file, fig_dir=fig_dir)
                 Solutions.append(solution)
 
     '''
@@ -431,10 +453,10 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
             num_layouts = int(num_layouts)
         except:
             print "Please enter an integer"
-        fig_data, cs_sym_info = layout_engine.generate_solutions(mode, num_layouts=num_layouts, W=width, H=height,
+        cs_sym_info = layout_engine.generate_solutions(mode, num_layouts=num_layouts, W=width, H=height,
                                                               fixed_x_location=window.fixed_x_locations,
                                                               fixed_y_location=window.fixed_y_locations,
-                                                              seed=seed, individual=None, bar=False)
+                                                              seed=seed, individual=None,db=db_file, bar=False)
         # print fig_data
         if optimization == True:
             opt_problem = new_engine_opt(engine=layout_engine, W=width, H=height, seed=seed, mode=mode, method=None)
@@ -457,10 +479,15 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
         for i in range(len(fig_data)):
             save_solution(fig_data[i], id=i, db=db_file)
     '''
+
+    '''
     # POPULATING DATABASE
     for i in range(len(Solutions)):  # MARK FOR DELETION
         solution = Solutions[i]
         save_solution(solution.fig_data, id=i, db=db_file)
+    
+    '''
+
     return Solutions
 
 
@@ -500,7 +527,7 @@ def script_translator(input_script=None, bond_wire_info=None, fig_dir=None):
     plot_layout(fig_data=New_engine.init_data[0], size=New_engine.init_size, fig_dir=fig_dir)
 
     # New_engine.open_new_layout_engine(window=window)
-    Patches, cs_sym_data = New_engine.generate_solutions(level=0, num_layouts=1, W=None, H=None, fixed_x_location=None,
+    cs_sym_data = New_engine.generate_solutions(level=0, num_layouts=1, W=None, H=None, fixed_x_location=None,
                                                          fixed_y_location=None, seed=None, individual=None)
 
-    return New_engine, cs_sym_data, bondwires, Patches
+    return New_engine, cs_sym_data, bondwires

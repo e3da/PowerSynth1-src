@@ -158,7 +158,7 @@ class New_layout_engine():
 
 
         sym_to_cs = Sym_to_CS(input_rects, self.Htree, self.Vtree)  # maps corner stitch tiles to symbolic layout objects
-        print sym_to_cs
+        #print sym_to_cs
         self.init_data = [patches, sym_to_cs, combined_graph]
         #return init_data, Htree, Vtree
 
@@ -270,7 +270,7 @@ class New_layout_engine():
 
 
     # generate layout solutions using constraint graph edge weights randomization for different modes(level)
-    def generate_solutions(self, level, num_layouts=1, W=None, H=None, fixed_x_location=None, fixed_y_location=None,seed=None,individual=None,bar=False):
+    def generate_solutions(self, level, num_layouts=1, W=None, H=None, fixed_x_location=None, fixed_y_location=None,seed=None,individual=None,db=None,count=None,bar=False):
         """
 
         :param level: mode of operation: mode-0(minimum sized layout), mode-1(variable sized layouts), mode-2(fixed sized layouts), mode-3(fixed sized with fixed component locations)
@@ -324,7 +324,12 @@ class New_layout_engine():
                     k=(k[0]*scaler,k[1]*scaler)
                     CS_SYM_Updated[k] = CS_SYM_information
             CS_SYM_Updated = [CS_SYM_Updated] # mapped solution layout information to symbolic layout objects
-
+            if db!=None:
+                if count==None:
+                    converted_layout_rects={}
+                    for k,v in Layout_Rects.items():
+                        converted_layout_rects[k]=[v]
+                    self.save_layouts(converted_layout_rects,count=None, db=db)
 
 
         #mode-1
@@ -334,10 +339,13 @@ class New_layout_engine():
                                                       XLoc=None, YLoc=None, seed=seed, individual=individual,Types=self.Types)
             CS_SYM_Updated, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree, sym_to_cs,scaler)
             CS_SYM_Updated = CS_SYM_Updated['H']
-            self.cur_fig_data = plot_layout(Layout_Rects, level,self.min_dimensions)
-            #self.cur_fig_data=None
-            #self.save_layouts(Layout_Rects, p_bar)
-            #self.cur_fig_data = None
+            #self.cur_fig_data = plot_layout(Layout_Rects, level,self.min_dimensions)
+            if count==None:
+                #for i in range(len(Layout_Rects)):
+                self.save_layouts(Layout_Rects, db=db)
+            else:
+                #for i in range(len(Layout_Rects)):
+                self.save_layouts(Layout_Rects,count=count, db=db)
 
         #mode-2
         elif level == 2:
@@ -371,7 +379,7 @@ class New_layout_engine():
             Min_Y_Loc[len(YLoc) - 1] = max_y
 
             for k, v in Min_X_Loc.items(): # checking if the given width is greater or equal minimum width
-                print W,v
+
                 if W >= v:
                     #Min_X_Loc[0] = 0
                     #Min_X_Loc[k] = W
@@ -403,17 +411,13 @@ class New_layout_engine():
 
             CS_SYM_Updated, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree, sym_to_cs,scaler)
             CS_SYM_Updated = CS_SYM_Updated['H'] # takes only horizontal corner stitch data
-            self.cur_fig_data = plot_layout(Layout_Rects, level,self.min_dimensions) #collects the layout patches
-
-            '''
-            if self.new_layout_engine.opt_algo!="NSGAII":
-                self.save_layouts(Layout_Rects, p_bar)
-                self.cur_fig_data = None
+            #self.cur_fig_data = plot_layout(Layout_Rects, level,self.min_dimensions) #collects the layout patches
+            if count==None:
+                #for i in range(len(Layout_Rects)):
+                self.save_layouts(Layout_Rects, db=db)
             else:
-                self.cur_fig_data=Layout_Rects
-            
-            '''
-
+                #for i in range(len(Layout_Rects)):
+                self.save_layouts(Layout_Rects,count=count, db=db)
 
 
 
@@ -528,8 +532,11 @@ class New_layout_engine():
 
 
             CS_SYM_Updated = CS_SYM_Updated['H'] # takes only horizontal corner stitch data
-            self.cur_fig_data = plot_layout(Layout_Rects, level,self.min_dimensions,Min_X_Loc,Min_Y_Loc)
-            #self.save_layouts(Layout_Rects, p_bar)
+            #self.cur_fig_data = plot_layout(Layout_Rects, level,self.min_dimensions,Min_X_Loc,Min_Y_Loc)
+            if count==None:
+                #for i in range(len(Layout_Rects)):
+                self.save_layouts(Layout_Rects, db=db)
+
 
 
 
@@ -538,9 +545,36 @@ class New_layout_engine():
         if bar:
             p_bar.close()
 
-        return self.cur_fig_data, CS_SYM_Updated
+        return  CS_SYM_Updated
 
-    def save_layouts(self,Layout_Rects,p_bar=None):
+    def save_layout(self,Layout_Rects, count, db):
+        # print Layout_Rects
+
+        data = []
+
+        for k, v in Layout_Rects.items():
+            for R_in in v:
+                data.append(R_in)
+
+            data.append([k[0], k[1]])
+
+        l_data = [count, data]
+        directory = os.path.dirname(db)
+        temp_file = directory + '/out.txt'
+
+        with open(temp_file, 'wb') as f:
+            f.writelines(["%s\n" % item for item in data])
+            # f.write(''.join(chr(i) for i in range(data)))
+        conn = create_connection(db)
+        with conn:
+            insert_record(conn, l_data, temp_file)
+        conn.close()
+
+
+    def save_layouts(self,Layout_Rects,count=None, db=None):
+
+
+
         for k,v in Layout_Rects.items():
 
             if k=='H':
@@ -574,14 +608,15 @@ class New_layout_engine():
                     Total_H[(max_x,max_y)].append(Rectangles)
         colors = ['white', 'green', 'red', 'blue', 'yellow', 'purple', 'pink', 'magenta', 'orange', 'violet']
         type = ['EMPTY', 'Type_1', 'Type_2', 'Type_3', 'Type_4', 'Type_5', 'Type_6', 'Type_7', 'Type_8', 'Type_9']
-        j=0
+        if count==None:
+            j=0
+        else:
+            j=count
         for k, v in Total_H.items():
             #print v, len(v)
             for c in range(len(v)):
                 #print "C",c,len(v)
                 data = []
-                item = 'Layout ' + str(j)
-                # data.append(item)
                 Rectangles = v[c]
 
                 for i in Rectangles:
@@ -607,56 +642,28 @@ class New_layout_engine():
                         R_in1 = [x, y, w, h, colour, 2,'None','None']
                         data.append(R_in1)
                     data.append(R_in)
-                '''
-                data.append([k[0], k[1], 'None', 'None', 'None', 'None', 'None', 'None'])
+                
 
-                conn = create_connection(self.new_layout_engine.db)
-                with conn:
-                    # create a new project
-                    table = 'Layout_' + str(j)
-                    try:
-                        p_bar.update(j)
-                    except:
-                        print table
-                    create_table(conn, name=table)
-                    for d in data:
-                        insert_record(conn, table, d)
-                
-                
-                
-                '''
-                table = 'Layout_' + str(j)
-                try:
-                    #p_bar.update(j)
-                    p_bar.update(1)
-                except:
-                    print table
+
                 data.append([k[0], k[1]])
                 l_data = [j, data]
-                #data_s=json.dumps(l_data)
-                temp_file=self.new_layout_engine.parent.project.directory+'/out.txt'
+                directory = os.path.dirname(db)
+                temp_file = directory + '/out.txt'
                 with open(temp_file, 'wb') as f:
                     f.writelines(["%s\n" % item for item in data])
-                conn = create_connection(self.new_layout_engine.db)
+                conn = create_connection(db)
                 with conn:
                     insert_record(conn, l_data, temp_file)
 
-                '''
-                file_name = self.new_layout_engine.directory+'/' + item + '.csv'
-
-                with open(file_name, 'wb') as my_csv:
-                    csv_writer = csv.writer(my_csv, delimiter=',')
-                    data.append([k[0], k[1]])
-                    # csv_writer.writerow(data) #Name, [x,y,w,h,color,zorder],......,W,H
-                    for i in data:
-                        csv_writer.writerow(i)
-
-                my_csv.close()
-                
-                '''
-
-                j+=1
+               
+                if count==None:
+                    j+=1
             conn.close()
+    
+    
+    
+
+
 
 def plot_layout(Layout_Rects,level,min_dimensions=None,Min_X_Loc=None,Min_Y_Loc=None):
     #global min_dimensions
