@@ -1,0 +1,235 @@
+# This is the layout generation and optimization flow using command line only
+from powercad.electrical_mdl.cornerstitch_API import *
+from powercad.thermal.cornerstitch_API import *
+from glob import glob
+from powercad.cmd_run.cmd_layout_handler import generate_optimize_layout, script_translator
+
+
+
+
+class Cmd_Handler:
+    def __init__(self):
+        # Input files
+        self.layout_script = None  # layout file dir
+        self.bondwire_setup = None  # bondwire setup dir
+        self.layer_stack_file = None  # layerstack file dir
+        self.rs_model_file = None  # rs model file dir
+        self.fig_dir = None  # Default dir to save figures
+        self.db_dir = None  # Default dir to save layout db
+
+        # Data storage
+        self.db_file = None  # A file to store layout database
+
+
+        # CornerStitch Initial Objects
+        self.engine = None
+        self.comp_dict = {}
+        self.wire_table = {}
+        self.raw_layout_info = {}
+        self.min_size_rect_patches = {}
+        # APIs
+        self.measures = []
+        self.e_api = None
+        self.t_api = None
+        # Solutions
+        self.soluions = None
+    def database_dir_request(self):
+        print "Please enter a directory to save layout database"
+        correct = True
+        while (correct):
+            db_dir = raw_input("Database dir:")
+            if os.path.isdir(db_dir):
+                self.db_dir = db_dir
+                correct = False
+            else:
+                print "wrong input"
+
+    def fig_dir_request(self):
+        print "Please enter a directory to save figures"
+        correct = True
+        while (correct):
+            fig_dir = raw_input("Fig dir:")
+            if os.path.isdir(fig_dir):
+                self.fig_dir = fig_dir
+                correct = False
+            else:
+                print "wrong input"
+
+    def layout_script_request(self):
+        print "Please enter a layout file directory"
+        correct = True
+        while (correct):
+            file = raw_input("Layout Script File:")
+            if os.path.isfile(file):
+                self.layout_script = file
+                correct = False
+            else:
+                print "wrong input"
+
+    def bondwire_file_request(self):
+        print "Please enter a bondwire setup file directory"
+        correct = True
+        while (correct):
+            file = raw_input("Bondwire Setup File:")
+            if os.path.isfile(file):
+                self.bondwire_setup = file
+                correct = False
+            else:
+                print "wrong input"
+
+    def layer_stack_request(self):
+        print "Please enter a layer stack file directory"
+        correct = True
+        while (correct):
+            file = raw_input("Layer Stack File:")
+            if os.path.isfile(file):
+                self.layer_stack_file = file
+                correct = False
+            else:
+                print "wrong input"
+
+    def res_model_request(self):
+        print "Please enter a model file directory"
+        correct = True
+        while (correct):
+            file = raw_input("Model File:")
+            if os.path.isfile(file):
+                self.rs_model_file = file
+                correct = False
+            else:
+                print "wrong input"
+
+    def option_request(self):
+        print "Please enter an option:"
+        print "0: layout generation, 1:single layout evaluation, 2:layout optimization, quit:to quit,help:to get help"
+        correct = True
+        while (correct):
+            opt = raw_input("Option:")
+            if opt in ['0', '1', '2']:
+                return True, int(opt)
+            elif opt == 'quit':
+                return False, opt
+            elif opt == 'help':
+                self.help()
+            else:
+                print "wrong input"
+
+    def help(self):
+        print "Layout Generation Mode: generate layout only without evaluation"
+        print "Layout Evaluation Mode: single layout evaluation"
+        print "Layout Optimization Mode: optimize layout based on initial input"
+
+    def option_layout_gen(self):
+        print "Please enter an option:"
+        print "0: minimum size, 1:variable size, 2:fixed size, 3:fixed size with fixed locations, quit:to quit"
+        print "back: return to the previous stage"
+
+        correct = True
+        while (correct):
+            opt = raw_input("Option:")
+            if opt in ['0', '1', '2', '3']:
+                return True, int(opt)
+            elif opt == 'quit':
+                return False, opt
+            elif opt == 'back':
+                return True, opt
+            else:
+                print "wrong input"
+
+    # -------------------INITIAL SETUP--------------------------------------
+    def set_up_db(self):
+        database = os.path.join(self.db_dir, 'layouts_db')
+        filelist = glob(os.path.join(database + '/*'))
+        # print filelist
+        for f in filelist:
+            try:
+                os.remove(f)
+            except:
+                print "can't remove file"
+
+        if not os.path.exists(database):
+            os.makedirs(database)
+        self.db_file = database + '/' + 'layout.db'
+        conn = create_connection(self.db_file)
+        with conn:
+            create_table(conn)
+        conn.close()
+
+    def input_request(self):
+        self.layout_script_request()
+        self.bondwire_file_request()
+        self.layer_stack_request()
+        self.res_model_request()
+        self.fig_dir_request()
+        self.database_dir_request()
+
+    def init_cs_objects(self):
+        '''
+        Initialize some CS objects
+        :return:
+        '''
+        self.engine, self.raw_layout_info, self.wire_table, self.min_size_rect_patches = script_translator(
+            input_script=self.layout_script, bond_wire_info=self.bondwire_setup,fig_dir=self.fig_dir)
+        for comp in self.engine.all_components:
+            self.comp_dict[comp.layout_component_id] = comp
+
+
+
+    # --------------- API --------------------------------
+    def setup_electrical(self):
+
+        layer_to_z = {'T': [0, 0.2], 'D': [0.2, 0], 'B': [0.2, 0],
+                      'L': [0.2, 0]}
+        self.e_api = CornerStitch_Emodel_API(comp_dict=self.comp_dict, layer_to_z=layer_to_z, wire_conn=self.wire_table)
+        self.e_api.load_rs_model(self.rs_model_file)
+        self.e_api.form_connection_table()
+        self.measures+=self.e_api.measurement_setup()
+
+    def setup_thermal(self):
+
+        self.t_api = CornerStitch_Tmodel_API(comp_dict=self.comp_dict)
+        self.t_api.import_layer_stack(self.layer_stack_file)
+        self.t_api.set_up_device_power()
+        self.measures +=self.t_api.measurement_setup()
+
+    def init_apis(self):
+        '''
+        initialize electrical and thermal APIs
+        '''
+        self.measures = []
+        self.setup_thermal()
+        self.setup_electrical()
+
+    def cmd_handler_flow(self):
+        self.input_request()
+        self.init_cs_objects()
+        self.set_up_db()
+        self.cmd_loop()
+
+    def cmd_loop(self):
+        cont = True
+        while (cont):
+            cont, opt = self.option_request()
+            if opt == 0:  # Perform layout generation only without evaluation
+                cont, layout_mode = self.option_layout_gen()
+                if layout_mode in range(3):
+                    self.soluions=generate_optimize_layout(layout_engine=self.engine,mode=layout_mode,optimization=False,db_file=self.db_file,
+                                             apis ={'E':self.e_api,'T':self.t_api})
+
+            elif opt==2: # Peform layout evaluation based on the list of measures
+                self.init_apis() # Setup measurement
+                cont, layout_mode = self.option_layout_gen()
+                if layout_mode in range(3):
+                    self.soluions = generate_optimize_layout(layout_engine=self.engine, mode=layout_mode,
+                                                             optimization=True, db_file=self.db_file,
+                                                             apis={'E': self.e_api, 'T': self.t_api},measures=self.measures)
+
+
+
+            elif opt == 'quit':
+                cont = False
+
+
+if __name__ == "__main__":
+    cmd = Cmd_Handler()
+    cmd.cmd_handler_flow()

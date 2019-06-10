@@ -24,6 +24,22 @@ class Connection_Table:
                 if conns_to_select[s]==r:
                     self.states[s]=1
         print self.states
+
+    def set_up_table_cmd(self):
+        print "Input a sequence of 0 or 1 separate by commas e.g: 0,1,1 for each of the connection following this order"
+        for conns in self.connections:
+            mode = self.connections.keys().index(conns)
+            print 'column', mode, ":", conns[0] + ' to ' + conns[1]
+            self.states[conns] = 0
+        input = raw_input("Input sequence here:")
+        states = tuple(map(int, input.split(',')))
+        keys = self.connections.keys()
+        for k in self.connections:
+            self.states[k] = states[keys.index(k)]
+        print self.states
+
+
+
 def set_up_pins_connections(parts=[]):
     """
 

@@ -6,7 +6,7 @@ import csv
 import math
 
 import numpy as np
-
+from powercad.general.data_struct.util import draw_rect_list
 from powercad.electrical_mdl.e_hierarchy import *
 from powercad.electrical_mdl.e_struct import *
 from powercad.parasitics.models_bondwire import wire_inductance, wire_partial_mutual_ind, wire_resistance, \
@@ -211,7 +211,6 @@ class EWires(EComp):
             imp =self.circuit.results['v1']
             R = abs(np.real(imp))
             L = abs(np.imag(imp) / (2 * np.pi * self.f))
-            print "wire group",R,L
             self.net_graph.add_edge(self.sheet[0].net, self.sheet[1].net, edge_data={'R': R, 'L': L, 'C': None})
             # print self.net_graph.edges(data=True)
 
@@ -391,12 +390,14 @@ class EModule:
         for i in range(len(output)):
             self.group[i] = output[i]
 
+
     def split_layer_group(self):
         plate_group = self.group
         self.plate = []
         self.group_layer_dict = {}
         splitted_group = {}
         for group in plate_group.keys():  # First collect all xs and ys coordinates
+            rects = []
             counter = 0
             xs = []
             ys = []
@@ -415,7 +416,6 @@ class EModule:
             ys = list(set(ys))
             xs.sort()
             ys.sort()
-
             ls = range(len(xs) - 1)  # left
             ls = [xs[i] for i in ls]
             ls.sort()
@@ -441,7 +441,13 @@ class EModule:
                             break
 
                     if split:
-                        newRect = Rect(top=top, bottom=bot, left=left, right=right)
+                        t = round(top/1000.0,3)
+                        b = round(bot / 1000.0, 3)
+                        l = round(left / 1000.0, 3)
+                        r = round(right / 1000.0, 3)
+
+                        newRect = Rect(top=t, bottom=b, left=l, right=r)
+                        rects.append(newRect)
                         newPlate = E_plate(rect=newRect, z=z, dz=dz, n=n)
                         newPlate.name = 'T' + str(counter) + '_(' + 'isl' + str(group) + ')'
                         counter += 1

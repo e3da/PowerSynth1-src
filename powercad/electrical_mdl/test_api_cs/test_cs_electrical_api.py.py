@@ -90,7 +90,7 @@ def test_case(layout_script, bond_wire_script):
     flow_api = CornerStitch_Emodel_API(comp_dict=comp_dict, layer_to_z=layer_to_z, wire_conn=bondwires)
     mdl_dir = "C:\Users\qmle\Desktop\New_Layout_Engine\New_design_flow"
     mdl_name = 'ARL_module.rsmdl'
-    flow_api.load_rs_mode(mdl_dir,mdl_name)
+    flow_api.load_rs_model(os.path.join(mdl_dir,mdl_name))
     flow_api.form_connection_table()
     flow_api.init_layout(layout_info[0])
     flow_api.extract_RL('L1','L4')

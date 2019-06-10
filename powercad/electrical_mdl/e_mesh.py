@@ -219,9 +219,8 @@ class EMesh():
                 all_r = trace_res_krige(self.f, self.all_W, self.all_L, t=0, p=0, mdl=self.mdl['R']).tolist()
                 #all_r = [trace_resistance(self.f,w,l,t,h) for w, l in zip(self.all_W, self.all_L)]
                 all_l = trace_ind_krige(self.f, self.all_W, self.all_L, mdl=self.mdl['L']).tolist()
-
                 #all_l = [trace_inductance(w, l, t, h) for w, l in zip(self.all_W, self.all_L)]
-                #print all_l
+                print len(all_l)
 
                 #all_c = self.compute_all_cap()
                 for i in range(len(self.all_W)):
@@ -600,7 +599,6 @@ class EMesh():
                     comp_nodes[group].append(cp_node)
                     comp_dict[comp] = 1
                 for n in comp.net_graph.nodes(data=True): # node without parents
-                    print n
                     sheet_data= n[1]['node']
 
                     #print sheet_data.node
@@ -652,6 +650,9 @@ class EMesh():
             node_dict = {}           # Use to store hashed data positions
             lines = []               # All rect bound lines
             points=[]                # All mesh points
+            x_cs = []                # Corner stitch x locations
+            y_cs = []                # Corner stitch y locations
+
             P_app = points.append
             for k_id in xrange(len(g.nodes.keys())): # Search for all traces in trace island
                 # take the traces of this group ( by definition, each group have a different z level)
@@ -759,7 +760,7 @@ class EMesh():
                 if add:
                     bound_lines+=[l1]
             #for l in bound_lines:
-                #print l.pt1, l.pt2
+            #    print l.pt1, l.pt2
             #    plt.plot([l.pt1[0], l.pt2[0]], [l.pt1[1], l.pt2[1]], color='red', linewidth=3)
             #for p in points:
             #   plt.scatter([p[0]],[p[1]],color='black')
@@ -768,11 +769,11 @@ class EMesh():
             self.mesh_nodes(points=points,corners_trace_dict=corners_trace_dict,boundary_line=bound_lines,group=g)
             # Finding mesh edges for group
             self.mesh_edges(thick)
+
             #self.update_trace_RL_val()
             #self.mesh_edges2(thick)
             #fig,ax = plt.subplots()
             #draw_rect_list(all_rect,ax,'blue',None)
-            # plt.show()
             # Once we have all the nodes and edges for the trace group, we need to save hier node info
             hier_group_dict = {}
             if comp_nodes!={} and g in comp_nodes: # case there are components

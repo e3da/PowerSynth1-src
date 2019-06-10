@@ -1,37 +1,63 @@
 import math
-from simanneal import Annealer
 from scipy import optimize
 from powercad.opt.optimizer import NSGAII_Optimizer, DesignVar, Matlab_weighted_sum_fmincon, Matlab_hybrid_method, \
     Matlab_gamultiobj, SimulatedAnnealing
+from powercad.opt.simulated_anneal import Annealer
 import collections
 import numpy as np
 import random
 import timeit
 import os
-
-
+from powercad.electrical_mdl.cornerstitch_API import ElectricalMeasure
+from powercad.thermal.cornerstitch_API import ThermalMeasure
+import matplotlib.pyplot as plt
 class new_engine_opt:
-    def __init__(self, engine, W, H,seed,level,method=None):
+    def __init__(self, engine, W, H, seed, level, method=None, apis={}, measures=[]):
         self.engine = engine
         self.W = W
         self.H = H
-        #self.solutions = {}
+        # self.solutions = {}
         self.count = 0
-        self.solution_data = []
+        self.layout_data = []
+        self.fig_data = []
+        self.perf_results = []
+
         self.gen_layout_func = self.engine.generate_solutions
         self.method = method
-        self.seed=seed
-        self.level=level
-        self.num_gen=100
-        self.num_measure=2
-        self.T_init=1000000
-        self.num_disc=10
+        self.seed = seed
+        self.level = level
+        self.num_gen = 100
+        # number of evaluation
+        self.num_measure = 2
+        # Sim Anneal
+        self.T_init = 1000000
+        self.num_disc = 10
+        # API for ET measure.
+        self.e_api = apis['E']
+        self.t_api = apis['T']
+        # List of measure object
+        self.measures = measures
 
+    def eval_layout(self, layout_data=None):
+        result = []
 
+        for measure in self.measures:
+            # TODO: APPLY LAYOUT INFO INTO ELECTRICAL MODEL
+            if isinstance(measure, ElectricalMeasure):
+                type = measure.measure
+                self.e_api.init_layout(layout_data=layout_data)
+                R, L = self.e_api.extract_RL(src=measure.source, sink=measure.sink)
 
-    def eval_layout(self):
-        return [4.5,340]
+                if type == 0:  # LOOP RESISTANCE
+                    result.append(R)  # resistance in mOhm
+                if type == 1:  # LOOP INDUCTANCE
+                    result.append(L)  # resistance in mOhm
 
+            if isinstance(measure, ThermalMeasure):
+                max_t = self.t_api.eval_max_temp(layout_data=layout_data)
+                result.append(max_t)
+        print "inside", result
+        return result
 
     def find_individuals(self, X_Loc, Y_Loc):
         for k, v in X_Loc.items():
@@ -66,22 +92,22 @@ class new_engine_opt:
         if not (isinstance(individual, list)):
             individual = np.asarray(individual).tolist()
 
-        figure, CS_SYM = self.gen_layout_func(level=self.level, num_layouts=1, W=self.W, H=self.H,fixed_x_location=None,fixed_y_location=None, seed=self.seed,individual=individual)
+        fig_data, cs_sym_info = self.gen_layout_func(level=self.level, num_layouts=1, W=self.W, H=self.H,
+                                                     fixed_x_location=None, fixed_y_location=None, seed=self.seed,
+                                                     individual=individual)
 
-        ret=self.eval_layout()
+        result = self.eval_layout(cs_sym_info[0])
         self.count += 1
-        #self.solutions[(ret[0], ret[1])] = figure
-        #if ret not in self.solution_data:
-        self.solution_data.append([figure,CS_SYM])
-        for j in range(len(ret)):
-            self.solution_data[self.count-1].append(ret[j])
-
-        return ret
-
+        # self.solutions[(ret[0], ret[1])] = figure
+        # if ret not in self.solution_data:
+        self.fig_data.append(fig_data)
+        self.layout_data.append(cs_sym_info)
+        self.perf_results.append(result)
+        return result
 
     """
     # implementation by Danny
-    
+
     def cost_func2(self, individual=None, alpha=None, opt_mode=True, feval_init=[],update=None):
         # OBJECTIVE CALCULATION
         OBJS = self.cost_func1(individual)
@@ -124,14 +150,13 @@ class new_engine_opt:
         XSEND = GRAD
         #print GRAD
         return XSEND
-    
-    
-    """
 
+
+    """
 
     """
     # implementation from Quang
-    
+
     def compute_grad(self,alpha,objs_0,individual,deltaX,obj,dx,GRAD,index):
         INDIVIDUAL = individual + deltaX
 
@@ -165,7 +190,7 @@ class new_engine_opt:
         # PERFORM LOOP TO CALCULATE GRADIENT
         deltaX = 0.1  # forward difference step size
         DELTAX=np.zeros(len(individual))
-        
+
         if update<=self.num_disc/4:
             start = 0
             stop = len(individual)/4
@@ -189,26 +214,28 @@ class new_engine_opt:
 
         XSEND = GRAD
         return XSEND
-    
-    
+
+
     """
 
     def cost_func1(self, individual):
         if not (isinstance(individual, list)):
             individual = np.asarray(individual).tolist()
 
-        figure, CS_SYM = self.gen_layout_func(level=self.level, num_layouts=1, W=self.W, H=self.H,fixed_x_location=None,fixed_y_location=None, seed=self.seed, individual=individual)
+        fig_data, cs_sym_info = self.gen_layout_func(level=self.level, num_layouts=1, W=self.W, H=self.H,
+                                              fixed_x_location=None, fixed_y_location=None, seed=self.seed,
+                                              individual=individual)
 
+        result = self.eval_layout(cs_sym_info[0])
+        self.count += 1
+        # self.solutions[(ret[0], ret[1])] = figure
+        # if ret not in self.solution_data:
+        self.fig_data.append(fig_data)
+        self.layout_data.append(cs_sym_info)
+        self.perf_results.append(result)
+        return result
 
-        ret = self.eval_layout()
-        self.count+=1
-        #if ret not in self.solution_data:
-        self.solution_data.append([figure,CS_SYM])
-        for j in range(len(ret)):
-            self.solution_data[self.count-1].append(ret[j])
-        return ret
-
-    def cost_func_fmincon(self, individual=None, alpha=None, opt_mode=True, feval_init=[],update=None):
+    def cost_func_fmincon(self, individual=None, alpha=None, opt_mode=True, feval_init=[], update=None):
         # OBJECTIVE CALCULATION
         OBJS = self.cost_func1(individual)
         if opt_mode == False:
@@ -228,21 +255,20 @@ class new_engine_opt:
         deltaX = 0.1
 
         for i in range(0, len(individual)):
-            DELTAX=np.empty(len(individual))
+            DELTAX = np.empty(len(individual))
 
-            if update<=self.num_disc/4:
-                for j in range(len(individual)/4):
-                    DELTAX[j]=deltaX
-            elif update<=self.num_disc/2:
-                for j in range(len(individual)/4,len(individual)/2):
-                    DELTAX[j]=deltaX
-            elif update<=3*self.num_disc/4:
-                for j in range(len(individual)/2,3*(len(individual))/4):
-                    DELTAX[j]=deltaX
+            if update <= self.num_disc / 4:
+                for j in range(len(individual) / 4):
+                    DELTAX[j] = deltaX
+            elif update <= self.num_disc / 2:
+                for j in range(len(individual) / 4, len(individual) / 2):
+                    DELTAX[j] = deltaX
+            elif update <= 3 * self.num_disc / 4:
+                for j in range(len(individual) / 2, 3 * (len(individual)) / 4):
+                    DELTAX[j] = deltaX
             else:
-                for j in range(3*(len(individual))/4,len(individual)):
-                    DELTAX[j]=deltaX
-
+                for j in range(3 * (len(individual)) / 4, len(individual)):
+                    DELTAX[j] = deltaX
 
             INDIVIDUAL = individual + DELTAX
 
@@ -256,20 +282,20 @@ class new_engine_opt:
         return XSEND
 
     def cost_func_SA(self, individual):
-        figure, CS_SYM= self.gen_layout_func(level=self.level, num_layouts=1, W=self.W, H=self.H,fixed_x_location=None,fixed_y_location=None,seed=self.seed, individual=individual)
+        fig_data, cs_sym_info = self.gen_layout_func(level=self.level, num_layouts=1, W=self.W, H=self.H,
+                                              fixed_x_location=None, fixed_y_location=None, seed=self.seed,
+                                              individual=individual)
 
-
-        ret = self.eval_layout()
+        result = self.eval_layout(cs_sym_info[0])
         self.count += 1
-        #if ret not in self.solution_data:
-        self.solution_data.append([figure,CS_SYM])
-        for j in range(len(ret)):
-            self.solution_data[self.count-1].append(ret[j])
-        return ret[0], ret[1]
-
+        # self.solutions[(ret[0], ret[1])] = figure
+        # if ret not in self.solution_data:
+        self.fig_data.append(fig_data)
+        self.layout_data.append(cs_sym_info)
+        self.perf_results.append(result)
+        return result[0], result[1]
 
     def optimize(self):
-
 
         X, Y = self.engine.mode_zero()
         x_nodes = [i for i in range(len(X[1]))]
@@ -286,35 +312,35 @@ class new_engine_opt:
             Design_Vars.append(DesignVar((prange[0], prange[1]), (prange[0], prange[1])))
 
         if self.method == "NSGAII":
-            #start = timeit.default_timer()
-            opt = NSGAII_Optimizer(design_vars=Design_Vars, eval_fn=self.cost_func_NSGAII, num_measures=self.num_measure, seed=self.seed,num_gen=self.num_gen)
+            # start = timeit.default_timer()
+            opt = NSGAII_Optimizer(design_vars=Design_Vars, eval_fn=self.cost_func_NSGAII,
+                                   num_measures=self.num_measure, seed=self.seed, num_gen=self.num_gen)
             opt.run()
-            return self.solution_data
 
 
         elif self.method == "FMINCON":
 
-            #start = timeit.default_timer()
+            # start = timeit.default_timer()
 
-            #num_gen=MaxIter, num_disc= how many times a complete maxiter number of iterations will happen.
+            # num_gen=MaxIter, num_disc= how many times a complete maxiter number of iterations will happen.
 
-            opt = Matlab_weighted_sum_fmincon(len(Design_Vars), self.cost_func_fmincon, num_measures=self.num_measure, num_gen=self.num_gen,num_disc=self.num_disc,matlab_dir=os.path.abspath("../../../../MATLAB"),individual=None)
+            opt = Matlab_weighted_sum_fmincon(len(Design_Vars), self.cost_func_fmincon, num_measures=self.num_measure,
+                                              num_gen=self.num_gen, num_disc=self.num_disc,
+                                              matlab_dir=os.path.abspath("../../../../MATLAB"), individual=None)
             opt.run()
-            #results=np.array(self.solution_data)
-            #end = timeit.default_timer()
-            return self.solution_data
+            # results=np.array(self.solution_data)
+            # end = timeit.default_timer()
 
         elif self.method == "SA":
 
-            #start = timeit.default_timer()
+            # start = timeit.default_timer()
 
-            individual = [i  for i in Random]
+            individual = [i for i in Random]
 
+            state = [i * 0 + 6 for i in range(len(individual))]
+            opt = SimulatedAnnealing(state, self.cost_func_SA, alpha=0.8, Tmax=self.T_init, Tmin=2.5,
+                                     steps=self.num_gen)
+            best, variables, repeat = opt.anneal()
+            # results=np.array(self.solution_data)
+            # end = timeit.default_timer()
 
-            state=[i*0+6 for i in range(len(individual))]
-            opt = SimulatedAnnealing(state, self.cost_func_SA,alpha=0.8, Tmax=self.T_init, Tmin=2.5, steps=self.num_gen)
-            best, variables,repeat = opt.anneal()
-            #results=np.array(self.solution_data)
-            #end = timeit.default_timer()
-
-            return self.solution_data
