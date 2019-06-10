@@ -31,17 +31,28 @@ class Cmd_Handler:
         # Solutions
         self.soluions = None
 
-    def load_macro_file(self,file):
+    def load_macro_file(self, file):
+        '''
+
+        :param file:
+        :return:
+        '''
+        run_option = None
+        num_layouts = None
+        floor_plan = None
+        seed = None
+        algorithm = None
+        t_name =None
 
         with open(file, 'rb') as inputfile:
-            pin_read = False
-            para_read = False
+            thermal_mode = False
+            electrical_mode =False
             for line in inputfile.readlines():
                 line = line.strip("\r\n")
                 info = line.split(" ")
-                if line =='':
+                if line == '':
                     continue
-                if line[0] == '#': # Comments
+                if line[0] == '#':  # Comments
                     continue
                 if info[0] == "Layout_script:":
                     self.layout_script = info[1]
@@ -55,8 +66,39 @@ class Cmd_Handler:
                     self.fig_dir = info[1]
                 if info[0] == "Solution_dir:":
                     self.db_dir = info[1]
-                if info[0] == "Option:": # engine option
-                    run_opt = info[1]
+                if info[0] == "Option:":  # engine option
+                    run_option = int(info[1])
+                if info[0] == "Num_of_layouts:":  # engine option
+                    num_layouts = int(info[1])
+                if info[0] == "Seed:":  # engine option
+                    seed = int(info[1])
+                if info[0] == "Optimization_Algorithm:":  # engine option
+                    algorithm = info[1]
+                if info[0] == "Layout_Mode:":  # engine option
+                    layout_mode = int(info[1])
+                if info[0] == "Floor_plan:":
+                    floor_plan = info[1]
+                    floor_plan = floor_plan.split(",")
+                    floor_plan = [int(i) for i in floor_plan]
+                if info[0] == 'Num_generations:':
+                    num_gen = int(info[1])
+                if info[0]== 'Thermal_Setup:':
+                    thermal_mode = True
+                if info[0] == 'End_Thermal_Setup.':
+                    thermal_mode = False
+                if thermal_mode:
+                    if info[0] == 'Measure_Name:':
+                        t_name = info[1]
+                    if info[0] == 'Selected_Devices:':
+                        devices = info[1].split(",")
+                    if info[0] == 'Device_Power:':
+                        power = info[1].split(",")
+                        power = [float(i) for i in power]
+                    if info[0] == 'Heat_Convection:':
+                        h_conv = float(info[1])
+                    if info[0] == 'Ambient_Temperature:':
+                        t_amb = float(info[1])
+
 
         check_file = os.path.isfile
         check_dir = os.path.isdir
@@ -68,9 +110,49 @@ class Cmd_Handler:
             print "run the optimization"
             self.init_cs_objects()
             self.set_up_db()
+            if run_option == 0:
+                generate_optimize_layout(layout_engine=self.engine, mode=layout_mode,
+                                         optimization=False, db_file=self.db_file, num_layouts=num_layouts, seed=seed,
+                                         floor_plan=floor_plan)
+            elif run_option == 1:
+                self.measures=[]
+                setup_data={'Power': power,'heat_conv':h_conv,'t_amb':t_amb}
+                measure_data={'name':t_name,'devices':devices}
+                self.setup_thermal(mode='macro', setup_data=setup_data,measure_data=measure_data)
+                self.setup_electrical()
+
+                # Convert a list of patch to rectangles
+                patch_dict = self.engine.init_data[0]
+                width, height = self.engine.init_size
+                fig_dict = {(width, height): []}
+                for k, v in patch_dict.items():
+                    fig_dict[(width, height)].append(v)
+                init_rects = {}
+                for k, v in self.engine.init_data[1].items():
+                    rects = []
+                    for i in v:
+                        rect = Rectangle(x=i[0] * 1000, y=i[1] * 1000, width=i[2] * 1000, height=i[3] * 1000, type=i[4])
+                        rects.append(rect)
+                    init_rects[k] = rects
+                cs_sym_info = {(width * 1000, height * 1000): init_rects}
+                eval_single_layout(layout_engine=self.engine, layout_data=cs_sym_info, apis={'E': self.e_api,
+                                                                                             'T': self.t_api},
+                                   measures=self.measures)
+            if run_option == 2:
+
+                self.measures = []
+                setup_data = {'Power': power, 'heat_conv': h_conv, 't_amb': t_amb}
+                measure_data = {'name': t_name, 'devices': devices}
+                self.setup_thermal(mode='macro', setup_data=setup_data, meas_data=measure_data)
+                self.setup_electrical()
+                generate_optimize_layout(layout_engine=self.engine, mode=layout_mode,
+                                         optimization=True, db_file=self.db_file,
+                                         apis={'E': self.e_api, 'T': self.t_api}, num_layouts=num_layouts, seed=seed,
+                                         algorithm=algorithm, floor_plan=floor_plan,num_gen=num_gen,measures=self.measures)
             self.cmd_loop()
         else:
             return cont
+
     # ------------------ File Resquest -------------------------------------------------
     def database_dir_request(self):
         print "Please enter a directory to save layout database"
@@ -223,12 +305,17 @@ class Cmd_Handler:
         self.e_api.get_frequency()
         self.measures += self.e_api.measurement_setup()
 
-    def setup_thermal(self):
+    def setup_thermal(self,mode = 'command',meas_data ={},setup_data={}):
 
         self.t_api = CornerStitch_Tmodel_API(comp_dict=self.comp_dict)
         self.t_api.import_layer_stack(self.layer_stack_file)
-        self.t_api.set_up_device_power()
-        self.measures += self.t_api.measurement_setup()
+        if mode == 'command':
+            self.measures += self.t_api.measurement_setup(mode =0)
+            self.t_api.set_up_device_power(mode=0)
+
+        elif mode == 'macro':
+            self.measures += self.t_api.measurement_setup(mode =1,data=meas_data)
+            self.t_api.set_up_device_power(mode=1,data=setup_data)
 
     def init_apis(self):
         '''
@@ -247,7 +334,7 @@ class Cmd_Handler:
         cont = True
         while (cont):
             mode = raw_input("Enter command here")
-            if mode =='-f':
+            if mode == '-f':
                 self.input_request()
                 self.init_cs_objects()
                 self.set_up_db()
@@ -269,6 +356,7 @@ class Cmd_Handler:
 
             else:
                 print "Wrong Input, please double check and try again !"
+
     def cmd_loop(self):
         cont = True
         while (cont):
@@ -293,7 +381,7 @@ class Cmd_Handler:
                 for k, v in self.engine.init_data[1].items():
                     rects = []
                     for i in v:
-                        rect = Rectangle(x=i[0]*1000, y=i[1] * 1000, width=i[2] * 1000, height=i[3] * 1000, type=i[4])
+                        rect = Rectangle(x=i[0] * 1000, y=i[1] * 1000, width=i[2] * 1000, height=i[3] * 1000, type=i[4])
                         rects.append(rect)
                     init_rects[k] = rects
                 cs_sym_info = {(width * 1000, height * 1000): init_rects}

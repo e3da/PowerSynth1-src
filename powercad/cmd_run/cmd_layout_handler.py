@@ -55,20 +55,23 @@ def plot_layout(fig_data=None, rects=None, size=None, fig_dir=None):
     plt.savefig(fig_dir + '/_init_layout' + '.png')
 
 
-def opt_choices():
-    choices = ["Non-guided randomization", "Genetic Algorithm (NSGAII)", "Weighted sum", "Simulated annealing"]
-    print "Enter a mode below to choose an optimization algorithm"
-    print "List of choices:"
-    for mode_id in range(len(choices)):
-        print "+mode id:", mode_id, "--> algorithm:", choices[mode_id]
-    cont = True
-    while cont:
-        try:
-            id = int(raw_input("Enter selected id here:"))
-        except:
-            cont = True
-        if id in range(4):
-            return choices[id]
+def opt_choices(algorithm=None):
+    if algorithm==None:
+        choices = ["NG-RANDOM", "NSGAII", "WS", "SA"]
+        print "Enter a mode below to choose an optimization algorithm"
+        print "List of choices:"
+        for mode_id in range(len(choices)):
+            print "+mode id:", mode_id, "--> algorithm:", choices[mode_id]
+        cont = True
+        while cont:
+            try:
+                id = int(raw_input("Enter selected id here:"))
+            except:
+                cont = True
+            if id in range(4):
+                return choices[id]
+    else:
+        return algorithm
 
 
 def save_solution(rects, id, db):
@@ -126,8 +129,65 @@ def update_solution_data(layout_dictionary=None, opt_problem=None, measure_names
         Solutions.append(solution)
     return Solutions
 
+def get_seed(seed=None):
+    if seed == None:
+        print "Enter information for Variable-sized layout generation"
+        seed = raw_input("Enter randomization seed:")
+        try:
+            seed = int(seed)
+        except:
+            print "Please enter an integer"
+    return seed
 
-def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_file=None, apis={}, measures=[]):
+def get_params(num_layouts=None,num_disc =None,temp_init = None, alg=None):
+    params = []
+    if num_layouts == None:
+        if alg == 'NG-RANDOM' or alg == 'LAYOUT_GEN' or alg == 'WS':
+            print "Enter desired number of solutions:"
+        elif alg == 'SA':
+            print "Enter number of steps"
+        elif alg == 'NSGAII':
+            print "Enter desired number of generations:"
+        num_layouts = raw_input()
+        try:
+            num_layouts = int(num_layouts)
+        except:
+            print "Please enter an integer"
+    params.append(num_layouts)
+
+    if alg == 'WS' and num_disc == None:
+        print "Enter number of interval for weights to the objectives:"
+        num_disc = raw_input()
+        try:
+            num_disc = int(num_disc)
+        except:
+            print "Please enter an integer"
+    params.append(num_disc)
+    if alg == "SA" and temp_init==None:
+        print "Enter initial temperature (High):"
+        temp_init = raw_input()
+        try:
+            temp_init = float(temp_init)
+        except:
+            print "Please enter a valid Temperature"
+    params.append(temp_init)
+    return params
+def get_dims(floor_plan = None):
+    if floor_plan==None:
+        print "Enter information for Fixed-sized layout generation"
+        print "Floorplan Width:"
+        width = raw_input()
+        width = float(width) * 1000
+        print "Floorplan Height:"
+        height = raw_input()
+        height = float(height) * 1000
+        return [width,height]
+    else:
+        width = floor_plan[0]*1000
+        height = floor_plan[1]*1000
+        return [width, height]
+def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_file=None, apis={}, measures=[],seed=None,
+                             num_layouts = None,num_gen= None , num_disc=None,max_temp=None,floor_plan=None,algorithm=None):
     '''
 
     :param layout_engine: Layout engine object for layout generation
@@ -135,7 +195,18 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
     :param optimization: (or evaluation for mode 0) set to be True for layout evaluation
     :param db_file: database file to store the layout info
     :param apis: {'E':e_api,'T':t_api} some apis for electrical and thermal models
-    :return:
+    :param measures: list of measure objects
+    # Below are some macro mode params:
+    :param seed: int -- provide a seed for layout generation used in all methods(macro mode)
+    :param floor_plan: [int, int] -- provide width and height values for fix floor plan layout generation mode
+    # ALGORITHM PARAMS
+    :param algorithm str -- type of algorithm NG-RANDOM,NSGAII,WS,SA
+    :param num_layouts int -- provide a number of layouts used in NG RANDOM and WS(macro mode)
+    :param num_gen int -- provide a number of generations used in NSGAII (macro mode)
+    :param num_disc -- provide a number for intervals to create weights for objectives WS (macro mode)
+    :param max_temp -- provide a max temp param for SA (macro mode)
+
+    :return: list of CornerStitch Solution objects
     '''
 
     # GET MEASUREMENT NAME:
@@ -158,24 +229,14 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
 
 
     elif mode == 1:
-        print "Enter information for Variable-sized layout generation"
-        seed = raw_input("Enter randomization seed:")
-        try:
-            seed = int(seed)
-        except:
-            print "Please enter an integer"
+        seed = get_seed(seed)
 
         if optimization == True:
-            choice = opt_choices()
+            choice = opt_choices(algorithm=algorithm)
+            params = get_params(num_layouts=num_layouts,alg = 'NG-RANDOM')
+            num_layouts = params[0]
+            if choice == "NG-RANDOM":
 
-            if choice == "Non-guided randomization":
-                optimization_algorithm = "NG_RANDOM"
-                print "Enter desired number of solutions:"
-                num_layouts = raw_input()
-                try:
-                    num_layouts = int(num_layouts)
-                except:
-                    print "Please enter an integer"
                 fig_data, cs_sym_info = layout_engine.generate_solutions(mode, num_layouts=num_layouts, W=None, H=None,
                                                                          fixed_x_location=None, fixed_y_location=None,
                                                                          seed=seed, individual=None, bar=False)
@@ -186,13 +247,9 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
                                                  measure_names=measure_names)
 
             else:
-                if choice == "Genetic Algorithm (NSGAII)":
-                    print "Enter desired number of generations:"
-                    num_layouts = raw_input()
-                    try:
-                        num_layouts = int(num_layouts)
-                    except:
-                        print "Please enter an integer"
+                if choice == "NSGAII":
+                    params= get_params(num_layouts=num_gen,alg='NSGAII')
+                    num_layouts = params[0]
                     # optimization_algorithm="NSGAII"
                     opt_problem = new_engine_opt(engine=layout_engine, W=None, H=None, seed=seed, level=mode,
                                                  method="NSGAII",
@@ -201,20 +258,10 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
                     opt_problem.num_gen = num_layouts  # number of generations
                     opt_problem.optimize()
 
-                elif choice == "Weighted sum":
-                    # optimization_algorithm="W_S"
-                    print "Enter desired number of maximum iterations:"
-                    num_layouts = raw_input()
-                    try:
-                        num_layouts = int(num_layouts)
-                    except:
-                        print "Please enter an integer"
-                    print "Enter number of interval for weights to the objectives:"
-                    num_disc = raw_input()
-                    try:
-                        num_disc = int(num_disc)
-                    except:
-                        print "Please enter an integer"
+                elif choice == "WS":
+                    params = get_params(num_layouts=num_layouts,num_disc=num_disc,alg='WS')
+                    num_layouts=params[0]
+                    num_disc = params[1]
 
                     opt_problem = new_engine_opt(engine=layout_engine, W=None, H=None, seed=seed, level=mode,
                                                  method="FMINCON",
@@ -224,20 +271,13 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
                     opt_problem.num_disc = num_disc
                     opt_problem.optimize()  # results=list of list, where each element=[fig,cs_sym_info,perf1_value,perf2_value,...]
 
-                elif choice == "Simulated annealing":
+                elif choice == "SA":
                     # optimization_algorithm="SA"
-                    print "Enter desired number of steps:"
-                    num_layouts = raw_input()
-                    try:
-                        num_layouts = int(num_layouts)
-                    except:
-                        print "Please enter an integer"
-                    print "Enter initial temperature (High):"
-                    temp_init = raw_input()
-                    try:
-                        temp_init = float(temp_init)
-                    except:
-                        print "Please enter a valid Temperature"
+                    params = get_params(num_layouts=num_layouts,temp_init=max_temp, alg='SA')
+                    num_layouts = params[0]
+                    temp_init = params[1]
+
+
                     opt_problem = new_engine_opt(engine=layout_engine, W=None, H=None, seed=seed, level=mode,
                                                  method="SA",
                                                  apis=apis, measures=measures)
@@ -250,12 +290,8 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
                                                  perf_results=opt_problem.perf_results)
 
         else:  # Layout generation only
-            print "Enter desired number of solutions:"
-            num_layouts = raw_input()
-            try:
-                num_layouts = int(num_layouts)
-            except:
-                print "Please enter an integer"
+            num_layouts = get_params(num_layouts=num_layouts,alg='LAYOUT_GEN')
+
             fig_data, cs_sym_info = layout_engine.generate_solutions(mode, num_layouts=num_layouts, W=None, H=None,
                                                                      fixed_x_location=None, fixed_y_location=None,
                                                                      seed=seed, individual=None, bar=False)
@@ -273,30 +309,14 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
 
     elif mode == 2:
 
-        print "Enter information for Fixed-sized layout generation"
-        print "Floorplan Width:"
-        width = raw_input()
-        width = float(width) * 1000
-        print "Floorplan Height:"
-        height = raw_input()
-        height = float(height) * 1000
-        print "Enter randomization seed:"
-        seed = raw_input()
-        try:
-            seed = int(seed)
-        except:
-            print "Please enter an integer"
+        width,height =get_dims(floor_plan=floor_plan)
+        seed = get_seed(seed)
 
         if optimization == True:
-            choice = opt_choices()
-            if choice == "Non-guided randomization":
-                optimization_algorithm = "NG_RANDOM"
-                print "Enter desired number of solutions:"
-                num_layouts = raw_input()
-                try:
-                    num_layouts = int(num_layouts)
-                except:
-                    print "Please enter an integer"
+            choice = opt_choices(algorithm=algorithm)
+            if choice == "NG-RANDOM":
+                params = get_params(num_layouts=num_layouts,alg='NG-RANDOM')
+                num_layouts = params[0]
                 fig_data, cs_sym_info = layout_engine.generate_solutions(mode, num_layouts=num_layouts, W=width,
                                                                          H=height,
                                                                          fixed_x_location=None, fixed_y_location=None,
@@ -309,13 +329,9 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
                 Solutions = update_solution_data(layout_dictionary=cs_sym_info, opt_problem=opt_problem,
                                                  measure_names=measure_names)
             else:
-                if choice == "Genetic Algorithm (NSGAII)":
-                    print "Enter desired number of generations:"
-                    num_layouts = raw_input()
-                    try:
-                        num_layouts = int(num_layouts)
-                    except:
-                        print "Please enter an integer"
+                if choice == "NSGAII":
+                    params = get_params(num_layouts=num_gen, alg='NSGAII')
+                    num_layouts = params[0]
                     # optimization_algorithm="NSGAII"
                     opt_problem = new_engine_opt(engine=layout_engine, W=width, H=height, seed=seed, level=mode,
                                                  method="NSGAII",
@@ -324,20 +340,11 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
                     opt_problem.num_gen = num_layouts  # number of generations
                     opt_problem.optimize()  # perform optimization
 
-                elif choice == "Weighted sum":
+                elif choice == "WS":
                     # optimization_algorithm="W_S"
-                    print "Enter desired number of maximum iterations:"
-                    num_layouts = raw_input()
-                    try:
-                        num_layouts = int(num_layouts)
-                    except:
-                        print "Please enter an integer"
-                    print "Enter number of interval for weights to the objectives:"
-                    num_disc = raw_input()
-                    try:
-                        num_disc = int(num_disc)
-                    except:
-                        print "Please enter an integer"
+                    params = get_params(num_layouts=num_layouts, num_disc=num_disc, alg='WS')
+                    num_layouts = params[0]
+                    num_disc = params[1]
 
                     opt_problem = new_engine_opt(engine=layout_engine, W=width, H=height, seed=seed, level=mode,
                                                  method="FMINCON",
@@ -347,20 +354,11 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
                     opt_problem.num_disc = num_disc
                     opt_problem.optimize()  # perform optimization
 
-                elif choice == "Simulated annealing":
+                elif choice == "SA":
                     # optimization_algorithm="SA"
-                    print "Enter desired number of steps:"
-                    num_layouts = raw_input()
-                    try:
-                        num_layouts = int(num_layouts)
-                    except:
-                        print "Please enter an integer"
-                    print "Enter initial temperature (High):"
-                    temp_init = raw_input()
-                    try:
-                        temp_init = float(temp_init)
-                    except:
-                        print "Please enter a valid Temperature"
+                    params = get_params(num_layouts=num_layouts, temp_init=max_temp, alg='SA')
+                    num_layouts = params[0]
+                    temp_init = params[1]
                     opt_problem = new_engine_opt(engine=layout_engine, W=width, H=height, seed=seed, level=mode,
                                                  method="SA",
                                                  apis=apis, measures=measures)
@@ -370,12 +368,8 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
                     opt_problem.optimize()  # perform optimization
                 Solutions = update_solution_data(layout_dictionary=opt_problem.layout_data, measure_names=measure_names, perf_results=opt_problem.perf_results)
         else:
-            print "Enter desired number of solutions:"
-            num_layouts = raw_input()
-            try:
-                num_layouts = int(num_layouts)
-            except:
-                print "Please enter an integer"
+            num_layouts = get_params(num_layouts=num_layouts, alg='LAYOUT_GEN')
+
             fig_data, cs_sym_info = layout_engine.generate_solutions(mode, num_layouts=num_layouts, W=width, H=height,
                                                                      fixed_x_location=None, fixed_y_location=None,
                                                                      seed=seed, individual=None, bar=False)

@@ -225,13 +225,12 @@ class CornerStitch_Emodel_API:
                 elif comp.type ==1:
                     for p in comp.pin_name:
                         print("Device pins:",comp.layout_component_id+'_'+p)
-        num_loop = int(raw_input("Input number of loops to measure:"))
-        for i in range(num_loop):
-            name = raw_input("Loop name:")
-            type = int(raw_input("Measurement type (0 for Resistance, 1 for Inductance):"))
-            source = raw_input("Source name:")
-            sink = raw_input("Sink name:")
-            self.measure.append(ElectricalMeasure(measure=type,name=name,source=source,sink=sink))
+        # Only support single loop extraction for now.
+        name = raw_input("Loop name:")
+        type = int(raw_input("Measurement type (0 for Resistance, 1 for Inductance):"))
+        source = raw_input("Source name:")
+        sink = raw_input("Sink name:")
+        self.measure.append(ElectricalMeasure(measure=type,name=name,source=source,sink=sink))
         return self.measure
 
     def extract_RL(self,src=None,sink=None):

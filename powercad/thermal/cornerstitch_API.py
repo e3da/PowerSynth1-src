@@ -10,7 +10,7 @@ from powercad.thermal.rect_flux_channel_model import Baseplate, ExtaLayer, Devic
     compound_top_surface_avg
 from powercad.design.parts import Part
 import sys
-
+from collections import deque
 
 class ThermalMeasure(object):
     FIND_MAX = 1
@@ -63,19 +63,7 @@ class CornerStitch_Tmodel_API:
             self.module_data.substrate_attach = self.layer_stack_import.substrate_attach
             self.module_data.substrate = self.layer_stack_import.substrate
 
-    def set_up_device_power(self):
-        print "load a table to collect power load"
-        for k in self.comp_dict:
-            comp = self.comp_dict[k]
-            if isinstance(comp, Part):
-                if comp.type == 1:  # if this is a component
-                    self.devices[comp.layout_component_id] = comp
-                    value = raw_input("enter a power for " + comp.layout_component_id + ": ")
-                    self.dev_powerload_table[comp.layout_component_id] = float(value)
-        value = raw_input("enter a value for heat convection coefficient of the baseplate:")
-        self.bp_conv = float(value)
-        value = raw_input("enter a value for ambient temperature:")
-        self.t_amb = float(value)
+
 
     def set_up_thermal_props(self, layout_data=None):  # for analytical model of a simple 6 layers
         baseplate = self.module_data.baseplate
@@ -124,19 +112,51 @@ class CornerStitch_Tmodel_API:
             temp += self.t_amb + dev_delta
             self.temp_res[k] = temp
 
-    def measurement_setup(self):
-        print "List of Devices:"
-        for device in self.devices:
-            print device
-        num_measure = int(raw_input("Input number of thermal measurements:"))
+    def set_up_device_power(self, mode=0, data=None):
+        if mode ==0:
+            print "load a table to collect power load"
+            for k in self.comp_dict:
+                comp = self.comp_dict[k]
+                if isinstance(comp, Part):
+                    if comp.type == 1:  # if this is a component
+                        self.devices[comp.layout_component_id] = comp
+                        value = raw_input("enter a power for " + comp.layout_component_id + ": ")
+                        self.dev_powerload_table[comp.layout_component_id] = float(value)
+            value = raw_input("enter a value for heat convection coefficient of the baseplate:")
+            self.bp_conv = float(value)
+            value = raw_input("enter a value for ambient temperature:")
+            self.t_amb = float(value)
+        elif mode ==1:
+            power_list = deque(data['Power']) # pop from left to right
+            for k in self.comp_dict:
+                comp = self.comp_dict[k]
+                if isinstance(comp, Part):
+                    if comp.type == 1:  # if this is a component
+                        self.devices[comp.layout_component_id] = comp
+                        value = power_list.popleft()
+                        self.dev_powerload_table[comp.layout_component_id] = float(value)
+            self.bp_conv = float(data['heat_conv'])
+            self.t_amb = float(data['t_amb'])
 
-        for i in range(num_measure):
-            name = raw_input("Enter a name for this thermal measurement")
-            print "Type in a list of devices above separated by commas"
-            input = raw_input("Input sequence here:")
-            devices = tuple(input.split(','))
+    def measurement_setup(self,mode=0,data=None):
+        if mode ==0:
+            print "List of Devices:"
+            for device in self.devices:
+                print device
+            num_measure = int(raw_input("Input number of thermal measurements:"))
+
+            for i in range(num_measure):
+                name = raw_input("Enter a name for this thermal measurement")
+                print "Type in a list of devices above separated by commas"
+                input = raw_input("Input sequence here:")
+                devices = tuple(input.split(','))
+                self.measure.append(ThermalMeasure(devices=devices, name=name))
+            return self.measure
+        elif mode==1: # Only support single measure for now.
+            name = data['name']
+            devices = data['devices']
             self.measure.append(ThermalMeasure(devices=devices, name=name))
-        return self.measure
+            return self.measure
 
     def eval_max_temp(self, layout_data):
         self.dev_result_table_eval(layout_data)
