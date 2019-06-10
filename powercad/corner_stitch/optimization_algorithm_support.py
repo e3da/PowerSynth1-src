@@ -56,7 +56,7 @@ class new_engine_opt:
             if isinstance(measure, ThermalMeasure):
                 max_t = self.t_api.eval_max_temp(layout_data=layout_data)
                 result.append(max_t)
-        print "inside", result
+
         return result
 
     def find_individuals(self, X_Loc, Y_Loc):
@@ -91,7 +91,7 @@ class new_engine_opt:
     def cost_func_NSGAII(self, individual):
         if not (isinstance(individual, list)):
             individual = np.asarray(individual).tolist()
-
+        print "cost",individual
         fig_data, cs_sym_info = self.gen_layout_func(level=self.level, num_layouts=1, W=self.W, H=self.H,
                                                      fixed_x_location=None, fixed_y_location=None, seed=self.seed,
                                                      individual=individual)
@@ -103,6 +103,7 @@ class new_engine_opt:
         self.fig_data.append(fig_data)
         self.layout_data.append(cs_sym_info)
         self.perf_results.append(result)
+        print "res",result
         return result
 
     """
