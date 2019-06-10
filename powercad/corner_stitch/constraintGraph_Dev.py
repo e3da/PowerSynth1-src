@@ -1101,7 +1101,7 @@ class constraintGraph:
 
             if individual!=None:
                 H=[]
-                individual = [i * 10000 for i in individual]
+                individual = [int(round(i,4) * 10000) for i in individual]
                 for (k), v in h_edges.items():
                     for i in range(len(vertices_list)):
                         if vertices_list[i]==k:
@@ -1112,6 +1112,7 @@ class constraintGraph:
                             elif v[2] == 0 and int(v[1]) > 1:
                                 val = v[0]
                             else:
+
                                 val = individual[i] + v[0]
                         else:
                             continue
@@ -1554,7 +1555,7 @@ class constraintGraph:
 
             if individual!=None:
                 H=[]
-                individual = [i * 10000 for i in individual]
+                individual = [int(round(i, 4) * 10000) for i in individual]
 
 
                 for (k), v in v_edges.items():
@@ -2101,16 +2102,18 @@ class constraintGraph:
             if Sum>0:
                 Vi=[]
                 for i in Random:
+
                     Vi.append(Range*(i/Sum))
             else:
                 Vi = [0 for i in Random]
             #print Random
-            #Vi=[0 for i in Vi]
+            Vi = [int(round(i, 1) * 10) for i in Vi]
+
             variable=[]
             for i in range(len(value)):
                 variable.append(value[i]+Vi[i])
 
-            #print "var", Vi
+            #print "var", variable
 
         #print "Vy",len(Vy_s),sum(Vy_s),Vy_s
 
@@ -2139,7 +2142,7 @@ class constraintGraph:
                 v = Range - sum(D_V_Newval)
                 if ((2 * v) / n) > 0:
                     random.seed(self.seed_h[sid])
-                    x =  random.uniform(0, (int(2 * v) / n))
+                    x =  random.randint(0, (int(2 * v) / n))
                 else:
                     x = 0
                 p = value.pop(i)
@@ -2542,11 +2545,12 @@ class constraintGraph:
             for i in Random:
                 Vi.append(Range * (i / Sum))
             '''
-
+            Vi = [int(round(i, 1) * 10) for i in Vi]
+            #print Vi
             variable = []
             for i in range(len(value)):
                 variable.append(value[i] + Vi[i])
-
+            #print variable
 
 
         else:
@@ -2577,7 +2581,7 @@ class constraintGraph:
                 if ((2 * v) / n) > 0:
                     random.seed(self.seed_v[sid])
 
-                    x = random.uniform(0, (int(2 * v) / n))
+                    x = random.randint(0, (int(2 * v) / n))
                 else:
                     x = 0
                 p = value.pop(i)

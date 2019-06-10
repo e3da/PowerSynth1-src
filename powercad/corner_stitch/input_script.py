@@ -625,6 +625,7 @@ def plot_solution(Patches=None):
         fig, ax1 = plt.subplots()
         for k, v in Patches[i].items():
             for p in v:
+                #print"c", p.get_x(),p.get_y()
                 ax1.add_patch(p)
             ax1.set_xlim(0, k[0])
             ax1.set_ylim(0, k[1])

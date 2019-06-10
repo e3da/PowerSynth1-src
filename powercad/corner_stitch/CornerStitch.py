@@ -2481,6 +2481,8 @@ class CS_to_CG():
                 Dimensions = []
                 DIM = []
 
+                #for d in range(len(i.stitchList)):
+                    #j=i.stitchList[d]
                 for j in i.stitchList:
                     p = [j.cell.x, j.cell.y, j.getWidth(), j.getHeight(),j.cell.type]
 
@@ -2523,6 +2525,8 @@ class CS_to_CG():
                 Dimensions = []
                 DIM_V = []
 
+                #for d in range(len(i.stitchList)):
+                    #j=i.stitchList[d]
                 for j in i.stitchList:
                     p = [j.cell.x, j.cell.y, j.getWidth(), j.getHeight(), j.voltage, j.current, j.cell.type]
                     DIM_V.append(p)
@@ -2576,7 +2580,8 @@ class CS_to_CG():
         ALL_HRECTS.setdefault(key2,[])
 
         #s=1000 #scaler
-        for j in Htree.hNodeList[0].stitchList:
+        for d in range(len(Htree.hNodeList[0].stitchList)):
+            j=Htree.hNodeList[0].stitchList[d]
             k = [j.cell.x, j.cell.y, j.EAST.cell.x, j.NORTH.cell.y,j.cell.type]
 
             DIM.append(k)
