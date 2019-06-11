@@ -154,10 +154,12 @@ def get_seed(seed=None):
 def get_params(num_layouts=None,num_disc =None,temp_init = None, alg=None):
     params = []
     if num_layouts == None:
-        if alg == 'NG-RANDOM' or alg == 'LAYOUT_GEN' or alg == 'WS':
+        if alg == 'NG-RANDOM' or alg == 'LAYOUT_GEN':
             print "Enter desired number of solutions:"
+        elif alg=="WS":
+            print "Enter number of maximum iterations:"
         elif alg == 'SA':
-            print "Enter number of steps"
+            print "Enter number of steps: "
         elif alg == 'NSGAII':
             print "Enter desired number of generations:"
         num_layouts = raw_input()
