@@ -6,7 +6,7 @@ from powercad.parasitics.mdl_compare import load_mdl
 import cProfile
 import pstats
 from mpl_toolkits.mplot3d import Axes3D
-
+from collections import deque
 
 class ElectricalMeasure(object):
     MEASURE_RES = 1
@@ -46,24 +46,39 @@ class CornerStitch_Emodel_API:
         self.height = 0
         self.measure = []
 
-    def form_connection_table(self):
+    def form_connection_table(self, dev_conn=None):
         '''
         Form a connection table only once, which can be reused for multiple evaluation
         :return: update self.conn_dict
         '''
-        for c in self.comp_dict:
-            comp = self.comp_dict[c]
-            if isinstance(comp, Part):
-                if comp.type == 1:
-                    name = comp.layout_component_id
-                    table = Connection_Table(name=name, cons=comp.conn_dict)
-                    table.set_up_table_cmd()
-                    self.conn_dict[name] = table.states
-        print self.conn_dict
-    def get_frequency(self):
-        freq=raw_input("Frequency for the extraction in kHz:")
-        self.freq=float(freq)
 
+        if dev_conn==None:
+            for c in self.comp_dict:
+                comp = self.comp_dict[c]
+                if isinstance(comp, Part):
+                    if comp.type == 1:
+                        name = comp.layout_component_id
+                        table = Connection_Table(name=name, cons=comp.conn_dict)
+                        table.set_up_table_cmd()
+                        self.conn_dict[name] = table.states
+        else:
+            for c in self.comp_dict:
+                comp = self.comp_dict[c]
+                if isinstance(comp, Part):
+                    if comp.type == 1:
+                        states ={}
+                        name = comp.layout_component_id
+
+                        for conns in comp.conn_dict:
+                            states[conns] = dev_conn[name][comp.conn_dict.keys().index(conns)]
+                        self.conn_dict[name] = states
+
+    def get_frequency(self, frequency=None):
+        if frequency==None:
+            freq=raw_input("Frequency for the extraction in kHz:")
+            self.freq=float(freq)
+        else:
+            self.freq=frequency
     def load_rs_model(self, mdl_file):
         self.rs_model = load_mdl(file=mdl_file)
 
@@ -214,25 +229,32 @@ class CornerStitch_Emodel_API:
         self.emesh.plot_3d(fig=fig, ax=ax, show_labels=True)
         plt.show()
 
-    def measurement_setup(self):
-        # Print source sink table:
-        print "List of Pins:"
-        for c in self.comp_dict:
-            comp = self.comp_dict[c]
-            if isinstance(comp, Part):
-                if comp.type == 0:
-                    print ("Connector:",comp.layout_component_id)
-                elif comp.type ==1:
-                    for p in comp.pin_name:
-                        print("Device pins:",comp.layout_component_id+'_'+p)
-        # Only support single loop extraction for now.
-        name = raw_input("Loop name:")
-        type = int(raw_input("Measurement type (0 for Resistance, 1 for Inductance):"))
-        source = raw_input("Source name:")
-        sink = raw_input("Sink name:")
-        self.measure.append(ElectricalMeasure(measure=type,name=name,source=source,sink=sink))
-        return self.measure
-
+    def measurement_setup(self,meas_data=None):
+        if meas_data==None:
+            # Print source sink table:
+            print "List of Pins:"
+            for c in self.comp_dict:
+                comp = self.comp_dict[c]
+                if isinstance(comp, Part):
+                    if comp.type == 0:
+                        print ("Connector:",comp.layout_component_id)
+                    elif comp.type ==1:
+                        for p in comp.pin_name:
+                            print("Device pins:",comp.layout_component_id+'_'+p)
+            # Only support single loop extraction for now.
+            name = raw_input("Loop name:")
+            type = int(raw_input("Measurement type (0 for Resistance, 1 for Inductance):"))
+            source = raw_input("Source name:")
+            sink = raw_input("Sink name:")
+            self.measure.append(ElectricalMeasure(measure=type,name=name,source=source,sink=sink))
+            return self.measure
+        else:
+            name = meas_data['name']
+            type = meas_data['type']
+            source =meas_data['source']
+            sink = meas_data['sink']
+            self.measure.append(ElectricalMeasure(measure=type, name=name, source=source, sink=sink))
+            return self.measure
     def extract_RL(self,src=None,sink=None):
         '''
         Input src and sink name, then extract the inductance/resistance between them

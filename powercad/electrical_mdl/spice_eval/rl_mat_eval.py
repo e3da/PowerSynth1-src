@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import time
 import scipy
-
+import gc
 class diag_prec:
     def __init__(self, A):
         self.shape = A.shape
@@ -495,8 +495,6 @@ class RL_circuit():
         elif method ==4:
             self.results = np.linalg.lstsq(A, Z)[0]
         elif method ==5: # direct inverse method.
-
-
             self.results = np.linalg.inv(A)*Z
             self.results=np.squeeze(np.asarray(self.results))
 
@@ -530,6 +528,7 @@ class RL_circuit():
                 results_dict[str(names[i,0])]=self.results[i]
 
         self.results=results_dict
+        gc.collect()
         #print "R,L,M", self.R_count,self.L_count,self.M_count
 def test_RL_circuit1():
     print "new method"

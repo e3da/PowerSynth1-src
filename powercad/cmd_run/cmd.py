@@ -44,10 +44,12 @@ class Cmd_Handler:
         seed = None
         algorithm = None
         t_name =None
-
+        e_name = None
+        dev_conn ={}
         with open(file, 'rb') as inputfile:
             thermal_mode = False
             electrical_mode =False
+            dev_conn_mode=False
             for line in inputfile.readlines():
                 line = line.strip("\r\n")
                 info = line.split(" ")
@@ -91,6 +93,10 @@ class Cmd_Handler:
                     thermal_mode = True
                 if info[0] == 'End_Thermal_Setup.':
                     thermal_mode = False
+                if info[0] == 'Electrical_Setup:':
+                    electrical_mode = True
+                if info[0] == 'End_Electrical_Setup..':
+                    electrical_mode = False
                 if thermal_mode:
                     if info[0] == 'Measure_Name:':
                         t_name = info[1]
@@ -103,7 +109,29 @@ class Cmd_Handler:
                         h_conv = float(info[1])
                     if info[0] == 'Ambient_Temperature:':
                         t_amb = float(info[1])
+                if electrical_mode:
+                    if info[0] == 'Measure_Name:':
+                        e_name = info[1]
+                    if info[0] == 'Measure_Type:':
+                        type = int(info[1])
+                    if info[0] == 'End_Device_Connection.':
+                        dev_conn_mode = False
+                    if dev_conn_mode:
+                        dev_name = info[0]
+                        print info
+                        conn = info[1].split(",")
+                        conn = [int(i) for i in conn]
+                        dev_conn[dev_name] = conn
+                    if info[0] == 'Device_Connection:':
+                        dev_conn_mode = True
 
+
+                    if info[0] == 'Source:':
+                        source = info[1]
+                    if info[0] == 'Sink:':
+                        sink = info[1]
+                    if info[0] == 'Frequency:':
+                        frequency = float(info[1])
 
         check_file = os.path.isfile
         check_dir = os.path.isdir
@@ -121,10 +149,11 @@ class Cmd_Handler:
                                          floor_plan=floor_plan)
             elif run_option == 1:
                 self.measures=[]
-                setup_data={'Power': power,'heat_conv':h_conv,'t_amb':t_amb}
-                measure_data={'name':t_name,'devices':devices}
-                self.setup_thermal(mode='macro', setup_data=setup_data,measure_data=measure_data)
-                self.setup_electrical()
+                t_setup_data={'Power': power,'heat_conv':h_conv,'t_amb':t_amb}
+                t_measure_data={'name':t_name,'devices':devices}
+                e_measure_data = {'name': e_name, 'type': type, 'source': source, 'sink': sink}
+                self.setup_thermal(mode='macro', setup_data=t_setup_data,measure_data=t_measure_data)
+                self.setup_electrical(mode='macro', dev_conn=dev_conn, frequency=frequency, meas_data=e_measure_data)
 
                 # Convert a list of patch to rectangles
                 patch_dict = self.engine.init_data[0]
@@ -146,10 +175,12 @@ class Cmd_Handler:
             if run_option == 2:
 
                 self.measures = []
-                setup_data = {'Power': power, 'heat_conv': h_conv, 't_amb': t_amb}
-                measure_data = {'name': t_name, 'devices': devices}
-                self.setup_thermal(mode='macro', setup_data=setup_data, meas_data=measure_data)
-                self.setup_electrical()
+                t_setup_data = {'Power': power, 'heat_conv': h_conv, 't_amb': t_amb}
+                t_measure_data = {'name': t_name, 'devices': devices}
+                e_measure_data = {'name':e_name,'type':type,'source':source,'sink':sink}
+                self.setup_electrical(mode='macro', dev_conn=dev_conn, frequency=frequency, meas_data=e_measure_data)
+
+                self.setup_thermal(mode='macro', setup_data=t_setup_data, meas_data=t_measure_data)
                 generate_optimize_layout(layout_engine=self.engine, mode=layout_mode,
                                          optimization=True, db_file=self.db_file,
                                          apis={'E': self.e_api, 'T': self.t_api}, num_layouts=num_layouts, seed=seed,
@@ -300,27 +331,32 @@ class Cmd_Handler:
             self.comp_dict[comp.layout_component_id] = comp
 
     # --------------- API --------------------------------
-    def setup_electrical(self):
+    def setup_electrical(self,mode='command',dev_conn={},frequency=None,meas_data={}):
 
         layer_to_z = {'T': [0, 0.2], 'D': [0.2, 0], 'B': [0.2, 0],
                       'L': [0.2, 0]}
         self.e_api = CornerStitch_Emodel_API(comp_dict=self.comp_dict, layer_to_z=layer_to_z, wire_conn=self.wire_table)
         self.e_api.load_rs_model(self.rs_model_file)
-        self.e_api.form_connection_table()
-        self.e_api.get_frequency()
-        self.measures += self.e_api.measurement_setup()
+        if mode == 'command':
+            self.e_api.form_connection_table()
+            self.e_api.get_frequency()
+            self.measures += self.e_api.measurement_setup()
+        elif mode == 'macro':
+            self.e_api.form_connection_table(dev_conn)
+            self.e_api.get_frequency(frequency)
+            self.measures += self.e_api.measurement_setup(meas_data)
 
     def setup_thermal(self,mode = 'command',meas_data ={},setup_data={}):
 
         self.t_api = CornerStitch_Tmodel_API(comp_dict=self.comp_dict)
         self.t_api.import_layer_stack(self.layer_stack_file)
         if mode == 'command':
-            self.measures += self.t_api.measurement_setup(mode =0)
-            self.t_api.set_up_device_power(mode=0)
+            self.measures += self.t_api.measurement_setup()
+            self.t_api.set_up_device_power()
 
         elif mode == 'macro':
-            self.measures += self.t_api.measurement_setup(mode =1,data=meas_data)
-            self.t_api.set_up_device_power(mode=1,data=setup_data)
+            self.measures += self.t_api.measurement_setup(data=meas_data)
+            self.t_api.set_up_device_power(data=setup_data)
 
     def init_apis(self):
         '''

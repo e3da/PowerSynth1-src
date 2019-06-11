@@ -112,8 +112,8 @@ class CornerStitch_Tmodel_API:
             temp += self.t_amb + dev_delta
             self.temp_res[k] = temp
 
-    def set_up_device_power(self, mode=0, data=None):
-        if mode ==0:
+    def set_up_device_power(self, data=None):
+        if data==None:
             print "load a table to collect power load"
             for k in self.comp_dict:
                 comp = self.comp_dict[k]
@@ -126,7 +126,7 @@ class CornerStitch_Tmodel_API:
             self.bp_conv = float(value)
             value = raw_input("enter a value for ambient temperature:")
             self.t_amb = float(value)
-        elif mode ==1:
+        else:
             power_list = deque(data['Power']) # pop from left to right
             for k in self.comp_dict:
                 comp = self.comp_dict[k]
@@ -138,8 +138,8 @@ class CornerStitch_Tmodel_API:
             self.bp_conv = float(data['heat_conv'])
             self.t_amb = float(data['t_amb'])
 
-    def measurement_setup(self,mode=0,data=None):
-        if mode ==0:
+    def measurement_setup(self,data=None):
+        if data ==None:
             print "List of Devices:"
             for device in self.devices:
                 print device
@@ -152,7 +152,7 @@ class CornerStitch_Tmodel_API:
                 devices = tuple(input.split(','))
                 self.measure.append(ThermalMeasure(devices=devices, name=name))
             return self.measure
-        elif mode==1: # Only support single measure for now.
+        else: # Only support single measure for now.
             name = data['name']
             devices = data['devices']
             self.measure.append(ThermalMeasure(devices=devices, name=name))
