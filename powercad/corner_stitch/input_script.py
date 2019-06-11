@@ -10,7 +10,7 @@ import constraint
 from CornerStitch import *
 from PySide import QtCore, QtGui
 import sys
-from powercad.project_builder.proj_dialogs import ConsDialog
+#from powercad.project_builder.proj_dialogs import ConsDialog
 from powercad.design.parts import *
 from powercad.design.Routing_paths import *
 from powercad.cons_aware_en.cons_engine import New_layout_engine
@@ -547,7 +547,7 @@ class ScriptInputMethod():
         #print enclosure_rows
         df = pd.DataFrame(all_rows)
 
-        df.to_csv('out.csv', sep=',', header=None, index=None)
+
         self.Types=Types
         self.df=df
         return self.df,self.Types
@@ -568,7 +568,11 @@ class ScriptInputMethod():
 
         return input_rects
 
+def save_constraint_table(cons_df=None,directory=None):
+    if directory!=None:
+        cons_df.to_csv(directory+'/constraint.csv', sep=',', header=None, index=None)
 
+'''
 def show_constraint_table(parent,cons_df=None):
 
 
@@ -576,6 +580,9 @@ def show_constraint_table(parent,cons_df=None):
     dialog.show()
     dialog.exec_()
     return parent.cons_df
+
+'''
+
     #print "parent consdf",main_window.cons_df
 
 

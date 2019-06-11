@@ -14,7 +14,8 @@ class Cmd_Handler:
         self.rs_model_file = None  # rs model file dir
         self.fig_dir = None  # Default dir to save figures
         self.db_dir = None  # Default dir to save layout db
-
+        self.constraint_dir=None # Default dir to save constraint table
+        self.new_mode=1 # 1: constraint table setup required, 0: constraint file will be reloaded
         # Data storage
         self.db_file = None  # A file to store layout database
 
@@ -66,6 +67,10 @@ class Cmd_Handler:
                     self.fig_dir = info[1]
                 if info[0] == "Solution_dir:":
                     self.db_dir = info[1]
+                if info[0] == "Constraint_dir:":
+                    self.constraint_dir = info[1]
+                if info[0] =="new:":
+                    self.new_mode = int(info[1])
                 if info[0] == "Option:":  # engine option
                     run_option = int(info[1])
                 if info[0] == "Num_of_layouts:":  # engine option
@@ -105,7 +110,7 @@ class Cmd_Handler:
         # Check if these files exist
         cont = check_file(self.layout_script) and check_file(self.bondwire_setup) and check_file(
             self.layer_stack_file) and check_file(self.rs_model_file) and check_dir(self.fig_dir) and check_dir(
-            self.db_dir)
+            self.db_dir) and check_dir(self.constraint_dir)
         if cont:
             print "run the optimization"
             self.init_cs_objects()
@@ -290,7 +295,7 @@ class Cmd_Handler:
         :return:
         '''
         self.engine, self.raw_layout_info, self.wire_table = script_translator(
-            input_script=self.layout_script, bond_wire_info=self.bondwire_setup, fig_dir=self.fig_dir)
+            input_script=self.layout_script, bond_wire_info=self.bondwire_setup, fig_dir=self.fig_dir,cons_dir=self.constraint_dir,mode=self.new_mode)
         for comp in self.engine.all_components:
             self.comp_dict[comp.layout_component_id] = comp
 

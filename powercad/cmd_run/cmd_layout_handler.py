@@ -209,7 +209,7 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
 
     :return: list of CornerStitch Solution objects
     '''
-    plot = True
+    plot = False
 
     # GET MEASUREMENT NAME:
     measure_names = []
@@ -323,11 +323,13 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
 
 
         else:  # Layout generation only
-            num_layouts = get_params(num_layouts=num_layouts,alg='LAYOUT_GEN')
+            params = get_params(num_layouts=num_layouts,alg='LAYOUT_GEN')
+            num_layouts = params[0]
 
             cs_sym_info = layout_engine.generate_solutions(mode, num_layouts=num_layouts, W=None, H=None,
                                                                      fixed_x_location=None, fixed_y_location=None,
                                                                      seed=seed, individual=None,db=db_file, bar=False)
+
 
             Solutions = []
             for i in range(len(cs_sym_info)):
@@ -337,6 +339,7 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
                 solution.layout_info = cs_sym_info[i]
                 solution.abstract_info = solution.form_abs_obj_rect_dict()
                 Solutions.append(solution)
+
                 if plot:
                     solution.layout_plot(layout_ind=i, db=db_file, fig_dir=fig_dir)
 
@@ -416,7 +419,9 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
 
 
         else: #layout generation only
-            num_layouts = get_params(num_layouts=num_layouts, alg='LAYOUT_GEN')
+            params = get_params(num_layouts=num_layouts, alg='LAYOUT_GEN')
+            num_layouts=params[0]
+
 
             cs_sym_info = layout_engine.generate_solutions(mode, num_layouts=num_layouts, W=width, H=height,
                                                                      fixed_x_location=None, fixed_y_location=None,
@@ -513,7 +518,7 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
     return Solutions
 
 
-def script_translator(input_script=None, bond_wire_info=None, fig_dir=None):
+def script_translator(input_script=None, bond_wire_info=None, fig_dir=None,cons_dir=None,mode=None):
     ScriptMethod = ScriptInputMethod(input_script)  # initializes the class with filename
     ScriptMethod.read_input_script()  # reads input script and make two sections
     ScriptMethod.gather_part_route_info()  # gathers part and route info
@@ -539,9 +544,21 @@ def script_translator(input_script=None, bond_wire_info=None, fig_dir=None):
     except:
         pass
     window = QMainWindow()
+    
+
+
     New_engine = New_layout_engine()
     New_engine.init_layout(input_format=input_info)
-    cons_df = show_constraint_table(parent=window, cons_df=ScriptMethod.df)
+    #cons_df = show_constraint_table(parent=window, cons_df=ScriptMethod.df)
+    if mode==0:
+        cons_df = pd.read_csv(cons_dir+"/constraint.csv")
+
+    else:
+        save_constraint_table(cons_df=ScriptMethod.df,directory=cons_dir)
+        flag=raw_input("Please edit the constraint table from constraint directory: Enter 1 on completion: ")
+        if flag=='1':
+            cons_df = pd.read_csv(cons_dir + "/constraint.csv")
+
     New_engine.cons_df = cons_df
     New_engine.Types = ScriptMethod.Types
     New_engine.all_components = ScriptMethod.all_components
