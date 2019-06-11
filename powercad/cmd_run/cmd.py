@@ -3,8 +3,8 @@ from powercad.electrical_mdl.cornerstitch_API import *
 from powercad.thermal.cornerstitch_API import *
 from glob import glob
 from powercad.cmd_run.cmd_layout_handler import generate_optimize_layout, script_translator, eval_single_layout
-
-
+from pympler import muppy,summary
+import types
 class Cmd_Handler:
     def __init__(self):
         # Input files
@@ -69,8 +69,8 @@ class Cmd_Handler:
                     self.fig_dir = info[1]
                 if info[0] == "Solution_dir:":
                     self.db_dir = info[1]
-                if info[0] == "Constraint_dir:":
-                    self.constraint_dir = info[1]
+                if info[0] == "Constraint_file:":
+                    self.constraint_file = info[1]
                 if info[0] =="New:":
                     self.new_mode = int(info[1])
                 if info[0] == "Option:":  # engine option
@@ -131,13 +131,19 @@ class Cmd_Handler:
                         sink = info[1]
                     if info[0] == 'Frequency:':
                         frequency = float(info[1])
-
+        if self.new_mode==1:
+            try:
+                with open(self.constraint_file, "w") as my_empty_csv:
+                    pass
+            except:
+                print " wrong file name for constraint file"
+                return False
         check_file = os.path.isfile
         check_dir = os.path.isdir
         # Check if these files exist
         cont = check_file(self.layout_script) and check_file(self.bondwire_setup) and check_file(
             self.layer_stack_file) and check_file(self.rs_model_file) and check_dir(self.fig_dir) and check_dir(
-            self.db_dir) and check_dir(self.constraint_dir)
+            self.db_dir) and check_file(self.constraint_file)
         if cont:
             print "run the optimization"
             self.init_cs_objects()
@@ -183,7 +189,6 @@ class Cmd_Handler:
                                          optimization=True, db_file=self.db_file,fig_dir=self.fig_dir,
                                          apis={'E': self.e_api, 'T': self.t_api}, num_layouts=num_layouts, seed=seed,
                                          algorithm=algorithm, floor_plan=floor_plan,num_gen=num_gen,measures=self.measures)
-            self.cmd_loop()
         else:
             return cont
 
@@ -465,3 +470,7 @@ class Cmd_Handler:
 if __name__ == "__main__":
     cmd = Cmd_Handler()
     cmd.cmd_handler_flow()
+    all_objects = muppy.get_objects()
+    sum1 = summary.summarize(all_objects)
+    my_types = muppy.filter(all_objects, Type=types.ClassType)
+    summary.print_(sum1)

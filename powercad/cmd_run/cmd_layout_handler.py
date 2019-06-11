@@ -577,7 +577,7 @@ def script_translator(input_script=None, bond_wire_info=None, fig_dir=None, cons
         cons_df = pd.read_csv(constraint_file)
 
     else:
-        save_constraint_table(cons_df=ScriptMethod.df,directory=cons_dir)
+        save_constraint_table(cons_df=ScriptMethod.df,file=constraint_file)
         flag=raw_input("Please edit the constraint table from constraint directory: Enter 1 on completion: ")
         if flag=='1':
             cons_df = pd.read_csv(constraint_file)

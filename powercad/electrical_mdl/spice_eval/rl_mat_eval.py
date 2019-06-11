@@ -2,7 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import time
 import scipy
-import gc
+#from memory_profiler import profile
+
 class diag_prec:
     def __init__(self, A):
         self.shape = A.shape
@@ -464,6 +465,9 @@ class RL_circuit():
         second_row = np.concatenate((self.M_t, self.D), axis=1)  # form [M_t , D]
         self.A = np.concatenate((first_row,second_row),axis=0)
 
+    #precision = 10
+    #fp = open('memory_profiler_basic_mean.log', 'w+')
+    #@profile(precision=precision, stream=fp)
     def solve_iv(self,mode = 0):
         debug=False
         # initialize some symbolic matrix with zeros
