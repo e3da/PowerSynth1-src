@@ -72,6 +72,7 @@ class CornerStitchSolution:
 
         conn = create_connection(db)
         v1=[]
+
         with conn:
             # create a new project
             #table = 'Layout_' + str(layout_ind)

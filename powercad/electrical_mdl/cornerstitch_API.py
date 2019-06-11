@@ -7,7 +7,7 @@ import cProfile
 import pstats
 from mpl_toolkits.mplot3d import Axes3D
 from collections import deque
-
+import gc
 class ElectricalMeasure(object):
     MEASURE_RES = 1
     MEASURE_IND = 2
@@ -47,7 +47,7 @@ class CornerStitch_Emodel_API:
         self.measure = []
         self.circuit = RL_circuit()
 
-    def form_connection_table(self, dev_conn=None):
+    def form_connection_table(self,mode=None, dev_conn=None):
         '''
         Form a connection table only once, which can be reused for multiple evaluation
         :return: update self.conn_dict
@@ -59,7 +59,7 @@ class CornerStitch_Emodel_API:
                 if isinstance(comp, Part):
                     if comp.type == 1:
                         name = comp.layout_component_id
-                        table = Connection_Table(name=name, cons=comp.conn_dict)
+                        table = Connection_Table(name=name, cons=comp.conn_dict, mode='command')
                         table.set_up_table_cmd()
                         self.conn_dict[name] = table.states
         else:
@@ -189,6 +189,7 @@ class CornerStitch_Emodel_API:
         #plt.show()
         self.emesh.mutual_data_prepare(mode=0)
         self.emesh.update_mutual(mode=0)
+        del hier
         #pr.disable()
         #pr.create_stats()
         #file = open('C:\Users\qmle\Desktop\New_Layout_Engine\New_design_flow\mystats.txt', 'w')

@@ -143,7 +143,7 @@ def update_solution_data(layout_dictionary=None, opt_problem=None, measure_names
 
 def get_seed(seed=None):
     if seed == None:
-        print "Enter information for Variable-sized layout generation"
+        #print "Enter information for Variable-sized layout generation"
         seed = raw_input("Enter randomization seed:")
         try:
             seed = int(seed)
@@ -222,6 +222,7 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
     '''
     plot = False
 
+
     # GET MEASUREMENT NAME:
     measure_names = []
     for m in measures:
@@ -245,16 +246,20 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
             Solutions = []
             for i in range(len(cs_sym_info)):
                 name = 'Layout_' + str(i)
-                solution = CornerStitchSolution(name=name)
+                solution = CornerStitchSolution(name=name,index=i)
                 solution.params = None
                 solution.layout_info = cs_sym_info[i]
                 solution.abstract_info = solution.form_abs_obj_rect_dict()
                 Solutions.append(solution)
-                if plot:
-                    sol_path = fig_dir + '/Mode_0'
-                    if not os.path.exists(sol_path):
-                        os.makedirs(sol_path)
-                    solution.layout_plot(layout_ind=i, db=db_file, fig_dir=sol_path)
+        if plot:
+            sol_path = fig_dir + '/Mode_0'
+            if not os.path.exists(sol_path):
+                os.makedirs(sol_path)
+            for solution in Solutions:
+                size=solution.layout_info.keys()[0]
+                size=list(size)
+                print "Min-size", size[0]/1000,size[1]/1000
+                solution.layout_plot(layout_ind=solution.index, db=db_file, fig_dir=sol_path)
 
 
 

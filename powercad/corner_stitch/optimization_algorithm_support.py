@@ -329,7 +329,7 @@ class new_engine_opt:
 
             opt = Matlab_weighted_sum_fmincon(len(Design_Vars), self.cost_func_fmincon, num_measures=self.num_measure,
                                               num_gen=self.num_gen, num_disc=self.num_disc,
-                                              matlab_dir=os.path.abspath("../../../../MATLAB"), individual=None)
+                                              matlab_dir=os.path.abspath("../../../MATLAB"), individual=None)
             opt.run()
             # results=np.array(self.solution_data)
             # end = timeit.default_timer()

@@ -94,6 +94,18 @@ class RL_circuit():
         self.C_count = 0
         self.M_count = 0
 
+    def clean_dicts(self):
+        del self.pnode
+        del self.nnode
+        del self.cp_node
+        del self.cn_node
+        del self.vout
+        del self.value
+        del self.Vname
+        # Handle Mutual inductance
+        del self.Lname1
+        del self.Lname2
+        del self.L_id  # A relationship between Lname and current id in the matrix
 
     def assign_freq(self,freq=1000):
         self.freq = freq
@@ -556,7 +568,6 @@ class RL_circuit():
                 results_dict[str(names[i,0])]=self.results[i]
 
         self.results=results_dict
-
         #print "R,L,M", self.R_count,self.L_count,self.M_count
 def test_RL_circuit1():
     print "new method"
