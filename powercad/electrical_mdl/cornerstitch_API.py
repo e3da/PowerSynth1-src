@@ -85,8 +85,8 @@ class CornerStitch_Emodel_API:
         '''
         sig = 4
         # UPDATE ALL PLATES and SHEET FOR THE LAYOUT
-        print "data"
-        print layout_data
+        #print "data"
+        #print layout_data
         self.layout_data = layout_data.values()[0]
         self.width, self.height = layout_data.keys()[0]
         #self.width = round(self.width/1000.0, sig)

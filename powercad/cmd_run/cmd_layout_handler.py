@@ -5,6 +5,7 @@ from powercad.corner_stitch.cs_solution import CornerStitchSolution
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from powercad.corner_stitch.input_script import *
+from powercad.sol_browser.cs_solution_handler import pareto_solutions,export_solutions
 
 
 # --------------Plot function---------------------
@@ -208,7 +209,7 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
 
     :return: list of CornerStitch Solution objects
     '''
-    plot = False
+    plot = True
 
     # GET MEASUREMENT NAME:
     measure_names = []
@@ -307,6 +308,20 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
                     for solution in Solutions:
                         solution.layout_plot(layout_ind=solution.index, db=db_file, fig_dir=fig_dir)
 
+            # ---------------------------------------------- save pareto data and plot figures ------------------------------------
+            # checking pareto_plot and saving csv file
+            pareto_data = pareto_solutions(Solutions)  # a dictionary with index as key and list of performance value as value {0:[p1,p2],1:[...],...}
+            export_solutions(solutions=Solutions, directory=fig_dir,
+                             pareto_data=pareto_data)  # exporting solution info to csv file
+            if plot:
+                pareto_data = pareto_solutions(Solutions)
+                for solution in Solutions:
+                    if solution.index in pareto_data.keys():
+                        solution.layout_plot(layout_ind=solution.index, db=db_file, fig_dir=fig_dir)
+
+
+
+
         else:  # Layout generation only
             num_layouts = get_params(num_layouts=num_layouts,alg='LAYOUT_GEN')
 
@@ -387,11 +402,20 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
                     opt_problem.T_init = temp_init  # initial temperature
                     opt_problem.optimize()  # perform optimization
                 Solutions = update_solution_data(layout_dictionary=opt_problem.layout_data, measure_names=measure_names, perf_results=opt_problem.perf_results)
-                if plot:
-                    for solution in Solutions:
+
+            #---------------------------------------------- save pareto data and plot figures ------------------------------------
+            # checking pareto_plot and saving csv file
+            pareto_data = pareto_solutions(Solutions) # a dictionary with index as key and list of performance value as value {0:[p1,p2],1:[...],...}
+            export_solutions(solutions=Solutions, directory=fig_dir, pareto_data=pareto_data) # exporting solution info to csv file
+            if plot:
+                pareto_data = pareto_solutions(Solutions)
+                for solution in Solutions:
+                    if solution.index in pareto_data.keys():
                         solution.layout_plot(layout_ind=solution.index, db=db_file, fig_dir=fig_dir)
 
-        else:
+
+
+        else: #layout generation only
             num_layouts = get_params(num_layouts=num_layouts, alg='LAYOUT_GEN')
 
             cs_sym_info = layout_engine.generate_solutions(mode, num_layouts=num_layouts, W=width, H=height,
