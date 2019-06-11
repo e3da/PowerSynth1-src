@@ -568,9 +568,9 @@ class ScriptInputMethod():
 
         return input_rects
 
-def save_constraint_table(cons_df=None,directory=None):
-    if directory!=None:
-        cons_df.to_csv(directory+'/constraint.csv', sep=',', header=None, index=None)
+def save_constraint_table(cons_df=None,file=None):
+    if file!=None:
+        cons_df.to_csv(file, sep=',', header=None, index=None)
 
 '''
 def show_constraint_table(parent,cons_df=None):

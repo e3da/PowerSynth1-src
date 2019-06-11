@@ -518,7 +518,7 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
     return Solutions
 
 
-def script_translator(input_script=None, bond_wire_info=None, fig_dir=None,cons_dir=None,mode=None):
+def script_translator(input_script=None, bond_wire_info=None, fig_dir=None, constraint_file=None,mode=None):
     ScriptMethod = ScriptInputMethod(input_script)  # initializes the class with filename
     ScriptMethod.read_input_script()  # reads input script and make two sections
     ScriptMethod.gather_part_route_info()  # gathers part and route info
@@ -551,13 +551,13 @@ def script_translator(input_script=None, bond_wire_info=None, fig_dir=None,cons_
     New_engine.init_layout(input_format=input_info)
     #cons_df = show_constraint_table(parent=window, cons_df=ScriptMethod.df)
     if mode==0:
-        cons_df = pd.read_csv(cons_dir+"/constraint.csv")
+        cons_df = pd.read_csv(constraint_file)
 
     else:
         save_constraint_table(cons_df=ScriptMethod.df,directory=cons_dir)
         flag=raw_input("Please edit the constraint table from constraint directory: Enter 1 on completion: ")
         if flag=='1':
-            cons_df = pd.read_csv(cons_dir + "/constraint.csv")
+            cons_df = pd.read_csv(constraint_file)
 
     New_engine.cons_df = cons_df
     New_engine.Types = ScriptMethod.Types

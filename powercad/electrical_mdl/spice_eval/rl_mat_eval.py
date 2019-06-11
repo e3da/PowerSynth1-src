@@ -73,7 +73,6 @@ class RL_circuit():
         self.A = None
         self.Mutual = {}  # Dictionary for coupling pairs
         # List of circuit equations:
-        self.equ = None
         self.func = []
         self.solver = None
         self.max_net_id = 0 # maximum used net id value
@@ -129,13 +128,38 @@ class RL_circuit():
         #newport = self.node_dict[node]
         Equiv_name = 'Bt_' + str(node)
         self._graph_add_comp(Equiv_name, node, ground, val)
+    def refresh(self):
+        self.cur_element = []
+        self.cur_pnode = {}
+        self.cur_nnode = {}
+        self.cur_value = {}
+        self.element = []
+        self.pnode = {}
+        self.nnode = {}
+        self.cp_node = {}
+        self.cn_node = {}
+        self.vout = {}
+        self.value = {}
+        self.Vname = {}
+        # Handle Mutual inductance
+        self.Lname1 = {}
+        self.Lname2 = {}
+        self.L_id = {}  # A relationship between Lname and current id in the matrix
+        self.max_net_id = 0  # maximum used net id value
+        self.results_dict = {}
+        self.node_dict = {}
 
+        self.L_count = 0
+        self.R_count = 0
+        self.C_count = 0
+        self.M_count = 0
     def _graph_read(self,graph):
         '''
         this will be used to read mesh graph and forming matrices
         :param lumped_graph: networkX graph from PowerSynth
         :return: update self.net_data
         '''
+
         for edge in graph.edges(data=True):
             n1 = edge[0]
             n2 = edge[1]
@@ -528,7 +552,7 @@ class RL_circuit():
                 results_dict[str(names[i,0])]=self.results[i]
 
         self.results=results_dict
-        gc.collect()
+
         #print "R,L,M", self.R_count,self.L_count,self.M_count
 def test_RL_circuit1():
     print "new method"

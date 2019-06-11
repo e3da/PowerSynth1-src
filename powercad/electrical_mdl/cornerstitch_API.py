@@ -45,6 +45,7 @@ class CornerStitch_Emodel_API:
         self.width = 0
         self.height = 0
         self.measure = []
+        self.circuit = RL_circuit()
 
     def form_connection_table(self, dev_conn=None):
         '''
@@ -264,18 +265,18 @@ class CornerStitch_Emodel_API:
         '''
         pt1 = self.emesh.comp_net_id[src]
         pt2 = self.emesh.comp_net_id[sink]
-        circuit = RL_circuit()
-        circuit._graph_read(self.emesh.graph)
-        circuit.m_graph_read(self.emesh.m_graph)
-        circuit.assign_freq(self.freq)
-        circuit.indep_current_source(pt1, 0, 1)
+        self.circuit = RL_circuit()
+        self.circuit._graph_read(self.emesh.graph)
+        self.circuit.m_graph_read(self.emesh.m_graph)
+        self.circuit.assign_freq(self.freq)
+        self.circuit.indep_current_source(pt1, 0, 1)
         #print "src",pt1,"sink",pt2
-        circuit._add_termial(pt2)
-        circuit.build_current_info()
-        circuit.solve_iv()
+        self.circuit._add_termial(pt2)
+        self.circuit.build_current_info()
+        self.circuit.solve_iv()
         vname = 'v' + str(pt1)
-        imp = circuit.results[vname]
+        imp = self.circuit.results[vname]
         R = abs(np.real(imp)*1e3)
-        L = abs(np.imag(imp)) * 1e9 / (2 * np.pi * circuit.freq)
+        L = abs(np.imag(imp)) * 1e9 / (2 * np.pi * self.circuit.freq)
         print R,L
         return R[0],L[0]
