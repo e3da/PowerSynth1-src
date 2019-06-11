@@ -15,11 +15,13 @@ def pareto_solutions(solutions):
         pareto_data.setdefault(key,[])
 
     for solution in solutions:
+
         ret=[]
         key=solution.index
         for k,v in solution.params.items():
             ret.append(v)
             all_data[key]=ret
+
     pareto_front=pareto_frontiter2D(data_in=all_data)
     #print "P",pareto_front
     return pareto_front
@@ -51,8 +53,8 @@ def pareto_frontiter2D(data_in=None, MinX=True, MinY=True):
                 if pair[1] >= p_front[-1][1]:  # Look for lower values of Y
                     p_front.append(pair)  # and add them to the Pareto frontie
 
-        print "No of Solutions on Pareto-front", len(p_front)
-        print "Total solutions", len(data_1)
+        #print "No of Solutions on Pareto-front", len(p_front)
+        #print "Total solutions", len(data_1)
         pareto_data = np.array(p_front)
 
         plot = False
@@ -90,8 +92,8 @@ def export_solutions(solutions=None,directory=None,pareto_data=None):
             csv_writer.writerow(["Size", 'Performance 1', 'Performance 2'])
             # for k, v in _fetch_currencies.iteritems():
             Size = solutions[i].abstract_info[item]['Dims']
-            Perf_1 = performance_names[0]
-            Perf_2 = performance_names[1]
+            Perf_1 = solutions[i].params[performance_names[0]]
+            Perf_2 =  solutions[i].params[performance_names[1]]
             data = [Size, Perf_1, Perf_2]
             csv_writer.writerow(data)
             csv_writer.writerow(["Component_Name", "x_coordinate", "y_coordinate", "width", "length"])

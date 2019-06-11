@@ -315,7 +315,7 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
                              pareto_data=pareto_data)  # exporting solution info to csv file
             if plot:
                 pareto_data = pareto_solutions(Solutions)
-                for solution in pareto_data:
+                for solution in Solutions:
                     if solution.index in pareto_data.keys():
                         solution.layout_plot(layout_ind=solution.index, db=db_file, fig_dir=fig_dir)
 
@@ -409,7 +409,7 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
             export_solutions(solutions=Solutions, directory=fig_dir, pareto_data=pareto_data) # exporting solution info to csv file
             if plot:
                 pareto_data = pareto_solutions(Solutions)
-                for solution in pareto_data:
+                for solution in Solutions:
                     if solution.index in pareto_data.keys():
                         solution.layout_plot(layout_ind=solution.index, db=db_file, fig_dir=fig_dir)
 
