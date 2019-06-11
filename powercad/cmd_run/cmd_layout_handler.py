@@ -104,7 +104,18 @@ def eval_single_layout(layout_engine=None, layout_data=None, apis={}, measures=[
                                  seed=None, level=2, method=None, apis=apis, measures=measures)
 
     results = opt_problem.eval_layout(layout_data)
-    print results
+    measure_names = []
+    for m in measures:
+        measure_names.append(m.name)
+    Solutions=[]
+    name='initial_input_layout'
+    solution = CornerStitchSolution(name=name, index=0)
+    solution.params = dict(zip(measure_names, results))  # A dictionary formed by result and measurement name
+    solution.layout_info = layout_data
+    solution.abstract_info = solution.form_abs_obj_rect_dict()
+    Solutions.append(solution)
+    print "Performance_results",results
+    return Solutions
 
 
 def update_solution_data(layout_dictionary=None, opt_problem=None, measure_names=[], perf_results=[]):
@@ -240,7 +251,10 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
                 solution.abstract_info = solution.form_abs_obj_rect_dict()
                 Solutions.append(solution)
                 if plot:
-                    solution.layout_plot(layout_ind=i, db=db_file, fig_dir=fig_dir)
+                    sol_path = fig_dir + '/Mode_0'
+                    if not os.path.exists(sol_path):
+                        os.makedirs(sol_path)
+                    solution.layout_plot(layout_ind=i, db=db_file, fig_dir=sol_path)
 
 
 
@@ -304,20 +318,20 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
 
                 Solutions = update_solution_data(layout_dictionary=opt_problem.layout_data, measure_names=measure_names,
                                                  perf_results=opt_problem.perf_results)
-                if plot:
-                    for solution in Solutions:
-                        solution.layout_plot(layout_ind=solution.index, db=db_file, fig_dir=fig_dir)
+
 
             # ---------------------------------------------- save pareto data and plot figures ------------------------------------
             # checking pareto_plot and saving csv file
             pareto_data = pareto_solutions(Solutions)  # a dictionary with index as key and list of performance value as value {0:[p1,p2],1:[...],...}
-            export_solutions(solutions=Solutions, directory=fig_dir,
-                             pareto_data=pareto_data)  # exporting solution info to csv file
+            export_solutions(solutions=Solutions, directory=fig_dir,pareto_data=pareto_data)  # exporting solution info to csv file
             if plot:
+                sol_path = fig_dir + '/Mode_1_pareto'
+                if not os.path.exists(sol_path):
+                    os.makedirs(sol_path)
                 pareto_data = pareto_solutions(Solutions)
                 for solution in Solutions:
                     if solution.index in pareto_data.keys():
-                        solution.layout_plot(layout_ind=solution.index, db=db_file, fig_dir=fig_dir)
+                        solution.layout_plot(layout_ind=solution.index, db=db_file, fig_dir=sol_path)
 
 
 
@@ -341,7 +355,10 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
                 Solutions.append(solution)
 
                 if plot:
-                    solution.layout_plot(layout_ind=i, db=db_file, fig_dir=fig_dir)
+                    sol_path = fig_dir + '/Mode_1_gen_only'
+                    if not os.path.exists(sol_path):
+                        os.makedirs(sol_path)
+                    solution.layout_plot(layout_ind=i, db=db_file, fig_dir=sol_path)
 
 
 
@@ -411,10 +428,13 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
             pareto_data = pareto_solutions(Solutions) # a dictionary with index as key and list of performance value as value {0:[p1,p2],1:[...],...}
             export_solutions(solutions=Solutions, directory=fig_dir, pareto_data=pareto_data) # exporting solution info to csv file
             if plot:
+                sol_path = fig_dir + '/Mode_2_pareto'
+                if not os.path.exists(sol_path):
+                    os.makedirs(sol_path)
                 pareto_data = pareto_solutions(Solutions)
                 for solution in Solutions:
                     if solution.index in pareto_data.keys():
-                        solution.layout_plot(layout_ind=solution.index, db=db_file, fig_dir=fig_dir)
+                        solution.layout_plot(layout_ind=solution.index, db=db_file, fig_dir=sol_path)
 
 
 
@@ -436,7 +456,10 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
                 solution.abstract_info = solution.form_abs_obj_rect_dict()
                 Solutions.append(solution)
                 if plot:
-                    solution.layout_plot(layout_ind=i, db=db_file, fig_dir=fig_dir)
+                    sol_path = fig_dir + '/Mode_2_gen_only'
+                    if not os.path.exists(sol_path):
+                        os.makedirs(sol_path)
+                    solution.layout_plot(layout_ind=i, db=db_file, fig_dir=sol_path)
 
     '''
     elif mode == 3:

@@ -18,7 +18,7 @@ class constraint():
             t = 'Type_' + str(i)
             Type.append(t)
             type.append(str(i))
-    print "in constraint", Type
+
     # print type
     # Type=["EMPTY","Type_1", "Type_2","Type_3","Type_4"]  # in this version 4 types of components are considered (Trace, MOS, Leads, Diodes)
 

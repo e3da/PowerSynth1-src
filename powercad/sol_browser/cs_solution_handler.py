@@ -15,15 +15,12 @@ def pareto_solutions(solutions):
         pareto_data.setdefault(key,[])
 
     for solution in solutions:
-
         ret=[]
         key=solution.index
         for k,v in solution.params.items():
             ret.append(v)
-            all_data[key]=ret
-
+        all_data[key]=ret
     pareto_front=pareto_frontiter2D(data_in=all_data)
-    #print "P",pareto_front
     return pareto_front
 
 def pareto_frontiter2D(data_in=None, MinX=True, MinY=True):
@@ -72,7 +69,6 @@ def pareto_frontiter2D(data_in=None, MinX=True, MinY=True):
 
 
 def export_solutions(solutions=None,directory=None,pareto_data=None):
-
     sol_path = directory + '/Layout_Solutions'
     pareto_path = directory + '/Pareto_Solutions'
     if not os.path.exists(sol_path):

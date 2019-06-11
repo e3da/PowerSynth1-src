@@ -98,7 +98,7 @@ class Cmd_Handler:
                 if info[0] == 'End_Electrical_Setup..':
                     electrical_mode = False
                 if thermal_mode:
-                    if info[0] == 'Measure_Name:':
+                    if info[0] == 'Measure_Name:' and t_name==None:
                         t_name = info[1]
                     if info[0] == 'Selected_Devices:':
                         devices = info[1].split(",")
@@ -110,7 +110,7 @@ class Cmd_Handler:
                     if info[0] == 'Ambient_Temperature:':
                         t_amb = float(info[1])
                 if electrical_mode:
-                    if info[0] == 'Measure_Name:':
+                    if info[0] == 'Measure_Name:' and e_name==None:
                         e_name = info[1]
                     if info[0] == 'Measure_Type:':
                         type = int(info[1])
@@ -118,7 +118,6 @@ class Cmd_Handler:
                         dev_conn_mode = False
                     if dev_conn_mode:
                         dev_name = info[0]
-                        print info
                         conn = info[1].split(",")
                         conn = [int(i) for i in conn]
                         dev_conn[dev_name] = conn
@@ -144,8 +143,8 @@ class Cmd_Handler:
             self.init_cs_objects()
             self.set_up_db()
             if run_option == 0:
-                generate_optimize_layout(layout_engine=self.engine, mode=layout_mode,
-                                         optimization=False, db_file=self.db_file, num_layouts=num_layouts, seed=seed,
+                self.solutions=generate_optimize_layout(layout_engine=self.engine, mode=layout_mode,
+                                         optimization=False, db_file=self.db_file,fig_dir=self.fig_dir, num_layouts=num_layouts, seed=seed,
                                          floor_plan=floor_plan)
             elif run_option == 1:
                 self.measures=[]
@@ -169,9 +168,8 @@ class Cmd_Handler:
                         rects.append(rect)
                     init_rects[k] = rects
                 cs_sym_info = {(width * 1000, height * 1000): init_rects}
-                eval_single_layout(layout_engine=self.engine, layout_data=cs_sym_info, apis={'E': self.e_api,
-                                                                                             'T': self.t_api},
-                                   measures=self.measures)
+                self.solutions=eval_single_layout(layout_engine=self.engine, layout_data=cs_sym_info, apis={'E': self.e_api,
+                                                                                             'T': self.t_api},measures=self.measures)
             if run_option == 2:
 
                 self.measures = []
@@ -181,8 +179,8 @@ class Cmd_Handler:
                 self.setup_electrical(mode='macro', dev_conn=dev_conn, frequency=frequency, meas_data=e_measure_data)
 
                 self.setup_thermal(mode='macro', setup_data=t_setup_data, meas_data=t_measure_data)
-                generate_optimize_layout(layout_engine=self.engine, mode=layout_mode,
-                                         optimization=True, db_file=self.db_file,
+                self.solutions=generate_optimize_layout(layout_engine=self.engine, mode=layout_mode,
+                                         optimization=True, db_file=self.db_file,fig_dir=self.fig_dir,
                                          apis={'E': self.e_api, 'T': self.t_api}, num_layouts=num_layouts, seed=seed,
                                          algorithm=algorithm, floor_plan=floor_plan,num_gen=num_gen,measures=self.measures)
             self.cmd_loop()
@@ -256,6 +254,20 @@ class Cmd_Handler:
             else:
                 print "wrong input"
 
+    def cons_dir_request(self):
+        print "Please enter a constraint file directory"
+        correct = True
+        while (correct):
+            directory = raw_input("Constraint Directory:")
+            if os.path.isdir(file):
+                self.constraint_dir = directory
+                correct = False
+            else:
+                print "wrong input"
+
+    def cons_file_edit_request(self):
+        self.new_mode=int(raw_input( "If you want to edit the constraint file, enter 1. Else enter 0"))
+
     def option_request(self):
         print "Please enter an option:"
         print "0: layout generation, 1:single layout evaluation, 2:layout optimization, quit:to quit,help:to get help"
@@ -319,6 +331,8 @@ class Cmd_Handler:
         self.res_model_request()
         self.fig_dir_request()
         self.database_dir_request()
+        self.cons_dir_request()
+        self.cons_file_edit_request()
 
     def init_cs_objects(self):
         '''
@@ -345,6 +359,7 @@ class Cmd_Handler:
             self.e_api.form_connection_table(dev_conn)
             self.e_api.get_frequency(frequency)
             self.measures += self.e_api.measurement_setup(meas_data)
+
 
     def setup_thermal(self,mode = 'command',meas_data ={},setup_data={}):
 
@@ -428,14 +443,14 @@ class Cmd_Handler:
                     init_rects[k] = rects
                 cs_sym_info = {(width * 1000, height * 1000): init_rects}
                 eval_single_layout(layout_engine=self.engine, layout_data=cs_sym_info, apis={'E': self.e_api,
-                                                                                             'T': self.t_api},
-                                   measures=self.measures)
+                                                                                             'T': self.t_api},measures=self.measures)
 
             elif opt == 2:  # Peform layout evaluation based on the list of measures
                 self.init_apis()  # Setup measurement
                 cont, layout_mode = self.option_layout_gen()
                 if layout_mode in range(3):
                     self.set_up_db()
+                    print "F",self.fig_dir
                     self.soluions = generate_optimize_layout(layout_engine=self.engine, mode=layout_mode,
                                                              optimization=True, db_file=self.db_file,fig_dir=self.fig_dir,
                                                              apis={'E': self.e_api, 'T': self.t_api},
