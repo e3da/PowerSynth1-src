@@ -8,7 +8,7 @@ from collections import OrderedDict
 class Connection_Table:
     def __init__(self,name="",cons={},width=400,height=200):
         self.connections = cons
-        self.states={}
+        self.states=OrderedDict
     def set_up_table(self):
         ''' A simple multiple choice table to ask for the internal connections'''
         conns_to_select={}

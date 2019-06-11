@@ -66,8 +66,12 @@ class CornerStitch_Emodel_API:
                 comp = self.comp_dict[c]
                 if isinstance(comp, Part):
                     if comp.type == 1:
+                        states ={}
                         name = comp.layout_component_id
-                        self.conn_dict[name] = dev_conn[name]
+
+                        for conns in comp.conn_dict:
+                            states[conns] = dev_conn[name][comp.conn_dict.keys().index(conns)]
+                        self.conn_dict[name] = states
 
     def get_frequency(self, frequency=None):
         if frequency==None:
