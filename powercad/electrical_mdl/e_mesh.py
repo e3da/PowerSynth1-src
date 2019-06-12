@@ -14,6 +14,7 @@ from powercad.parasitics.mdl_compare import trace_ind_krige, trace_res_krige, tr
     trace_inductance
 from powercad.parasitics.mutual_inductance.mutual_inductance import *
 import time
+import gc
 class MeshNode:
 
 
@@ -566,23 +567,21 @@ class EMesh():
                 self.add_hier_edge(net[e[0]], net[e[1]], edge_data=e[2]['edge_data'])
 
     def mesh_grid_hier(self,Nx=3,Ny=3,corner_stitch=False):
-        # function calls in loop so it wont take time to search for these functions
-        add_hier_edge = self.add_hier_edge
-        hier_E=self.hier_E
-        comp_dict ={} # Use to remember the component that has its graph built (so we dont do it again)
+
+        self.comp_dict ={} # Use to remember the component that has its graph built (so we dont do it again)
         # all comp points
-        comp_nodes ={}
-        net={}
+        self.comp_nodes ={}
+        self.comp_net_id={}
         self.graph = nx.MultiGraph()
         self.node_count = 1
         # First search through all sheet and add their edges, nodes to the mesh
-        for sh in hier_E.sheet:
+        for sh in self.hier_E.sheet:
             group =sh.parent.parent # Define the trace island (containing a sheet)
-            if not(group in comp_nodes): # Create a list in dictionary to store all hierarchy node for each group
-                comp_nodes[group]=[]
+            if not(group in self.comp_nodes): # Create a list in dictionary to store all hierarchy node for each group
+                self.comp_nodes[group]=[]
 
             comp = sh.data.component     # Get the component of a sheet.
-            if comp != None and not (comp in comp_dict):
+            if comp != None and not (comp in self.comp_dict):
                 #print "case 1"
                 comp.build_graph()
                 sheet_data = sh.data
@@ -591,12 +590,12 @@ class EMesh():
                 x, y = sheet_data.rect.center()
                 z = sheet_data.z
                 cp = [x, y, z]
-                if not (sheet_data.net in net):
+                if not (sheet_data.net in self.comp_net_id):
                     cp_node = MeshNode(pos=cp, type=conn_type, node_id=self.node_count, group_id=None)
-                    net[sheet_data.net] = self.node_count
+                    self.comp_net_id[sheet_data.net] = self.node_count
                     self.add_node(cp_node)
-                    comp_nodes[group].append(cp_node)
-                    comp_dict[comp] = 1
+                    self.comp_nodes[group].append(cp_node)
+                    self.comp_dict[comp] = 1
                 for n in comp.net_graph.nodes(data=True): # node without parents
                     sheet_data= n[1]['node']
 
@@ -607,11 +606,11 @@ class EMesh():
                         x, y = sheet_data.rect.center()
                         z = sheet_data.z
                         cp = [x, y, z]
-                        if not (sheet_data.net in net):
+                        if not (sheet_data.net in self.comp_net_id):
                             cp_node = MeshNode(pos=cp, type=conn_type, node_id=self.node_count, group_id=None)
-                            net[sheet_data.net] = self.node_count
+                            self.comp_net_id[sheet_data.net] = self.node_count
                             self.add_node(cp_node)
-                            comp_dict[comp]=1
+                            self.comp_dict[comp]=1
 
             else:
                 sheet_data = sh.data
@@ -620,38 +619,35 @@ class EMesh():
                 x, y = sheet_data.rect.center()
                 z = sheet_data.z
                 cp = [x, y, z]
-                if not (sheet_data.net in net):
+                if not (sheet_data.net in self.comp_net_id):
                     cp_node = MeshNode(pos=cp, type=type, node_id=self.node_count, group_id=None)
-                    net[sheet_data.net] = self.node_count
+                    self.comp_net_id[sheet_data.net] = self.node_count
                     self.add_node(cp_node)
-                    comp_nodes[group].append(cp_node)
+                    self.comp_nodes[group].append(cp_node)
         #for c in comp_dict.keys(): # Once all components are built we make the edges
         #    for e in c.net_graph.edges(data=True):
         #        self.add_hier_edge(net[e[0]], net[e[1]],edge_data={'R':1.08e-3,'L':2.2e-9}) # TODO add bondwire model here
         #(add_hier_edge(net[e[0]], net[e[1]], edge_data={'R': 1.08e-3, 'L': 2.2e-9}) for c in comp_dict.keys() for e in
         # c.net_graph.edges(data=True))
         #print net
-        self.comp_net_id=net # update the component, net relationship
-        self.update_E_comp_parasitics(net=net,comp_dict=comp_dict)
+
+        self.update_E_comp_parasitics(net=self.comp_net_id,comp_dict=self.comp_dict)
 
         # These are applied for each different groups on each layer.
-        for isl_id in xrange(len(hier_E.isl_group)): # trace island id in T_Node
-            g = hier_E.isl_group[isl_id]
+        for isl_id in xrange(len(self.hier_E.isl_group)): # trace island id in T_Node
+            g = self.hier_E.isl_group[isl_id]
             # First forming all nodes and edges for a trace piece
-            if hier_E.isl_group_data!={}:
-                thick = hier_E.isl_group_data[g]['thick']
+            if self.hier_E.isl_group_data!={}:
+                thick = self.hier_E.isl_group_data[g]['thick']
             else:
                 thick = 0.035 # Hard coded for test case without MDK input
 
-            corners_trace_dict = {}  # Dictionary to store all corners of each rectangular piece
-            lines_corners_dict = {}  # Dictionary to store all lines connected to corners
-            corners = []             # All bound corners
-            node_dict = {}           # Use to store hashed data positions
+            self.corners_trace_dict = {}  # Dictionary to store all corners of each rectangular piece
+            self.lines_corners_dict = {}  # Dictionary to store all lines connected to corners
+            self.corners = []             # All bound corners
+            self.node_dict = {}           # Use to store hashed data positions
             lines = []               # All rect bound lines
             points=[]                # All mesh points
-            x_cs = []                # Corner stitch x locations
-            y_cs = []                # Corner stitch y locations
-
             P_app = points.append
             for k_id in xrange(len(g.nodes.keys())): # Search for all traces in trace island
                 # take the traces of this group ( by definition, each group have a different z level)
@@ -662,18 +658,18 @@ class EMesh():
                 z = trace.data.z  # layer level for this node
 
                 # Forming corner - trace relationship
-                corners += tr.get_all_corners()
+                self.corners += tr.get_all_corners()
                 # Form relationship between corner and trace
 
-                for c in corners:
+                for c in self.corners:
                     cr = (c[0],c[1],z)
                     if tr.encloses(c[0], c[1]):
-                        if not (cr in corners_trace_dict.keys()):
-                            corners_trace_dict[cr] = [tr]
+                        if not (cr in self.corners_trace_dict.keys()):
+                            self.corners_trace_dict[cr] = [tr]
                         else:
-                            corners_trace_dict[cr].append(tr)
-                    corners_trace_dict[cr] = list(set(corners_trace_dict[cr]))
-                corners = list(set(corners))
+                            self.corners_trace_dict[cr].append(tr)
+                    self.corners_trace_dict[cr] = list(set(self.corners_trace_dict[cr]))
+                self.corners = list(set(self.corners))
                 lines += tr.get_all_lines()
 
                 # GROUND PLANE
@@ -711,9 +707,9 @@ class EMesh():
                         p=list(p)
                         name = str(p[0])+str(p[1])+str(z)
                         # check dict/hash table for new point
-                        if not(name in node_dict):
+                        if not(name in self.node_dict):
                             p.append(z)#+ trace.data.dz)
-                            node_dict[name]=p
+                            self.node_dict[name]=p
                             P_app(p) # sort form of points.append
                 else:
                     all_points = tr.get_all_corners()
@@ -721,27 +717,27 @@ class EMesh():
                         p = list(p)
                         name = str(p[0]) + str(p[1]) + str(z)
                         # check dict/hash table for new point
-                        if not (name in node_dict):
+                        if not (name in self.node_dict):
                             p=(p[0],p[1],z)
-                            node_dict[name] = p
+                            self.node_dict[name] = p
                             P_app(p)  # sort form of points.append
 
             # Form relationship between lines and points, to split into boundary lines
             for l in lines:
                 split = False
-                for c in corners:
+                for c in self.corners:
                     if l.include(c) and c != l.pt1 and c != l.pt2:
-                        if not (l in lines_corners_dict.keys()):
-                            lines_corners_dict[l] = [c]
+                        if not (l in self.lines_corners_dict.keys()):
+                            self.lines_corners_dict[l] = [c]
                             split = True
                         else:
-                            lines_corners_dict[l].append(c)
+                            self.lines_corners_dict[l].append(c)
                 if not split:
-                    lines_corners_dict[l] = []
+                    self.lines_corners_dict[l] = []
             all_lines = []
             # Create a list of boundary lines
-            for l in lines_corners_dict.keys():
-                cpoints = lines_corners_dict[l]
+            for l in self.lines_corners_dict.keys():
+                cpoints = self.lines_corners_dict[l]
                 if cpoints != []:
                     new_line = l.split(cpoints)
                     all_lines += new_line
@@ -765,18 +761,17 @@ class EMesh():
             #   plt.scatter([p[0]],[p[1]],color='black')
             #plt.show()
             # Finding mesh nodes for group
-            self.mesh_nodes(points=points,corners_trace_dict=corners_trace_dict,boundary_line=bound_lines,group=g)
+            self.mesh_nodes(points=points,corners_trace_dict=self.corners_trace_dict,boundary_line=bound_lines,group=g)
             # Finding mesh edges for group
             self.mesh_edges(thick)
-
             #self.update_trace_RL_val()
             #self.mesh_edges2(thick)
             #fig,ax = plt.subplots()
             #draw_rect_list(all_rect,ax,'blue',None)
             # Once we have all the nodes and edges for the trace group, we need to save hier node info
-            hier_group_dict = {}
-            if comp_nodes!={} and g in comp_nodes: # case there are components
-                for cp_node in comp_nodes[g]:
+            self.hier_group_dict = {}
+            if self.comp_nodes!={} and g in self.comp_nodes: # case there are components
+                for cp_node in self.comp_nodes[g]:
                     min_dis = 1000
                     SW = None
                     cp = cp_node.pos
@@ -796,17 +791,17 @@ class EMesh():
                     NW = SW.North
                     NE = NW.East
                     SE = NE.South
-                    hier_data = {'SW':SW,'NW':NW,'NE':NE,'SE':SE} # 4 points on the corners of parent net
-                    if not (SW.node_id in hier_group_dict): # form new group based on SW_id
-                        hier_group_dict[SW.node_id]={'node_group':[cp_node],'parent_data':hier_data}
+                    self.hier_data = {'SW':SW,'NW':NW,'NE':NE,'SE':SE} # 4 points on the corners of parent net
+                    if not (SW.node_id in self.hier_group_dict): # form new group based on SW_id
+                        self.hier_group_dict[SW.node_id]={'node_group':[cp_node],'parent_data':self.hier_data}
                     else: # if SW_id exists, add new hier node to group
-                        hier_group_dict[SW.node_id]['node_group'].append(cp_node)
+                        self.hier_group_dict[SW.node_id]['node_group'].append(cp_node)
 
 
 
-            for k in hier_group_dict.keys(): # Based on group to form hier node
-                node_group = hier_group_dict[k]['node_group']
-                parent_data = hier_group_dict[k]['parent_data']
+            for k in self.hier_group_dict.keys(): # Based on group to form hier node
+                node_group = self.hier_group_dict[k]['node_group']
+                parent_data = self.hier_group_dict[k]['parent_data']
                 self._save_hier_node_data(hier_nodes =node_group,parent_data=parent_data)
 
 

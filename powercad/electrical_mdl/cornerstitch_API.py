@@ -88,7 +88,6 @@ class CornerStitch_Emodel_API:
         Read part info and link them with part info, from an updaed layout, update the electrical network
         :return: updating self.e_sheets, self.e_plates
         '''
-        sig = 4
         # UPDATE ALL PLATES and SHEET FOR THE LAYOUT
         #print "data"
         #print layout_data
@@ -105,11 +104,8 @@ class CornerStitch_Emodel_API:
             data = self.layout_data[k]
             for rect in data:
                 x, y, w, h = [rect.x, rect.y, rect.width,
-                              rect.height]  # convert from integer to float TODO: send in correct data
-                #x = x / 1000
-                #y = y / 1000
-                #w = w / 1000
-                #h = h / 1000
+                              rect.height]  # convert from integer to float
+
                 new_rect = Rect(top=y + h, bottom=y, left=x, right=x + w)
                 p = E_plate(rect=new_rect, z=self.layer_to_z['T'][0], dz=self.layer_to_z['T'][1])
                 self.e_plates.append(p)
@@ -172,9 +168,9 @@ class CornerStitch_Emodel_API:
         self.module = EModule(plate=self.e_plates, sheet=self.e_sheets, components=self.wires + self.e_comps)
         self.module.form_group()
         self.module.split_layer_group()
-        hier = EHier(module=self.module)
-        hier.form_hierachy()
-        self.emesh = EMesh(hier_E=hier, freq=self.freq, mdl=self.rs_model)
+        self.hier = EHier(module=self.module)
+        self.hier.form_hierachy()
+        self.emesh = EMesh(hier_E=self.hier, freq=self.freq, mdl=self.rs_model)
         self.emesh.mesh_grid_hier(corner_stitch=True)
         self.emesh.update_trace_RL_val()
         self.emesh.update_hier_edge_RL()
@@ -189,7 +185,6 @@ class CornerStitch_Emodel_API:
         #plt.show()
         self.emesh.mutual_data_prepare(mode=0)
         self.emesh.update_mutual(mode=0)
-        del hier
         #pr.disable()
         #pr.create_stats()
         #file = open('C:\Users\qmle\Desktop\New_Layout_Engine\New_design_flow\mystats.txt', 'w')
