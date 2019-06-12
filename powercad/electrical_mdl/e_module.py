@@ -12,6 +12,7 @@ from powercad.electrical_mdl.e_struct import *
 from powercad.parasitics.models_bondwire import wire_inductance, wire_partial_mutual_ind, wire_resistance, \
     ball_mutual_indutance, ball_self_inductance
 
+
 class Escript:
     def __init__(self, file):
         '''
@@ -21,22 +22,23 @@ class Escript:
         '''
         self.file = open(file, "rb")
         self.stack = EStack()
-        self.module =EModule()
-        self.materials ={} # keys = mat index by user, values = material names
-        self.comp_def={} #keys=def name by user, values = num of pins for components.
-        self.pins={} # a dictionary to relate between pin names and pin pad
+        self.module = EModule()
+        self.materials = {}  # keys = mat index by user, values = material names
+        self.comp_def = {}  # keys=def name by user, values = num of pins for components.
+        self.pins = {}  # a dictionary to relate between pin names and pin pad
+
     def make_module(self):
-        #["Materials","Layer Stack","Traces","Terminals","Device Definition","Componetns"]
+        # ["Materials","Layer Stack","Traces","Terminals","Device Definition","Componetns"]
         mode = None
         for l in self.file.readlines():
             l = l.strip('\n')
             l = l.strip('\r')
-            if len(l)==0: # case a blank line
+            if len(l) == 0:  # case a blank line
                 continue
-            if l[0]=="+":# tags
-                mode =l.replace('+','')
+            if l[0] == "+":  # tags
+                mode = l.replace('+', '')
                 continue
-            if "#" in l: # this is a comment
+            if "#" in l:  # this is a comment
                 continue
             if mode == "Materials":
                 self._handle_material(l)
@@ -51,32 +53,35 @@ class Escript:
             elif mode == "Components":
                 self._handle_comp(l)
 
-    def _handle_material(self,line):
+    def _handle_material(self, line):
         print "handle Material"
         data = line.strip('\t').split(" ")
-        self.materials[data[0]]= data[1]
+        self.materials[data[0]] = data[1]
+
     def _handle_layerstack(self, line):
         print "handle Layer Stack"
         data = line.strip('\t').split(" ")
         # Update layer stack data
         self.stack.layer_id.append(data[0])
-        self.stack.thick[data[0]]=data[2]
-        self.stack.z[data[0]]=data[1]
-        self.stack.mat[data[0]]= self.materials[data[3]] # TODO: this is conductivity need to update from the material lib
+        self.stack.thick[data[0]] = data[2]
+        self.stack.z[data[0]] = data[1]
+        self.stack.mat[data[0]] = self.materials[
+            data[3]]  # TODO: this is conductivity need to update from the material lib
 
-    def _handle_traces(self,line):
+    def _handle_traces(self, line):
         print "handle Traces"
         data = line.strip('\t').split(" ")
-        top,bot,left,right = data[1:5]
-        print float(top),float(bot),float(left),float(right)
-        rect = Rect(float(top),float(bot),float(left),float(right))
+        top, bot, left, right = data[1:5]
+        print float(top), float(bot), float(left), float(right)
+        rect = Rect(float(top), float(bot), float(left), float(right))
         lid = data[5].strip("l=")
-        print self.stack.thick,self.stack.z
+        print self.stack.thick, self.stack.z
         z = float(self.stack.z[lid])
         dz = float(self.stack.thick[lid])
-        trace=E_plate(rect=rect, z=z, dz=dz)
+        trace = E_plate(rect=rect, z=z, dz=dz)
         self.module.plate.append(trace)
-    def _handle_terminals(self,line):
+
+    def _handle_terminals(self, line):
         print "handle Terminals"
         data = line.strip('\t').split(" ")
         pin_id = data[0]
@@ -89,32 +94,35 @@ class Escript:
         z = self.stack.z[lid]
         z = float(z)
 
-        if net_type=="E":
-            net_type="external"
-        elif net_type=="I":
-            net_type="internal"
+        if net_type == "E":
+            net_type = "external"
+        elif net_type == "I":
+            net_type = "internal"
         else:
             print "wrong input"
 
-        if n_dir=='U':
+        if n_dir == 'U':
             n_dir = (0, 0, 1)
         if n_dir == 'D':
             n_dir = (0, 0, -1)
 
         terminal = Sheet(rect=rect, net_type=net_type, net_name=net_name, type='point', n=n_dir, z=z)
 
-        self.pins[pin_id]=terminal
+        self.pins[pin_id] = terminal
         self.module.sheet.append(terminal)
-    def _handle_comp_def(self,line):
+
+    def _handle_comp_def(self, line):
         print "handle comp definition"
         data = line.strip('\t').split(" ")
         print data
-    def _handle_comp(self,line):
+
+    def _handle_comp(self, line):
         print "handle components"
         data = line.strip('\t').split(" ")
-        pin_list=[]
+        pin_list = []
 
         print data
+
 
 class EComp:
     def __init__(self, sheet=[], conn=[], val=[], type="active"):
@@ -208,7 +216,7 @@ class EWires(EComp):
             self.circuit.indep_current_source(0, 1, val=1)
             self.circuit.build_current_info()
             self.circuit.solve_iv()
-            imp =self.circuit.results['v1']
+            imp = self.circuit.results['v1']
             R = abs(np.real(imp))
             L = abs(np.imag(imp) / (2 * np.pi * self.f))
             self.net_graph.add_edge(self.sheet[0].net, self.sheet[1].net, edge_data={'R': R, 'L': L, 'C': None})
@@ -310,7 +318,7 @@ class EStack:
     '''
 
     def __init__(self, file=None):
-        self.csvfile = file # csv file if None this is used through script interface
+        self.csvfile = file  # csv file if None this is used through script interface
         self.layer_id = []  # layer ID
         self.thick = {}  # layer thickness in mm
         self.z = {}  # layer z in mm
@@ -329,6 +337,7 @@ class EStack:
         for i in self.layer_id:
             if z == self.z[i]:
                 return i
+
 
 class EModule:
     def __init__(self, sheet=[], plate=[], layer_stack=None, components=[]):
@@ -390,7 +399,6 @@ class EModule:
         for i in range(len(self.output)):
             self.group[i] = self.output[i]
 
-
     def split_layer_group(self):
         self.plate_group = self.group
         self.plate = []
@@ -441,7 +449,7 @@ class EModule:
                             break
 
                     if split:
-                        t = round(top/1000.0,3)
+                        t = round(top / 1000.0, 3)
                         b = round(bot / 1000.0, 3)
                         l = round(left / 1000.0, 3)
                         r = round(right / 1000.0, 3)
@@ -578,6 +586,7 @@ def load_e_stack_test(file):
     es = EStack(file=file)
     es.load_layer_stack()
 
+
 def test_bondwires_group():
     R7 = Rect(49, 48, 34, 35)
     R8 = Rect(39, 38, 34, 35)
@@ -587,26 +596,29 @@ def test_bondwires_group():
     wire_group = EWires(0.15, 5, 1, sheets[0], sheets[1], None, 1000e3)
     wire_group.update_wires_parasitic()
 
+
 def test_bondwires_group_with_length():
     from powercad.electrical_mdl.spice_eval.peec_num_solver import Circuit
 
-    R1 = Rect(1,0,0,1)
-    for l in range(1,15):
-        R2 = Rect(1,0,l,l+1)
+    R1 = Rect(1, 0, 0, 1)
+    for l in range(1, 15):
+        R2 = Rect(1, 0, l, l + 1)
         nets = ['bw1_s', 'bw1_e']
         rects_sh = [R1, R2]
         sheets = [Sheet(rect=sh, net_name=nets[rects_sh.index(sh)], type='point', n=(0, 0, 1), z=0.4) for sh in
                   rects_sh]
-        print 'length:',l
-        wire_group = EWires(0.15, 5, 0.8, sheets[0], sheets[1], None, 1000e3,circuit=Circuit())
+        print 'length:', l
+        wire_group = EWires(0.15, 5, 0.8, sheets[0], sheets[1], None, 1000e3, circuit=Circuit())
         wire_group.update_wires_parasitic()
+
+
 def test_solderball_group():
     from powercad.electrical_mdl.spice_eval.peec_num_solver import Circuit
     R7 = Rect(49, 48, 34, 35)
     nets = ['source_z1', 'source_z2']
     sheet1 = Sheet(rect=R7, net_name=nets[0], type='point', n=(0, 0, 1), z=0.2)
     sheet2 = Sheet(rect=R7, net_name=nets[0], type='point', n=(0, 0, 1), z=0.4)
-    ball_grid = np.random.choice([0, 1], size=(3,3), p=[0. / 10, 10. / 10])
+    ball_grid = np.random.choice([0, 1], size=(3, 3), p=[0. / 10, 10. / 10])
     print ball_grid
     dis = [0.508, 0.762, 1.016, 1.27]
     for d in dis:
@@ -615,15 +627,17 @@ def test_solderball_group():
                                   circuit=Circuit())
         ball_group.build_graph()
 
+
 def test_read_srcipt():
     dir = "C:\Users\qmle\Desktop\Documents\Conferences\IWIPP\\template.txt"
-    src=Escript(dir)
+    src = Escript(dir)
     src.make_module()
+
 
 if __name__ == '__main__':
     # test_comp()
     # load_e_stack_test("C:\Users\qmle\Desktop\Documents\Conferences\IWIPP\ELayerStack//2_layers.csv")
     # test_bondwires_group()
-    #test_solderball_group()
-    #test_read_srcipt()
+    # test_solderball_group()
+    # test_read_srcipt()
     test_bondwires_group_with_length()
