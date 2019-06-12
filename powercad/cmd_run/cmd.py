@@ -3,6 +3,7 @@ from powercad.electrical_mdl.cornerstitch_API import *
 from powercad.thermal.cornerstitch_API import *
 from glob import glob
 from powercad.cmd_run.cmd_layout_handler import generate_optimize_layout, script_translator, eval_single_layout
+import objgraph
 from pympler import muppy,summary
 import types
 class Cmd_Handler:
@@ -469,7 +470,8 @@ class Cmd_Handler:
 if __name__ == "__main__":
     cmd = Cmd_Handler()
     cmd.cmd_handler_flow()
+    objgraph.show_most_common_types()
     all_objects = muppy.get_objects()
-    sum1 = summary.summarize(all_objects)
-    my_types = muppy.filter(all_objects, Type=types.ClassType)
+    my_types = muppy.filter(all_objects, Type=types.DictType)
+    sum1 = summary.summarize(my_types)
     summary.print_(sum1)
