@@ -1,4 +1,6 @@
-from powercad.parasitics.mutual_inductance_saved import *
+from powercad.parasitics.mutual_inductance_saved import mutual_between_bars as m_cal_py# This is the Python file only
+from powercad.parasitics.mutual_inductance import mutual_mat_eval,mutual_between_bars
+
 from timeit import default_timer as timer
 from sklearn.svm import SVR
 from sklearn import svm
@@ -8,8 +10,44 @@ import matplotlib.pyplot as plt
 from SALib.analyze import morris
 from SALib.sample.morris import sample
 from SALib.plotting.morris import horizontal_bar_plot, covariance_plot, sample_histograms
+from scipy.optimize import curve_fit
 
 
+def func(x,a1,a2,a3,a4,a5,a6,b1,b2,b3,b4,b5,b6):
+    return a1*x[0]+a2*x[1]+a3*x[2]+a4*x[3]+a5*x[4]+a6*x[5]\
+           +b1**2*x[0] + b2 ** 2 * x[1] + b3 ** 2 * x[2] + b4 ** 2 * x[3] + b4 ** 2 * x[4] + b6 ** 2 * x[5]
+
+def non_linear_leastsquare():
+    problem = {
+        'num_vars': 6,
+        'names': ['w1', 'l1', 'w2', 'l2', 'l3', 'E'],
+        'bounds': [[1, 40],
+                   [1, 40],
+                   [1, 40],
+                   [1, 40],
+                   [1, 40],
+                   [1, 40]]
+    }
+    X = sample(problem, N=100, num_levels=4, grid_jump=2, optimal_trajectories=None)
+    n_samples = np.shape(X)[0]
+    Y = np.zeros((n_samples), dtype=np.float64)
+    Y_new = np.zeros((n_samples), dtype=np.float64)
+    err = np.zeros((n_samples), dtype=np.float64)
+
+    f = m_cal_py
+    X1 = np.transpose(X)
+
+    for i in range(n_samples):
+        Y[i] = f(X1[0, i], X1[1, i], 0.2, X1[2, i], X1[3, i], 0.2, X1[4, i], 0, X1[5, i])
+    Y *= 1e-9
+    print X.shape,Y.shape
+    popt,pcov = curve_fit(func,X1,Y)
+    for i in range(n_samples):
+        Y_new[i] = func(X[i],*popt)
+        err[i]=abs(Y_new[i]-Y[i])/Y[i]
+    print max(err)
+    print popt
+    print pcov
 def idea1_ressponse_surface():
 
     n_samples= 1000
@@ -21,7 +59,7 @@ def idea1_ressponse_surface():
     E = np.linspace(1,4, n_samples)
 
 
-    f= mutual_between_bars
+    f= m_cal_py
 
     Y = np.zeros((n_samples), dtype=np.float64)
     X=np.random.rand(n_samples,6)*10
@@ -67,7 +105,7 @@ def idea2_SVM():
     n_samples=np.shape(X)[0]
     Y = np.zeros((n_samples), dtype=np.float64)
 
-    f = mutual_between_bars
+    f = m_cal_py
 
     for i in range(n_samples):
         Y[i] = f(X[i, 0], X[i, 1], 0.2, X[i, 2], X[i, 3], 0.2, X[i, 4], 0, X[i, 5])
@@ -124,7 +162,7 @@ def idea3_MLP():
     n_samples = np.shape(X)[0]
     Y = np.zeros((n_samples), dtype=np.float64)
 
-    f = mutual_between_bars
+    f = m_cal_py
 
     for i in range(n_samples):
         Y[i] = f(X[i, 0], X[i, 1], 0.2, X[i, 2], X[i, 3], 0.2, X[i, 4], 0, X[i, 5])
@@ -174,4 +212,7 @@ def idea3_MLP():
     print sum(diff)
     print len(right_decisions)
 
-idea3_MLP()
+        
+
+
+non_linear_leastsquare()

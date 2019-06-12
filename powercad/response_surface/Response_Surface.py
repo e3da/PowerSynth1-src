@@ -384,7 +384,7 @@ class RS_model:
 
         elif mode=='OrKrigg':
             variogram=['linear','power','gaussian','spherical','exponential']
-            variogram = ['exponential']
+            #variogram = ['exponential']
 
             best_score=[1000 for i in range(len(self.input))]
             best_variogram=['' for i in range(len(self.input))]

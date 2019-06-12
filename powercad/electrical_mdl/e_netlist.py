@@ -59,9 +59,9 @@ class ENetlist():
             for e in edge:
                 try:
                     self.net_graph.remove_edge(*e)
-                    print "found one edge between", e[0], e[1]
+                    #print "found one edge between", e[0], e[1]
                 except:
-                    print "no edge between", e[0], e[1], "continue"
+                    #print "no edge between", e[0], e[1], "continue"
                     continue
 
 
@@ -83,7 +83,6 @@ class ENetlist():
         Intnet = "{}_{}"
         Rname = "R{}"
         Lname = "L{}"
-        SPICE_M = "K{} L{} L{} {}"
         L_dict = {}
         for edge in self.net_graph.edges(data=True):
             name = edge[2]['data'].name
@@ -119,6 +118,8 @@ class ENetlist():
             L1_val = L_dict[L1_name]
             L2_val = L_dict[L2_name]
             k = M_val / np.sqrt(L1_val * L2_val)
+            if k >1:
+                continue
             M_name = 'K' + '_' + L1_name + '_' + L2_name
 
             M_text += ' '.join([M_name, L1_name, L2_name, str(k), '\n'])

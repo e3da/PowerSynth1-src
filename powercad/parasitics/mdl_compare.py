@@ -19,7 +19,7 @@ e_0 = 8.85e-12                  # permittivity of vaccum;
 
 # -----------  resistance model of traces on ground plane ------------------
 # --------------------------------------------------------------------------
-def trace_resistance(f, w, l, t, h, p=1.724e-8):
+def trace_resistance(f=None, w=None, l=None, t=None, h=None, p=1.724e-8):
     # f: Hz (AC frequency)
     # w: mm (trace width, perpendicular to current flow)
     # l: mm (trace length, parallel to current flow)

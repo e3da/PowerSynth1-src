@@ -754,7 +754,7 @@ def form_fasthenry_trace_response_surface(layer_stack, Width=[1.2, 40], Length=[
         p = subprocess.Popen(args, shell=False, stdout=subprocess.PIPE)
         stdout, stderr = p.communicate()
 
-        print stdout,stderr
+        #print stdout,stderr
         ''' Output Path'''
         outname=os.path.join(os.getcwd(), 'Zc.mat')
         print "mesh", nwinc,nhinc_met
@@ -1075,7 +1075,7 @@ def form_bondwire_group_model_JDEC(l_range,radi,num_wires,distance,height,freq,c
     L=[]
     for l in length:
         name='length '+str(l)+' mm'+'.inp'
-        print name
+        #print name
         fname=os.path.join(wdir,name)
         X = 0
         Y = 0
@@ -1120,6 +1120,8 @@ def form_bondwire_group_model_JDEC(l_range,radi,num_wires,distance,height,freq,c
         #print r_list,'mOhm',l_list,'nH'
         R.append(r_list[0])
         L.append(l_list[0])
+        print "length:", l, "R and L", r_list[-1], l_list[-1]
+
     inter_R=interp1d(length, R, kind='linear')
     inter_L=interp1d(length, L, kind='linear')
 
@@ -1131,7 +1133,7 @@ def form_bondwire_group_model_JDEC(l_range,radi,num_wires,distance,height,freq,c
 
 
 # Test functions
-def test_build_bw_group_model_fh(f=100,num_wire=2,bw_pad_width=None,radius=0.2764/2,l_range=[1,5],sigma=36000,bw_distance=0.1,view_mode=False):
+def test_build_bw_group_model_fh(f=100,num_wire=2,bw_pad_width=None,radius=0.2764/2,l_range=[1,10],sigma=36000,bw_distance=0.1,view_mode=False):
     start=time.time()
     fh_env_dir = "C://Users//qmle//Desktop//Testing//FastHenry//Fasthenry3_test_gp//WorkSpace//fasthenry.exe"
     read_output_dir = "C://Users//qmle//Desktop//Testing//FastHenry//Fasthenry3_test_gp//ReadOutput.exe"
@@ -1160,7 +1162,9 @@ def test_build_trace_model_fh():
     mdk_dir ="C:\Users\qmle\Desktop\Documents\Conferences\IWIPP\Model//S_params_test_pcb.csv"
     #mdk_dir = "G:\My Drive\MSCAD PowerSynth Archives\Internal\MDK\Layer Stack Quang//MDK_Validation.csv"
     w_dir = "C:\Users\qmle\Desktop\Documents\Conferences\IWIPP\Model\workspace"
-    mdk_dir = "C:\Users\qmle\Desktop\Documents\Conferences\IWIPP\Model\ushape.csv"
+    mdk_dir = "C:\Users\qmle\Desktop\Documents\Conferences\IWIPP\Model\\S_params_test_pcb.csv"
+    w_dir = "C:\Users\qmle\Desktop\ARL\Model"
+    mdk_dir = "C:\Users\qmle\Desktop\ARL\Model\\4swhb_amol.csv"
     #w_dir = "C:\Users\qmle\Desktop\Documents\Conferences\ECCE\Imam_Quang\Model\workspace"
     dir = os.path.abspath(mdk_dir)
     ls = LayerStackImport(dir)
@@ -1169,13 +1173,13 @@ def test_build_trace_model_fh():
     metal_cond = 5.96*1e7
     sd_met = math.sqrt(1 / (math.pi * 1e6 * u * metal_cond * 1e6))
 
-    Width = [1,4]
-    Length = [0.2,5]
+    Width = [0.5,8]
+    Length = [0.2,10]
     #freq = [0.01, 100000, 100] # in kHz
-    freq = [3,9,100]
+    freq = [3,6,100]
     form_fasthenry_trace_response_surface(layer_stack=ls, Width=Width, Length=Length, freq=freq, wdir=w_dir,
                                           savedir=w_dir
-                                          , mdl_name='1trace', env=env, doe_mode=2,mode='log')
+                                          , mdl_name='ARL_module', env=env, doe_mode=2,mode='log')
 
 
 def test_build_trace_model_fh1():
@@ -1276,19 +1280,17 @@ if __name__ == "__main__":
     #test_corner_ind_correction(10, 4, 4)
     #test_corner_ind_correction(10, 4, 10)
     # test_build_corner_correction()
-    time1=time.time()
-    test_build_trace_model_fh()
+    #test_build_trace_model_fh()
     #test_build_trace_mdl_q3d()
     #test_build_trace_cornermodel_fh()
-    print range(1)
     #test_corner_ind_correction_fh(f,8,8)
     #test_corner_ind_correction_fh(f, 4,10)
     #test_corner_ind_correction_fh(f, 10, 4)
     #test_corner_ind_correction_fh(f,18.4817453658, 3.11002939201)
 
-    #f = 1000
+    f = 1000
 
-    #test_build_bw_group_model_fh(f, num_wire=2, bw_distance=2,view_mode=True,radius=0.138)
+    test_build_bw_group_model_fh(f, num_wire=5, bw_distance=1,view_mode=True,radius=0.15)
     '''
     bw_pad=2.09
     L_list=[]

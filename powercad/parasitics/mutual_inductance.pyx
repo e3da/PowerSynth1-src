@@ -28,7 +28,7 @@ cpdef double[:] mutual_mat_eval(double[:,:] m_mat,int nt):
         openmp.omp_set_num_threads(nt)
         #num_t = openmp.omp_get_num_threads()
         chunksize = rows/num_t
-        printf("t\n")
+        #printf("t\n")
         for i in prange(rows, schedule='static',chunksize=chunksize):
                 result[i] = mutual_between_bars(m_mat1[i,:])
     return result
