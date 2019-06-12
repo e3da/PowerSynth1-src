@@ -389,7 +389,7 @@ class EModule:
 
         for i in range(len(output)):
             self.group[i] = output[i]
-
+        del d
 
     def split_layer_group(self):
         plate_group = self.group
