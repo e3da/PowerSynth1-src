@@ -274,7 +274,10 @@ class CornerStitch_Emodel_API:
         imp = self.circuit.results[vname]
         R = abs(np.real(imp)*1e3)
         L = abs(np.imag(imp)) * 1e9 / (2 * np.pi * self.circuit.freq)
+        self.hier.tree.__del__()
         del self.circuit
-        del self.emesh
-        print R,L
+        self.emesh.graph.clear()
+        self.emesh.m_graph.clear()
+        gc.collect()
+        print R, L
         return R[0],L[0]

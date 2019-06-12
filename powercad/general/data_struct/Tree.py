@@ -48,7 +48,8 @@ class T_Node():
         self.nodes.pop(name,None)
 
     def __del__(self):
-        print "deleted",self.name
+        self.nodes.clear()
+        del self.nodes
 
 class Tree():
     def __init__(self):
@@ -57,6 +58,12 @@ class Tree():
         self.digraph=nx.DiGraph()
         self.max_rank =0
         self.cm=cm.jet
+    def __del__(self):
+        del self.nodes
+        del self.root
+        self.digraph.clear()
+        del self.digraph
+
     def search_tree(self,start_node=None,kname='ROOT'):
         ''' Perform a recursive search for node with name kname'''
         result=None

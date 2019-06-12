@@ -525,7 +525,7 @@ class RL_circuit():
             A = self.D
 
         t = time.time()
-        method=3
+        method=2
         if method ==1:
             self.results= scipy.sparse.linalg.spsolve(A,Z)
         elif method ==2:

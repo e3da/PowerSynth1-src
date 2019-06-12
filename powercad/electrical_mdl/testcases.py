@@ -87,7 +87,7 @@ def ARL_module():
     emesh.update_trace_RL_val()
     emesh.update_hier_edge_RL()
     start = time.time()
-
+    emesh.mutual_data_prepare()
     emesh.update_mutual()
     print 'mutual',time.time() - start, 's'
 
