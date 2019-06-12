@@ -3,7 +3,8 @@ import matplotlib.pyplot as plt
 import time
 import scipy
 #from memory_profiler import profile
-
+import warnings
+warnings.filterwarnings("ignore")
 class diag_prec:
     def __init__(self, A):
         self.shape = A.shape
@@ -94,6 +95,18 @@ class RL_circuit():
         self.C_count = 0
         self.M_count = 0
 
+    def clean_dicts(self):
+        del self.pnode
+        del self.nnode
+        del self.cp_node
+        del self.cn_node
+        del self.vout
+        del self.value
+        del self.Vname
+        # Handle Mutual inductance
+        del self.Lname1
+        del self.Lname2
+        del self.L_id  # A relationship between Lname and current id in the matrix
 
     def assign_freq(self,freq=1000):
         self.freq = freq
@@ -224,7 +237,6 @@ class RL_circuit():
         Returns:
             update M elemts
         '''
-        M_table = {}
         if debug ==True:
             all_vals = []
             for edge in m_graph.edges(data=True):
@@ -513,7 +525,7 @@ class RL_circuit():
             A = self.D
 
         t = time.time()
-        method=2
+        method=3
         if method ==1:
             self.results= scipy.sparse.linalg.spsolve(A,Z)
         elif method ==2:
@@ -526,7 +538,9 @@ class RL_circuit():
             self.results = np.linalg.inv(A)*Z
             self.results=np.squeeze(np.asarray(self.results))
 
-
+        #print np.shape(self.A)
+        del A
+        del Z
         #print "RESULTS",self.results
         if debug: # for debug and time analysis
             print 'RL', np.shape(A)
@@ -541,7 +555,7 @@ class RL_circuit():
             np.savetxt("A.csv", self.A, delimiter=",")
             np.savetxt("Z.csv", Z, delimiter=",")
             print "solve", time.time() - t, "s"
-        results_dict={}
+        self.results_dict={}
         rlmode=True
 
         if case == "no_current":
@@ -553,10 +567,9 @@ class RL_circuit():
             print self.J.shape
         if rlmode:
             for i in range(len(names)):
-                results_dict[str(names[i,0])]=self.results[i]
+                self.results_dict[str(names[i,0])]=self.results[i]
 
-        self.results=results_dict
-
+        self.results=self.results_dict
         #print "R,L,M", self.R_count,self.L_count,self.M_count
 def test_RL_circuit1():
     print "new method"

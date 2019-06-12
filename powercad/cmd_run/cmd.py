@@ -3,6 +3,7 @@ from powercad.electrical_mdl.cornerstitch_API import *
 from powercad.thermal.cornerstitch_API import *
 from glob import glob
 from powercad.cmd_run.cmd_layout_handler import generate_optimize_layout, script_translator, eval_single_layout
+import objgraph
 from pympler import muppy,summary
 import types
 class Cmd_Handler:
@@ -157,7 +158,7 @@ class Cmd_Handler:
                 t_setup_data={'Power': power,'heat_conv':h_conv,'t_amb':t_amb}
                 t_measure_data={'name':t_name,'devices':devices}
                 e_measure_data = {'name': e_name, 'type': type, 'source': source, 'sink': sink}
-                self.setup_thermal(mode='macro', setup_data=t_setup_data,measure_data=t_measure_data)
+                self.setup_thermal(mode='macro', setup_data=t_setup_data,meas_data=t_measure_data)
                 self.setup_electrical(mode='macro', dev_conn=dev_conn, frequency=frequency, meas_data=e_measure_data)
 
                 # Convert a list of patch to rectangles
@@ -263,15 +264,15 @@ class Cmd_Handler:
         print "Please enter a constraint file directory"
         correct = True
         while (correct):
-            directory = raw_input("Constraint Directory:")
-            if os.path.isdir(file):
-                self.constraint_dir = directory
+            file = raw_input("Constraint File:")
+            if os.path.isfile(file):
+                self.constraint_file = file
                 correct = False
             else:
                 print "wrong input"
 
     def cons_file_edit_request(self):
-        self.new_mode=int(raw_input( "If you want to edit the constraint file, enter 1. Else enter 0"))
+        self.new_mode=int(raw_input( "If you want to edit the constraint file, enter 1. Else enter 0: "))
 
     def option_request(self):
         print "Please enter an option:"
@@ -357,11 +358,11 @@ class Cmd_Handler:
         self.e_api = CornerStitch_Emodel_API(comp_dict=self.comp_dict, layer_to_z=layer_to_z, wire_conn=self.wire_table)
         self.e_api.load_rs_model(self.rs_model_file)
         if mode == 'command':
-            self.e_api.form_connection_table()
+            self.e_api.form_connection_table(mode='command')
             self.e_api.get_frequency()
             self.measures += self.e_api.measurement_setup()
         elif mode == 'macro':
-            self.e_api.form_connection_table(dev_conn)
+            self.e_api.form_connection_table(mode='macro',dev_conn=dev_conn)
             self.e_api.get_frequency(frequency)
             self.measures += self.e_api.measurement_setup(meas_data)
 
@@ -455,7 +456,6 @@ class Cmd_Handler:
                 cont, layout_mode = self.option_layout_gen()
                 if layout_mode in range(3):
                     self.set_up_db()
-                    print "F",self.fig_dir
                     self.soluions = generate_optimize_layout(layout_engine=self.engine, mode=layout_mode,
                                                              optimization=True, db_file=self.db_file,fig_dir=self.fig_dir,
                                                              apis={'E': self.e_api, 'T': self.t_api},
@@ -470,7 +470,8 @@ class Cmd_Handler:
 if __name__ == "__main__":
     cmd = Cmd_Handler()
     cmd.cmd_handler_flow()
+    objgraph.show_most_common_types()
     all_objects = muppy.get_objects()
-    sum1 = summary.summarize(all_objects)
-    my_types = muppy.filter(all_objects, Type=types.ClassType)
+    my_types = muppy.filter(all_objects, Type=types.DictType)
+    sum1 = summary.summarize(my_types)
     summary.print_(sum1)

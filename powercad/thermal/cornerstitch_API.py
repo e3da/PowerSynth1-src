@@ -111,7 +111,7 @@ class CornerStitch_Tmodel_API:
             temp = compound_top_surface_avg(t_bp, layer, devices, self.devices.keys().index(k))
             temp += self.t_amb + dev_delta
             self.temp_res[k] = temp
-
+        del t_bp,layer,devices
     def set_up_device_power(self, data=None):
         if data==None:
             print "load a table to collect power load"

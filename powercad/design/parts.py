@@ -1,14 +1,17 @@
 import os
-from Tkinter import *
 import copy
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import easygui as eg
 from collections import OrderedDict
 class Connection_Table:
-    def __init__(self,name="",cons={},width=400,height=200):
+    def __init__(self,name="",cons={},mode='macro',width=400,height=200):
         self.connections = cons
-        self.states=OrderedDict
+        self.mode=mode
+        if self.mode=='macro':
+            self.states=OrderedDict
+        elif self.mode=='command':
+            self.states = {}
     def set_up_table(self):
         ''' A simple multiple choice table to ask for the internal connections'''
         conns_to_select={}
@@ -28,6 +31,7 @@ class Connection_Table:
     def set_up_table_cmd(self):
         print "Input a sequence of 0 or 1 separate by commas e.g: 0,1,1 for each of the connection following this order"
         for conns in self.connections:
+
             mode = self.connections.keys().index(conns)
             print 'column', mode, ":", conns[0] + ' to ' + conns[1]
             self.states[conns] = 0

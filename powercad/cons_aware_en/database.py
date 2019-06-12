@@ -62,7 +62,6 @@ def retrieve_data(conn,ID):
     cur = conn.cursor()
     #cur.execute("SELECT * FROM " +table)
     #return cur.fetchall()
-
     #cur.execute("SELECT Layout_info FROM LAYOUT_DATA where ID=?",ID )
     sql = "SELECT Layout_info FROM LAYOUT_DATA WHERE ID = :id"
     param = {'id': ID}
