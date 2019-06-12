@@ -200,7 +200,7 @@ def get_dims(floor_plan = None):
         width = floor_plan[0]*1000
         height = floor_plan[1]*1000
         return [width, height]
-def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_file=None,fig_dir=None, apis={}, measures=[],seed=None,
+def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_file=None,fig_dir=None,sol_dir=None, apis={}, measures=[],seed=None,
                              num_layouts = None,num_gen= None , num_disc=None,max_temp=None,floor_plan=None,algorithm=None):
     '''
 
@@ -330,7 +330,7 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
             # ---------------------------------------------- save pareto data and plot figures ------------------------------------
             # checking pareto_plot and saving csv file
             pareto_data = pareto_solutions(Solutions)  # a dictionary with index as key and list of performance value as value {0:[p1,p2],1:[...],...}
-            export_solutions(solutions=Solutions, directory=fig_dir,pareto_data=pareto_data)  # exporting solution info to csv file
+            export_solutions(solutions=Solutions, directory=sol_dir,pareto_data=pareto_data)  # exporting solution info to csv file
             if plot:
                 sol_path = fig_dir + '/Mode_1_pareto'
                 if not os.path.exists(sol_path):
@@ -433,7 +433,7 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
             #---------------------------------------------- save pareto data and plot figures ------------------------------------
             # checking pareto_plot and saving csv file
             pareto_data = pareto_solutions(Solutions) # a dictionary with index as key and list of performance value as value {0:[p1,p2],1:[...],...}
-            export_solutions(solutions=Solutions, directory=fig_dir, pareto_data=pareto_data) # exporting solution info to csv file
+            export_solutions(solutions=Solutions, directory=sol_dir, pareto_data=pareto_data) # exporting solution info to csv file
             if plot:
                 sol_path = fig_dir + '/Mode_2_pareto'
                 if not os.path.exists(sol_path):

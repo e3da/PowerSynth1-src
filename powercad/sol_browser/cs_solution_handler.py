@@ -85,7 +85,7 @@ def export_solutions(solutions=None,directory=None,pareto_data=None):
         file_name = sol_path + '/' + item + '.csv'
         with open(file_name, 'wb') as my_csv:
             csv_writer = csv.writer(my_csv, delimiter=',')
-            csv_writer.writerow(["Size", 'Performance 1', 'Performance 2'])
+            csv_writer.writerow(["Size", performance_names[0], performance_names[1]])
             # for k, v in _fetch_currencies.iteritems():
             Size = solutions[i].abstract_info[item]['Dims']
             Perf_1 = solutions[i].params[performance_names[0]]
