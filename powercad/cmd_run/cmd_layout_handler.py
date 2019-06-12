@@ -129,13 +129,16 @@ def update_solution_data(layout_dictionary=None, opt_problem=None, measure_names
     '''
     Solutions = []
     for i in range(len(layout_dictionary)):
+
         if opt_problem != None:  # Evaluatio mode
             results = opt_problem.eval_layout(layout_dictionary[i])
         else:
             results = perf_results[i]
         name = 'Layout_' + str(i)
+
         solution = CornerStitchSolution(name=name,index=i)
         solution.params = dict(zip(measure_names, results))  # A dictionary formed by result and measurement name
+        print "Added", name,"Perf_values: ", solution.params.values()
         solution.layout_info = layout_dictionary[i]
         solution.abstract_info = solution.form_abs_obj_rect_dict()
         Solutions.append(solution)

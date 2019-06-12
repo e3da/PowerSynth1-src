@@ -284,5 +284,5 @@ class CornerStitch_Emodel_API:
         self.emesh.graph.clear()
         self.emesh.m_graph.clear()
         gc.collect()
-        print R, L
+        #print R, L
         return R[0], L[0]
