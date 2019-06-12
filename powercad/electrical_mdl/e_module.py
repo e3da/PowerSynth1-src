@@ -368,46 +368,46 @@ class EModule:
                 for t2 in traces:
                     if t1.intersects(t2):
                         a.append([t1, t2])
-            d = {tuple(t): set(t) for t in a}  # forces keys to be unique
+            self.d = {tuple(t): set(t) for t in a}  # forces keys to be unique
             while True:
-                for tuple_, set1 in d.items():
+                for tuple_, set1 in self.d.items():
                     try:
-                        match = next(k for k, set2 in d.items() if k != tuple_ and set1 & set2)
+                        match = next(k for k, set2 in self.d.items() if k != tuple_ and set1 & set2)
                     except StopIteration:
                         # no match for this key - keep looking
                         continue
                     else:
-                        d[tuple_] = set1 | d.pop(match)
+                        self.d[tuple_] = set1 | self.d.pop(match)
                         break
                 else:
                     # no match for any key - we are done!
                     break
-            output = sorted(tuple(s) for s in d.values())
+            self.output = sorted(tuple(s) for s in self.d.values())
 
         else:
-            output = [[traces[0]]]
+            self.output = [[traces[0]]]
 
-        for i in range(len(output)):
-            self.group[i] = output[i]
+        for i in range(len(self.output)):
+            self.group[i] = self.output[i]
 
 
     def split_layer_group(self):
-        plate_group = self.group
+        self.plate_group = self.group
         self.plate = []
         self.group_layer_dict = {}
-        splitted_group = {}
-        for group in plate_group.keys():  # First collect all xs and ys coordinates
+        self.splitted_group = {}
+        for group in self.plate_group.keys():  # First collect all xs and ys coordinates
             rects = []
             counter = 0
             xs = []
             ys = []
-            splitted_group[group] = []
-            z = plate_group[group][0].z
+            self.splitted_group[group] = []
+            z = self.plate_group[group][0].z
             if self.layer_stack != None:
                 self.group_layer_dict[group] = self.layer_stack.id_by_z(z)
-            dz = plate_group[group][0].dz
-            n = plate_group[group][0].n
-            for plate in plate_group[group]:
+            dz = self.plate_group[group][0].dz
+            n = self.plate_group[group][0].n
+            for plate in self.plate_group[group]:
                 trace = plate.rect
                 xs += [trace.left, trace.right]
                 ys += [trace.top, trace.bottom]
@@ -434,7 +434,7 @@ class EModule:
                     midx = left + (right - left) / 2
                     midy = bot + (top - bot) / 2
                     split = False
-                    for plate in plate_group[group]:
+                    for plate in self.plate_group[group]:
                         trace = plate.rect
                         if trace.encloses(midx, midy):
                             split = True
@@ -452,13 +452,13 @@ class EModule:
                         newPlate.name = 'T' + str(counter) + '_(' + 'isl' + str(group) + ')'
                         counter += 1
 
-                        splitted_group[group].append(newPlate)
+                        self.splitted_group[group].append(newPlate)
                         if self.layer_stack != None:
                             self.group_layer_dict[group] = self.layer_stack.id_by_z(z)
                         self.plate.append(newPlate)
                         # else:
                         #    splitted_group[group].append(cur_plate)
-        self.group = splitted_group
+        self.group = self.splitted_group
 
 
 def test1():

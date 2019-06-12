@@ -84,7 +84,7 @@ class LayerStackHandler:
         bp_tech=Baseplate()
         sa_tech = SubstrateAttach()
         for layer in self.layer_list:
-            print '--- Checking layer: ' + str(layer)
+            #print '--- Checking layer: ' + str(layer)
             
             try:
                 layer_type = layer[0]
@@ -128,7 +128,7 @@ class LayerStackHandler:
                     self.error_msg = 'Could not find all values in baseplate layer ' + name + '. Baseplate must contain the following fields: layer type, num, name, pos, width, length, thickness, material id.'
                     break
                 self.baseplate = BaseplateInstance((width, length, thick), None, bp_tech)
-                print 'Found baseplate ' + str(width) + ', ' + str(length) + ', ' + str(thick) + ', ' + str(bp_material_id)
+                #print 'Found baseplate ' + str(width) + ', ' + str(length) + ', ' + str(thick) + ', ' + str(bp_material_id)
                 
             # Find substrate attach
             if layer_type == self.substrate_attach_abbrev:
@@ -141,7 +141,7 @@ class LayerStackHandler:
                     self.error_msg = 'Could not find all values in substrate attach layer ' + name + '. Substrate attach must contain the following fields: layer type, num, name, pos, thickness.'
                     break
                 self.substrate_attach = SubstrateAttachInstance(thick, sa_tech)
-                print 'Found substrate attach ' + str(thick)
+                #print 'Found substrate attach ' + str(thick)
                     
             # Find substrate 
             if layer_type == self.metal_abbrev or layer_type == self.dielectric_abbrev:
@@ -166,7 +166,7 @@ class LayerStackHandler:
                 
 
 
-                print 'Found metal/dielectric ' + str(width) + ', ' + str(length)
+                #print 'Found metal/dielectric ' + str(width) + ', ' + str(length)
                 
             elif layer_type == self.interconnect_abbrev :
                 try:
@@ -175,14 +175,14 @@ class LayerStackHandler:
                     self.compatible = False
                     self.error_msg = 'Could not find all values in interconnect layer ' + name + '. Interconnect layers must contain the following fields: layer type, num, name, pos, ledge width.'
                     break
-                print 'Found interconnect ' + str(ledge_width)
+                #print 'Found interconnect ' + str(ledge_width)
 
         try:
             self.substrate = SubstrateInstance((substrate_width, substrate_length), ledge_width, substrate_tech)
         except:
             self.compatible = False
             self.error_msg = 'Could not find substrate layers.'
-        print 'Found substrate ' + str(width) + ', ' + str(length) + ', ' + str(ledge_width)  
+        #print 'Found substrate ' + str(width) + ', ' + str(length) + ', ' + str(ledge_width)
                     
         # TODO - check for excess substrate layers
                 

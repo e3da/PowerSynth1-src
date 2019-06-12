@@ -1,5 +1,4 @@
 import os
-from Tkinter import *
 import copy
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
