@@ -23,7 +23,7 @@ def get_device():
     bl_s1 = BondwireLanding((1, 2.41), BondwireLanding.POWER)
     bl_s3 = BondwireLanding((1, 4.41), BondwireLanding.POWER)
     #device_model = open_device_model('powerMOSVA.va')
-    device_model = None
+    device_model=None
     dev = Device('TEST', (6.82, 6.35, 0.8), device_props, Device.TRANSISTOR,
                  [bl_g, bl_s1, bl_s3], device_model, 1)
     return dev
@@ -58,7 +58,7 @@ def get_dieattach():
     thermal_cond -- W/(m*K) -- "Thermal Conductivity"
     spec_heat_cap -- J/(kg*K) -- "Specific Heat Capacity"
     density -- kg/m^3 -- "Material Density"
-    electrical_res -- (ohm*m) -- "electrical_mdl Resistivity"
+    electrical_res -- (ohm*m) -- "Electrical Resistivity"
     rel_permit -- (unitless) -- "Relative Permittivity"
     rel_permeab -- (unitless) -- "Relative Permeability"'''
     die_attach_props = MaterialProperties('Pb-Sn Solder Alloy', 35.8, 130.0, 11020.0, None, None, None)

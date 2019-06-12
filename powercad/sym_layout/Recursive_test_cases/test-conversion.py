@@ -1,20 +1,19 @@
 # This will test the new lumped graph structure along with Kelvin connection
 #@authors: Quang Le
 
-import sys
-
-from PySide import QtGui
-from PySide.QtGui import QMainWindow
-
-from powercad.cons_aware_en.cons_engine import *
 from powercad.design.module_data import gen_test_module_data
 from powercad.general.settings import settings
-from powercad.parasitics.analytical.analysis import parasitic_analysis
+from powercad.parasitics.analysis import parasitic_analysis
 from powercad.sym_layout.symbolic_layout import SymbolicLayout, DeviceInstance, SymLine, SymPoint, ElectricalMeasure, \
     ThermalMeasure
-from powercad.tech_lib.test_techlib import get_mosfet, get_dieattach
 from powercad.tech_lib.test_techlib import get_power_bondwire, get_signal_bondwire
-from powercad.tech_lib.test_techlib import get_signal_lead
+from powercad.tech_lib.test_techlib import get_signal_lead, get_power_lead
+from PySide import QtGui
+from PySide.QtGui import QFileDialog,QMainWindow
+from powercad.tech_lib.test_techlib import get_mosfet, get_dieattach
+from powercad.cons_aware_en.cons_engine import *
+import sys
+
 
 
 def make_test_symmetries(sym_layout):
@@ -220,7 +219,8 @@ def random_layout(directory):
 
 def test1():
     # The test goes here, moddify the path below as you wish...
-    directory ='Layout//CS-conversion//simple_switch.psc' # directory to layout script
+    #directory ='Layout//CS-conversion//simple_switch.psc' # directory to layout script
+    directory = 'D:\PowerSynth\Layout Script//simple_switch.psc'  # directory to layout script
     random_layout(directory)
 
 test1()

@@ -3,7 +3,9 @@ import pandas as pd
 from powercad.corner_stitch.API_PS import *
 from powercad.corner_stitch.CornerStitch import *
 from powercad.design.library_structures import *
-
+from powercad.cons_aware_en.database import *
+from tqdm import tqdm
+from powercad.design import parts
 
 class New_layout_engine():
     def __init__(self):
@@ -16,23 +18,31 @@ class New_layout_engine():
         self.Min_X = None
         self.Min_Y = None
         self.cons_info = None
+        self.ledge_width=1000.0
+        self.ledge_height=1000.0
+
+
+        self.Types=None  # added for new flow (list of all cs_type)
+        self.all_components=None #added for new flow (holds all layout component objects)
+        self.init_size=[]
 
         # for initialize only
         self.init_data = []
         self.cornerstitch = CornerStitch()
-
+        self.min_dimensions = {}
         # current solutions
         self.cur_fig_data = None
 
         # only activate when the sym_layout API is used
         self.sym_layout = None
         self.layout_sols = {}
-
     def open_new_layout_engine(self, window):
         self.window = window
         patches = self.init_data[0]
         graph = self.init_data[2]
-        self.new_layout_engine = New_layout_engine_dialog(self.window, patches, W=self.W + 20, H=self.H + 20 , engine=self,graph=graph)
+        num_cols=self.init_data[-1]
+        self.new_layout_engine = New_layout_engine_dialog(self.window, patches, W=self.W, H=self , engine=self,graph=graph)
+        self.new_layout_engine.show()
         self.new_layout_engine.exec_()
 
     def cons_from_ps(self):
@@ -64,18 +74,18 @@ class New_layout_engine():
         r15 = ['Lead', 0, 0, 0, 0, 0]
         r16 = ['Diode', 0, 0, 0, 0, 0]
         my_list = [r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, r13, r14, r15, r16]
-
+        #print "MY",my_list
         df = pd.DataFrame(my_list)
 
         df.to_csv('out.csv', sep=',', header=None, index=None) # writing to a file out.csv for further reading
 
         return
 
-    def init_layout_from_symlayout(self, sym_layout=None):
-        '''
-        initialize new layout engine with old symlayout data structure
-        Returns:
-        '''
+    def init_layout(self, sym_layout=None,input_format=None):
+        
+        #initialize new layout engine with old symlayout data structure
+        #Returns:
+        
         print "initializing ....."
         self.sym_layout = sym_layout
 
@@ -83,17 +93,74 @@ class New_layout_engine():
         if sym_layout != None:
             self.cons_info = self.collect_sym_cons_info(sym_layout)
             self.cons_df = self.cons_from_ps()
+            input_rects, self.W, self.H = input_conversion(
+                sym_layout)  # converts symbolic layout lines and points into rectangles
+            input = self.cornerstitch.read_input('list',
+                                                 Rect_list=input_rects)  # Makes the rectangles compaitble to new layout engine input format
+
+            self.Htree, self.Vtree = self.cornerstitch.input_processing(input, self.W + 20,
+                                                                        self.H + 20)  # creates horizontal and vertical corner stitch layouts
+            num_columns = len(self.Htree.hNodeList[0].stitchList)
+
+            patches, combined_graph = self.cornerstitch.draw_layout(rects=input_rects, Htree=self.Htree,
+                                                                    Vtree=self.Vtree)  # collects initial layout patches and combined HCS,VCS points as a graph for mode-3 representation
+            sym_to_cs = Sym_to_CS(input_rects, self.Htree,
+                                  self.Vtree)  # maps corner stitch tiles to symbolic layout objects
+
+            self.init_data = [patches, sym_to_cs, combined_graph, num_columns]
+        else:
+            input_rects=input_format[0]
+            size=input_format[1]
+            self.W=size[0]
+            self.H=size[1]
+            self.create_cornerstitch(input_rects,size)
+
+
 
         # ------------------------------------------
-        input_rects, self.W, self.H = input_conversion(sym_layout)  # converts symbolic layout lines and points into rectangles
-        input = self.cornerstitch.read_input('list', Rect_list=input_rects) # Makes the rectangles compaitble to new layout engine input format
 
-        self.Htree, self.Vtree = self.cornerstitch.input_processing(input, self.W + 20, self.H + 20) # creates horizontal and vertical corner stitch layouts
 
-        patches, combined_graph = self.cornerstitch.draw_layout(rects=input_rects,Htree=self.Htree,Vtree=self.Vtree) # collects initial layout patches and combined HCS,VCS points as a graph for mode-3 representation
-        sym_to_cs = Sym_to_CS(input_rects, self.Htree, self.Vtree) # maps corner stitch tiles to symbolic layout objects
+    
 
+
+
+    def create_cornerstitch(self,input_rects=None, size=None):
+        #cornerstitch = CornerStitch()
+        input = self.cornerstitch.read_input('list',Rect_list=input_rects)  # Makes the rectangles compaitble to new layout engine input format
+        self.Htree, self.Vtree = self.cornerstitch.input_processing(input, size[0],size[1])  # creates horizontal and vertical corner stitch layouts
+        patches, combined_graph = self.cornerstitch.draw_layout(rects=input_rects, Htree=self.Htree,Vtree=self.Vtree)  # collects initial layout patches and combined HCS,VCS points as a graph for mode-3 representation
+
+        plot = False
+        if plot:
+            fig2, ax2 = plt.subplots()
+            Names = patches.keys()
+            Names.sort()
+            for k, p in patches.items():
+
+                if k[0] == 'T':
+                    x = p.get_x()
+                    y = p.get_y()
+                    ax2.text(x + 0.1, y + 0.1, k)
+                    ax2.add_patch(p)
+
+            for k, p in patches.items():
+
+                if k[0] != 'T':
+                    x = p.get_x()
+                    y = p.get_y()
+                    ax2.text(x + 0.1, y + 0.1, k, weight='bold')
+                    ax2.add_patch(p)
+            ax2.set_xlim(0, size[0])
+            ax2.set_ylim(0, size[1])
+            ax2.set_aspect('equal')
+            plt.savefig('C:\Users\qmle\Desktop\New_Layout_Engine\New_design_flow'+'/_initial_layout.png')
+
+
+
+        sym_to_cs = Sym_to_CS(input_rects, self.Htree, self.Vtree)  # maps corner stitch tiles to symbolic layout objects
+        #print sym_to_cs
         self.init_data = [patches, sym_to_cs, combined_graph]
+        #return init_data, Htree, Vtree
 
     def collect_sym_cons_info(self, sym_layout):
         '''
@@ -158,20 +225,52 @@ class New_layout_engine():
         Gaps = [Gap_0_0, Gap_1_1, Gap_2_2, Gap_3_3, Gap_4_4, Gap_2_3, Gap_3_4]
         Enclosures = [ledge_width, Gap_1_2, Gap_1_3, Gap_1_4]
         #print Type1_W, Type2_W, Type3_W, Type4_W, Gap_1_2, Gap_2_2, ledge_width
+        #print"W", minWidth
+        #print"H", minHeight
+        #print"E", minExtension
+        #print"G", Gaps
+        #print"Enc",Enclosures
+
         return minWidth, minHeight, minExtension, Gaps, Enclosures
 
     def mode_zero(self): # evaluates mode 0(minimum sized layouts)
 
         CG1 = CS_to_CG(0)
         CG1.getConstraints(self.cons_df)
-        Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=None, W=None, H=None, XLoc=None, YLoc=None)
+        count = 0
+        for row in self.cons_df.itertuples(index=False, name='Pandas'):
+
+            count += 1
+            if row[0] == 'Min Enclosure':
+                found = count
+        count = 0
+        for row in self.cons_df.itertuples(index=False, name='Pandas'):
+            count += 1
+            if count == found + 1:
+                self.ledge_width = float(row[2])
+                self.ledge_height = float(row[2])
+
+
+        #self.cons_df.to_csv('out_2.csv', sep=',', header=None, index=None)
+        Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=None, W=None, H=None, XLoc=None, YLoc=None,seed=None,individual=None,Types=self.Types)
 
 
         return Evaluated_X, Evaluated_Y
 
 
+    def get_min_dimensions(self):
+        for comp in self.all_components:
+            if isinstance(comp, parts.Part):
+
+                name=comp.name
+                type=comp.cs_type
+                footprint=comp.footprint
+                self.min_dimensions[type]=footprint
+
+
+
     # generate layout solutions using constraint graph edge weights randomization for different modes(level)
-    def generate_solutions(self, level, num_layouts=1, W=None, H=None, fixed_x_location=None, fixed_y_location=None):
+    def generate_solutions(self, level, num_layouts=1, W=None, H=None, fixed_x_location=None, fixed_y_location=None,seed=None,individual=None,db=None,count=None,bar=False):
         """
 
         :param level: mode of operation: mode-0(minimum sized layout), mode-1(variable sized layouts), mode-2(fixed sized layouts), mode-3(fixed sized with fixed component locations)
@@ -180,32 +279,73 @@ class New_layout_engine():
         :param H: floorplan height (for mode 2-3)
         :param fixed_x_location: user defined fixed x locations (for mode 3)
         :param fixed_y_location: user given fixed y locations (for mode 3)
+        :param bar: show progress bar if True
         :return: Layout solutions and mapped  new layout engine solutions back to symbolic layout (old engine) objects
         """
-
+        #global min_dimensions
+        if bar:
+            p_bar = tqdm(total=num_layouts,ncols=50)
+        else:
+            p_bar=None
         CG1 = CS_to_CG(level)
-        CG1.getConstraints(self.cons_df)
-        sym_to_cs = self.init_data[1]
+        self.constraint_info=CG1.getConstraints(self.cons_df)
+        self.get_min_dimensions()
+        '''
+        self.min_dimensions['Type_2'] = [float(self.cons_df.iat[1, 3]), float(self.cons_df.iat[2, 3])]
+        self.min_dimensions['Type_3'] = [float(self.cons_df.iat[1, 4]), float(self.cons_df.iat[2, 4])]
+        self.min_dimensions['Type_4'] = [float(self.cons_df.iat[1, 5]), float(self.cons_df.iat[2, 5])]
+        self.new_layout_engine.min_dimensions=self.min_dimensions
+        '''
 
+        '''
+        if self.new_layout_engine.opt_algo!="NSGAII":
+            cwd = os.getcwd()
+            self.new_layout_engine.directory = cwd + "/Mode_" + str(level)
+            if not os.path.exists(self.new_layout_engine.directory):
+                os.makedirs(self.new_layout_engine.directory)  # creating directory
+                #shutil.rmtree(self.directory)
+            filelist = glob.glob(os.path.join(self.new_layout_engine.directory, "*.csv"))
+            for f in filelist:
+                os.remove(f)
+        #print"Dir", self.directory
+        '''
+        #self.cons_df.to_csv('out_2.csv', sep=',', header=None, index=None)
+        sym_to_cs = self.init_data[1]
+        scaler = 1000  # to get back original dimensions all coordinated will be scaled down by 1000
         #mode-0
         if level == 0:
-            Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=None, W=None, H=None, XLoc=None, YLoc=None) # for minimum sized layout only one solution is generated
-            CS_SYM_information, Layout_Rects = CG1.UPDATE_min(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree ,sym_to_cs)  # CS_SYM_information is a dictionary where key=path_id(component name) and value=list of updated rectangles, Layout Rects is a dictionary for minimum HCS and VCS evaluated rectangles (used for plotting only)
+
+            Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=None, W=None, H=None, XLoc=None, YLoc=None,seed=None,individual=None,Types=self.Types) # for minimum sized layout only one solution is generated
+            CS_SYM_information, Layout_Rects = CG1.UPDATE_min(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree ,sym_to_cs,scaler)  # CS_SYM_information is a dictionary where key=path_id(component name) and value=list of updated rectangles, Layout Rects is a dictionary for minimum HCS and VCS evaluated rectangles (used for plotting only)
             self.cur_fig_data = plot_layout(Layout_Rects, level)
             CS_SYM_Updated = {}
             for i in self.cur_fig_data:
                 for k, v in i.items():
+                    k=(k[0]*scaler,k[1]*scaler)
                     CS_SYM_Updated[k] = CS_SYM_information
             CS_SYM_Updated = [CS_SYM_Updated] # mapped solution layout information to symbolic layout objects
+            if db!=None:
+                if count==None:
+                    converted_layout_rects={}
+                    for k,v in Layout_Rects.items():
+                        converted_layout_rects[k]=[v]
+                    self.save_layouts(converted_layout_rects,count=None, db=db)
+
 
         #mode-1
         elif level == 1:
 
-            Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=num_layouts, W=None, H=None
-                                                      , XLoc=None, YLoc=None)
-            CS_SYM_Updated, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree, sym_to_cs)
+            Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=num_layouts, W=None, H=None,
+                                                      XLoc=None, YLoc=None, seed=seed, individual=individual,Types=self.Types)
+            CS_SYM_Updated, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree, sym_to_cs,scaler)
             CS_SYM_Updated = CS_SYM_Updated['H']
-            self.cur_fig_data = plot_layout(Layout_Rects, level)
+            #self.cur_fig_data = plot_layout(Layout_Rects, level,self.min_dimensions)
+            if count==None:
+                #for i in range(len(Layout_Rects)):
+                self.save_layouts(Layout_Rects, db=db)
+            else:
+                #for i in range(len(Layout_Rects)):
+                self.save_layouts(Layout_Rects,count=count, db=db)
 
         #mode-2
         elif level == 2:
@@ -239,15 +379,25 @@ class New_layout_engine():
             Min_Y_Loc[len(YLoc) - 1] = max_y
 
             for k, v in Min_X_Loc.items(): # checking if the given width is greater or equal minimum width
+
                 if W >= v:
+                    #Min_X_Loc[0] = 0
+                    #Min_X_Loc[k] = W
                     Min_X_Loc[0] = 0
+                    Min_X_Loc[1] = self.ledge_width*scaler
+                    Min_X_Loc[k - 1] = W-self.ledge_width*scaler
                     Min_X_Loc[k] = W
                 else:
                     print"Enter Width greater than or equal Minimum Width"
                     return
             for k, v in Min_Y_Loc.items():# checking if the given height is greater or equal minimum width
                 if H >= v:
+                    #Min_Y_Loc[0] = 0
+                    #Min_Y_Loc[k] = H
+
                     Min_Y_Loc[0] = 0
+                    Min_Y_Loc[1] = self.ledge_height*scaler
+                    Min_Y_Loc[k - 1] = H-self.ledge_height*scaler
                     Min_Y_Loc[k] = H
                 else:
                     print"Enter Height greater than or equal Minimum Height"
@@ -257,13 +407,22 @@ class New_layout_engine():
             Min_Y_Loc = collections.OrderedDict(sorted(Min_Y_Loc.items()))
 
             Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=num_layouts, W=W, H=H,
-                                                      XLoc=Min_X_Loc, YLoc=Min_Y_Loc) # evaluates and finds updated locations for each coordinate
+                                                      XLoc=Min_X_Loc, YLoc=Min_Y_Loc, seed=seed, individual=individual,Types=self.Types) # evaluates and finds updated locations for each coordinate
 
-            CS_SYM_Updated, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree, sym_to_cs)
+            CS_SYM_Updated, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree, sym_to_cs,scaler)
             CS_SYM_Updated = CS_SYM_Updated['H'] # takes only horizontal corner stitch data
-            self.cur_fig_data = plot_layout(Layout_Rects, level) #collects the layout patches
+            #self.cur_fig_data = plot_layout(Layout_Rects, level,self.min_dimensions) #collects the layout patches
+            if count==None:
+                #for i in range(len(Layout_Rects)):
+                self.save_layouts(Layout_Rects, db=db)
+            else:
+                #for i in range(len(Layout_Rects)):
+                self.save_layouts(Layout_Rects,count=count, db=db)
 
-        #mode-3
+
+
+
+            #mode-3
         elif level == 3:
             Evaluated_X0, Evaluated_Y0=self.mode_zero()
             ZDL_H = {}
@@ -297,19 +456,33 @@ class New_layout_engine():
             Min_Y_Loc[len(YLoc) - 1] = max_y
 
             for k, v in Min_X_Loc.items():
-                if W > v:
+                if W >= v:
                     Min_X_Loc[0] = 0
                     Min_X_Loc[k] = W
-                    fixed_x_location[k]=W
+                    fixed_x_location[k] = W
+                    '''
+                    Min_X_Loc[0] = -2000
+                    Min_X_Loc[1] = 0
+                    Min_X_Loc[k - 1] = W
+                    Min_X_Loc[k] = W + 2000
+                    fixed_x_location[k]=W + 2000
+                    '''
 
                 else:
                     print"Enter Width greater than or equal Minimum Width"
                     return None,None
             for k, v in Min_Y_Loc.items():
-                if H > v:
+                if H >= v:
                     Min_Y_Loc[0] = 0
                     Min_Y_Loc[k] = H
                     fixed_y_location[k]=H
+                    '''
+                    Min_Y_Loc[0] = -2000
+                    Min_Y_Loc[1] = 0
+                    Min_Y_Loc[k - 1] = H
+                    Min_Y_Loc[k] = H + 2000
+                    fixed_y_location[k] = H+2000
+                    '''
                 else:
                     print"Enter Height greater than or equal Minimum Height"
                     return None,None
@@ -351,64 +524,57 @@ class New_layout_engine():
                         print"Invalid Location for Y coordinate"
                         return None,None
 
-            Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=num_layouts, W=W, H=H,XLoc=Min_X_Loc, YLoc=Min_Y_Loc)
+            Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=num_layouts,
+                                                      W=W, H=H, XLoc=Min_X_Loc, YLoc=Min_Y_Loc, seed=seed,
+                                                      individual=individual,Types=self.Types)
 
-            CS_SYM_Updated, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree, sym_to_cs)
+            CS_SYM_Updated, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree, sym_to_cs,scaler)
 
 
             CS_SYM_Updated = CS_SYM_Updated['H'] # takes only horizontal corner stitch data
-            self.cur_fig_data = plot_layout(Layout_Rects, level)
-
-        return self.cur_fig_data, CS_SYM_Updated
-
-def plot_layout(Layout_Rects,level):
-    # Prepares solution rectangles as patches according to the requirement of mode of operation
-    Patches=[]
-    if level==0:
-        Rectangles=[]
-        for k,v in Layout_Rects.items():
-            if k=='H':
-                for rect in v:                    #rect=[x,y,width,height,type]
-                    Rectangles.append(rect)
-        max_x = 0
-        max_y = 0
-        min_x = 1e10
-        min_y = 1e10
-
-        for i in Rectangles:
-
-            if i[0] + i[2] > max_x:
-                max_x = i[0] + i[2]
-            if i[1] + i[3] > max_y:
-                max_y = i[1] + i[3]
-            if i[0] < min_x:
-                min_x = i[0]
-            if i[1] < min_y:
-                min_y = i[1]
-        colors=['White','green','red','blue','yellow','pink']
-        type=['EMPTY','Type_1','Type_2','Type_3','Type_4']
-        ALL_Patches={}
-        key=(max_x,max_y)
-        ALL_Patches.setdefault(key,[])
-        for i in Rectangles:
-            for t in type:
-                if i[4]==t:
-                    type_ind=type.index(t)
-                    colour=colors[type_ind]
-            R=matplotlib.patches.Rectangle(
-                    (i[0], i[1]),  # (x,y)
-                    i[2],  # width
-                    i[3],  # height
-                    facecolor=colour,
-                    edgecolor='black'
-
-                )
-            ALL_Patches[key].append(R)
-        Patches.append(ALL_Patches)
+            #self.cur_fig_data = plot_layout(Layout_Rects, level,self.min_dimensions,Min_X_Loc,Min_Y_Loc)
+            if count==None:
+                #for i in range(len(Layout_Rects)):
+                self.save_layouts(Layout_Rects, db=db)
 
 
 
-    else:
+
+
+
+        if bar:
+            p_bar.close()
+
+        return  CS_SYM_Updated
+
+    def save_layout(self,Layout_Rects, count, db):
+        # print Layout_Rects
+
+        data = []
+
+        for k, v in Layout_Rects.items():
+            for R_in in v:
+                data.append(R_in)
+
+            data.append([k[0], k[1]])
+
+        l_data = [count, data]
+        directory = os.path.dirname(db)
+        temp_file = directory + '/out.txt'
+
+        with open(temp_file, 'wb') as f:
+            f.writelines(["%s\n" % item for item in data])
+            # f.write(''.join(chr(i) for i in range(data)))
+        conn = create_connection(db)
+        with conn:
+            insert_record(conn, l_data, temp_file)
+        conn.close()
+
+
+    def save_layouts(self,Layout_Rects,count=None, db=None):
+
+
+
         for k,v in Layout_Rects.items():
 
             if k=='H':
@@ -419,11 +585,12 @@ def plot_layout(Layout_Rects,level):
 
                     Rectangles = []
                     for rect in v[j]:  # rect=[x,y,width,height,type]
+
                         Rectangles.append(rect)
                     max_x = 0
                     max_y = 0
-                    min_x = 1e10
-                    min_y = 1e10
+                    min_x = 1e30
+                    min_y = 1e30
 
                     for i in Rectangles:
 
@@ -436,10 +603,156 @@ def plot_layout(Layout_Rects,level):
                         if i[1] < min_y:
                             min_y = i[1]
                     key=(max_x,max_y)
+
                     Total_H.setdefault(key,[])
                     Total_H[(max_x,max_y)].append(Rectangles)
-        j = 0
+        colors = ['white', 'green', 'red', 'blue', 'yellow', 'purple', 'pink', 'magenta', 'orange', 'violet']
+        type = ['EMPTY', 'Type_1', 'Type_2', 'Type_3', 'Type_4', 'Type_5', 'Type_6', 'Type_7', 'Type_8', 'Type_9']
+        if count==None:
+            j=0
+        else:
+            j=count
+        for k, v in Total_H.items():
+            #print v, len(v)
+            for c in range(len(v)):
+                #print "C",c,len(v)
+                data = []
+                Rectangles = v[c]
+
+                for i in Rectangles:
+                    for t in type:
+                        if i[4] == t:
+                            type_ind = type.index(t)
+                            colour = colors[type_ind]
+                            if type_ind in self.min_dimensions:
+                                w=self.min_dimensions[t][0]
+                                h=self.min_dimensions[t][1]
+                            else:
+                                w=None
+                                h=None
+                    if w==None and h==None:
+                        R_in=[i[0],i[1],i[2],i[3],colour,1,'None','None']
+                    else:
+
+                        center_x=(i[0]+i[0]+i[2])/float(2)
+                        center_y=(i[1]+i[1]+i[3])/float(2)
+                        x=center_x-w/float(2)
+                        y=center_y-h/float(2)
+                        R_in = [i[0], i[1], i[2], i[3],'green',1,'--','black']
+                        R_in1 = [x, y, w, h, colour, 2,'None','None']
+                        data.append(R_in1)
+                    data.append(R_in)
+                
+
+
+                data.append([k[0], k[1]])
+                l_data = [j, data]
+                directory = os.path.dirname(db)
+                temp_file = directory + '/out.txt'
+                with open(temp_file, 'wb') as f:
+                    f.writelines(["%s\n" % item for item in data])
+                conn = create_connection(db)
+                with conn:
+                    insert_record(conn, l_data, temp_file)
+
+               
+                if count==None:
+                    j+=1
+            conn.close()
+    
+    
+    
+
+
+
+def plot_layout(Layout_Rects,level,min_dimensions=None,Min_X_Loc=None,Min_Y_Loc=None):
+    #global min_dimensions
+    # Prepares solution rectangles as patches according to the requirement of mode of operation
+    Patches=[]
+    if level==0:
+        Rectangles=[]
+        for k,v in Layout_Rects.items():
+            if k=='H':
+                for rect in v:                    #rect=[x,y,width,height,type]
+
+                    Rectangles.append(rect)
+        max_x = 0
+        max_y = 0
+        min_x = 1e30
+        min_y = 1e30
+
+        for i in Rectangles:
+
+            if i[0] + i[2] > max_x:
+                max_x = i[0] + i[2]
+            if i[1] + i[3] > max_y:
+                max_y = i[1] + i[3]
+            if i[0] < min_x:
+                min_x = i[0]
+            if i[1] < min_y:
+                min_y = i[1]
+        colors = ['white','green', 'red', 'blue', 'yellow', 'purple', 'pink', 'magenta', 'orange', 'violet']
+        type = ['EMPTY','Type_1', 'Type_2', 'Type_3', 'Type_4', 'Type_5', 'Type_6', 'Type_7', 'Type_8', 'Type_9']
+        ALL_Patches={}
+        key=(max_x,max_y)
+        #print key
+        ALL_Patches.setdefault(key,[])
+        for i in Rectangles:
+            for t in type:
+                if i[4]==t:
+
+                    type_ind=type.index(t)
+                    colour=colors[type_ind]
+            R=matplotlib.patches.Rectangle(
+                    (i[0], i[1]),  # (x,y)
+                    i[2],  # width
+                    i[3],  # height
+                    facecolor=colour,
+
+
+                )
+            ALL_Patches[key].append(R)
+        Patches.append(ALL_Patches)
+
+
+
+    else:
+
+
+        for k,v in Layout_Rects.items():
+
+            if k=='H':
+                Total_H = {}
+
+                for j in range(len(v)):
+
+
+                    Rectangles = []
+                    for rect in v[j]:  # rect=[x,y,width,height,type]
+
+                        Rectangles.append(rect)
+                    max_x = 0
+                    max_y = 0
+                    min_x = 1e30
+                    min_y = 1e30
+
+                    for i in Rectangles:
+
+                        if i[0] + i[2] > max_x:
+                            max_x = i[0] + i[2]
+                        if i[1] + i[3] > max_y:
+                            max_y = i[1] + i[3]
+                        if i[0] < min_x:
+                            min_x = i[0]
+                        if i[1] < min_y:
+                            min_y = i[1]
+                    key=(max_x,max_y)
+
+                    Total_H.setdefault(key,[])
+                    Total_H[(max_x,max_y)].append(Rectangles)
+        plot = 0
         for k,v in Total_H.items():
+
             for i in range(len(v)):
 
                 Rectangles = v[i]
@@ -449,23 +762,82 @@ def plot_layout(Layout_Rects,level):
                 key = (max_x, max_y)
                 ALL_Patches.setdefault(key, [])
 
+                colors = ['white', 'green', 'red', 'blue', 'yellow', 'purple', 'pink', 'magenta', 'orange', 'violet']
 
-                colors = ['White', 'green', 'red', 'blue', 'yellow', 'pink']
-                type = ['EMPTY', 'Type_1', 'Type_2', 'Type_3', 'Type_4']
+                type = ['EMPTY', 'Type_1', 'Type_2', 'Type_3', 'Type_4', 'Type_5', 'Type_6', 'Type_7', 'Type_8','Type_9']
                 for i in Rectangles:
                     for t in type:
                         if i[4] == t:
+
                             type_ind = type.index(t)
                             colour = colors[type_ind]
-                    R= matplotlib.patches.Rectangle(
+
+                            if type[type_ind] in min_dimensions:
+
+                                w=min_dimensions[t][0]
+                                h=min_dimensions[t][1]
+                            else:
+                                w=None
+                                h=None
+                    if w==None and h==None:
+
+                        R= matplotlib.patches.Rectangle(
+                                (i[0], i[1]),  # (x,y)
+                                i[2],  # width
+                                i[3],  # height
+                                facecolor=colour
+
+                            )
+                    else:
+                        #print Min_X_Loc
+                        #print Min_Y_Loc
+                        '''
+                        if (i[0]+i[2])*1000 in Min_X_Loc.values():
+                            x=i[0]+i[2]-w
+                            y=i[1]
+                        elif (i[1]+i[3])*1000 in Min_Y_Loc.values():
+                            x=i[0]
+                            y=i[1]+i[3]-h
+                        elif (i[0]+i[2])*1000 in Min_X_Loc.values() and (i[1]+i[3])*1000 in Min_Y_Loc.values():
+                            x = [0]+i[2] - w
+                            y = i[1]+i[3]-h
+                        elif (i[0])*1000 in Min_X_Loc.values() or (i[1])*1000 in Min_Y_Loc.values():
+                            x=i[0]
+                            y=i[1]
+                        else:
+                        '''
+                        center_x=(i[0]+i[0]+i[2])/float(2)
+                        center_y=(i[1]+i[1]+i[3])/float(2)
+                        x=center_x-w/float(2)
+                        y=center_y-h/float(2)
+
+                        R = matplotlib.patches.Rectangle(
                             (i[0], i[1]),  # (x,y)
                             i[2],  # width
                             i[3],  # height
-                            facecolor=colour
+                            facecolor='green',
+                            linestyle='--',
+                            edgecolor='black',
+                            zorder=1
+
+
+                        )#linestyle='--'
+
+                        R1=matplotlib.patches.Rectangle(
+                            (x, y),  # (x,y)
+                            w,  # width
+                            h,  # height
+                            facecolor=colour,
+                            zorder=2
+
+
                         )
+                        ALL_Patches[key].append(R1)
+
                     ALL_Patches[key].append(R)
-                j+=1
+                plot+=1
                 Patches.append(ALL_Patches)
+
 
     return Patches
 

@@ -1,17 +1,18 @@
-import copy
-import math
-
-import matplotlib.pyplot as plt
 import networkx as nx
 import pandas as pd
+from powercad.parasitics.analysis import parasitic_analysis
 from powercad.parasitics.mdl_compare import trace_cap_krige, trace_ind_krige, trace_res_krige
-from powercad.design.library_structures import Lead, BondWire
-from powercad.design.project_structures import DeviceInstance
-from powercad.general.data_struct.util import Rect, distance
-from powercad.parasitics.models_bk import trace_inductance, trace_resistance, trace_capacitance, \
-    wire_inductance, \
+from powercad.parasitics.models_bk import trace_inductance, trace_resistance, trace_capacitance, wire_inductance, \
     wire_resistance
+from powercad.general.data_struct.util import Rect, complex_rot_vec, get_overlap_interval, distance
+import math
+from powercad.sym_layout.plot import plot_layout
 
+from powercad.design.project_structures import DeviceInstance
+from powercad.design.library_structures import Lead, BondWire
+import matplotlib.pyplot as plt
+import copy
+from powercad.sym_layout.symbolic_layout import LayoutLine,LayoutPoint
 DEVICE_POI = 1
 BAR_LEAD_POI = 2
 RND_LEAD_POI = 3
@@ -206,7 +207,7 @@ class E_graph():
             for w, l in self.trace_info:
                 w_all.append(w)
                 l_all.append(l)
-            # print 'width,length', w_all,l_all
+            #print 'width,length', w_all,l_all,self.LAC_mdl
             ind1 = trace_ind_krige(f, w_all, l_all, self.LAC_mdl).tolist()
             res1 = trace_res_krige(f, w_all, l_all, trace_data[1], trace_data[5], self.RAC_mdl).tolist()
             if self.C_mdl != None:
@@ -355,6 +356,7 @@ class E_graph():
                                                   point=point, data_type=obj)
 
                 # Check for all Bondwires connected to a trace
+
                 for bw in trace.conn_bonds:
                     # Add bondwires
                     if (bw.land_pt is not None) and (bw.land_pt2 is None):
@@ -364,34 +366,39 @@ class E_graph():
                         # bondwire connects trace to trace
                         poi_type = TRACE_TRACE_BW_POI
                     '''Test for Colinear BWs, this might work for any direction wirebond too '''
-                    # Problem with bw connection here This assumes bw have to be perpendicular again
-                    try:
+                    # Problem with bw connection here This assumes bw have to be perpendicular
+                    if bw.land_pt2==None: #Case device to trace
                         if trace.element.vertical:
                             # if this is vertical we have 2 options:
                             if ta.encloses(ta.center_x(), bw.land_pt[1]):
                                 dtype = poi_type;
                                 obj = bw;
                                 point = (ta.center_x(), bw.land_pt[1])
-                            elif ta.encloses(ta.center_x(), bw.land_pt2[1]):
-                                dtype = poi_type;
-                                obj = bw;
-                                point = (ta.center_x(), bw.land_pt2[1])
 
                         else:
+
                             # if this is horizontal we have 2 options:
                             if ta.encloses(bw.land_pt[0], ta.center_y()):
                                 dtype = poi_type;
                                 obj = bw;
                                 point = (bw.land_pt[0], ta.center_y())
+                    else: # case trace to trace
+                        if trace.element.vertical:
+                            # if this is vertical we have 2 options:
+                            if ta.encloses(ta.center_x(), bw.land_pt2[1]):
+                                dtype = poi_type;
+                                obj = bw;
+                                point = (ta.center_x(), bw.land_pt2[1])
 
-                            elif ta.encloses(bw.land_pt2[0], ta.center_y()):
+                        else:
+                            if ta.encloses(bw.land_pt2[0], ta.center_y()):
                                 dtype = poi_type;
                                 obj = bw;
                                 point = (bw.land_pt2[0], ta.center_y())
-                        row_id = self.update_trace_df(row_id=row_id, trace_id=trace_id, poi_type=dtype,
-                                                      point=point, data_type=obj)
-                    except:
-                        print "wrong solution, due to packaging"
+
+                    row_id = self.update_trace_df(row_id=row_id, trace_id=trace_id, poi_type=dtype,
+                                                  point=point, data_type=obj)
+
                 trace_bound=[True,True] # [TOP , BOT] or [RIGHT, LEFT] THAT DOESNT HAVE TRACE CONNECTED
                 # Trace to trace connection
                 for conn in trace.trace_connections:

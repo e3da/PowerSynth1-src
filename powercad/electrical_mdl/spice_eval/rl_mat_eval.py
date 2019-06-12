@@ -1,18 +1,20 @@
-from scipy.sparse.linalg import gmres
-
-from powercad.electrical_mdl.spice_eval.peec_num_solver import *
-
-import gc
+import numpy as np
+import matplotlib.pyplot as plt
+import time
+import scipy
+#from memory_profiler import profile
+import warnings
+warnings.filterwarnings("ignore")
 class diag_prec:
     def __init__(self, A):
         self.shape = A.shape
         n = self.shape[0]
-        self.dinv = numpy.empty(n)
+        self.dinv = np.empty(n)
         for i in xrange(n):
             self.dinv[i] = 1.0 / A[i, i]
 
     def precon(self, x, y):
-        numpy.multiply(x, self.dinv, y)
+        np.multiply(x, self.dinv, y)
 
 
 class RL_circuit():
@@ -73,7 +75,6 @@ class RL_circuit():
         self.A = None
         self.Mutual = {}  # Dictionary for coupling pairs
         # List of circuit equations:
-        self.equ = None
         self.func = []
         self.solver = None
         self.max_net_id = 0 # maximum used net id value
@@ -94,6 +95,18 @@ class RL_circuit():
         self.C_count = 0
         self.M_count = 0
 
+    def clean_dicts(self):
+        del self.pnode
+        del self.nnode
+        del self.cp_node
+        del self.cn_node
+        del self.vout
+        del self.value
+        del self.Vname
+        # Handle Mutual inductance
+        del self.Lname1
+        del self.Lname2
+        del self.L_id  # A relationship between Lname and current id in the matrix
 
     def assign_freq(self,freq=1000):
         self.freq = freq
@@ -129,13 +142,38 @@ class RL_circuit():
         #newport = self.node_dict[node]
         Equiv_name = 'Bt_' + str(node)
         self._graph_add_comp(Equiv_name, node, ground, val)
+    def refresh(self):
+        self.cur_element = []
+        self.cur_pnode = {}
+        self.cur_nnode = {}
+        self.cur_value = {}
+        self.element = []
+        self.pnode = {}
+        self.nnode = {}
+        self.cp_node = {}
+        self.cn_node = {}
+        self.vout = {}
+        self.value = {}
+        self.Vname = {}
+        # Handle Mutual inductance
+        self.Lname1 = {}
+        self.Lname2 = {}
+        self.L_id = {}  # A relationship between Lname and current id in the matrix
+        self.max_net_id = 0  # maximum used net id value
+        self.results_dict = {}
+        self.node_dict = {}
 
+        self.L_count = 0
+        self.R_count = 0
+        self.C_count = 0
+        self.M_count = 0
     def _graph_read(self,graph):
         '''
         this will be used to read mesh graph and forming matrices
         :param lumped_graph: networkX graph from PowerSynth
         :return: update self.net_data
         '''
+
         for edge in graph.edges(data=True):
             n1 = edge[0]
             n2 = edge[1]
@@ -199,7 +237,6 @@ class RL_circuit():
         Returns:
             update M elemts
         '''
-        M_table = {}
         if debug ==True:
             all_vals = []
             for edge in m_graph.edges(data=True):
@@ -207,8 +244,6 @@ class RL_circuit():
                 #if not M_val in all_vals:
 
                 all_vals.append(M_val)
-            print len(all_vals)
-            print len(m_graph.edges)
             all_vals.sort()
             plt.bar(np.arange(len(all_vals)),all_vals,align='center', alpha=0.5)
             plt.show()
@@ -442,6 +477,9 @@ class RL_circuit():
         second_row = np.concatenate((self.M_t, self.D), axis=1)  # form [M_t , D]
         self.A = np.concatenate((first_row,second_row),axis=0)
 
+    #precision = 10
+    #fp = open('memory_profiler_basic_mean.log', 'w+')
+    #@profile(precision=precision, stream=fp)
     def solve_iv(self,mode = 0):
         debug=False
         # initialize some symbolic matrix with zeros
@@ -483,15 +521,11 @@ class RL_circuit():
             Z = self.Z
             A = self.A
         elif case =="no_voltage":
-            #print self.Vi
-            Z = np.linalg.multi_dot([self.M,self.Vi])
-            A = np.linalg.multi_dot([self.M, self.D, self.M_t])
-            print np.where(~A.any(axis=1))[0]
-            print 'A', A.shape
-            print "Z", Z.shape
-            print "M", self.M.shape
+            Z = self.Vi
+            A = self.D
+
         t = time.time()
-        method=1
+        method=3
         if method ==1:
             self.results= scipy.sparse.linalg.spsolve(A,Z)
         elif method ==2:
@@ -501,27 +535,27 @@ class RL_circuit():
         elif method ==4:
             self.results = np.linalg.lstsq(A, Z)[0]
         elif method ==5: # direct inverse method.
-
-
             self.results = np.linalg.inv(A)*Z
             self.results=np.squeeze(np.asarray(self.results))
 
-
+        #print np.shape(self.A)
+        del A
+        del Z
         #print "RESULTS",self.results
         if debug: # for debug and time analysis
             print 'RL', np.shape(A)
-            numpy.savetxt("M.csv", self.M_t, delimiter=",")
-            numpy.savetxt("Mt.csv", self.M, delimiter=",")
-            numpy.savetxt("D.csv", self.D, delimiter=",")
+            np.savetxt("M.csv", self.M_t, delimiter=",")
+            np.savetxt("Mt.csv", self.M, delimiter=",")
+            np.savetxt("D.csv", self.D, delimiter=",")
             print self.J
             print self.V
             print self.Z
 
-            numpy.savetxt("M.csv", self.M_t, delimiter=",")
-            numpy.savetxt("A.csv", self.A, delimiter=",")
-            numpy.savetxt("Z.csv", Z, delimiter=",")
+            np.savetxt("M.csv", self.M_t, delimiter=",")
+            np.savetxt("A.csv", self.A, delimiter=",")
+            np.savetxt("Z.csv", Z, delimiter=",")
             print "solve", time.time() - t, "s"
-        results_dict={}
+        self.results_dict={}
         rlmode=True
 
         if case == "no_current":
@@ -533,10 +567,9 @@ class RL_circuit():
             print self.J.shape
         if rlmode:
             for i in range(len(names)):
-                results_dict[str(names[i,0])]=self.results[i]
+                self.results_dict[str(names[i,0])]=self.results[i]
 
-        self.results=results_dict
-        gc.collect()
+        self.results=self.results_dict
         #print "R,L,M", self.R_count,self.L_count,self.M_count
 def test_RL_circuit1():
     print "new method"

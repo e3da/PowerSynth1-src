@@ -41,26 +41,29 @@ from copy import copy, deepcopy
 import networkx as nx
 import numpy as np
 from numpy.linalg.linalg import LinAlgError
-from powercad.parasitics.analysis import parasitic_analysis
-from powercad.parasitics.mdl_compare import trace_ind_krige, trace_res_krige
+
 import powercad.general.settings.settings as settings
 from powercad.design.library_structures import Lead, BondWire
 from powercad.design.module_data import gen_test_module_data
 from powercad.design.project_structures import DeviceInstance
 from powercad.drc.design_rule_check import DesignRuleCheck
-from powercad.general.data_struct.util import Rect, complex_rot_vec, get_overlap_interval
+from powercad.general.data_struct.util import Rect, complex_rot_vec, get_overlap_interval, distance
 from powercad.general.settings.save_and_load import load_file
 from powercad.opt.optimizer import NSGAII_Optimizer, DesignVar
-from powercad.parasitics.models_bk import trace_inductance, trace_resistance, trace_capacitance
+from powercad.parasitics.analysis import parasitic_analysis
+from powercad.parasitics.mdl_compare import trace_cap_krige, trace_ind_krige, trace_res_krige
+from powercad.parasitics.models_bk import trace_inductance, trace_resistance, trace_capacitance, wire_inductance, \
+    wire_resistance
 from powercad.sol_browser.solution_lib import SolutionLibrary
-from powercad.sym_layout.Electrical_meshing.Lumped_Graph import E_graph
 from powercad.sym_layout.svg import LayoutLine, LayoutPoint
 from powercad.sym_layout.svg import load_svg, normalize_layout, check_for_overlap, load_script
 from powercad.thermal.analysis import perform_thermal_analysis
 from powercad.thermal.elmer_characterize import characterize_devices
-
-
+import matplotlib.pyplot as plt
+from powercad.parasitics.mdl_compare import load_mdl
+from powercad.sym_layout.Electrical_meshing.Lumped_Graph import E_graph
 # test bondwire:
+from powercad.sym_layout.plot import plot_layout
 #Used in Pycharm only
 
 
@@ -116,9 +119,9 @@ class ElectricalMeasure(object):
     UNIT_IND = ('nH', 'nanoHenry')
     UNIT_CAP = ('pF', 'picoFarad')
 
-    def __init__(self, pt1=None, pt2=None, measure=None, freq=10, name=None, lines=[], mdl=None,src_sink_type=[None,None],device_state=[1,0,0]):
+    def __init__(self, pt1, pt2, measure, name, lines=None, mdl=None,src_sink_type=[None,None],device_state=None):
         """
-        electrical_mdl parasitic measure object
+        Electrical parasitic measure object
 
         Keyword Arguments:
         pt1 -- SymPoint object which represents start of electrical path
@@ -168,6 +171,7 @@ class SymWire(object):
     def __init__(self):
         self.tech = None  # holds a reference to Bondwire object
         self.device = None  # device in which wire is connected to
+
         self.dev_pt = None  # 1 or 2 -- which end is connected to device
         self.trace = None  # trace that wire is connected to
         self.trace2 = None  # 2nd trace that wire is connected to
@@ -180,7 +184,7 @@ class SymWire(object):
         self.end_pt_conn = None  # points to the trace object in which end_pts are connected to
         self.num_wires = None  # Number of wires in the trace to trace bondwire
         self.wire_sep = None  # Separation between wires in trace to trace bondwire
-
+        #self.footprint_rect=None
 
 class SymLine(object):
     def __init__(self, line=None, raw_line=None):
@@ -1247,8 +1251,6 @@ class SymbolicLayout(object):
         self.dev_design_values = dev_design_values
         self.bondwire_design_values = bondwire_design_values
     '''-----------------------------------------------------------------------------------------------------------------------------------------------------'''
-
-
     def generate_layout(self):
         self.layout_ready = False
         self._handle_fixed_constraints()
@@ -2082,7 +2084,7 @@ class SymbolicLayout(object):
     '''-----------------------------------------------------------------------------------------------------------------------------------------------------'''
     def optimize(self, iseed=None, inum_gen=800, mu=15, ilambda=30, progress_fn=None):
 
-
+        self.trial=0
         self.eval_count = 0
         self.eval_total = inum_gen*ilambda    # check this... this sounds not correct to me -- Quang
         self.opt_progress_fn = progress_fn
@@ -2095,16 +2097,15 @@ class SymbolicLayout(object):
                 self.mdl_type['E']=pm.mdl
 
         self.algorithm='NSGAII'
-        self.running = True
+
         if self.algorithm=='NSGAII':
-            self.eval_count=0
             opt = NSGAII_Optimizer(self.opt_dv_list, self._opt_eval,
                                    len(self.perf_measures), seed=iseed, num_gen=inum_gen, mu=mu, ilambda=ilambda)
 
             opt.run()
             self.solutions = opt.solutions
             self.solution_lib = SolutionLibrary(self)
-        self.running=False
+
         #print self.solution_lib
     '''-----------------------------------------------------------------------------------------------------------------------------------------------------'''
     def debug_single_eval(self):
@@ -2228,8 +2229,11 @@ class SymbolicLayout(object):
         self.generate_layout()
         ret = []
         drc = DesignRuleCheck(self)
-        drc_count = drc.count_drc_errors(False)
-
+        drc_count = drc.count_drc_errors(True)
+        #fig, ax = plt.subplots()
+        #plot_layout(self, ax=ax)
+        #plt.show()
+        self.trial+=1
         if drc_count > 0:   # Non-convergence case
             #Brett's method
             for i in xrange(len(self.perf_measures)):
@@ -2312,13 +2316,8 @@ class SymbolicLayout(object):
                     val = self._thermal_analysis(measure,type_id)
                     ret.append(val)
         # Update progress bar and eval count
-        if self.running==True:
-            self.eval_count += 1
-            print "Running... Current number of evaluations:", self.eval_count
-        else:
-            print "Solution loaded "
-        print 'res', ret
-
+        self.eval_count += 1
+        print "Running... Current number of evaluations:", self.eval_count,self.trial
         return ret
     '''-----------------------------------------------------------------------------------------------------------------------------------------------------'''
     def _measure_capacitance(self, measure):
@@ -2589,7 +2588,7 @@ def make_test_setup_journal_paper(p1,p2,f,h,tamb):
     module = gen_test_module_data(f,h,tamb)
     sym_layout.form_design_problem(module, temp_dir)
     #mdl = load_file("C://PowerSynth_git//Response_Surface//PowerCAD-full//tech_lib//Model//Trace//t1.rsmdl")
-    mdl = load_file("C://Users//qmle//Desktop//Testing//FastHenry//Fasthenry3_test_gp//WorkSpace//test5.rsmdl")
+    mdl = load_file("C://Users//qmle//Desktop//Testing//FastHenry//Fasthenry3_test_gp//WorkSpace//model_tutorial.rsmdl")
     sym_layout.set_RS_model(mdl)
     sym_layout._map_design_vars()
     setup_model(sym_layout)
@@ -2745,7 +2744,7 @@ def corner_overestimate(w1,w2,l,f):
     return sum(ind_corner)
 
 def continuity_test(w,l1,l2,f):
-    mdl = load_file("C://Users//qmle//Desktop//Testing//FastHenry//Fasthenry3_test_gp//WorkSpace//test5.rsmdl")
+    mdl = load_file("C://Users//qmle//Desktop//Testing//FastHenry//Fasthenry3_test_gp//WorkSpace//model_tutorial.rsmdl")
     print "discontinuous",trace_ind_krige(f,w,l1,mdl['L'])+trace_ind_krige(f,w,l2,mdl['L'])
     print "continuous",trace_ind_krige(f,w,l1+l2,mdl['L'])
 
@@ -2810,7 +2809,7 @@ if __name__ == '__main__':
 
 
     '''
-    mdl = load_file("C://Users//qmle//Desktop//Testing//FastHenry//Fasthenry3_test_gp//WorkSpace//test5.rsmdl")
+    mdl = load_file("C://Users//qmle//Desktop//Testing//FastHenry//Fasthenry3_test_gp//WorkSpace//model_tutorial.rsmdl")
     #mdl = load_file("C://PowerSynth_git//Response_Surface//PowerCAD-full//tech_lib//Model//Trace//t1.rsmdl")
     sym_layout = SymbolicLayout()
     sym_layout.set_RS_model(mdl)

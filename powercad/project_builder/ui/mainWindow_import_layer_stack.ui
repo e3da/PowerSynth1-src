@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1222</width>
-    <height>960</height>
+    <width>1180</width>
+    <height>875</height>
    </rect>
   </property>
   <property name="palette">
@@ -1768,8 +1768,8 @@ p, li { white-space: pre-wrap; }
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>282</width>
-         <height>832</height>
+         <width>359</width>
+         <height>806</height>
         </rect>
        </property>
        <attribute name="label">
@@ -2812,8 +2812,8 @@ p, li { white-space: pre-wrap; }
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>125</width>
-         <height>655</height>
+         <width>376</width>
+         <height>514</height>
         </rect>
        </property>
        <attribute name="label">
@@ -3108,8 +3108,8 @@ p, li { white-space: pre-wrap; }
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>215</width>
-         <height>386</height>
+         <width>376</width>
+         <height>514</height>
         </rect>
        </property>
        <attribute name="label">
@@ -3302,8 +3302,8 @@ p, li { white-space: pre-wrap; }
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>300</width>
-         <height>517</height>
+         <width>376</width>
+         <height>514</height>
         </rect>
        </property>
        <attribute name="label">
@@ -3725,8 +3725,8 @@ p, li { white-space: pre-wrap; }
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>271</width>
-         <height>465</height>
+         <width>376</width>
+         <height>514</height>
         </rect>
        </property>
        <attribute name="label">
@@ -4076,7 +4076,7 @@ p, li { white-space: pre-wrap; }
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1222</width>
+     <width>1180</width>
      <height>21</height>
     </rect>
    </property>
