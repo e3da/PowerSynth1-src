@@ -12,7 +12,7 @@ from PySide.QtGui import QFileDialog, QStandardItemModel, QStandardItem, QMessag
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 import powercad.sym_layout.plot as plot
-from powercad.Spice_handler.spice_import.NetlistImport import Netlist
+from powercad.spice_handler.spice_import.NetlistImport import Netlist
 import copy
 plot.plt.matplotlib.rcParams['backend.qt4'] = 'PySide'
 from powercad.project_builder.UI_py.propertiesDeviceDialog_ui import Ui_device_propeties
@@ -1134,12 +1134,12 @@ class Device_states_dialog(QtGui.QDialog):
 
 
 class ConsDialog(QtGui.QDialog):
-    def __init__(self, parent):
+    def __init__(self, parent=None,cons_df=None):
         QtGui.QDialog.__init__(self, parent)
         self.ui = Ui_Constraint_setup()
         self.ui.setupUi(self)
         self.parent = parent
-        self.cons_df = pd.DataFrame()
+
         self.cons_dims = pd.DataFrame()
         self.cons_sp = pd.DataFrame()
         self.cons_encl = pd.DataFrame()
@@ -1147,9 +1147,15 @@ class ConsDialog(QtGui.QDialog):
         self.ui.btn_load.pressed.connect(self.load_table)
         self.ui.btn_apply.pressed.connect(self.apply_changes)
         self.ui.btn_save.pressed.connect(self.save_cons)
-        self.load_table(mode=0)
+        if cons_df is None:
+            self.cons_df = pd.DataFrame()
+            self.load_table(mode=0)
+        else:
+            self.cons_df=cons_df
+            self.load_table(mode=0) # not a mode, cons_df is imported
 
     def load_table(self, mode=1):
+        print mode
         if mode == 1:  # from csv
             cons_file = QFileDialog.getOpenFileName(self, "Select Constraint File", 'C://', "Constraints Files (*.csv)")
             self.cons_df = pd.read_csv(cons_file[0])
@@ -1157,6 +1163,8 @@ class ConsDialog(QtGui.QDialog):
             cons_file = 'out.csv'
             if cons_file is not None:
                 self.cons_df = pd.read_csv(cons_file)
+
+
         table_df = self.cons_df
         total_cols = len(table_df.axes[1])
         r_sp = 4  # row of min spacing
@@ -1169,12 +1177,13 @@ class ConsDialog(QtGui.QDialog):
         self.ui.tbl_cons_encl.setColumnCount(total_cols)
         # First table for dimensions
         cols_name = list(table_df.columns.values)
+
         self.cons_dims = pd.DataFrame(columns=cols_name)
         self.cons_sp = pd.DataFrame(columns=["Min Spacing"] + cols_name[1:-1])
         self.cons_encl = pd.DataFrame(columns=["Min Enclosure"] + cols_name[1:-1])
         for c in range(total_cols):
             self.ui.tbl_cons_dims.setItem(0, c, QtGui.QTableWidgetItem())
-            self.ui.tbl_cons_dims.item(0, c).setText(cols_name[c])
+            self.ui.tbl_cons_dims.item(0, c).setText(str(cols_name[c]))
             if c == 0:
                 self.ui.tbl_cons_encl.setItem(0, c, QtGui.QTableWidgetItem())
                 self.ui.tbl_cons_encl.item(0, c).setText("Min Enclosure")
@@ -1182,9 +1191,9 @@ class ConsDialog(QtGui.QDialog):
                 self.ui.tbl_cons_gaps.item(0, c).setText("Min Spacing")
             else:
                 self.ui.tbl_cons_encl.setItem(0, c, QtGui.QTableWidgetItem())
-                self.ui.tbl_cons_encl.item(0, c).setText(cols_name[c])
+                self.ui.tbl_cons_encl.item(0, c).setText(str(cols_name[c]))
                 self.ui.tbl_cons_gaps.setItem(0, c, QtGui.QTableWidgetItem())
-                self.ui.tbl_cons_gaps.item(0, c).setText(cols_name[c])
+                self.ui.tbl_cons_gaps.item(0, c).setText(str(cols_name[c]))
 
         for r in range(3):
             for c in range(total_cols):
@@ -1959,7 +1968,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
         self.ui.btn_fixed_locs.pressed.connect(self.assign_fixed_locations)
         self.ui.btn_constraints.pressed.connect(self.add_constraints)
         self.ui.cmb_modes.currentIndexChanged.connect(self.mode_handler)
-        self.initialize_layout(self.mainwindow_fig, self.graph)
+        #self.initialize_layout(self.mainwindow_fig, self.graph)
         self.ui.btn_eval_setup.pressed.connect(self.eval_setup)
         self.ui.btn_gen_layouts.pressed.connect(self.gen_layouts)
         self.ui.btn_sel_sol.pressed.connect(self.save_solution)
@@ -2452,6 +2461,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
             print "can't generate layouts"
             return
         else:
+
             database = os.path.join(self.parent.project.directory,'layouts_db')
             filelist = glob.glob(os.path.join(database + '/*'))
             # print filelist

@@ -150,8 +150,11 @@ def trace_capacitance(w, l, t, h, k=8.8):
 
     return c
 
-def load_mdl(dir=None,mdl_name=None):
-    mdl=load_file(os.path.join(dir,mdl_name))
+def load_mdl(dir=None,mdl_name=None,file=None):
+    if file==None:
+        mdl=load_file(os.path.join(dir,mdl_name))
+    else:
+        mdl = load_file(file)
     return mdl
 
 def wire_over_plane(r,h,l):

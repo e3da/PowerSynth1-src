@@ -2160,22 +2160,23 @@ class CornerStitch():
 
     # function to generate initial layout
     def draw_layout(self,rects=None,Htree=None,Vtree=None):
-        colors = ['green', 'red', 'blue', 'yellow', 'pink']
-        type = ['Type_1', 'Type_2', 'Type_3', 'Type_4','Type_5']
-        zorders = [1,2,3,4,5]
+        colors = ['green', 'red', 'blue', 'yellow','purple', 'pink','magenta','orange','violet']
+        type = ['Type_1', 'Type_2', 'Type_3', 'Type_4','Type_5','Type_6','Type_7','Type_8','Type_9']
+        #zorders = [1,2,3,4,5]
         Patches={}
 
         for r in rects:
             i = type.index(r.type)
+            #print i,r.name
             P=matplotlib.patches.Rectangle(
                     (r.x, r.y),  # (x,y)
                     r.width,  # width
                     r.height,  # height
                     facecolor=colors[i],
                     alpha=0.5,
-                    zorder=zorders[i],
+                    #zorder=zorders[i],
                     edgecolor='black',
-                    linewidth=2,
+                    linewidth=1,
                 )
             Patches[r.name]=P
         CG = constraintGraph()
@@ -2342,8 +2343,9 @@ class CS_to_CG():
         SP = []
         EN = []
         width = [int(math.floor(float(w)* mult)) for w in ((data.iloc[0, 1:]).values.tolist())]
-        extension = [int(math.floor(float(ext) * mult)) for ext in ((data.iloc[1, 1:]).values.tolist())]
-        height = [int(math.floor(float(h) * mult)) for h in ((data.iloc[2, 1:]).values.tolist())]
+        height = [int(math.floor(float(h) * mult)) for h in ((data.iloc[1, 1:]).values.tolist())]
+        extension = [int(math.floor(float(ext) * mult)) for ext in ((data.iloc[2, 1:]).values.tolist())]
+
 
         for j in range(len(data)):
             if j >3 and j < (3+Types):
@@ -2363,13 +2365,15 @@ class CS_to_CG():
         minHeight = map(int, height)
         minSpacing = [map(int, i) for i in SP]
         minEnclosure = [map(int, i) for i in EN]
-
         CONSTRAINT = ct.constraint()
         CONSTRAINT.setupMinWidth(minWidth)
         CONSTRAINT.setupMinHeight(minHeight)
         CONSTRAINT.setupMinExtension(minExtension)
         CONSTRAINT.setupMinSpacing(minSpacing)
         CONSTRAINT.setupMinEnclosure(minEnclosure)
+
+        
+
 
     def Sym_to_CS(self,Input_rects, Htree, Vtree):
         '''
@@ -2416,7 +2420,7 @@ class CS_to_CG():
         return SYM_CS
 
     ## Evaluates constraint graph depending on modes of operation
-    def evaluation(self,Htree,Vtree,N,W,H,XLoc,YLoc,seed,individual):
+    def evaluation(self,Htree,Vtree,N,W,H,XLoc,YLoc,seed,individual,Types):
         '''
         :param Htree: Horizontal tree
         :param Vtree: Vertical tree
@@ -2429,7 +2433,7 @@ class CS_to_CG():
         '''
         if self.level==1:
             CG = constraintGraph( W=None, H=None,XLocation=None, YLocation=None)
-            CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList,self.level, N,seed,individual)
+            CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList,self.level, N,seed,individual,Types=Types)
         elif self.level==2 or self.level==3:
             if W==None or H ==None:
                 print"Please enter Width and Height of the floorplan"
@@ -2437,10 +2441,11 @@ class CS_to_CG():
                 print"Please enter Number of layouts to be generated"
             else:
                 CG = constraintGraph(W, H, XLoc, YLoc)
-                CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList, self.level, N,seed,individual)
+                CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList, self.level, N,seed,individual,Types=Types)
         else:
+
             CG = constraintGraph( W=None, H=None,XLocation=None, YLocation=None)
-            CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList, self.level)
+            CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList, self.level,Types=Types)
         MIN_X, MIN_Y = CG.minValueCalculation(Htree.hNodeList, Vtree.vNodeList, self.level)
         return MIN_X, MIN_Y
 
@@ -2476,6 +2481,8 @@ class CS_to_CG():
                 Dimensions = []
                 DIM = []
 
+                #for d in range(len(i.stitchList)):
+                    #j=i.stitchList[d]
                 for j in i.stitchList:
                     p = [j.cell.x, j.cell.y, j.getWidth(), j.getHeight(),j.cell.type]
 
@@ -2518,6 +2525,8 @@ class CS_to_CG():
                 Dimensions = []
                 DIM_V = []
 
+                #for d in range(len(i.stitchList)):
+                    #j=i.stitchList[d]
                 for j in i.stitchList:
                     p = [j.cell.x, j.cell.y, j.getWidth(), j.getHeight(), j.voltage, j.current, j.cell.type]
                     DIM_V.append(p)
@@ -2571,7 +2580,8 @@ class CS_to_CG():
         ALL_HRECTS.setdefault(key2,[])
 
         #s=1000 #scaler
-        for j in Htree.hNodeList[0].stitchList:
+        for d in range(len(Htree.hNodeList[0].stitchList)):
+            j=Htree.hNodeList[0].stitchList[d]
             k = [j.cell.x, j.cell.y, j.EAST.cell.x, j.NORTH.cell.y,j.cell.type]
 
             DIM.append(k)

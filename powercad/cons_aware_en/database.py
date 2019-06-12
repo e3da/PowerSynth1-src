@@ -52,17 +52,16 @@ def insert_record(conn,data,temp_file):
         print "layout_info not found"
 
     return cur.lastrowid
-def retrieve_data(conn,ID,table=None):
+def retrieve_data(conn,ID):
     """
     retrieve a table
-    :param conn:
-    :param table:
+    :param conn: connect object to the database
+    :param ID: layout ID
     :return:
     """
     cur = conn.cursor()
     #cur.execute("SELECT * FROM " +table)
     #return cur.fetchall()
-
     #cur.execute("SELECT Layout_info FROM LAYOUT_DATA where ID=?",ID )
     sql = "SELECT Layout_info FROM LAYOUT_DATA WHERE ID = :id"
     param = {'id': ID}

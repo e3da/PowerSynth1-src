@@ -33,7 +33,7 @@ from powercad.sol_browser.solution_lib import SolutionLibrary
 
 from powercad.sym_layout.plot import plot_layout
 from powercad.electro_thermal.ElectroThermal_toolbox import ET_analysis
-from powercad.Spice_handler.spice_export.thermal_netlist_graph import Module_Full_Thermal_Netlist_Graph
+from powercad.spice_handler.spice_export.thermal_netlist_graph import Module_Full_Thermal_Netlist_Graph
 from powercad.export.py_csv import py_csv 
 
 class GrapheneWindow(QtGui.QMainWindow):

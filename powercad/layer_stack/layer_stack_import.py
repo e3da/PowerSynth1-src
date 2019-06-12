@@ -21,12 +21,15 @@ from powercad.general.settings.settings import MATERIAL_LIB_PATH
 
 class LayerStackHandler:
     
-    def __init__(self, csv_file):
+    def __init__(self, csv_file=None,mat_lib=None):
         self.csv_file = csv_file
         self.layer_list = []
         # Load Material Lib
         self.material_lib=Material_lib()
-        self.material_lib.load_csv(MATERIAL_LIB_PATH)
+        if mat_lib==None:
+            self.material_lib.load_csv(MATERIAL_LIB_PATH)
+        else:
+            self.material_lib.load_csv(mat_lib)
         # Initialize design stucture
         self.baseplate = None
         self.substrate_attach = None
@@ -81,7 +84,7 @@ class LayerStackHandler:
         bp_tech=Baseplate()
         sa_tech = SubstrateAttach()
         for layer in self.layer_list:
-            print '--- Checking layer: ' + str(layer)
+            #print '--- Checking layer: ' + str(layer)
             
             try:
                 layer_type = layer[0]
@@ -119,12 +122,13 @@ class LayerStackHandler:
                     thick = float(layer[6])
                     bp_material_id=layer[7]
                     bp_tech.properties=self.material_lib.get_mat(bp_material_id)
+
                 except:
                     self.compatible = False
                     self.error_msg = 'Could not find all values in baseplate layer ' + name + '. Baseplate must contain the following fields: layer type, num, name, pos, width, length, thickness, material id.'
                     break
                 self.baseplate = BaseplateInstance((width, length, thick), None, bp_tech)
-                print 'Found baseplate ' + str(width) + ', ' + str(length) + ', ' + str(thick) + ', ' + str(bp_material_id)
+                #print 'Found baseplate ' + str(width) + ', ' + str(length) + ', ' + str(thick) + ', ' + str(bp_material_id)
                 
             # Find substrate attach
             if layer_type == self.substrate_attach_abbrev:
@@ -137,7 +141,7 @@ class LayerStackHandler:
                     self.error_msg = 'Could not find all values in substrate attach layer ' + name + '. Substrate attach must contain the following fields: layer type, num, name, pos, thickness.'
                     break
                 self.substrate_attach = SubstrateAttachInstance(thick, sa_tech)
-                print 'Found substrate attach ' + str(thick)
+                #print 'Found substrate attach ' + str(thick)
                     
             # Find substrate 
             if layer_type == self.metal_abbrev or layer_type == self.dielectric_abbrev:
@@ -162,7 +166,7 @@ class LayerStackHandler:
                 
 
 
-                print 'Found metal/dielectric ' + str(width) + ', ' + str(length)
+                #print 'Found metal/dielectric ' + str(width) + ', ' + str(length)
                 
             elif layer_type == self.interconnect_abbrev :
                 try:
@@ -171,14 +175,14 @@ class LayerStackHandler:
                     self.compatible = False
                     self.error_msg = 'Could not find all values in interconnect layer ' + name + '. Interconnect layers must contain the following fields: layer type, num, name, pos, ledge width.'
                     break
-                print 'Found interconnect ' + str(ledge_width)
+                #print 'Found interconnect ' + str(ledge_width)
 
         try:
             self.substrate = SubstrateInstance((substrate_width, substrate_length), ledge_width, substrate_tech)
         except:
             self.compatible = False
             self.error_msg = 'Could not find substrate layers.'
-        print 'Found substrate ' + str(width) + ', ' + str(length) + ', ' + str(ledge_width)  
+        #print 'Found substrate ' + str(width) + ', ' + str(length) + ', ' + str(ledge_width)
                     
         # TODO - check for excess substrate layers
                 
