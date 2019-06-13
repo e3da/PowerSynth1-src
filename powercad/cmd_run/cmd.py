@@ -132,13 +132,6 @@ class Cmd_Handler:
                         sink = info[1]
                     if info[0] == 'Frequency:':
                         frequency = float(info[1])
-        if self.new_mode==1:
-            try:
-                with open(self.constraint_file, "w") as my_empty_csv:
-                    pass
-            except:
-                print " wrong file name for constraint file"
-                return False
         check_file = os.path.isfile
         check_dir = os.path.isdir
         # Check if these files exist
