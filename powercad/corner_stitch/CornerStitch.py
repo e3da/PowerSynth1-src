@@ -2456,7 +2456,95 @@ class CS_to_CG():
             CG = constraintGraph( W=None, H=None,XLocation=None, YLocation=None)
             CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList, self.level,Types=Types)
         MIN_X, MIN_Y = CG.minValueCalculation(Htree.hNodeList, Vtree.vNodeList, self.level)
-        return MIN_X, MIN_Y
+        #return MIN_X, MIN_Y
+        if self.level == 0:
+
+            R = self.UPDATE_min(MIN_X, MIN_Y, Htree, Vtree)
+            Results = []
+            for i in R:
+                Rectangles = {}
+                for k, v in i.items():
+                    # print"Size", k, len(v)
+                    key = k
+                    Rectangles.setdefault(key, [])
+                    val = []
+                    value = {}
+                    for rect in v:
+                        # print "N",rect.name
+
+                        value[rect.name] = [rect.top, rect.bottom, rect.left, rect.right]
+                        # val.append(value)
+
+                        # rect.print_rect()
+                    Rectangles[key].append(value)
+                Results.append(Rectangles)
+
+        else:
+
+
+            DIM_H = {}
+
+            keys = MIN_X[0].keys()
+            # print keys
+            for i in range(len(keys)):
+                key = keys[i]
+                for k in range(len(Htree.hNodeList)):
+                    if Htree.hNodeList[k].id == key:
+
+                        coord = []
+                        for j in Htree.hNodeList[k].stitchList:
+                            x_y = [j.cell.x, j.cell.y, j.EAST.cell.x, j.NORTH.cell.y, j.name, j.cell.type,j.nodeId]
+                            coord.append(x_y)
+
+                DIM_H[key] = coord
+            # print"DIM", DIM_H
+            DIM_V = {}
+            keysv = MIN_Y[0].keys()
+            # print keys
+            for i in range(len(keysv)):
+                key = keysv[i]
+                for k in range(len(Vtree.vNodeList)):
+                    if Vtree.vNodeList[k].id == key:
+                        coord = []
+                        for j in Vtree.vNodeList[k].stitchList:
+                            x_y = [j.cell.x, j.cell.y, j.EAST.cell.x, j.NORTH.cell.y, j.name, j.cell.type,j.nodeId]
+                            coord.append(x_y)
+                DIM_V[key] = coord
+            # print"DIM", DIM_V
+
+            floorplan_results = []
+            for i in range(len(MIN_X)):
+                # print MIN_X[i],MIN_Y[i]
+
+                MINX = collections.OrderedDict(sorted(MIN_X[i].items()))
+                MINY = collections.OrderedDict(sorted(MIN_Y[i].items()))
+
+                HCS, VCS, HCS1, VCS1 = self.UPDATED_Location(MINX, MINY, DIM_H, DIM_V)
+
+
+            Results = []
+
+            for i in floorplan_results:
+                Rectangles = {}
+                for k, v in i.items():
+                    # print"Size", k, len(v)
+                    key = k
+                    Rectangles.setdefault(key, [])
+                    val = []
+                    value = {}
+                    for rect in v:
+                        # print "N",rect.name
+
+                        value[rect.name] = [rect.top, rect.bottom, rect.left, rect.right]
+                        # val.append(value)
+
+                        # rect.print_rect()
+                    Rectangles[key].append(value)
+                Results.append(Rectangles)
+
+        return Results
+
+
 
 
 
@@ -2493,21 +2581,21 @@ class CS_to_CG():
                 #for d in range(len(i.stitchList)):
                     #j=i.stitchList[d]
                 for j in i.stitchList:
-                    p = [j.cell.x, j.cell.y, j.getWidth(), j.getHeight(),j.cell.type]
+                    p = [j.cell.x, j.cell.y, j.getWidth(), j.getHeight(),j.cell.type, j.nodeId]
 
                     DIM.append(p)
 
-                    k = [j.cell.x, j.cell.y, j.EAST.cell.x, j.NORTH.cell.y]
+                    k = [j.cell.x, j.cell.y, j.EAST.cell.x, j.NORTH.cell.y,j.nodeId]
 
 
                     if k[0] in MINX[i.id].keys() and k[1] in MINY[i.id].keys() and k[2] in MINX[i.id].keys() and k[3] in \
                             MINY[i.id].keys():
                         rect = [(MINX[i.id][k[0]]), (MINY[i.id][k[1]]), (MINX[i.id][k[2]]) - (MINX[i.id][k[0]]),
-                               (MINY[i.id][k[3]]) - (MINY[i.id][k[1]]), j.cell.type]
+                               (MINY[i.id][k[3]]) - (MINY[i.id][k[1]]), j.cell.type,j.nodeId]
                         r1=Rectangle(x=rect[0],y=rect[1],width=rect[2],height=rect[3],type=rect[4])
                         r2 = [float(MINX[i.id][k[0]]) / s, float(MINY[i.id][k[1]]) / s,
                                 float(MINX[i.id][k[2]]) / s - float(MINX[i.id][k[0]]) / s,
-                                float(MINY[i.id][k[3]]) / s - float(MINY[i.id][k[1]]) / s, j.cell.type]
+                                float(MINY[i.id][k[3]]) / s - float(MINY[i.id][k[1]]) / s, j.cell.type,j.nodeId]
                     for k1,v in sym_to_cs.items():
 
                         key=k1
@@ -2537,13 +2625,13 @@ class CS_to_CG():
                 #for d in range(len(i.stitchList)):
                     #j=i.stitchList[d]
                 for j in i.stitchList:
-                    p = [j.cell.x, j.cell.y, j.getWidth(), j.getHeight(), j.voltage, j.current, j.cell.type]
+                    p = [j.cell.x, j.cell.y, j.getWidth(), j.getHeight(), j.voltage, j.current, j.cell.type,j.nodeId]
                     DIM_V.append(p)
                     k = [j.cell.x, j.cell.y, j.EAST.cell.x, j.NORTH.cell.y]
                     if k[0] in MINX[i.id].keys() and k[1] in MINY[i.id].keys() and k[2] in MINX[i.id].keys() and k[3] in \
                             MINY[i.id].keys():
                         rect = [float(MINX[i.id][k[0]])/s, float(MINY[i.id][k[1]])/s, float(MINX[i.id][k[2]])/s - float(MINX[i.id][k[0]])/s,
-                                float(MINY[i.id][k[3]])/s - float(MINY[i.id][k[1]])/s, j.cell.type]
+                                float(MINY[i.id][k[3]])/s - float(MINY[i.id][k[1]])/s, j.cell.type,j.nodeId]
 
 
 
@@ -2562,6 +2650,80 @@ class CS_to_CG():
         for k, v in Recatngles_V.items():
             ALL_RECTS['V'] = v
         return ALL_HRECTS,ALL_RECTS
+
+    def UPDATED_Location(self,MINX, MINY, DIM_H, DIM_V):
+
+        DIM_H_up = {}
+        HCS = {}
+        VCS = {}
+        DIM_V_up = {}
+
+        for k, v in DIM_H.items():
+
+            Rects = []
+            Plot_rect = []
+            for i in v:
+                if i[0] in MINX[k].keys() and i[2] in MINX[k].keys() and i[1] in MINY[k].keys() and i[3] in MINY[k].keys():
+
+                    rect = [MINX[k][i[0]], MINY[k][i[1]], MINX[k][i[2]], MINY[k][i[3]], i[-2], i[-1],i[-4]]
+                    rect_to_plot = [rect[0], rect[1], rect[2] - rect[0], rect[3] - rect[1],rect[6],rect[4],
+                                    rect[5]]  # x,y,width,height
+
+                Rects.append(rect)
+                Plot_rect.append(rect_to_plot)
+            DIM_H_up[k] = Rects
+            HCS[k] = Plot_rect
+        # print"UP", DIM_H_up
+        for k, v in DIM_V.items():
+
+            Rects = []
+            Plot_rect = []
+            for i in v:
+                if i[0] in MINX[k].keys() and i[2] in MINX[k].keys() and i[1] in MINY[k].keys() and i[3] in MINY[
+                    k].keys():
+                    '''
+                    bw = None
+                    if len(i[-3]) > 0:
+                        if i[-2] != "Type_1":
+                            num_bw = 0
+                            for j in i[-3]:
+                                if j.num_of_bw > num_bw:
+                                    num_bw = j.num_of_bw
+                                    bw = j
+                    '''
+                    bw = None
+                    if len(i[-3]) > 0:
+                        if i[-2] != "Type_1":
+                            bw = []
+                            for j in i[-3]:
+                                bw.append({(j.name,j.direction,j.num_of_bw):(MINX[k][j.src_coordinate[0]],MINY[k][j.src_coordinate[1]]) })
+                    rect = [MINX[k][i[0]], MINY[k][i[1]], MINX[k][i[2]], MINY[k][i[3]], i[-2], i[-1],i[-4]]
+                    rect_to_plot = [rect[0], rect[1], rect[2] - rect[0], rect[3] - rect[1],rect[6],bw, rect[4],
+                                    rect[5]]  # x,y,width,height
+                Rects.append(rect)
+                Plot_rect.append(rect_to_plot)
+            DIM_V_up[k] = Rects
+            VCS[k] = Plot_rect
+        Total_H = []
+        Total_V = []
+        # print HCS,VCS
+        HCS = collections.OrderedDict(sorted(HCS.items()))
+        VCS = collections.OrderedDict(sorted(VCS.items()))
+        # print"HCS", HCS
+        # print "VCS",VCS
+        for k, v in HCS.items():
+            Total_H.append(v)
+            # plotrectH(k,v,format)
+
+        # print"TOT", Total_H
+        for k, v in VCS.items():
+            Total_V.append(v)
+            # plotrectV(k,v,format)
+        return Total_H, Total_V, HCS, VCS
+
+
+
+
 
     def UPDATE(self,MINX,MINY,Htree, Vtree, sym_to_cs,s=1000):
         '''
@@ -2591,7 +2753,7 @@ class CS_to_CG():
         #s=1000 #scaler
         for d in range(len(Htree.hNodeList[0].stitchList)):
             j=Htree.hNodeList[0].stitchList[d]
-            k = [j.cell.x, j.cell.y, j.EAST.cell.x, j.NORTH.cell.y,j.cell.type]
+            k = [j.cell.x, j.cell.y, j.EAST.cell.x, j.NORTH.cell.y,j.cell.type,j.nodeId]
 
             DIM.append(k)
 
