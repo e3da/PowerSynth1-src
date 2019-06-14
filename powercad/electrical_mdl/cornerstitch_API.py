@@ -100,8 +100,6 @@ class CornerStitch_Emodel_API:
 
 
         # UPDATE ALL PLATES and SHEET FOR THE LAYOUT
-        print "data"
-        print layout_data
         self.layout_data = layout_data.values()[0]
         self.width, self.height = layout_data.keys()[0]
         #self.width = round(self.width/1000.0, sig)
@@ -198,16 +196,16 @@ class CornerStitch_Emodel_API:
         self.emesh.update_hier_edge_RL()
         #pr = cProfile.Profile()
         #pr.enable()
-        fig = plt.figure(1)
+        #fig = plt.figure(1)
 
-        ax = Axes3D(fig)
-        ax.set_xlim3d(0, 42)
-        ax.set_ylim3d(0, 80)
-        ax.set_zlim3d(0, 2)
+        #ax = Axes3D(fig)
+        #ax.set_xlim3d(0, 42)
+        #ax.set_ylim3d(0, 80)
+        #ax.set_zlim3d(0, 2)
 
-        self.emesh.plot_3d(fig=fig, ax=ax, show_labels=True)
-        fig.set_size_inches(18.5, 10.5)
-        plt.savefig('C:\Users\qmle\Desktop\New_Layout_Engine\Mesh\Mesh'+str(self.m_id)+'.png')
+        #self.emesh.plot_3d(fig=fig, ax=ax, show_labels=True)
+        #fig.set_size_inches(18.5, 10.5)
+        #plt.savefig('C:\Users\qmle\Desktop\New_Layout_Engine\Mesh\Mesh'+str(self.m_id)+'.png')
         self.m_id+=1
         self.emesh.mutual_data_prepare(mode=0)
         self.emesh.update_mutual(mode=0)

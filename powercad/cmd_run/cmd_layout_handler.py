@@ -2,7 +2,7 @@ from powercad.corner_stitch.optimization_algorithm_support import new_engine_opt
 from powercad.corner_stitch.cs_solution import CornerStitchSolution
 from powercad.corner_stitch.input_script import *
 from powercad.sol_browser.cs_solution_handler import pareto_solutions,export_solutions
-
+from powercad.electrical_mdl.e_handler import E_Rect
 
 # --------------Plot function---------------------
 def plot_layout(fig_data=None, rects=None, size=None, fig_dir=None):
@@ -134,7 +134,7 @@ def update_solution_data(layout_dictionary=None, opt_problem=None, measure_names
 
         solution = CornerStitchSolution(name=name,index=i)
         solution.params = dict(zip(measure_names, results))  # A dictionary formed by result and measurement name
-        print "Added", name,"Perf_values: ", solution.params.values()
+        #print "Added", name,"Perf_values: ", solution.params.values()
         solution.layout_info = layout_dictionary[i]
         solution.abstract_info = solution.form_abs_obj_rect_dict()
         Solutions.append(solution)
@@ -546,6 +546,20 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
 
     return Solutions
 
+def form_direct_mutual_pairs(cs_info):
+    trace_raw_data = []  # for trace type (power and signal)
+    for data in cs_info:  # define groups for traces and devices
+        left = data[1]
+        bot = data[2]
+        right = data[1] + data[3]
+        top = data[2] + data[4]
+        name = data[5]
+        type = data[0]
+        if type == 'Type_1' or type == 'Type_2':
+            trace_raw_data.append([name, E_Rect(top=top, bottom=bot, left=left, right=right)])
+
+
+
 
 def get_hierachy_info(cs_info):
     #Use raw data from CS info to form a hierarchy which can be used later for meshing. This is less computationally expensive
@@ -556,7 +570,7 @@ def get_hierachy_info(cs_info):
     name_to_group=OrderedDict()
 
     g_id =0
-    for data in cs_info:
+    for data in cs_info: # define groups for traces and devices
         left = data[1]
         bot = data[2]
         right = data[1]+data[3]
