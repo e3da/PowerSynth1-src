@@ -8,6 +8,8 @@ import pstats
 from mpl_toolkits.mplot3d import Axes3D
 from collections import deque
 import gc
+
+
 class ElectricalMeasure(object):
     MEASURE_RES = 1
     MEASURE_IND = 2
@@ -23,6 +25,7 @@ class ElectricalMeasure(object):
         self.measure = measure
         self.source = source
         self.sink = sink
+
 
 class CornerStitch_Emodel_API:
     # This is an API with NewLayout Engine
@@ -272,12 +275,12 @@ class CornerStitch_Emodel_API:
         self.circuit.solve_iv()
         vname = 'v' + str(pt1)
         imp = self.circuit.results[vname]
-        R = abs(np.real(imp)*1e3)
+        R = abs(np.real(imp) * 1e3)
         L = abs(np.imag(imp)) * 1e9 / (2 * np.pi * self.circuit.freq)
         self.hier.tree.__del__()
         del self.circuit
         self.emesh.graph.clear()
         self.emesh.m_graph.clear()
         gc.collect()
-        print R, L
-        return R[0],L[0]
+        #print R, L
+        return R[0], L[0]

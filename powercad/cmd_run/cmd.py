@@ -132,13 +132,6 @@ class Cmd_Handler:
                         sink = info[1]
                     if info[0] == 'Frequency:':
                         frequency = float(info[1])
-        if self.new_mode==1:
-            try:
-                with open(self.constraint_file, "w") as my_empty_csv:
-                    pass
-            except:
-                print " wrong file name for constraint file"
-                return False
         check_file = os.path.isfile
         check_dir = os.path.isdir
         # Check if these files exist
@@ -151,7 +144,7 @@ class Cmd_Handler:
             self.set_up_db()
             if run_option == 0:
                 self.solutions=generate_optimize_layout(layout_engine=self.engine, mode=layout_mode,
-                                         optimization=False, db_file=self.db_file,fig_dir=self.fig_dir, num_layouts=num_layouts, seed=seed,
+                                         optimization=False, db_file=self.db_file,fig_dir=self.fig_dir,sol_dir=self.db_dir, num_layouts=num_layouts, seed=seed,
                                          floor_plan=floor_plan)
             elif run_option == 1:
                 self.measures=[]
@@ -187,7 +180,7 @@ class Cmd_Handler:
 
                 self.setup_thermal(mode='macro', setup_data=t_setup_data, meas_data=t_measure_data)
                 self.solutions=generate_optimize_layout(layout_engine=self.engine, mode=layout_mode,
-                                         optimization=True, db_file=self.db_file,fig_dir=self.fig_dir,
+                                         optimization=True, db_file=self.db_file,fig_dir=self.fig_dir,sol_dir=self.db_dir,
                                          apis={'E': self.e_api, 'T': self.t_api}, num_layouts=num_layouts, seed=seed,
                                          algorithm=algorithm, floor_plan=floor_plan,num_gen=num_gen,measures=self.measures)
         else:
@@ -428,7 +421,7 @@ class Cmd_Handler:
                 if layout_mode in range(3):
                     self.set_up_db()
                     self.soluions = generate_optimize_layout(layout_engine=self.engine, mode=layout_mode,
-                                                             optimization=False, db_file=self.db_file,fig_dir=self.fig_dir,
+                                                             optimization=False, db_file=self.db_file,fig_dir=self.fig_dir,sol_dir=self.db_dir,
                                                              apis={'E': self.e_api, 'T': self.t_api})
 
             if opt == 1:
@@ -457,7 +450,7 @@ class Cmd_Handler:
                 if layout_mode in range(3):
                     self.set_up_db()
                     self.soluions = generate_optimize_layout(layout_engine=self.engine, mode=layout_mode,
-                                                             optimization=True, db_file=self.db_file,fig_dir=self.fig_dir,
+                                                             optimization=True, db_file=self.db_file,fig_dir=self.fig_dir,sol_dir=self.db_dir,
                                                              apis={'E': self.e_api, 'T': self.t_api},
                                                              measures=self.measures)
 
