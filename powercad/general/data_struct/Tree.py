@@ -3,7 +3,7 @@
 import matplotlib.cm as cm
 import networkx as nx
 from matplotlib.colors import Normalize
-
+from collections import OrderedDict
 ''' This is a general Tree structure'''
 
 
@@ -21,7 +21,7 @@ class T_Node():
         self.depth=0
         self.name=name
         self.data=data
-        self.nodes={} # dictionary for children
+        self.nodes= OrderedDict() # dictionary for children
         self.type=type # Quick description of this data type
         self.rank=0
         self.tree = tree
@@ -42,7 +42,7 @@ class T_Node():
         self.nodes[node.name]=node
 
     def remove_all_children(self):
-        self.nodes={}
+        self.nodes= OrderedDict()
 
     def remove_child(self,name):
         self.nodes.pop(name,None)
@@ -55,7 +55,7 @@ class Tree():
     def __init__(self):
         self.nodes=[]
         self.root = T_Node(None,'ROOT','ROOT',tree=self)
-        self.digraph=nx.DiGraph()
+        self.digraph=nx.OrderedDiGraph()
         self.max_rank =0
         self.cm=cm.jet
     def __del__(self):
@@ -126,7 +126,7 @@ class Tree():
         nx.draw_networkx_edges(G, pos, edgelist=G.edges(), edge_color='black',width=2, arrows=True,ax=ax)
 
     def update_pos(self):
-        pos ={}
+        pos = OrderedDict()
         for i in range(self.max_rank + 1):
             counter = 0
             for n in self.digraph.nodes(data=True):

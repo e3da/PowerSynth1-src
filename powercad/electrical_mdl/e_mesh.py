@@ -15,6 +15,7 @@ from powercad.parasitics.mdl_compare import trace_ind_krige, trace_res_krige, tr
 from powercad.parasitics.mutual_inductance.mutual_inductance import *
 import time
 import gc
+from collections import OrderedDict
 class MeshNode:
 
 
@@ -107,9 +108,9 @@ class EMesh():
         self.hier_E=hier_E
         self.graph=nx.Graph()#nx.MultiGraph()
         self.m_graph=nx.Graph() # A graph represent Mutual
-        self.cap_dict={} # Each node and its capacitive cell
+        self.cap_dict=OrderedDict() # Each node and its capacitive cell
         self.node_count=1
-        self.node_dict = {}
+        self.node_dict = OrderedDict()
         self.c_map =cm.jet
         self.f = freq
         self.mdl = mdl
@@ -121,8 +122,8 @@ class EMesh():
         self.all_n2 = []
         self.rm_edges=[]
         self.div=2 # by default, special case for gp (ratio between outer and inner edges)
-        self.hier_edge_data={} # edge name : parent edge data
-        self.comp_net_id ={} # a dictionary for relationship between graph index and components net-names
+        self.hier_edge_data = OrderedDict() # edge name : parent edge data
+        self.comp_net_id =OrderedDict() # a dictionary for relationship between graph index and components net-names
 
     def plot_3d(self,fig,ax, show_labels=False):
         network_plot_3D(G=self.graph,ax=ax, show_labels=show_labels)
@@ -421,7 +422,6 @@ class EMesh():
                 e2_name = edge2.data['name']
                 if e1_name != e2_name and edge1.type != 'hier':
                     # First define the new edge name as a node name of Mutual graph
-                    start = time.time()
                     check = has_edge(e1_name, e2_name)
                     if not (check):
                         n2_1 = get_node[data2[0]]['node']  # node 1 on edge 1
@@ -568,11 +568,11 @@ class EMesh():
 
     def mesh_grid_hier(self,Nx=3,Ny=3,corner_stitch=False):
 
-        self.comp_dict ={} # Use to remember the component that has its graph built (so we dont do it again)
+        self.comp_dict  = OrderedDict() # Use to remember the component that has its graph built (so we dont do it again)
         # all comp points
-        self.comp_nodes ={}
-        self.comp_net_id={}
-        self.graph = nx.MultiGraph()
+        self.comp_nodes  = OrderedDict()
+        self.comp_net_id = OrderedDict()
+        self.graph = nx.OrderedMultiGraph()
         self.node_count = 1
         # First search through all sheet and add their edges, nodes to the mesh
         for sh in self.hier_E.sheet:
@@ -599,10 +599,7 @@ class EMesh():
                 for n in comp.net_graph.nodes(data=True): # node without parents
                     sheet_data= n[1]['node']
 
-                    #print sheet_data.node
                     if sheet_data.node.parent == None: # floating net
-                        type = "hier"
-                        # Get x,y,z positions
                         x, y = sheet_data.rect.center()
                         z = sheet_data.z
                         cp = [x, y, z]
@@ -624,43 +621,34 @@ class EMesh():
                     self.comp_net_id[sheet_data.net] = self.node_count
                     self.add_node(cp_node)
                     self.comp_nodes[group].append(cp_node)
-        #for c in comp_dict.keys(): # Once all components are built we make the edges
-        #    for e in c.net_graph.edges(data=True):
-        #        self.add_hier_edge(net[e[0]], net[e[1]],edge_data={'R':1.08e-3,'L':2.2e-9}) # TODO add bondwire model here
-        #(add_hier_edge(net[e[0]], net[e[1]], edge_data={'R': 1.08e-3, 'L': 2.2e-9}) for c in comp_dict.keys() for e in
-        # c.net_graph.edges(data=True))
-        #print net
+
 
         self.update_E_comp_parasitics(net=self.comp_net_id,comp_dict=self.comp_dict)
 
         # These are applied for each different groups on each layer.
-        for isl_id in xrange(len(self.hier_E.isl_group)): # trace island id in T_Node
-            g = self.hier_E.isl_group[isl_id]
+        for g in self.hier_E.isl_group: # trace island id in T_Node
+
             # First forming all nodes and edges for a trace piece
             if self.hier_E.isl_group_data!={}:
                 thick = self.hier_E.isl_group_data[g]['thick']
             else:
                 thick = 0.035 # Hard coded for test case without MDK input
 
-            self.corners_trace_dict = {}  # Dictionary to store all corners of each rectangular piece
-            self.lines_corners_dict = {}  # Dictionary to store all lines connected to corners
+            self.corners_trace_dict = OrderedDict()  # Dictionary to store all corners of each rectangular piece
+            self.lines_corners_dict = OrderedDict()  # Dictionary to store all lines connected to corners
             self.corners = []             # All bound corners
-            self.node_dict = {}           # Use to store hashed data positions
+            self.node_dict = OrderedDict()           # Use to store hashed data positions
             lines = []               # All rect bound lines
             points=[]                # All mesh points
             P_app = points.append
-            for k_id in xrange(len(g.nodes.keys())): # Search for all traces in trace island
+            for k in g.nodes.keys(): # Search for all traces in trace island
                 # take the traces of this group ( by definition, each group have a different z level)
-                k = g.nodes.keys()[k_id]
                 trace=g.nodes[k]
                 tr = trace.data.rect # rectangle object
-
                 z = trace.data.z  # layer level for this node
-
                 # Forming corner - trace relationship
                 self.corners += tr.get_all_corners()
                 # Form relationship between corner and trace
-
                 for c in self.corners:
                     cr = (c[0],c[1],z)
                     if tr.encloses(c[0], c[1]):
@@ -769,7 +757,7 @@ class EMesh():
             #fig,ax = plt.subplots()
             #draw_rect_list(all_rect,ax,'blue',None)
             # Once we have all the nodes and edges for the trace group, we need to save hier node info
-            self.hier_group_dict = {}
+            self.hier_group_dict = OrderedDict()
             if self.comp_nodes!={} and g in self.comp_nodes: # case there are components
                 for cp_node in self.comp_nodes[g]:
                     min_dis = 1000

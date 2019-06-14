@@ -285,7 +285,7 @@ def make_test_setup2(f, directory):
     #plates.append(bs_plate)
     sheets = [P1,P2]
     new_module = EModule(plate=plates, components = [Bw1, Bw2], sheet=sheets)#,layer_stack=es)
-    new_module.form_group()
+    new_module.form_group_split_rect()
     new_module.split_layer_group()
 
 

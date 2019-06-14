@@ -1,4 +1,5 @@
 from powercad.general.data_struct.Tree import *
+from collections import OrderedDict
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -11,7 +12,7 @@ class EHier():
         self.tree = Tree()
         self.isl_group=[]
         self.sheet =[]
-        self.isl_group_data={}
+        self.isl_group_data= OrderedDict()
     # Form tree based on sheet + plate intersection
     def __del__(self):
         self.isl_group_data.clear()

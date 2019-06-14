@@ -11,7 +11,7 @@ from powercad.electrical_mdl.e_hierarchy import *
 from powercad.electrical_mdl.e_struct import *
 from powercad.parasitics.models_bondwire import wire_inductance, wire_partial_mutual_ind, wire_resistance, \
     ball_mutual_indutance, ball_self_inductance
-
+from collections import OrderedDict
 class Escript:
     def __init__(self, file):
         '''
@@ -342,7 +342,7 @@ class EModule:
         self.sheet = sheet  # list Sheet objects
         self.plate = plate  # list of 3D plates
         self.layer_stack = layer_stack  # Will be used later to store layer info
-        self.group = {}  # trace islands in any layer
+        self.group = OrderedDict()  # trace islands in any layer
         self.components = components
         if self.components != []:
             self.unpack_comp()
@@ -354,13 +354,13 @@ class EModule:
                     sh.net_type = "external"
                 self.sheet.append(sh)
 
-    def form_group(self):
+    def form_group_split_rect(self):
         '''
         Form island of traces (self.plate), this is used to define correct mesh boundary for each trace group
         Returns: a dictionary of group ID for plates
 
         '''
-        # "Sourec: https://stackoverflow.com/questions/27016803/find-sets-of-disjoint-sets-from-a-list-of-tuples-or-sets-in-python" a=[]
+        # "Source: https://stackoverflow.com/questions/27016803/find-sets-of-disjoint-sets-from-a-list-of-tuples-or-sets-in-python" a=[]
         a = []
         traces = self.plate
         if len(traces) > 1:
@@ -368,7 +368,8 @@ class EModule:
                 for t2 in traces:
                     if t1.intersects(t2):
                         a.append([t1, t2])
-            self.d = {tuple(t): set(t) for t in a}  # forces keys to be unique
+            self.d = OrderedDict((tuple(t),set(t)) for t in a)  # forces keys to be unique
+
             while True:
                 for tuple_, set1 in self.d.items():
                     try:
@@ -391,23 +392,40 @@ class EModule:
             self.group[i] = self.output[i]
 
 
+    def form_group_cs_flat(self):
+        '''
+        Using flat level layout info to form the hierarchy
+        Returns: self.group
+        '''
+        group_id = 0
+        self.group=OrderedDict()
+        name_to_group={}
+        for p in self.plate:
+            name = p.group_id
+            if not (name in name_to_group):
+                self.group[group_id]=[p]
+                name_to_group[name]=group_id
+                group_id+=1
+            else:
+                self.group[name_to_group[name]].append(p)
+
+
     def split_layer_group(self):
-        self.plate_group = self.group
         self.plate = []
-        self.group_layer_dict = {}
-        self.splitted_group = {}
-        for group in self.plate_group.keys():  # First collect all xs and ys coordinates
+        self.group_layer_dict = OrderedDict()
+        self.splitted_group = OrderedDict()
+        for group in self.group.keys():  # First collect all xs and ys coordinates
             rects = []
             counter = 0
             xs = []
             ys = []
             self.splitted_group[group] = []
-            z = self.plate_group[group][0].z
+            z = self.group[group][0].z
             if self.layer_stack != None:
                 self.group_layer_dict[group] = self.layer_stack.id_by_z(z)
-            dz = self.plate_group[group][0].dz
-            n = self.plate_group[group][0].n
-            for plate in self.plate_group[group]:
+            dz = self.group[group][0].dz
+            n = self.group[group][0].n
+            for plate in self.group[group]:
                 trace = plate.rect
                 xs += [trace.left, trace.right]
                 ys += [trace.top, trace.bottom]
@@ -434,7 +452,7 @@ class EModule:
                     midx = left + (right - left) / 2
                     midy = bot + (top - bot) / 2
                     split = False
-                    for plate in self.plate_group[group]:
+                    for plate in self.group[group]:
                         trace = plate.rect
                         if trace.encloses(midx, midy):
                             split = True
@@ -459,7 +477,6 @@ class EModule:
                         # else:
                         #    splitted_group[group].append(cur_plate)
         self.group = self.splitted_group
-
 
 def test1():
     r1 = Rect(14, 10, 0, 10)
@@ -512,7 +529,7 @@ def test1():
 
     new_module = EModule(plate=[R1, R2, R3, R4, R5, R6, R7],
                          sheet=[S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13])
-    new_module.form_group()
+    new_module.form_group_split_rect()
     new_module.split_layer_group()
 
     fig = plt.figure(1)

@@ -26,18 +26,20 @@ class ElectricalMeasure(object):
 
 class CornerStitch_Emodel_API:
     # This is an API with NewLayout Engine
-    def __init__(self, comp_dict={}, layer_to_z={}, wire_conn={}):
+    def __init__(self, comp_dict={}, layer_to_z={}, wire_conn={},island_info=None):
         '''
 
         :param comp_dict: list of all components and routing objects
         :param layer_to_z: a simple layerstack info for thickness and elevation of each layer
         :param wire_conn: a simple table for bondwires setup
+        :param island_info: this is the raw hierarchy information each island. islname:[obj_name,obj]
         '''
         self.pins = None
         self.comp_dict = comp_dict
         self.layer_to_z = layer_to_z
         self.conn_dict = {}  # key: comp name, Val: list of connecition based on the connection table input
         self.wire_dict = wire_conn  # key: wire name, Val list of data such as wire radius,
+        self.island_info = island_info
         # wire distance, number of wires, start and stop position
         # and bondwire object
         self.module = None
@@ -46,6 +48,8 @@ class CornerStitch_Emodel_API:
         self.height = 0
         self.measure = []
         self.circuit = RL_circuit()
+
+        self.m_id = 0
 
     def form_connection_table(self,mode=None, dev_conn=None):
         '''
@@ -83,14 +87,18 @@ class CornerStitch_Emodel_API:
     def load_rs_model(self, mdl_file):
         self.rs_model = load_mdl(file=mdl_file)
 
+
+
     def init_layout(self, layout_data=None):
         '''
         Read part info and link them with part info, from an updaed layout, update the electrical network
         :return: updating self.e_sheets, self.e_plates
         '''
+
+
         # UPDATE ALL PLATES and SHEET FOR THE LAYOUT
-        #print "data"
-        #print layout_data
+        print "data"
+        print layout_data
         self.layout_data = layout_data.values()[0]
         self.width, self.height = layout_data.keys()[0]
         #self.width = round(self.width/1000.0, sig)
@@ -98,7 +106,7 @@ class CornerStitch_Emodel_API:
         self.e_plates = []  # list of electrical components
         self.e_sheets = []  # list of sheets for connector presentaion
         self.e_comps = []  # list of all components
-        self.net_to_sheet = {}  # quick look up table to find the sheet object based of the net_name
+        self.net_to_sheet = OrderedDict()  # quick look up table to find the sheet object based of the net_name
         # Update based on layout info
         for k in self.layout_data:
             data = self.layout_data[k]
@@ -108,8 +116,10 @@ class CornerStitch_Emodel_API:
 
                 new_rect = Rect(top=y + h, bottom=y, left=x, right=x + w)
                 p = E_plate(rect=new_rect, z=self.layer_to_z['T'][0], dz=self.layer_to_z['T'][1])
-                self.e_plates.append(p)
+
                 type = k[0]
+                if type == 'T':
+                    p.group_id=k
                 if type in ['B', 'D', 'L']:  # if this is bondwire pad or device or lead type.
                     # Below we need to link the pad info and update the sheet list
                     # Get the object
@@ -162,11 +172,20 @@ class CornerStitch_Emodel_API:
 
                             self.e_comps.append(
                                 EComp(sheet=dev_pins, conn=dev_conn_list, val=dev_para))  # Update the component
+                for isl in self.island_info:
+                    for data in self.island_info[isl]:
+                        if data[0]==k:
+                            p.group_id=isl
+                            break
+
+
+
+                self.e_plates.append(p)
 
         self.make_wire_table()
         # Update module object
         self.module = EModule(plate=self.e_plates, sheet=self.e_sheets, components=self.wires + self.e_comps)
-        self.module.form_group()
+        self.module.form_group_cs_flat()
         self.module.split_layer_group()
         self.hier = EHier(module=self.module)
         self.hier.form_hierachy()
@@ -176,13 +195,17 @@ class CornerStitch_Emodel_API:
         self.emesh.update_hier_edge_RL()
         #pr = cProfile.Profile()
         #pr.enable()
-        #fig = plt.figure(4)
-        #ax = Axes3D(fig)
-        #ax.set_xlim3d(0, 42)
-        #ax.set_ylim3d(0, 80)
-        #ax.set_zlim3d(0, 2)
-        #self.emesh.plot_3d(fig=fig, ax=ax, show_labels=True)
-        #plt.show()
+        fig = plt.figure(1)
+
+        ax = Axes3D(fig)
+        ax.set_xlim3d(0, 42)
+        ax.set_ylim3d(0, 80)
+        ax.set_zlim3d(0, 2)
+
+        self.emesh.plot_3d(fig=fig, ax=ax, show_labels=True)
+        fig.set_size_inches(18.5, 10.5)
+        plt.savefig('C:\Users\qmle\Desktop\New_Layout_Engine\Mesh\Mesh'+str(self.m_id)+'.png')
+        self.m_id+=1
         self.emesh.mutual_data_prepare(mode=0)
         self.emesh.update_mutual(mode=0)
         #pr.disable()

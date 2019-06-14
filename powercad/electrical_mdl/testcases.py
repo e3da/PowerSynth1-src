@@ -77,7 +77,7 @@ def ARL_module():
     sheets = [bw1, bw2, bw3, bw4, D1, D2, D3, D4, S1, S2, S3, S4,lead1,lead2]
     comps = [MOS1,MOS2,MOS3,MOS4,wire1,wire2,wire3,wire4]
     new_module = EModule(plate=traces ,sheet=sheets,components=comps)
-    new_module.form_group()
+    new_module.form_group_split_rect()
     new_module.split_layer_group()
 
     hier = EHier(module=new_module)
@@ -308,7 +308,7 @@ def test_simple_4sw_hb():
     new_module = EModule(plate=plates,
                          sheet=sheets, components=comps)
 
-    new_module.form_group()
+    new_module.form_group_split_rect()
     new_module.split_layer_group()
 
     hier = EHier(module=new_module)
@@ -429,7 +429,7 @@ def test_hier2():
         new_module = EModule(plate=[R1, R2, R3, R4, R5, R6, R7],
                              sheet=[S7, S8, S9], components=[Mos1, Mos2, Bw_S1, Bw_S2, Bw_G1, Bw_G2])
 
-        new_module.form_group()
+        new_module.form_group_split_rect()
         new_module.split_layer_group()
 
         hier = EHier(module=new_module)
@@ -533,7 +533,7 @@ def test_hier2():
         normI = Normalize(I_min, I_max)
         # fig = plt.figure(4)
         # ax = a3d.Axes3D(fig)
-        # plot_I_map_3D(norm=normI, fig=fig, ax=ax, cmap=emesh.c_map, G=emesh.graph)
+        plot_I_map_3D(norm=normI, fig=fig, ax=ax, cmap=emesh.c_map, G=emesh.graph)
 
 
         # fig = plt.figure(5)
@@ -599,7 +599,7 @@ def test_Ushape():
         rects = [R1, R2, R3]  # ,R4]
         P1, P2, P3 = [E_plate(rect=r, z=0, dz=0.2) for r in rects]
         new_module = EModule(plate=[P1, P2, P3])
-        new_module.form_group()
+        new_module.form_group_split_rect()
         new_module.split_layer_group()
         # fig = plt.figure(1)
         # ax = a3d.Axes3D(fig)
@@ -818,7 +818,7 @@ def test_single_trace_mesh():
         R4 = Rect(4, 0, 0, 20)
         P4 = E_plate(R4, 0, 0.2)
         new_module = EModule(plate=[P4])
-        new_module.form_group()
+        new_module.form_group_split_rect()
         new_module.split_layer_group()
         hier = EHier(module=new_module)
         hier.form_hierachy()
@@ -944,7 +944,7 @@ def test_3d_module():
     S6 = Sheet(rect=sh6, net_name='M2_D', type='point', n=(0, 0, 1), z=0.2)
 
     new_module = EModule(plate=[P1, P2, P3], sheet=[S1, S2, S3, S4, S5, S6])
-    new_module.form_group()
+    new_module.form_group_split_rect()
     new_module.split_layer_group()
     # Plot 3D
     fig = plt.figure(1)
@@ -1009,7 +1009,7 @@ def balance_study():
         plates.append(E_plate(r, z, dz))
 
     new_module = EModule(plate=plates, sheet=sheets)
-    new_module.form_group()
+    new_module.form_group_split_rect()
     new_module.split_layer_group()
     # Plot 3D
     fig = plt.figure(1)
@@ -1045,7 +1045,7 @@ def test_mutual():
         dz = 0.2
         plates.append(E_plate(r, z, dz))
     new_module = EModule(plate=plates)
-    new_module.form_group()
+    new_module.form_group_split_rect()
     new_module.split_layer_group()
     freq = [10.0, 21.544, 46.415, 100, 215.44, 464.15, 1000]
     for f in freq:
@@ -1109,7 +1109,7 @@ def test_layer_stack_mutual():
 
     # print plates
     new_module = EModule(plate=plates, layer_stack=es)
-    new_module.form_group()
+    new_module.form_group_split_rect()
     new_module.split_layer_group()
     # Plot 3D
     # fig = plt.figure(1)
@@ -1204,7 +1204,7 @@ def S_para_IWIPP_HSPICE_no_ground():
     plates = [E_plate(rect=r, z=0.235, dz=0.035) for r in rects]
 
     new_module = EModule(plate=plates)
-    new_module.form_group()
+    new_module.form_group_split_rect()
     new_module.split_layer_group()
     hier = EHier(module=new_module)
     hier.form_hierachy()
@@ -1264,7 +1264,7 @@ def S_para_IWIPP_HSPICE_PCB():
         # R4= Rect(13, -1, -1, 21)
         # plates.append(E_plate(rect=R4, z=0, dz=0.035))
         new_module = EModule(plate=plates)
-        new_module.form_group()
+        new_module.form_group_split_rect()
         new_module.split_layer_group()
         hier = EHier(module=new_module)
         hier.form_hierachy()
@@ -1413,7 +1413,7 @@ def S_para_IWIPP_HSPICE_wground():
         # R4= Rect(13, -1, -1, 21)
         # plates.append(E_plate(rect=R4, z=0, dz=0.035))
         new_module = EModule(plate=plates)
-        new_module.form_group()
+        new_module.form_group_split_rect()
         new_module.split_layer_group()
         hier = EHier(module=new_module)
         hier.form_hierachy()
@@ -1492,7 +1492,7 @@ def S_para_IWIPP():
     # R4= Rect(13, -1, -1, 21)
     # plates.append(E_plate(rect=R4, z=0, dz=0.035))
     new_module = EModule(plate=plates)
-    new_module.form_group()
+    new_module.form_group_split_rect()
     new_module.split_layer_group()
     hier = EHier(module=new_module)
     hier.form_hierachy()
@@ -1631,7 +1631,7 @@ def ECCE_layout():
         plot_rect3D(rect2ds=plates, ax=ax)
     # Set up a new problem
     new_module = EModule(plate=plates, sheet=sheets)
-    new_module.form_group()
+    new_module.form_group_split_rect()
     new_module.split_layer_group()
     hier = EHier(module=new_module)
     hier.form_hierachy()
@@ -1701,7 +1701,7 @@ def test_layer_stack_ushape():
         plates += [E_plate(rect=r, z=0, dz=0.2) for r in rects1]
         # print len(plates)
         new_module = EModule(plate=plates, layer_stack=es)
-        new_module.form_group()
+        new_module.form_group_split_rect()
         new_module.split_layer_group()
 
         hier = EHier(module=new_module)
@@ -1831,7 +1831,7 @@ def test_read_srcipt():
     src = Escript(dir)
     src.make_module()
     new_module =src.module
-    new_module.form_group()
+    new_module.form_group_split_rect()
     new_module.split_layer_group()
     hier = EHier(module=new_module)
     hier.form_hierachy()
