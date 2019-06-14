@@ -49,7 +49,6 @@ class new_engine_opt:
                 type = measure.measure
                 self.e_api.init_layout(layout_data=layout_data)
                 R, L = self.e_api.extract_RL(src=measure.source, sink=measure.sink)
-
                 if type == 0:  # LOOP RESISTANCE
                     result.append(R)  # resistance in mOhm
                 if type == 1:  # LOOP INDUCTANCE
