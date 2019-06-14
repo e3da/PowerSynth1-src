@@ -202,12 +202,21 @@ class cornerStitch_algorithms(object):
     collections of tiles or anything involving coordinates being passed in instead of a tile
     """
     __metaclass__ = ABCMeta
-    def __init__(self, stitchList, level):
+
+    def __init__(self, stitchList, level, max_x=None, max_y=None,boundaries=None):
         """
         northBoundary and eastBoundary should be integer values, the upper and right edges of the editable rectangle
         """
         self.stitchList = stitchList
         self.level=level
+        if self.level == 0:
+            self.northBoundary = tile(None, None, None, None, None, cell(0, max_y, "EMPTY"))
+            self.eastBoundary = tile(None, None, None, None, None, cell(max_x, 0, "EMPTY"))
+            self.southBoundary = tile(None, None, None, None, None, cell(0, -1000, "EMPTY"))
+            self.westBoundary = tile(None, None, None, None, None, cell(-1000, 0, "EMPTY"))
+            self.boundaries = [self.northBoundary, self.eastBoundary, self.westBoundary, self.southBoundary]
+        else:
+            self.boundaries = boundaries
 
     def merge(self, tile1, tile2):
         """
@@ -579,7 +588,7 @@ class Node(cornerStitch_algorithms):
 
 ##Node object for vertical corner stitched tree element
 class Vnode(Node):
-    def __init__(self, boundaries,stitchList,parent,id):
+    def __init__(self, boundaries, stitchList, parent, id):
 
         self.stitchList=stitchList
         self.boundaries=boundaries
