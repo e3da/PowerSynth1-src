@@ -11,6 +11,7 @@ import os
 from powercad.electrical_mdl.cornerstitch_API import ElectricalMeasure
 from powercad.thermal.cornerstitch_API import ThermalMeasure
 import matplotlib.pyplot as plt
+from powercad.corner_stitch.CornerStitch import Rectangle
 class new_engine_opt:
     def __init__(self, engine, W, H, seed, level, method=None,db=None, apis={}, measures=[]):
         self.engine = engine
@@ -39,10 +40,35 @@ class new_engine_opt:
         # List of measure object
         self.measures = measures
 
+    def convert_layout_data(self,layout_data=None):
+        #print "HERE"
+        layout_info={}
+        converted_data={}
+        for k,v in layout_data.items():
+            #print k,v
+            key=k
+            for i in range(len(v)):
+                for k1,v1 in v[i].items():
+                    print k1,v1[0],v1[1]
+                    if v1[1]==None:
+                        continue
+                    else:
+                        layout_info[v1[0][-1]]=[]
+
+                        for i in range(len(v1[1])):
+                            #d=v1[1][i][1:6]
+                            #r=Rectangle(x=d[0],y=d[1],width=d[2],height=d[3])
+                            layout_info[v1[0][-1]].append(v1[1][i])
+                        data=v1[0][1:6]
+                        layout_info[k1]=[Rectangle(x=data[0],y=data[1],width=data[2],height=data[3])]
+        converted_data[key]=layout_info
+        print converted_data
+        return converted_data
 
     def eval_layout(self, layout_data=None):
+        layout_data=self.convert_layout_data(layout_data)
         result = []
-
+        #print "DATA",layout_data
         for measure in self.measures:
             # TODO: APPLY LAYOUT INFO INTO ELECTRICAL MODEL
             if isinstance(measure, ElectricalMeasure):

@@ -113,6 +113,7 @@ class ScriptInputMethod():
                 part2=i
                 break
 
+        Input=[]
         for i in range(part2+2,len(lines)):
             line=lines[i]
             L = line.strip('\r\n')
@@ -120,13 +121,35 @@ class ScriptInputMethod():
             d_out = re.sub("\s", ",", d_out)
             line = d_out.rstrip(',')
             line = line.split(',')
-            self.layout_info.append(line)
+            #self.layout_info.append(line)
+            Input.append(line)
 
-        #for i in self.layout_info:
-            #print len(i),i
+        self.layout_info.append(Input[0])
+        Modified_input = []
+        bondwires = []
+        for i in range(1,len(Input)):
+            inp = Input[i]
+            if inp[0][0] == 'C':
+                bondwires.append(inp)
+            else:
+                if i < len(Input) - 1:
+                    inp2 = Input[i + 1]
+
+                    for c in inp2:
+                        if c == '+' or c == '-':
+                            inp.append(c)
+                else:
+                    inp.append('+')
+                self.layout_info.append(inp)
+
+        for i in self.layout_info:
+            print len(i),i
+
+
 
 
         return self.Definition,self.layout_info
+
 
     def gather_part_route_info(self):
 
@@ -151,20 +174,114 @@ class ScriptInputMethod():
 
         self.all_route_info = {}
         for j in range(1, len(layout_info)):
-            if layout_info[j][1][0] == 'T':
-                key = 'trace'
-                self.all_route_info.setdefault(key, [])
-            elif layout_info[j][1][0] == 'B':
-                key = 'bonding wire pad'
-                self.all_route_info.setdefault(key, [])
-            elif layout_info[j][1][0] == 'V':
-                key = 'via'
-                self.all_route_info.setdefault(key, [])
+            for k in range(len(layout_info[j])):
+                if layout_info[j][k][0] == 'T':
+                    key = 'trace'
+                    self.all_route_info.setdefault(key, [])
+                elif layout_info[j][k][0] == 'B':
+                    key = 'bonding wire pad'
+                    self.all_route_info.setdefault(key, [])
+                elif layout_info[j][k][0] == 'V':
+                    key = 'via'
+                    self.all_route_info.setdefault(key, [])
 
 
         for j in range (1,len(layout_info)):
 
             #updates routing path components
+
+            for k in range(len(layout_info[j])):
+                if layout_info[j][k][0]=='T' and layout_info[j][k+1]=='power':
+                    element = RoutingPath(name='trace', type=0, layout_component_id=layout_info[j][k])
+                    self.all_route_info['trace'].append(element)
+                elif layout_info[j][k][0]=='T' and layout_info[j][k+1]=='signal':
+                    element = RoutingPath(name='trace', type=1, layout_component_id=layout_info[j][k])
+                    self.all_route_info['trace'].append(element)
+                elif layout_info[j][k][0]=='B' and layout_info[j][k+1]=='signal':
+                    element = RoutingPath(name='bonding wire pad', type=1, layout_component_id=layout_info[j][k])
+                    self.all_route_info['bonding wire pad'].append(element)
+                elif layout_info[j][k][0]=='B' and layout_info[j][k+1]=='power':
+                    element = RoutingPath(name='bonding wire pad', type=0, layout_component_id=layout_info[j][k])
+                    self.all_route_info['bonding wire pad'].append(element)
+
+                #parts info gathering
+                elif layout_info[j][k][0] == 'D' and layout_info[j][k+1] in self.all_components_list:
+                    rotate=False
+                    angle=None
+                    for m in range(len(layout_info[j])):
+                        if layout_info[j][m][0]=='R':
+                            rotate=True
+
+                            angle=layout_info[j][m].strip('R')
+                            break
+                    if rotate==False:
+                        element = Part(name=layout_info[j][k+1], info_file=self.info_files[layout_info[j][k+1]],layout_component_id=layout_info[j][k])
+                        element.load_part()
+                        self.all_parts_info[layout_info[j][k+1]].append(element)
+
+                    else:
+                        element = Part(info_file=self.info_files[layout_info[j][k + 1]],layout_component_id=layout_info[j][k])
+                        element.load_part()
+                        # print element.footprint
+                        if angle == '90':
+                            name = layout_info[j][k + 1] + '_' + '90'
+                            element.name = name
+                            element.rotate_angle = 1
+                            element.rotate_90()
+                        elif angle == '180':
+                            name = layout_info[j][k + 1] + '_' + '180'
+                            element.name = name
+                            element.rotate_angle = 2
+                            element.rotate_180()
+                        elif angle == '270':
+                            name = layout_info[j][k + 1] + '_' + '270'
+                            element.name = name
+                            element.rotate_angle = 3
+                            element.rotate_270()
+                        # print element.footprint
+                        self.all_parts_info[layout_info[j][k + 1]].append(element)
+
+                elif layout_info[j][k][0] == 'L' and (layout_info[j][k+1] == 'power_lead' or layout_info[j][k+1]=='signal_lead') and layout_info[j][k+1] in self.all_components_list:
+                    rotate = False
+                    angle = None
+                    for m in range(len(layout_info[j])):
+                        if layout_info[j][m][0] == 'R':
+                            rotate = True
+                            angle = layout_info[j][m].strip('R')
+                            break
+
+                    if rotate==False:
+                        element = Part(name=layout_info[j][k + 1], info_file=self.info_files[layout_info[j][k + 1]],layout_component_id=layout_info[j][k])
+                        element.load_part()
+                        self.all_parts_info[layout_info[j][k + 1]].append(element)
+
+                    else:
+                        element = Part(info_file=self.info_files[layout_info[j][k + 1]],layout_component_id=layout_info[j][k])
+                        element.load_part()
+                        # print element.footprint
+                        if angle == '90':
+                            name = layout_info[j][k + 1] + '_' + '90'
+                            element.name = name
+                            element.rotate_angle = 1
+                            element.rotate_90()
+                        elif angle == '180':
+                            name = layout_info[j][k + 1] + '_' + '180'
+                            element.name = name
+                            element.rotate_angle = 2
+                            element.rotate_180()
+                        elif angle == '270':
+                            name = layout_info[j][k + 1] + '_' + '270'
+                            element.name = name
+                            element.rotate_angle = 3
+                            element.rotate_270()
+                        # print element.footprint
+                        self.all_parts_info[layout_info[j][k + 1]].append(element)
+
+
+
+
+            '''
+            #Nonhierarchical input       
             if layout_info[j][1][0]=='T' and layout_info[j][2]=='power':
                 element=RoutingPath(name='trace',type=0,layout_component_id=layout_info[j][1])
                 self.all_route_info['trace'].append(element)
@@ -260,7 +377,7 @@ class ScriptInputMethod():
                 self.all_route_info.setdefault(key,[])
                 self.all_route_info[key].append(element)
 
-
+            '''
 
 
 
@@ -279,9 +396,12 @@ class ScriptInputMethod():
 
 
 
-        #print self.all_parts_info, self.info_files
+        #print self.all_parts_info
+        #print self.info_files
         #print self.all_route_info
         #print "map",self.all_components_type_mapped_dict
+
+
 
 
 
@@ -314,25 +434,29 @@ class ScriptInputMethod():
         for j in range(1, len(layout_info)):
             for k, v in self.all_parts_info.items():
                 for element in v:
-                    if element.layout_component_id == layout_info[j][1]:
-                        if element not in self.all_components:
-                            self.all_components.append(element)
-                        if element.name not in all_component_type_names:
-                            all_component_type_names.append(element.name)
+                    for m in range(len(layout_info[j])):
+                        if element.layout_component_id == layout_info[j][m]:
+
+                            if element not in self.all_components:
+                                self.all_components.append(element)
+                            if element.name not in all_component_type_names:
+                                all_component_type_names.append(element.name)
+
+        for j in range(1, len(layout_info)):
             for k, v in self.all_route_info.items():
                 for element in v:
-
-                    if element.layout_component_id == layout_info[j][1]:
-                        if element not in self.all_components:
-                            self.all_components.append(element)
-                        if element.type == 0 and element.name == 'trace':
-                            type_name = 'power_trace'
-                        elif element.type == 1 and element.name == 'trace':
-                            type_name = 'signal_trace'
-                        elif element.name=='bonding wire pad':
-                            type_name= 'bonding wire pad'
-                    if type_name not in all_component_type_names:
-                        all_component_type_names.append(type_name)
+                    for m in range(len(layout_info[j])):
+                        if element.layout_component_id == layout_info[j][m]:
+                            if element not in self.all_components:
+                                self.all_components.append(element)
+                            if element.type == 0 and element.name == 'trace':
+                                type_name = 'power_trace'
+                            elif element.type == 1 and element.name == 'trace':
+                                type_name = 'signal_trace'
+                            elif element.name=='bonding wire pad':
+                                type_name= 'bonding wire pad'
+                            if type_name not in all_component_type_names:
+                                all_component_type_names.append(type_name)
 
 
         #print all_component_type_names #['EMPTY', 'power_trace', 'signal_trace', 'MOS_90', 'MOS', 'power_lead', 'signal_lead']
@@ -354,45 +478,74 @@ class ScriptInputMethod():
                 #print comp.cs_type
 
 
-
+        hier_input_info={}
         for j in range(1, len(layout_info)):
-            for k, v in self.all_parts_info.items():
-                for element in v:
-                    if element.layout_component_id == layout_info[j][1]:
-                        type = self.component_to_cs_type[element.name]
-                        x = float(layout_info[j][3])
-                        y = float(layout_info[j][4])
-                        width = round(element.footprint[0])
-                        height = round(element.footprint[1])
-                        name = layout_info[j][1]
-                        Schar = '/'
-                        Echar = '/'
-                        rect_info = [type, x, y, width, height, name, Schar, Echar]
-                        self.cs_info.append(rect_info)
+            hier_level = 0
+            for m in range(len(layout_info[j])):
+                if layout_info[j][m] == '.':
+                    hier_level += 1
+                    continue
+                else:
+                    start=m
+                    break
 
-            for k, v in self.all_route_info.items():
-                for element in v:
-                    if element.layout_component_id == layout_info[j][1]:
-                        if element.type == 0 and element.name == 'trace':
-                            type_name = 'power_trace'
-                        elif element.type == 1 and element.name == 'trace':
-                            type_name = 'signal_trace'
+            hier_input_info.setdefault(hier_level,[])
+            hier_input_info[hier_level].append(layout_info[j][start:])
+
+        #print hier_input_info
+        rects_info=[]
+        for k1,layout_data in hier_input_info.items():
+
+            for j in range(len(layout_data)):
+                for k, v in self.all_parts_info.items():
+                    for element in v:
+                        if element.layout_component_id == layout_data[j][1]:
+                            type = self.component_to_cs_type[element.name]
+                            x = float(layout_data[j][3])
+                            y = float(layout_data[j][4])
+                            width = round(element.footprint[0])
+                            height = round(element.footprint[1])
+                            name = layout_data[j][1]
+                            Schar = layout_data[j][0]
+                            Echar = layout_data[j][-1]
+                            rect_info = [type, x, y, width, height, name, Schar, Echar,k1] #k1=hierarchy level
+                            rects_info.append(rect_info)
+
+                for k, v in self.all_route_info.items():
+                    for element in v:
+                        if element.layout_component_id == layout_data[j][1]:
+                            if element.type == 0 and element.name == 'trace':
+                                type_name = 'power_trace'
+                            elif element.type == 1 and element.name == 'trace':
+                                type_name = 'signal_trace'
+                            else:
+                                type_name=element.name
+                            type = self.component_to_cs_type[type_name]
+                            x = float(layout_data[j][3])
+                            y = float(layout_data[j][4])
+                            width = float(layout_data[j][5])
+                            height = float(layout_data[j][6])
+                            name = layout_data[j][1]
+                            Schar = layout_data[j][0]
+                            Echar = layout_data[j][-1]
+                            rect_info = [type, x, y, width, height, name, Schar, Echar,k1] #k1=hierarchy level
+                            rects_info.append(rect_info)
                         else:
-                            type_name=element.name
-                        type = self.component_to_cs_type[type_name]
-                        x = float(layout_info[j][3])
-                        y = float(layout_info[j][4])
-                        width = float(layout_info[j][5])
-                        height = float(layout_info[j][6])
-                        name = layout_info[j][1]
-                        Schar = '/'
-                        Echar = '/'
-                        rect_info = [type, x, y, width, height, name, Schar, Echar]
-                        self.cs_info.append(rect_info)
-                    else:
-                        continue
+                            continue
+
+
+        self.cs_info=[0 for i in range(len(rects_info))]
+        layout_info=layout_info[1:]
+        for i in range(len(layout_info)):
+            for j in range(len(rects_info)):
+                if rects_info[j][5] in layout_info[i]:
+                    self.cs_info[i]=rects_info[j]
+
+
 
         print self.cs_info
+
+
 
         return self.size,self.cs_info,self.component_to_cs_type,self.all_components
 
@@ -564,7 +717,8 @@ class ScriptInputMethod():
             name = rect[5]
             Schar = rect[6]
             Echar = rect[7]
-            input_rects.append(Rectangle(type, x, y, width, height, name, Schar=Schar, Echar=Echar))
+            hier_level=rect[8]
+            input_rects.append(Rectangle(type, x, y, width, height, name, Schar=Schar, Echar=Echar,hier_level=hier_level))
 
         return input_rects
 

@@ -12,6 +12,7 @@ class RoutingPath():
         self.name = name
         self.type = type
         self.layout_component_id = layout_component_id
+        self.parent_component_id=None #parent component layout id
 
     def printRoutingPath(self):
 

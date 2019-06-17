@@ -91,6 +91,7 @@ class Part:
         self.cs_type=None # corner stitch type (Type_1,Type_2...)
         self.rotate_angle= 0 #0:0 degree, 1:90 degree, 2:180 degree, 3:270 degree
         self.thermal_cond =0 # thermal conductivity for thermal evaluation # TODO: REPLACE WITH MATERIAL
+        self.parent_component_id=None # in hierarchy parent component layout id
     def load_part(self):
         # Update part info from file
         all_parasitic =[]

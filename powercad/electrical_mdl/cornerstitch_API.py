@@ -104,11 +104,12 @@ class CornerStitch_Emodel_API:
         self.e_comps = []  # list of all components
         self.net_to_sheet = {}  # quick look up table to find the sheet object based of the net_name
         # Update based on layout info
+        #print "inside",self.layout_data
         for k in self.layout_data:
             data = self.layout_data[k]
+
             for rect in data:
-                x, y, w, h = [rect.x, rect.y, rect.width,
-                              rect.height]  # convert from integer to float
+                x, y, w, h = [rect.x, rect.y, rect.width,rect.height]  # convert from integer to float
 
                 new_rect = Rect(top=y + h, bottom=y, left=x, right=x + w)
                 p = E_plate(rect=new_rect, z=self.layer_to_z['T'][0], dz=self.layer_to_z['T'][1])
@@ -180,13 +181,20 @@ class CornerStitch_Emodel_API:
         self.emesh.update_hier_edge_RL()
         # pr = cProfile.Profile()
         # pr.enable()
-        # fig = plt.figure(4)
-        # ax = Axes3D(fig)
-        # ax.set_xlim3d(0, 42)
-        # ax.set_ylim3d(0, 80)
-        # ax.set_zlim3d(0, 2)
-        # self.emesh.plot_3d(fig=fig, ax=ax, show_labels=True)
-        # plt.show()
+
+        fig = plt.figure(4)
+        ax = Axes3D(fig)
+        ax.set_xlim3d(0, 42)
+        ax.set_ylim3d(0, 80)
+        ax.set_zlim3d(0, 2)
+        self.emesh.plot_3d(fig=fig, ax=ax, show_labels=True)
+        plt.show()
+
+
+        
+        
+
+
         self.emesh.mutual_data_prepare(mode=0)
         self.emesh.update_mutual(mode=0)
         # pr.disable()
