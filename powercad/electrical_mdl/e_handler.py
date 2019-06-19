@@ -15,20 +15,19 @@ class E_Rect(Rect):
         self.East = []
         self.West = []
 
+def generate_mesh_matrix_1(mesh_graph,result):
+    '''
+    for now based on the old graph structure to form mesh
+    Args:
+        mesh_graph: networkx mesh structure
+        result: dictionary of voltage and current result, Only current result is needed
+    Returns:
+        Return a Nx3 matrix, for N is number of edges in the loop, first collumn determine the group, second collumn for the sign
 
-
-
-
-
-
-
-
-
-
-def generate_mesh_matrix(mesh_graph,result):
+    '''
     # Make M:
     N = len(mesh_graph.edges) # Number of mesh elements
-    col =2 # loop_id, sign
+    col =3 # loop_id, sign, edge_name
     M = np.zeros([N,col],int)
     e_name_to_id={}
     # Get the current value from the mesh:

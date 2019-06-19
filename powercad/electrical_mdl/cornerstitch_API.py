@@ -185,36 +185,39 @@ class CornerStitch_Emodel_API:
 
         self.make_wire_table()
         # Update module object
+        print "start setup"
+        start = time.time()
         self.module = EModule(plate=self.e_plates, sheet=self.e_sheets, components=self.wires + self.e_comps)
         self.module.form_group_cs_flat()
         self.module.split_layer_group()
+
         self.hier = EHier(module=self.module)
         self.hier.form_hierachy()
+        pr = cProfile.Profile()
+        pr.enable()
         self.emesh = EMesh(hier_E=self.hier, freq=self.freq, mdl=self.rs_model)
         self.emesh.mesh_grid_hier(corner_stitch=True)
+        pr.disable()
+        pr.create_stats()
+        file = open('C:\Users\qmle\Desktop\New_Layout_Engine\New_design_flow\mystats' + str(self.m_id) + '.txt', 'w')
+        stats = pstats.Stats(pr, stream=file)
+        stats.sort_stats('cumulative')
+        stats.print_stats(10)
+        start = time.time()
         self.emesh.update_trace_RL_val()
         self.emesh.update_hier_edge_RL()
-        #pr = cProfile.Profile()
-        #pr.enable()
         #fig = plt.figure(1)
-
         #ax = Axes3D(fig)
         #ax.set_xlim3d(0, 42)
         #ax.set_ylim3d(0, 80)
         #ax.set_zlim3d(0, 2)
-
         #self.emesh.plot_3d(fig=fig, ax=ax, show_labels=True)
         #fig.set_size_inches(18.5, 10.5)
         #plt.savefig('C:\Users\qmle\Desktop\New_Layout_Engine\Mesh\Mesh'+str(self.m_id)+'.png')
         self.m_id+=1
         self.emesh.mutual_data_prepare(mode=0)
         self.emesh.update_mutual(mode=0)
-        #pr.disable()
-        #pr.create_stats()
-        #file = open('C:\Users\qmle\Desktop\New_Layout_Engine\New_design_flow\mystats.txt', 'w')
-        #stats = pstats.Stats(pr, stream=file)
-        #stats.sort_stats('time')
-        #stats.print_stats()
+
 
     def make_wire_table(self):
         self.wires = []
@@ -299,9 +302,7 @@ class CornerStitch_Emodel_API:
         R = abs(np.real(imp) * 1e3)
         L = abs(np.imag(imp)) * 1e9 / (2 * np.pi * self.circuit.freq)
         self.hier.tree.__del__()
-        del self.circuit
         self.emesh.graph.clear()
         self.emesh.m_graph.clear()
-        gc.collect()
-        #print R, L
-        return R[0], L[0]
+        print R, L
+        return R, L
