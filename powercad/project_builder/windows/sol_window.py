@@ -82,7 +82,7 @@ class SolutionWindow(QtGui.QWidget):
         elif selected== 'Solidworks':
             self.export_solidworks()
         elif selected == 'Electrical netlist ':
-            self.export_spice_parasitics(self.sym_layout)
+            self.export_spice_parasitics()
         elif selected == 'Thermal netlist':
             self.export_spice_thermal()
         elif selected == 'FastHenry':
@@ -156,7 +156,7 @@ class SolutionWindow(QtGui.QWidget):
                 QtGui.QMessageBox.warning(None, "SolidWorks Script", "Failed to export vb script! Check log/console.")
                 print traceback.format_exc()
 
-    def export_spice_parasitics(self,sym_layout):
+    def export_spice_parasitics(self):
         fn = QtGui.QFileDialog.getSaveFileName(self,dir=self.default_save_dir, options=QtGui.QFileDialog.ShowDirsOnly)
         outname = fn[0]
 
@@ -166,8 +166,9 @@ class SolutionWindow(QtGui.QWidget):
                 #spice_netlist_graph = Module_SPICE_netlist_graph_v2(os.path.basename(outname), self.sym_layout, self.solution.index, template_graph=None)
                 #spice_netlist_graph.write_SPICE_subcircuit(os.path.dirname(outname))
 
+                self.sym_layout.gen_solution_layout(self.solution.index)
                 spice_netlist=Circuit()
-                spice_netlist._graph_read(sym_layout.lumped_graph)
+                spice_netlist._graph_read(self.sym_layout.lumped_graph)
                 ads_net = Netlist_export_ADS(df=spice_netlist.df_circuit_info, pm=spice_netlist.portmap)
                 ads_net.export_ads2(outname)
                 QtGui.QMessageBox.about(None, "SPICE Electrical Parasitics Netlist", "Export successful.")

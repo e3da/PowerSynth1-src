@@ -34,7 +34,9 @@ from powercad.sol_browser.solution_lib import SolutionLibrary
 from powercad.sym_layout.plot import plot_layout
 from powercad.electro_thermal.ElectroThermal_toolbox import ET_analysis
 from powercad.Spice_handler.spice_export.thermal_netlist_graph import Module_Full_Thermal_Netlist_Graph
-from powercad.export.py_csv import py_csv 
+from powercad.export.py_csv import py_csv
+
+import csv
 
 class GrapheneWindow(QtGui.QMainWindow):
     def __init__(self, parent):
@@ -445,6 +447,11 @@ class GrapheneWindow(QtGui.QMainWindow):
         if tgt_file[0]!="":
             # send data, file name, and directory to py_csv 
             py_csv(self.solution_library.measure_data, self.solution_library.measure_names_units, tgt_file[0])
+            fname = tgt_file[0]
+            thermal_time_fname = fname[:-4] + "_thermal_model_time.csv"
+            with open(thermal_time_fname, "wb") as myfile:
+                wr = csv.writer(myfile)
+                wr.writerow(self.sym_layout.thermal_timer)
         else: # if name is blank or user clicks 'cancel'
             pass
         

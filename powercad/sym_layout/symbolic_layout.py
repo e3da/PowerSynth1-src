@@ -391,6 +391,8 @@ class SymbolicLayout(object):
         self.opt_to_sym_index = None
         self.opt_dv_list = None
         self.opt_progress_fn = None # function to control optimization progress bar in GUI
+        # Model Evaluation Timers
+        # self.thermal_timer = [['Model Name', 'Eval Count', 'Time']]
 
         # Types
         self.SymLine = SymLine
@@ -2232,6 +2234,7 @@ class SymbolicLayout(object):
         self.generate_layout()
         ret = []
         measurement_list = []
+
         drc = DesignRuleCheck(self)
         drc_count = drc.count_drc_errors(True)
         #fig, ax = plt.subplots()
@@ -2309,8 +2312,8 @@ class SymbolicLayout(object):
                     ret.append(val)
                     measurement_list.append(measure_type)
 
-
                 elif isinstance(measure, ThermalMeasure):
+
                     type = measure.mdl
                     matlab_engine = None
                     if type == 'TFSM_MODEL':
@@ -2322,12 +2325,14 @@ class SymbolicLayout(object):
                     elif type == 'ParaPowerThermal':
                         type_id = 5
                         matlab_engine = measure.matlab_engine
-                    # start = time.time()
+                    start = time.time()
                     val = self._thermal_analysis(measure, type_id, matlab_engine=matlab_engine)
-                    # stop = time.time()
+                    stop = time.time()
                     ret.append(val)
                     measurement_list.append(type)
                     # ret.append(stop-start)
+                    self.thermal_timer.append([type, self.eval_count, stop-start])
+
         # Update progress bar and eval count
         self.eval_count += 1
         print "Running... Current number of evaluations:", self.eval_count

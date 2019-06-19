@@ -66,7 +66,7 @@ class ModuleDesign(object):
 
         # Leads
         self.leads = []
-        self.lead_id=[]
+        self.lead_id = []
         for lead in layout.leads:
             cpos = lead.center_position
             # Translate points over by ledge_width (reference to substrate corner)

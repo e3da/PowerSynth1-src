@@ -331,10 +331,11 @@ class ParaPower(object):
         # self.eng.workspace['test_md'] = self.eng.ImportPSModuleDesign(json.dumps(self.to_dict()), nargout=1)
         # self.eng.save('test_md_file.mat', 'test_md')
         # return temperature + 273.5
+        self.save_parapower()
         return temperature
 
     def save_parapower(self):
-        fname = self.path + 'Test_MD_JSON.json'
+        fname = self.path + 'PowerSynth_MD_JSON.json'
         with open(fname, 'w') as outfile:
             json.dump(self.to_dict(), outfile)
 
@@ -343,6 +344,128 @@ def init_matlab(path):
     eng = matlab.engine.start_matlab()
     eng.cd(path)
     return eng
+
+
+import numpy as np
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import axes3d
+import mpl_toolkits.mplot3d.art3d as art3d
+from matplotlib.patches import Rectangle
+import matplotlib.cm as cm
+from matplotlib.pylab import *
+
+
+class Coordinates(object):
+    def __init__(self, lower_left_coordinate=[0., 0., 0.], width_length_height=[1., 1., 1.]):
+        self.location = lower_left_coordinate
+        self.dimensions = width_length_height
+
+        if type(self.location) is not np.ndarray:
+            self.location = np.array(self.location)
+
+        if type(self.dimensions) is not np.ndarray:
+            self.dimensions = np.array(self.dimensions)
+
+        self.location = self.location * 1e3
+        self.dimensions = self.dimensions * 1e3
+        self.x = self.location[0]
+        self.y = self.location[1]
+        self.z = self.location[2]
+
+        self.width = self.dimensions[0]
+        self.length = self.dimensions[1]
+        self.height = width_length_height[2]
+
+        self.center = self.location + (self.dimensions/2.0)
+        self.center_x = self.center[0]
+        self.center_y = self.center[1]
+        self.center_z = self.center[2]
+
+        self.start = self.location
+        self.start_x = self.x
+        self.start_y = self.y
+        self.start_z = self.z
+
+        self.end = self.location + self.dimensions
+        self.end_x = self.end[0]
+        self.end_y = self.end[1]
+        self.end_z = self.end[2]
+
+
+class Cell(Coordinates):
+    def __init__(self, index, xyz, wlh, material_name=None):
+        Coordinates.__init__(self, lower_left_coordinate=xyz, width_length_height=wlh)
+        self.index = index
+        self.material_name = material_name
+        self.dx = self.dimensions[0]
+        self.dy = self.dimensions[1]
+        self.dz = self.dimensions[2]
+        self.neighbors = {'left': None, 'right': None, 'front': None, 'back': None, 'bottom': None, 'top': None}
+
+        self.directions = {'left': np.array([-1, 0, 0]), 'right': np.array([1, 0, 0]),
+                           'front': np.array([0, -1, 0]), 'back': np.array([0, 1, 0]),
+                           'bottom': np.array([0, 0, -1]), 'top': np.array([0, 0, 1])}
+
+        # Convenience variables
+        self.sides = ['left', 'right', 'front', 'back', 'bottom', 'top']
+        self.opposite_sides = {'left': 'right', 'right': 'left',
+                               'front': 'back', 'back': 'front',
+                               'bottom': 'top', 'top': 'bottom'}
+
+        # Converting mm to meters and determining lengths, areas
+        self.d_xyz = np.array([self.dx, self.dy, self.dz]) #* 1e-3
+        # self.area = self.face_areas()
+        # self.d = self.cell_half_length()
+        # Boundary conditions
+        self.h = {'left': None, 'right': None, 'front': None, 'back': None, 'bottom': None, 'top': None}
+        self.partial_rth = None
+        self.conductivity = None
+        self.Q = 0
+        self.Ta = None
+        self.A = None
+        self.B = None
+        self.T = None
+
+    def draw_cell(self, ax, edgecolor='gray', cmap=None):
+        if self.T == 0.:
+            return
+        # color = self.material.color
+        if cmap:
+            color = cmap
+        # alpha = self.material.alpha
+        alpha = 1
+        x = self.start_x
+        y = self.start_y
+        z = self.start_z
+        width = self.width
+        length = self.length
+        height = self.height
+        lw = '0.1'
+
+        left = Rectangle((y, z), length, height, facecolor=color, alpha=alpha, edgecolor=edgecolor, linewidth=lw)
+        ax.add_patch(left)
+        art3d.pathpatch_2d_to_3d(left, z=x, zdir='x')
+
+        right = Rectangle((y, z), length, height, facecolor=color, alpha=alpha, edgecolor=edgecolor, linewidth=lw)
+        ax.add_patch(right)
+        art3d.pathpatch_2d_to_3d(right, z=x + width, zdir='x')
+
+        front = Rectangle((x, z), width, height, facecolor=color, alpha=alpha, edgecolor=edgecolor, linewidth=lw)
+        ax.add_patch(front)
+        art3d.pathpatch_2d_to_3d(front, z=y, zdir='y')
+
+        back = Rectangle((x, z), width, height, facecolor=color, alpha=alpha, edgecolor=edgecolor, linewidth=lw)
+        ax.add_patch(back)
+        art3d.pathpatch_2d_to_3d(back, z=y + length, zdir='y')
+
+        bottom = Rectangle((x, y), width, length, facecolor=color, alpha=alpha, edgecolor=edgecolor, linewidth=lw)
+        ax.add_patch(bottom)
+        art3d.pathpatch_2d_to_3d(bottom, z=z, zdir='z')
+
+        top = Rectangle((x, y), width, length, facecolor=color, alpha=alpha, edgecolor=edgecolor, linewidth=lw)
+        ax.add_patch(top)
+        art3d.pathpatch_2d_to_3d(top, z=z + height, zdir='z')
+
 
 
 '''
@@ -359,13 +482,81 @@ class MD_General_v1(object):
 
 '''
 
+
+def plot_data_convert(data):
+    out = {}
+    for name, entry in data.iteritems():
+        if type(entry) == matlab.double:
+            out[name] = np.array(entry)
+        else:
+            out[name] = entry
+    return out
+
+
+def make_mesh(plot_data):
+    origin = plot_data['origin'][0]
+    dx = plot_data['x'][0]
+    dy = plot_data['y'][0]
+    dz = plot_data['z'][0]
+
+    x = np.concatenate([[0], np.cumsum(dx)[:-1]])
+    y = np.concatenate([[0], np.cumsum(dy)[:-1]])
+    z = np.concatenate([[0], np.cumsum(dz)[:-1]])
+
+    temp = plot_data['temp'][:, :, :, 1]
+    cell_list = []
+    index = 0
+    print len(x), len(dx)
+    for i in range(len(x)):
+        for j in range(len(y)):
+            for k in range(len(z)):
+                temp_cell = Cell(index, [x[i], y[j], z[k]], [dx[i], dy[j], dz[k]])
+                temp_cell.T = temp[i, j, k]
+                cell_list.append(temp_cell)
+                index += 1
+
+    return [x, y, z], [dx, dy, dz], cell_list
+
+
+def plot_parapower(plot_data):
+    pdc = plot_data_convert(plot_data)
+    xyz, wlh, cells = make_mesh(pdc)
+    # min_val = np.amin(pdc['temp'][:, :, :, 1])
+    min_val = 345.
+    max_val = np.amax(pdc['temp'][:, :, :, 1])
+
+    fig = plt.figure()
+    ax = fig.gca(projection='3d')
+    ax.set_xlabel('X (mm)')
+    ax.set_ylabel('Y (mm)')
+    ax.set_zlabel('Z (mm)')
+
+    my_cmap = cm.get_cmap('jet')  # or any other one
+    norm = matplotlib.colors.Normalize(min_val, max_val)  # the color maps work for [0, 1]
+    for cell in cells:
+        color_i = my_cmap(norm(cell.T))
+        cell.draw_cell(ax, cmap=color_i)
+
+    cmmapable = cm.ScalarMappable(norm, my_cmap)
+    cmmapable.set_array(range(int(min_val), int(max_val)))
+    plt.colorbar(cmmapable)
+    ax.set_xlim(-5, 65)
+    ax.set_ylim(-5, 65)
+    ax.set_zlim(-1, 10)
+    ax.view_init(elev=90, azim=90)
+    plt.show()
+
+'''
+matlab_path = 'C:/Users/tmevans/Documents/MATLAB/ParaPower/ARL_ParaPower/ARL_ParaPower'
+eng = init_matlab(matlab_path)
+plotdata = eng.PreparePlotData()
+pdc = plot_data_convert(plotdata)
+xyz, wlh, cells = make_mesh(pdc)
+
+plot_parapower(plotdata)
+'''
 if __name__ == '__main__':
     pass
 
-    # import simplejson as json
 
-    '''
-    class MDEncoder(json.JSONEncoder):
-        def default(self, o):
-            return o.__dict__
-    '''
+
