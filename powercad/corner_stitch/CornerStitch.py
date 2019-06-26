@@ -719,8 +719,8 @@ class Vnode(Node):
         x2 = foo[2]
         y2 = foo[3]
         RESP=0 # flag to check empty area
-        if self.areaSearch(x1, y1, x2, y2,type):#check to ensure that the area is empty
-            RESP=1
+        #if self.areaSearch(x1, y1, x2, y2,type):#check to ensure that the area is empty
+            #RESP=1
 
         # finding top left and bottom right coordinate containing tiles of the new tile
         topLeft = self.findPoint(x1, y1, self.stitchList[0])
@@ -1469,9 +1469,9 @@ class Hnode(Node):
         x2 = foo[2]
         y2 = foo[3]
         RESP = 0
-        if self.areaSearch(x1, y1, x2, y2,type): #check to ensure that the area is empty
+        #if self.areaSearch(x1, y1, x2, y2,type): #check to ensure that the area is empty
 
-            RESP=1
+            #RESP=1
 
         # finds top left and bottom right coordinate containing tile and then start for finding all tiles which should be split
         topLeft = self.findPoint(x1, y1, self.stitchList[0])
@@ -2367,7 +2367,7 @@ class CornerStitch():
             inp=Input.pop(0)
 
 
-
+            print "H",inp
             if inp[1] == "." and inp[2] != ".": ## determining hierarchy level (2nd level):Device insertion
                 start = inp[0]
                 x1 = int(inp[2])

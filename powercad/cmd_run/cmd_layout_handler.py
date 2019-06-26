@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from powercad.corner_stitch.input_script import *
 from powercad.sol_browser.cs_solution_handler import pareto_solutions,export_solutions
-
+import time
 
 # --------------Plot function---------------------
 def plot_layout(fig_data=None, rects=None, size=None, fig_dir=None):
@@ -131,7 +131,10 @@ def update_solution_data(layout_dictionary=None, opt_problem=None, measure_names
     for i in range(len(layout_dictionary)):
 
         if opt_problem != None:  # Evaluatio mode
+            start = time.time()
             results = opt_problem.eval_layout(layout_dictionary[i])
+            end = time.time()
+            print "RT_E", end - start
         else:
             results = perf_results[i]
         name = 'Layout_' + str(i)
@@ -225,7 +228,7 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
 
     :return: list of CornerStitch Solution objects
     '''
-    plot = False
+    plot = True
 
 
     # GET MEASUREMENT NAME:
@@ -242,6 +245,7 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
 
 
         if optimization == True:
+
             opt_problem = new_engine_opt(engine=layout_engine, W=None, H=None, seed=None, level=mode, method=None,
                                          apis=apis, measures=measures)
             Solutions = update_solution_data(layout_dictionary=cs_sym_info, opt_problem=opt_problem,

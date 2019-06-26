@@ -84,9 +84,11 @@ class constraint():
             self.constraintType = self.constraintIndex[self.indexNo]
 
     def add_component_type(self,component_name_type=None):
-        constraint.all_component_types.append(component_name_type)
+        if component_name_type not in constraint.all_component_types:
+            constraint.all_component_types.append(component_name_type)
         t=constraint.all_component_types.index(component_name_type)
         t_in="Type_"+str(t)
+        #print component_name_type,t
         constraint.Type.append(t_in)
         constraint.type.append(str(t))
         constraint.component_to_component_type[component_name_type] = t_in

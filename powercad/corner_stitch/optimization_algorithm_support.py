@@ -12,6 +12,7 @@ from powercad.electrical_mdl.cornerstitch_API import ElectricalMeasure
 from powercad.thermal.cornerstitch_API import ThermalMeasure
 import matplotlib.pyplot as plt
 from powercad.corner_stitch.CornerStitch import Rectangle
+import time
 class new_engine_opt:
     def __init__(self, engine, W, H, seed, level, method=None,db=None, apis={}, measures=[]):
         self.engine = engine
@@ -62,7 +63,7 @@ class new_engine_opt:
                         data=v1[0][1:6]
                         layout_info[k1]=[Rectangle(x=data[0],y=data[1],width=data[2],height=data[3])]
         converted_data[key]=layout_info
-        print converted_data
+        #print converted_data
         return converted_data
 
     def eval_layout(self, layout_data=None):
@@ -74,7 +75,14 @@ class new_engine_opt:
             if isinstance(measure, ElectricalMeasure):
                 type = measure.measure
                 self.e_api.init_layout(layout_data=layout_data)
-                R, L = self.e_api.extract_RL(src=measure.source, sink=measure.sink)
+                try:
+                    start=time.time()
+                    R, L = self.e_api.extract_RL(src=measure.source, sink=measure.sink)
+                    end = time.time()
+                    print "RT", end - start
+                except:
+                    R,L=1000,1000
+
                 if type == 0:  # LOOP RESISTANCE
                     result.append(R)  # resistance in mOhm
                 if type == 1:  # LOOP INDUCTANCE

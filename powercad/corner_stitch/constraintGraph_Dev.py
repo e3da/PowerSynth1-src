@@ -3349,7 +3349,7 @@ class constraintGraph:
 
             # finds randomized location for each non-fixed node between minimum and maximum possible location
             if v1 < v2:
-                random.seed(self.seed_h[sid])
+                random.seed(sid)
                 self.Loc_X[i] = randrange(v1, v2)
             else:
                 self.Loc_X[i] = max(v1, v2)
@@ -3850,7 +3850,7 @@ class constraintGraph:
             v1 = v_low
             v2 = v_h2
             if v1 < v2:
-                random.seed(self.seed_v[sid])
+                random.seed(sid)
                 self.Loc_Y[i] = randrange(v1, v2)
             else:
                 self.Loc_Y[i] = max(v1, v2)

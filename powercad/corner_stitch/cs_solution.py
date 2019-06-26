@@ -151,6 +151,7 @@ class CornerStitchSolution:
             ax1.set_ylim(0, k1[1])
             ax1.set_aspect('equal')
             plt.savefig(fig_dir+'/layout_'+str(layout_ind)+'.png')
+            plt.savefig(fig_dir + '/layout_' + str(layout_ind) + '.eps')
 
         conn.close()
 

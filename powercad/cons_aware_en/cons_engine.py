@@ -155,7 +155,7 @@ class New_layout_engine():
             ax2.set_xlim(0, size[0])
             ax2.set_ylim(0, size[1])
             ax2.set_aspect('equal')
-            plt.savefig('C:\Users\qmle\Desktop\New_Layout_Engine\New_design_flow'+'/_initial_layout.png')
+            plt.savefig('D:\Demo\New_Flow_w_Hierarchy\Figs'+'/_initial_layout.png')
 
 
 

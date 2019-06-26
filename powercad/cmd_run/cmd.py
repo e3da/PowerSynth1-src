@@ -58,6 +58,7 @@ class Cmd_Handler:
                     continue
                 if line[0] == '#':  # Comments
                     continue
+                #print info
                 if info[0] == "Layout_script:":
                     self.layout_script = info[1]
                 if info[0] == "Bondwire_setup:":
@@ -138,6 +139,7 @@ class Cmd_Handler:
         cont = check_file(self.layout_script) and check_file(self.bondwire_setup) and check_file(
             self.layer_stack_file) and check_file(self.rs_model_file) and check_dir(self.fig_dir) and check_dir(
             self.db_dir) and check_file(self.constraint_file)
+
         if cont:
             print "run the optimization"
             self.init_cs_objects()

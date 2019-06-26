@@ -492,7 +492,7 @@ class ScriptInputMethod():
             hier_input_info.setdefault(hier_level,[])
             hier_input_info[hier_level].append(layout_info[j][start:])
 
-        #print hier_input_info
+        print len(hier_input_info[0]),len(hier_input_info[1])
         rects_info=[]
         for k1,layout_data in hier_input_info.items():
 
@@ -535,10 +535,14 @@ class ScriptInputMethod():
 
 
         self.cs_info=[0 for i in range(len(rects_info))]
+        for i in range(len(rects_info)):
+            print rects_info[i]
         layout_info=layout_info[1:]
+        print "L", len(self.cs_info), len(rects_info),len(layout_info)
         for i in range(len(layout_info)):
             for j in range(len(rects_info)):
                 if rects_info[j][5] in layout_info[i]:
+
                     self.cs_info[i]=rects_info[j]
 
 
