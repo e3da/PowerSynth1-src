@@ -73,7 +73,7 @@ class Cmd_Handler:
                     self.db_dir = info[1]
                 if info[0] == "Constraint_file:":
                     self.constraint_file = info[1]
-                if info[0] =="New:":
+                if info[0] =="new:":
                     self.new_mode = int(info[1])
                 if info[0] == "Option:":  # engine option
                     run_option = int(info[1])
