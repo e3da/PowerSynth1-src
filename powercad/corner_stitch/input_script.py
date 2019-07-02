@@ -542,7 +542,6 @@ class ScriptInputMethod():
         for i in range(len(layout_info)):
             for j in range(len(rects_info)):
                 if rects_info[j][5] in layout_info[i]:
-
                     self.cs_info[i]=rects_info[j]
 
 
