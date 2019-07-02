@@ -139,7 +139,13 @@ class Cmd_Handler:
         cont = check_file(self.layout_script) and check_file(self.bondwire_setup) and check_file(
             self.layer_stack_file) and check_file(self.rs_model_file) and check_dir(self.fig_dir) and check_dir(
             self.db_dir) and check_file(self.constraint_file)
-
+        print check_file(self.layout_script)
+        print check_file(self.bondwire_setup)
+        print check_file(self.layer_stack_file)
+        print check_file(self.rs_model_file)
+        print check_dir(self.fig_dir)
+        print check_dir(self.db_dir)
+        print check_file(self.constraint_file)
         if cont:
             print "run the optimization"
             self.init_cs_objects()
