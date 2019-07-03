@@ -313,22 +313,37 @@ class New_layout_engine():
         '''
         #self.cons_df.to_csv('out_2.csv', sep=',', header=None, index=None)
         sym_to_cs = self.init_data[1]
+        #print "sym",sym_to_cs
         scaler = 1000  # to get back original dimensions all coordinated will be scaled down by 1000
         #mode-0
         if level == 0:
 
             Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=None, W=None, H=None, XLoc=None, YLoc=None,seed=None,individual=None,Types=self.Types) # for minimum sized layout only one solution is generated
 
-            CS_SYM_information, Layout_Rects = CG1.update_min(Evaluated_X, Evaluated_Y ,self.Htree, sym_to_cs, scaler)
+
+            CS_SYM_information, Layout_Rects = CG1.update_min_hv(Evaluated_X, Evaluated_Y, self.Htree,self.Vtree, sym_to_cs, scaler)
+
+            #CS_SYM_information, Layout_Rects = CG1.update_min(Evaluated_X, Evaluated_Y, self.Htree, sym_to_cs, scaler)
             #raw_input()
+
+
             #CS_SYM_information, Layout_Rects = CG1.UPDATE_min(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree ,sym_to_cs,scaler)  # CS_SYM_information is a dictionary where key=path_id(component name) and value=list of updated rectangles, Layout Rects is a dictionary for minimum HCS and VCS evaluated rectangles (used for plotting only)
             self.cur_fig_data = plot_layout(Layout_Rects, level)
             CS_SYM_Updated = {}
             for i in self.cur_fig_data:
                 for k, v in i.items():
-                    k=(k[0]*scaler,k[1]*scaler)
-                    CS_SYM_Updated[k] = CS_SYM_information
-            CS_SYM_Updated = [CS_SYM_Updated] # mapped solution layout information to symbolic layout objects
+                    size=(k[0]*scaler,k[1]*scaler)
+                    #CS_SYM_Updated[k] = CS_SYM_information
+            #CS_SYM_Updated = [CS_SYM_Updated] # mapped solution layout information to symbolic layout objects
+            for k,v in CS_SYM_information.items():
+                info={}
+                if k=='H':
+                    info[size]=v
+                    CS_SYM_Updated['H']=info
+                elif k=='V':
+                    info[size] = v
+                    CS_SYM_Updated['V'] = info
+            CS_SYM_Updated=[CS_SYM_Updated]
             if db!=None:
                 if count==None:
                     converted_layout_rects={}
@@ -345,8 +360,27 @@ class New_layout_engine():
             CS_SYM_Updated=[]
             Layout_Rects=[]
             for i in range(len(Evaluated_X)):
-                CS_SYM_Updated1, Layout_Rects1 = CG1.update_min(Evaluated_X[i], Evaluated_Y[i], self.Htree,sym_to_cs,scaler)
+                CS_SYM_Updated1, Layout_Rects1 = CG1.update_min_hv(Evaluated_X[i], Evaluated_Y[i], self.Htree,self.Vtree,sym_to_cs,scaler)
                 self.cur_fig_data = plot_layout(Layout_Rects1, level=0)
+
+                CS_SYM_information = {}
+                for i in self.cur_fig_data:
+                    for k, v in i.items():
+                        size = (k[0] * scaler, k[1] * scaler)
+                        # CS_SYM_Updated[k] = CS_SYM_information
+                # CS_SYM_Updated = [CS_SYM_Updated] # mapped solution layout information to symbolic layout objects
+                for k, v in CS_SYM_Updated1.items():
+                    info = {}
+                    if k == 'H':
+                        info[size] = v
+                        CS_SYM_information['H'] = info
+                    elif k == 'V':
+                        info[size] = v
+                        CS_SYM_information['V'] = info
+                CS_SYM_Updated.append(CS_SYM_information)
+                Layout_Rects.append(Layout_Rects1)
+
+                '''
                 CS_SYM_info= {}
                 for i in self.cur_fig_data:
                     for k, v in i.items():
@@ -354,6 +388,9 @@ class New_layout_engine():
                         CS_SYM_info[k] = CS_SYM_Updated1
                 CS_SYM_Updated.append(CS_SYM_info)
                 Layout_Rects.append(Layout_Rects1)
+                
+                '''
+
             #print "1",CS_SYM_Updated
             #print Layout_Rects
             #CS_SYM_Updated = CS_SYM_Updated['H']
@@ -449,9 +486,33 @@ class New_layout_engine():
             CS_SYM_Updated = []
             Layout_Rects = []
             for i in range(len(Evaluated_X)):
-                CS_SYM_Updated1, Layout_Rects1 = CG1.update_min(Evaluated_X[i], Evaluated_Y[i], self.Htree, sym_to_cs,
+                CS_SYM_Updated1, Layout_Rects1 = CG1.update_min_hv(Evaluated_X[i], Evaluated_Y[i], self.Htree,self.Vtree, sym_to_cs,
                                                                 scaler)
                 self.cur_fig_data = plot_layout(Layout_Rects1, level=0)
+
+                CS_SYM_information = {}
+                for i in self.cur_fig_data:
+                    for k, v in i.items():
+                        size = (k[0] * scaler, k[1] * scaler)
+                        # CS_SYM_Updated[k] = CS_SYM_information
+                # CS_SYM_Updated = [CS_SYM_Updated] # mapped solution layout information to symbolic layout objects
+                for k, v in CS_SYM_Updated1.items():
+                    info = {}
+                    if k == 'H':
+                        info[size] = v
+                        CS_SYM_information['H'] = info
+                    elif k == 'V':
+                        info[size] = v
+                        CS_SYM_information['V'] = info
+                CS_SYM_Updated.append(CS_SYM_information)
+                Layout_Rects.append(Layout_Rects1)
+
+
+
+
+
+
+                '''
                 CS_SYM_info = {}
                 for i in self.cur_fig_data:
                     for k, v in i.items():
@@ -459,6 +520,9 @@ class New_layout_engine():
                         CS_SYM_info[k] = CS_SYM_Updated1
                 CS_SYM_Updated.append(CS_SYM_info)
                 Layout_Rects.append(Layout_Rects1)
+                
+                '''
+
             # print "1",CS_SYM_Updated
             # print Layout_Rects
             # CS_SYM_Updated = CS_SYM_Updated['H']
@@ -988,9 +1052,9 @@ def Sym_to_CS(input_rects,Htree,Vtree):
             print v[0].name,v[0].parent_name
     
     '''
+    #return ALL_RECTS['H']
 
-
-    return ALL_RECTS['H']
+    return ALL_RECTS
     '''
     raw_input()
 
