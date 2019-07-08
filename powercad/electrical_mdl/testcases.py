@@ -91,8 +91,8 @@ def ARL_module():
     emesh.update_mutual()
     print 'mutual',time.time() - start, 's'
 
-    #netlist = ENetlist(new_module, emesh)
-    #netlist.export_netlist_to_ads(file_name='ARL_half_bridge.net')
+    netlist = ENetlist(new_module, emesh)
+    netlist.export_netlist_to_ads(file_name='ARL_half_bridge.net')
     for p in new_module.plate:
         rects.append(p.rect)
     plot = True

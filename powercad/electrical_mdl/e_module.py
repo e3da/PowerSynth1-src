@@ -68,10 +68,10 @@ class Escript:
         print "handle Traces"
         data = line.strip('\t').split(" ")
         top,bot,left,right = data[1:5]
-        print float(top),float(bot),float(left),float(right)
+        #print float(top),float(bot),float(left),float(right)
         rect = Rect(float(top),float(bot),float(left),float(right))
         lid = data[5].strip("l=")
-        print self.stack.thick,self.stack.z
+        #print self.stack.thick,self.stack.z
         z = float(self.stack.z[lid])
         dz = float(self.stack.thick[lid])
         trace=E_plate(rect=rect, z=z, dz=dz)
@@ -409,8 +409,98 @@ class EModule:
             else:
                 self.group[name_to_group[name]].append(p)
 
+    def split_layer_cs_data(self):
+        '''
+        This will split the layout based on the horizontal and vertical cs data
+        Args:
+            cs_sym_data:
+
+        Returns: list of rectangles on separated groups
+
+        '''
+
+        self.plate = []
+        self.group_layer_dict = OrderedDict()
+        self.splitted_group = OrderedDict()
+        for group in self.group.keys():  # First collect all xs and ys coordinates
+            h_rects = []
+            v_rects = []
+            split_rects = []
+
+            self.splitted_group[group] = []
+            z = self.group[group][0].z
+            dz = self.group[group][0].dz
+            n = self.group[group][0].n
+            if self.layer_stack != None:
+                self.group_layer_dict[group] = self.layer_stack.id_by_z(z)
+            # collect the h and v rects
+            for plate in self.group[group]:
+                trace = plate.rect
+                if trace.cs_type == 'h':
+                    h_rects.append(trace)
+                elif trace.cs_type == 'v':
+                    v_rects.append(trace)
+            # search through all y locations and collect the extending intervals
+            y_locs_intervals = {}
+            counter = 0
+
+            for h_rect in h_rects:
+                y1 = h_rect.top
+                y2 = h_rect.bottom
+                x1 = h_rect.left
+                x2 = h_rect.right
+                if not y1 in y_locs_intervals:
+                    y_locs_intervals[y1]=[(x1,x2)]
+                else:
+                    y_locs_intervals[y1].append((x1, x2))
+
+                if not y2 in y_locs_intervals:
+                    y_locs_intervals[y2] = [(x1, x2)]
+                else:
+                    y_locs_intervals[y2].append((x1, x2))
+            for v_rect in v_rects:
+                cuts = v_rect.find_cut_intervals(dir=0, cut_set=y_locs_intervals)
+                cuts = list(set(cuts))
+                if cuts == []:
+                    continue
+                else:
+                    split_rects += v_rect.split_rect(cuts=cuts, dir=1)
+                    #fig, ax = plt.subplots()
+                    #draw_rect_list([v_rect], 'blue', '+', ax=ax)
+                    #draw_rect_list(v_rect.split_rect(cuts=cuts, dir=1), 'green', '', ax=ax)
+                    #plt.show()
+
+            fig, ax = plt.subplots()
+            #draw_rect_list(h_rects, 'red', '//', ax=ax)
+            #fig, ax = plt.subplots()
+            draw_rect_list(v_rects, 'blue', '/', ax=ax)
+            fig, ax = plt.subplots()
+
+            #draw_rect_list(split_rects, 'green', '', ax=ax)
+
+            #print len(split_rects)
+            #for r in split_rects:
+            #    print r.left, r.right, r.bottom, r.top
+
+            plt.show()
+
+
+            for r in split_rects:
+                t = round(r.top / 1000.0, 3)
+                b = round(r.bottom / 1000.0, 3)
+                l = round(r.left / 1000.0, 3)
+                r = round(r.right / 1000.0, 3)
+                newRect = Rect(top=t, bottom=b, left=l, right=r)
+                newPlate = E_plate(rect=newRect, z=z, dz=dz, n=n)
+                newPlate.name = 'T' + str(counter) + '_(' + 'isl' + str(group) + ')'
+                counter += 1
+                self.splitted_group[group].append(newPlate)
+                self.plate.append(newPlate)
+        self.group = self.splitted_group
 
     def split_layer_group(self):
+        # simply create a  Hanan Grid out of the given input to form connection between connected pieces
+        # This doesnt work the same way for CS data
         self.plate = []
         self.group_layer_dict = OrderedDict()
         self.splitted_group = OrderedDict()

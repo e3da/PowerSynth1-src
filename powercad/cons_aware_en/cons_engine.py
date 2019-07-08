@@ -126,6 +126,8 @@ class New_layout_engine():
 
     def create_cornerstitch(self,input_rects=None, size=None):
         #cornerstitch = CornerStitch()
+        #print input_rects
+
         input = self.cornerstitch.read_input('list',Rect_list=input_rects)  # Makes the rectangles compaitble to new layout engine input format
         self.Htree, self.Vtree = self.cornerstitch.input_processing(input, size[0],size[1])  # creates horizontal and vertical corner stitch layouts
         patches, combined_graph = self.cornerstitch.draw_layout(rects=input_rects, Htree=self.Htree,Vtree=self.Vtree)  # collects initial layout patches and combined HCS,VCS points as a graph for mode-3 representation
@@ -153,7 +155,7 @@ class New_layout_engine():
             ax2.set_xlim(0, size[0])
             ax2.set_ylim(0, size[1])
             ax2.set_aspect('equal')
-            plt.savefig('C:\Users\qmle\Desktop\New_Layout_Engine\New_design_flow'+'/_initial_layout.png')
+            plt.savefig('D:\Demo\New_Flow_w_Hierarchy\Figs'+'/_initial_layout.png')
 
 
 
@@ -252,7 +254,7 @@ class New_layout_engine():
 
 
         #self.cons_df.to_csv('out_2.csv', sep=',', header=None, index=None)
-        Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=None, W=None, H=None, XLoc=None, YLoc=None,seed=None,individual=None,Types=self.Types)
+        Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=None, W=None, H=None,XLoc=None, YLoc=None, seed=None, individual=None,Types=self.Types)  #
 
 
         return Evaluated_X, Evaluated_Y
@@ -311,19 +313,37 @@ class New_layout_engine():
         '''
         #self.cons_df.to_csv('out_2.csv', sep=',', header=None, index=None)
         sym_to_cs = self.init_data[1]
+        #print "sym",sym_to_cs
         scaler = 1000  # to get back original dimensions all coordinated will be scaled down by 1000
         #mode-0
         if level == 0:
 
             Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=None, W=None, H=None, XLoc=None, YLoc=None,seed=None,individual=None,Types=self.Types) # for minimum sized layout only one solution is generated
-            CS_SYM_information, Layout_Rects = CG1.UPDATE_min(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree ,sym_to_cs,scaler)  # CS_SYM_information is a dictionary where key=path_id(component name) and value=list of updated rectangles, Layout Rects is a dictionary for minimum HCS and VCS evaluated rectangles (used for plotting only)
+
+
+            CS_SYM_information, Layout_Rects = CG1.update_min_hv(Evaluated_X, Evaluated_Y, self.Htree,self.Vtree, sym_to_cs, scaler)
+
+            #CS_SYM_information, Layout_Rects = CG1.update_min(Evaluated_X, Evaluated_Y, self.Htree, sym_to_cs, scaler)
+            #raw_input()
+
+
+            #CS_SYM_information, Layout_Rects = CG1.UPDATE_min(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree ,sym_to_cs,scaler)  # CS_SYM_information is a dictionary where key=path_id(component name) and value=list of updated rectangles, Layout Rects is a dictionary for minimum HCS and VCS evaluated rectangles (used for plotting only)
             self.cur_fig_data = plot_layout(Layout_Rects, level)
             CS_SYM_Updated = {}
             for i in self.cur_fig_data:
                 for k, v in i.items():
-                    k=(k[0]*scaler,k[1]*scaler)
-                    CS_SYM_Updated[k] = CS_SYM_information
-            CS_SYM_Updated = [CS_SYM_Updated] # mapped solution layout information to symbolic layout objects
+                    size=(k[0]*scaler,k[1]*scaler)
+                    #CS_SYM_Updated[k] = CS_SYM_information
+            #CS_SYM_Updated = [CS_SYM_Updated] # mapped solution layout information to symbolic layout objects
+            for k,v in CS_SYM_information.items():
+                info={}
+                if k=='H':
+                    info[size]=v
+                    CS_SYM_Updated['H']=info
+                elif k=='V':
+                    info[size] = v
+                    CS_SYM_Updated['V'] = info
+            CS_SYM_Updated=[CS_SYM_Updated]
             if db!=None:
                 if count==None:
                     converted_layout_rects={}
@@ -335,14 +355,54 @@ class New_layout_engine():
         #mode-1
         elif level == 1:
 
-            Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=num_layouts, W=None, H=None,
-                                                      XLoc=None, YLoc=None, seed=seed, individual=individual,Types=self.Types)
-            CS_SYM_Updated, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree, sym_to_cs,scaler)
-            CS_SYM_Updated = CS_SYM_Updated['H']
+            Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=num_layouts, W=None, H=None,XLoc=None, YLoc=None, seed=seed, individual=individual,Types=self.Types)
+            #CS_SYM_Updated, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree, sym_to_cs,scaler)
+            CS_SYM_Updated=[]
+            Layout_Rects=[]
+            for i in range(len(Evaluated_X)):
+                CS_SYM_Updated1, Layout_Rects1 = CG1.update_min_hv(Evaluated_X[i], Evaluated_Y[i], self.Htree,self.Vtree,sym_to_cs,scaler)
+                self.cur_fig_data = plot_layout(Layout_Rects1, level=0)
+
+                CS_SYM_information = {}
+                for i in self.cur_fig_data:
+                    for k, v in i.items():
+                        size = (k[0] * scaler, k[1] * scaler)
+                        # CS_SYM_Updated[k] = CS_SYM_information
+                # CS_SYM_Updated = [CS_SYM_Updated] # mapped solution layout information to symbolic layout objects
+                for k, v in CS_SYM_Updated1.items():
+                    info = {}
+                    if k == 'H':
+                        info[size] = v
+                        CS_SYM_information['H'] = info
+                    elif k == 'V':
+                        info[size] = v
+                        CS_SYM_information['V'] = info
+                CS_SYM_Updated.append(CS_SYM_information)
+                Layout_Rects.append(Layout_Rects1)
+
+                '''
+                CS_SYM_info= {}
+                for i in self.cur_fig_data:
+                    for k, v in i.items():
+                        k = (k[0] * scaler, k[1] * scaler)
+                        CS_SYM_info[k] = CS_SYM_Updated1
+                CS_SYM_Updated.append(CS_SYM_info)
+                Layout_Rects.append(Layout_Rects1)
+                
+                '''
+
+            #print "1",CS_SYM_Updated
+            #print Layout_Rects
+            #CS_SYM_Updated = CS_SYM_Updated['H']
             #self.cur_fig_data = plot_layout(Layout_Rects, level,self.min_dimensions)
             if count==None:
                 #for i in range(len(Layout_Rects)):
-                self.save_layouts(Layout_Rects, db=db)
+                for i in range(len(Layout_Rects)):
+                    converted_layout_rects = {}
+                    for k, v in Layout_Rects[i].items():
+                        converted_layout_rects[k] = [v]
+                    self.save_layouts(converted_layout_rects, count=i, db=db)
+                    #self.save_layouts(Layout_Rects[i], db=db)
             else:
                 #for i in range(len(Layout_Rects)):
                 self.save_layouts(Layout_Rects,count=count, db=db)
@@ -350,12 +410,15 @@ class New_layout_engine():
         #mode-2
         elif level == 2:
             Evaluated_X0, Evaluated_Y0 = self.mode_zero() # mode-0 evaluation is required to check the validity of given floorplan size
+            print Evaluated_X0, Evaluated_Y0
+            print "here"
             ZDL_H={}
             ZDL_V={}
-            for k,v in Evaluated_X0.items():
-                ZDL_H=v
-            for k,v in Evaluated_Y0.items():
-                ZDL_V=v
+            for k,v in Evaluated_X0[1].items():
+
+                ZDL_H[k]=v
+            for k,v in Evaluated_Y0[1].items():
+                ZDL_V[k]=v
             MIN_X={}
             MIN_Y={}
             for k,v in ZDL_H.items():
@@ -405,10 +468,11 @@ class New_layout_engine():
             # sorting the given locations based on the graph vertices in ascending order
             Min_X_Loc = collections.OrderedDict(sorted(Min_X_Loc.items()))
             Min_Y_Loc = collections.OrderedDict(sorted(Min_Y_Loc.items()))
+            print Min_X_Loc,Min_Y_Loc
 
             Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=num_layouts, W=W, H=H,
                                                       XLoc=Min_X_Loc, YLoc=Min_Y_Loc, seed=seed, individual=individual,Types=self.Types) # evaluates and finds updated locations for each coordinate
-
+            '''
             CS_SYM_Updated, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree, sym_to_cs,scaler)
             CS_SYM_Updated = CS_SYM_Updated['H'] # takes only horizontal corner stitch data
             #self.cur_fig_data = plot_layout(Layout_Rects, level,self.min_dimensions) #collects the layout patches
@@ -418,6 +482,62 @@ class New_layout_engine():
             else:
                 #for i in range(len(Layout_Rects)):
                 self.save_layouts(Layout_Rects,count=count, db=db)
+            '''
+            CS_SYM_Updated = []
+            Layout_Rects = []
+            for i in range(len(Evaluated_X)):
+                CS_SYM_Updated1, Layout_Rects1 = CG1.update_min_hv(Evaluated_X[i], Evaluated_Y[i], self.Htree,self.Vtree, sym_to_cs,
+                                                                scaler)
+                self.cur_fig_data = plot_layout(Layout_Rects1, level=0)
+
+                CS_SYM_information = {}
+                for i in self.cur_fig_data:
+                    for k, v in i.items():
+                        size = (k[0] * scaler, k[1] * scaler)
+                        # CS_SYM_Updated[k] = CS_SYM_information
+                # CS_SYM_Updated = [CS_SYM_Updated] # mapped solution layout information to symbolic layout objects
+                for k, v in CS_SYM_Updated1.items():
+                    info = {}
+                    if k == 'H':
+                        info[size] = v
+                        CS_SYM_information['H'] = info
+                    elif k == 'V':
+                        info[size] = v
+                        CS_SYM_information['V'] = info
+                CS_SYM_Updated.append(CS_SYM_information)
+                Layout_Rects.append(Layout_Rects1)
+
+
+
+
+
+
+                '''
+                CS_SYM_info = {}
+                for i in self.cur_fig_data:
+                    for k, v in i.items():
+                        k = (k[0] * scaler, k[1] * scaler)
+                        CS_SYM_info[k] = CS_SYM_Updated1
+                CS_SYM_Updated.append(CS_SYM_info)
+                Layout_Rects.append(Layout_Rects1)
+                
+                '''
+
+            # print "1",CS_SYM_Updated
+            # print Layout_Rects
+            # CS_SYM_Updated = CS_SYM_Updated['H']
+            # self.cur_fig_data = plot_layout(Layout_Rects, level,self.min_dimensions)
+            if count == None:
+                # for i in range(len(Layout_Rects)):
+                for i in range(len(Layout_Rects)):
+                    converted_layout_rects = {}
+                    for k, v in Layout_Rects[i].items():
+                        converted_layout_rects[k] = [v]
+                    self.save_layouts(converted_layout_rects, count=i, db=db)
+                    # self.save_layouts(Layout_Rects[i], db=db)
+            else:
+                # for i in range(len(Layout_Rects)):
+                self.save_layouts(Layout_Rects, count=count, db=db)
 
 
 
@@ -866,18 +986,78 @@ def Sym_to_CS(input_rects,Htree,Vtree):
     :return:
     '''
     # Converts corner stitch rectangles to powersynth objects . Makes a list of tiles mapping each powersynth lyout object
-    ALL_RECTS={}
-    DIM=[]
 
-    for j in Htree.hNodeList[0].stitchList:
-        p = [j.cell.x, j.cell.y, j.getWidth(), j.getHeight(), j.cell.type]
-        DIM.append(p)
-    ALL_RECTS['H']=DIM
-    DIM = []
-    for j in Vtree.vNodeList[0].stitchList:
-        p = [j.cell.x, j.cell.y, j.getWidth(), j.getHeight(), j.cell.type]
-        DIM.append(p)
-    ALL_RECTS['V']=DIM
+    HorizontalNodeList = []
+    VerticalNodeList = []
+    for node in Htree.hNodeList:
+        if node.child == []:
+            continue
+        else:
+            HorizontalNodeList.append(node)  # only appending all horizontal tree nodes which have children. Nodes having no children are not included
+
+    for node in Vtree.vNodeList:
+        if node.child == []:
+            continue
+        else:
+            VerticalNodeList.append(node)  # only appending all vertical tree nodes which have children. Nodes having no children are not included
+
+
+
+    ALL_RECTS = {'H':[],'V':[]}
+    for node in HorizontalNodeList:
+        for i in node.stitchList:
+            for j in input_rects:
+                #if j.hier_level==0:
+
+                if j.x==i.cell.x and j.y==i.cell.y and j.type==i.cell.type and j.width==i.getWidth() and j.height==i.getHeight():
+                    i.name=j.name
+                    if node.parent!=None:
+                        for m in ALL_RECTS['H']:
+                            for k,v in m.items():
+                                if v[0].nodeId==node.id:
+                                    i.parent_name=v[0].name
+
+                    #if node.parent!=None:
+                    #print i.nodeId,j.name,node.id
+                    if node.parent==None:
+                        dict = {j.name: [i, node.parent]}
+                    else:
+                        dict={j.name:[i,node]}
+                    if dict not in ALL_RECTS['H']:
+                        ALL_RECTS['H'].append(dict)
+
+                
+
+    for node in VerticalNodeList:
+        for i in node.stitchList:
+            for j in input_rects:
+                #if j.hier_level == 0:
+                if j.x == i.cell.x and j.y == i.cell.y and j.type == i.cell.type and j.width == i.getWidth() and j.height == i.getHeight():
+                    i.name=j.name
+                    if node.parent!=None:
+                        for m in ALL_RECTS['V']:
+                            for k,v in m.items():
+                                if v[0].nodeId==node.id:
+                                    i.parent_name=v[0].name
+                    if node.parent==None:
+                        dict = {j.name: [i, node.parent]}
+                    else:
+                        dict={j.name:[i,node]}
+                    if dict not in ALL_RECTS['V']:
+                        ALL_RECTS['V'].append(dict)
+
+    '''
+    for i in ALL_RECTS['H']:
+        for k,v in i.items():
+            print v[0].name,v[0].parent_name
+    
+    '''
+    #return ALL_RECTS['H']
+
+    return ALL_RECTS
+    '''
+    raw_input()
+
 
     SYM_CS={}
     for rect in input_rects:
@@ -899,5 +1079,9 @@ def Sym_to_CS(input_rects,Htree,Vtree):
                         continue
 
     return SYM_CS
+    
+    
+    '''
+
 
 

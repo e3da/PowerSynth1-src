@@ -11,6 +11,8 @@ import os
 from powercad.electrical_mdl.cornerstitch_API import ElectricalMeasure
 from powercad.thermal.cornerstitch_API import ThermalMeasure
 import matplotlib.pyplot as plt
+from powercad.corner_stitch.CornerStitch import Rectangle
+import time
 class new_engine_opt:
     def __init__(self, engine, W, H, seed, level, method=None,db=None, apis={}, measures=[]):
         self.engine = engine
@@ -39,23 +41,112 @@ class new_engine_opt:
         # List of measure object
         self.measures = measures
 
+    def convert_layout_data_hv(self,layout_data=None):
+        converted_data={}
+        layout_info_h = {}
+        converted_data_h = {}
+        layout_info_v = {}
+        converted_data_v = {}
+        print layout_data
+        layout_data_h=layout_data['H']
+        layout_data_v=layout_data['V']
+        for k,v in layout_data_h.items():
+            #print k,v
+            key=k
+            for i in range(len(v)):
+                for k1,v1 in v[i].items():
+                    #print k1,v1[0],v1[1]
+                    if v1[1]==None:
+                        continue
+                    else:
+                        layout_info_h[v1[0][-1]]=[]
+
+                        for i in range(len(v1[1])):
+                            #d=v1[1][i][1:6]
+                            #r=Rectangle(x=d[0],y=d[1],width=d[2],height=d[3])
+                            layout_info_h[v1[0][-1]].append(v1[1][i])
+                        data=v1[0][1:6]
+                        layout_info_h[k1]=[Rectangle(x=data[0],y=data[1],width=data[2],height=data[3])]
+        converted_data_h[key]=layout_info_h
+        for k,v in layout_data_v.items():
+            #print k,v
+            key=k
+            for i in range(len(v)):
+                for k1,v1 in v[i].items():
+                    #print k1,v1[0],v1[1]
+                    if v1[1]==None:
+                        continue
+                    else:
+                        layout_info_v[v1[0][-1]]=[]
+
+                        for i in range(len(v1[1])):
+                            #d=v1[1][i][1:6]
+                            #r=Rectangle(x=d[0],y=d[1],width=d[2],height=d[3])
+                            layout_info_v[v1[0][-1]].append(v1[1][i])
+                        data=v1[0][1:6]
+                        layout_info_v[k1]=[Rectangle(x=data[0],y=data[1],width=data[2],height=data[3])]
+        converted_data_v[key]=layout_info_v
+
+        converted_data['H']=converted_data_h
+        converted_data['V']=converted_data_v
+        print converted_data
+        return converted_data
+
+    def convert_layout_data(self,layout_data=None):
+        print "HERE"
+        print layout_data
+        for k,v in layout_data.items():
+            print k
+            print len(v)
+        raw_input()
+
+        layout_info={}
+        converted_data={}
+        for k,v in layout_data.items():
+            #print k,v
+            key=k
+            for i in range(len(v)):
+                for k1,v1 in v[i].items():
+                    print k1,v1[0],v1[1]
+                    if v1[1]==None:
+                        continue
+                    else:
+                        layout_info[v1[0][-1]]=[]
+
+                        for i in range(len(v1[1])):
+                            #d=v1[1][i][1:6]
+                            #r=Rectangle(x=d[0],y=d[1],width=d[2],height=d[3])
+                            layout_info[v1[0][-1]].append(v1[1][i])
+                        data=v1[0][1:6]
+                        layout_info[k1]=[Rectangle(x=data[0],y=data[1],width=data[2],height=data[3])]
+        converted_data[key]=layout_info
+        #print converted_data
+        return converted_data
 
     def eval_layout(self, layout_data=None):
+        layout_data=self.convert_layout_data_hv(layout_data)
         result = []
-
+        #print "DATA",layout_data
         for measure in self.measures:
             # TODO: APPLY LAYOUT INFO INTO ELECTRICAL MODEL
             if isinstance(measure, ElectricalMeasure):
                 type = measure.measure
                 self.e_api.init_layout(layout_data=layout_data)
-                R, L = self.e_api.extract_RL(src=measure.source, sink=measure.sink)
+                try:
+                    start=time.time()
+                    R, L = self.e_api.extract_RL(src=measure.source, sink=measure.sink)
+                    end = time.time()
+                    print "RT", end - start
+                except:
+                    R,L=1000,1000
+
                 if type == 0:  # LOOP RESISTANCE
                     result.append(R)  # resistance in mOhm
                 if type == 1:  # LOOP INDUCTANCE
                     result.append(L)  # resistance in mOhm
 
             if isinstance(measure, ThermalMeasure):
-                max_t = self.t_api.eval_max_temp(layout_data=layout_data)
+                max_t = self.t_api.eval_max_temp(layout_data=layout_data['H'])
                 result.append(max_t)
 
         return result

@@ -26,10 +26,10 @@ class CornerStitchSolution:
         where layout_rect_dict= {'Symbolic ID': [R1,R2 ... Ri]} where Ri is a Rectangle object
         '''
         if isinstance(self.layout_info, dict):
-            p_data = self.layout_info
+            p_data = self.layout_info['H']
         else:
             #print self.layout_info
-            p_data=self.layout_info[0]
+            p_data=self.layout_info[0]['H']
         layout_symb_dict={}
         layout_rect_dict = {}
 
@@ -38,6 +38,8 @@ class CornerStitchSolution:
         W = float(W) / div
         H = float(H) / div
         rect_dict = p_data.values()[0]
+        print p_data
+        print rect_dict
         for r_id in rect_dict.keys():
             # print 'rect id',r_id
             left = 1e32

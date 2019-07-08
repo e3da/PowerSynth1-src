@@ -74,6 +74,7 @@ class CornerStitch_Tmodel_API:
         attach = (sub_attach.thickness, sub_attach.attach_tech.properties.thermal_cond)
         thickness, thermal_cond = layer_average([met, iso, met, attach])
         layer = ExtaLayer(thickness * 1e-3, thermal_cond)
+        print layout_data
         self.width, self.height = layout_data.keys()[0]
         self.width = round(self.width / 1000.0, 3)
         self.height = round(self.height / 1000.0, 3)

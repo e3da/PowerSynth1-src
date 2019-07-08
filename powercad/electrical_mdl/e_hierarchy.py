@@ -44,4 +44,4 @@ class EHier():
                         self.sheet.append(self.sh_node)
 
         # Test plot of the hierarchy
-        #self.tree.print_tree()
+        self.tree.print_tree()

@@ -31,7 +31,7 @@ class constraint():
 
     minSpacing = np.zeros(shape=(len(Type) - 1, len(Type) - 1))  # minimum spacing is a 2-D matrix
     minEnclosure = np.zeros(shape=(len(Type) - 1, len(Type) - 1))  # minimum Enclosure is a 2-D matrix
-
+    comp_type = {"Trace": ["1","2"],"Device":["3"]}
 
 
 
@@ -84,12 +84,15 @@ class constraint():
             self.constraintType = self.constraintIndex[self.indexNo]
 
     def add_component_type(self,component_name_type=None):
-        constraint.all_component_types.append(component_name_type)
+        if component_name_type not in constraint.all_component_types:
+            constraint.all_component_types.append(component_name_type)
         t=constraint.all_component_types.index(component_name_type)
         t_in="Type_"+str(t)
+        #print component_name_type,t
         constraint.Type.append(t_in)
         constraint.type.append(str(t))
         constraint.component_to_component_type[component_name_type] = t_in
+        constraint.comp_type['Device'].append(str(t))
 
     def update_2D_constraints(self):
         constraint.minSpacing = np.zeros(shape=(len(self.Type) - 1, len(self.Type) - 1))  # minimum spacing is a 2-D matrix

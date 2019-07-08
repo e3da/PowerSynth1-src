@@ -14,6 +14,9 @@ from powercad.parasitics.mdl_compare import trace_ind_krige, trace_res_krige, tr
     trace_inductance
 from powercad.parasitics.mutual_inductance.mutual_inductance import *
 import time
+from mpl_toolkits.mplot3d import Axes3D
+
+
 class MeshNode:
 
 
@@ -318,6 +321,7 @@ class EMesh():
 
             self.graph[e[0]][e[1]][0]['res'] = R
             self.graph[e[0]][e[1]][0]['ind'] = L
+
     def _save_hier_node_data(self,hier_nodes=None,parent_data=None):
         '''
 
@@ -376,6 +380,99 @@ class EMesh():
             self.graph.remove_edge(edge.nodeA.node_id,edge.nodeB.node_id)
         except:
             print "cant find edge" , edge.nodeA.node_id, edge.nodeB.node_id
+
+    def mutual_data_pre_process(self,mode=0,h_lim=0,v_lim=0):
+        get_node = self.graph.node
+        all_edges = self.graph.edges(data=True)
+        has_edge = self.m_graph.has_edge
+        self.mutual_matrix = []
+        m_m_append = self.mutual_matrix.append
+        self.edges = []
+        e_append = self.edges.append
+        # Create 2 dictionaries of horizontal and vertical traces by group
+        h_traces = {}
+        v_traces = {}
+        for edge in all_edges: # O(N) process here, sort data in groups for better data handler later
+            data = edge[2]['data']
+            #data = {'type': 'trace', 'w': width, 'l': length, 'name': name,'rect':rect, 'ori': 'h'}
+            if data['type']=='trace':
+                group_name = edge[2]['nodeA'].group_id
+                if not group_name in h_traces:
+                    h_traces[group_name] = [] # if the list of traces for the group is not there, create a list to store
+                if not group_name in v_traces:
+                    v_traces[group_name] = []  # if the list of traces for the group is not there, create a list to store
+                rect_data = edge.data['rect']
+                rect_name = edge.data['name']
+                if data['ori'] == 'h':  # if the trace is horizontal
+                    h_traces[group_name].append([rect_name,rect_data])
+                if data['ori'] == 'v':  # if the trace is vertical
+                    v_traces[group_name].append([rect_name, rect_data])
+            else: # This is a hierachical or internal connection
+                continue
+
+    def mutual_collect_data(self,horizontal=True,rect1_data=[],rect2_data=[],mode=0,dis=0):
+        '''
+
+        Args:
+            horizontal: True, for horizontal case,
+
+        Returns:
+
+        '''
+        m_m_append = self.mutual_matrix.append
+        e_append = self.edges.append
+        rect1 = rect1_data[1]
+        rect2 = rect2_data[1]
+        e1_name = rect1_data[0]
+        e2_name = rect2_data[0]
+
+        if horizontal:  # 2 horizontal parallel pieces
+
+            if rect1.left >= rect2.left:
+                r2 = rect1
+                r1 = rect2
+                w1, l1, t1, z1 = rect2_data
+                w2, l2, t2, z2 = rect1_data
+            else:
+                r1 = rect1
+                r2 = rect2
+                w1, l1, t1, z1 = rect1_data
+                w2, l2, t2, z2 = rect2_data
+            p = z2 - z1
+            E = abs(r2.bottom - r1.bottom)
+            l3 = abs(r2.left - r1.left)
+            if E > dis:
+                return []
+            elif l1 > 0.5 * w1 and l2 > 0.5 * w2 and E < dis:
+                if mode == 0:
+                    m_m_append([w1, l1, t1, w2, l2, t2, l3, p, E])  # collect data for bar equation
+                elif mode == 1:
+                    m_m_append([w1, l1, w2, l2, l3, p, E])  # collect data for plane equation
+
+        else:  # 2 vertical parallel pieces
+
+            if rect1.top <= rect2.top:
+                r2 = rect1
+                r1 = rect2
+                w1, l1, t1, z1 = rect2_data
+                w2, l2, t2, z2 = rect1_data
+            else:
+                r1 = rect1
+                r2 = rect2
+                w1, l1, t1, z1 = rect1_data
+                w2, l2, t2, z2 = rect2_data
+            p = abs(z1 - z2)
+            E = abs(r2.left - r1.left)
+            l3 = abs(r1.top - r2.top)
+            if E > dis:
+                return []
+            elif l1 > 0.5 * w1 and l2 > 0.5 * w2 and E < dis:
+                if mode == 0:
+                    m_m_append([w1, l1, t1, w2, l2, t2, l3, p, E])  # collect data for bar equation
+                elif mode == 1:
+                    m_m_append([w1, l1, w2, l2, l3, p, E])  # collect data for plane equation
+
+                e_append([e1_name, e2_name])
 
     def mutual_data_prepare(self,mode=0):
         '''
@@ -561,6 +658,7 @@ class EMesh():
         plot_E_map_test(G=bound_graph,ax=ax,cmap=self.c_map)
 
         plt.show()
+
     def check_bound_type(self,rect,point):
         b_type =[]
         if point[0]==rect.left:
@@ -575,9 +673,20 @@ class EMesh():
 
 
     def update_E_comp_parasitics(self,net,comp_dict):
+        '''
+        Adding internal parasitic values to the loop
+        Args:
+            net: net name to node relationship through dictionary
+            comp_dict: list of components with edges info
+
+        Returns: update self.Graph
+
+        '''
         for c in comp_dict.keys():
             for e in c.net_graph.edges(data=True):
                 self.add_hier_edge(net[e[0]], net[e[1]], edge_data=e[2]['edge_data'])
+
+
 
     def mesh_grid_hier(self,Nx=3,Ny=3,corner_stitch=False):
 
@@ -587,57 +696,9 @@ class EMesh():
         self.comp_net_id = {}
         self.graph = nx.MultiGraph()
         self.node_count = 1
-        # First search through all sheet and add their edges, nodes to the mesh
-        for sh in self.hier_E.sheet:
-            group =sh.parent.parent # Define the trace island (containing a sheet)
-            if not(group in self.comp_nodes): # Create a list in dictionary to store all hierarchy node for each group
-                self.comp_nodes[group]=[]
-
-            comp = sh.data.component     # Get the component of a sheet.
-            if comp != None and not (comp in self.comp_dict):
-                #print "case 1"
-                comp.build_graph()
-                sheet_data = sh.data
-                conn_type = "hier"
-                # Get x,y,z positions
-                x, y = sheet_data.rect.center()
-                z = sheet_data.z
-                cp = [x, y, z]
-                if not (sheet_data.net in self.comp_net_id):
-                    cp_node = MeshNode(pos=cp, type=conn_type, node_id=self.node_count, group_id=None)
-                    self.comp_net_id[sheet_data.net] = self.node_count
-                    self.add_node(cp_node)
-                    self.comp_nodes[group].append(cp_node)
-                    self.comp_dict[comp] = 1
-                for n in comp.net_graph.nodes(data=True): # node without parents
-                    sheet_data= n[1]['node']
-
-                    if sheet_data.node.parent == None: # floating net
-                        x, y = sheet_data.rect.center()
-                        z = sheet_data.z
-                        cp = [x, y, z]
-                        if not (sheet_data.net in self.comp_net_id):
-                            cp_node = MeshNode(pos=cp, type=conn_type, node_id=self.node_count, group_id=None)
-                            self.comp_net_id[sheet_data.net] = self.node_count
-                            self.add_node(cp_node)
-                            self.comp_dict[comp]=1
-
-            else:
-                sheet_data = sh.data
-                type = "hier"
-                # Get x,y,z positions
-                x, y = sheet_data.rect.center()
-                z = sheet_data.z
-                cp = [x, y, z]
-                if not (sheet_data.net in self.comp_net_id):
-                    cp_node = MeshNode(pos=cp, type=type, node_id=self.node_count, group_id=None)
-                    self.comp_net_id[sheet_data.net] = self.node_count
-                    self.add_node(cp_node)
-                    self.comp_nodes[group].append(cp_node)
-
-
-        self.update_E_comp_parasitics(net=self.comp_net_id,comp_dict=self.comp_dict)
-
+        # Handle pins connections and update graph
+        self._handle_pins_connections()
+        # Handle geometrical connections and update the mesh for each trace island
         # These are applied for each different groups on each layer.
         for g in self.hier_E.isl_group: # trace island id in T_Node
 
@@ -659,7 +720,6 @@ class EMesh():
                 trace=g.nodes[k]
                 tr = trace.data.rect # rectangle object
                 z = trace.data.z  # layer level for this node
-                # Forming corner - trace relationship
                 self.corners += tr.get_all_corners()
                 # Form relationship between corner and trace
                 for c in self.corners:
@@ -672,7 +732,10 @@ class EMesh():
                     self.corners_trace_dict[cr] = list(set(self.corners_trace_dict[cr]))
                 self.corners = list(set(self.corners))
                 lines += tr.get_all_lines()
-
+                num_x = Nx
+                num_y = Ny
+                self.div = 2
+                '''
                 # GROUND PLANE
                 if z ==-1: # TEST FOR NOW , HAVE TO SPECIFY LATER
                     num_x=5#+  int(self.f/100)
@@ -688,7 +751,7 @@ class EMesh():
                     self.div=2
                 #xs = np.linspace(tr.left, tr.right, num_x)
                 #ys = np.linspace(tr.bottom, tr.top, num_y)
-                # TESTING
+                '''
                 if not(corner_stitch): # no uniform mesh needed, using Corner Stitch coordinates as mesh
                     if tr.width>tr.height:
                         xs = np.linspace(tr.left, tr.right, num_y)
@@ -723,6 +786,7 @@ class EMesh():
                             self.node_dict[name] = p
                             P_app(p)  # sort form of points.append
 
+
             # Form relationship between lines and points, to split into boundary lines
             for l in lines:
                 split = False
@@ -755,12 +819,15 @@ class EMesh():
                             add=False
                 if add:
                     bound_lines+=[l1]
+
+            #plt.figure(10)
             #for l in bound_lines:
-            #    print l.pt1, l.pt2
             #    plt.plot([l.pt1[0], l.pt2[0]], [l.pt1[1], l.pt2[1]], color='red', linewidth=3)
             #for p in points:
             #   plt.scatter([p[0]],[p[1]],color='black')
             #plt.show()
+
+
             # Finding mesh nodes for group
             self.mesh_nodes(points=points,corners_trace_dict=self.corners_trace_dict,boundary_line=bound_lines,group=g)
             # Finding mesh edges for group
@@ -771,6 +838,15 @@ class EMesh():
             #draw_rect_list(all_rect,ax,'blue',None)
             # Once we have all the nodes and edges for the trace group, we need to save hier node info
             self.hier_group_dict = {}
+            #fig = plt.figure(1)
+            #ax = Axes3D(fig)
+            #ax.set_xlim3d(0, 60)
+            #ax.set_ylim3d(0, 60)
+            #ax.set_zlim3d(0, 2)
+            #print node_name
+            #self.plot_3d(fig=fig, ax=ax, show_labels=True)
+            #fig.set_size_inches(18.5, 10.5)
+            #plt.show()
             if self.comp_nodes!={} and g in self.comp_nodes: # case there are components
                 for cp_node in self.comp_nodes[g]:
                     min_dis = 1000
@@ -792,6 +868,7 @@ class EMesh():
                     NW = SW.North
                     NE = NW.East
                     SE = NE.South
+
                     self.hier_data = {'SW':SW,'NW':NW,'NE':NE,'SE':SE} # 4 points on the corners of parent net
                     if not (SW.node_id in self.hier_group_dict): # form new group based on SW_id
                         self.hier_group_dict[SW.node_id]={'node_group':[cp_node],'parent_data':self.hier_data}
@@ -806,7 +883,57 @@ class EMesh():
                 self._save_hier_node_data(hier_nodes =node_group,parent_data=parent_data)
 
 
+    def _handle_pins_connections(self):
 
+        # First search through all sheet (device pins) and add their edges, nodes to the mesh
+        for sh in self.hier_E.sheet:
+            group = sh.parent.parent  # Define the trace island (containing a sheet)
+            if not (group in self.comp_nodes):  # Create a list in dictionary to store all hierarchy node for each group
+                self.comp_nodes[group] = []
+
+            comp = sh.data.component  # Get the component of a sheet.
+            if comp != None and not (comp in self.comp_dict):
+                # print "case 1"
+                comp.build_graph()
+                sheet_data = sh.data
+                conn_type = "hier"
+                # Get x,y,z positions
+                x, y = sheet_data.rect.center()
+                z = sheet_data.z
+                cp = [x, y, z]
+                if not (sheet_data.net in self.comp_net_id):
+                    cp_node = MeshNode(pos=cp, type=conn_type, node_id=self.node_count, group_id=None)
+                    self.comp_net_id[sheet_data.net] = self.node_count
+                    self.add_node(cp_node)
+                    self.comp_nodes[group].append(cp_node)
+                    self.comp_dict[comp] = 1
+                for n in comp.net_graph.nodes(data=True):  # node without parents
+                    sheet_data = n[1]['node']
+
+                    if sheet_data.node.parent == None:  # floating net
+                        x, y = sheet_data.rect.center()
+                        z = sheet_data.z
+                        cp = [x, y, z]
+                        if not (sheet_data.net in self.comp_net_id):
+                            cp_node = MeshNode(pos=cp, type=conn_type, node_id=self.node_count, group_id=None)
+                            self.comp_net_id[sheet_data.net] = self.node_count
+                            self.add_node(cp_node)
+                            self.comp_dict[comp] = 1
+
+            else:
+                sheet_data = sh.data
+                type = "hier"
+                # Get x,y,z positions
+                x, y = sheet_data.rect.center()
+                z = sheet_data.z
+                cp = [x, y, z]
+                if not (sheet_data.net in self.comp_net_id):
+                    cp_node = MeshNode(pos=cp, type=type, node_id=self.node_count, group_id=None)
+                    self.comp_net_id[sheet_data.net] = self.node_count
+                    self.add_node(cp_node)
+                    self.comp_nodes[group].append(cp_node)
+
+        self.update_E_comp_parasitics(net=self.comp_net_id, comp_dict=self.comp_dict)
 
     def mesh_edges(self,thick=None,cond=5.96e7):
         u = 4 * math.pi * 1e-7
@@ -1106,11 +1233,9 @@ class EMesh():
         ys.sort()
         xs_id = {xs[i]:i for i in range(len(xs))}
         ys_id = {ys[i]: i for i in range(len(ys))}
-
         min_loc = 0
         max_x_id = len(xs) - 1
         max_y_id = len(ys) - 1
-
         for p in points:
             node1 = locs_to_node[(p[0],p[1])]
             # get positions
@@ -1120,26 +1245,43 @@ class EMesh():
             y1_id = ys_id[y1]
             North,South,East,West = [None,None,None,None]
             # Once we get the ids, lets get the corresponding node in each direction
-            if not y1_id == max_y_id: # not on the top bound
+            yN_id = y1_id
+            while (not yN_id == max_y_id): # not on the top bound
                 xN= xs[x1_id]
-                yN = ys[y1_id+1]
+                yN = ys[yN_id+1]
                 if (xN, yN) in locs_to_node:
                     North = locs_to_node[(xN,yN)]
-            if not y1_id == min_loc:
+                    break
+                else:
+                    yN_id+=1
+            yS_id = y1_id
+            while not yS_id == min_loc:
                 xS = xs[x1_id]
-                yS = ys[y1_id - 1]
+                yS = ys[yS_id - 1]
                 if (xS, yS) in locs_to_node:
                     South = locs_to_node[(xS, yS)]
-            if not x1_id == max_x_id:
-                xE = xs[x1_id+1]
+                    break
+                else:
+                    yS_id-=1
+
+            xE_id = x1_id
+            while not xE_id == max_x_id:
+                xE = xs[xE_id+1]
                 yE = ys[y1_id]
                 if (xE, yE) in locs_to_node:
                     East = locs_to_node[(xE,yE)]
-            if not x1_id == min_loc:
-                xW = xs[x1_id - 1]
+                    break
+                else:
+                    xE_id+=1
+            xW_id = x1_id
+            while not xW_id == min_loc:
+                xW = xs[xW_id - 1]
                 yW = ys[y1_id]
                 if (xW, yW) in locs_to_node:
                     West = locs_to_node[(xW, yW)]
+                    break
+                else:
+                    xW_id-=1
             # Although the ids can go negative here, the boundary check loop already handle the speacial case
             if node1.type == 'boundary':
                 if 'E' in node1.b_type:

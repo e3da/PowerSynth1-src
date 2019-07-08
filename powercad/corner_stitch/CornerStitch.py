@@ -19,9 +19,9 @@ from powercad.general.data_struct.util import *
 
 
 global VID,HID,Schar,EChar,Cchar,Htree,Vtree
-Schar='/'
+Schar='+'
 Cchar='%'
-EChar='/'
+EChar='-'
 VID=0
 HID=0
 
@@ -76,6 +76,8 @@ class tile:
         self.nodeId=nodeId # in hierarchical tree which node it belongs to
         self.voltage=voltage # to keep voltage information
         self.current=current # to keep current value
+        self.bw = []  # list of bondwire objects which have source in the tile
+        self.parent_name=None # name of the parent component
 
 
 
@@ -194,6 +196,51 @@ class tile:
                 break
 
         return neighbors
+
+class BondWire():
+    def __init__(self,type=None,name=None,num_of_bw=None,src_coordinate=None,dest_coordinate=None,src_nodeID=None,dest_nodeID=None,direction=None):
+        """
+        :param type:Connection type (0: flexible, 1: fixed(either horizontal or vertical), 2: fixed in both direction(3-D via))
+        :param name:Name of bondwire(id)
+        :param num_of_bw:Number of bondwires in a group
+        :param src_coordinate:coordinate of source point for cneter bondwire (if there are multiple bondwires)
+        :param dest_coordinate:coordinate of destination point for cneter bondwire (if there are multiple bondwires)
+        :param src_nodeID: src_tile's node ID
+        :param dest_node_ID: dest_tile's nodeID
+        :param direction: direction of bondwire (-1:horizontal,1:vertical)
+        """
+        self.type=type
+        self.name=name
+        self.num_of_bw=num_of_bw
+        self.src_coordinate=src_coordinate
+        self.dest_coordinate=dest_coordinate
+        self.src_nodeID=src_nodeID
+        self.dest_nodeID=dest_nodeID
+        self.src_tile=None
+        self.dest_tile=None
+        self.direction=direction
+
+
+
+    def printBondWire(self):
+        print"Type",self.type
+        print "Name",self.name
+        print "Num",self.num_of_bw
+        print "src_coordinate",self.src_coordinate
+        print"dest_coordinate",self.dest_coordinate
+        print "src_tile", self.src_tile.nodeId,self.src_tile.cell.x,self.src_tile.cell.y,self.src_tile.cell.type
+        print "dest_tile", self.dest_tile.nodeId, self.dest_tile.cell.x, self.dest_tile.cell.y, self.dest_tile.cell.type
+        print "src_nodeID", self.src_nodeID
+        print "dest_nodeID", self.dest_nodeID
+        print "src_tile_ID", self.src_tile.nodeId
+        print "dest_tile_ID", self.dest_tile.nodeId
+        if self.direction==-1:
+            print "direction: Horizontal"
+        if self.direction==1:
+            print "direction: Vertical"
+        if self.direction==0:
+            print "direction: Diagonal"
+
 ########################################################################################################################
 class cornerStitch_algorithms(object):
     """
@@ -202,12 +249,21 @@ class cornerStitch_algorithms(object):
     collections of tiles or anything involving coordinates being passed in instead of a tile
     """
     __metaclass__ = ABCMeta
-    def __init__(self, stitchList, level):
+
+    def __init__(self, stitchList, level, max_x=None, max_y=None,boundaries=None):
         """
         northBoundary and eastBoundary should be integer values, the upper and right edges of the editable rectangle
         """
         self.stitchList = stitchList
         self.level=level
+        if self.level == 0:
+            self.northBoundary = tile(None, None, None, None, None, cell(0, max_y, "EMPTY"))
+            self.eastBoundary = tile(None, None, None, None, None, cell(max_x, 0, "EMPTY"))
+            self.southBoundary = tile(None, None, None, None, None, cell(0, -1000, "EMPTY"))
+            self.westBoundary = tile(None, None, None, None, None, cell(-1000, 0, "EMPTY"))
+            self.boundaries = [self.northBoundary, self.eastBoundary, self.westBoundary, self.southBoundary]
+        else:
+            self.boundaries = boundaries
 
     def merge(self, tile1, tile2):
         """
@@ -579,7 +635,7 @@ class Node(cornerStitch_algorithms):
 
 ##Node object for vertical corner stitched tree element
 class Vnode(Node):
-    def __init__(self, boundaries,stitchList,parent,id):
+    def __init__(self, boundaries, stitchList, parent, id):
 
         self.stitchList=stitchList
         self.boundaries=boundaries
@@ -632,7 +688,7 @@ class Vnode(Node):
                 break
 
         return self.stitchList
-    def insert(self, start,x1, y1, x2, y2, type,end,Vtree,Parent):
+    def insert(self, start,x1, y1, x2, y2, type,end,Vtree,Parent,bw=None):
         """
 
               :param start: starting charsacter
@@ -663,8 +719,8 @@ class Vnode(Node):
         x2 = foo[2]
         y2 = foo[3]
         RESP=0 # flag to check empty area
-        if self.areaSearch(x1, y1, x2, y2,type):#check to ensure that the area is empty
-            RESP=1
+        #if self.areaSearch(x1, y1, x2, y2,type):#check to ensure that the area is empty
+            #RESP=1
 
         # finding top left and bottom right coordinate containing tiles of the new tile
         topLeft = self.findPoint(x1, y1, self.stitchList[0])
@@ -1047,6 +1103,42 @@ class Vnode(Node):
                         if i not in tile_list:
                             tile_list.append(i)
             self.addChild(start,tile_list,type,end,Vtree,Parent)  # after creating a tile it's parent should be updated
+            if bw!=None:
+                Connections = [bw[x:x + 3] for x in xrange(0, len(bw), 3)]
+
+                #print Connections
+                for w in Connections:
+
+                    parent_tile = None
+                    for wire in v_bondwire_objects:
+                        #print"PRe", wire.src_coordinate, wire.dest_coordinate
+                        if wire.name==w[0]:
+
+                            if wire.src_coordinate==None:
+
+                                wire.src_coordinate=(int(w[1]),int(w[2]))
+                                x = wire.src_coordinate[0]
+                                y = wire.src_coordinate[1]
+                                if x >= x1 and y >= y2 and x <= x2 and y <= y1:
+                                    parent_tile = self.findPoint(x1, y2, tile_list[0])
+                                    wire.src_tile = parent_tile
+                                    wire.src_nodeID = Parent.id
+                                    #wire.src_nodeID = parent_tile.nodeId
+                            elif wire.dest_coordinate==None:
+
+                                wire.dest_coordinate = (int(w[1]), int(w[2]))
+
+                                x3 = wire.dest_coordinate[0]
+                                y3 = wire.dest_coordinate[1]
+                                if x3 >= x1 and y3 >= y2 and x3 <= x2 and y3 <= y1:
+                                    parent_tile = self.findPoint(x1, y2, tile_list[0])
+                                    wire.dest_tile = parent_tile
+                                    wire.dest_nodeID = Parent.id
+                                    #wire.dest_nodeID =  parent_tile.nodeId
+
+
+                            #print "Pr",parent_tile.cell.x,parent_tile.cell.y,parent_tile.cell.type,wire.src_coordinate,wire.dest_coordinate
+                            parent_tile.bw.append(wire)
         return self.stitchList
 
 
@@ -1346,7 +1438,7 @@ class Hnode(Node):
 
         return self.stitchList
 
-    def insert(self,start, x1, y1, x2, y2, type,end,Htree,Parent):
+    def insert(self,start, x1, y1, x2, y2, type,end,Htree,Parent,bw=None):
         """
 
         :param start: starting charsacter
@@ -1377,9 +1469,9 @@ class Hnode(Node):
         x2 = foo[2]
         y2 = foo[3]
         RESP = 0
-        if self.areaSearch(x1, y1, x2, y2,type): #check to ensure that the area is empty
+        #if self.areaSearch(x1, y1, x2, y2,type): #check to ensure that the area is empty
 
-            RESP=1
+            #RESP=1
 
         # finds top left and bottom right coordinate containing tile and then start for finding all tiles which should be split
         topLeft = self.findPoint(x1, y1, self.stitchList[0])
@@ -1779,7 +1871,35 @@ class Hnode(Node):
                             tile_list.append(i)
 
             self.addChild(start,tile_list, type,end,Htree,Parent)
+            if bw!=None:
+                Connections = [bw[x:x + 3] for x in xrange(0, len(bw), 3)]
 
+
+                #print Connections
+                for w in Connections:
+
+                    parent_tile = None
+                    for wire in h_bondwire_objects:
+                        if wire.name==w[0]:
+                            if wire.src_coordinate==None:
+                                wire.src_coordinate=(int(w[1]),int(w[2]))
+                                x = wire.src_coordinate[0]
+                                y = wire.src_coordinate[1]
+                                if x >= x1 and y >= y2 and x <= x2 and y <= y1:
+                                    parent_tile = self.findPoint(x1, y2, tile_list[0])
+                                    wire.src_tile = parent_tile
+                                    wire.src_nodeID = ParentH.id
+                                    #wire.src_nodeID = parent_tile.nodeId
+                            elif wire.dest_coordinate==None:
+                                wire.dest_coordinate = (int(w[1]), int(w[2]))
+                                x3 = wire.dest_coordinate[0]
+                                y3 = wire.dest_coordinate[1]
+                                if x3 >= x1 and y3 >= y2 and x3 <= x2 and y3 <= y1:
+                                    parent_tile = self.findPoint(x1, y2, tile_list[0])
+                                    wire.dest_tile = parent_tile
+                                    wire.dest_nodeID = ParentH.id
+                                    #wire.dest_nodeID = parent_tile.nodeId
+                            parent_tile.bw.append(wire)
 
 
         return self.stitchList
@@ -2031,7 +2151,7 @@ class Tree():
 
 ###################################################
 class Rectangle(Rect):
-    def __init__(self, type=None, x=None, y=None, width=None, height=None, name=None, Schar=None, Echar=None, Netid=None):
+    def __init__(self, type=None, x=None, y=None, width=None, height=None, name=None, Schar=None, Echar=None,hier_level=None, Netid=None):
         '''
 
         Args:
@@ -2056,6 +2176,7 @@ class Rectangle(Rect):
         self.Echar = Echar
         self.Netid = Netid
         self.name = name
+        self.hier_level=hier_level
         Rect.__init__(self, top=self.y + self.height, bottom=self.y, left=self.x, right=self.x + self.width)
     def __str__(self):
         return 'x: '+str(self.x) + ', y: ' + str(self.y) + ', w: ' + str(self.width) + ', h: ' + str(self.height)
@@ -2152,9 +2273,16 @@ class CornerStitch():
         elif input_mode=='list':
             Modified_input=[]
 
-            for R in Rect_list:
-               Modified_input.append([R.Schar,R.x,R.y,R.width,R.height,R.type,R.Echar,R.name])
+            for i in range(len(Rect_list)):
+                R=Rect_list[i]
+                if R.hier_level==0:
+                   Modified_input.append([R.Schar,R.x,R.y,R.width,R.height,R.type,R.Echar,R.name])
+                elif R.hier_level==1:
+                    Modified_input.append([R.Schar,'.', R.x, R.y, R.width, R.height, R.type, R.Echar, R.name])
+                elif R.hier_level==2:
+                    Modified_input.append([R.Schar,'.','.', R.x, R.y, R.width, R.height, R.type, R.Echar, R.name])
 
+        print Modified_input
         return Modified_input
 
 
@@ -2239,16 +2367,20 @@ class CornerStitch():
             inp=Input.pop(0)
 
 
-
+            print "H",inp
             if inp[1] == "." and inp[2] != ".": ## determining hierarchy level (2nd level):Device insertion
-
+                start = inp[0]
+                x1 = int(inp[2])
+                y1 = int(inp[3]) + int(inp[5])
+                x2 = int(inp[2]) + int(inp[4])
+                y2 = int(inp[3])
                 for i in reversed(Htree.hNodeList):
                     if i.parent.id == 1:
                         # print"ID", i.id
                         ParentH = i
                         break
                 CHILDH = ParentH
-                CHILDH.insert(inp[0], int(inp[2]), int(inp[3]), int(inp[4]), int(inp[5]), inp[6], inp[7])
+                CHILDH.insert(start, x1,y1,x2,y2, inp[6], inp[7],Htree,ParentH)
 
                 for i in reversed(Vtree.vNodeList):
                     if i.parent.id == 1:
@@ -2256,11 +2388,15 @@ class CornerStitch():
                         Parent = i
                         break
                 CHILD = Parent
-                CHILD.insert(inp[0], int(inp[2]), int(inp[3]), int(inp[4]), int(inp[5]), inp[6], inp[7])
+                CHILD.insert(start, x1,y1,x2,y2, inp[6], inp[7],Vtree,Parent)
 
             if inp[1] == "." and inp[2] == ".":##determining hierarchy level (3rd level):Pin insertion
 
-
+                start = inp[0]
+                x1 = int(inp[3])
+                y1 = int(inp[4]) + int(inp[6])
+                x2 = int(inp[3]) + int(inp[5])
+                y2 = int(inp[4])
                 for i in reversed(Htree.hNodeList):
                     if i.parent.id == 1:
 
@@ -2270,12 +2406,9 @@ class CornerStitch():
                 ParentH = med.child[-1]
                 CHILDH = ParentH
 
-                x1 = int(inp[3])
-                y1 = int(inp[4]) + int(inp[6])
-                x2 = int(inp[3]) + int(inp[5])
-                y2 = int(inp[4])
 
-                CHILDH.insert(inp[0], int(inp[3]), int(inp[4]), int(inp[5]), int(inp[6]), inp[7], inp[8])
+
+                CHILDH.insert(start,x1,y1,x2,y2, inp[7], inp[8],Htree,ParentH)
 
                 for i in reversed(Vtree.vNodeList):
                     if i.parent.id == 1:
@@ -2286,12 +2419,7 @@ class CornerStitch():
                 Parent = med.child[-1]
                 CHILD = Parent
 
-                x1 = int(inp[3])
-                y1 = int(inp[4]) + int(inp[6])
-                x2 = int(inp[3]) + int(inp[5])
-                y2 = int(inp[4])
-
-                CHILD.insert(inp[0], int(inp[3]), int(inp[4]), int(inp[5]), int(inp[6]), inp[7], inp[8])
+                CHILD.insert(start, x1,y1,x2,y2, inp[7], inp[8],Vtree,Parent)
 
             if inp[1] != ".":#determining hierarchy level (1st level):Tile insertion
 
@@ -2317,6 +2445,9 @@ class CornerStitch():
 
         Htree.setNodeId1(Htree.hNodeList[0])
         Vtree.setNodeId1(Vtree.vNodeList[0])
+
+
+
         return Htree, Vtree
 
 # creating constraint graph from corner-stitched layout
@@ -2365,6 +2496,11 @@ class CS_to_CG():
         minHeight = map(int, height)
         minSpacing = [map(int, i) for i in SP]
         minEnclosure = [map(int, i) for i in EN]
+        #print minWidth
+        #print minExtension
+        #print minHeight
+        #print minSpacing
+        #print minEnclosure
         CONSTRAINT = ct.constraint()
         CONSTRAINT.setupMinWidth(minWidth)
         CONSTRAINT.setupMinHeight(minHeight)
@@ -2400,7 +2536,10 @@ class CS_to_CG():
             DIM.append(p)
         ALL_RECTS['V'] = DIM
 
-        SYM_CS = {}
+        #SYM_CS = {}
+        SYM_CS = {'H':[],'V':[]}
+        sym_cs_h ={}
+        sym_cs_v={}
         for rect in Input_rects:
             x1 = rect.x
             y1 = rect.y
@@ -2411,12 +2550,24 @@ class CS_to_CG():
             for k, v in ALL_RECTS.items():
                 if k == 'H':
                     key = name
-                    SYM_CS.setdefault(key, [])
+
+                    sym_cs_h.setdefault(key, [])
                     for i in v:
                         if i[0] >= x1 and i[1] >= y1 and i[0] + i[2] <= x2 and i[1] + i[3] <= y2 and i[4] == type:
-                            SYM_CS[key].append(i)
+                            sym_cs_h[key].append(i)
                         else:
                             continue
+                elif k=='V':
+                    key = name
+
+                    sym_cs_v.setdefault(key, [])
+                    for i in v:
+                        if i[0] >= x1 and i[1] >= y1 and i[0] + i[2] <= x2 and i[1] + i[3] <= y2 and i[4] == type:
+                            sym_cs_v[key].append(i)
+                        else:
+                            continue
+        SYM_CS['H'].append(sym_cs_h)
+        SYM_CS['V'].append(sym_cs_v)
         return SYM_CS
 
     ## Evaluates constraint graph depending on modes of operation
@@ -2448,6 +2599,520 @@ class CS_to_CG():
             CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList, self.level,Types=Types)
         MIN_X, MIN_Y = CG.minValueCalculation(Htree.hNodeList, Vtree.vNodeList, self.level)
         return MIN_X, MIN_Y
+        '''
+        if self.level == 0:
+
+            R = self.UPDATE_min(MIN_X, MIN_Y, Htree, Vtree)
+            Results = []
+            for i in R:
+                Rectangles = {}
+                for k, v in i.items():
+                    # print"Size", k, len(v)
+                    key = k
+                    Rectangles.setdefault(key, [])
+                    val = []
+                    value = {}
+                    for rect in v:
+                        # print "N",rect.name
+
+                        value[rect.name] = [rect.top, rect.bottom, rect.left, rect.right]
+                        # val.append(value)
+
+                        # rect.print_rect()
+                    Rectangles[key].append(value)
+                Results.append(Rectangles)
+
+        else:
+
+
+            DIM_H = {}
+
+            keys = MIN_X[0].keys()
+            # print keys
+            for i in range(len(keys)):
+                key = keys[i]
+                for k in range(len(Htree.hNodeList)):
+                    if Htree.hNodeList[k].id == key:
+
+                        coord = []
+                        for j in Htree.hNodeList[k].stitchList:
+                            x_y = [j.cell.x, j.cell.y, j.EAST.cell.x, j.NORTH.cell.y, j.name, j.cell.type,j.nodeId]
+                            coord.append(x_y)
+
+                DIM_H[key] = coord
+            # print"DIM", DIM_H
+            DIM_V = {}
+            keysv = MIN_Y[0].keys()
+            # print keys
+            for i in range(len(keysv)):
+                key = keysv[i]
+                for k in range(len(Vtree.vNodeList)):
+                    if Vtree.vNodeList[k].id == key:
+                        coord = []
+                        for j in Vtree.vNodeList[k].stitchList:
+                            x_y = [j.cell.x, j.cell.y, j.EAST.cell.x, j.NORTH.cell.y, j.name, j.cell.type,j.nodeId]
+                            coord.append(x_y)
+                DIM_V[key] = coord
+            # print"DIM", DIM_V
+
+            floorplan_results = []
+            for i in range(len(MIN_X)):
+                # print MIN_X[i],MIN_Y[i]
+
+                MINX = collections.OrderedDict(sorted(MIN_X[i].items()))
+                MINY = collections.OrderedDict(sorted(MIN_Y[i].items()))
+
+                HCS, VCS, HCS1, VCS1 = self.UPDATED_Location(MINX, MINY, DIM_H, DIM_V)
+
+            Results = []
+
+            for i in HCS:  # need to double check
+                Rectangles = {}
+                for k, v in i.items():
+                    # print"Size", k, len(v)
+                    key = k
+                    Rectangles.setdefault(key, [])
+                    val = []
+                    value = {}
+                    for rect in v:
+                        # print "N",rect.name
+
+                        value[rect.name] = [rect.top, rect.bottom, rect.left, rect.right]
+                        # val.append(value)
+
+                        # rect.print_rect()
+                    Rectangles[key].append(value)
+                Results.append(Rectangles)
+
+        return Results
+        '''
+
+
+    def update_min_hv(self,minx,miny,Htree,Vtree,sym_to_cs,s=1000.0):
+        all_init_rects_h = []
+        all_init_rects_v= []
+        #print "h", sym_to_cs
+        length=len(sym_to_cs['H'])
+        sym_to_cs_h=sym_to_cs['H']
+        sym_to_cs_v=sym_to_cs['V']
+        #print length
+        #print "h",sym_to_cs_h
+        #print "v",sym_to_cs_v
+        #cs_sym_info = [0 for i in range(len(length))]
+        cs_sym_info_h=[0 for i in range(length)]
+        cs_sym_info_v=[0 for i in range(length)]
+
+        for i in range(len(sym_to_cs_h)):
+            for k, v in sym_to_cs_h[i].items():
+                rect = v[0]
+                if rect.parent_name == None:
+                    init_rect = [rect.nodeId, rect.cell.x, rect.cell.y, rect.EAST.cell.x, rect.NORTH.cell.y,
+                                 rect.cell.type, rect.name, rect.parent_name]
+                    all_init_rects_h.append(init_rect)
+                    cs_sym_info_h[i] = {k: [init_rect, v[1]]}
+
+        for i in range(len(sym_to_cs_h)):
+            for k, v in sym_to_cs_h[i].items():
+                rect = v[0]
+                if rect.parent_name != None:
+                    parent = rect.parent_name
+                    for j in range(len(sym_to_cs_h)):
+                        for k1, v1 in sym_to_cs_h[j].items():
+                            rect1 = v1[0]
+
+                            if rect1.name == parent:
+                                nodeId = rect1.nodeId
+                                init_rect = [nodeId, rect.cell.x, rect.cell.y, rect.EAST.cell.x, rect.NORTH.cell.y,
+                                             rect.cell.type, rect.name, rect.parent_name]
+                                all_init_rects_h.append(init_rect)
+                                cs_sym_info_h[i] = {k: [init_rect, v[1]]}
+                            else:
+                                continue
+                                # break
+        for i in range(len(sym_to_cs_v)):
+            for k, v in sym_to_cs_v[i].items():
+                rect = v[0]
+                if rect.parent_name == None:
+                    init_rect = [rect.nodeId, rect.cell.x, rect.cell.y, rect.EAST.cell.x, rect.NORTH.cell.y,
+                                 rect.cell.type, rect.name, rect.parent_name]
+                    all_init_rects_v.append(init_rect)
+                    cs_sym_info_v[i] = {k: [init_rect, v[1]]}
+
+        for i in range(len(sym_to_cs_v)):
+            for k, v in sym_to_cs_v[i].items():
+                rect = v[0]
+                if rect.parent_name != None:
+                    parent = rect.parent_name
+                    for j in range(len(sym_to_cs_v)):
+                        for k1, v1 in sym_to_cs_v[j].items():
+                            rect1 = v1[0]
+
+                            if rect1.name == parent:
+                                nodeId = rect1.nodeId
+                                init_rect = [nodeId, rect.cell.x, rect.cell.y, rect.EAST.cell.x, rect.NORTH.cell.y,
+                                             rect.cell.type, rect.name, rect.parent_name]
+                                all_init_rects_v.append(init_rect)
+                                cs_sym_info_v[i] = {k: [init_rect, v[1]]}
+                            else:
+                                continue
+
+
+        for rect in Htree.hNodeList[0].stitchList:
+            if rect.cell.type == "EMPTY" and (
+                    rect.WEST in Htree.hNodeList[0].boundaries or rect.NORTH in Htree.hNodeList[
+                0].boundaries or rect.SOUTH in Htree.hNodeList[0].boundaries or rect.EAST in Htree.hNodeList[
+                        0].boundaries):
+                rect.name = "EMPTY"
+                init_rect = [rect.nodeId, rect.cell.x, rect.cell.y, rect.EAST.cell.x, rect.NORTH.cell.y, rect.cell.type,
+                             rect.name, rect.parent_name]
+                all_init_rects_h.append(init_rect)
+                cs_sym_info_h[i] = {k: [init_rect, v[1]]}
+
+        for rect in Vtree.vNodeList[0].stitchList:
+            if rect.cell.type == "EMPTY" and (
+                    rect.WEST in Htree.hNodeList[0].boundaries or rect.NORTH in Htree.hNodeList[
+                0].boundaries or rect.SOUTH in Htree.hNodeList[0].boundaries or rect.EAST in Htree.hNodeList[
+                        0].boundaries):
+                rect.name = "EMPTY"
+                init_rect = [rect.nodeId, rect.cell.x, rect.cell.y, rect.EAST.cell.x, rect.NORTH.cell.y, rect.cell.type,
+                             rect.name, rect.parent_name]
+                all_init_rects_v.append(init_rect)
+                cs_sym_info_v[i] = {k: [init_rect, v[1]]}
+
+        minx_nodes = minx.keys()
+        all_layout_rects= {}
+        #all_layout_rects_v = {}
+        layout_rects_h = []
+        layout_rects_v=[]
+        new_rects_h = {}
+        new_rects_v={}
+        for i in range(len(all_init_rects_h)):
+            rect = all_init_rects_h[i]
+            if rect[0] in minx and rect[0] in miny and rect[1] in minx and rect[2] in miny:
+                node = rect[0]
+                x = minx[node][rect[1]]
+                y = miny[node][rect[2]]
+                w = minx[node][rect[3]] - minx[node][rect[1]]
+                h = miny[node][rect[4]] - miny[node][rect[2]]
+                type = rect[5]
+                name = rect[6]
+                new_rect = [x / s, y / s, w / s, h / s, type]
+                layout_rects_h.append(new_rect)
+                new_rects_h[name] = [node, x, y, w, h, type, rect[7]]
+            else:
+                for k in ((minx_nodes)):
+                    # print minx[k],miny[k]
+                    # print rect
+                    if rect[1] in minx[k] and rect[2] in miny[k] and rect[3] in minx[k] and rect[4] in miny[k]:
+                        node = k
+                        x = minx[node][rect[1]]
+                        y = miny[node][rect[2]]
+                        w = minx[node][rect[3]] - minx[node][rect[1]]
+                        h = miny[node][rect[4]] - miny[node][rect[2]]
+                        type = rect[5]
+                        name = rect[6]
+                        new_rect = [x / s, y / s, w / s, h / s, type]
+                        layout_rects_h.append(new_rect)
+                        new_rects_h[name] = [node, x, y, w, h, type, rect[7]]
+
+        all_layout_rects['H'] = layout_rects_h
+        # print "N",new_rects
+
+        for i in range(len(all_init_rects_v)):
+            rect = all_init_rects_v[i]
+            if rect[0] in minx and rect[0] in miny and rect[1] in minx and rect[2] in miny:
+                node = rect[0]
+                x = minx[node][rect[1]]
+                y = miny[node][rect[2]]
+                w = minx[node][rect[3]] - minx[node][rect[1]]
+                h = miny[node][rect[4]] - miny[node][rect[2]]
+                type = rect[5]
+                name = rect[6]
+                new_rect = [x / s, y / s, w / s, h / s, type]
+                layout_rects_v.append(new_rect)
+                new_rects_v[name] = [node, x, y, w, h, type, rect[7]]
+            else:
+                for k in ((minx_nodes)):
+                    # print minx[k],miny[k]
+                    # print rect
+                    if rect[1] in minx[k] and rect[2] in miny[k] and rect[3] in minx[k] and rect[4] in miny[k]:
+                        node = k
+                        x = minx[node][rect[1]]
+                        y = miny[node][rect[2]]
+                        w = minx[node][rect[3]] - minx[node][rect[1]]
+                        h = miny[node][rect[4]] - miny[node][rect[2]]
+                        type = rect[5]
+                        name = rect[6]
+                        new_rect = [x / s, y / s, w / s, h / s, type]
+                        layout_rects_v.append(new_rect)
+                        new_rects_v[name] = [node, x, y, w, h, type, rect[7]]
+
+        all_layout_rects['V'] = layout_rects_v
+
+
+
+        for i in range(len(cs_sym_info_h)):
+
+            comp = cs_sym_info_h[i]
+            for k, v in comp.items():
+                if v[1] == None:
+                    v[0] = new_rects_h[k]
+                    v[1] = None
+                else:
+                    v[0] = new_rects_h[k]
+
+                    stitchList = []
+                    for rect in v[1].stitchList:
+
+                        init_rect = [rect.nodeId, rect.cell.x, rect.cell.y, rect.EAST.cell.x, rect.NORTH.cell.y,
+                                     rect.cell.type]
+
+                        if init_rect[0] in minx and init_rect[0] in miny:
+                            node = init_rect[0]
+                            x = minx[node][init_rect[1]]
+                            y = miny[node][init_rect[2]]
+                            w = minx[node][init_rect[3]] - minx[node][init_rect[1]]
+                            h = miny[node][init_rect[4]] - miny[node][init_rect[2]]
+                            type = init_rect[5]
+
+                            new_rect = Rectangle(x=x, y=y, width=w, height=h, type=type)
+                            stitchList.append(new_rect)
+                        else:
+                            for k in ((minx_nodes)):
+                                if init_rect[1] in minx[k] and init_rect[2] in miny[k] and init_rect[3] in minx[k] and \
+                                        init_rect[4] in miny[k]:
+                                    node = k
+                                    x = minx[node][init_rect[1]]
+                                    y = miny[node][init_rect[2]]
+                                    w = minx[node][init_rect[3]] - minx[node][init_rect[1]]
+                                    h = miny[node][init_rect[4]] - miny[node][init_rect[2]]
+                                    type = init_rect[5]
+                                    new_rect = Rectangle(x=x, y=y, width=w, height=h, type=type)
+                                    stitchList.append(new_rect)
+
+                    v[1] = stitchList
+
+
+        for i in range(len(cs_sym_info_v)):
+
+            comp = cs_sym_info_v[i]
+            for k, v in comp.items():
+                if v[1] == None:
+                    v[0] = new_rects_v[k]
+                    v[1] = None
+                else:
+                    v[0] = new_rects_v[k]
+
+                    stitchList = []
+                    for rect in v[1].stitchList:
+
+                        init_rect = [rect.nodeId, rect.cell.x, rect.cell.y, rect.EAST.cell.x, rect.NORTH.cell.y,
+                                     rect.cell.type]
+
+                        if init_rect[0] in minx and init_rect[0] in miny:
+                            node = init_rect[0]
+                            x = minx[node][init_rect[1]]
+                            y = miny[node][init_rect[2]]
+                            w = minx[node][init_rect[3]] - minx[node][init_rect[1]]
+                            h = miny[node][init_rect[4]] - miny[node][init_rect[2]]
+                            type = init_rect[5]
+
+                            new_rect = Rectangle(x=x, y=y, width=w, height=h, type=type)
+                            stitchList.append(new_rect)
+                        else:
+                            for k in ((minx_nodes)):
+                                if init_rect[1] in minx[k] and init_rect[2] in miny[k] and init_rect[3] in minx[k] and \
+                                        init_rect[4] in miny[k]:
+                                    node = k
+                                    x = minx[node][init_rect[1]]
+                                    y = miny[node][init_rect[2]]
+                                    w = minx[node][init_rect[3]] - minx[node][init_rect[1]]
+                                    h = miny[node][init_rect[4]] - miny[node][init_rect[2]]
+                                    type = init_rect[5]
+                                    new_rect = Rectangle(x=x, y=y, width=w, height=h, type=type)
+                                    stitchList.append(new_rect)
+
+                    v[1] = stitchList
+
+        # print all_layout_rects
+        # print cs_sym_info
+        cs_sym_info={}
+        cs_sym_info['H']=cs_sym_info_h
+        cs_sym_info['V']=cs_sym_info_v
+        #print cs_sym_info
+        return cs_sym_info, all_layout_rects
+
+
+
+
+    def update_min(self,minx,miny,Htree,sym_to_cs,s=1000.0):
+        '''
+
+        :param minx: Evaluated minimum x coordinates
+        :param miny: Evaluated minimum y coordinates
+        :param sym_to_cs: initial input to initial cornerstitch mapped information
+        :param s: divider
+        :return:
+        '''
+
+        all_init_rects=[]
+        cs_sym_info=[0 for i in range(len(sym_to_cs))]
+        for i in range(len(sym_to_cs)):
+            for k,v in sym_to_cs[i].items():
+                rect=v[0]
+                if rect.parent_name==None:
+                    init_rect=[rect.nodeId,rect.cell.x,rect.cell.y,rect.EAST.cell.x,rect.NORTH.cell.y,rect.cell.type,rect.name,rect.parent_name]
+                    all_init_rects.append(init_rect)
+                    cs_sym_info[i] = {k: [init_rect, v[1]]}
+
+        for i in range(len(sym_to_cs)):
+            for k, v in sym_to_cs[i].items():
+                rect = v[0]
+                if rect.parent_name!=None:
+                    parent = rect.parent_name
+                    for j in range(len(sym_to_cs)):
+                        for k1, v1 in sym_to_cs[j].items():
+                            rect1=v1[0]
+
+                            if rect1.name==parent:
+                                nodeId=rect1.nodeId
+                                init_rect = [nodeId, rect.cell.x, rect.cell.y, rect.EAST.cell.x, rect.NORTH.cell.y,
+                                             rect.cell.type, rect.name, rect.parent_name]
+                                all_init_rects.append(init_rect)
+                                cs_sym_info[i] = {k: [init_rect, v[1]]}
+                            else:
+                                continue
+                                #break
+
+
+
+
+
+
+
+
+
+        for rect in Htree.hNodeList[0].stitchList:
+            if rect.cell.type=="EMPTY" and (rect.WEST in Htree.hNodeList[0].boundaries or rect.NORTH in Htree.hNodeList[0].boundaries or rect.SOUTH in Htree.hNodeList[0].boundaries or rect.EAST in Htree.hNodeList[0].boundaries):
+                rect.name="EMPTY"
+                init_rect=[rect.nodeId,rect.cell.x,rect.cell.y,rect.EAST.cell.x,rect.NORTH.cell.y,rect.cell.type,rect.name,rect.parent_name]
+                all_init_rects.append(init_rect)
+                cs_sym_info[i] = {k: [init_rect, v[1]]}
+
+
+
+
+        minx_nodes=minx.keys()
+        all_layout_rects={}
+        layout_rects=[]
+        new_rects={}
+        for i in range(len(all_init_rects)):
+            rect=all_init_rects[i]
+            if rect[0] in minx and rect[0] in miny and rect[1] in minx and rect[2] in miny:
+                node=rect[0]
+                x=minx[node][rect[1]]
+                y=miny[node][rect[2]]
+                w=minx[node][rect[3]] - minx[node][rect[1]]
+                h=miny[node][rect[4]] - miny[node][rect[2]]
+                type=rect[5]
+                name=rect[6]
+                new_rect=[x/s,y/s,w/s,h/s,type]
+                layout_rects.append(new_rect)
+                new_rects[name]=[node,x,y,w,h,type,rect[7]]
+            else:
+                for k in ((minx_nodes)):
+                    #print minx[k],miny[k]
+                    #print rect
+                    if rect[1] in minx[k] and rect[2] in miny[k] and rect[3] in minx[k] and rect[4] in miny[k]:
+                        node=k
+                        x = minx[node][rect[1]]
+                        y = miny[node][rect[2]]
+                        w = minx[node][rect[3]] - minx[node][rect[1]]
+                        h = miny[node][rect[4]] - miny[node][rect[2]]
+                        type = rect[5]
+                        name = rect[6]
+                        new_rect = [x/s, y/s, w/s, h/s, type]
+                        layout_rects.append(new_rect)
+                        new_rects[name] = [node, x, y, w, h, type, rect[7]]
+
+
+
+        all_layout_rects['H']=layout_rects
+        #print "N",new_rects
+        for i in range(len(cs_sym_info)):
+
+            comp=cs_sym_info[i]
+            for k,v in comp.items():
+                if v[1]==None:
+                    v[0]=new_rects[k]
+                    v[1]=None
+                else:
+                    v[0] = new_rects[k]
+
+                    stitchList = []
+                    for rect in v[1].stitchList:
+
+                        init_rect = [rect.nodeId, rect.cell.x, rect.cell.y, rect.EAST.cell.x, rect.NORTH.cell.y,
+                                     rect.cell.type]
+
+                        if init_rect[0] in minx and init_rect[0] in miny:
+                            node=init_rect[0]
+                            x = minx[node][init_rect[1]]
+                            y = miny[node][init_rect[2]]
+                            w = minx[node][init_rect[3]] - minx[node][init_rect[1]]
+                            h = miny[node][init_rect[4]] - miny[node][init_rect[2]]
+                            type = init_rect[5]
+
+                            new_rect=Rectangle(x=x,y=y,width=w,height=h,type=type)
+                            stitchList.append(new_rect)
+                        else:
+                            for k in ((minx_nodes)):
+                                if init_rect[1] in minx[k] and init_rect[2] in miny[k] and init_rect[3] in minx[k] and init_rect[4] in miny[k]:
+                                    node = k
+                                    x = minx[node][init_rect[1]]
+                                    y = miny[node][init_rect[2]]
+                                    w = minx[node][init_rect[3]] - minx[node][init_rect[1]]
+                                    h = miny[node][init_rect[4]] - miny[node][init_rect[2]]
+                                    type = init_rect[5]
+                                    new_rect = Rectangle(x=x, y=y, width=w, height=h, type=type)
+                                    stitchList.append(new_rect)
+
+                    v[1]=stitchList
+
+
+
+        #print all_layout_rects
+        #print cs_sym_info
+        return cs_sym_info,all_layout_rects
+
+
+    def update(self,minx,miny,Htree,sym_to_cs,s=1000):
+
+        all_init_rects = []
+        cs_sym_info = [0 for i in range(len(sym_to_cs))]
+        for i in range(len(sym_to_cs)):
+            for k, v in sym_to_cs[i].items():
+                rect = v[0]
+                init_rect = [rect.nodeId, rect.cell.x, rect.cell.y, rect.EAST.cell.x, rect.NORTH.cell.y, rect.cell.type,
+                             rect.name, rect.parent_name]
+                all_init_rects.append(init_rect)
+                cs_sym_info[i] = {k: [init_rect, v[1]]}
+
+        for rect in Htree.hNodeList[0].stitchList:
+            if rect.cell.type == "EMPTY" and (
+                    rect.WEST in Htree.hNodeList[0].boundaries or rect.NORTH in Htree.hNodeList[
+                0].boundaries or rect.SOUTH in Htree.hNodeList[0].boundaries or rect.EAST in Htree.hNodeList[
+                        0].boundaries):
+                rect.name = "EMPTY"
+                init_rect = [rect.nodeId, rect.cell.x, rect.cell.y, rect.EAST.cell.x, rect.NORTH.cell.y, rect.cell.type,
+                             rect.name, rect.parent_name]
+                all_init_rects.append(init_rect)
+                cs_sym_info[i] = {k: [init_rect, v[1]]}
+
+
+        all_cs_sym_info=[]
+        print len(minx)
+        print len(miny)
 
 
 
@@ -2484,30 +3149,34 @@ class CS_to_CG():
                 #for d in range(len(i.stitchList)):
                     #j=i.stitchList[d]
                 for j in i.stitchList:
-                    p = [j.cell.x, j.cell.y, j.getWidth(), j.getHeight(),j.cell.type]
+                    p = [j.cell.x, j.cell.y, j.getWidth(), j.getHeight(),j.cell.type, j.nodeId]
 
                     DIM.append(p)
 
-                    k = [j.cell.x, j.cell.y, j.EAST.cell.x, j.NORTH.cell.y]
+                    k = [j.cell.x, j.cell.y, j.EAST.cell.x, j.NORTH.cell.y,j.nodeId]
 
 
                     if k[0] in MINX[i.id].keys() and k[1] in MINY[i.id].keys() and k[2] in MINX[i.id].keys() and k[3] in \
                             MINY[i.id].keys():
                         rect = [(MINX[i.id][k[0]]), (MINY[i.id][k[1]]), (MINX[i.id][k[2]]) - (MINX[i.id][k[0]]),
-                               (MINY[i.id][k[3]]) - (MINY[i.id][k[1]]), j.cell.type]
-                        r1=Rectangle(x=rect[0],y=rect[1],width=rect[2],height=rect[3],type=rect[4])
+                               (MINY[i.id][k[3]]) - (MINY[i.id][k[1]]), j.cell.type,j.nodeId]
+                        r1=Rectangle(x=rect[0],y=rect[1],width=rect[2],height=rect[3],type=rect[4],name=j.name)
                         r2 = [float(MINX[i.id][k[0]]) / s, float(MINY[i.id][k[1]]) / s,
                                 float(MINX[i.id][k[2]]) / s - float(MINX[i.id][k[0]]) / s,
-                                float(MINY[i.id][k[3]]) / s - float(MINY[i.id][k[1]]) / s, j.cell.type]
-                    for k1,v in sym_to_cs.items():
+                                float(MINY[i.id][k[3]]) / s - float(MINY[i.id][k[1]]) / s, j.cell.type,j.nodeId]
+
+                    for k1,v in sym_to_cs[0].items():
 
                         key=k1
-                        ALL_HRECTS.setdefault(key,[])
+                        #ALL_HRECTS.setdefault(key,[])
+                        item=[]
                         for r in v:
-
-                            if r[0]==k[0] and r[1]==k[1]:
-                                ALL_HRECTS[key].append(r1)
-
+                            if isinstance (r,tile):
+                                if r.cell.x==k[0] and r.cell.y==k[1]:
+                                    item.append(r1)
+                            elif r==None:
+                                item.append(None)
+                            ALL_HRECTS[key]=item
 
                     Dimensions.append(r2)
 
@@ -2515,6 +3184,20 @@ class CS_to_CG():
                 Recatngles_H[i.id] = Dimensions
                 RET_H[i.id] = DIM
 
+        for k1, v in sym_to_cs[0].items():
+            for r in v:
+                if isinstance(r,Hnode):
+                    rects=[]
+                    for node in Htree.hNodeList:
+                        if r.id==node.id:
+                            for j in node.stitchList:
+                                k = [j.cell.x, j.cell.y, j.EAST.cell.x, j.NORTH.cell.y, j.nodeId]
+                                if k[0] in MINX[i.id].keys() and k[1] in MINY[i.id].keys() and k[2] in MINX[i.id].keys() and k[3] in MINY[i.id].keys():
+                                    rect = [(MINX[i.id][k[0]]), (MINY[i.id][k[1]]),
+                                            (MINX[i.id][k[2]]) - (MINX[i.id][k[0]]),
+                                            (MINY[i.id][k[3]]) - (MINY[i.id][k[1]]), j.cell.type, j.nodeId]
+                                    r1 = Rectangle(x=rect[0], y=rect[1], width=rect[2], height=rect[3], type=rect[4])
+                                    rects.append(r1)
 
 
         Recatngles_V = {}
@@ -2528,13 +3211,13 @@ class CS_to_CG():
                 #for d in range(len(i.stitchList)):
                     #j=i.stitchList[d]
                 for j in i.stitchList:
-                    p = [j.cell.x, j.cell.y, j.getWidth(), j.getHeight(), j.voltage, j.current, j.cell.type]
+                    p = [j.cell.x, j.cell.y, j.getWidth(), j.getHeight(), j.voltage, j.current, j.cell.type,j.nodeId]
                     DIM_V.append(p)
                     k = [j.cell.x, j.cell.y, j.EAST.cell.x, j.NORTH.cell.y]
                     if k[0] in MINX[i.id].keys() and k[1] in MINY[i.id].keys() and k[2] in MINX[i.id].keys() and k[3] in \
                             MINY[i.id].keys():
                         rect = [float(MINX[i.id][k[0]])/s, float(MINY[i.id][k[1]])/s, float(MINX[i.id][k[2]])/s - float(MINX[i.id][k[0]])/s,
-                                float(MINY[i.id][k[3]])/s - float(MINY[i.id][k[1]])/s, j.cell.type]
+                                float(MINY[i.id][k[3]])/s - float(MINY[i.id][k[1]])/s, j.cell.type,j.nodeId]
 
 
 
@@ -2553,6 +3236,80 @@ class CS_to_CG():
         for k, v in Recatngles_V.items():
             ALL_RECTS['V'] = v
         return ALL_HRECTS,ALL_RECTS
+
+    def UPDATED_Location(self,MINX, MINY, DIM_H, DIM_V):
+
+        DIM_H_up = {}
+        HCS = {}
+        VCS = {}
+        DIM_V_up = {}
+
+        for k, v in DIM_H.items():
+
+            Rects = []
+            Plot_rect = []
+            for i in v:
+                if i[0] in MINX[k].keys() and i[2] in MINX[k].keys() and i[1] in MINY[k].keys() and i[3] in MINY[k].keys():
+
+                    rect = [MINX[k][i[0]], MINY[k][i[1]], MINX[k][i[2]], MINY[k][i[3]], i[-2], i[-1],i[-4]]
+                    rect_to_plot = [rect[0], rect[1], rect[2] - rect[0], rect[3] - rect[1],rect[6],rect[4],
+                                    rect[5]]  # x,y,width,height
+
+                Rects.append(rect)
+                Plot_rect.append(rect_to_plot)
+            DIM_H_up[k] = Rects
+            HCS[k] = Plot_rect
+        # print"UP", DIM_H_up
+        for k, v in DIM_V.items():
+
+            Rects = []
+            Plot_rect = []
+            for i in v:
+                if i[0] in MINX[k].keys() and i[2] in MINX[k].keys() and i[1] in MINY[k].keys() and i[3] in MINY[
+                    k].keys():
+                    '''
+                    bw = None
+                    if len(i[-3]) > 0:
+                        if i[-2] != "Type_1":
+                            num_bw = 0
+                            for j in i[-3]:
+                                if j.num_of_bw > num_bw:
+                                    num_bw = j.num_of_bw
+                                    bw = j
+                    '''
+                    bw = None
+                    if len(i[-3]) > 0:
+                        if i[-2] != "Type_1":
+                            bw = []
+                            for j in i[-3]:
+                                bw.append({(j.name,j.direction,j.num_of_bw):(MINX[k][j.src_coordinate[0]],MINY[k][j.src_coordinate[1]]) })
+                    rect = [MINX[k][i[0]], MINY[k][i[1]], MINX[k][i[2]], MINY[k][i[3]], i[-2], i[-1],i[-4]]
+                    rect_to_plot = [rect[0], rect[1], rect[2] - rect[0], rect[3] - rect[1],rect[6],bw, rect[4],
+                                    rect[5]]  # x,y,width,height
+                Rects.append(rect)
+                Plot_rect.append(rect_to_plot)
+            DIM_V_up[k] = Rects
+            VCS[k] = Plot_rect
+        Total_H = []
+        Total_V = []
+        # print HCS,VCS
+        HCS = collections.OrderedDict(sorted(HCS.items()))
+        VCS = collections.OrderedDict(sorted(VCS.items()))
+        # print"HCS", HCS
+        # print "VCS",VCS
+        for k, v in HCS.items():
+            Total_H.append(v)
+            # plotrectH(k,v,format)
+
+        # print"TOT", Total_H
+        for k, v in VCS.items():
+            Total_V.append(v)
+            # plotrectV(k,v,format)
+        return Total_H, Total_V, HCS, VCS
+
+
+
+
 
     def UPDATE(self,MINX,MINY,Htree, Vtree, sym_to_cs,s=1000):
         '''
@@ -2582,7 +3339,7 @@ class CS_to_CG():
         #s=1000 #scaler
         for d in range(len(Htree.hNodeList[0].stitchList)):
             j=Htree.hNodeList[0].stitchList[d]
-            k = [j.cell.x, j.cell.y, j.EAST.cell.x, j.NORTH.cell.y,j.cell.type]
+            k = [j.cell.x, j.cell.y, j.EAST.cell.x, j.NORTH.cell.y,j.cell.type,j.nodeId]
 
             DIM.append(k)
 

@@ -167,7 +167,9 @@ class Cmd_Handler:
                 for k, v in self.engine.init_data[1].items():
                     rects = []
                     for i in v:
-                        rect = Rectangle(x=i[0] * 1000, y=i[1] * 1000, width=i[2] * 1000, height=i[3] * 1000, type=i[4])
+                        i=i.values()[0][0]
+                        rect = Rectangle(x=i.cell.x * 1000, y=i.cell.y * 1000, width=i.getWidth() * 1000,
+                                         height=i.getHeight() * 1000, type=i.cell.type)
                         rects.append(rect)
                     init_rects[k] = rects
                 cs_sym_info = {(width * 1000, height * 1000): init_rects}

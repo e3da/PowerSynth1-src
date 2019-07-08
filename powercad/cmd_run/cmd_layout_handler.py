@@ -124,10 +124,11 @@ def update_solution_data(layout_dictionary=None, opt_problem=None, measure_names
     :return:
     '''
     Solutions = []
+    print layout_dictionary
     for i in range(len(layout_dictionary)):
-
         if opt_problem != None:  # Evaluatio mode
-            results = opt_problem.eval_layout(layout_dictionary[i])
+            layout_data = {'H':layout_dictionary[i]['H'], 'V': layout_dictionary[i]['V']}
+            results = opt_problem.eval_layout(layout_data)
         else:
             results = perf_results[i]
         name = 'Layout_' + str(i)
@@ -135,7 +136,7 @@ def update_solution_data(layout_dictionary=None, opt_problem=None, measure_names
         solution = CornerStitchSolution(name=name,index=i)
         solution.params = dict(zip(measure_names, results))  # A dictionary formed by result and measurement name
         #print "Added", name,"Perf_values: ", solution.params.values()
-        solution.layout_info = layout_dictionary[i]
+        solution.layout_info = layout_dictionary[i]['H']
         solution.abstract_info = solution.form_abs_obj_rect_dict()
         Solutions.append(solution)
     return Solutions
@@ -221,7 +222,7 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
 
     :return: list of CornerStitch Solution objects
     '''
-    plot = False
+    plot = True
 
 
     # GET MEASUREMENT NAME:
@@ -235,8 +236,7 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
                                                                  seed=None,
                                                                  individual=None,db=db_file, bar=False)
 
-
-
+        print cs_sym_info
         if optimization == True:
             opt_problem = new_engine_opt(engine=layout_engine, W=None, H=None, seed=None, level=mode, method=None,
                                          apis=apis, measures=measures)
@@ -245,6 +245,7 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
 
         else:
             Solutions = []
+
             for i in range(len(cs_sym_info)):
                 name = 'Layout_' + str(i)
                 solution = CornerStitchSolution(name=name,index=i)
@@ -257,7 +258,7 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
             if not os.path.exists(sol_path):
                 os.makedirs(sol_path)
             for solution in Solutions:
-                size=solution.layout_info.keys()[0]
+                size=solution.layout_info['H'].keys()[0]
                 size=list(size)
                 print "Min-size", size[0]/1000,size[1]/1000
                 solution.layout_plot(layout_ind=solution.index, db=db_file, fig_dir=sol_path)
@@ -279,6 +280,8 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
 
                 opt_problem = new_engine_opt(engine=layout_engine, W=None, H=None, seed=seed, level=mode, method=None,
                                              apis=apis, measures=measures)
+                cs_sym_info = cs_sym_info['H']  # only collect horizontal data for solution
+
                 Solutions = update_solution_data(layout_dictionary=cs_sym_info, opt_problem=opt_problem,
                                                  measure_names=measure_names)
 
@@ -352,6 +355,8 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
 
 
             Solutions = []
+            cs_sym_info = cs_sym_info['H']  # only collect horizontal data for solution
+
             for i in range(len(cs_sym_info)):
                 name = 'Layout_' + str(i)
                 solution = CornerStitchSolution(name=name)
@@ -386,6 +391,8 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
                 opt_problem = new_engine_opt(engine=layout_engine, W=width, H=height, seed=seed, level=mode,
                                              method=None,
                                              apis=apis, measures=measures)
+
+                #cs_sym_info = cs_sym_info['H']  # only collect horizontal data for solution
 
                 Solutions = update_solution_data(layout_dictionary=cs_sym_info, opt_problem=opt_problem,
                                                  measure_names=measure_names)
@@ -452,7 +459,7 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
             cs_sym_info = layout_engine.generate_solutions(mode, num_layouts=num_layouts, W=width, H=height,
                                                                      fixed_x_location=None, fixed_y_location=None,
                                                                      seed=seed, individual=None,db=db_file, bar=False)
-
+            #cs_sym_info = cs_sym_info['H'] # only collect horizontal data for solution
             Solutions = []
             for i in range(len(cs_sym_info)):
                 name = 'Layout_' + str(i)
@@ -671,5 +678,6 @@ def script_translator(input_script=None, bond_wire_info=None, fig_dir=None, cons
     # New_engine.open_new_layout_engine(window=window)
     cs_sym_data = New_engine.generate_solutions(level=0, num_layouts=1, W=None, H=None, fixed_x_location=None,
                                                          fixed_y_location=None, seed=None, individual=None)
+    # cs_sym_data contains both horizontal and vertical CS data
 
     return New_engine, cs_sym_data, bondwires, island_info

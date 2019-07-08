@@ -49,7 +49,7 @@ class ENetlist():
             for sh in comp.sheet:
                 all_net.append(net_graph_id[sh.net])  # create a list of net id for component pins
             self.comp_net.append(all_net)
-        # All edges among pins in each component need to be removed
+        # All edges among pins for each component need to be removed
         for pins in self.comp_net:
             edge = {}
             for p1 in pins:
