@@ -1,8 +1,12 @@
 from powercad.corner_stitch.optimization_algorithm_support import new_engine_opt
+import os
+from powercad.cons_aware_en.database import create_connection, insert_record
 from powercad.corner_stitch.cs_solution import CornerStitchSolution
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
 from powercad.corner_stitch.input_script import *
 from powercad.sol_browser.cs_solution_handler import pareto_solutions,export_solutions
-from powercad.electrical_mdl.e_handler import E_Rect
+import time
 
 # --------------Plot function---------------------
 def plot_layout(fig_data=None, rects=None, size=None, fig_dir=None):
@@ -99,7 +103,7 @@ def eval_single_layout(layout_engine=None, layout_data=None, apis={}, measures=[
     opt_problem = new_engine_opt(engine=layout_engine, W=layout_engine.init_size[0], H=layout_engine.init_size[1],
                                  seed=None, level=2, method=None, apis=apis, measures=measures)
 
-    results = opt_problem.eval_layout(layout_data)
+    results = opt_problem.eval_layout(layout_data,islands_info)
     measure_names = []
     for m in measures:
         measure_names.append(m.name)
@@ -114,7 +118,7 @@ def eval_single_layout(layout_engine=None, layout_data=None, apis={}, measures=[
     return Solutions
 
 
-def update_solution_data(layout_dictionary=None, opt_problem=None, measure_names=[], perf_results=[]):
+def update_solution_data(layout_dictionary=None,islands_info=None, opt_problem=None, measure_names=[], perf_results=[]):
     '''
 
     :param layout_dictionary: list of CS layout data
@@ -124,19 +128,18 @@ def update_solution_data(layout_dictionary=None, opt_problem=None, measure_names
     :return:
     '''
     Solutions = []
-    print layout_dictionary
     for i in range(len(layout_dictionary)):
+
         if opt_problem != None:  # Evaluatio mode
-            layout_data = {'H':layout_dictionary[i]['H'], 'V': layout_dictionary[i]['V']}
-            results = opt_problem.eval_layout(layout_data)
+            results = opt_problem.eval_layout(layout_dictionary[i])
         else:
             results = perf_results[i]
         name = 'Layout_' + str(i)
 
         solution = CornerStitchSolution(name=name,index=i)
         solution.params = dict(zip(measure_names, results))  # A dictionary formed by result and measurement name
-        #print "Added", name,"Perf_values: ", solution.params.values()
-        solution.layout_info = layout_dictionary[i]['H']
+        print "Added", name,"Perf_values: ", solution.params.values()
+        solution.layout_info = layout_dictionary[i]
         solution.abstract_info = solution.form_abs_obj_rect_dict()
         Solutions.append(solution)
     return Solutions
@@ -231,21 +234,22 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
         measure_names.append(m.name)
 
     if mode == 0:
-        cs_sym_info = layout_engine.generate_solutions(mode, num_layouts=1, W=None, H=None,
+        cs_sym_info,islands_info = layout_engine.generate_solutions(mode, num_layouts=1, W=None, H=None,
                                                                  fixed_x_location=None, fixed_y_location=None,
                                                                  seed=None,
                                                                  individual=None,db=db_file, bar=False)
 
-        print cs_sym_info
+
+
         if optimization == True:
+
             opt_problem = new_engine_opt(engine=layout_engine, W=None, H=None, seed=None, level=mode, method=None,
                                          apis=apis, measures=measures)
-            Solutions = update_solution_data(layout_dictionary=cs_sym_info, opt_problem=opt_problem,
+            Solutions = update_solution_data(layout_dictionary=cs_sym_info,islands_info=islands_info, opt_problem=opt_problem,
                                              measure_names=measure_names)
 
         else:
             Solutions = []
-
             for i in range(len(cs_sym_info)):
                 name = 'Layout_' + str(i)
                 solution = CornerStitchSolution(name=name,index=i)
@@ -258,7 +262,7 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
             if not os.path.exists(sol_path):
                 os.makedirs(sol_path)
             for solution in Solutions:
-                size=solution.layout_info['H'].keys()[0]
+                size=solution.layout_info.keys()[0]
                 size=list(size)
                 print "Min-size", size[0]/1000,size[1]/1000
                 solution.layout_plot(layout_ind=solution.index, db=db_file, fig_dir=sol_path)
@@ -274,15 +278,13 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
             num_layouts = params[0]
             if choice == "NG-RANDOM":
 
-                cs_sym_info = layout_engine.generate_solutions(mode, num_layouts=num_layouts, W=None, H=None,
+                cs_sym_info,islands_info = layout_engine.generate_solutions(mode, num_layouts=num_layouts, W=None, H=None,
                                                                          fixed_x_location=None, fixed_y_location=None,
                                                                          seed=seed, individual=None,db=db_file,count=None, bar=False)
 
                 opt_problem = new_engine_opt(engine=layout_engine, W=None, H=None, seed=seed, level=mode, method=None,
                                              apis=apis, measures=measures)
-                cs_sym_info = cs_sym_info['H']  # only collect horizontal data for solution
-
-                Solutions = update_solution_data(layout_dictionary=cs_sym_info, opt_problem=opt_problem,
+                Solutions = update_solution_data(layout_dictionary=cs_sym_info,islands_info=islands_info, opt_problem=opt_problem,
                                                  measure_names=measure_names)
 
             else:
@@ -325,7 +327,7 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
                     opt_problem.T_init = temp_init  # initial temperature
                     opt_problem.optimize()  # results=list of list, where each element=[fig,cs_sym_info,perf1_value,perf2_value,...]
 
-                Solutions = update_solution_data(layout_dictionary=opt_problem.layout_data, measure_names=measure_names,
+                Solutions = update_solution_data(layout_dictionary=opt_problem.layout_data,islands_info=opt_problem.islands_info, measure_names=measure_names,
                                                  perf_results=opt_problem.perf_results)
 
 
@@ -349,14 +351,12 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
             params = get_params(num_layouts=num_layouts,alg='LAYOUT_GEN')
             num_layouts = params[0]
 
-            cs_sym_info = layout_engine.generate_solutions(mode, num_layouts=num_layouts, W=None, H=None,
+            cs_sym_info,islands_info = layout_engine.generate_solutions(mode, num_layouts=num_layouts, W=None, H=None,
                                                                      fixed_x_location=None, fixed_y_location=None,
                                                                      seed=seed, individual=None,db=db_file, bar=False)
 
 
             Solutions = []
-            cs_sym_info = cs_sym_info['H']  # only collect horizontal data for solution
-
             for i in range(len(cs_sym_info)):
                 name = 'Layout_' + str(i)
                 solution = CornerStitchSolution(name=name)
@@ -383,7 +383,7 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
             if choice == "NG-RANDOM":
                 params = get_params(num_layouts=num_layouts,alg='NG-RANDOM')
                 num_layouts = params[0]
-                cs_sym_info = layout_engine.generate_solutions(mode, num_layouts=num_layouts, W=width,
+                cs_sym_info,islands_info = layout_engine.generate_solutions(mode, num_layouts=num_layouts, W=width,
                                                                          H=height,
                                                                          fixed_x_location=None, fixed_y_location=None,
                                                                          seed=seed, individual=None,db=db_file, bar=False)
@@ -392,9 +392,7 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
                                              method=None,
                                              apis=apis, measures=measures)
 
-                #cs_sym_info = cs_sym_info['H']  # only collect horizontal data for solution
-
-                Solutions = update_solution_data(layout_dictionary=cs_sym_info, opt_problem=opt_problem,
+                Solutions = update_solution_data(layout_dictionary=cs_sym_info,islands_info=islands_info, opt_problem=opt_problem,
                                                  measure_names=measure_names)
             else:
                 if choice == "NSGAII":
@@ -434,7 +432,7 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
                     opt_problem.num_gen = num_layouts  # number of generations
                     opt_problem.T_init = temp_init  # initial temperature
                     opt_problem.optimize()  # perform optimization
-                Solutions = update_solution_data(layout_dictionary=opt_problem.layout_data, measure_names=measure_names, perf_results=opt_problem.perf_results)
+                Solutions = update_solution_data(layout_dictionary=opt_problem.layout_data,islands_info=opt_problem.islands_info, measure_names=measure_names, perf_results=opt_problem.perf_results)
 
             #---------------------------------------------- save pareto data and plot figures ------------------------------------
             # checking pareto_plot and saving csv file
@@ -456,10 +454,10 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
             num_layouts=params[0]
 
 
-            cs_sym_info = layout_engine.generate_solutions(mode, num_layouts=num_layouts, W=width, H=height,
+            cs_sym_info,islands_info = layout_engine.generate_solutions(mode, num_layouts=num_layouts, W=width, H=height,
                                                                      fixed_x_location=None, fixed_y_location=None,
                                                                      seed=seed, individual=None,db=db_file, bar=False)
-            #cs_sym_info = cs_sym_info['H'] # only collect horizontal data for solution
+
             Solutions = []
             for i in range(len(cs_sym_info)):
                 name = 'Layout_' + str(i)
@@ -553,86 +551,12 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
 
     return Solutions
 
-def form_direct_mutual_pairs(cs_info):
-    trace_raw_data = []  # for trace type (power and signal)
-    for data in cs_info:  # define groups for traces and devices
-        left = data[1]
-        bot = data[2]
-        right = data[1] + data[3]
-        top = data[2] + data[4]
-        name = data[5]
-        type = data[0]
-        if type == 'Type_1' or type == 'Type_2':
-            trace_raw_data.append([name, E_Rect(top=top, bottom=bot, left=left, right=right)])
-
-
-
-
-def get_hierachy_info(cs_info):
-    #Use raw data from CS info to form a hierarchy which can be used later for meshing. This is less computationally expensive
-
-    group_check =[] # list of names of object, pop this everytime a new intersection is found
-    trace_raw_data= [] # for trace type (power and signal)
-    conn_raw_data=[] # for other types
-    name_to_group=OrderedDict()
-
-    g_id =0
-    for data in cs_info: # define groups for traces and devices
-        left = data[1]
-        bot = data[2]
-        right = data[1]+data[3]
-        top = data[2] + data[4]
-        name = data[5]
-        group_check.append(name)
-        type = data[0]
-        if type == 'Type_1' or type == 'Type_2':
-            trace_raw_data.append([name,Rect(top=top,bottom=bot,left=left,right=right)])
-            name_to_group[name]=g_id
-            g_id +=1 # a unique group id for each rect
-        else:
-            conn_raw_data.append([name, Rect(top=top, bottom=bot, left=left, right=right)])
-    print name_to_group
-    # This has to be O(N^2) if they are all in different groups
-    for d1 in trace_raw_data:
-        name1 = d1[0]
-        rect1 = d1[1]
-        for d2 in trace_raw_data:
-            name2 = d2[0]
-            rect2 = d2[1]
-            if name_to_group[name1] != name_to_group[name2]: # If they are not in same group
-                if rect1.intersects(rect2): # if they intersect to each other
-                    name_to_group[name2]= name_to_group[name1] # update the group id of this trace
-    init_name = list(set(name_to_group.values()))
-    isl_name = ['isl_'+str(i) for i in range(len(init_name))]
-    new_isl_name_map = OrderedDict((k,i) for i,k in zip(init_name,isl_name))
-    trace_isl = OrderedDict((n,[]) for n in isl_name)
-    # Form trace isl
-    for k in trace_isl:
-        isl = trace_isl[k]
-        init_name = new_isl_name_map[k]
-        for t in trace_raw_data:
-            if init_name == name_to_group[t[0]]:
-                isl.append(t)
-    # Append conn data to isl:
-
-    for k in trace_isl:
-        dev =[]
-        for t in trace_isl[k]:
-            for c in conn_raw_data:
-                if t[1].encloses(c[1].left,c[1].bottom):
-                    dev.append(c)
-        trace_isl[k]+=dev
-    print  trace_isl
-
-    return trace_isl
 
 def script_translator(input_script=None, bond_wire_info=None, fig_dir=None, constraint_file=None,mode=None):
     ScriptMethod = ScriptInputMethod(input_script)  # initializes the class with filename
     ScriptMethod.read_input_script()  # reads input script and make two sections
     ScriptMethod.gather_part_route_info()  # gathers part and route info
     ScriptMethod.gather_layout_info()  # gathers layout info
-
-    island_info=get_hierachy_info(ScriptMethod.cs_info)
     # print ScriptMethod.size
     # print len(ScriptMethod.cs_info), ScriptMethod.cs_info
 
@@ -648,6 +572,21 @@ def script_translator(input_script=None, bond_wire_info=None, fig_dir=None, cons
     # output format of bondwire storing
     # Bond wire table={'BW1': {'BW_object': <powercad.design.Routing_paths.BondingWires instance at 0x16F4D648>, 'Source': 'D1_Drain', 'num_wires': '4', 'Destination': 'B1', 'spacing': '0.1'}, 'BW2': {'BW....}
 
+    # finding islands for a given layout
+    islands =ScriptMethod.form_island()
+    #for i in islands:
+        #print i.PrintIsland()
+
+    # finding child of each island
+    islands=ScriptMethod.populate_child(islands)
+
+
+    '''
+    for i in islands:
+        print i.PrintIsland()
+    raw_input()
+    
+    '''
 
     try:
         app = QtGui.QApplication(sys.argv)
@@ -658,7 +597,7 @@ def script_translator(input_script=None, bond_wire_info=None, fig_dir=None, cons
 
 
     New_engine = New_layout_engine()
-    New_engine.init_layout(input_format=input_info)
+    New_engine.init_layout(input_format=input_info,islands=islands)
     #cons_df = show_constraint_table(parent=window, cons_df=ScriptMethod.df)
     if mode==0:
         cons_df = pd.read_csv(constraint_file)
@@ -678,6 +617,5 @@ def script_translator(input_script=None, bond_wire_info=None, fig_dir=None, cons
     # New_engine.open_new_layout_engine(window=window)
     cs_sym_data = New_engine.generate_solutions(level=0, num_layouts=1, W=None, H=None, fixed_x_location=None,
                                                          fixed_y_location=None, seed=None, individual=None)
-    # cs_sym_data contains both horizontal and vertical CS data
 
-    return New_engine, cs_sym_data, bondwires, island_info
+    return New_engine, cs_sym_data, bondwires, islands

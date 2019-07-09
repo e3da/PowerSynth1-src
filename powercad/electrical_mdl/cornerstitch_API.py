@@ -1,7 +1,6 @@
 # Collecting layout information from CornerStitch, ask user to setup the connection and show the loop
 from powercad.electrical_mdl.spice_eval.rl_mat_eval import *
 from powercad.electrical_mdl.e_mesh import *
-from powercad.electrical_mdl.e_netlist import*
 from powercad.corner_stitch.input_script import *
 from powercad.parasitics.mdl_compare import load_mdl
 import cProfile
@@ -14,14 +13,14 @@ import gc
 class ElectricalMeasure(object):
     MEASURE_RES = 1
     MEASURE_IND = 2
-    #MEASURE_CAP = 3
+    # MEASURE_CAP = 3
 
     UNIT_RES = ('mOhm', 'milliOhm')
     UNIT_IND = ('nH', 'nanoHenry')
-    #UNIT_CAP = ('pF', 'picoFarad')
+
+    # UNIT_CAP = ('pF', 'picoFarad')
 
     def __init__(self, measure, name, source, sink):
-
         self.name = name
         self.measure = measure
         self.source = source
@@ -30,20 +29,18 @@ class ElectricalMeasure(object):
 
 class CornerStitch_Emodel_API:
     # This is an API with NewLayout Engine
-    def __init__(self, comp_dict={}, layer_to_z={}, wire_conn={},island_info=None):
+    def __init__(self, comp_dict={}, layer_to_z={}, wire_conn={}):
         '''
 
         :param comp_dict: list of all components and routing objects
         :param layer_to_z: a simple layerstack info for thickness and elevation of each layer
         :param wire_conn: a simple table for bondwires setup
-        :param island_info: this is the raw hierarchy information each island. islname:[obj_name,obj]
         '''
         self.pins = None
         self.comp_dict = comp_dict
         self.layer_to_z = layer_to_z
         self.conn_dict = {}  # key: comp name, Val: list of connecition based on the connection table input
         self.wire_dict = wire_conn  # key: wire name, Val list of data such as wire radius,
-        self.island_info = island_info
         # wire distance, number of wires, start and stop position
         # and bondwire object
         self.module = None
@@ -53,15 +50,13 @@ class CornerStitch_Emodel_API:
         self.measure = []
         self.circuit = RL_circuit()
 
-        self.m_id = 0
-
-    def form_connection_table(self,mode=None, dev_conn=None):
+    def form_connection_table(self, mode=None, dev_conn=None):
         '''
         Form a connection table only once, which can be reused for multiple evaluation
         :return: update self.conn_dict
         '''
 
-        if dev_conn==None:
+        if dev_conn == None:
             for c in self.comp_dict:
                 comp = self.comp_dict[c]
                 if isinstance(comp, Part):
@@ -75,7 +70,7 @@ class CornerStitch_Emodel_API:
                 comp = self.comp_dict[c]
                 if isinstance(comp, Part):
                     if comp.type == 1:
-                        states ={}
+                        states = {}
                         name = comp.layout_component_id
 
                         for conns in comp.conn_dict:
@@ -83,84 +78,63 @@ class CornerStitch_Emodel_API:
                         self.conn_dict[name] = states
 
     def get_frequency(self, frequency=None):
-        if frequency==None:
-            freq=raw_input("Frequency for the extraction in kHz:")
-            self.freq=float(freq)
+        if frequency == None:
+            freq = raw_input("Frequency for the extraction in kHz:")
+            self.freq = float(freq)
         else:
-            self.freq=frequency
+            self.freq = frequency
+
     def load_rs_model(self, mdl_file):
         self.rs_model = load_mdl(file=mdl_file)
-
-
 
     def init_layout(self, layout_data=None):
         '''
         Read part info and link them with part info, from an updaed layout, update the electrical network
         :return: updating self.e_sheets, self.e_plates
         '''
-
-
         # UPDATE ALL PLATES and SHEET FOR THE LAYOUT
-        net_check = {}
-        # layout_data : {'W':{(W,H):[{rects}]},'H':{(W,H):[{rects}]}}
-        # process layout data so that trace name are updated while device only got collected once
-        #print layout_data
-        h_data = layout_data['H'].values()[0]
-        v_data = layout_data['V'].values()[0]
-        #print len(h_data)
-        #print len(v_data)
-        self.width, self.height = layout_data['H'].keys()[0]
-        self.layout_data = {}
-        for k in h_data.keys():
-            for h_rect in h_data[k]:
-                h_rect.cs_type = 'h'
-            for v_rect in v_data[k]:
-                v_rect.cs_type = 'v'
-            self.layout_data[k]= h_data[k] + v_data[k]
-        #self.width = round(self.width/1000.0, sig)
-        #self.height = round(self.height/1000.0, sig)
-        self.comp_check ={} # so that we wont take the component twice (same for h and v cs)
+        # print "data"
+        # print layout_data
+        self.layout_data = layout_data.values()[0]
+        self.width, self.height = layout_data.keys()[0]
+        # self.width = round(self.width/1000.0, sig)
+        # self.height = round(self.height/1000.0, sig)
         self.e_plates = []  # list of electrical components
-        self.e_sheets = []  # list of sheets for connectors
+        self.e_sheets = []  # list of sheets for connector presentaion
         self.e_comps = []  # list of all components
-        self.net_to_sheet = OrderedDict()  # quick look up table to find the sheet object based of the net_name
+        self.net_to_sheet = {}  # quick look up table to find the sheet object based of the net_name
         # Update based on layout info
+        #print "inside",self.layout_data
         for k in self.layout_data:
             data = self.layout_data[k]
+
             for rect in data:
-                x, y, w, h = [rect.x, rect.y, rect.width,
-                              rect.height]  # convert from integer to float
+                x, y, w, h = [rect.x, rect.y, rect.width,rect.height]  # convert from integer to float
 
                 new_rect = Rect(top=y + h, bottom=y, left=x, right=x + w)
-                new_rect.cs_type=rect.cs_type
                 p = E_plate(rect=new_rect, z=self.layer_to_z['T'][0], dz=self.layer_to_z['T'][1])
-
+                self.e_plates.append(p)
                 type = k[0]
-                if type == 'T':
-                    p.group_id=k
                 if type in ['B', 'D', 'L']:  # if this is bondwire pad or device or lead type.
                     # Below we need to link the pad info and update the sheet list
-
+                    # Get the object
                     obj = self.comp_dict[k]
                     if isinstance(obj, RoutingPath):  # If this is a routing object
                         # reuse the rect info and create a sheet
                         z = self.layer_to_z[type][0]
-                        new_rect = Rect(top=(y + h)/1000, bottom=y / 1000, left=x / 1000, right=(x + w) / 1000)
+                        new_rect = Rect(top=(y + h) / 1000, bottom=y / 1000, left=x / 1000, right=(x + w) / 1000)
+
                         pin = Sheet(rect=new_rect, net_name=k, net_type='internal', n=(0, 0, 1), z=z)
-                        if not k in self.comp_check:
-                            self.comp_check[k] = 1
-                            self.e_sheets.append(pin)
-                            # need to have a more generic way in the future
-                            self.net_to_sheet[k] = pin
+                        self.e_sheets.append(pin)
+                        # need to have a more generic way in the future
+                        self.net_to_sheet[k] = pin
                     elif isinstance(obj, Part):
                         if obj.type == 0:  # If this is lead type:
                             new_rect = Rect(top=(y + h) / 1000, bottom=y / 1000, left=x / 1000, right=(x + w) / 1000)
                             z = self.layer_to_z[type][0]
                             pin = Sheet(rect=new_rect, net_name=k, net_type='internal', n=(0, 0, 1), z=z)
-                            if not k in self.comp_check:
-                                self.comp_check[k] = 1
-                                self.net_to_sheet[k] = pin
-                                self.e_sheets.append(pin)
+                            self.net_to_sheet[k] = pin
+                            self.e_sheets.append(pin)
                         elif obj.type == 1:  # If this is a component
                             dev_name = obj.layout_component_id
                             dev_pins = []  # all device pins
@@ -174,13 +148,12 @@ class CornerStitch_Emodel_API:
                                     z = self.layer_to_z[type][0]
                                 elif side == 'T':  # if the pin on the top side of the device
                                     z = self.layer_to_z[type][0] + obj.thickness
-                                top = y/1000 + (py + pheight)
+                                top = y / 1000 + (py + pheight)
                                 bot = y / 1000 + py
-                                left =x / 1000+ px
-                                right =x / 1000+ (px + pwidth)
+                                left = x / 1000 + px
+                                right = x / 1000 + (px + pwidth)
                                 rect = Rect(top=top, bottom=bot, left=left, right=right)
-
-                                pin = Sheet(rect=rect,net_name=net_name,z=z)
+                                pin = Sheet(rect=rect, net_name=net_name, z=z)
                                 self.net_to_sheet[net_name] = pin
                                 dev_pins.append(pin)
                             # Todo: need to think of a way to do this only once
@@ -191,69 +164,47 @@ class CornerStitch_Emodel_API:
                                     pin2 = dev_name + '_' + conn[1]
                                     dev_conn_list.append([pin1, pin2])  # update pin connection
                                     dev_para.append(obj.conn_dict[conn])  # update intenal parasitics values
-                            # Get the object
-                            if not k in self.comp_check:
-                                self.comp_check[k] = 1
-                                self.e_comps.append(
-                                    EComp(sheet=dev_pins, conn=dev_conn_list, val=dev_para))  # Update the component
 
-                for isl in self.island_info:
-                    for data in self.island_info[isl]:
-                        if data[0]==k:
-                            p.group_id=isl
-                            break
-
-
-
-                self.e_plates.append(p)
+                            self.e_comps.append(
+                                EComp(sheet=dev_pins, conn=dev_conn_list, val=dev_para))  # Update the component
 
         self.make_wire_table()
         # Update module object
-        # remember e_plates are both horizontal and vertical now
         self.module = EModule(plate=self.e_plates, sheet=self.e_sheets, components=self.wires + self.e_comps)
-        self.module.form_group_cs_flat()
+        self.module.form_group()
         self.module.split_layer_group()
-        #self.module.split_layer_cs_data()
-
         self.hier = EHier(module=self.module)
         self.hier.form_hierachy()
-        pr = cProfile.Profile()
-        pr.enable()
         self.emesh = EMesh(hier_E=self.hier, freq=self.freq, mdl=self.rs_model)
         self.emesh.mesh_grid_hier(corner_stitch=True)
-        pr.disable()
-        pr.create_stats()
-        file = open('C:\Users\qmle\Desktop\New_Layout_Engine\New_design_flow\mystats' + str(self.m_id) + '.txt', 'w')
-        stats = pstats.Stats(pr, stream=file)
-        stats.sort_stats('cumulative')
-        stats.print_stats(20)
-        start = time.time()
-        fig = plt.figure(1)
-        ax = Axes3D(fig)
-        ax.set_xlim3d(0, 60)
-        ax.set_ylim3d(0, 60)
-        ax.set_zlim3d(0, 2)
-        self.emesh.plot_3d(fig=fig, ax=ax, show_labels=True)
-        fig.set_size_inches(18.5, 10.5)
-        plt.savefig('C:\Users\qmle\Desktop\New_Layout_Engine\Mesh\Mesh'+str(self.m_id)+'.png')
-        #plt.show()
-
         self.emesh.update_trace_RL_val()
         self.emesh.update_hier_edge_RL()
+        # pr = cProfile.Profile()
+        # pr.enable()
+        '''
+        fig = plt.figure(4)
+        ax = Axes3D(fig)
+        ax.set_xlim3d(0, 42)
+        ax.set_ylim3d(0, 80)
+        ax.set_zlim3d(0, 2)
+        self.emesh.plot_3d(fig=fig, ax=ax, show_labels=True)
+        plt.show()
+        '''
 
-        #fig = plt.figure(1)
-        #ax = Axes3D(fig)
-        #ax.set_xlim3d(0, 42)
-        #ax.set_ylim3d(0, 80)
-        #ax.set_zlim3d(0, 2)
-        #self.emesh.plot_3d(fig=fig, ax=ax, show_labels=True)
-        #fig.set_size_inches(18.5, 10.5)
-        #plt.savefig('C:\Users\qmle\Desktop\New_Layout_Engine\Mesh\Mesh'+str(self.m_id)+'.png')
-        #self.emesh.mutual_data_prepare(mode=0)
-        #self.emesh.update_mutual(mode=0)
-        netlist = ENetlist(self.module, self.emesh)
-        netlist.export_netlist_to_ads(file_name='C:\Users\qmle\Desktop\New_Layout_Engine\Quang_Journal\PCELL_NCELL_net\pcell_ncell'+str(self.m_id)+'.net')
-        self.m_id += 1
+
+
+        
+        
+
+
+        self.emesh.mutual_data_prepare(mode=0)
+        self.emesh.update_mutual(mode=0)
+        # pr.disable()
+        # pr.create_stats()
+        # file = open('C:\Users\qmle\Desktop\New_Layout_Engine\New_design_flow\mystats.txt', 'w')
+        # stats = pstats.Stats(pr, stream=file)
+        # stats.sort_stats('time')
+        # stats.print_stats()
 
     def make_wire_table(self):
         self.wires = []
@@ -267,8 +218,8 @@ class CornerStitch_Emodel_API:
             s2 = self.net_to_sheet[stop]
             spacing = float(wire_data['spacing'])
             wire = EWires(wire_radius=wire_obj.radius, num_wires=num_wires, wire_dis=spacing, start=s1, stop=s2,
-                       wire_model=None,
-                       frequency=self.freq, circuit=RL_circuit())
+                          wire_model=None,
+                          frequency=self.freq, circuit=RL_circuit())
 
             self.wires.append(wire)
 
@@ -289,33 +240,34 @@ class CornerStitch_Emodel_API:
         self.emesh.plot_3d(fig=fig, ax=ax, show_labels=True)
         plt.show()
 
-    def measurement_setup(self,meas_data=None):
-        if meas_data==None:
+    def measurement_setup(self, meas_data=None):
+        if meas_data == None:
             # Print source sink table:
             print "List of Pins:"
             for c in self.comp_dict:
                 comp = self.comp_dict[c]
                 if isinstance(comp, Part):
                     if comp.type == 0:
-                        print ("Connector:",comp.layout_component_id)
-                    elif comp.type ==1:
+                        print ("Connector:", comp.layout_component_id)
+                    elif comp.type == 1:
                         for p in comp.pin_name:
-                            print("Device pins:",comp.layout_component_id+'_'+p)
+                            print("Device pins:", comp.layout_component_id + '_' + p)
             # Only support single loop extraction for now.
             name = raw_input("Loop name:")
             type = int(raw_input("Measurement type (0 for Resistance, 1 for Inductance):"))
             source = raw_input("Source name:")
             sink = raw_input("Sink name:")
-            self.measure.append(ElectricalMeasure(measure=type,name=name,source=source,sink=sink))
+            self.measure.append(ElectricalMeasure(measure=type, name=name, source=source, sink=sink))
             return self.measure
         else:
             name = meas_data['name']
             type = meas_data['type']
-            source =meas_data['source']
+            source = meas_data['source']
             sink = meas_data['sink']
             self.measure.append(ElectricalMeasure(measure=type, name=name, source=source, sink=sink))
             return self.measure
-    def extract_RL(self,src=None,sink=None):
+
+    def extract_RL(self, src=None, sink=None):
         '''
         Input src and sink name, then extract the inductance/resistance between them
         :param src:
@@ -329,7 +281,7 @@ class CornerStitch_Emodel_API:
         self.circuit.m_graph_read(self.emesh.m_graph)
         self.circuit.assign_freq(self.freq)
         self.circuit.indep_current_source(pt1, 0, 1)
-        #print "src",pt1,"sink",pt2
+        # print "src",pt1,"sink",pt2
         self.circuit._add_termial(pt2)
         self.circuit.build_current_info()
         self.circuit.solve_iv()
@@ -338,7 +290,9 @@ class CornerStitch_Emodel_API:
         R = abs(np.real(imp) * 1e3)
         L = abs(np.imag(imp)) * 1e9 / (2 * np.pi * self.circuit.freq)
         self.hier.tree.__del__()
+        del self.circuit
         self.emesh.graph.clear()
         self.emesh.m_graph.clear()
-        print R, L
-        return R, L
+        gc.collect()
+        #print R, L
+        return R[0], L[0]

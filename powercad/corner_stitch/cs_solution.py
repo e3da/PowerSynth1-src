@@ -25,44 +25,41 @@ class CornerStitchSolution:
         Output type : {"Layout id": {'Sym_info': layout_rect_dict,'Dims': [W,H]} --- Dims is the dimension of the baseplate
         where layout_rect_dict= {'Symbolic ID': [R1,R2 ... Ri]} where Ri is a Rectangle object
         '''
+        #print "info",self.layout_info
+
         if isinstance(self.layout_info, dict):
-            p_data = self.layout_info['H']
+            p_data = self.layout_info
         else:
             #print self.layout_info
-            p_data=self.layout_info[0]['H']
+            p_data=self.layout_info[0]
+
         layout_symb_dict={}
         layout_rect_dict = {}
 
 
         W, H = p_data.keys()[0]
+
         W = float(W) / div
         H = float(H) / div
-        rect_dict = p_data.values()[0]
-        print p_data
-        print rect_dict
-        for r_id in rect_dict.keys():
-            # print 'rect id',r_id
-            left = 1e32
-            bottom = 1e32
-            right = 0
-            top = 0
-            for rect in rect_dict[r_id]:
-                type = rect.type
-                min_x = float(rect.left) / div
-                max_x = float(rect.right) / div
-                min_y = float(rect.bottom) / div
-                max_y = float(rect.top) / div
-                if min_x <= left:
-                    left = float(min_x)
-                if min_y <= bottom:
-                    bottom = float(min_y)
-                if max_x >= right:
-                    right = float(max_x)
-                if max_y >= top:
-                    top = float(max_y)
-            layout_rect_dict[r_id] = Rectangle(x=left, y=bottom, width=right - left, height=top - bottom, type=type)
+
+        rect_dict=p_data.values()[0]
+
+        #for rect_dict in dict_list:
+        for k,v in rect_dict.items():
+            x=v[1]
+            y=v[2]
+            width=v[3]
+            height=v[4]
+            type=v[0]
+
+            layout_rect_dict[k] = Rectangle(x=x, y=y, width=width, height=height, type=type)
+
+
+
         layout_symb_dict[self.name] = {'rect_info': layout_rect_dict, 'Dims': [W, H]}
         #print layout_symb_dict[layout]
+        print layout_symb_dict
+
         return layout_symb_dict
 
 
@@ -98,9 +95,9 @@ class CornerStitchSolution:
                 all_lines.append(l)
 
 
-            colors = ['white', 'green', 'red', 'blue', 'yellow', 'purple','pink','magenta','orange','violet']
+            colors = ['white', 'green', 'red', 'blue', 'yellow', 'purple','pink','magenta','orange','violet','black']
 
-            colours=["'white'","'green'","'red'","'blue'","'yellow'","'purple'","'pink'","'magenta'","'orange'","'violet'"]
+            colours=["'white'","'green'","'red'","'blue'","'yellow'","'purple'","'pink'","'magenta'","'orange'","'violet'","'black'"]
 
 
             for row in all_lines:
@@ -154,6 +151,7 @@ class CornerStitchSolution:
             ax1.set_ylim(0, k1[1])
             ax1.set_aspect('equal')
             plt.savefig(fig_dir+'/layout_'+str(layout_ind)+'.png')
+            plt.savefig(fig_dir + '/layout_' + str(layout_ind) + '.eps')
 
         conn.close()
 

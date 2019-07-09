@@ -6,7 +6,6 @@ from powercad.cmd_run.cmd_layout_handler import generate_optimize_layout, script
 import objgraph
 from pympler import muppy,summary
 import types
-from collections import OrderedDict
 class Cmd_Handler:
     def __init__(self):
         # Input files
@@ -23,12 +22,11 @@ class Cmd_Handler:
 
         # CornerStitch Initial Objects
         self.engine = None
-        self.comp_dict = OrderedDict()
-        self.wire_table = OrderedDict()
-        self.raw_layout_info = OrderedDict()
-        self.min_size_rect_patches = OrderedDict()
-        self.island_info = OrderedDict() # An island info from initial user input
-
+        self.comp_dict = {}
+        self.wire_table = {}
+        self.raw_layout_info = {}
+        self.min_size_rect_patches = {}
+        self.islands=[] # list of islands from the input script
         # APIs
         self.measures = []
         self.e_api = None
@@ -49,7 +47,7 @@ class Cmd_Handler:
         algorithm = None
         t_name =None
         e_name = None
-        dev_conn = OrderedDict()
+        dev_conn ={}
         with open(file, 'rb') as inputfile:
             thermal_mode = False
             electrical_mode =False
@@ -167,9 +165,7 @@ class Cmd_Handler:
                 for k, v in self.engine.init_data[1].items():
                     rects = []
                     for i in v:
-                        i=i.values()[0][0]
-                        rect = Rectangle(x=i.cell.x * 1000, y=i.cell.y * 1000, width=i.getWidth() * 1000,
-                                         height=i.getHeight() * 1000, type=i.cell.type)
+                        rect = Rectangle(x=i[0] * 1000, y=i[1] * 1000, width=i[2] * 1000, height=i[3] * 1000, type=i[4])
                         rects.append(rect)
                     init_rects[k] = rects
                 cs_sym_info = {(width * 1000, height * 1000): init_rects}
@@ -343,7 +339,7 @@ class Cmd_Handler:
         Initialize some CS objects
         :return:
         '''
-        self.engine, self.raw_layout_info, self.wire_table,self.island_info = script_translator(
+        self.engine, self.raw_layout_info, self.wire_table = script_translator(
             input_script=self.layout_script, bond_wire_info=self.bondwire_setup, fig_dir=self.fig_dir, constraint_file=self.constraint_file,mode=self.new_mode)
         for comp in self.engine.all_components:
             self.comp_dict[comp.layout_component_id] = comp
@@ -353,7 +349,7 @@ class Cmd_Handler:
 
         layer_to_z = {'T': [0, 0.2], 'D': [0.2, 0], 'B': [0.2, 0],
                       'L': [0.2, 0]}
-        self.e_api = CornerStitch_Emodel_API(comp_dict=self.comp_dict, layer_to_z=layer_to_z, wire_conn=self.wire_table,island_info=self.island_info)
+        self.e_api = CornerStitch_Emodel_API(comp_dict=self.comp_dict, layer_to_z=layer_to_z, wire_conn=self.wire_table)
         self.e_api.load_rs_model(self.rs_model_file)
         if mode == 'command':
             self.e_api.form_connection_table(mode='command')
@@ -438,7 +434,7 @@ class Cmd_Handler:
                 for k, v in patch_dict.items():
                     fig_dict[(width, height)].append(v)
                 fig_data = [fig_dict]
-                init_rects = OrderedDict()
+                init_rects = {}
                 for k, v in self.engine.init_data[1].items():
                     rects = []
                     for i in v:

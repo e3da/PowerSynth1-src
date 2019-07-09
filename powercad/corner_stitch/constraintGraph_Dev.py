@@ -1262,7 +1262,7 @@ class constraintGraph:
                         H = []
 
                         for (k), v in edgelabels.items():
-                            print k,v
+                            #print k,v
                             count += 1
                             if v[2] == 2 and v[1] == '0':  # ledge width
                                 val = v[0]
@@ -1270,7 +1270,7 @@ class constraintGraph:
                                 val = v[0]
                             else:
                                 if (N < 150):
-                                    SD = N * 500  # standard deviation for randomization
+                                    SD = N * 3000  # standard deviation for randomization
                                 else:
                                     SD = 10000
                                 random.seed(seed + count * 1000)
@@ -1505,7 +1505,7 @@ class constraintGraph:
                                 loc[self.ZDL_H[element.ID][k]] = v
                             xloc.append(loc)
                         self.LocationH[element.ID] = xloc
-                        print "N",self.LocationH
+                        #print "N",self.LocationH
 
         elif level == 2 or level == 3:
             for element in reversed(self.Tbeval):
@@ -2142,7 +2142,7 @@ class constraintGraph:
                                 val = v[0]
                             else:
                                 if (N < 150):
-                                    SD = N * 300  # standard deviation for randomization
+                                    SD = N * 3000  # standard deviation for randomization
                                 else:
                                     SD = 10000  # 7000
                                 random.seed(seed + count * 1000)
@@ -2260,7 +2260,7 @@ class constraintGraph:
                         Location[element.ID].append(loct)
                         # print Location
                     self.LocationV = Location
-                    print"VCG",N,len(self.LocationV.values()),self.LocationV
+                    #print"VCG",N,len(self.LocationV.values()),self.LocationV
 
                         #
                 else:
@@ -2352,7 +2352,7 @@ class constraintGraph:
                                 loc[self.ZDL_V[element.ID][k]] = v
                             yloc.append(loc)
                         self.LocationV[element.ID] = yloc
-                    print "VLOC",self.LocationV
+                    #print "VLOC",self.LocationV
 
         elif level == 2 or level == 3:
             for element in reversed(self.TbevalV):

@@ -2536,10 +2536,7 @@ class CS_to_CG():
             DIM.append(p)
         ALL_RECTS['V'] = DIM
 
-        #SYM_CS = {}
-        SYM_CS = {'H':[],'V':[]}
-        sym_cs_h ={}
-        sym_cs_v={}
+        SYM_CS = {}
         for rect in Input_rects:
             x1 = rect.x
             y1 = rect.y
@@ -2550,24 +2547,12 @@ class CS_to_CG():
             for k, v in ALL_RECTS.items():
                 if k == 'H':
                     key = name
-
-                    sym_cs_h.setdefault(key, [])
+                    SYM_CS.setdefault(key, [])
                     for i in v:
                         if i[0] >= x1 and i[1] >= y1 and i[0] + i[2] <= x2 and i[1] + i[3] <= y2 and i[4] == type:
-                            sym_cs_h[key].append(i)
+                            SYM_CS[key].append(i)
                         else:
                             continue
-                elif k=='V':
-                    key = name
-
-                    sym_cs_v.setdefault(key, [])
-                    for i in v:
-                        if i[0] >= x1 and i[1] >= y1 and i[0] + i[2] <= x2 and i[1] + i[3] <= y2 and i[4] == type:
-                            sym_cs_v[key].append(i)
-                        else:
-                            continue
-        SYM_CS['H'].append(sym_cs_h)
-        SYM_CS['V'].append(sym_cs_v)
         return SYM_CS
 
     ## Evaluates constraint graph depending on modes of operation
@@ -2894,8 +2879,9 @@ class CS_to_CG():
 
 
         for i in range(len(cs_sym_info_v)):
-
+            print cs_sym_info_v
             comp = cs_sym_info_v[i]
+            print comp
             for k, v in comp.items():
                 if v[1] == None:
                     v[0] = new_rects_v[k]
@@ -2945,7 +2931,152 @@ class CS_to_CG():
 
 
 
+
+
+    """
+    
+    # without island implementation
     def update_min(self,minx,miny,Htree,sym_to_cs,s=1000.0):
+    '''
+
+    :param minx: Evaluated minimum x coordinates
+    :param miny: Evaluated minimum y coordinates
+    :param sym_to_cs: initial input to initial cornerstitch mapped information
+    :param s: divider
+    :return:
+    '''
+
+    all_init_rects=[]
+    cs_sym_info=[0 for i in range(len(sym_to_cs))]
+    for i in range(len(sym_to_cs)):
+        for k,v in sym_to_cs[i].items():
+            rect=v[0]
+            if rect.parent_name==None:
+                init_rect=[rect.nodeId,rect.cell.x,rect.cell.y,rect.EAST.cell.x,rect.NORTH.cell.y,rect.cell.type,rect.name,rect.parent_name]
+                all_init_rects.append(init_rect)
+                cs_sym_info[i] = {k: [init_rect, v[1]]}
+
+    for i in range(len(sym_to_cs)):
+        for k, v in sym_to_cs[i].items():
+            rect = v[0]
+            if rect.parent_name!=None:
+                parent = rect.parent_name
+                for j in range(len(sym_to_cs)):
+                    for k1, v1 in sym_to_cs[j].items():
+                        rect1=v1[0]
+
+                        if rect1.name==parent:
+                            nodeId=rect1.nodeId
+                            init_rect = [nodeId, rect.cell.x, rect.cell.y, rect.EAST.cell.x, rect.NORTH.cell.y,
+                                         rect.cell.type, rect.name, rect.parent_name]
+                            all_init_rects.append(init_rect)
+                            cs_sym_info[i] = {k: [init_rect, v[1]]}
+                        else:
+                            continue
+                            #break
+
+    for rect in Htree.hNodeList[0].stitchList:
+        if rect.cell.type=="EMPTY" and (rect.WEST in Htree.hNodeList[0].boundaries or rect.NORTH in Htree.hNodeList[0].boundaries or rect.SOUTH in Htree.hNodeList[0].boundaries or rect.EAST in Htree.hNodeList[0].boundaries):
+            rect.name="EMPTY"
+            init_rect=[rect.nodeId,rect.cell.x,rect.cell.y,rect.EAST.cell.x,rect.NORTH.cell.y,rect.cell.type,rect.name,rect.parent_name]
+            all_init_rects.append(init_rect)
+            cs_sym_info[i] = {k: [init_rect, v[1]]}
+
+
+
+
+    minx_nodes=minx.keys()
+    all_layout_rects={}
+    layout_rects=[]
+    new_rects={}
+    for i in range(len(all_init_rects)):
+        rect=all_init_rects[i]
+        if rect[0] in minx and rect[0] in miny and rect[1] in minx and rect[2] in miny:
+            node=rect[0]
+            x=minx[node][rect[1]]
+            y=miny[node][rect[2]]
+            w=minx[node][rect[3]] - minx[node][rect[1]]
+            h=miny[node][rect[4]] - miny[node][rect[2]]
+            type=rect[5]
+            name=rect[6]
+            new_rect=[x/s,y/s,w/s,h/s,type]
+            layout_rects.append(new_rect)
+            new_rects[name]=[node,x,y,w,h,type,rect[7]]
+        else:
+            for k in ((minx_nodes)):
+                #print minx[k],miny[k]
+                #print rect
+                if rect[1] in minx[k] and rect[2] in miny[k] and rect[3] in minx[k] and rect[4] in miny[k]:
+                    node=k
+                    x = minx[node][rect[1]]
+                    y = miny[node][rect[2]]
+                    w = minx[node][rect[3]] - minx[node][rect[1]]
+                    h = miny[node][rect[4]] - miny[node][rect[2]]
+                    type = rect[5]
+                    name = rect[6]
+                    new_rect = [x/s, y/s, w/s, h/s, type]
+                    layout_rects.append(new_rect)
+                    new_rects[name] = [node, x, y, w, h, type, rect[7]]
+
+
+
+    all_layout_rects['H']=layout_rects
+    #print "N",new_rects
+    for i in range(len(cs_sym_info)):
+
+        comp=cs_sym_info[i]
+        for k,v in comp.items():
+            if v[1]==None:
+                v[0]=new_rects[k]
+                v[1]=None
+            else:
+                v[0] = new_rects[k]
+
+                stitchList = []
+                for rect in v[1].stitchList:
+
+                    init_rect = [rect.nodeId, rect.cell.x, rect.cell.y, rect.EAST.cell.x, rect.NORTH.cell.y,
+                                 rect.cell.type]
+
+                    if init_rect[0] in minx and init_rect[0] in miny:
+                        node=init_rect[0]
+                        x = minx[node][init_rect[1]]
+                        y = miny[node][init_rect[2]]
+                        w = minx[node][init_rect[3]] - minx[node][init_rect[1]]
+                        h = miny[node][init_rect[4]] - miny[node][init_rect[2]]
+                        type = init_rect[5]
+
+                        new_rect=Rectangle(x=x,y=y,width=w,height=h,type=type)
+                        stitchList.append(new_rect)
+                    else:
+                        for k in ((minx_nodes)):
+                            if init_rect[1] in minx[k] and init_rect[2] in miny[k] and init_rect[3] in minx[k] and init_rect[4] in miny[k]:
+                                node = k
+                                x = minx[node][init_rect[1]]
+                                y = miny[node][init_rect[2]]
+                                w = minx[node][init_rect[3]] - minx[node][init_rect[1]]
+                                h = miny[node][init_rect[4]] - miny[node][init_rect[2]]
+                                type = init_rect[5]
+                                new_rect = Rectangle(x=x, y=y, width=w, height=h, type=type)
+                                stitchList.append(new_rect)
+
+                v[1]=stitchList
+
+
+
+    #print all_layout_rects
+    #print cs_sym_info
+    return cs_sym_info,all_layout_rects
+
+
+
+
+
+
+
+
+    """
+    def update_min(self,minx,miny,sym_to_cs,s=1000.0):
         '''
 
         :param minx: Evaluated minimum x coordinates
@@ -2955,135 +3086,32 @@ class CS_to_CG():
         :return:
         '''
 
-        all_init_rects=[]
-        cs_sym_info=[0 for i in range(len(sym_to_cs))]
-        for i in range(len(sym_to_cs)):
-            for k,v in sym_to_cs[i].items():
-                rect=v[0]
-                if rect.parent_name==None:
-                    init_rect=[rect.nodeId,rect.cell.x,rect.cell.y,rect.EAST.cell.x,rect.NORTH.cell.y,rect.cell.type,rect.name,rect.parent_name]
-                    all_init_rects.append(init_rect)
-                    cs_sym_info[i] = {k: [init_rect, v[1]]}
-
-        for i in range(len(sym_to_cs)):
-            for k, v in sym_to_cs[i].items():
-                rect = v[0]
-                if rect.parent_name!=None:
-                    parent = rect.parent_name
-                    for j in range(len(sym_to_cs)):
-                        for k1, v1 in sym_to_cs[j].items():
-                            rect1=v1[0]
-
-                            if rect1.name==parent:
-                                nodeId=rect1.nodeId
-                                init_rect = [nodeId, rect.cell.x, rect.cell.y, rect.EAST.cell.x, rect.NORTH.cell.y,
-                                             rect.cell.type, rect.name, rect.parent_name]
-                                all_init_rects.append(init_rect)
-                                cs_sym_info[i] = {k: [init_rect, v[1]]}
-                            else:
-                                continue
-                                #break
-
-
-
-
-
-
-
-
-
-        for rect in Htree.hNodeList[0].stitchList:
-            if rect.cell.type=="EMPTY" and (rect.WEST in Htree.hNodeList[0].boundaries or rect.NORTH in Htree.hNodeList[0].boundaries or rect.SOUTH in Htree.hNodeList[0].boundaries or rect.EAST in Htree.hNodeList[0].boundaries):
-                rect.name="EMPTY"
-                init_rect=[rect.nodeId,rect.cell.x,rect.cell.y,rect.EAST.cell.x,rect.NORTH.cell.y,rect.cell.type,rect.name,rect.parent_name]
-                all_init_rects.append(init_rect)
-                cs_sym_info[i] = {k: [init_rect, v[1]]}
-
-
-
-
-        minx_nodes=minx.keys()
-        all_layout_rects={}
         layout_rects=[]
-        new_rects={}
-        for i in range(len(all_init_rects)):
-            rect=all_init_rects[i]
-            if rect[0] in minx and rect[0] in miny and rect[1] in minx and rect[2] in miny:
-                node=rect[0]
-                x=minx[node][rect[1]]
-                y=miny[node][rect[2]]
-                w=minx[node][rect[3]] - minx[node][rect[1]]
-                h=miny[node][rect[4]] - miny[node][rect[2]]
-                type=rect[5]
-                name=rect[6]
-                new_rect=[x/s,y/s,w/s,h/s,type]
+        cs_sym_info={}
+
+        sub_width=max(minx[1].values())
+        sub_length=max(miny[1].values())
+        for k, v in sym_to_cs.items():
+            rect = v[0]
+            nodeid=v[1].id
+            if rect.cell.x in minx[nodeid] and rect.EAST.cell.x in minx[nodeid] and rect.cell.y in miny[nodeid] and rect.NORTH.cell.y in miny[nodeid]:
+                x = minx[nodeid][rect.cell.x]
+                y = miny[nodeid][rect.cell.y]
+                w = minx[nodeid][rect.EAST.cell.x] - minx[nodeid][rect.cell.x]
+                h = miny[nodeid][rect.NORTH.cell.y] - miny[nodeid][rect.cell.y]
+                type = rect.cell.type
+                name = k
+                #print x,y,w,h
+                new_rect = [float(x) / s, float(y) / s, float(w) / s, float(h) / s, type,v[2]+1]
+                #print new_rect
                 layout_rects.append(new_rect)
-                new_rects[name]=[node,x,y,w,h,type,rect[7]]
-            else:
-                for k in ((minx_nodes)):
-                    #print minx[k],miny[k]
-                    #print rect
-                    if rect[1] in minx[k] and rect[2] in miny[k] and rect[3] in minx[k] and rect[4] in miny[k]:
-                        node=k
-                        x = minx[node][rect[1]]
-                        y = miny[node][rect[2]]
-                        w = minx[node][rect[3]] - minx[node][rect[1]]
-                        h = miny[node][rect[4]] - miny[node][rect[2]]
-                        type = rect[5]
-                        name = rect[6]
-                        new_rect = [x/s, y/s, w/s, h/s, type]
-                        layout_rects.append(new_rect)
-                        new_rects[name] = [node, x, y, w, h, type, rect[7]]
+                cs_sym_info[name]=[type,x,y,w,h]
 
-
-
-        all_layout_rects['H']=layout_rects
-        #print "N",new_rects
-        for i in range(len(cs_sym_info)):
-
-            comp=cs_sym_info[i]
-            for k,v in comp.items():
-                if v[1]==None:
-                    v[0]=new_rects[k]
-                    v[1]=None
-                else:
-                    v[0] = new_rects[k]
-
-                    stitchList = []
-                    for rect in v[1].stitchList:
-
-                        init_rect = [rect.nodeId, rect.cell.x, rect.cell.y, rect.EAST.cell.x, rect.NORTH.cell.y,
-                                     rect.cell.type]
-
-                        if init_rect[0] in minx and init_rect[0] in miny:
-                            node=init_rect[0]
-                            x = minx[node][init_rect[1]]
-                            y = miny[node][init_rect[2]]
-                            w = minx[node][init_rect[3]] - minx[node][init_rect[1]]
-                            h = miny[node][init_rect[4]] - miny[node][init_rect[2]]
-                            type = init_rect[5]
-
-                            new_rect=Rectangle(x=x,y=y,width=w,height=h,type=type)
-                            stitchList.append(new_rect)
-                        else:
-                            for k in ((minx_nodes)):
-                                if init_rect[1] in minx[k] and init_rect[2] in miny[k] and init_rect[3] in minx[k] and init_rect[4] in miny[k]:
-                                    node = k
-                                    x = minx[node][init_rect[1]]
-                                    y = miny[node][init_rect[2]]
-                                    w = minx[node][init_rect[3]] - minx[node][init_rect[1]]
-                                    h = miny[node][init_rect[4]] - miny[node][init_rect[2]]
-                                    type = init_rect[5]
-                                    new_rect = Rectangle(x=x, y=y, width=w, height=h, type=type)
-                                    stitchList.append(new_rect)
-
-                    v[1]=stitchList
-
-
-
-        #print all_layout_rects
-        #print cs_sym_info
-        return cs_sym_info,all_layout_rects
+        substrate_rect = ["EMPTY",0,0,sub_width,sub_length]
+        cs_sym_info['Substrate'] = substrate_rect
+        new_rect = [0, 0, float(sub_width)/s, float(sub_length) / s, "EMPTY", 0]
+        layout_rects.append(new_rect)
+        return cs_sym_info,layout_rects
 
 
     def update(self,minx,miny,Htree,sym_to_cs,s=1000):
