@@ -166,6 +166,8 @@ class Cmd_Handler:
                 # Convert a list of patch to rectangles
                 patch_dict = self.engine.init_data[0]
                 width, height = self.engine.init_size
+                islands_info=self.engine.init_data[2]
+                print self.engine.init_data[1]
                 fig_dict = {(width, height): []}
                 for k, v in patch_dict.items():
                     fig_dict[(width, height)].append(v)
@@ -177,7 +179,8 @@ class Cmd_Handler:
                         rects.append(rect)
                     init_rects[k] = rects
                 cs_sym_info = {(width * 1000, height * 1000): init_rects}
-                self.solutions=eval_single_layout(layout_engine=self.engine, layout_data=cs_sym_info, apis={'E': self.e_api,
+                print"CS", cs_sym_info
+                self.solutions=eval_single_layout(layout_engine=self.engine, layout_data=cs_sym_info,islands_info=islands_info, apis={'E': self.e_api,
                                                                                              'T': self.t_api},measures=self.measures)
             if run_option == 2:
 
@@ -441,6 +444,7 @@ class Cmd_Handler:
                 # Convert a list of patch to rectangles
                 patch_dict = self.engine.init_data[0]
                 width, height = self.engine.init_size
+                island_info=self.engine.init_data[2]
                 fig_dict = {(width, height): []}
                 for k, v in patch_dict.items():
                     fig_dict[(width, height)].append(v)
@@ -453,7 +457,7 @@ class Cmd_Handler:
                         rects.append(rect)
                     init_rects[k] = rects
                 cs_sym_info = {(width * 1000, height * 1000): init_rects}
-                eval_single_layout(layout_engine=self.engine, layout_data=cs_sym_info, apis={'E': self.e_api,
+                eval_single_layout(layout_engine=self.engine, layout_data=cs_sym_info,isalnds_info=island_info, apis={'E': self.e_api,
                                                                                              'T': self.t_api},measures=self.measures)
 
             elif opt == 2:  # Peform layout evaluation based on the list of measures
