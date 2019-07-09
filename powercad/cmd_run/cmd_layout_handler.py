@@ -99,11 +99,11 @@ def save_solution(rects, id, db):
     conn.close()
 
 
-def eval_single_layout(layout_engine=None, layout_data=None, apis={}, measures=[]):
+def eval_single_layout(layout_engine=None, layout_data=None, apis={}, measures=[], islands_info=None):
     opt_problem = new_engine_opt(engine=layout_engine, W=layout_engine.init_size[0], H=layout_engine.init_size[1],
                                  seed=None, level=2, method=None, apis=apis, measures=measures)
 
-    results = opt_problem.eval_layout(layout_data,islands_info)
+    results = opt_problem.eval_layout(layout_data, islands_info)
     measure_names = []
     for m in measures:
         measure_names.append(m.name)
@@ -618,4 +618,4 @@ def script_translator(input_script=None, bond_wire_info=None, fig_dir=None, cons
     cs_sym_data = New_engine.generate_solutions(level=0, num_layouts=1, W=None, H=None, fixed_x_location=None,
                                                          fixed_y_location=None, seed=None, individual=None)
 
-    return New_engine, cs_sym_data, bondwires, islands
+    return New_engine, cs_sym_data, bondwires

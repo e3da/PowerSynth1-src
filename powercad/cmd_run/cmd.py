@@ -26,7 +26,6 @@ class Cmd_Handler:
         self.wire_table = {}
         self.raw_layout_info = {}
         self.min_size_rect_patches = {}
-        self.islands=[] # list of islands from the input script
         # APIs
         self.measures = []
         self.e_api = None
@@ -157,6 +156,7 @@ class Cmd_Handler:
 
                 # Convert a list of patch to rectangles
                 patch_dict = self.engine.init_data[0]
+                init_data_islands = self.engine.init_data[2]
                 width, height = self.engine.init_size
                 fig_dict = {(width, height): []}
                 for k, v in patch_dict.items():
@@ -169,8 +169,10 @@ class Cmd_Handler:
                         rects.append(rect)
                     init_rects[k] = rects
                 cs_sym_info = {(width * 1000, height * 1000): init_rects}
-                self.solutions=eval_single_layout(layout_engine=self.engine, layout_data=cs_sym_info, apis={'E': self.e_api,
-                                                                                             'T': self.t_api},measures=self.measures)
+                self.solutions = eval_single_layout(layout_engine=self.engine, layout_data=cs_sym_info,
+                                                    apis={'E': self.e_api,
+                                                          'T': self.t_api}, measures=self.measures,
+                                                    islands_info=init_data_islands)
             if run_option == 2:
 
                 self.measures = []
