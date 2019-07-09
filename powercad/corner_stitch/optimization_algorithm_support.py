@@ -47,9 +47,10 @@ class new_engine_opt:
         converted_data_h = {}
         layout_info_v = {}
         converted_data_v = {}
-        print layout_data
+        layout_data=layout_data.values()[0]
         layout_data_h=layout_data['H']
         layout_data_v=layout_data['V']
+        print layout_data_h
         for k,v in layout_data_h.items():
             #print k,v
             key=k
