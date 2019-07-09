@@ -15,6 +15,7 @@ from powercad.design.parts import *
 from powercad.design.Routing_paths import *
 from powercad.cons_aware_en.cons_engine import New_layout_engine
 import getpass
+from powercad.design.group import Island
 
 '''
 class ConstraintWindow(QtGui.QMainWindow):
@@ -724,6 +725,73 @@ class ScriptInputMethod():
             input_rects.append(Rectangle(type, x, y, width, height, name, Schar=Schar, Echar=Echar,hier_level=hier_level))
 
         return input_rects
+
+    def form_island(self):
+        '''
+
+        :return: connected groups according to the input
+        '''
+        islands=[]
+        for i in range(len(self.cs_info)):
+            rect=self.cs_info[i]
+            if rect[5][0]=='T' and rect[6]=='+' and rect[7]=='+':
+                island=Island()
+                island.elements.append(rect)
+                name='island_'
+                island.name=name+rect[5].strip('T')
+                island.element_names.append(rect[5])
+                islands.append(island)
+            elif rect[5][0]=='T' and rect[6]=='+' and rect[7]=='-':
+                island = Island()
+                island.elements.append(rect)
+                name = 'island_'
+                island.name = name + rect[5].strip('T')
+                island.element_names.append(rect[5])
+                islands.append(island)
+            elif rect[5][0]=='T' and rect[6]=='-' and (rect[7]=='-' or rect[7]=='+'):
+                island=islands[-1]
+                island.elements.append(rect)
+                island.name = island.name +('_')+ rect[5].strip('T')
+                island.element_names.append(rect[5])
+        return islands
+
+    def populate_child(self,islands=None):
+        '''
+
+        :param islands: list of islands
+        :return: populate each islands child list
+        '''
+        all_layout_component_ids=[]
+        for island in islands:
+            all_layout_component_ids+=island.element_names
+
+        for island in islands:
+            layout_component_ids=island.element_names
+
+
+            end=10000
+            for i in range(len(self.cs_info)):
+                rect = self.cs_info[i]
+                if rect[5] in layout_component_ids:
+                    start=i
+                elif rect[5] in all_layout_component_ids and i>start:
+                    end=i
+                    break
+
+            for i in range(len(self.cs_info)):
+                rect = self.cs_info[i]
+                if rect[5] in layout_component_ids and rect[5] in all_layout_component_ids:
+                    continue
+                elif rect[5] not in all_layout_component_ids and i>start and i<end:
+                    island.child.append(rect)
+                    island.child_names.append(rect[5])
+
+        return islands
+
+
+
+
+
 
 def save_constraint_table(cons_df=None,file=None):
     if file!=None:

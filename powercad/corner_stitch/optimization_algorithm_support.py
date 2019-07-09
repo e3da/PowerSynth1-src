@@ -21,6 +21,7 @@ class new_engine_opt:
         # self.solutions = {}
         self.count = 0
         self.layout_data = []
+        self.islands_info=[]
         self.fig_data = []
         self.perf_results = []
         self.db=db
@@ -92,12 +93,12 @@ class new_engine_opt:
         return converted_data
 
     def convert_layout_data(self,layout_data=None):
-        print "HERE"
+
         print layout_data
         for k,v in layout_data.items():
             print k
             print len(v)
-        raw_input()
+
 
         layout_info={}
         converted_data={}
@@ -122,8 +123,10 @@ class new_engine_opt:
         #print converted_data
         return converted_data
 
-    def eval_layout(self, layout_data=None):
-        layout_data=self.convert_layout_data_hv(layout_data)
+    def eval_layout(self, layout_data=None,isalnds_info=None):
+        print"Here_eval",isalnds_info
+
+        layout_data=self.convert_layout_data(layout_data)
         result = []
         #print "DATA",layout_data
         for measure in self.measures:
@@ -183,16 +186,17 @@ class new_engine_opt:
         if not (isinstance(individual, list)):
             individual = np.asarray(individual).tolist()
 
-        cs_sym_info = self.gen_layout_func(level=self.level, num_layouts=1, W=self.W, H=self.H,
+        cs_sym_info,islands_info = self.gen_layout_func(level=self.level, num_layouts=1, W=self.W, H=self.H,
                                                      fixed_x_location=None, fixed_y_location=None, seed=self.seed,
                                                      individual=individual,db=self.db,count=self.count)
 
-        result = self.eval_layout(cs_sym_info[0])
+        result = self.eval_layout(cs_sym_info[0],islands_info[0])
         self.count += 1
         # self.solutions[(ret[0], ret[1])] = figure
         # if ret not in self.solution_data:
         #self.fig_data.append(fig_data)
         self.layout_data.append(cs_sym_info)
+        self.islands_info.append(islands_info)
         self.perf_results.append(result)
 
         return result
@@ -314,16 +318,17 @@ class new_engine_opt:
         if not (isinstance(individual, list)):
             individual = np.asarray(individual).tolist()
 
-        cs_sym_info = self.gen_layout_func(level=self.level, num_layouts=1, W=self.W, H=self.H,
+        cs_sym_info,islands_info = self.gen_layout_func(level=self.level, num_layouts=1, W=self.W, H=self.H,
                                               fixed_x_location=None, fixed_y_location=None, seed=self.seed,
                                               individual=individual,db=self.db,count=self.count)
 
-        result = self.eval_layout(cs_sym_info[0])
+        result = self.eval_layout(cs_sym_info[0],islands_info[0] )
         self.count += 1
         # self.solutions[(ret[0], ret[1])] = figure
         # if ret not in self.solution_data:
         #self.fig_data.append(fig_data)
         self.layout_data.append(cs_sym_info)
+        self.islands_info.append(islands_info)
         self.perf_results.append(result)
         return result
 
@@ -374,16 +379,17 @@ class new_engine_opt:
         return XSEND
 
     def cost_func_SA(self, individual):
-        cs_sym_info = self.gen_layout_func(level=self.level, num_layouts=1, W=self.W, H=self.H,
+        cs_sym_info,islands_info  = self.gen_layout_func(level=self.level, num_layouts=1, W=self.W, H=self.H,
                                               fixed_x_location=None, fixed_y_location=None, seed=self.seed,
                                               individual=individual,db=self.db,count=self.count)
 
-        result = self.eval_layout(cs_sym_info[0])
+        result = self.eval_layout(cs_sym_info[0],islands_info[0] )
         self.count += 1
         # self.solutions[(ret[0], ret[1])] = figure
         # if ret not in self.solution_data:
         #self.fig_data.append(fig_data)
         self.layout_data.append(cs_sym_info)
+        self.islands_info.append(islands_info)
         self.perf_results.append(result)
         return result[0], result[1]
 

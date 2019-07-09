@@ -26,6 +26,7 @@ class Cmd_Handler:
         self.wire_table = {}
         self.raw_layout_info = {}
         self.min_size_rect_patches = {}
+        self.islands=[] # list of islands from the input script
         # APIs
         self.measures = []
         self.e_api = None
@@ -346,10 +347,13 @@ class Cmd_Handler:
         Initialize some CS objects
         :return:
         '''
-        self.engine, self.raw_layout_info, self.wire_table = script_translator(
+        self.engine, self.raw_layout_info, self.wire_table= script_translator(
             input_script=self.layout_script, bond_wire_info=self.bondwire_setup, fig_dir=self.fig_dir, constraint_file=self.constraint_file,mode=self.new_mode)
         for comp in self.engine.all_components:
             self.comp_dict[comp.layout_component_id] = comp
+
+
+
 
     # --------------- API --------------------------------
     def setup_electrical(self,mode='command',dev_conn={},frequency=None,meas_data={}):
