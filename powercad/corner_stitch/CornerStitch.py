@@ -78,6 +78,7 @@ class tile:
         self.current=current # to keep current value
         self.bw = []  # list of bondwire objects which have source in the tile
         self.parent_name=None # name of the parent component
+        self.rotation_index=0 # default is no rotation
 
 
 
@@ -688,7 +689,7 @@ class Vnode(Node):
                 break
 
         return self.stitchList
-    def insert(self, start,x1, y1, x2, y2, type,end,Vtree,Parent,bw=None):
+    def insert(self, start,x1, y1, x2, y2, type,end,Vtree,Parent,rotate_angle=None,bw=None):
         """
 
               :param start: starting charsacter
@@ -700,6 +701,7 @@ class Vnode(Node):
               :param end: end character(Global variable)
               :param Vtree: Vertical tree structure
               :param Parent: Parent node from the tree
+              :param Rotate_angle: rotation angle for parts
               :return: Updated tree with inserting new tile
               """
         """
@@ -1069,6 +1071,7 @@ class Vnode(Node):
         for x in range(0, len(changeList)):
 
             changeList[x].cell.type = type
+            changeList[x].rotation_index=rotate_angle # adding rotation index 0:0 deg, 1: 90 deg, 2: 180 deg, 3: 270 deg
 
             self.rectifyShadow(changeList[x])
             x += 1
@@ -1079,6 +1082,7 @@ class Vnode(Node):
             if len(changeList)==1 and RESP==0:
                 changeList[0].nodeId=None
             self.rectifyShadow(changeList[0])
+
 
             self.set_id_V()
 
@@ -1438,7 +1442,7 @@ class Hnode(Node):
 
         return self.stitchList
 
-    def insert(self,start, x1, y1, x2, y2, type,end,Htree,Parent,bw=None):
+    def insert(self,start, x1, y1, x2, y2, type,end,Htree,Parent,rotate_angle=None,bw=None):
         """
 
         :param start: starting charsacter
@@ -1834,6 +1838,7 @@ class Hnode(Node):
 
         for x in range(0, len(changeList)):
             changeList[x].cell.type = type
+            changeList[x].rotation_index=rotate_angle
 
             self.rectifyShadow(changeList[x])
             x += 1
@@ -2151,7 +2156,7 @@ class Tree():
 
 ###################################################
 class Rectangle(Rect):
-    def __init__(self, type=None, x=None, y=None, width=None, height=None, name=None, Schar=None, Echar=None,hier_level=None, Netid=None):
+    def __init__(self, type=None, x=None, y=None, width=None, height=None, name=None, Schar=None, Echar=None,hier_level=None,Netid=None,rotate_angle=None):
         '''
 
         Args:
@@ -2177,7 +2182,11 @@ class Rectangle(Rect):
         self.Netid = Netid
         self.name = name
         self.hier_level=hier_level
+        self.rotate_angle=rotate_angle # to handle rotation of components ):0 degree, 1:90 degree, 2:180 degree, 3:270 degree
+
         Rect.__init__(self, top=self.y + self.height, bottom=self.y, left=self.x, right=self.x + self.width)
+
+
     def __str__(self):
         return 'x: '+str(self.x) + ', y: ' + str(self.y) + ', w: ' + str(self.width) + ', h: ' + str(self.height)
 
@@ -2276,13 +2285,13 @@ class CornerStitch():
             for i in range(len(Rect_list)):
                 R=Rect_list[i]
                 if R.hier_level==0:
-                   Modified_input.append([R.Schar,R.x,R.y,R.width,R.height,R.type,R.Echar,R.name])
+                   Modified_input.append([R.Schar,R.x,R.y,R.width,R.height,R.type,R.Echar,R.name,R.rotate_angle])
                 elif R.hier_level==1:
-                    Modified_input.append([R.Schar,'.', R.x, R.y, R.width, R.height, R.type, R.Echar, R.name])
+                    Modified_input.append([R.Schar,'.', R.x, R.y, R.width, R.height, R.type, R.Echar, R.name,R.rotate_angle])
                 elif R.hier_level==2:
-                    Modified_input.append([R.Schar,'.','.', R.x, R.y, R.width, R.height, R.type, R.Echar, R.name])
+                    Modified_input.append([R.Schar,'.','.', R.x, R.y, R.width, R.height, R.type, R.Echar, R.name,R.rotate_angle])
 
-        print Modified_input
+        print "M", Modified_input
         return Modified_input
 
 
@@ -2380,7 +2389,7 @@ class CornerStitch():
                         ParentH = i
                         break
                 CHILDH = ParentH
-                CHILDH.insert(start, x1,y1,x2,y2, inp[6], inp[7],Htree,ParentH)
+                CHILDH.insert(start, x1,y1,x2,y2, inp[6], inp[7],Htree,ParentH,rotate_angle=inp[-1]) #rotate_angle=inp[-1]
 
                 for i in reversed(Vtree.vNodeList):
                     if i.parent.id == 1:
@@ -2388,7 +2397,7 @@ class CornerStitch():
                         Parent = i
                         break
                 CHILD = Parent
-                CHILD.insert(start, x1,y1,x2,y2, inp[6], inp[7],Vtree,Parent)
+                CHILD.insert(start, x1,y1,x2,y2, inp[6], inp[7],Vtree,Parent,rotate_angle=inp[-1])
 
             if inp[1] == "." and inp[2] == ".":##determining hierarchy level (3rd level):Pin insertion
 
@@ -2408,7 +2417,7 @@ class CornerStitch():
 
 
 
-                CHILDH.insert(start,x1,y1,x2,y2, inp[7], inp[8],Htree,ParentH)
+                CHILDH.insert(start,x1,y1,x2,y2, inp[7], inp[8],Htree,ParentH,rotate_angle=inp[-1])
 
                 for i in reversed(Vtree.vNodeList):
                     if i.parent.id == 1:
@@ -2419,7 +2428,7 @@ class CornerStitch():
                 Parent = med.child[-1]
                 CHILD = Parent
 
-                CHILD.insert(start, x1,y1,x2,y2, inp[7], inp[8],Vtree,Parent)
+                CHILD.insert(start, x1,y1,x2,y2, inp[7], inp[8],Vtree,Parent,rotate_angle=inp[-1])
 
             if inp[1] != ".":#determining hierarchy level (1st level):Tile insertion
 
@@ -2431,7 +2440,7 @@ class CornerStitch():
                 x2 = int(inp[1]) + int(inp[3])
                 y2 = int(inp[2])
 
-                Parent.insert(start, x1, y1, x2, y2, inp[5],inp[6],Vtree,Parent)
+                Parent.insert(start, x1, y1, x2, y2, inp[5],inp[6],Vtree,Parent,rotate_angle=inp[-1])
 
 
                 ParentH = Htree.hNodeList[0]
@@ -2441,10 +2450,11 @@ class CornerStitch():
                 x2 = int(inp[1]) + int(inp[3])
                 y2 = int(inp[2])
 
-                ParentH.insert(start, x1, y1, x2, y2, inp[5],inp[6],Htree,ParentH)
+                ParentH.insert(start, x1, y1, x2, y2, inp[5],inp[6],Htree,ParentH,rotate_angle=inp[-1])
 
         Htree.setNodeId1(Htree.hNodeList[0])
         Vtree.setNodeId1(Vtree.vNodeList[0])
+
 
 
 
@@ -3102,14 +3112,14 @@ class CS_to_CG():
                 type = rect.cell.type
                 name = k
                 #print x,y,w,h
-                new_rect = [float(x) / s, float(y) / s, float(w) / s, float(h) / s, type,v[2]+1]
-                #print new_rect
+                new_rect = [float(x) / s, float(y) / s, float(w) / s, float(h) / s, type,v[2]+1,rect.rotation_index]
+                #print "NN",new_rect
                 layout_rects.append(new_rect)
                 cs_sym_info[name]=[type,x,y,w,h]
 
         substrate_rect = ["EMPTY",0,0,sub_width,sub_length]
         cs_sym_info['Substrate'] = substrate_rect
-        new_rect = [0, 0, float(sub_width)/s, float(sub_length) / s, "EMPTY", 0]
+        new_rect = [0, 0, float(sub_width)/s, float(sub_length) / s, "EMPTY", 0,0] # z_order,rotation_index
         layout_rects.append(new_rect)
         return cs_sym_info,layout_rects
 

@@ -100,17 +100,13 @@ class New_layout_engine():
         if sym_layout != None:
             self.cons_info = self.collect_sym_cons_info(sym_layout)
             self.cons_df = self.cons_from_ps()
-            input_rects, self.W, self.H = input_conversion(
-                sym_layout)  # converts symbolic layout lines and points into rectangles
-            input = self.cornerstitch.read_input('list',
-                                                 Rect_list=input_rects)  # Makes the rectangles compaitble to new layout engine input format
+            input_rects, self.W, self.H = input_conversion(sym_layout)  # converts symbolic layout lines and points into rectangles
+            input = self.cornerstitch.read_input('list',Rect_list=input_rects)  # Makes the rectangles compaitble to new layout engine input format
 
-            self.Htree, self.Vtree = self.cornerstitch.input_processing(input, self.W + 20,
-                                                                        self.H + 20)  # creates horizontal and vertical corner stitch layouts
+            self.Htree, self.Vtree = self.cornerstitch.input_processing(input, self.W + 20,self.H + 20)  # creates horizontal and vertical corner stitch layouts
             num_columns = len(self.Htree.hNodeList[0].stitchList)
 
-            patches, combined_graph = self.cornerstitch.draw_layout(rects=input_rects, Htree=self.Htree,
-                                                                    Vtree=self.Vtree)  # collects initial layout patches and combined HCS,VCS points as a graph for mode-3 representation
+            patches, combined_graph = self.cornerstitch.draw_layout(rects=input_rects, Htree=self.Htree,Vtree=self.Vtree)  # collects initial layout patches and combined HCS,VCS points as a graph for mode-3 representation
             sym_to_cs = Sym_to_CS(input_rects, self.Htree,
                                   self.Vtree)  # maps corner stitch tiles to symbolic layout objects
 
@@ -276,11 +272,15 @@ class New_layout_engine():
     def get_min_dimensions(self):
         for comp in self.all_components:
             if isinstance(comp, parts.Part):
-
-                name=comp.name
+                #name=comp.name
                 type=comp.cs_type
                 footprint=comp.footprint
-                self.min_dimensions[type]=footprint
+                for island in self.init_data[2]:
+                    if comp.layout_component_id in island.child_names:
+                        parent_type=island.elements[0][0] # type of 1st element in parent island. Assumption: all traces on same island have same type
+
+
+                self.min_dimensions[type]=[footprint,parent_type]
 
 
 
@@ -394,8 +394,8 @@ class New_layout_engine():
                 cs_islands_up = self.update_islands(CS_SYM_Updated1, Evaluated_X[i], Evaluated_Y[i], cs_islands)
                 updated_cs_islands.append(cs_islands_up)
                 Layout_Rects.append(Layout_Rects1)
-                for island in cs_islands_up:
-                    island.print_island(plot=True,size=k)
+                #for island in cs_islands_up:
+                    #island.print_island(plot=True,size=k)
 
 
             #print "1",CS_SYM_Updated
@@ -1228,28 +1228,38 @@ class New_layout_engine():
                 # print "C",c,len(v)
                 data = []
                 Rectangles = v[c]
-
+                print Rectangles
                 for i in Rectangles:
+
                     for t in type:
                         if i[4] == t:
                             type_ind = type.index(t)
                             colour = colors[type_ind]
+                            #print "MD",self.min_dimensions
                             if type[type_ind] in self.min_dimensions:
-                                w = self.min_dimensions[t][0]
-                                h = self.min_dimensions[t][1]
+                                if i[-1]==1 or i[-1]==3:  # rotation_index
+                                    h = self.min_dimensions[t][0][0]
+                                    w = self.min_dimensions[t][0][1]
+                                else:
+                                    w = self.min_dimensions[t][0][0]
+                                    h = self.min_dimensions[t][0][1]
+
+                                parent_type=self.min_dimensions[t][1]
+                                p_type_ind = type.index(parent_type)
+                                p_colour = colors[p_type_ind]
                             else:
                                 w = None
                                 h = None
                     if w == None and h == None:
-                        R_in = [i[0], i[1], i[2], i[3], colour, i[-1], 'None', 'None']
+                        R_in = [i[0], i[1], i[2], i[3], colour, i[-2], 'None', 'None'] # i[-2]=zorder
                     else:
 
                         center_x = (i[0] + i[0] + i[2]) / float(2)
                         center_y = (i[1] + i[1] + i[3]) / float(2)
                         x = center_x - w / float(2)
                         y = center_y - h / float(2)
-                        R_in = [i[0], i[1], i[2], i[3], 'white', 0, '--', 'black']
-                        R_in1 = [x, y, w, h, colour, i[-1], 'None', 'None']
+                        R_in = [i[0], i[1], i[2], i[3], p_colour, 1, '--', 'black']
+                        R_in1 = [x, y, w, h, colour, i[-2], 'None', 'None']
                         data.append(R_in1)
                     data.append(R_in)
 

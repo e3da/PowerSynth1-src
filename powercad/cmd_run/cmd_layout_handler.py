@@ -572,6 +572,8 @@ def script_translator(input_script=None, bond_wire_info=None, fig_dir=None, cons
     ScriptMethod.update_constraint_table()  # updates constraint table
 
     input_rects = ScriptMethod.convert_rectangle()  # converts layout info to cs rectangle info
+
+
     input_info = [input_rects, ScriptMethod.size]
 
     # bond wire file read in

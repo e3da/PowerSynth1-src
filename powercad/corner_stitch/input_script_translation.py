@@ -226,19 +226,16 @@ class ScriptInputMethod():
                         # print element.footprint
                         if angle == '90':
                             name = layout_info[j][k + 1] + '_' + '90'
-                            #name = layout_info[j][k + 1]
                             element.name = name
                             element.rotate_angle = 1
                             element.rotate_90()
                         elif angle == '180':
                             name = layout_info[j][k + 1] + '_' + '180'
-                            #name = layout_info[j][k + 1]
                             element.name = name
                             element.rotate_angle = 2
                             element.rotate_180()
                         elif angle == '270':
                             name = layout_info[j][k + 1] + '_' + '270'
-                            #name = layout_info[j][k + 1]
                             element.name = name
                             element.rotate_angle = 3
                             element.rotate_270()
@@ -265,19 +262,16 @@ class ScriptInputMethod():
                         # print element.footprint
                         if angle == '90':
                             name = layout_info[j][k + 1] + '_' + '90'
-                            #name = layout_info[j][k + 1]
                             element.name = name
                             element.rotate_angle = 1
                             element.rotate_90()
                         elif angle == '180':
                             name = layout_info[j][k + 1] + '_' + '180'
-                            #name = layout_info[j][k + 1]
                             element.name = name
                             element.rotate_angle = 2
                             element.rotate_180()
                         elif angle == '270':
                             name = layout_info[j][k + 1] + '_' + '270'
-                            #name = layout_info[j][k + 1]
                             element.name = name
                             element.rotate_angle = 3
                             element.rotate_270()
@@ -390,19 +384,13 @@ class ScriptInputMethod():
 
             #print layout_info[j][1][0],layout_info[j][2]
 
-        #print "T",constraint.constraint.component_to_component_type
-        #raw_input()
-        '''
+
         for key,comp in self.all_parts_info.items():
             for element in comp:
                 if element.rotate_angle in [1,2,3]:
                     c = constraint.constraint()
                     name=element.name
                     constraint.constraint.add_component_type(c, name)
-        
-        
-        '''
-
 
 
         self.all_components_type_mapped_dict = constraint.constraint.component_to_component_type
@@ -412,7 +400,7 @@ class ScriptInputMethod():
         #print self.all_parts_info
         #print self.info_files
         #print self.all_route_info
-        print "map",self.all_components_type_mapped_dict
+        #print "map",self.all_components_type_mapped_dict
         return self.all_parts_info,self.info_files,self.all_route_info,self.all_components_type_mapped_dict
 
     #def gather_layout_info(layout_info=None, all_parts_info=None, all_route_info=None,all_components_mapped_type_dict=None):
@@ -446,9 +434,8 @@ class ScriptInputMethod():
 
                             if element not in self.all_components:
                                 self.all_components.append(element)
-                            if element.name not in all_component_type_names :
-                                if element.rotate_angle==0:
-                                    all_component_type_names.append(element.name)
+                            if element.name not in all_component_type_names:
+                                all_component_type_names.append(element.name)
 
         for j in range(1, len(layout_info)):
             for k, v in self.all_route_info.items():
@@ -480,8 +467,7 @@ class ScriptInputMethod():
 
         for k, v in self.all_parts_info.items():
             for comp in v:
-                if comp.rotate_angle==0:
-                    comp.cs_type = self.component_to_cs_type[comp.name]
+                comp.cs_type = self.component_to_cs_type[comp.name]
 
 
                 #print comp.cs_type
@@ -508,11 +494,8 @@ class ScriptInputMethod():
             for j in range(len(layout_data)):
                 for k, v in self.all_parts_info.items():
                     for element in v:
-                        if element.layout_component_id in layout_data[j]:
-                            index=layout_data[j].index(element.layout_component_id)
-                            type_index=index+1
-                            type_name=layout_data[j][type_index]
-                            type = self.component_to_cs_type[type_name]
+                        if element.layout_component_id == layout_data[j][1]:
+                            type = self.component_to_cs_type[element.name]
                             x = float(layout_data[j][3])
                             y = float(layout_data[j][4])
                             width = round(element.footprint[0])
@@ -520,13 +503,12 @@ class ScriptInputMethod():
                             name = layout_data[j][1]
                             Schar = layout_data[j][0]
                             Echar = layout_data[j][-1]
-                            rotate_angle=element.rotate_angle
-                            rect_info = [type, x, y, width, height, name, Schar, Echar,k1,rotate_angle] #k1=hierarchy level,# added rotate_angle to reduce type in constraint table
+                            rect_info = [type, x, y, width, height, name, Schar, Echar,k1] #k1=hierarchy level
                             rects_info.append(rect_info)
 
                 for k, v in self.all_route_info.items():
                     for element in v:
-                        if element.layout_component_id in layout_data[j]:
+                        if element.layout_component_id == layout_data[j][1]:
                             if element.type == 0 and element.name == 'trace':
                                 type_name = 'power_trace'
                             elif element.type == 1 and element.name == 'trace':
@@ -541,7 +523,7 @@ class ScriptInputMethod():
                             name = layout_data[j][1]
                             Schar = layout_data[j][0]
                             Echar = layout_data[j][-1]
-                            rect_info = [type, x, y, width, height, name, Schar, Echar,k1,0] #k1=hierarchy level # 0 is for rotate angle (default=0 as r)
+                            rect_info = [type, x, y, width, height, name, Schar, Echar,k1] #k1=hierarchy level
                             rects_info.append(rect_info)
                         else:
                             continue
@@ -559,8 +541,7 @@ class ScriptInputMethod():
 
 
 
-        print "cs_info",self.cs_info
-        #raw_input()
+        print self.cs_info
 
 
 
@@ -735,7 +716,7 @@ class ScriptInputMethod():
             Schar = rect[6]
             Echar = rect[7]
             hier_level=rect[8]
-            input_rects.append(Rectangle(type, x, y, width, height, name, Schar=Schar, Echar=Echar,hier_level=hier_level,rotate_angle=rect[9]))
+            input_rects.append(Rectangle(type, x, y, width, height, name, Schar=Schar, Echar=Echar,hier_level=hier_level))
 
         return input_rects
 
@@ -798,7 +779,6 @@ class ScriptInputMethod():
                 elif rect[5] not in all_layout_component_ids and i>start and i<end:
                     island.child.append(rect)
                     island.child_names.append(rect[5])
-
 
         return islands
 

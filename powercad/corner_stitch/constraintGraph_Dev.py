@@ -617,8 +617,12 @@ class constraintGraph:
                     southEast = None
 
                 # this tile has a minheight constraint between it's bottom and top edge
-                c = constraint.constraint(4) # index=4 means minheight constraint
-                index = 4
+                if rect.rotation_index==1 or rect.rotation_index==3:
+                    index=0 # index=0 means minwidth constraint
+                else:
+                    index=4 # index=4 means minheight constraint
+                c = constraint.constraint(index)
+                #index = 4
 
 
                 value = constraint.constraint.getConstraintVal(c,type=rect.cell.type,Types=Types)
@@ -731,8 +735,11 @@ class constraintGraph:
                 # if current tile is stretched from bottom to top, it's a complete background tile and should be a min height constraint generator. It's redundant actually as this tile will be considered
                 # as foreground tile in its background plane's cornerstitched layout, there it will be again considered as min height constraint generator.
                 elif rect.NORTH not in cornerStitch_v.stitchList and rect.SOUTH not in cornerStitch_v.stitchList:
-                    c = constraint.constraint(4)  # index=4 means minheight constraint
-                    index = 4
+                    if rect.rotation_index == 1 or rect.rotation_index == 3:
+                        index = 0  # index=0 means minheight constraint
+                    else:
+                        index = 4  # index=4 means minheight constraint
+                    c = constraint.constraint(index)
 
                     value = constraint.constraint.getConstraintVal(c, type=rect.cell.type,Types=Types)
                     Weight = 2 * value
@@ -785,8 +792,11 @@ class constraintGraph:
                 else:
                     eastSouth = None
 
-                c = constraint.constraint(0)
-                index = 0 # min width constraint
+                if rect.rotation_index==1 or rect.rotation_index==3:
+                    index=4 # index=4 means minheight constraint
+                else:
+                    index=0 # index=0 means minwidth constraint
+                c = constraint.constraint(index)
 
                 value = constraint.constraint.getConstraintVal(c, type=rect.cell.type,Types=Types)
                 Weight = 2 * value
@@ -890,8 +900,11 @@ class constraintGraph:
                     self.vertexMatrixh[ID][origin][dest].append(Edge.getEdgeWeight(e, origin, dest))
                 elif rect.EAST not in cornerStitch_h.stitchList and rect.WEST not in cornerStitch_h.stitchList:
 
-                    c = constraint.constraint(0)
-                    index = 0
+                    if rect.rotation_index == 1 or rect.rotation_index == 3:
+                        index = 4  # index=4 means minheight  constraint
+                    else:
+                        index = 0  # index=0 means minWidth constraint
+                    c = constraint.constraint(index)
 
                     value = constraint.constraint.getConstraintVal(c, type=rect.cell.type,Types=Types)
                     Weight = 2 * value
