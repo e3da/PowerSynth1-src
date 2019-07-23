@@ -162,6 +162,7 @@ class New_layout_engine():
 
 
         cs_islands,sym_to_cs= self.form_cs_island(islands, self.Htree, self.Vtree)
+        #self.form_cs_island1(islands, self.Htree, self.Vtree)
         cs_islands=self.populate_mesh_nodes(cs_islands,self.Htree,self.Vtree) # adding mesh nodes to the islands
 
         #for island in cs_islands:
@@ -327,6 +328,8 @@ class New_layout_engine():
         #self.cons_df.to_csv('out_2.csv', sep=',', header=None, index=None)
         sym_to_cs = self.init_data[1]
         print "sym",sym_to_cs
+        #for k,v in sym_to_cs.items():
+            #print k,v[0],v[1],v[2]
         cs_islands=self.init_data[2]
         scaler = 1000  # to get back original dimensions all coordinated will be scaled down by 1000
         #mode-0
@@ -661,11 +664,14 @@ class New_layout_engine():
         for i in range(len(cs_islands)):
             island=cs_islands[i]
             for element in island.elements:
+                print "B", element
                 if element[-3] in cs_sym_info:
+
                     element[1]=cs_sym_info[element[-3]][1]
                     element[2]=cs_sym_info[element[-3]][2]
                     element[3]=cs_sym_info[element[-3]][3]
                     element[4] = cs_sym_info[element[-3]][4]
+                    print "A",element
             for element in island.child:
                 if element[-3] in cs_sym_info:
                     element[1]=cs_sym_info[element[-3]][1]
@@ -920,8 +926,9 @@ class New_layout_engine():
                 intersections = list(itertools.product(zdl_h, zdl_v))
                 intersection_points = [list(elem) for elem in intersections]
                 #print len(intersection_points)
+                #print "len",len(island.elements)
                 for element in island.elements:
-                    # print "EL", element[1],element[2],element[3],element[4],element[0],type(element[0])
+                    #print "EL", element[1],element[2],element[3],element[4],element[0],type(element[0])
 
                     for rect in Htree.hNodeList[0].stitchList:
                             # print rect.cell.x,rect.cell.y,rect.getWidth(),rect.getHeight(),rect.cell.type
@@ -945,6 +952,9 @@ class New_layout_engine():
                                     if point[0] == rect.cell.x + rect.getWidth():
                                         #print"E",point
                                         E.append(point)
+
+                for element in island.elements_v:
+
                     for rect in Vtree.vNodeList[0].stitchList:
 
                             #if rect.cell.x == element[1] and rect.cell.y == element[2] and rect.getWidth() == element[3] and rect.getHeight() == element[4] and rect.cell.type == element[0]:
@@ -1090,11 +1100,114 @@ class New_layout_engine():
 
         return cs_islands
 
-
-
-
-
     def form_cs_island(self,islands=None, Htree=None, Vtree=None):
+        copy_islands = copy.deepcopy(islands)  # list of islands converting input rects to corner stitch tiles
+        HorizontalNodeList = []
+        VerticalNodeList = []
+        for node in Htree.hNodeList:
+            if node.child == []:
+                continue
+            else:
+                HorizontalNodeList.append(node)  # only appending all horizontal tree nodes which have children. Nodes having no children are not included
+
+        for node in Vtree.vNodeList:
+            if node.child == []:
+                continue
+            else:
+                VerticalNodeList.append(node)  # only appending all vertical tree nodes which have children. Nodes having no children are not included
+
+        cs_islands = []
+        cs_mapped_input = {}
+        for island in copy_islands:
+            cs_island = Island()
+            cs_island.name = island.name
+            elements = island.elements
+
+            child = island.child
+            cs_elements = []
+            cs_elements_v = []
+            cs_child = []
+            cs_tiles_h=[]
+            cs_tiles_v=[]
+            if len(elements)>1:
+                zdl_h=[]
+                zdl_v=[]
+
+                for element in elements:
+                    zdl_h.append(element[1])
+                    zdl_h.append(element[1]+element[3])
+                    zdl_v.append(element[2])
+                    zdl_v.append(element[2] + element[4])
+                    type=element[0]
+                zdl_h=list(set(zdl_h))
+                zdl_v=list(set(zdl_v))
+                zdl_h.sort()
+                zdl_v.sort()
+                #print len(zdl_h),len(zdl_v)
+                bottom_left_coordinates=list(itertools.product(zdl_h[0:-1],zdl_v[0:-1]))
+                #print bottom_left_coordinates
+                #for node in HorizontalNodeList:
+                node_h=Htree.hNodeList[0]
+                node_v=Vtree.vNodeList[0]
+
+                #raw_input()
+                for point in bottom_left_coordinates:
+                    tile=node_h.findPoint(point[0],point[1],node_h.stitchList[0])
+                    if tile.cell.type==type and tile not in cs_tiles_h:
+                        #print tile.cell.x,tile.cell.y,tile.getWidth(),tile.getHeight()
+                        cs_tiles_h.append(tile)
+                            #break
+                for point in bottom_left_coordinates:
+                    tile=node_v.findPoint(point[0],point[1],node_v.stitchList[0])
+                    if tile.cell.type==type and tile not in cs_tiles_v:
+                        #print tile.cell.x,tile.cell.y,tile.getWidth(),tile.getHeight()
+                        cs_tiles_v.append(tile)
+                for i in range(len(elements)):
+                    rect=elements[i]
+                    #print"EL", rect[0],rect[1],rect[2],rect[3],rect[4]
+                    r = [cs_tiles_h[i].cell.type, cs_tiles_h[i].cell.x, cs_tiles_h[i].cell.y, cs_tiles_h[i].getWidth(), cs_tiles_h[i].getHeight(), rect[5], rect[8],cs_tiles_h[i].nodeId]  # type,x,y,width,height,name, hierarchy_level, nodeId
+                    #print r[0],r[1],r[2],r[3],r[4]
+                    cs_elements.append(r)
+                    cs_mapped_input[rect[5]] = [cs_tiles_h[i], cs_tiles_h[i].nodeId, rect[8]]
+                    cs_island.element_names.append(rect[5])
+                for i in range(len(elements)):
+                    rect=elements[i]
+                    #print"EL", rect[0],rect[1],rect[2],rect[3],rect[4]
+                    r = [cs_tiles_v[i].cell.type, cs_tiles_v[i].cell.x, cs_tiles_v[i].cell.y, cs_tiles_v[i].getWidth(), cs_tiles_v[i].getHeight(), rect[5], rect[8],cs_tiles_v[i].nodeId]  # type,x,y,width,height,name, hierarchy_level, nodeId
+                    #print r[0],r[1],r[2],r[3],r[4]
+                    cs_elements_v.append(r)
+                    #cs_mapped_input[rect[5]] = [cs_tiles_h[i], cs_tiles_h[i].nodeId, rect[8]]
+                    #cs_island.element_names.append(rect[5])
+
+            else:
+                for rect in elements:
+                    for node in HorizontalNodeList:
+                        for i in node.stitchList:
+                            if rect[1] == i.cell.x and rect[2] == i.cell.y and rect[3] == i.getWidth() and rect[4] == i.getHeight() and rect[0] == i.cell.type:
+                                r = [rect[0], rect[1], rect[2], rect[3], rect[4], rect[5], rect[8],i.nodeId]  # type,x,y,width,height,name, hierarchy_level, nodeId
+                                cs_elements.append(r)
+                                cs_mapped_input[rect[5]] = [i, node.id, rect[8]]
+                                cs_island.element_names.append(rect[5])
+
+            cs_island.elements = cs_elements
+            cs_island.elements_v=cs_elements_v
+            if len(child) > 0:
+                for rect in child:
+                    for node in HorizontalNodeList:
+                        for i in node.stitchList:
+                            if rect[1] == i.cell.x and rect[2] == i.cell.y and rect[3] == i.getWidth() and rect[4] == i.getHeight() and rect[0] == i.cell.type:
+                                r = [rect[0], rect[1], rect[2], rect[3], rect[4], rect[5], rect[8],node.id]  # type,x,y,width,height,name, hierarchy_level, parent nodeId
+                                cs_child.append(r)
+                                cs_mapped_input[rect[5]] = [i, node.id, rect[8]]
+                                cs_island.child_names.append(rect[5])
+
+            cs_island.child = cs_child
+            cs_islands.append(cs_island)
+
+
+        return cs_islands, cs_mapped_input
+
+    def form_cs_island1(self,islands=None, Htree=None, Vtree=None):
         '''
 
         :param islands: list of islands from input script

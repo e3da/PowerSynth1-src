@@ -403,6 +403,79 @@ class ScriptInputMethod():
         #print "map",self.all_components_type_mapped_dict
         return self.all_parts_info,self.info_files,self.all_route_info,self.all_components_type_mapped_dict
 
+
+    def create_initial_island(self):
+        islands=[]
+
+        for i in range(len(self.layout_info)):
+            rect=self.layout_info[i]
+            if rect[1][0] == 'T' and rect[0] == '+' and rect[-1] == '+':
+                island = Island()
+                rectangle=Rectangle(x=float(rect[3]),y=float(rect[4]),width=float(rect[5]),height=float(rect[6]),name=rect[1])
+                island.rectangles.append(rectangle)
+                island.elements.append(rect)
+                name = 'island_'
+                island.name = name + rect[1].strip('T')
+                island.element_names.append(rect[1])
+                islands.append(island)
+            elif rect[1][0] == 'T' and rect[0] == '+' and rect[-1] == '-':
+                island = Island()
+                rectangle = Rectangle(x=float(rect[3]), y=float(rect[4]), width=float(rect[5]), height=float(rect[6]),name=rect[1])
+                island.rectangles.append(rectangle)
+                island.elements.append(rect)
+                name = 'island_'
+                island.name = name + rect[1].strip('T')
+                island.element_names.append(rect[1])
+                islands.append(island)
+            elif rect[1][0] == 'T' and rect[0] == '-' and (rect[-1] == '-' or rect[-1] == '+'):
+                island = islands[-1]
+                rectangle = Rectangle(x=float(rect[3]), y=float(rect[4]), width=float(rect[5]), height=float(rect[6]),name=rect[1])
+                island.rectangles.append(rectangle)
+                island.elements.append(rect)
+                island.name = island.name + ('_') + rect[1].strip('T')
+                island.element_names.append(rect[1])
+
+
+        for island in islands:
+            if len(island.elements)>1:
+                netid = 0
+                all_rects=island.rectangles
+                for i in range(len(all_rects)):
+                    all_rects[i].Netid=netid
+                    netid+=1
+                rectangles = [all_rects[0]]
+                #all_rects.remove(all_rects[0])
+
+
+                for rect1 in rectangles:
+                    for rect2 in all_rects:
+                        if (rect1.right==rect2.left or rect1.bottom==rect2.top or rect1.left==rect2.right or rect1.bottom==rect2.top) and rect2.Netid!=rect1.Netid:
+                            if rect2.Netid>rect1.Netid:
+                                rectangles.append(rect2)
+                                rect2.Netid=rect1.Netid
+                            #all_rects.remove(rect2)
+                        else:
+                            continue
+                if len(rectangles)!=len(island.elements):
+                    print "Check input script !! : Connected traces are not entered properly"
+
+                elements=island.elements
+                ordered_rectangle_names=[rect.name for rect in rectangles]
+                ordered_elements=[]
+                for name in ordered_rectangle_names:
+                    for element in elements:
+                        if name==element[1]:
+                            ordered_elements.append(element)
+                island.elements=ordered_elements
+                island.element_names=ordered_rectangle_names
+
+
+        return islands
+
+    def populate_initial_child(self,islands=None):
+        pass
+
+
     #def gather_layout_info(layout_info=None, all_parts_info=None, all_route_info=None,all_components_mapped_type_dict=None):
     def gather_layout_info(self):
 
@@ -900,10 +973,19 @@ def plot_solution(Patches=None):
 
 if __name__ == '__main__':
 
-    component_list,layout_info=test_file()
 
-    print len(component_list),component_list
-    print len(layout_info),layout_info
+    method=ScriptInputMethod(input_script='C:\Users\ialrazi\Desktop\REU_Data_collection_input\Quang_Journal\\test.txt')
+    method.read_input_script() # returns Definition, layout_info
+    layout_info_from_input_script=method.layout_info
+    initial_islands=method.create_initial_island()
+    for island in initial_islands:
+        island.print_island()
+        print island.element_names
+
+    #initial_island_w_child=method.populate_initial_child(islands=initial_islands)
+
+    #print len(component_list),component_list
+    #print len(layout_info),layout_info
 
 
 

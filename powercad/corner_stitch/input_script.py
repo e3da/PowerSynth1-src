@@ -749,6 +749,8 @@ class ScriptInputMethod():
             rect=self.cs_info[i]
             if rect[5][0]=='T' and rect[6]=='+' and rect[7]=='+':
                 island=Island()
+                rectangle = Rectangle(x=rect[1], y=rect[2], width=rect[3], height=rect[4],name=rect[5])
+                island.rectangles.append(rectangle)
                 island.elements.append(rect)
                 name='island_'
                 island.name=name+rect[5].strip('T')
@@ -756,6 +758,8 @@ class ScriptInputMethod():
                 islands.append(island)
             elif rect[5][0]=='T' and rect[6]=='+' and rect[7]=='-':
                 island = Island()
+                rectangle = Rectangle(x=rect[1], y=rect[2], width=rect[3], height=rect[4], name=rect[5])
+                island.rectangles.append(rectangle)
                 island.elements.append(rect)
                 name = 'island_'
                 island.name = name + rect[5].strip('T')
@@ -763,9 +767,57 @@ class ScriptInputMethod():
                 islands.append(island)
             elif rect[5][0]=='T' and rect[6]=='-' and (rect[7]=='-' or rect[7]=='+'):
                 island=islands[-1]
+                rectangle = Rectangle(x=rect[1], y=rect[2], width=rect[3], height=rect[4], name=rect[5])
+                island.rectangles.append(rectangle)
                 island.elements.append(rect)
                 island.name = island.name +('_')+ rect[5].strip('T')
                 island.element_names.append(rect[5])
+
+        # sorting connected traces on an island
+        for island in islands:
+            if len(island.elements)>1:
+                netid = 0
+                all_rects=island.rectangles
+                for i in range(len(all_rects)):
+                    all_rects[i].Netid=netid
+                    netid+=1
+                rectangles = [all_rects[0]]
+                #all_rects.remove(all_rects[0])
+
+
+                for rect1 in rectangles:
+                    for rect2 in all_rects:
+                        if (rect1.right==rect2.left or rect1.bottom==rect2.top or rect1.left==rect2.right or rect1.bottom==rect2.top) and rect2.Netid!=rect1.Netid:
+                            if rect2.Netid>rect1.Netid:
+                                rectangles.append(rect2)
+                                rect2.Netid=rect1.Netid
+                            #all_rects.remove(rect2)
+                        else:
+                            continue
+                if len(rectangles) != len(island.elements):
+                    print "Check input script !! : Group of traces are not defined in proper way."
+
+                elements = island.elements
+                ordered_rectangle_names = [rect.name for rect in rectangles]
+                ordered_elements = []
+                for name in ordered_rectangle_names:
+                    for element in elements:
+                        if name == element[5]:
+                            if element[5]==ordered_rectangle_names[0]:
+                                element[-4]='+'
+                                element[-3]='-'
+                            elif element[5]!=ordered_rectangle_names[-1]:
+                                element[-4]='-'
+                                element[-3]='-'
+                            elif element[5]==ordered_rectangle_names[-1]:
+                                element[-4] = '-'
+                                element[-3] = '+'
+                            ordered_elements.append(element)
+                island.elements = ordered_elements
+                island.element_names = ordered_rectangle_names
+
+
+
         return islands
 
     def populate_child(self,islands=None):
@@ -802,6 +854,29 @@ class ScriptInputMethod():
 
         return islands
 
+
+
+
+    def update_cs_info(self,islands=None):
+
+        for island in islands:
+            if len(island.element_names)>2:
+                for i in range(len(self.cs_info)):
+                    if self.cs_info[i][5] == island.element_names[0]:
+                        start=i
+                        end=len(island.element_names)
+                        break
+                print start, end
+
+                self.cs_info[start:start+end]=island.elements
+
+
+
+
+
+
+
+        #raw_input()
 
 
 

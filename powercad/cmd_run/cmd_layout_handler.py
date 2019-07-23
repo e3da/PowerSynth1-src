@@ -238,8 +238,11 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
 
     # GET MEASUREMENT NAME:
     measure_names = []
-    for m in measures:
-        measure_names.append(m.name)
+    if len(measures)>0:
+        for m in measures:
+            measure_names.append(m.name)
+    else:
+        measure_names=["perf_1","perf_2"]
 
     if mode == 0:
         cs_sym_info,islands_info = layout_engine.generate_solutions(mode, num_layouts=1, W=None, H=None,
@@ -261,10 +264,12 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
             for i in range(len(cs_sym_info)):
                 name = 'Layout_' + str(i)
                 solution = CornerStitchSolution(name=name,index=i)
-                solution.params = None
+                results = [None, None]
+                solution.params = dict(zip(measure_names, results))
                 solution.layout_info = cs_sym_info[i]
                 solution.abstract_info = solution.form_abs_obj_rect_dict()
                 Solutions.append(solution)
+            export_solutions(solutions=Solutions, directory=sol_dir)
         if plot:
             sol_path = fig_dir + '/Mode_0'
             if not os.path.exists(sol_path):
@@ -368,7 +373,8 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
             for i in range(len(cs_sym_info)):
                 name = 'Layout_' + str(i)
                 solution = CornerStitchSolution(name=name)
-                solution.params = None
+                results = [None, None]
+                solution.params = dict(zip(measure_names, results))
                 solution.layout_info = cs_sym_info[i]
                 solution.abstract_info = solution.form_abs_obj_rect_dict()
                 Solutions.append(solution)
@@ -379,7 +385,7 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
                         os.makedirs(sol_path)
                     solution.layout_plot(layout_ind=i, db=db_file, fig_dir=sol_path)
 
-
+            export_solutions(solutions=Solutions, directory=sol_dir)
 
     elif mode == 2:
 
@@ -470,7 +476,8 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
             for i in range(len(cs_sym_info)):
                 name = 'Layout_' + str(i)
                 solution = CornerStitchSolution(name=name)
-                solution.params = None
+                results=[None,None]
+                solution.params = dict(zip(measure_names, results))
                 solution.layout_info = cs_sym_info[i]
                 solution.abstract_info = solution.form_abs_obj_rect_dict()
                 Solutions.append(solution)
@@ -479,7 +486,7 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
                     if not os.path.exists(sol_path):
                         os.makedirs(sol_path)
                     solution.layout_plot(layout_ind=i, db=db_file, fig_dir=sol_path)
-
+            export_solutions(solutions=Solutions, directory=sol_dir)
     '''
     elif mode == 3:
         print "Enter information for Fixed-sized layout generation"
@@ -570,7 +577,16 @@ def script_translator(input_script=None, bond_wire_info=None, fig_dir=None, cons
 
     # print ScriptMethod.component_to_cs_type
     ScriptMethod.update_constraint_table()  # updates constraint table
+    # finding islands for a given layout
+    islands = ScriptMethod.form_island()
+    # for i in islands:
+    # print i.PrintIsland()
 
+    # finding child of each island
+    islands = ScriptMethod.populate_child(islands)
+    # updating the order of the rectangles in cs_info for corner stitch
+    ScriptMethod.update_cs_info(islands)
+    print "after",ScriptMethod.cs_info
     input_rects = ScriptMethod.convert_rectangle()  # converts layout info to cs rectangle info
 
 
@@ -581,7 +597,7 @@ def script_translator(input_script=None, bond_wire_info=None, fig_dir=None, cons
         bondwires = ScriptMethod.bond_wire_table(bondwire_info=bond_wire_info)
     # output format of bondwire storing
     # Bond wire table={'BW1': {'BW_object': <powercad.design.Routing_paths.BondingWires instance at 0x16F4D648>, 'Source': 'D1_Drain', 'num_wires': '4', 'Destination': 'B1', 'spacing': '0.1'}, 'BW2': {'BW....}
-
+    '''
     # finding islands for a given layout
     islands =ScriptMethod.form_island()
     #for i in islands:
@@ -589,6 +605,8 @@ def script_translator(input_script=None, bond_wire_info=None, fig_dir=None, cons
 
     # finding child of each island
     islands=ScriptMethod.populate_child(islands)
+
+    '''
 
 
     '''

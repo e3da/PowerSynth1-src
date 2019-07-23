@@ -16,7 +16,7 @@ import constraint as ct
 import collections
 import networkx as nx
 from powercad.general.data_struct.util import *
-
+from API_PS import draw_rect_list_cs
 
 global VID,HID,Schar,EChar,Cchar,Htree,Vtree
 Schar='+'
@@ -1549,7 +1549,7 @@ class Hnode(Node):
 
         # splitting tiles at y1 coordinate
         for rect in splitList:
-
+            #print rect.cell.x,rect.cell.y,rect.cell.type
             i = self.stitchList.index(rect)
             if y1 != rect.cell.y and y1 != rect.NORTH.cell.y: self.hSplit(i, y1)
 
@@ -1834,6 +1834,7 @@ class Hnode(Node):
                 else:
                     changeList.insert(i, mergedcell)
                 self.rectifyShadow(changeList[i])
+
 
 
         for x in range(0, len(changeList)):
@@ -2143,13 +2144,26 @@ class Tree():
             for rect in node.boundaries:
                 rect.nodeId=node.id
 
-    def setNodeId1(self,node):
+    def setNodeId1(self,nodelist):
+
+        node = nodelist[0]
+
+        for n in nodelist:
+            if len(n.child)==0 and n.parent.id==node.id:
+
+                for rect1 in n.stitchList:
+                    for rect in node.stitchList:
+                        if rect1.cell.x==rect.cell.x and rect1.cell.y==rect.cell.y and rect1.getWidth()==rect.getWidth() and rect1.getHeight()==rect.getHeight() and rect1.cell.type==rect.cell.type:
+                            rect.nodeId=node.id
+
 
         for rect in node.stitchList:
             if rect.nodeId==None:
                 rect.nodeId=node.id
         for rect in node.boundaries:
             rect.nodeId=node.id
+
+
 
 
 
@@ -2452,8 +2466,60 @@ class CornerStitch():
 
                 ParentH.insert(start, x1, y1, x2, y2, inp[5],inp[6],Htree,ParentH,rotate_angle=inp[-1])
 
-        Htree.setNodeId1(Htree.hNodeList[0])
-        Vtree.setNodeId1(Vtree.vNodeList[0])
+        Htree.setNodeId1(Htree.hNodeList)
+        Vtree.setNodeId1(Vtree.vNodeList)
+
+        '''
+        print "Horizontal NodeList"
+
+        for i in Htree.hNodeList:
+
+            print i.id, i, len(i.stitchList)
+            rectlist=[]
+            # i=Htree.hNodeList[0]
+            if len(i.child)>0:
+                for j in i.stitchList:
+                    k = j.cell.x, j.cell.y, j.getWidth(), j.getHeight(), j.cell.id, j.cell.type, j.nodeId, j.bw, j.name
+                    rectlist.append(k)
+                fig,ax=plt.subplots()
+                draw_rect_list_cs(rectlist,ax=ax,x_max=57,y_max=51)
+
+        for i in Vtree.vNodeList:
+
+            print i.id, i, len(i.stitchList)
+            rectlist=[]
+            # i=Htree.hNodeList[0]
+            if len(i.child)>0:
+                for j in i.stitchList:
+                    k = j.cell.x, j.cell.y, j.getWidth(), j.getHeight(), j.cell.id, j.cell.type, j.nodeId, j.bw, j.name
+                    rectlist.append(k)
+                fig,ax=plt.subplots()
+                draw_rect_list_cs(rectlist,ax=ax,x_max=57,y_max=51)
+        
+        for i in Htree.hNodeList:
+
+            print i.id, i, len(i.stitchList)
+
+            # i=Htree.hNodeList[0]
+            for j in i.stitchList:
+                k = j.cell.x, j.cell.y, j.getWidth(), j.getHeight(), j.cell.id, j.cell.type, j.nodeId, j.bw, j.name
+                print k
+
+            if i.parent == None:
+                print 0
+            else:
+                print i.parent.id, i.id
+            for j in i.boundaries:
+                if j.cell.type != None:
+                    k = j.cell.x, j.cell.y, j.getWidth(), j.getHeight(), j.cell.id, j.cell.type, j.nodeId, j.bw, j.name
+
+                else:
+                    k = j.cell.x, j.cell.y, j.cell.type, j.nodeId
+                print "B", i.id, k
+
+        
+        '''
+
 
 
 
@@ -3102,8 +3168,12 @@ class CS_to_CG():
         sub_width=max(minx[1].values())
         sub_length=max(miny[1].values())
         for k, v in sym_to_cs.items():
+
             rect = v[0]
-            nodeid=v[1].id
+            #nodeid=v[1].id
+            nodeid = v[1]
+            #print "UP",k,rect.cell.x,rect.cell.y,rect.EAST.cell.x,rect.NORTH.cell.y
+
             if rect.cell.x in minx[nodeid] and rect.EAST.cell.x in minx[nodeid] and rect.cell.y in miny[nodeid] and rect.NORTH.cell.y in miny[nodeid]:
                 x = minx[nodeid][rect.cell.x]
                 y = miny[nodeid][rect.cell.y]

@@ -9,6 +9,8 @@ class Island():
         self.element_names=[] #list of layout component ids of elements
         self.child_names=[] #list of layout component ids of child
         self.mesh_nodes=[]#list of MeshNode objects
+        self.elements_v=[]# list of elements in vertical corner stitch on an island
+        self.rectangles=[] # list of elements in rectangle objects
         #self.points = []  # list of all points on an island
         #self.boundary_points = {'N': [], 'S': [], 'E': [],'W': []}  # dictionary of boundary points, where key= direction, value=list of points
 
@@ -106,3 +108,7 @@ class MeshNode():
         self.type = type  # Node type
         self.b_type = []  # if type is boundary this will tell if it is N,S,E,W
         self.pos = pos  # Node Position (x , y ,z)
+
+
+
+
