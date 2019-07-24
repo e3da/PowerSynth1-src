@@ -89,10 +89,14 @@ class New_layout_engine():
         return
 
     def init_layout(self, sym_layout=None,input_format=None,islands=None):
-        
-        #initialize new layout engine with old symlayout data structure
-        #Returns:
-        
+        '''
+
+        :param sym_layout: old symbolic layout
+        :param input_format: a list: [list of rectangle objects to create corner stitch ,initial_floorplan_size]
+        :param islands: list of island objects created from initial layout input script
+        :return: creates corner stitch data structure from initial layout and creates islands with corner stitch tiles, updates mesh node objects for each island,
+        creates a map between input rectangle to corner stitch tile. If it's a connected group (island), mapping is done by group wise, else it is one-to-one
+        '''
         print "initializing ....."
         self.sym_layout = sym_layout
 
@@ -112,10 +116,11 @@ class New_layout_engine():
 
             self.init_data = [patches, sym_to_cs, combined_graph, num_columns]
         else:
-            input_rects=input_format[0]
-            size=input_format[1]
-            self.W=size[0]
-            self.H=size[1]
+            input_rects=input_format[0] # list of rectangle objects for corner stitch input
+            size=input_format[1] # list [width,height] initial floorplan size given by user
+            self.W=size[0] # width
+            self.H=size[1] # hieght
+            # creates horizontal and vertical corner stitch
             self.create_cornerstitch(input_rects,size,islands)
 
 
@@ -128,8 +133,12 @@ class New_layout_engine():
 
 
     def create_cornerstitch(self,input_rects=None, size=None,islands=None):
-        #cornerstitch = CornerStitch()
-        #print input_rects
+        '''
+        :param input_rects: list of rectangle objects for corner stitch input
+        :param size: floorplan size given by user
+        :param islands: list of islands created from initial input script
+        :return:
+        '''
 
         input = self.cornerstitch.read_input('list',Rect_list=input_rects)  # Makes the rectangles compaitble to new layout engine input format
         self.Htree, self.Vtree = self.cornerstitch.input_processing(input, size[0],size[1])  # creates horizontal and vertical corner stitch layouts
@@ -160,19 +169,21 @@ class New_layout_engine():
             ax2.set_aspect('equal')
             plt.savefig('D:\Demo\New_Flow_w_Hierarchy\Figs'+'/_initial_layout.png')
 
-
-        cs_islands,sym_to_cs= self.form_cs_island(islands, self.Htree, self.Vtree)
-        #self.form_cs_island1(islands, self.Htree, self.Vtree)
+        # creating corner stitch islands and map between input rectangle(s) and corner stitch tile(s)
+        cs_islands,sym_to_cs= self.form_cs_island(islands, self.Htree, self.Vtree) # creates a list of island objects populated with corner stitch tiles
+        # populates mesh node objects for each island for electrical evaluation
         cs_islands=self.populate_mesh_nodes(cs_islands,self.Htree,self.Vtree) # adding mesh nodes to the islands
-
+        #--------------------------------------for debugging----------------------
         #for island in cs_islands:
             #print island.print_island()
+        #for k,v in sym_to_cs.items():
+            #print k,v
+        #--------------------------------------------------------------------------
 
-        #sym_to_cs=self.cs_mapped_input(cs_islands) # maps cs tiles to input
-        #sym_to_cs = Sym_to_CS(input_rects, self.Htree, self.Vtree)  # maps corner stitch tiles to symbolic layout objects
-        print sym_to_cs
+        #To access globally, patches=initial input rectangle patch list, sym_to_cs= dictionary mapped between input rectangle(s) and corner stitch tile(s)
+        # cs_islands: updated islands having cs tiles as elements and mesh node objects, combined_graph is for mode 3 (initial layout with nodes)
         self.init_data = [patches, sym_to_cs,cs_islands, combined_graph]
-        #return init_data, Htree, Vtree
+
 
     def collect_sym_cons_info(self, sym_layout):
         '''
@@ -327,59 +338,45 @@ class New_layout_engine():
         '''
         #self.cons_df.to_csv('out_2.csv', sep=',', header=None, index=None)
         sym_to_cs = self.init_data[1]
-        print "sym",sym_to_cs
+        #---------------------------for debugging-----------------------------
         #for k,v in sym_to_cs.items():
             #print k,v[0],v[1],v[2]
+        #----------------------------------------------------------------------
         cs_islands=self.init_data[2]
         scaler = 1000  # to get back original dimensions all coordinated will be scaled down by 1000
         #mode-0
         if level == 0:
 
             Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=None, W=None, H=None, XLoc=None, YLoc=None,seed=None,individual=None,Types=self.Types) # for minimum sized layout only one solution is generated
-
             CS_SYM_information, Layout_Rects = CG1.update_min(Evaluated_X, Evaluated_Y , sym_to_cs, scaler)
-            #raw_input()
-
-            print CS_SYM_information
-
-
-
+            #-------------------------------for debugging----------------------
             #print "Before update"
             #for island in cs_islands:
                 #island.print_island(plot=True)
-
-
-
-
+            #------------------------------------------------------------------
             #cs_islands_up=self.update_points(cs_islands)
-
-
             #CS_SYM_information, Layout_Rects = CG1.UPDATE_min(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree ,sym_to_cs,scaler)  # CS_SYM_information is a dictionary where key=path_id(component name) and value=list of updated rectangles, Layout Rects is a dictionary for minimum HCS and VCS evaluated rectangles (used for plotting only)
             self.cur_fig_data = plot_layout(Layout_Rects, level)
             CS_SYM_Updated = {}
             for i in self.cur_fig_data:
                 for k, v in i.items():
-                    k=(k[0]*scaler,k[1]*scaler)
+                    k=(k[0]*scaler,k[1]*scaler) #size
                     CS_SYM_Updated[k] = CS_SYM_information
             CS_SYM_Updated = [CS_SYM_Updated] # mapped solution layout information to symbolic layout objects
             cs_islands_up = self.update_islands(CS_SYM_information, Evaluated_X, Evaluated_Y, cs_islands)
             updated_cs_islands = [cs_islands_up]
-
+            # -------------------------------for debugging----------------------
             #print "After update"
             #for island in cs_islands_up:
                 #island.print_island(plot=True,size=k)
                 #island.plot_mesh_nodes(size=k)
-
-
-
+            #-------------------------------------------------------------------
             if db!=None:
                 if count==None:
                     self.save_layouts(Layout_Rects,count=None, db=db)
 
-
         #mode-1
         elif level == 1:
-
             Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=num_layouts, W=None, H=None,XLoc=None, YLoc=None, seed=seed, individual=individual,Types=self.Types)
             #CS_SYM_Updated, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree, sym_to_cs,scaler)
             CS_SYM_Updated=[]
@@ -391,20 +388,13 @@ class New_layout_engine():
                 CS_SYM_info= {}
                 for item in self.cur_fig_data:
                     for k, v in item.items():
-                        k = (k[0] * scaler, k[1] * scaler)
+                        k = (k[0] * scaler, k[1] * scaler) #size
                         CS_SYM_info[k] = CS_SYM_Updated1
                 CS_SYM_Updated.append(CS_SYM_info)
                 cs_islands_up = self.update_islands(CS_SYM_Updated1, Evaluated_X[i], Evaluated_Y[i], cs_islands)
                 updated_cs_islands.append(cs_islands_up)
                 Layout_Rects.append(Layout_Rects1)
-                #for island in cs_islands_up:
-                    #island.print_island(plot=True,size=k)
 
-
-            #print "1",CS_SYM_Updated
-            #print Layout_Rects
-            #CS_SYM_Updated = CS_SYM_Updated['H']
-            #self.cur_fig_data = plot_layout(Layout_Rects, level,self.min_dimensions)
             if count==None:
                 #for i in range(len(Layout_Rects)):
                 for i in range(len(Layout_Rects)):
@@ -416,7 +406,6 @@ class New_layout_engine():
         #mode-2
         elif level == 2:
             Evaluated_X0, Evaluated_Y0 = self.mode_zero() # mode-0 evaluation is required to check the validity of given floorplan size
-            print Evaluated_X0, Evaluated_Y0
 
             ZDL_H={}
             ZDL_V={}
@@ -474,7 +463,6 @@ class New_layout_engine():
             # sorting the given locations based on the graph vertices in ascending order
             Min_X_Loc = collections.OrderedDict(sorted(Min_X_Loc.items()))
             Min_Y_Loc = collections.OrderedDict(sorted(Min_Y_Loc.items()))
-            print Min_X_Loc,Min_Y_Loc
 
             Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=num_layouts, W=W, H=H,
                                                       XLoc=Min_X_Loc, YLoc=Min_Y_Loc, seed=seed, individual=individual,Types=self.Types) # evaluates and finds updated locations for each coordinate
@@ -498,23 +486,20 @@ class New_layout_engine():
                 CS_SYM_info = {}
                 for item in self.cur_fig_data:
                     for k, v in item.items():
-                        k = (k[0] * scaler, k[1] * scaler)
+                        k = (k[0] * scaler, k[1] * scaler) #size
                         CS_SYM_info[k] = CS_SYM_Updated1
                 CS_SYM_Updated.append(CS_SYM_info)
                 cs_islands_up = self.update_islands(CS_SYM_Updated1, Evaluated_X[i], Evaluated_Y[i], cs_islands)
                 updated_cs_islands.append(cs_islands_up)
-
+                #-----------------------for debugging------------------------------
                 '''
                 print "After update"
                 for island in cs_islands_up:
                     island.PrintIsland(plot=True,size=k)                
                 
                 '''
+                #--------------------------------------------------------------------
                 Layout_Rects.append(Layout_Rects1)
-            # print "1",CS_SYM_Updated
-            # print Layout_Rects
-            # CS_SYM_Updated = CS_SYM_Updated['H']
-            # self.cur_fig_data = plot_layout(Layout_Rects, level,self.min_dimensions)
             if count == None:
                 # for i in range(len(Layout_Rects)):
                 for i in range(len(Layout_Rects)):
@@ -649,7 +634,7 @@ class New_layout_engine():
 
         if bar:
             p_bar.close()
-         # needs to be returned ---------------> updated_cs_islands
+
         return  CS_SYM_Updated, updated_cs_islands
 
 
@@ -659,19 +644,19 @@ class New_layout_engine():
         :param cs_islands:
         :return:
         '''
-        print cs_sym_info
+
         cs_islands=copy.deepcopy(cs_islands1)
         for i in range(len(cs_islands)):
             island=cs_islands[i]
             for element in island.elements:
-                print "B", element
+
                 if element[-3] in cs_sym_info:
 
                     element[1]=cs_sym_info[element[-3]][1]
                     element[2]=cs_sym_info[element[-3]][2]
                     element[3]=cs_sym_info[element[-3]][3]
                     element[4] = cs_sym_info[element[-3]][4]
-                    print "A",element
+
             for element in island.child:
                 if element[-3] in cs_sym_info:
                     element[1]=cs_sym_info[element[-3]][1]
@@ -689,20 +674,7 @@ class New_layout_engine():
                     if node.pos[0] in minx[node_id] and node.pos[1] in miny[node_id]:
                         node.pos[0] = minx[node_id][node.pos[0]]
                         node.pos[1] = miny[node_id][node.pos[1]]
-                '''
-                for point in island.points:
-                    if point[0] in minx[node_id] and point[1] in miny[node_id]:
 
-                        point[0]=minx[node_id][point[0]]
-                        point[1]=miny[node_id][point[1]]
-
-                for k in keys:
-                    for point in island.boundary_points[k]:
-
-                        if point[0] in minx[node_id] and point[1] in miny[node_id]:
-                            point[0]=minx[node_id][point[0]]
-                            point[1]=miny[node_id][point[1]]
-                '''
 
             else:
                 for element in island.elements:
@@ -712,20 +684,7 @@ class New_layout_engine():
                     if node.pos[0] in minx[node_id] and node.pos[1] in miny[node_id]:
                         node.pos[0] = minx[node_id][node.pos[0]]
                         node.pos[1] = miny[node_id][node.pos[1]]
-                '''
-                for point in island.points:
-                    if point[0] in minx[node_id] and point[1] in miny[node_id]:
 
-                        point[0]=minx[node_id][point[0]]
-                        point[1]=miny[node_id][point[1]]
-
-                for k in keys:
-                    for point in island.boundary_points[k]:
-                        if point[0] in minx[node_id] and point[1] in miny[node_id]:
-
-                            point[0] = minx[node_id][point[0]]
-                            point[1] = miny[node_id][point[1]]
-                '''
 
         return cs_islands
 
@@ -785,17 +744,6 @@ class New_layout_engine():
                             S.append(coordinate8)
 
 
-                    '''
-                    for tile in Vtree.vNodeList[nodeid - 1].stitchList:
-                        if tile.NORTH not in Vtree.vNodeList[nodeid - 1].boundaries:
-                            coordinate3 = (tile.NORTH.cell.x, tile.NORTH.cell.y)
-                            points.append(coordinate3)
-                        if tile.SOUTH not in Vtree.vNodeList[nodeid - 1].boundaries:
-                            coordinate5 = (tile.SOUTH.cell.x, tile.SOUTH.cell.y)
-                            #points.append(coordinate5)
-                    
-                    
-                    '''
                     for tile in Vtree.vNodeList[nodeid-1].stitchList:
                         coordinate1=[tile.cell.x,tile.cell.y]
                         coordinate6=[tile.cell.x+tile.getWidth(),tile.cell.y+tile.getHeight()]
@@ -893,86 +841,44 @@ class New_layout_engine():
                         points.append(coordinate7)
                     if coordinate8 not in points:
                         points.append(coordinate8)
-                ''''
-                for element in island.child:
-                    # print "EL", element[1],element[2],element[3],element[4],element[0],type(element[0])
 
-                    for tile in Htree.hNodeList[nodeid-1].stitchList:
-                            # print rect.cell.x,rect.cell.y,rect.getWidth(),rect.getHeight(),rect.cell.type
-                            # print rect.cell.type,type(rect.cell.type)
-
-                            #if rect.cell.x == element[1] and rect.cell.y == element[2] and rect.getWidth() == element[3] and rect.getHeight() == element[4] and rect.cell.type == str(element[0]):
-                        if tile.cell.x == element[1] and tile.cell.y == element[2]  and tile.cell.type == element[0]:
-                            coordinate1 = [tile.cell.x, tile.cell.y]
-                            coordinate6 = [tile.cell.x + tile.getWidth(), tile.cell.y + tile.getHeight()]
-                            coordinate7 = [tile.cell.x, tile.cell.y + tile.getHeight()]
-                            coordinate8 = [tile.cell.x + tile.getWidth(), tile.cell.y]
-                            if coordinate1 not in points:
-                                points.append(coordinate1)
-                            if coordinate6 not in points:
-                                points.append(coordinate6)
-                            if coordinate7 not in points:
-                                points.append(coordinate7)
-                            if coordinate8 not in points:
-                                points.append(coordinate8)
-
-                '''
                 hnode = Htree.hNodeList[nodeid - 1]
                 vnode = Vtree.vNodeList[nodeid - 1]
                 cg = constraintGraph()
                 zdl_h, zdl_v = cg.dimListFromLayer(hnode, vnode)
-                # print zdl_h
-                # print zdl_v
+
                 intersections = list(itertools.product(zdl_h, zdl_v))
                 intersection_points = [list(elem) for elem in intersections]
-                #print len(intersection_points)
-                #print "len",len(island.elements)
+
                 for element in island.elements:
-                    #print "EL", element[1],element[2],element[3],element[4],element[0],type(element[0])
-
                     for rect in Htree.hNodeList[0].stitchList:
-                            # print rect.cell.x,rect.cell.y,rect.getWidth(),rect.getHeight(),rect.cell.type
-                            # print rect.cell.type,type(rect.cell.type)
 
-                            #if rect.cell.x == element[1] and rect.cell.y == element[2] and rect.getWidth() == element[3] and rect.getHeight() == element[4] and rect.cell.type == str(element[0]):
                         if rect.cell.x == element[1] and rect.cell.y == element[2]  and rect.cell.type == element[0]:
 
-                            #print"Rh", rect.cell.x, rect.cell.y, rect.getWidth(), rect.getHeight(), rect.cell.type
                             for point in intersection_points:
                                 x1 = point[0]
                                 y1 = point[1]
                                 if x1 >= rect.cell.x and x1 <= rect.cell.x + rect.getWidth() and y1 >= rect.cell.y and y1 <= rect.cell.y + rect.getHeight():
-                                    #print "Ph", point
-                                    #if y1==rect.cell.y or y1==rect.cell.y+rect.getHeight():
-                                        #print "Phh", point
+
                                     points.append(point)
                                     if point[0] == rect.cell.x:
                                         W.append(point)
-                                        #print "W",point
                                     if point[0] == rect.cell.x + rect.getWidth():
-                                        #print"E",point
                                         E.append(point)
 
                 for element in island.elements_v:
 
                     for rect in Vtree.vNodeList[0].stitchList:
 
-                            #if rect.cell.x == element[1] and rect.cell.y == element[2] and rect.getWidth() == element[3] and rect.getHeight() == element[4] and rect.cell.type == element[0]:
                         if rect.cell.x == element[1] and rect.cell.y == element[2] and rect.cell.type == str(element[0]):
-                            #print"Rv", rect.cell.x, rect.cell.y, rect.getWidth(), rect.getHeight(), rect.cell.type
                             for point in intersection_points:
                                 x1 = point[0]
                                 y1 = point[1]
                                 if x1 >= rect.cell.x and x1 <= rect.cell.x + rect.getWidth() and y1 >= rect.cell.y and y1 <= rect.cell.y + rect.getHeight():
-                                    #print "Pv", point
-                                    #if x1==rect.cell.x or x1==rect.cell.x+rect.getWidth():
-                                        #print "Pvv", point
                                     points.append(point)
                                     if point[1] == rect.cell.y:
-                                        #print "S",point
                                         S.append(point)
                                     if point[1] == rect.cell.y + rect.getHeight():
-                                        #print"N",point
                                         N.append(point)
 
 
@@ -981,11 +887,6 @@ class New_layout_engine():
             E = [list(item) for item in set(tuple(x) for x in E)]
             W = [list(item) for item in set(tuple(x) for x in W)]
             points=[list(item) for item in set(tuple(x) for x in points)]
-            #island.points = points
-            #island.boundary_points['N'] = N
-            #island.boundary_points['S'] = S
-            #island.boundary_points['E'] = E
-            #island.boundary_points['W'] = W
             all_boundaries += N
             all_boundaries += S
             all_boundaries += E
@@ -1007,95 +908,6 @@ class New_layout_engine():
                 point_objects.append(node)
 
             island.mesh_nodes=point_objects
-
-
-
-
-        #print "ALL",len(all_points)
-        #print "Boundaries",len(all_boundaries)
-        #group = Island()
-        #group.plot_points(all_points, all_boundaries, size=(70, 80))
-
-
-        """
-        raw_input()
-
-        for tile in Htree.hNodeList[nodeid - 1].stitchList:
-            coordinate1 = [tile.cell.x, tile.cell.y]
-            coordinate6 = [tile.cell.x + tile.getWidth(), tile.cell.y + tile.getHeight()]
-            coordinate7 = [tile.cell.x, tile.cell.y + tile.getHeight()]
-            coordinate8 = [tile.cell.x + tile.getWidth(), tile.cell.y]
-            '''
-            if tile.EAST not in Htree.hNodeList[nodeid - 1].boundaries:
-                coordinate2 = (tile.EAST.cell.x, tile.EAST.cell.y)
-                points.append(coordinate2)
-            if tile.WEST not in Htree.hNodeList[nodeid - 1].boundaries:
-                coordinate4 = (tile.WEST.cell.x, tile.WEST.cell.y)
-                #points.append(coordinate4)
-            '''
-            if tile.EAST.cell.type == 'EMPTY':
-                E.append(coordinate8)
-                E.append(coordinate6)
-            if tile.WEST.cell.type == "EMPTY":
-                W.append(coordinate1)
-                W.append(coordinate7)
-            if tile.NORTH.cell.type == 'EMPTY':
-                N.append(coordinate7)
-                N.append(coordinate6)
-            if tile.SOUTH.cell.type == "EMPTY":
-                S.append(coordinate1)
-                S.append(coordinate8)
-
-            if coordinate1 not in points:
-                points.append(coordinate1)
-            if coordinate6 not in points:
-                points.append(coordinate6)
-            if coordinate7 not in points:
-                points.append(coordinate7)
-            if coordinate8 not in points:
-                points.append(coordinate8)
-            # points.append(coordinate4)
-        '''
-        for tile in Vtree.vNodeList[nodeid - 1].stitchList:
-            if tile.NORTH not in Vtree.vNodeList[nodeid - 1].boundaries:
-                coordinate3 = (tile.NORTH.cell.x, tile.NORTH.cell.y)
-                points.append(coordinate3)
-            if tile.SOUTH not in Vtree.vNodeList[nodeid - 1].boundaries:
-                coordinate5 = (tile.SOUTH.cell.x, tile.SOUTH.cell.y)
-                #points.append(coordinate5)                
-        
-        '''
-        for tile in Vtree.vNodeList[nodeid - 1].stitchList:
-            coordinate1 = [tile.cell.x, tile.cell.y]
-            coordinate6 = [tile.cell.x + tile.getWidth(), tile.cell.y + tile.getHeight()]
-            coordinate7 = [tile.cell.x, tile.cell.y + tile.getHeight()]
-            coordinate8 = [tile.cell.x + tile.getWidth(), tile.cell.y]
-            if tile.EAST.cell.type == 'EMPTY':
-                E.append(coordinate8)
-                E.append(coordinate6)
-            if tile.WEST.cell.type == "EMPTY":
-                W.append(coordinate1)
-                W.append(coordinate7)
-            if tile.NORTH.cell.type == 'EMPTY':
-                N.append(coordinate7)
-                N.append(coordinate6)
-            if tile.SOUTH.cell.type == "EMPTY":
-                S.append(coordinate1)
-                S.append(coordinate8)
-            if coordinate1 not in points:
-                points.append(coordinate1)
-            if coordinate6 not in points:
-                points.append(coordinate6)
-            if coordinate7 not in points:
-                points.append(coordinate7)
-            if coordinate8 not in points:
-                points.append(coordinate8)
-        """
-
-
-
-
-
 
 
         return cs_islands

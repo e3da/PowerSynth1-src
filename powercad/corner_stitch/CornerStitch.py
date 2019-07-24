@@ -25,7 +25,7 @@ EChar='-'
 VID=0
 HID=0
 
-class cell:
+class Cell:
     """
     This is the basis for a cell, with only internal information being stored. information pertaining to the 
     structure of a cornerStitch or the relative position of a cell is stored in a cornerStitch obj.
@@ -56,7 +56,7 @@ class cell:
     def getId(self):
         return self.id
 
-class tile:
+class Tile:
     """
     Abstract class of cells, there eventually will be multiple
     implementations of cells with different physical properties
@@ -243,7 +243,7 @@ class BondWire():
             print "direction: Diagonal"
 
 ########################################################################################################################
-class cornerStitch_algorithms(object):
+class CornerStitchAlgorithms(object):
     """
     A cornerStitch is a collection of tiles all existing on the same plane. I'm not sure how we're going to handle
     cornerStitchs connecting to one another yet so I'm leaving it unimplemented for now. Layer-level operations involve
@@ -258,10 +258,10 @@ class cornerStitch_algorithms(object):
         self.stitchList = stitchList
         self.level=level
         if self.level == 0:
-            self.northBoundary = tile(None, None, None, None, None, cell(0, max_y, "EMPTY"))
-            self.eastBoundary = tile(None, None, None, None, None, cell(max_x, 0, "EMPTY"))
-            self.southBoundary = tile(None, None, None, None, None, cell(0, -1000, "EMPTY"))
-            self.westBoundary = tile(None, None, None, None, None, cell(-1000, 0, "EMPTY"))
+            self.northBoundary = Tile(None, None, None, None, None, Cell(0, max_y, "EMPTY"))
+            self.eastBoundary = Tile(None, None, None, None, None, Cell(max_x, 0, "EMPTY"))
+            self.southBoundary = Tile(None, None, None, None, None, Cell(0, -1000, "EMPTY"))
+            self.westBoundary = Tile(None, None, None, None, None, Cell(-1000, 0, "EMPTY"))
             self.boundaries = [self.northBoundary, self.eastBoundary, self.westBoundary, self.southBoundary]
         else:
             self.boundaries = boundaries
@@ -451,9 +451,9 @@ class cornerStitch_algorithms(object):
         if x < splitCell.cell.x or x > splitCell.cell.x + splitCell.getWidth(): # checking if x is inside the tile
             return
         if splitCell.cell.type!="EMPTY":
-            newCell = tile(None, None, None, None, None,cell(x, splitCell.cell.y, splitCell.cell.type, id=splitCell.cell.id),nodeId=splitCell.nodeId)
+            newCell = Tile(None, None, None, None, None, Cell(x, splitCell.cell.y, splitCell.cell.type, id=splitCell.cell.id), nodeId=splitCell.nodeId)
         else:
-            newCell = tile(None, None, None, None, None,cell(x, splitCell.cell.y, splitCell.cell.type, id=splitCell.cell.id))
+            newCell = Tile(None, None, None, None, None, Cell(x, splitCell.cell.y, splitCell.cell.type, id=splitCell.cell.id))
         self.stitchList.append(newCell)
 
         #assigning new cell neigbors
@@ -516,9 +516,9 @@ class cornerStitch_algorithms(object):
         if y < splitCell.cell.y or y > splitCell.cell.y + splitCell.getHeight():
             return
         if splitCell.cell.type!="EMPTY":
-            newCell = tile(None, None, None, None, None,cell(splitCell.cell.x, y, splitCell.cell.type, id=splitCell.cell.id),nodeId=splitCell.nodeId)
+            newCell = Tile(None, None, None, None, None, Cell(splitCell.cell.x, y, splitCell.cell.type, id=splitCell.cell.id), nodeId=splitCell.nodeId)
         else:
-            newCell = tile(None, None, None, None, None,cell(splitCell.cell.x, y, splitCell.cell.type, id=splitCell.cell.id))
+            newCell = Tile(None, None, None, None, None, Cell(splitCell.cell.x, y, splitCell.cell.type, id=splitCell.cell.id))
 
         self.stitchList.append(newCell)
 
@@ -589,7 +589,7 @@ class cornerStitch_algorithms(object):
         return [x1, y1, x2, y2]
 ########################################################################################################################
 
-class Node(cornerStitch_algorithms):
+class Node(CornerStitchAlgorithms):
     """
     Group of tiles .Part of hierarchical Tree
     """
@@ -2212,6 +2212,15 @@ class Rectangle(Rect):
     def getParent(self):
         return self.parent
 
+    def print_rectangle(self):
+        print "Schar:",self.Schar,"Type",self.type, "x",self.x, "y",self.y,"width",self.width,"height",self.height,"name",self.name,"Echar:",self.Echar
+        if self.hier_level!=None:
+            print"hier_level:",self.hier_level
+        if self.rotate_angle!=None:
+            print"rotate_angle:",self.rotate_angle
+        if self.Netid!=None:
+            print self.Netid
+
 
 class Baseplate():
     def __init__(self,w,h,type):
@@ -2230,11 +2239,11 @@ class Baseplate():
 
     # defining root tile of the tree
     def Initialize(self):
-        Tile1 = tile(None, None, None, None, None, cell(0, 0, self.type), nodeId=1)
-        TN = tile(None, None, None, None, None, cell(0, self.h, None))
-        TE = tile(None, None, None, None, None, cell(self.w, 0, None))
-        TW = tile(None, None, None, None, None, cell(-1000, 0, None))
-        TS = tile(None, None, None, None, None, cell(0, -1000, None))
+        Tile1 = Tile(None, None, None, None, None, Cell(0, 0, self.type), nodeId=1)
+        TN = Tile(None, None, None, None, None, Cell(0, self.h, None))
+        TE = Tile(None, None, None, None, None, Cell(self.w, 0, None))
+        TW = Tile(None, None, None, None, None, Cell(-1000, 0, None))
+        TS = Tile(None, None, None, None, None, Cell(0, -1000, None))
         Tile1.NORTH = TN
         Tile1.EAST = TE
         Tile1.WEST = TW
@@ -2247,11 +2256,11 @@ class Baseplate():
         Boundaries.append(TW)
         Boundaries.append(TS)
         Vnode0 = Vnode(boundaries=Boundaries,stitchList=Stitchlist, parent=None, id=1)
-        Tile2 = tile(None, None, None, None, None, cell(0, 0, self.type), nodeId=1)
-        TN2 = tile(None, None, None, None, None, cell(0, self.h, None))
-        TE2 = tile(None, None, None, None, None, cell(self.w, 0, None))
-        TW2 = tile(None, None, None, None, None, cell(-1000, 0, None))
-        TS2 = tile(None, None, None, None, None, cell(0, -1000, None))
+        Tile2 = Tile(None, None, None, None, None, Cell(0, 0, self.type), nodeId=1)
+        TN2 = Tile(None, None, None, None, None, Cell(0, self.h, None))
+        TE2 = Tile(None, None, None, None, None, Cell(self.w, 0, None))
+        TW2 = Tile(None, None, None, None, None, Cell(-1000, 0, None))
+        TS2 = Tile(None, None, None, None, None, Cell(0, -1000, None))
         Tile2.NORTH = TN2
         Tile2.EAST = TE2
         Tile2.WEST = TW2
@@ -2305,7 +2314,7 @@ class CornerStitch():
                 elif R.hier_level==2:
                     Modified_input.append([R.Schar,'.','.', R.x, R.y, R.width, R.height, R.type, R.Echar, R.name,R.rotate_angle])
 
-        print "M", Modified_input
+        #print "M", Modified_input
         return Modified_input
 
 
@@ -2390,7 +2399,7 @@ class CornerStitch():
             inp=Input.pop(0)
 
 
-            print "H",inp
+            #print "H",inp
             if inp[1] == "." and inp[2] != ".": ## determining hierarchy level (2nd level):Device insertion
                 start = inp[0]
                 x1 = int(inp[2])
@@ -3279,7 +3288,7 @@ class CS_to_CG():
                         #ALL_HRECTS.setdefault(key,[])
                         item=[]
                         for r in v:
-                            if isinstance (r,tile):
+                            if isinstance (r, Tile):
                                 if r.cell.x==k[0] and r.cell.y==k[1]:
                                     item.append(r1)
                             elif r==None:

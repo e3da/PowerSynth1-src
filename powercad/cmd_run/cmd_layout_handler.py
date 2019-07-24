@@ -567,28 +567,34 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
     return Solutions
 
 
+# translates the input layout script and makes necessary information ready for corner stitch data structure
 def script_translator(input_script=None, bond_wire_info=None, fig_dir=None, constraint_file=None,mode=None):
     ScriptMethod = ScriptInputMethod(input_script)  # initializes the class with filename
     ScriptMethod.read_input_script()  # reads input script and make two sections
     ScriptMethod.gather_part_route_info()  # gathers part and route info
     ScriptMethod.gather_layout_info()  # gathers layout info
-    # print ScriptMethod.size
-    # print len(ScriptMethod.cs_info), ScriptMethod.cs_info
-
-    # print ScriptMethod.component_to_cs_type
-    ScriptMethod.update_constraint_table()  # updates constraint table
+    ScriptMethod.update_constraint_table()  # updates constraint table in the given csv file
     # finding islands for a given layout
-    islands = ScriptMethod.form_island()
-    # for i in islands:
-    # print i.PrintIsland()
-
+    islands = ScriptMethod.form_island() # list of island objects
     # finding child of each island
     islands = ScriptMethod.populate_child(islands)
     # updating the order of the rectangles in cs_info for corner stitch
-    ScriptMethod.update_cs_info(islands)
-    print "after",ScriptMethod.cs_info
+
+    # ---------------------------------for debugging----------------------
+    # for island in islands:
+    # print island.print_island()
+    # --------------------------------------------------------------------
+
+
+    ScriptMethod.update_cs_info(islands) # updates the order of the input rectangle list for corner stitch data structure
+
     input_rects = ScriptMethod.convert_rectangle()  # converts layout info to cs rectangle info
 
+    #-------------------------------------for debugging-------------------
+    #fig,ax=plt.subplots()
+    #draw_rect_list(rectlist=input_rects,ax=ax,size=ScriptMethod.size)
+    #plt.show()
+    #---------------------------------------------------------------------
 
     input_info = [input_rects, ScriptMethod.size]
 
@@ -597,24 +603,7 @@ def script_translator(input_script=None, bond_wire_info=None, fig_dir=None, cons
         bondwires = ScriptMethod.bond_wire_table(bondwire_info=bond_wire_info)
     # output format of bondwire storing
     # Bond wire table={'BW1': {'BW_object': <powercad.design.Routing_paths.BondingWires instance at 0x16F4D648>, 'Source': 'D1_Drain', 'num_wires': '4', 'Destination': 'B1', 'spacing': '0.1'}, 'BW2': {'BW....}
-    '''
-    # finding islands for a given layout
-    islands =ScriptMethod.form_island()
-    #for i in islands:
-        #print i.PrintIsland()
 
-    # finding child of each island
-    islands=ScriptMethod.populate_child(islands)
-
-    '''
-
-
-    '''
-    for i in islands:
-        print i.PrintIsland()
-    raw_input()
-    
-    '''
 
     try:
         app = QtGui.QApplication(sys.argv)
@@ -622,8 +611,7 @@ def script_translator(input_script=None, bond_wire_info=None, fig_dir=None, cons
         pass
     window = QMainWindow()
     
-
-
+    # initiates new layout engine
     New_engine = New_layout_engine()
     New_engine.init_layout(input_format=input_info,islands=islands)
     #cons_df = show_constraint_table(parent=window, cons_df=ScriptMethod.df)
@@ -637,13 +625,12 @@ def script_translator(input_script=None, bond_wire_info=None, fig_dir=None, cons
             cons_df = pd.read_csv(constraint_file)
 
     New_engine.cons_df = cons_df
-    New_engine.Types = ScriptMethod.Types
+    New_engine.Types = ScriptMethod.Types # gets all types to pass in constraint graph creation
     New_engine.all_components = ScriptMethod.all_components
     New_engine.init_size = ScriptMethod.size
-    plot_layout(fig_data=New_engine.init_data[0], size=New_engine.init_size, fig_dir=fig_dir)
+    plot_layout(fig_data=New_engine.init_data[0], size=New_engine.init_size, fig_dir=fig_dir) # plots initial layout
 
     # New_engine.open_new_layout_engine(window=window)
-    cs_sym_data = New_engine.generate_solutions(level=0, num_layouts=1, W=None, H=None, fixed_x_location=None,
-                                                         fixed_y_location=None, seed=None, individual=None)
+    #cs_sym_data = New_engine.generate_solutions(level=0, num_layouts=1, W=None, H=None, fixed_x_location=None,fixed_y_location=None, seed=None, individual=None)
 
-    return New_engine, cs_sym_data, bondwires
+    return New_engine, bondwires

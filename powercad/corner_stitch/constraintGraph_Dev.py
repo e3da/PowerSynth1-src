@@ -189,8 +189,8 @@ class constraintGraph:
             v = list(set(v))
             v.sort()
             self.ZDL_V[k]=v
-        print"BH", self.ZDL_H
-        print"BV", self.ZDL_V
+        #print"BH", self.ZDL_H
+        #print"BV", self.ZDL_V
 
         # setting up edges for constraint graph from corner stitch tiles using minimum constraint values
         for i in range(len(self.HorizontalNodeList)):
