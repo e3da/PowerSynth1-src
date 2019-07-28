@@ -88,7 +88,7 @@ class New_layout_engine():
 
         return
 
-    def init_layout(self, sym_layout=None,input_format=None,islands=None):
+    def init_layout(self, sym_layout=None,input_format=None,islands=None,voltage_info=None,current_info=None):
         '''
 
         :param sym_layout: old symbolic layout
@@ -121,7 +121,7 @@ class New_layout_engine():
             self.W=size[0] # width
             self.H=size[1] # hieght
             # creates horizontal and vertical corner stitch
-            self.create_cornerstitch(input_rects,size,islands)
+            self.create_cornerstitch(input_rects,size,islands,voltage_info,current_info)
 
 
 
@@ -132,7 +132,7 @@ class New_layout_engine():
 
 
 
-    def create_cornerstitch(self,input_rects=None, size=None,islands=None):
+    def create_cornerstitch(self,input_rects=None, size=None,islands=None,voltage_info=None,current_info=None):
         '''
         :param input_rects: list of rectangle objects for corner stitch input
         :param size: floorplan size given by user
@@ -179,6 +179,29 @@ class New_layout_engine():
         #for k,v in sym_to_cs.items():
             #print k,v
         #--------------------------------------------------------------------------
+        # populate voltage and current information for Htree and Vtree tiles
+        if voltage_info!=None or current_info!=None:
+            self.apply_IV_loading(cs_islands,voltage_info,current_info)
+
+        #--------------------------------------------for debugging----------------------
+        """
+        rectlist1=[]
+        rectlist2=[]
+        for rect in self.Htree.hNodeList[0].stitchList:
+            if rect.voltage!=None:
+                r=[rect.cell.x,rect.cell.y,rect.getWidth(),rect.getHeight()]
+                rectlist1.append(r)
+        for rect in self.Vtree.vNodeList[0].stitchList:
+            if rect.voltage!=None:
+                r = [rect.cell.x, rect.cell.y, rect.getWidth(), rect.getHeight()]
+                rectlist2.append(r)
+        fig,ax=plt.subplots()
+        draw_rect_list_cs(rectlist=rectlist1,ax=ax,x_max=80,y_max=80)
+
+        fig, ax = plt.subplots()
+        draw_rect_list_cs(rectlist=rectlist2, ax=ax,x_max=80,y_max=80)
+        """
+        #------------------------------------------------------------------------------------
 
         #To access globally, patches=initial input rectangle patch list, sym_to_cs= dictionary mapped between input rectangle(s) and corner stitch tile(s)
         # cs_islands: updated islands having cs tiles as elements and mesh node objects, combined_graph is for mode 3 (initial layout with nodes)
@@ -637,6 +660,43 @@ class New_layout_engine():
 
         return  CS_SYM_Updated, updated_cs_islands
 
+    def apply_IV_loading(self,cs_islands=None,voltage_info=None,current_info=None):
+
+        voltage={}
+        current={}
+        if voltage_info!=None:
+            for island in cs_islands:
+                for name in island.element_names:
+                    if name in voltage_info:
+                        voltage[island.name]=voltage_info[name]
+
+        if current_info != None:
+            for island in cs_islands:
+                for name in island.element_names:
+                    if name in current_info:
+                        current[island.name]=current_info[name]
+
+        for island in cs_islands:
+            if island.name in voltage:
+                for rect in self.Htree.hNodeList[0].stitchList:
+                    for rect1 in island.elements:
+                        if rect1[0]==rect.cell.type and rect1[1]==rect.cell.x and rect1[2]==rect.cell.y and rect1[3]==rect.getWidth() and rect1[4]==rect.getHeight() and rect1[-1]==rect.nodeId:
+                            rect.voltage=voltage[island.name]
+                for rect in self.Vtree.vNodeList[0].stitchList:
+                    for rect1 in island.elements_v:
+                        if rect1[0]==rect.cell.type and rect1[1]==rect.cell.x and rect1[2]==rect.cell.y and rect1[3]==rect.getWidth() and rect1[4]==rect.getHeight() and rect1[-1]==rect.nodeId:
+                            rect.voltage=voltage[island.name]
+
+        for island in cs_islands:
+            if island.name in current:
+                for rect in self.Htree.hNodeList[0].stitchList:
+                    for rect1 in island.elements:
+                        if rect1[0]==rect.cell.type and rect1[1]==rect.cell.x and rect1[2]==rect.cell.y and rect1[3]==rect.getWidth() and rect1[4]==rect.getHeight() and rect1[-1]==rect.nodeId:
+                            rect.current=current[island.name]
+                for rect in self.Vtree.vNodeList[0].stitchList:
+                    for rect1 in island.elements_v:
+                        if rect1[0]==rect.cell.type and rect1[1]==rect.cell.x and rect1[2]==rect.cell.y and rect1[3]==rect.getWidth() and rect1[4]==rect.getHeight() and rect1[-1]==rect.nodeId:
+                            rect.current=current[island.name]
 
     def update_islands(self,cs_sym_info,minx,miny,cs_islands1):
         '''
@@ -1000,6 +1060,11 @@ class New_layout_engine():
                                 cs_elements.append(r)
                                 cs_mapped_input[rect[5]] = [i, node.id, rect[8]]
                                 cs_island.element_names.append(rect[5])
+                    for node in VerticalNodeList:
+                        for i in node.stitchList:
+                            if rect[1] == i.cell.x and rect[2] == i.cell.y and rect[3] == i.getWidth() and rect[4] == i.getHeight() and rect[0] == i.cell.type:
+                                r = [rect[0], rect[1], rect[2], rect[3], rect[4], rect[5], rect[8],i.nodeId]  # type,x,y,width,height,name, hierarchy_level, nodeId
+                                cs_elements_v.append(r)
 
             cs_island.elements = cs_elements
             cs_island.elements_v=cs_elements_v

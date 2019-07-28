@@ -16,6 +16,7 @@ class Cmd_Handler:
         self.fig_dir = None  # Default dir to save figures
         self.db_dir = None  # Default dir to save layout db
         self.constraint_file=None # Default csv file to save constraint table
+        self.i_v_constraint=0 # reliability constraint flag
         self.new_mode=1 # 1: constraint table setup required, 0: constraint file will be reloaded
         # Data storage
         self.db_file = None  # A file to store layout database
@@ -74,7 +75,11 @@ class Cmd_Handler:
                     self.db_dir = info[1]
                 if info[0] == "Constraint_file:":
                     self.constraint_file = info[1]
-                if info[0] =="new:":
+
+                if info[0]=="Reliability-awareness:":
+                    self.i_v_constraint= int(info[1])
+
+                if info[0] =="New:":
                     self.new_mode = int(info[1])
                 if info[0] == "Option:":  # engine option
                     run_option = int(info[1])
@@ -152,7 +157,7 @@ class Cmd_Handler:
             self.init_cs_objects()
             self.set_up_db()
             if run_option == 0:
-                self.solutions=generate_optimize_layout(layout_engine=self.engine, mode=layout_mode,
+                self.solutions=generate_optimize_layout(layout_engine=self.engine, mode=layout_mode,rel_cons=self.i_v_constraint,
                                          optimization=False, db_file=self.db_file,fig_dir=self.fig_dir,sol_dir=self.db_dir, num_layouts=num_layouts, seed=seed,
                                          floor_plan=floor_plan)
             elif run_option == 1:
@@ -173,13 +178,12 @@ class Cmd_Handler:
                     fig_dict[(width, height)].append(v)
                 init_rects = {}
                 for k, v in self.engine.init_data[1].items():
-                    rects = []
-                    for i in v:
-                        rect = Rectangle(x=i[0] * 1000, y=i[1] * 1000, width=i[2] * 1000, height=i[3] * 1000, type=i[4])
-                        rects.append(rect)
-                    init_rects[k] = rects
+                    v=v[0]
+                    rect = Rectangle(x=v.cell.x * 1000, y=v.cell.y * 1000, width=v.getWidth() * 1000, height=v.getHeight()* 1000, type=v.cell.type)
+                    init_rects[k] = rect
                 cs_sym_info = {(width * 1000, height * 1000): init_rects}
-                print"CS", cs_sym_info
+                #print"CS", cs_sym_info
+                #self.measures=None
                 self.solutions=eval_single_layout(layout_engine=self.engine, layout_data=cs_sym_info,islands_info=islands_info, apis={'E': self.e_api,
                                                                                              'T': self.t_api},measures=self.measures)
             if run_option == 2:
@@ -275,7 +279,8 @@ class Cmd_Handler:
                 correct = False
             else:
                 print "wrong input"
-
+    def rel_cons_request(self):
+        self.i_v_constraint=int(raw_input("Please eneter 1 if you want to apply reliability constraints, otherwise enter 0"))
     def cons_file_edit_request(self):
         self.new_mode=int(raw_input( "If you want to edit the constraint file, enter 1. Else enter 0: "))
 
@@ -343,6 +348,7 @@ class Cmd_Handler:
         self.fig_dir_request()
         self.database_dir_request()
         self.cons_dir_request()
+        self.rel_cons_request()
         self.cons_file_edit_request()
 
     def init_cs_objects(self):
@@ -350,7 +356,7 @@ class Cmd_Handler:
         Initialize some CS objects
         :return:
         '''
-        self.engine, self.wire_table= script_translator(input_script=self.layout_script, bond_wire_info=self.bondwire_setup, fig_dir=self.fig_dir, constraint_file=self.constraint_file,mode=self.new_mode)
+        self.engine, self.wire_table= script_translator(input_script=self.layout_script, bond_wire_info=self.bondwire_setup, fig_dir=self.fig_dir, constraint_file=self.constraint_file,rel_cons=self.i_v_constraint,mode=self.new_mode)
         for comp in self.engine.all_components:
             self.comp_dict[comp.layout_component_id] = comp
 

@@ -2593,6 +2593,31 @@ class CS_to_CG():
         CONSTRAINT.setupMinSpacing(minSpacing)
         CONSTRAINT.setupMinEnclosure(minEnclosure)
 
+        for index,row in data.iterrows():
+            if row[0]=='Voltage Difference':
+                start_v=index+1
+            elif row[0]=='Current Rating':
+                end_v=index-1
+                start_c=index+1
+            if index==len(data)-1:
+                end_c=index
+            else:
+                start_v=None
+                end_v=None
+                start_c=None
+                end_c=None
+        if start_v!=None and end_v!=None:
+            voltage_constraints=[]
+            current_constraints=[]
+            for index, row in data.iterrows():
+                if index in range(start_v, end_v + 1):
+                    voltage_constraints.append([float(row[0]),float(row[1])*mult]) # voltage rating,minimum spacing
+                if index in range(start_c,end_c + 1):
+                    current_constraints.append([float(row[0]), float(row[1])*mult]) #current rating,minimum width
+
+            CONSTRAINT.setup_I_V_constraints(voltage_constraints,current_constraints)
+
+
         
 
 

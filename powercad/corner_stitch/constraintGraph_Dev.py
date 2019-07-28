@@ -12,6 +12,7 @@ import copy
 import random
 from random import randrange
 import numpy as np
+import math
 
 
 #########################################################################################################################
@@ -114,7 +115,7 @@ class constraintGraph:
                 continue
             else:
                 self.VerticalNodeList.append(node)# only appending all vertical tree nodes which have children. Nodes having no children are not included
-        '''
+        """
         print "Horizontal NodeList"
         for i in self.HorizontalNodeList:
 
@@ -122,7 +123,7 @@ class constraintGraph:
 
             # i=Htree.hNodeList[0]
             for j in i.stitchList:
-                k = j.cell.x, j.cell.y, j.getWidth(), j.getHeight(), j.cell.id, j.cell.type, j.nodeId, j.bw, j.name
+                k = j.cell.x, j.cell.y, j.getWidth(), j.getHeight(), j.cell.id, j.cell.type, j.nodeId, j.voltage,j.bw, j.name
                 print k
 
             if i.parent == None:
@@ -141,7 +142,7 @@ class constraintGraph:
         for i in self.VerticalNodeList:
             print i.id, i, len(i.stitchList)
             for j in i.stitchList:
-                k = j.cell.x, j.cell.y, j.getWidth(), j.getHeight(), j.cell.id, j.cell.type, j.nodeId, j.bw, j.name
+                k = j.cell.x, j.cell.y, j.getWidth(), j.getHeight(), j.cell.id, j.cell.type, j.nodeId,j.voltage j.bw, j.name
                 print k
 
             if i.parent == None:
@@ -155,7 +156,8 @@ class constraintGraph:
                 else:
                     k = j.cell.x, j.cell.y, j.cell.type, j.nodeId
         
-        '''
+        """
+
         
 
 
@@ -564,7 +566,8 @@ class constraintGraph:
     ## creating edges from corner stitched tiles
     def setEdgesFromLayer(self, cornerStitch_h, cornerStitch_v,Types):
 
-
+        #print "Voltage",constraint.constraint.voltage_constraints
+        #print "Current",constraint.constraint.current_constraints
         ID = cornerStitch_h.id # node id
         Horizontal_patterns, Vertical_patterns = self.shared_coordinate_pattern(cornerStitch_h, cornerStitch_v, ID)
         n1 = len(self.ZDL_H[ID])
@@ -623,10 +626,31 @@ class constraintGraph:
                     index=4 # index=4 means minheight constraint
                 c = constraint.constraint(index)
                 #index = 4
+                # getting appropriate constraint value
+                value1 = constraint.constraint.getConstraintVal(c,type=rect.cell.type,Types=Types)
+                if rect.current!=None:
+                    current_rating=rect.current
+                    current_ratings=constraint.constraint.current_constraints.keys()
+                    current_ratings.sort()
+                    if len(current_ratings)>1:
+                        range_c=current_ratings[1]-current_ratings[0]
+                        index=math.ceil(current_rating/range_c)*range_c
+                        if index in constraint.constraint.current_constraints:
+                            value2=constraint.constraint.current_constraints[index]
+                        else:
+                            print "ERROR!!!Constraint for the Current Rating is not defined"
+                    else:
+                        value2=constraint.constraint.current_constraints[current_rating]
 
-
-                value = constraint.constraint.getConstraintVal(c,type=rect.cell.type,Types=Types)
-
+                else:
+                    value2=None
+                if value2!=None:
+                    if value2>value1:
+                        value=value2
+                    else:
+                        value=value1
+                else:
+                    value=value1
                 Weight = 2 * value
                 for k, v in constraint.constraint.comp_type.items():
                     if str(Types.index(rect.cell.type)) in v:
@@ -650,7 +674,32 @@ class constraintGraph:
                     index = 3
                     rect.vertex1 = origin
                     rect.vertex2 = dest
-                    value = constraint.constraint.getConstraintVal(c, type=rect.cell.type,Types=Types)
+                    #value = constraint.constraint.getConstraintVal(c, type=rect.cell.type,Types=Types)
+                    value1 = constraint.constraint.getConstraintVal(c, type=rect.cell.type, Types=Types)
+                    if rect.current != None:
+                        current_rating = rect.current
+                        current_ratings = constraint.constraint.current_constraints.keys()
+                        current_ratings.sort()
+                        if len(current_ratings) > 1:
+                            range_c = current_ratings[1] - current_ratings[0]
+                            index = math.ceil(current_rating / range_c) * range_c
+                            if index in constraint.constraint.current_constraints:
+                                value2 = constraint.constraint.current_constraints[index]
+                            else:
+                                print "ERROR!!!Constraint for the Current Rating is not defined"
+                        else:
+                            value2=constraint.constraint.current_constraints[current_rating]
+
+                    else:
+                        value2 = None
+                    if value2 != None:
+                        if value2 > value1:
+                            value = value2
+                        else:
+                            value = value1
+                    else:
+                        value = value1
+
                     Weight = 2 * value
                     e = Edge(origin, dest, value, index, str(Types.index(rect.cell.type)), id, Weight,East,West, northWest, southEast)
                     edgesh.append(Edge(origin, dest, value, index, str(Types.index(rect.cell.type)), id,Weight, East,West, northWest, southEast)) # appending in horizontal constraint graph edges
@@ -660,10 +709,8 @@ class constraintGraph:
                 origin = self.ZDL_V[ID].index(rect.cell.y)
                 dest = self.ZDL_V[ID].index(rect.getNorth().cell.y)
                 id = rect.cell.id
-
                 if rect.getNorth().nodeId == rect.nodeId:
                     North = rect.getNorth().cell.id
-
                 else:
                     North = None
                 if rect.getSouth().nodeId == rect.nodeId:
@@ -687,7 +734,35 @@ class constraintGraph:
 
                     c = constraint.constraint(1)  # index=1 means min spacing constraint
                     index = 1
-                    value = constraint.constraint.getConstraintVal(c, source=t1, dest=t2,Types=Types)
+
+                    # Applying I-V constraints
+                    value1 = constraint.constraint.getConstraintVal(c, source=t1, dest=t2,Types=Types)
+
+                    if rect.NORTH.voltage!=None and rect.SOUTH.voltage!=None:
+                        voltage_diff1=abs(rect.NORTH.voltage[0]-rect.SOUTH.voltage[1])
+                        voltage_diff2=abs(rect.NORTH.voltage[1]-rect.SOUTH.voltage[0])
+                        voltage_diff=max(voltage_diff1,voltage_diff2)
+                        voltage_differences = constraint.constraint.voltage_constraints.keys()
+                        voltage_differences.sort()
+                        if len(voltage_differences) > 1:
+                            range_v = voltage_differences[1] - voltage_differences[0]
+                            index = math.ceil(voltage_diff / range_v) * range_v
+                            if index in constraint.constraint.voltage_constraints:
+                                value2 = constraint.constraint.voltage_constraints[index]
+                            else:
+                                print "ERROR!!!Constraint for the Voltage difference is not defined"
+                        else:
+                            value2 = constraint.constraint.voltage_constraints[voltage_diff]
+
+                    else:
+                        value2 = None
+                    if value2 != None:
+                        if value2 > value1:
+                            value = value2
+                        else:
+                            value = value1
+                    else:
+                        value = value1
                     Weight = 2 * value
                     e = Edge(origin, dest, value, index, str(Types.index(rect.cell.type)), id, Weight,North,
                              South, westNorth, eastSouth)
@@ -741,7 +816,32 @@ class constraintGraph:
                         index = 4  # index=4 means minheight constraint
                     c = constraint.constraint(index)
 
-                    value = constraint.constraint.getConstraintVal(c, type=rect.cell.type,Types=Types)
+                    value1 = constraint.constraint.getConstraintVal(c, type=rect.cell.type,Types=Types)
+                    # Applying I-V constraints
+                    if rect.current != None:
+                        current_rating = rect.current
+                        current_ratings = constraint.constraint.current_constraints.keys()
+                        current_ratings.sort()
+                        if len(current_ratings) > 1:
+                            range_c = current_ratings[1] - current_ratings[0]
+                            index = math.ceil(current_rating / range_c) * range_c
+                            if index in constraint.constraint.current_constraints:
+                                value2 = constraint.constraint.current_constraints[index]
+                            else:
+                                print "ERROR!!!Constraint for the Current Rating is not defined"
+                        else:
+                            value2=constraint.constraint.current_constraints[current_rating]
+
+                    else:
+                        value2 = None
+                    if value2 != None:
+                        if value2 > value1:
+                            value = value2
+                        else:
+                            value = value1
+                    else:
+                        value = value1
+
                     Weight = 2 * value
                     e = Edge(origin, dest, value, index, str(Types.index(rect.cell.type)), id,Weight,
                              North, South, westNorth, eastSouth)
@@ -798,7 +898,35 @@ class constraintGraph:
                     index=0 # index=0 means minwidth constraint
                 c = constraint.constraint(index)
 
-                value = constraint.constraint.getConstraintVal(c, type=rect.cell.type,Types=Types)
+                #value = constraint.constraint.getConstraintVal(c, type=rect.cell.type,Types=Types)
+                # applying I-V constraint values
+                value1 = constraint.constraint.getConstraintVal(c, type=rect.cell.type, Types=Types)
+                if rect.current != None:
+                    current_rating = rect.current
+                    current_ratings = constraint.constraint.current_constraints.keys()
+                    current_ratings.sort()
+                    if len(current_ratings) > 1:
+                        range_c = current_ratings[1] - current_ratings[0]
+                        index = math.ceil(current_rating / range_c) * range_c # finding the nearest upper limit in the current ratings
+                        if index in constraint.constraint.current_constraints:
+                            value2 = constraint.constraint.current_constraints[index]
+                        else:
+                            print "ERROR!!!Constraint for the Current Rating is not defined"
+                    else:
+                        value2=constraint.constraint.current_constraints[current_rating]
+
+                else:
+                    value2 = None
+                if value2 != None:
+                    if value2 > value1:
+                        value = value2
+                    else:
+                        value = value1
+                else:
+                    value = value1
+
+
+
                 Weight = 2 * value
                 for k, v in constraint.constraint.comp_type.items():
                     if str(Types.index(rect.cell.type)) in v:
@@ -820,7 +948,33 @@ class constraintGraph:
                     index = 3 # min extension
                     rect.vertex1 = origin
                     rect.vertex2 = dest
-                    value = constraint.constraint.getConstraintVal(c, type=rect.cell.type,Types=Types)
+                    #value = constraint.constraint.getConstraintVal(c, type=rect.cell.type,Types=Types)
+
+                    value1 = constraint.constraint.getConstraintVal(c, type=rect.cell.type, Types=Types)
+                    if rect.current != None:
+                        current_rating = rect.current
+                        current_ratings = constraint.constraint.current_constraints.keys()
+                        current_ratings.sort()
+                        if len(current_ratings) > 1:
+                            range_c = current_ratings[1] - current_ratings[0]
+                            index = math.ceil(current_rating / range_c) * range_c
+                            if index in constraint.constraint.current_constraints:
+                                value2 = constraint.constraint.current_constraints[index]
+                            else:
+                                print "ERROR!!!Constraint for the Current Rating is not defined"
+                        else:
+                            value2=constraint.constraint.current_constraints[current_rating]
+
+                    else:
+                        value2 = None
+                    if value2 != None:
+                        if value2 > value1:
+                            value = value2
+                        else:
+                            value = value1
+                    else:
+                        value = value1
+
                     Weight = 2 * value
                     e = Edge(origin, dest, value, index, str(Types.index(rect.cell.type)), id,Weight, North,
                              South, westNorth, eastSouth)
@@ -858,7 +1012,37 @@ class constraintGraph:
 
                     c = constraint.constraint(1)
                     index = 1
-                    value = constraint.constraint.getConstraintVal(c, source=t1, dest=t2,Types=Types)
+                    #value = constraint.constraint.getConstraintVal(c, source=t1, dest=t2,Types=Types)
+                    # Applying I-V constraints
+                    value1 = constraint.constraint.getConstraintVal(c, source=t1, dest=t2, Types=Types)
+
+                    if rect.EAST.voltage != None and rect.WEST.voltage != None:
+                        voltage_diff1 = abs(rect.EAST.voltage[0] - rect.WEST.voltage[1])
+                        voltage_diff2 = abs(rect.EAST.voltage[1] - rect.WEST.voltage[0])
+                        voltage_diff = max(voltage_diff1, voltage_diff2)
+                        voltage_differences = constraint.constraint.voltage_constraints.keys()
+                        voltage_differences.sort()
+                        if len(voltage_differences) > 1:
+                            range_v = voltage_differences[1] - voltage_differences[0]
+                            index = math.ceil(voltage_diff / range_v) * range_v
+                            if index in constraint.constraint.voltage_constraints:
+                                value2 = constraint.constraint.voltage_constraints[index]
+                            else:
+                                print "ERROR!!!Constraint for the Voltage difference is not defined"
+                        else:
+                            value2 = constraint.constraint.voltage_constraints[voltage_diff]
+
+                    else:
+                        value2 = None
+                    if value2 != None:
+                        if value2 > value1:
+                            value = value2
+                        else:
+                            value = value1
+                    else:
+                        value = value1
+
+
                     Weight = 2 * value
                     e = Edge(origin, dest, value, index, str(Types.index(rect.cell.type)), id,Weight, East,
                              West, northWest, southEast)
@@ -906,7 +1090,33 @@ class constraintGraph:
                         index = 0  # index=0 means minWidth constraint
                     c = constraint.constraint(index)
 
-                    value = constraint.constraint.getConstraintVal(c, type=rect.cell.type,Types=Types)
+                    value1 = constraint.constraint.getConstraintVal(c, type=rect.cell.type,Types=Types)
+                    # Applying I-V constraints
+                    if rect.current != None:
+                        current_rating = rect.current
+                        current_ratings = constraint.constraint.current_constraints.keys()
+                        current_ratings.sort()
+                        if len(current_ratings) > 1:
+                            range_c = current_ratings[1] - current_ratings[0]
+                            index = math.ceil(current_rating / range_c) * range_c
+                            if index in constraint.constraint.current_constraints:
+                                value2 = constraint.constraint.current_constraints[index]
+                            else:
+                                print "ERROR!!!Constraint for the Current Rating is not defined"
+                        else:
+                            value2=constraint.constraint.current_constraints[current_rating]
+
+                    else:
+                        value2 = None
+                    if value2 != None:
+                        if value2 > value1:
+                            value = value2
+                        else:
+                            value = value1
+                    else:
+                        value = value1
+
+
                     Weight = 2 * value
                     # print "val",value
                     for k, v in constraint.constraint.comp_type.items():

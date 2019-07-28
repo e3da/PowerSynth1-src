@@ -101,6 +101,7 @@ def save_solution(rects, id, db):
 
 
 def eval_single_layout(layout_engine=None, layout_data=None,islands_info=None, apis={}, measures=[]):
+
     opt_problem = new_engine_opt(engine=layout_engine, W=layout_engine.init_size[0], H=layout_engine.init_size[1],
                                  seed=None, level=2, method=None, apis=apis, measures=measures)
 
@@ -115,6 +116,8 @@ def eval_single_layout(layout_engine=None, layout_data=None,islands_info=None, a
     solution.layout_info = layout_data
     solution.abstract_info = solution.form_abs_obj_rect_dict()
     Solutions.append(solution)
+
+    #export_solutions(solutions=Solutions, directory='D:\Demo\New_Flow_w_Hierarchy\Journal_Case\Figs_PCB')
     print "Performance_results",results
     return Solutions
 
@@ -211,7 +214,7 @@ def get_dims(floor_plan = None):
 
 
 
-def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_file=None,fig_dir=None,sol_dir=None, apis={}, measures=[],seed=None,
+def generate_optimize_layout(layout_engine=None, mode=0, optimization=True,rel_cons=None, db_file=None,fig_dir=None,sol_dir=None, apis={}, measures=[],seed=None,
                              num_layouts = None,num_gen= None , num_disc=None,max_temp=None,floor_plan=None,algorithm=None):
     '''
 
@@ -568,12 +571,11 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
 
 
 # translates the input layout script and makes necessary information ready for corner stitch data structure
-def script_translator(input_script=None, bond_wire_info=None, fig_dir=None, constraint_file=None,mode=None):
+def script_translator(input_script=None, bond_wire_info=None, fig_dir=None, constraint_file=None,rel_cons=None,mode=None):
     ScriptMethod = ScriptInputMethod(input_script)  # initializes the class with filename
     ScriptMethod.read_input_script()  # reads input script and make two sections
     ScriptMethod.gather_part_route_info()  # gathers part and route info
     ScriptMethod.gather_layout_info()  # gathers layout info
-    ScriptMethod.update_constraint_table()  # updates constraint table in the given csv file
     # finding islands for a given layout
     islands = ScriptMethod.form_island() # list of island objects
     # finding child of each island
@@ -585,7 +587,7 @@ def script_translator(input_script=None, bond_wire_info=None, fig_dir=None, cons
     # print island.print_island()
     # --------------------------------------------------------------------
 
-
+    ScriptMethod.update_constraint_table(rel_cons,islands)  # updates constraint table in the given csv file
     ScriptMethod.update_cs_info(islands) # updates the order of the input rectangle list for corner stitch data structure
 
     input_rects = ScriptMethod.convert_rectangle()  # converts layout info to cs rectangle info
@@ -613,18 +615,47 @@ def script_translator(input_script=None, bond_wire_info=None, fig_dir=None, cons
     
     # initiates new layout engine
     New_engine = New_layout_engine()
-    New_engine.init_layout(input_format=input_info,islands=islands)
-    #cons_df = show_constraint_table(parent=window, cons_df=ScriptMethod.df)
-    if mode==0:
+    # cons_df = show_constraint_table(parent=window, cons_df=ScriptMethod.df)
+    if mode == 0:
         cons_df = pd.read_csv(constraint_file)
 
     else:
-        save_constraint_table(cons_df=ScriptMethod.df,file=constraint_file)
-        flag=raw_input("Please edit the constraint table from constraint directory: Enter 1 on completion: ")
-        if flag=='1':
+        save_constraint_table(cons_df=ScriptMethod.df, file=constraint_file)
+        flag = raw_input("Please edit the constraint table from constraint directory: Enter 1 on completion: ")
+        if flag == '1':
             cons_df = pd.read_csv(constraint_file)
 
+    # if reliability constraints are available creates two dictionaries to have voltage and current values, where key=layout component id and value=[min voltage,max voltage], value=max current
+    if rel_cons == 1:
+        for index, row in cons_df.iterrows():
+            if row[0] == 'Voltage Specification':
+                v_start = index + 2
+            if row[0] == 'Current Specification':
+                v_end = index - 1
+                c_start = index + 2
+            if row[0]=='Voltage Difference':
+                c_end = index-1
+        voltage_info = {}
+        current_info = {}
+        for index, row in cons_df.iterrows():
+            if index in range(v_start, v_end + 1):
+                name = row[0]
+                voltage_range = [float(row[1]), float(row[2])]
+                voltage_info[name] = voltage_range
+            if index in range(c_start, c_end + 1):
+                name = row[0]
+                max_current = float(row[1])
+                current_info[name] = max_current
+    else:
+        voltage_info=None
+        current_info=None
+
+    #print "V", voltage_info
+    #print"C", current_info
+
     New_engine.cons_df = cons_df
+    New_engine.init_layout(input_format=input_info,islands=islands,voltage_info=voltage_info,current_info=current_info)
+
     New_engine.Types = ScriptMethod.Types # gets all types to pass in constraint graph creation
     New_engine.all_components = ScriptMethod.all_components
     New_engine.init_size = ScriptMethod.size

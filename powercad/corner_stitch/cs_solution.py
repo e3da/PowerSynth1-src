@@ -46,13 +46,16 @@ class CornerStitchSolution:
 
         #for rect_dict in dict_list:
         for k,v in rect_dict.items():
-            x=v[1]
-            y=v[2]
-            width=v[3]
-            height=v[4]
-            type=v[0]
+            if not isinstance(v,Rectangle):
+                x=v[1]
+                y=v[2]
+                width=v[3]
+                height=v[4]
+                type=v[0]
 
-            layout_rect_dict[k] = Rectangle(x=x, y=y, width=width, height=height, type=type)
+                layout_rect_dict[k] = Rectangle(x=x, y=y, width=width, height=height, type=type)
+            else:
+                layout_rect_dict[k]=v
 
 
 

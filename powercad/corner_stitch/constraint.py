@@ -32,6 +32,8 @@ class constraint():
     minSpacing = np.zeros(shape=(len(Type) - 1, len(Type) - 1))  # minimum spacing is a 2-D matrix
     minEnclosure = np.zeros(shape=(len(Type) - 1, len(Type) - 1))  # minimum Enclosure is a 2-D matrix
     comp_type = {"Trace": ["1","2"],"Device":["3"]}
+    voltage_constraints={}
+    current_constraints={}
 
 
 
@@ -149,6 +151,11 @@ class constraint():
         constraint.minEnclosure=enclosure
     def setupMinExtension(self,extension):
         constraint.minExtension=extension
+    def setup_I_V_constraints(self,voltage_constraints, current_constraints):
+        for cons in voltage_constraints:
+            constraint.voltage_constraints[cons[0]]=cons[1]
+        for cons in current_constraints:
+            constraint.current_constraints[cons[0]]=cons[1]
 
     def addConstraint(self, conName, conValue):
         constraint.constraintIndex.append(conName)

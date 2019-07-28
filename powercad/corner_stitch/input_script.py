@@ -541,7 +541,7 @@ class ScriptInputMethod():
         return self.size,self.cs_info,self.component_to_cs_type,self.all_components
 
     # generate initial constraint table based on the types in the input script and saves information in the given csv file as constraint
-    def update_constraint_table(self):
+    def update_constraint_table(self,rel_cons=0,islands=None):
 
         Types_init=self.component_to_cs_type.values() # already three types are there: 'power_trace','signal_trace','bonding_wire_pad'
         Types = [0 for i in range(len(Types_init))]
@@ -659,6 +659,37 @@ class ScriptInputMethod():
                         row.append(1.0)
                     enclosure_rows.append(row)
                     all_rows.append(row)
+
+        # Voltage-Current dependent constraints application
+        if rel_cons==1:
+            # Populating voltage input table
+            r7= ['Voltage Specification']
+            all_rows.append(r7)
+            r8=['Component Name','Minimum Voltage','Maximum Voltage']
+            all_rows.append(r8)
+            if islands!=None:
+                for island in islands:
+                    all_rows.append([island.element_names[0],0,0])
+
+            # Populating Current input table
+            r9 = ['Current Specification']
+            all_rows.append(r9)
+            r10 = ['Component Name', 'Maximum Current']
+            all_rows.append(r10)
+            if islands!=None:
+                for island in islands:
+                    all_rows.append([island.element_names[0],0])
+
+            r10=['Voltage Difference','Minimum Spacing']
+            all_rows.append(r10)
+            r11=[0,2] # sample value
+            all_rows.append(r11)
+            r12 = ['Current Rating', 'Minimum Width']
+            all_rows.append(r12)
+            r13 = [1, 2]  # sample value
+            all_rows.append(r13)
+
+
         df = pd.DataFrame(all_rows)
         self.Types=Types
         self.df=df
