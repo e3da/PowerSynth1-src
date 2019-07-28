@@ -86,9 +86,9 @@ def characterize_devices(sym_layout, temp_dir=settings.TEMP_DIR, conv_tol=1e-3):
         ls = [bp_dim[1], sub_dim[1], sub_dim[1], sub_dim[1], sub_dim[1]-2.0*ledge_w, dev_dim[1], dev_dim[1]]
         ts = [bp_dim[2], solder_t, metal_t, iso_t, metal_t, attach_t, dev_dim[2]]
         
-        bp_lc = min([bp_dim[0], bp_dim[1]])/30.0
-        sub_lc = min([sub_dim[0], sub_dim[1]])/30.0
-        dev_lc = min([dev_dim[0], dev_dim[1]])/10.0
+        bp_lc = min([bp_dim[0], bp_dim[1]])/40.0
+        sub_lc = min([sub_dim[0], sub_dim[1]])/40.0
+        dev_lc = min([dev_dim[0], dev_dim[1]])/20.0
         lcs = [bp_lc, sub_lc, sub_lc, sub_lc, sub_lc, dev_lc, dev_lc]
         
         # Get Materials

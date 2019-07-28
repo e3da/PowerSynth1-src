@@ -18,7 +18,42 @@ class LTSPICE:
     def ac_lin(self,fmin,fmax,nump):
         return ".ac lin {0} {1} {2}".format(nump,fmin,fmax)
 
-
+    def write2(self,circuit,frange):
+        all_elements = len(circuit.element)
+        with open(self.file, 'w') as f:
+            f.write(strftime("* %Y-%m-%d %H:%M:%S", gmtime()) + '\n')
+            for e in all_elements:
+                print e
+                if e[0]!='M':
+                    pnode = str(circuit.pnode[e])
+                    nnode = str(circuit.nnode[e])
+                    if pnode != '0':
+                        pnode = list(pnode.zfill(4))
+                        pnode[0] = 'N'
+                        pnode = ''.join(pnode)
+                    if nnode != '0':
+                        nnode = list(nnode.zfill(4))
+                        nnode[0] = 'N'
+                        nnode = ''.join(nnode)
+                    value = str(circuit.value[e])
+                    if e[0] == 'R':
+                        line = [e, pnode, nnode, value]
+                    elif e[0] == 'V':
+                        line = [e, pnode, nnode, 'AC', value]
+                    elif e[0] == 'L':
+                        line = [e, pnode, nnode, value + 'H']
+                    elif e[0] == 'C':
+                        line = [e, pnode, nnode, value + 'F']
+                    line = " ".join(line)
+                    line += '\n'
+                    f.write(line)
+            # write ac sim
+            sim_line = self.ac_lin(fmin=frange[0], fmax=frange[1], nump=frange[2])
+            line = sim_line + '\n'
+            f.write(line)
+            # end line:
+            f.write('.backanno\n')
+            f.write('.end\n')
     def write(self,df,frange): #write netlist using dataframe
         rows=df.shape[0]
         with open(self.file,'w') as f:

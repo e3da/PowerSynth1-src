@@ -1950,7 +1950,7 @@ class Ui_Wizard(object):
         self.label_41311113.setText(QtGui.QApplication.translate("Wizard", "mm", None, QtGui.QApplication.UnicodeUTF8))
         self.BusLeadThicknessLabel.setText(QtGui.QApplication.translate("Wizard", "Thickness", None, QtGui.QApplication.UnicodeUTF8))
         self.label_41311114.setText(QtGui.QApplication.translate("Wizard", "mm", None, QtGui.QApplication.UnicodeUTF8))
-        self.RhoLeadLabel.setText(QtGui.QApplication.translate("Wizard", "Electrical Resistivity (ρ)", None, QtGui.QApplication.UnicodeUTF8))
+        self.RhoLeadLabel.setText(QtGui.QApplication.translate("Wizard", "electrical_mdl Resistivity (ρ)", None, QtGui.QApplication.UnicodeUTF8))
         self.label_411111.setText(QtGui.QApplication.translate("Wizard", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
 "p, li { white-space: pre-wrap; }\n"
@@ -1997,7 +1997,7 @@ class Ui_Wizard(object):
         self.BondwireFractionLabel.setText(QtGui.QApplication.translate("Wizard", "Fraction of bondwire total length (b)", None, QtGui.QApplication.UnicodeUTF8))
         self.label_51411.setText(QtGui.QApplication.translate("Wizard", "mm", None, QtGui.QApplication.UnicodeUTF8))
         self.label_51412.setText(QtGui.QApplication.translate("Wizard", "mm", None, QtGui.QApplication.UnicodeUTF8))
-        self.RhoBondwireLabel.setText(QtGui.QApplication.translate("Wizard", "Electrical Resistivity (ρ)", None, QtGui.QApplication.UnicodeUTF8))
+        self.RhoBondwireLabel.setText(QtGui.QApplication.translate("Wizard", "electrical_mdl Resistivity (ρ)", None, QtGui.QApplication.UnicodeUTF8))
         self.label_51312.setText(QtGui.QApplication.translate("Wizard", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
 "p, li { white-space: pre-wrap; }\n"
@@ -2029,7 +2029,7 @@ class Ui_Wizard(object):
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:8pt; font-weight:600;\">Metal Layer Properties:</span></p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
         self.SubMetalThermalCondLabel.setText(QtGui.QApplication.translate("Wizard", "Thermal Conductivity", None, QtGui.QApplication.UnicodeUTF8))
         self.SubMetalSpHeatLabel.setText(QtGui.QApplication.translate("Wizard", "Specific Heat Capacity", None, QtGui.QApplication.UnicodeUTF8))
-        self.SubMetalRhoLabel.setText(QtGui.QApplication.translate("Wizard", "Electrical Resistivity", None, QtGui.QApplication.UnicodeUTF8))
+        self.SubMetalRhoLabel.setText(QtGui.QApplication.translate("Wizard", "electrical_mdl Resistivity", None, QtGui.QApplication.UnicodeUTF8))
         self.label_62211.setText(QtGui.QApplication.translate("Wizard", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
 "p, li { white-space: pre-wrap; }\n"
@@ -2160,7 +2160,7 @@ class Ui_Wizard(object):
 "p, li { white-space: pre-wrap; }\n"
 "</style></head><body style=\" font-family:\'MS Shell Dlg 2\'; font-size:8.25pt; font-weight:400; font-style:normal;\">\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:8pt;\">kg/m</span><span style=\" font-size:8pt; vertical-align:super;\">3</span></p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
-        self.BaseplateRhoLabel.setText(QtGui.QApplication.translate("Wizard", "Electrical Resistivity", None, QtGui.QApplication.UnicodeUTF8))
+        self.BaseplateRhoLabel.setText(QtGui.QApplication.translate("Wizard", "electrical_mdl Resistivity", None, QtGui.QApplication.UnicodeUTF8))
         self.BaseplateMuLabel.setText(QtGui.QApplication.translate("Wizard", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
 "p, li { white-space: pre-wrap; }\n"

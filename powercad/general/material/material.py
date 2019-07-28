@@ -63,7 +63,7 @@ class Material_lib:
                 stop = len(line) - 1
                 material.expansion_coeff = float(line[start:stop])
 
-                '''Electrical Constant'''
+                '''electrical_mdl Constant'''
             elif "permittivity" in line and 'simple' in line:
                 start=line.find('permittivity')+len('permittivity')+3
                 stop=len(line)-1

@@ -10,9 +10,8 @@ from powercad.design.group import Island, MeshNode
 import matplotlib.pyplot as plt
 from powercad.corner_stitch.constraintGraph_Dev import constraintGraph
 import itertools
-
-
-
+from powercad.general.data_struct.util import *
+from powercad.design.layout_module_data import ModuleDataCornerStitch
 
 class New_layout_engine():
     def __init__(self):
@@ -28,10 +27,9 @@ class New_layout_engine():
         self.ledge_width=1000.0
         self.ledge_height=1000.0
 
-
-        self.Types=None  # added for new flow (list of all cs_type)
-        self.all_components=None #added for new flow (holds all layout component objects)
-        self.init_size=[]
+        self.Types = None  # added for new flow (list of all cs_type)
+        self.all_components = None  # added for new flow (holds all layout component objects)
+        self.init_size = []
 
         # for initialize only
         self.init_data = []
@@ -43,12 +41,14 @@ class New_layout_engine():
         # only activate when the sym_layout API is used
         self.sym_layout = None
         self.layout_sols = {}
+
     def open_new_layout_engine(self, window):
         self.window = window
         patches = self.init_data[0]
         graph = self.init_data[2]
-        num_cols=self.init_data[-1]
-        self.new_layout_engine = New_layout_engine_dialog(self.window, patches, W=self.W, H=self , engine=self,graph=graph)
+        num_cols = self.init_data[-1]
+        self.new_layout_engine = New_layout_engine_dialog(self.window, patches, W=self.W, H=self, engine=self,
+                                                          graph=graph)
         self.new_layout_engine.show()
         self.new_layout_engine.exec_()
 
@@ -81,12 +81,13 @@ class New_layout_engine():
         r15 = ['Lead', 0, 0, 0, 0, 0]
         r16 = ['Diode', 0, 0, 0, 0, 0]
         my_list = [r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, r13, r14, r15, r16]
-        #print "MY",my_list
+        # print "MY",my_list
         df = pd.DataFrame(my_list)
 
-        df.to_csv('out.csv', sep=',', header=None, index=None) # writing to a file out.csv for further reading
+        df.to_csv('out.csv', sep=',', header=None, index=None)  # writing to a file out.csv for further reading
 
         return
+
 
     def init_layout(self, sym_layout=None,input_format=None,islands=None,voltage_info=None,current_info=None):
         '''
@@ -100,17 +101,20 @@ class New_layout_engine():
         print "initializing ....."
         self.sym_layout = sym_layout
 
-
         if sym_layout != None:
             self.cons_info = self.collect_sym_cons_info(sym_layout)
             self.cons_df = self.cons_from_ps()
-            input_rects, self.W, self.H = input_conversion(sym_layout)  # converts symbolic layout lines and points into rectangles
-            input = self.cornerstitch.read_input('list',Rect_list=input_rects)  # Makes the rectangles compaitble to new layout engine input format
+            input_rects, self.W, self.H = input_conversion(
+                sym_layout)  # converts symbolic layout lines and points into rectangles
+            input = self.cornerstitch.read_input('list',
+                                                 Rect_list=input_rects)  # Makes the rectangles compaitble to new layout engine input format
 
-            self.Htree, self.Vtree = self.cornerstitch.input_processing(input, self.W + 20,self.H + 20)  # creates horizontal and vertical corner stitch layouts
+            self.Htree, self.Vtree = self.cornerstitch.input_processing(input, self.W + 20,
+                                                                        self.H + 20)  # creates horizontal and vertical corner stitch layouts
             num_columns = len(self.Htree.hNodeList[0].stitchList)
 
-            patches, combined_graph = self.cornerstitch.draw_layout(rects=input_rects, Htree=self.Htree,Vtree=self.Vtree)  # collects initial layout patches and combined HCS,VCS points as a graph for mode-3 representation
+            patches, combined_graph = self.cornerstitch.draw_layout(rects=input_rects, Htree=self.Htree,
+                                                                    Vtree=self.Vtree)  # collects initial layout patches and combined HCS,VCS points as a graph for mode-3 representation
             sym_to_cs = Sym_to_CS(input_rects, self.Htree,
                                   self.Vtree)  # maps corner stitch tiles to symbolic layout objects
 
@@ -303,7 +307,6 @@ class New_layout_engine():
 
         return Evaluated_X, Evaluated_Y
 
-
     def get_min_dimensions(self):
         for comp in self.all_components:
             if isinstance(comp, parts.Part):
@@ -317,10 +320,9 @@ class New_layout_engine():
 
                 self.min_dimensions[type]=[footprint,parent_type]
 
-
-
     # generate layout solutions using constraint graph edge weights randomization for different modes(level)
-    def generate_solutions(self, level, num_layouts=1, W=None, H=None, fixed_x_location=None, fixed_y_location=None,seed=None,individual=None,db=None,count=None,bar=False):
+    def generate_solutions(self, level, num_layouts=1, W=None, H=None, fixed_x_location=None, fixed_y_location=None,
+                           seed=None, individual=None, db=None, count=None, bar=False):
         """
 
         :param level: mode of operation: mode-0(minimum sized layout), mode-1(variable sized layouts), mode-2(fixed sized layouts), mode-3(fixed sized with fixed component locations)
@@ -340,6 +342,7 @@ class New_layout_engine():
         CG1 = CS_to_CG(level)
         self.constraint_info=CG1.getConstraints(self.cons_df)
         self.get_min_dimensions()
+        module_data=[] # list of ModuleDataCornerstitch objects
         '''
         self.min_dimensions['Type_2'] = [float(self.cons_df.iat[1, 3]), float(self.cons_df.iat[2, 3])]
         self.min_dimensions['Type_3'] = [float(self.cons_df.iat[1, 4]), float(self.cons_df.iat[2, 4])]
@@ -379,24 +382,55 @@ class New_layout_engine():
             #------------------------------------------------------------------
             #cs_islands_up=self.update_points(cs_islands)
             #CS_SYM_information, Layout_Rects = CG1.UPDATE_min(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree ,sym_to_cs,scaler)  # CS_SYM_information is a dictionary where key=path_id(component name) and value=list of updated rectangles, Layout Rects is a dictionary for minimum HCS and VCS evaluated rectangles (used for plotting only)
+            Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=None, W=None, H=None,
+                                                      XLoc=None, YLoc=None, seed=None, individual=None,
+                                                      Types=self.Types)  # for minimum sized layout only one solution is generated
+
+            CS_SYM_information, Layout_Rects = CG1.update_min(Evaluated_X, Evaluated_Y, sym_to_cs, scaler)
+            # raw_input()
+
+            print CS_SYM_information
+
+            # print "Before update"
+            # for island in cs_islands:
+            # island.print_island(plot=True)
+
+
+
+
+            # cs_islands_up=self.update_points(cs_islands)
+
+
+            # CS_SYM_information, Layout_Rects = CG1.UPDATE_min(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree ,sym_to_cs,scaler)  # CS_SYM_information is a dictionary where key=path_id(component name) and value=list of updated rectangles, Layout Rects is a dictionary for minimum HCS and VCS evaluated rectangles (used for plotting only)
             self.cur_fig_data = plot_layout(Layout_Rects, level)
             CS_SYM_Updated = {}
             for i in self.cur_fig_data:
-                for k, v in i.items():
-                    k=(k[0]*scaler,k[1]*scaler) #size
+                for k, v in i.items(): # k is footprint, v layout data
+                    k = (k[0] * scaler, k[1] * scaler)
                     CS_SYM_Updated[k] = CS_SYM_information
-            CS_SYM_Updated = [CS_SYM_Updated] # mapped solution layout information to symbolic layout objects
+            CS_SYM_Updated = [CS_SYM_Updated]  # mapped solution layout information to symbolic layout objects
             cs_islands_up = self.update_islands(CS_SYM_information, Evaluated_X, Evaluated_Y, cs_islands)
-            updated_cs_islands = [cs_islands_up]
             # -------------------------------for debugging----------------------
+            # print "After update"
+            # for island in cs_islands_up:
+            # island.print_island(plot=True,size=k)
+            # island.plot_mesh_nodes(size=k)
+            # -------------------------------------------------
+            md_data = ModuleDataCornerStitch()
+            md_data.islands[0] = cs_islands_up
+            md_data.footprint = k
+            module_data.append(md_data) # collect list of module_data
             #print "After update"
             #for island in cs_islands_up:
-                #island.print_island(plot=True,size=k)
+            #    island.print_island(plot=True,size=k)
                 #island.plot_mesh_nodes(size=k)
-            #-------------------------------------------------------------------
-            if db!=None:
-                if count==None:
-                    self.save_layouts(Layout_Rects,count=None, db=db)
+
+
+
+            if db != None:
+                if count == None:
+                    self.save_layouts(Layout_Rects, count=None, db=db)
+
 
         #mode-1
         elif level == 1:
@@ -418,38 +452,65 @@ class New_layout_engine():
                 updated_cs_islands.append(cs_islands_up)
                 Layout_Rects.append(Layout_Rects1)
 
-            if count==None:
-                #for i in range(len(Layout_Rects)):
+            Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=num_layouts, W=None, H=None,
+                                                      XLoc=None, YLoc=None, seed=seed, individual=individual,
+                                                      Types=self.Types)
+            # CS_SYM_Updated, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree, sym_to_cs,scaler)
+            CS_SYM_Updated = []
+            Layout_Rects = []
+            updated_cs_islands = []
+            for i in range(len(Evaluated_X)):
+                CS_SYM_Updated1, Layout_Rects1 = CG1.update_min(Evaluated_X[i], Evaluated_Y[i], sym_to_cs, scaler)
+                self.cur_fig_data = plot_layout(Layout_Rects1, level=0)
+                CS_SYM_info = {}
+                for item in self.cur_fig_data:
+                    for k, v in item.items():
+                        k = (k[0] * scaler, k[1] * scaler)
+                        CS_SYM_info[k] = CS_SYM_Updated1
+                CS_SYM_Updated.append(CS_SYM_info)
+                cs_islands_up = self.update_islands(CS_SYM_Updated1, Evaluated_X[i], Evaluated_Y[i], cs_islands)
+                md_data = ModuleDataCornerStitch()
+                md_data.islands[0] = cs_islands_up
+                md_data.footprint = k
+                module_data.append(md_data)  # collect list of module_data
+                Layout_Rects.append(Layout_Rects1)
+                for island in cs_islands_up:
+                    island.print_island(plot=True, size=k)
+
+            # print "1",CS_SYM_Updated
+            # print Layout_Rects
+            # CS_SYM_Updated = CS_SYM_Updated['H']
+            # self.cur_fig_data = plot_layout(Layout_Rects, level,self.min_dimensions)
+            if count == None:
+                # for i in range(len(Layout_Rects)):
                 for i in range(len(Layout_Rects)):
-                    self.save_layouts(Layout_Rects[i],count=i, db=db)
+                    self.save_layouts(Layout_Rects[i], count=i, db=db)
             else:
                 #for i in range(len(Layout_Rects)):
                 self.save_layouts(Layout_Rects,count=count, db=db)
 
         #mode-2
         elif level == 2:
-            Evaluated_X0, Evaluated_Y0 = self.mode_zero() # mode-0 evaluation is required to check the validity of given floorplan size
+            Evaluated_X0, Evaluated_Y0 = self.mode_zero()  # mode-0 evaluation is required to check the validity of given floorplan size
+            print Evaluated_X0, Evaluated_Y0
 
-            ZDL_H={}
-            ZDL_V={}
-            for k,v in Evaluated_X0[1].items():
+            ZDL_H = {}
+            ZDL_V = {}
+            for k, v in Evaluated_X0[1].items():
+                ZDL_H[k] = v
+            for k, v in Evaluated_Y0[1].items():
+                ZDL_V[k] = v
+            MIN_X = {}
+            MIN_Y = {}
+            for k, v in ZDL_H.items():
+                MIN_X[ZDL_H.keys().index(k)] = v
+            for k, v in ZDL_V.items():
+                MIN_Y[ZDL_V.keys().index(k)] = v
 
-                ZDL_H[k]=v
-            for k,v in Evaluated_Y0[1].items():
-                ZDL_V[k]=v
-            MIN_X={}
-            MIN_Y={}
-            for k,v in ZDL_H.items():
-                MIN_X[ZDL_H.keys().index(k)]=v
-            for k,v in ZDL_V.items():
-                MIN_Y[ZDL_V.keys().index(k)]=v
-
-
-
-            max_x=max(MIN_X.values()) #finding minimum width of the floorplan
-            max_y = max(MIN_Y.values()) # finding minimum height of the floorplan
-            XLoc=MIN_X.keys()
-            YLoc=MIN_Y.keys()
+            max_x = max(MIN_X.values())  # finding minimum width of the floorplan
+            max_y = max(MIN_Y.values())  # finding minimum height of the floorplan
+            XLoc = MIN_X.keys()
+            YLoc = MIN_Y.keys()
 
             Min_X_Loc = {}
             Min_Y_Loc = {}
@@ -459,7 +520,7 @@ class New_layout_engine():
             Min_X_Loc[len(XLoc) - 1] = max_x
             Min_Y_Loc[len(YLoc) - 1] = max_y
 
-            for k, v in Min_X_Loc.items(): # checking if the given width is greater or equal minimum width
+            for k, v in Min_X_Loc.items():  # checking if the given width is greater or equal minimum width
 
                 if W >= v:
                     #Min_X_Loc[0] = 0
@@ -488,7 +549,8 @@ class New_layout_engine():
             Min_Y_Loc = collections.OrderedDict(sorted(Min_Y_Loc.items()))
 
             Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=num_layouts, W=W, H=H,
-                                                      XLoc=Min_X_Loc, YLoc=Min_Y_Loc, seed=seed, individual=individual,Types=self.Types) # evaluates and finds updated locations for each coordinate
+                                                      XLoc=Min_X_Loc, YLoc=Min_Y_Loc, seed=seed, individual=individual,
+                                                      Types=self.Types)  # evaluates and finds updated locations for each coordinate
             '''
             CS_SYM_Updated, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree, sym_to_cs,scaler)
             CS_SYM_Updated = CS_SYM_Updated['H'] # takes only horizontal corner stitch data
@@ -502,27 +564,33 @@ class New_layout_engine():
             '''
             CS_SYM_Updated = []
             Layout_Rects = []
-            updated_cs_islands = []
             for i in range(len(Evaluated_X)):
-                CS_SYM_Updated1, Layout_Rects1 = CG1.update_min(Evaluated_X[i], Evaluated_Y[i], sym_to_cs,scaler)
+                CS_SYM_Updated1, Layout_Rects1 = CG1.update_min(Evaluated_X[i], Evaluated_Y[i], sym_to_cs, scaler)
                 self.cur_fig_data = plot_layout(Layout_Rects1, level=0)
                 CS_SYM_info = {}
                 for item in self.cur_fig_data:
                     for k, v in item.items():
-                        k = (k[0] * scaler, k[1] * scaler) #size
+                        k = (k[0] * scaler, k[1] * scaler)
                         CS_SYM_info[k] = CS_SYM_Updated1
                 CS_SYM_Updated.append(CS_SYM_info)
                 cs_islands_up = self.update_islands(CS_SYM_Updated1, Evaluated_X[i], Evaluated_Y[i], cs_islands)
-                updated_cs_islands.append(cs_islands_up)
-                #-----------------------for debugging------------------------------
+                md_data = ModuleDataCornerStitch()
+                md_data.islands[0] = cs_islands_up
+                md_data.footprint = k
+                module_data.append(md_data)  # collect list of module_data
+                # -----------------------for debugging------------------------------
                 '''
                 print "After update"
                 for island in cs_islands_up:
                     island.PrintIsland(plot=True,size=k)                
-                
+
                 '''
-                #--------------------------------------------------------------------
+                # --------------------------------------------------
                 Layout_Rects.append(Layout_Rects1)
+            # print "1",CS_SYM_Updated
+            # print Layout_Rects
+            # CS_SYM_Updated = CS_SYM_Updated['H']
+            # self.cur_fig_data = plot_layout(Layout_Rects, level,self.min_dimensions)
             if count == None:
                 # for i in range(len(Layout_Rects)):
                 for i in range(len(Layout_Rects)):
@@ -531,7 +599,6 @@ class New_layout_engine():
             else:
                 # for i in range(len(Layout_Rects)):
                 self.save_layouts(Layout_Rects, count=count, db=db)
-
 
 
 
@@ -658,7 +725,7 @@ class New_layout_engine():
         if bar:
             p_bar.close()
 
-        return  CS_SYM_Updated, updated_cs_islands
+            return CS_SYM_Updated, module_data
 
     def apply_IV_loading(self,cs_islands=None,voltage_info=None,current_info=None):
 
@@ -854,8 +921,8 @@ class New_layout_engine():
                         points.append(coordinate7)
                     if coordinate8 not in points:
                         points.append(coordinate8)
-                    
-                    
+
+
 
 
 
@@ -1278,11 +1345,13 @@ class New_layout_engine():
 
             if k=='H':
                 Total_H = {}
+
                 for j in range(len(v)):
 
 
                     Rectangles = []
                     for rect in v[j]:  # rect=[x,y,width,height,type]
+
                         Rectangles.append(rect)
                     max_x = 0
                     max_y = 0
@@ -1290,7 +1359,7 @@ class New_layout_engine():
                     min_y = 1e30
 
                     for i in Rectangles:
-                        print i
+
                         if i[0] + i[2] > max_x:
                             max_x = i[0] + i[2]
                         if i[1] + i[3] > max_y:
@@ -1358,12 +1427,9 @@ class New_layout_engine():
             conn.close()
     
     
+    
+
     """
-
-    
-    
-    
-
 
 
 def plot_layout(Layout_Rects,level,min_dimensions=None,Min_X_Loc=None,Min_Y_Loc=None):
@@ -1376,11 +1442,12 @@ def plot_layout(Layout_Rects,level,min_dimensions=None,Min_X_Loc=None,Min_Y_Loc=
         for k,v in Layout_Rects.items():
             if k=='H':
                 for rect in v:                    #rect=[x,y,width,height,type]
+
                     Rectangles.append(rect)
-        
-        
+
+
         '''
-        Rectangles=Layout_Rects
+        Rectangles = Layout_Rects
 
         max_x = 0
         max_y = 0
@@ -1563,14 +1630,6 @@ def intersection_pt(line1, line2):    # Find intersection point of 2 orthogonal 
         y = line2.pt1[1]                     # take the y value from line 2
 
     return x, y
-
-
-
-
-
-
-
-
 def Sym_to_CS(input_rects,Htree,Vtree):
     '''
 
@@ -1620,7 +1679,7 @@ def Sym_to_CS(input_rects,Htree,Vtree):
                     if dict not in ALL_RECTS['H']:
                         ALL_RECTS['H'].append(dict)
 
-                
+
 
     for node in VerticalNodeList:
         for i in node.stitchList:
@@ -1676,6 +1735,5 @@ def Sym_to_CS(input_rects,Htree,Vtree):
     
     
     '''
-
 
 

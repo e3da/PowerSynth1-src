@@ -21,7 +21,7 @@ class new_engine_opt:
         # self.solutions = {}
         self.count = 0
         self.layout_data = []
-        self.islands_info=[]
+        self.module_info =[]
         self.fig_data = []
         self.perf_results = []
         self.db=db
@@ -123,24 +123,21 @@ class new_engine_opt:
         #print converted_data
         return converted_data
 
-    def eval_layout(self, layout_data=None,isalnds_info=None):
-        print"Here_eval",isalnds_info
-
-        layout_data=self.convert_layout_data(layout_data)
+    def eval_layout(self,module_data=None):
+        print"Here_eval",module_data
         result = []
         #print "DATA",layout_data
         for measure in self.measures:
             # TODO: APPLY LAYOUT INFO INTO ELECTRICAL MODEL
             if isinstance(measure, ElectricalMeasure):
                 type = measure.measure
-                self.e_api.init_layout(layout_data=layout_data)
-                try:
-                    start=time.time()
-                    R, L = self.e_api.extract_RL(src=measure.source, sink=measure.sink)
-                    end = time.time()
-                    print "RT", end - start
-                except:
-                    R,L=1000,1000
+                self.e_api.init_layout_isl(module_data=module_data)
+                start=time.time()
+                R, L = self.e_api.extract_RL(src=measure.source, sink=measure.sink)
+                print 'R',R,'L',L
+                end = time.time()
+                print "RT", end - start
+
 
                 if type == 0:  # LOOP RESISTANCE
                     result.append(R)  # resistance in mOhm
@@ -148,7 +145,7 @@ class new_engine_opt:
                     result.append(L)  # resistance in mOhm
 
             if isinstance(measure, ThermalMeasure):
-                max_t = self.t_api.eval_max_temp(layout_data=layout_data)
+                max_t = self.t_api.eval_max_temp(module_data=module_data)
                 result.append(max_t)
 
         return result
@@ -186,17 +183,17 @@ class new_engine_opt:
         if not (isinstance(individual, list)):
             individual = np.asarray(individual).tolist()
 
-        cs_sym_info,islands_info = self.gen_layout_func(level=self.level, num_layouts=1, W=self.W, H=self.H,
+        cs_sym_info,module_data = self.gen_layout_func(level=self.level, num_layouts=1, W=self.W, H=self.H,
                                                      fixed_x_location=None, fixed_y_location=None, seed=self.seed,
                                                      individual=individual,db=self.db,count=self.count)
 
-        result = self.eval_layout(cs_sym_info[0],islands_info[0])
+        result = self.eval_layout(cs_sym_info[0], module_data[0])
         self.count += 1
         # self.solutions[(ret[0], ret[1])] = figure
         # if ret not in self.solution_data:
         #self.fig_data.append(fig_data)
         self.layout_data.append(cs_sym_info)
-        self.islands_info.append(islands_info)
+        self.module_info.append(module_data)
         self.perf_results.append(result)
 
         return result

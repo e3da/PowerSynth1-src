@@ -414,6 +414,7 @@ class RL_circuit():
                 k = Mval / np.sqrt(L1_val * L2_val)
 
                 self.Mutual[Mname] = Mval
+                #print Mval,'nH'
                 self.D[ind1_index, ind2_index] += -s * Mval
                 self.D[ind2_index, ind1_index] += -s * Mval
 
@@ -525,7 +526,7 @@ class RL_circuit():
             A = self.D
 
         t = time.time()
-        method=3
+        method=1
         if method ==1:
             self.results= scipy.sparse.linalg.spsolve(A,Z)
         elif method ==2:
@@ -537,10 +538,9 @@ class RL_circuit():
         elif method ==5: # direct inverse method.
             self.results = np.linalg.inv(A)*Z
             self.results=np.squeeze(np.asarray(self.results))
+        #print "solve", time.time() - t, "s"
 
         #print np.shape(self.A)
-        del A
-        del Z
         #print "RESULTS",self.results
         if debug: # for debug and time analysis
             print 'RL', np.shape(A)

@@ -54,7 +54,6 @@ def plot_layout(fig_data=None, rects=None, size=None, fig_dir=None):
     ax.set_aspect('equal')
 
     plt.savefig(fig_dir + '/_init_layout' + '.png')
-    plt.close()
 
 
 def opt_choices(algorithm=None):
@@ -100,12 +99,11 @@ def save_solution(rects, id, db):
     conn.close()
 
 
-def eval_single_layout(layout_engine=None, layout_data=None,islands_info=None, apis={}, measures=[]):
-
+def eval_single_layout(layout_engine=None, layout_data=None, apis={}, measures=[], module_info=None):
     opt_problem = new_engine_opt(engine=layout_engine, W=layout_engine.init_size[0], H=layout_engine.init_size[1],
                                  seed=None, level=2, method=None, apis=apis, measures=measures)
 
-    results = opt_problem.eval_layout(layout_data,islands_info)
+    results = opt_problem.eval_layout(module_info)
     measure_names = []
     for m in measures:
         measure_names.append(m.name)
@@ -116,29 +114,25 @@ def eval_single_layout(layout_engine=None, layout_data=None,islands_info=None, a
     solution.layout_info = layout_data
     solution.abstract_info = solution.form_abs_obj_rect_dict()
     Solutions.append(solution)
-
-    #export_solutions(solutions=Solutions, directory='D:\Demo\New_Flow_w_Hierarchy\Journal_Case\Figs_PCB')
     print "Performance_results",results
     return Solutions
 
 
-def update_solution_data(layout_dictionary=None,islands_info=None, opt_problem=None, measure_names=[], perf_results=[]):
+def update_solution_data(layout_dictionary=None,module_info=None, opt_problem=None, measure_names=[], perf_results=[]):
     '''
 
     :param layout_dictionary: list of CS layout data
     :param opt_problem: optimization object for different modes
     :param measure_names: list of performance names
     :param perf_results: if in data collection mode
+    :param module_info: list of ModuleDataCornerStitch objects
     :return:
     '''
     Solutions = []
     for i in range(len(layout_dictionary)):
 
         if opt_problem != None:  # Evaluatio mode
-            start = time.time()
-            results = opt_problem.eval_layout(layout_dictionary[i],islands_info[i])
-            end = time.time()
-            print "RT_E", end - start
+            results = opt_problem.eval_layout(module_data=module_info[i])
         else:
             results = perf_results[i]
         name = 'Layout_' + str(i)
@@ -236,19 +230,17 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True,rel_c
 
     :return: list of CornerStitch Solution objects
     '''
-    plot = True
+    plot = False
 
 
     # GET MEASUREMENT NAME:
     measure_names = []
-    if len(measures)>0:
-        for m in measures:
-            measure_names.append(m.name)
-    else:
-        measure_names=["perf_1","perf_2"]
+    for m in measures:
+        measure_names.append(m.name)
 
     if mode == 0:
-        cs_sym_info,islands_info = layout_engine.generate_solutions(mode, num_layouts=1, W=None, H=None,
+        # module_data: list of ModuleDataCornerStitch objects
+        cs_sym_info,module_data = layout_engine.generate_solutions(mode, num_layouts=1, W=None, H=None,
                                                                  fixed_x_location=None, fixed_y_location=None,
                                                                  seed=None,
                                                                  individual=None,db=db_file, bar=False)
@@ -259,7 +251,7 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True,rel_c
 
             opt_problem = new_engine_opt(engine=layout_engine, W=None, H=None, seed=None, level=mode, method=None,
                                          apis=apis, measures=measures)
-            Solutions = update_solution_data(layout_dictionary=cs_sym_info,islands_info=islands_info, opt_problem=opt_problem,
+            Solutions = update_solution_data(layout_dictionary=cs_sym_info,module_info=module_data, opt_problem=opt_problem,
                                              measure_names=measure_names)
 
         else:
@@ -294,13 +286,13 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True,rel_c
             num_layouts = params[0]
             if choice == "NG-RANDOM":
 
-                cs_sym_info,islands_info = layout_engine.generate_solutions(mode, num_layouts=num_layouts, W=None, H=None,
+                cs_sym_info, module_data = layout_engine.generate_solutions(mode, num_layouts=num_layouts, W=None, H=None,
                                                                          fixed_x_location=None, fixed_y_location=None,
                                                                          seed=seed, individual=None,db=db_file,count=None, bar=False)
 
                 opt_problem = new_engine_opt(engine=layout_engine, W=None, H=None, seed=seed, level=mode, method=None,
                                              apis=apis, measures=measures)
-                Solutions = update_solution_data(layout_dictionary=cs_sym_info,islands_info=islands_info, opt_problem=opt_problem,
+                Solutions = update_solution_data(layout_dictionary=cs_sym_info,module_info=module_data, opt_problem=opt_problem,
                                                  measure_names=measure_names)
 
             else:
@@ -343,7 +335,7 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True,rel_c
                     opt_problem.T_init = temp_init  # initial temperature
                     opt_problem.optimize()  # results=list of list, where each element=[fig,cs_sym_info,perf1_value,perf2_value,...]
 
-                Solutions = update_solution_data(layout_dictionary=opt_problem.layout_data,islands_info=opt_problem.islands_info, measure_names=measure_names,
+                Solutions = update_solution_data(layout_dictionary=opt_problem.layout_data,module_info=opt_problem.module_info, measure_names=measure_names,
                                                  perf_results=opt_problem.perf_results)
 
 
@@ -367,7 +359,7 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True,rel_c
             params = get_params(num_layouts=num_layouts,alg='LAYOUT_GEN')
             num_layouts = params[0]
 
-            cs_sym_info,islands_info = layout_engine.generate_solutions(mode, num_layouts=num_layouts, W=None, H=None,
+            cs_sym_info,module_data = layout_engine.generate_solutions(mode, num_layouts=num_layouts, W=None, H=None,
                                                                      fixed_x_location=None, fixed_y_location=None,
                                                                      seed=seed, individual=None,db=db_file, bar=False)
 
@@ -400,7 +392,7 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True,rel_c
             if choice == "NG-RANDOM":
                 params = get_params(num_layouts=num_layouts,alg='NG-RANDOM')
                 num_layouts = params[0]
-                cs_sym_info,islands_info = layout_engine.generate_solutions(mode, num_layouts=num_layouts, W=width,
+                cs_sym_info, module_data = layout_engine.generate_solutions(mode, num_layouts=num_layouts, W=width,
                                                                          H=height,
                                                                          fixed_x_location=None, fixed_y_location=None,
                                                                          seed=seed, individual=None,db=db_file, bar=False)
@@ -409,7 +401,7 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True,rel_c
                                              method=None,
                                              apis=apis, measures=measures)
 
-                Solutions = update_solution_data(layout_dictionary=cs_sym_info,islands_info=islands_info, opt_problem=opt_problem,
+                Solutions = update_solution_data(layout_dictionary=cs_sym_info,module_info=module_data, opt_problem=opt_problem,
                                                  measure_names=measure_names)
             else:
                 if choice == "NSGAII":
@@ -449,7 +441,7 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True,rel_c
                     opt_problem.num_gen = num_layouts  # number of generations
                     opt_problem.T_init = temp_init  # initial temperature
                     opt_problem.optimize()  # perform optimization
-                Solutions = update_solution_data(layout_dictionary=opt_problem.layout_data,islands_info=opt_problem.islands_info, measure_names=measure_names, perf_results=opt_problem.perf_results)
+                Solutions = update_solution_data(layout_dictionary=opt_problem.layout_data,module_info=opt_problem.module_info, measure_names=measure_names, perf_results=opt_problem.perf_results)
 
             #---------------------------------------------- save pareto data and plot figures ------------------------------------
             # checking pareto_plot and saving csv file
@@ -471,7 +463,7 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True,rel_c
             num_layouts=params[0]
 
 
-            cs_sym_info,islands_info = layout_engine.generate_solutions(mode, num_layouts=num_layouts, W=width, H=height,
+            cs_sym_info,module_data = layout_engine.generate_solutions(mode, num_layouts=num_layouts, W=width, H=height,
                                                                      fixed_x_location=None, fixed_y_location=None,
                                                                      seed=seed, individual=None,db=db_file, bar=False)
 
@@ -489,7 +481,7 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True,rel_c
                     if not os.path.exists(sol_path):
                         os.makedirs(sol_path)
                     solution.layout_plot(layout_ind=i, db=db_file, fig_dir=sol_path)
-            export_solutions(solutions=Solutions, directory=sol_dir)
+
     '''
     elif mode == 3:
         print "Enter information for Fixed-sized layout generation"
@@ -613,10 +605,11 @@ def script_translator(input_script=None, bond_wire_info=None, fig_dir=None, cons
         pass
     window = QMainWindow()
     
-    # initiates new layout engine
+
+
     New_engine = New_layout_engine()
-    # cons_df = show_constraint_table(parent=window, cons_df=ScriptMethod.df)
-    if mode == 0:
+    #cons_df = show_constraint_table(parent=window, cons_df=ScriptMethod.df)
+    if mode==0:
         cons_df = pd.read_csv(constraint_file)
 
     else:
@@ -662,6 +655,7 @@ def script_translator(input_script=None, bond_wire_info=None, fig_dir=None, cons
     plot_layout(fig_data=New_engine.init_data[0], size=New_engine.init_size, fig_dir=fig_dir) # plots initial layout
 
     # New_engine.open_new_layout_engine(window=window)
-    #cs_sym_data = New_engine.generate_solutions(level=0, num_layouts=1, W=None, H=None, fixed_x_location=None,fixed_y_location=None, seed=None, individual=None)
+    cs_sym_data = New_engine.generate_solutions(level=0, num_layouts=1, W=None, H=None, fixed_x_location=None,
+                                                         fixed_y_location=None, seed=None, individual=None)
 
-    return New_engine, bondwires
+    return New_engine, cs_sym_data, bondwires

@@ -68,10 +68,14 @@ def network_plot_3D(G, ax, cmap_node={}, cmap_edge={},show_labels = False):
     labels = {}
     type = {}
     for n in G.nodes():
-        node = G.node[n]['node']
-        pos[n] = node.pos
-        type[n]=node.type
-        labels[n] = node.node_id
+        try:
+            node = G.node[n]['node']
+            pos[n] = node.pos
+            type[n]=node.type
+            labels[n] = node.node_id
+        except:
+            print G.node[n]
+
     # 3D network plot
     with plt.style.context(('ggplot')):
         # Loop on the pos dictionary to extract the x,y,z coordinates of each node
@@ -251,7 +255,7 @@ def plot_combined_I_map_layer(norm=None, ax=None, cmap='jet', G=None, sel_z=0, m
         ax.add_patch(p)
 
 
-def plot_combined_I_quiver_map_layer(norm=None, ax=None, cmap='jet', G=None, sel_z=0, mode='I', W=[0, 10], H=[0, 10], numvecs=100,name='test',mesh='grid'):
+def plot_combined_I_quiver_map_layer(norm=None, ax=None, cmap='jet', G=None, sel_z=0, mode='I', W=[0, 10], H=[0, 10], numvecs=100,name='test',mesh='nodes'):
     df = pd.DataFrame(columns=['x','y','z','Jx','Jy','Jz'])
     if mesh == 'grid':
         xx = np.linspace(W[0], W[1], numvecs+1)

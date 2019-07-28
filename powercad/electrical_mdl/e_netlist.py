@@ -1,5 +1,5 @@
 from powercad.electrical_mdl.e_module import EModule
-from powercad.electrical_mdl.e_mesh import EMesh
+from powercad.electrical_mdl.e_mesh_direct import EMesh
 import copy
 import numpy as np
 
@@ -49,7 +49,7 @@ class ENetlist():
             for sh in comp.sheet:
                 all_net.append(net_graph_id[sh.net])  # create a list of net id for component pins
             self.comp_net.append(all_net)
-        # All edges among pins in each component need to be removed
+        # All edges among pins for each component need to be removed
         for pins in self.comp_net:
             edge = {}
             for p1 in pins:
@@ -68,11 +68,14 @@ class ENetlist():
     def export_netlist_to_ads(self,file_name = "test.net"):
         text_file = open(file_name, 'w')
         self.find_terminals()
-        self.prepare_graph_for_export()
+        #self.prepare_graph_for_export()
+        self.net_graph = copy.deepcopy(self.mesh.graph)
+
         # invert the dictionary relationship for net_graph
         keys = self.mesh.comp_net_id.values()
         values = self.mesh.comp_net_id.keys()
         id_to_net = dict(zip(keys, values))
+        print id_to_net
         # refresh netlist prepare to write
         self.netlist = ""
         sub = ".subckt X1"
@@ -88,14 +91,8 @@ class ENetlist():
             name = edge[2]['data'].name
             n1 = edge[0]
             n2 = edge[1]
-            if n1 in id_to_net:
-                net1 = id_to_net[n1]
-            else:
-                net1 = Netname.format(n1)
-            if n2 in id_to_net:
-                net2 = id_to_net[n2]
-            else:
-                net2 = Netname.format(n2)
+            net1 = Netname.format(n1)
+            net2 = Netname.format(n2)
             # internal net between R and L
             int_net = Intnet.format(net1, net2)
 

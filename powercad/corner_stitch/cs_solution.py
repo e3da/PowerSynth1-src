@@ -25,20 +25,16 @@ class CornerStitchSolution:
         Output type : {"Layout id": {'Sym_info': layout_rect_dict,'Dims': [W,H]} --- Dims is the dimension of the baseplate
         where layout_rect_dict= {'Symbolic ID': [R1,R2 ... Ri]} where Ri is a Rectangle object
         '''
-        #print "info",self.layout_info
-
         if isinstance(self.layout_info, dict):
             p_data = self.layout_info
         else:
             #print self.layout_info
             p_data=self.layout_info[0]
-
         layout_symb_dict={}
         layout_rect_dict = {}
 
 
         W, H = p_data.keys()[0]
-
         W = float(W) / div
         H = float(H) / div
 
@@ -98,9 +94,9 @@ class CornerStitchSolution:
                 all_lines.append(l)
 
 
-            colors = ['white', 'green', 'red', 'blue', 'yellow', 'purple','pink','magenta','orange','violet','black']
+            colors = ['white', 'green', 'red', 'blue', 'yellow', 'purple','pink','magenta','orange','violet']
 
-            colours=["'white'","'green'","'red'","'blue'","'yellow'","'purple'","'pink'","'magenta'","'orange'","'violet'","'black'"]
+            colours=["'white'","'green'","'red'","'blue'","'yellow'","'purple'","'pink'","'magenta'","'orange'","'violet'"]
 
 
             for row in all_lines:

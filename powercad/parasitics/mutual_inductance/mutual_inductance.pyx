@@ -26,8 +26,9 @@ cpdef double[:] mutual_mat_eval(double[:,:] m_mat,int nt,int mode):
     cdef int i,num_t,chunksize
     openmp.omp_set_dynamic(36)
     with nogil, parallel():
-        openmp.omp_set_num_threads(nt)
-        num_t = openmp.omp_get_num_threads()
+        #openmp.omp_set_num_threads(nt)
+        num_t = 12 #openmp.omp_get_num_threads()
+        openmp.omp_set_num_threads(32);
         chunksize = rows/num_t
         for i in prange(rows, schedule='static',chunksize=chunksize):
             if mode == 0: # use bar equation

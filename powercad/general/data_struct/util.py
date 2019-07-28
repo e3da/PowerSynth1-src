@@ -170,7 +170,7 @@ class Rect:
         self.right = right
         self.width = self.width_eval()
         self.height = self.height_eval()
-
+        self.cs_type = 'h' # for cornerstich object, this defines if the rectangles are coming from H_CS or V_CS
     def __str__(self):
         return str(self.top)+', '+str(self.bottom)+', '+str(self.left)+', '+str(self.right)
 
@@ -299,6 +299,75 @@ class Rect:
         rect = Rect(self.top, self.bottom, self.left, self.right)
         return rect
 
+    def find_cut_intervals(self,dir=0,cut_set={}):
+        '''
+        Given a set of x or y locations and its interval, check if there is a cut.
+        Args:
+            dir: 0 for horizontal check and 1 for vertical check
+            cut_set: if dir=0, {yloc:[x intervals]} if dir=1, {xloc:[ y intervals]}
+
+        Returns: a list of cut x or y locations
+
+        '''
+        # first perform merge on the intervals that are touching
+        #print "after",new_cut_set
+        cuts = []
+        if dir == 0: # horizontal cut
+            for k in cut_set: # the key is y location in this case
+                if k>=self.bottom and k <=self.top:
+                    for i in cut_set[k]: # for each interval
+                        if not (i[1]<self.left) or not (i[0]>self.right):
+                            cuts.append(k)
+                            break
+        elif dir == 1:  # horizontal cut
+            for k in cut_set:  # the key is x location in this case
+                if k >= self.left and k <= self.right:
+                    for i in cut_set[k]:  # for each interval
+                        if not (i[1] < self.bottom) or not (i[0] > self.top):
+                            cuts.append(k)
+                            break
+
+        return cuts
+
+    def split_rect(self,cuts=[],dir=0):
+        '''
+        Split a rectangle into multiple rectangles
+        Args:
+            cuts: the x or y locations to make cuts
+            dir: 0 for horizontal 1 for vertical
+
+        Returns: list of rectangles
+        '''
+        # if the cuts include the rect boundary, exclude them first
+        if dir ==0:
+            min = self.left
+            max = self.right
+        elif dir == 1:
+            min = self.bottom
+            max = self.top
+        cuts.sort() # sort the cut positions from min to max
+        if cuts[0]!=min:
+            cuts = [min]+cuts
+        if cuts[-1]!= max:
+            cuts = cuts+[max]
+        if cuts[0]==min and cuts[-1]==max and len(cuts)==2:
+            return [self]
+        splitted_rects = []
+        if dir == 0:
+            top =self.top
+            bottom = self.bottom
+            for i in range(len(cuts)-1):
+                r =Rect(left=cuts[i],right=cuts[i+1],top=top,bottom=bottom)
+                splitted_rects.append(r)
+        elif dir == 1:
+            left = self.left
+            right = self.right
+            for i in range(len(cuts) - 1):
+                r = Rect(left=left, right=right, top=cuts[i+1], bottom=cuts[i])
+                splitted_rects.append(r)
+
+        return splitted_rects
+
 # Seed the random module
 def seed_rand(num):
     random.seed(num)
@@ -334,17 +403,13 @@ def get_overlap_interval(interval1, interval2):
     return (max(interval1[0], interval2[0]), min(interval1[1], interval2[1]))
 
 
-def draw_rect_list(rectlist,color='blue',pattern='//',ax=None,size=None):
+def draw_rect_list(rectlist,color,pattern,text=None,ax=None):
     patch=[]
-    if size==None:
-        plt.xlim(0, 50000)
-        plt.ylim(0, 80000)
-    else:
-        plt.xlim(0, size[0])
-        plt.ylim(0, size[1])
+    plt.xlim(0, 50)
+    plt.ylim(0, 40)
     for r in rectlist:
         p = patches.Rectangle((r.left, r.bottom), r.width_eval(), r.height_eval(),fill=True,
-            edgecolor='black',facecolor=color,hatch=pattern,linewidth=2,alpha=0.5)
+            edgecolor='black',facecolor=color,hatch=pattern,linewidth=1,alpha=0.5)
         #print r.left,r.bottom,r.width(),r.height()
         patch.append(p)
         ax.add_patch(p)
