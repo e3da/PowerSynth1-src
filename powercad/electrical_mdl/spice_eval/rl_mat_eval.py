@@ -414,6 +414,7 @@ class RL_circuit():
                 k = Mval / np.sqrt(L1_val * L2_val)
 
                 self.Mutual[Mname] = Mval
+                #print Mval,'nH'
                 self.D[ind1_index, ind2_index] += -s * Mval
                 self.D[ind2_index, ind1_index] += -s * Mval
 

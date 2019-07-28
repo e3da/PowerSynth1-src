@@ -5,7 +5,9 @@ from glob import glob
 from powercad.cmd_run.cmd_layout_handler import generate_optimize_layout, script_translator, eval_single_layout
 import objgraph
 from pympler import muppy,summary
+from powercad.layer_stack.layer_stack import LayerStack
 import types
+
 class Cmd_Handler:
     def __init__(self):
         # Input files
@@ -21,11 +23,14 @@ class Cmd_Handler:
         self.db_file = None  # A file to store layout database
 
         # CornerStitch Initial Objects
+
         self.engine = None
         self.comp_dict = {}
         self.wire_table = {}
         self.raw_layout_info = {}
         self.min_size_rect_patches = {}
+        # Struture
+        self.layer_stack = LayerStack()
         # APIs
         self.measures = []
         self.e_api = None
@@ -99,6 +104,8 @@ class Cmd_Handler:
                 if info[0] == 'End_Electrical_Setup..':
                     electrical_mode = False
                 if thermal_mode:
+                    if info[0] == 'Model_Select:':
+                        thermal_model = int(info[1])
                     if info[0] == 'Measure_Name:' and t_name==None:
                         t_name = info[1]
                     if info[0] == 'Selected_Devices:':
@@ -138,6 +145,8 @@ class Cmd_Handler:
         cont = check_file(self.layout_script) and check_file(self.bondwire_setup) and check_file(
             self.layer_stack_file) and check_file(self.rs_model_file) and check_dir(self.fig_dir) and check_dir(
             self.db_dir) and check_file(self.constraint_file)
+
+
         if cont:
             print "run the optimization"
             self.init_cs_objects()
@@ -151,28 +160,64 @@ class Cmd_Handler:
                 t_setup_data={'Power': power,'heat_conv':h_conv,'t_amb':t_amb}
                 t_measure_data={'name':t_name,'devices':devices}
                 e_measure_data = {'name': e_name, 'type': type, 'source': source, 'sink': sink}
-                self.setup_thermal(mode='macro', setup_data=t_setup_data,meas_data=t_measure_data)
+                self.setup_thermal(mode='macro', setup_data=t_setup_data,meas_data=t_measure_data,model_type=thermal_model)
                 self.setup_electrical(mode='macro', dev_conn=dev_conn, frequency=frequency, meas_data=e_measure_data)
 
                 # Convert a list of patch to rectangles
                 patch_dict = self.engine.init_data[0]
                 init_data_islands = self.engine.init_data[2]
-                width, height = self.engine.init_size
-                fig_dict = {(width, height): []}
+                print init_data_islands
+                fp_width, fp_height = self.engine.init_size
+                fig_dict = {(fp_width, fp_height): []}
                 for k, v in patch_dict.items():
-                    fig_dict[(width, height)].append(v)
+                    fig_dict[(fp_width, fp_height)].append(v)
                 init_rects = {}
+                print self.engine.init_data
+                print "here"
                 for k, v in self.engine.init_data[1].items():
                     rects = []
-                    for i in v:
-                        rect = Rectangle(x=i[0] * 1000, y=i[1] * 1000, width=i[2] * 1000, height=i[3] * 1000, type=i[4])
-                        rects.append(rect)
-                    init_rects[k] = rects
-                cs_sym_info = {(width * 1000, height * 1000): init_rects}
+                    i=v[0]
+                    x,y,width,height= [i.cell.x,i.cell.y,i.getWidth(),i.getHeight()]
+                    type = i.cell.type
+                    #rect = Rectangle(x=x * 1000, y=y * 1000, width=width * 1000, height=height * 1000, type=type)
+                    rect=[type,x,y,width,height]
+                    #rects.append(rect)
+                    init_rects[k] = rect
+                cs_sym_info = {(fp_width * 1000, fp_height * 1000): init_rects}
+
+                for island in init_data_islands:
+                    for element in island.elements:
+
+
+                        element[1]=element[1]*1000
+                        element[2] = element[2] * 1000
+                        element[3] = element[3] * 1000
+                        element[4] = element[4] * 1000
+
+                    if len(island.child)>0:
+                        for element in island.child:
+
+
+                            element[1] = element[1] * 1000
+                            element[2] = element[2] * 1000
+                            element[3] = element[3] * 1000
+                            element[4] = element[4] * 1000
+                            print"C", element
+
+                    for node in island.mesh_nodes:
+                        node.pos[0]=node.pos[0]*1000
+                        node.pos[1]=node.pos[1]*1000
+
+                md_data = ModuleDataCornerStitch()
+                md_data.islands[0] = init_data_islands
+                md_data.footprint = [fp_width * 1000, fp_height * 1000]
+
+
+
                 self.solutions = eval_single_layout(layout_engine=self.engine, layout_data=cs_sym_info,
                                                     apis={'E': self.e_api,
                                                           'T': self.t_api}, measures=self.measures,
-                                                    islands_info=init_data_islands)
+                                                    module_info=md_data)
             if run_option == 2:
 
                 self.measures = []
@@ -341,6 +386,7 @@ class Cmd_Handler:
         Initialize some CS objects
         :return:
         '''
+        self.layer_stack.import_layer_stack_from_csv(self.layer_stack_file)
         self.engine, self.raw_layout_info, self.wire_table = script_translator(
             input_script=self.layout_script, bond_wire_info=self.bondwire_setup, fig_dir=self.fig_dir, constraint_file=self.constraint_file,mode=self.new_mode)
         for comp in self.engine.all_components:
@@ -348,33 +394,49 @@ class Cmd_Handler:
 
     # --------------- API --------------------------------
     def setup_electrical(self,mode='command',dev_conn={},frequency=None,meas_data={}):
-
+        print "init api"
         layer_to_z = {'T': [0, 0.2], 'D': [0.2, 0], 'B': [0.2, 0],
                       'L': [0.2, 0]}
         self.e_api = CornerStitch_Emodel_API(comp_dict=self.comp_dict, layer_to_z=layer_to_z, wire_conn=self.wire_table)
         self.e_api.load_rs_model(self.rs_model_file)
+        print mode
         if mode == 'command':
             self.e_api.form_connection_table(mode='command')
             self.e_api.get_frequency()
             self.measures += self.e_api.measurement_setup()
         elif mode == 'macro':
+            print "macro mode"
+
             self.e_api.form_connection_table(mode='macro',dev_conn=dev_conn)
             self.e_api.get_frequency(frequency)
             self.measures += self.e_api.measurement_setup(meas_data)
 
 
-    def setup_thermal(self,mode = 'command',meas_data ={},setup_data={}):
+    def setup_thermal(self,mode = 'command',meas_data ={},setup_data={},model_type=2):
+        '''
+        Set up thermal evaluation, by default return max temp of the given device list
+        Args:
+            mode: command (manual input) or macro
+            meas_data: List of device to measure
+            setup_data: List of power for devices
+            model_type: 1:TFSM (FEA) or 2:RECT_FlUX (ANALYTICAL)
 
+        Returns:
+
+        '''
         self.t_api = CornerStitch_Tmodel_API(comp_dict=self.comp_dict)
-        self.t_api.import_layer_stack(self.layer_stack_file)
+        self.t_api.layer_stack=self.layer_stack
         if mode == 'command':
             self.measures += self.t_api.measurement_setup()
             self.t_api.set_up_device_power()
+            self.t_api.model = raw_input("Input 0=TFSM or 1=Rect_flux: ")
 
         elif mode == 'macro':
             self.measures += self.t_api.measurement_setup(data=meas_data)
             self.t_api.set_up_device_power(data=setup_data)
-
+            self.t_api.model=model_type
+            if model_type == 0: # Select TSFM model
+                self.t_api.characterize_with_gmsh_and_elmer()
     def init_apis(self):
         '''
         initialize electrical and thermal APIs

@@ -10,7 +10,8 @@ from powercad.design.group import Island, MeshNode
 import matplotlib.pyplot as plt
 from powercad.corner_stitch.constraintGraph_Dev import constraintGraph
 import itertools
-
+from powercad.general.data_struct.util import *
+from powercad.design.layout_module_data import ModuleDataCornerStitch
 
 class New_layout_engine():
     def __init__(self):
@@ -100,6 +101,7 @@ class New_layout_engine():
             self.cons_df = self.cons_from_ps()
             input_rects, self.W, self.H = input_conversion(
                 sym_layout)  # converts symbolic layout lines and points into rectangles
+
             input = self.cornerstitch.read_input('list',
                                                  Rect_list=input_rects)  # Makes the rectangles compaitble to new layout engine input format
 
@@ -118,6 +120,9 @@ class New_layout_engine():
             size = input_format[1]
             self.W = size[0]
             self.H = size[1]
+            fig, ax = plt.subplots()
+            draw_rect_list(rectlist=input_rects, ax=ax, color='green',pattern='//')
+            plt.show()
             self.create_cornerstitch(input_rects, size, islands)
 
 
@@ -296,6 +301,7 @@ class New_layout_engine():
         CG1 = CS_to_CG(level)
         self.constraint_info = CG1.getConstraints(self.cons_df)
         self.get_min_dimensions()
+        module_data=[] # list of ModuleDataCornerstitch objects
         '''
         self.min_dimensions['Type_2'] = [float(self.cons_df.iat[1, 3]), float(self.cons_df.iat[2, 3])]
         self.min_dimensions['Type_3'] = [float(self.cons_df.iat[1, 4]), float(self.cons_df.iat[2, 4])]
@@ -346,17 +352,19 @@ class New_layout_engine():
             self.cur_fig_data = plot_layout(Layout_Rects, level)
             CS_SYM_Updated = {}
             for i in self.cur_fig_data:
-                for k, v in i.items():
+                for k, v in i.items(): # k is footprint, v layout data
                     k = (k[0] * scaler, k[1] * scaler)
                     CS_SYM_Updated[k] = CS_SYM_information
             CS_SYM_Updated = [CS_SYM_Updated]  # mapped solution layout information to symbolic layout objects
             cs_islands_up = self.update_islands(CS_SYM_information, Evaluated_X, Evaluated_Y, cs_islands)
-            updated_cs_islands = [cs_islands_up]
-
-            # print "After update"
-            # for island in cs_islands_up:
-            # island.print_island(plot=True,size=k)
-            # island.plot_mesh_nodes(size=k)
+            md_data = ModuleDataCornerStitch()
+            md_data.islands[0] = cs_islands_up
+            md_data.footprint = k
+            module_data.append(md_data) # collect list of module_data
+            #print "After update"
+            #for island in cs_islands_up:
+            #    island.print_island(plot=True,size=k)
+                #island.plot_mesh_nodes(size=k)
 
 
 
@@ -385,7 +393,10 @@ class New_layout_engine():
                         CS_SYM_info[k] = CS_SYM_Updated1
                 CS_SYM_Updated.append(CS_SYM_info)
                 cs_islands_up = self.update_islands(CS_SYM_Updated1, Evaluated_X[i], Evaluated_Y[i], cs_islands)
-                updated_cs_islands.append(cs_islands_up)
+                md_data = ModuleDataCornerStitch()
+                md_data.islands[0] = cs_islands_up
+                md_data.footprint = k
+                module_data.append(md_data)  # collect list of module_data
                 Layout_Rects.append(Layout_Rects1)
                 for island in cs_islands_up:
                     island.print_island(plot=True, size=k)
@@ -478,7 +489,6 @@ class New_layout_engine():
             '''
             CS_SYM_Updated = []
             Layout_Rects = []
-            updated_cs_islands = []
             for i in range(len(Evaluated_X)):
                 CS_SYM_Updated1, Layout_Rects1 = CG1.update_min(Evaluated_X[i], Evaluated_Y[i], sym_to_cs, scaler)
                 self.cur_fig_data = plot_layout(Layout_Rects1, level=0)
@@ -489,7 +499,10 @@ class New_layout_engine():
                         CS_SYM_info[k] = CS_SYM_Updated1
                 CS_SYM_Updated.append(CS_SYM_info)
                 cs_islands_up = self.update_islands(CS_SYM_Updated1, Evaluated_X[i], Evaluated_Y[i], cs_islands)
-                updated_cs_islands.append(cs_islands_up)
+                md_data = ModuleDataCornerStitch()
+                md_data.islands[0] = cs_islands_up
+                md_data.footprint = k
+                module_data.append(md_data)  # collect list of module_data
 
                 '''
                 print "After update"
@@ -513,8 +526,7 @@ class New_layout_engine():
 
 
 
-
-                # mode-3
+        # mode-3
         elif level == 3:
             Evaluated_X0, Evaluated_Y0 = self.mode_zero()
             ZDL_H = {}
@@ -630,7 +642,7 @@ class New_layout_engine():
         if bar:
             p_bar.close()
             # needs to be returned ---------------> updated_cs_islands
-        return CS_SYM_Updated, updated_cs_islands
+        return CS_SYM_Updated, module_data
 
     def update_islands(self, cs_sym_info, minx, miny, cs_islands1):
         '''

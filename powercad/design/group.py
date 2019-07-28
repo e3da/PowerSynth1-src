@@ -1,6 +1,7 @@
 
 import matplotlib.pyplot as plt
-
+from powercad.electrical_mdl.e_mesh_direct import MeshNode
+import numpy as np
 class Island():
     def __init__(self):
         self.elements=[] # list of elements on an island
@@ -12,7 +13,15 @@ class Island():
         #self.points = []  # list of all points on an island
         #self.boundary_points = {'N': [], 'S': [], 'E': [],'W': []}  # dictionary of boundary points, where key= direction, value=list of points
 
-
+    def get_all_devices(self):
+        devices ={}
+        for data in self.child:
+            name = data[5]
+            if 'D' in name:
+                x,y,w,h = list(np.array(data[1:5])/1000.0)
+                dev_center = (x+w / 2.0, y+h/2.0)
+                devices[name]=dev_center
+        return devices
 
     def print_island(self,plot=False,size=None):
         print "Name", self.name
@@ -97,12 +106,3 @@ class Island():
         else:
             plt.axis([0, size[0], 0, size[1]])
         plt.show()
-
-
-
-class MeshNode():
-    def __init__(self,node_id=None,type=None,b_type=[],pos=None):
-        self.node_id = node_id
-        self.type = type  # Node type
-        self.b_type = []  # if type is boundary this will tell if it is N,S,E,W
-        self.pos = pos  # Node Position (x , y ,z)

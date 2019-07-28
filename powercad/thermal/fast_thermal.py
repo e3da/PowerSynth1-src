@@ -220,7 +220,6 @@ def eval_island(island, all_dies, total_iso_temp, metal_thickness, metal_cond):
         max_eff_power += tf.eff_power
         max_metal_temp += tf.self_temp
         iso_metal_temp += tf.iso_top_avg_temp
-
     pe = (eff_power/max_eff_power)*actual_power
     if pe <= 0.0:
         pe = 0.00001

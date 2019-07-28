@@ -22,7 +22,7 @@ class EHier():
         self.tree.__del__()
     def form_hierachy(self):
         for isl in self.module.group:
-            self.isl_node = T_Node(name = 'isl_'+str(isl),type='isl',tree=self.tree)
+            self.isl_node = T_Node(name = str(isl),type='isl',tree=self.tree)
             self.tree.root.add_child(self.isl_node)
             self.isl_group.append(self.isl_node)
             if self.module.layer_stack!=None:

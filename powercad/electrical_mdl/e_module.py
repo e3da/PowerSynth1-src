@@ -182,7 +182,6 @@ class EWires(EComp):
         c_s = self.sheet[0].get_center()
         c_e = self.sheet[1].get_center()
         length = math.sqrt((c_s[0] - c_e[0]) ** 2 + (c_s[1] - c_e[1]) ** 2)
-
         start = 1
         end = 0
         if self.mode == 'analytical':
@@ -211,10 +210,12 @@ class EWires(EComp):
             imp =self.circuit.results['v1']
             R = abs(np.real(imp))
             L = abs(np.imag(imp) / (2 * np.pi * self.f))
+            print "wire R,L", R,L
             self.net_graph.add_edge(self.sheet[0].net, self.sheet[1].net, edge_data={'R': R, 'L': L, 'C': None})
             # print self.net_graph.edges(data=True)
 
     def build_graph(self):
+        print "update wires para"
         self.update_wires_parasitic()
 
 
@@ -409,6 +410,15 @@ class EModule:
             else:
                 self.group[name_to_group[name]].append(p)
 
+    def form_group_cs_hier(self):
+        name_to_group = {}
+        for p in self.plate:
+            name = p.group_id
+            if not (name in name_to_group):
+                self.group[name] = [p]
+                name_to_group[name] = 1
+            else:
+                self.group[name].append(p)
     def split_layer_cs_data(self):
         '''
         This will split the layout based on the horizontal and vertical cs data

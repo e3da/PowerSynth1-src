@@ -45,7 +45,9 @@ class CornerStitchSolution:
         rect_dict=p_data.values()[0]
 
         #for rect_dict in dict_list:
+
         for k,v in rect_dict.items():
+            print v
             x=v[1]
             y=v[2]
             width=v[3]

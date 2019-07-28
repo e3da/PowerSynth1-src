@@ -2,7 +2,7 @@ from powercad.corner_stitch.input_script import *
 import cProfile
 import pstats
 from timeit import default_timer as timer
-from powercad.electrical_mdl.e_mesh import *
+from powercad.electrical_mdl.e_mesh_direct import *
 from powercad.electrical_mdl.spice_eval.rl_mat_eval import *
 from powercad.design.parts import *
 from powercad.electrical_mdl.cornerstitch_API import *

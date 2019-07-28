@@ -695,7 +695,7 @@ def form_fasthenry_trace_response_surface(layer_stack, Width=[1.2, 40], Length=[
     model_input.set_dir(savedir)
     model_input.set_data_bound([[minW, maxW], [minL, maxL]])
     model_input.set_name(mdl_name)
-    mesh_size=10
+    mesh_size=5
     model_input.create_uniform_DOE([mesh_size, mesh_size], True)
     #model_input.create_DOE(3, mesh_size**2)
     model_input.generate_fname()
@@ -1163,8 +1163,8 @@ def test_build_trace_model_fh():
     #mdk_dir = "G:\My Drive\MSCAD PowerSynth Archives\Internal\MDK\Layer Stack Quang//MDK_Validation.csv"
     w_dir = "C:\Users\qmle\Desktop\Documents\Conferences\IWIPP\Model\workspace"
     mdk_dir = "C:\Users\qmle\Desktop\Documents\Conferences\IWIPP\Model\\S_params_test_pcb.csv"
-    w_dir = "C:\Users\qmle\Desktop\ARL\Model"
-    mdk_dir = "C:\Users\qmle\Desktop\ARL\Model\\4swhb_amol.csv"
+    w_dir = "C:\Users\qmle\Desktop\New_Layout_Engine\Quang_Journal\Mutual_IND_Case\workspace"
+    mdk_dir = "C:\Users\qmle\Desktop\New_Layout_Engine\Quang_Journal\Mutual_IND_Case\\mutual_test.csv"
     #w_dir = "C:\Users\qmle\Desktop\Documents\Conferences\ECCE\Imam_Quang\Model\workspace"
     dir = os.path.abspath(mdk_dir)
     ls = LayerStackHandler(dir)
@@ -1173,13 +1173,13 @@ def test_build_trace_model_fh():
     metal_cond = 5.96*1e7
     sd_met = math.sqrt(1 / (math.pi * 1e6 * u * metal_cond * 1e6))
 
-    Width = [0.5,8]
-    Length = [0.2,10]
+    Width = [0.5,10]
+    Length = [0.5,15]
     #freq = [0.01, 100000, 100] # in kHz
     freq = [3,6,100]
     form_fasthenry_trace_response_surface(layer_stack=ls, Width=Width, Length=Length, freq=freq, wdir=w_dir,
                                           savedir=w_dir
-                                          , mdl_name='ARL_module', env=env, doe_mode=2,mode='log')
+                                          , mdl_name='mutual_impact', env=env, doe_mode=2,mode='log')
 
 
 def test_build_trace_model_fh1():
@@ -1280,7 +1280,7 @@ if __name__ == "__main__":
     #test_corner_ind_correction(10, 4, 4)
     #test_corner_ind_correction(10, 4, 10)
     # test_build_corner_correction()
-    #test_build_trace_model_fh()
+    test_build_trace_model_fh()
     #test_build_trace_mdl_q3d()
     #test_build_trace_cornermodel_fh()
     #test_corner_ind_correction_fh(f,8,8)
@@ -1290,7 +1290,7 @@ if __name__ == "__main__":
 
     f = 1000
 
-    test_build_bw_group_model_fh(f, num_wire=5, bw_distance=1,view_mode=True,radius=0.15)
+    #test_build_bw_group_model_fh(f, num_wire=5, bw_distance=1,view_mode=True,radius=0.15)
     '''
     bw_pad=2.09
     L_list=[]

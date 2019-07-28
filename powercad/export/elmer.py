@@ -26,7 +26,7 @@ Simulation
   Coordinate System = "Cartesian 3D"
   Coordinate Mapping(3) = 1 2 3 
   Simulation Type = "Steady State"
-  Steady State Max Iterations = 10
+  Steady State Max Iterations = 20
   Steady State Min Iterations = 5
   Output Intervals = 1
 
@@ -100,6 +100,25 @@ Boundary Condition 2
 End
 """
 
+boundary_condition_heat_conv="""
+Boundary Condition {id}
+  Name = "{name}"
+  Target Boundaries(1) = {face}
+  Heat Flux BC = Logical True
+  External Temperature = {ambient}
+  Heat Transfer Coefficient = {heat_transfer}
+End
+"""
+boundary_condition_heat_flux = """
+Boundary Condition {id}
+  Name = "{name}"
+  Target Boundaries(1) = {face}
+  Heat Flux BC = Logical True
+  Heat Flux = {heat_flux}
+End
+"""
+
+
 body_str = """
 Body {id}
   Equation = 1
@@ -116,6 +135,52 @@ End
 
 
 """
+
+
+def write_module_elmer_sif_layer_stack(directory=None, sif_file=None, data_name=None, mesh_name=None, layer_stack=None,
+                                       device=None,heat_conv = None, heat_load=10,tamb=300,conv_tol=1e-4):
+    #Todo: rewrite to include flip chip cases, need to test on boundary id for flip chip
+    # todo: another idea is to characterize on each direction and then apply the reduced order model
+    """
+    Generates an Elmer sif FEM problem description.
+    Still follow the bottom up format due to the limit number of boundaries faces in Elmer.
+
+    Args:
+        directory -- file path for sif file
+        sif_fn -- .sif filename
+        data_name -- the output data filename (creates two files data_name.ep, data_name.dat)
+        mesh_name -- the input mesh filename (a folder created by ElmerGrid)
+        layer_stack -- LayerStack object
+        device -- Part object to be characterized
+        heat_load -- wattage given to the device for characterization (Watt)
+
+    Outputs:
+        A .sif file representing a module
+    """
+    i = 1 # start the indexing for material object
+    material_listing = "" # init string for material list in sif file
+    body_listing = "" # init string for body list in sif file
+    for layer_key in layer_stack.all_layers_info:
+        layer = layer_stack.all_layers_info[layer_key]
+        if layer.type=='p':  # Add material for layer
+            material_props = layer.material
+            material_listing += material_str.format(id=i, density=material_props.density,
+                                                    heat_cond=material_props.thermal_cond)
+        if layer.type=='a': # Add material for component
+            device_mat = layer_stack.material_lib.get_mat(device.material_id)
+            material_listing += material_str.format(id=i, density=device_mat.density,
+                                                    heat_cond=device_mat.thermal_cond)
+        body_listing += body_str.format(id=i)
+        i += 1
+    heat_flux = heat_load / (device.footprint[0] * device.footprint[1] * 1e-6)
+    sif_string = elmer_sif.format(data_name=data_name, mesh_name=mesh_name, body_listing=body_listing,
+                                  material_listing=material_listing, ambient=tamb,
+                                  heat_transfer=heat_conv, heat_flux=heat_flux, conv_tol=str(conv_tol))
+
+    sif_path = os.path.join(directory, sif_file)
+    f = open(sif_path, 'w')
+    f.write(sif_string)
+    f.close()
 
 def write_module_elmer_sif(directory, sif_fn, data_name, mesh_name, materials, load, ambient, heat_transfer, device_dim, conv_tol):
     """
@@ -174,7 +239,7 @@ def elmer_solve(directory, sif_fn, mesh_fn):
     p = subprocess.Popen(args, stdout=subprocess.PIPE, cwd=directory)
     print "subprocess.Popen() completed"
     stdout, stderr = p.communicate()
-    #print stdout, stderr
+    print stdout, stderr
     if stdout.count("The opening of the mesh file thermal_char.msh failed!") > 0:
         raise Exception("The opening of the mesh file failed! (Check permissions on temp data directory)")
     #print stdout
@@ -187,14 +252,14 @@ def elmer_solve(directory, sif_fn, mesh_fn):
     print args
     p = subprocess.Popen(args, shell=False, stdout=subprocess.PIPE, cwd=directory)
     stdout, stderr = p.communicate()
-    #print stdout,stderr
+    print stdout,stderr
     if stdout.count("Failed convergence tolerances.") > 0:
-        print stdout
-        raise Exception("Thermal characterization FEM model failed to converge!")
+        print "Thermal characterization FEM model failed to converge!"
+        return False
     elif stdout.count("Failed") > 0:
-        print stdout
-        raise Exception("Thermal characterization failed!")
-    
+        print "Thermal characterization failed!"
+        return False
+    return True
     
 def get_nodes_near_z_value(data_path, z_value, tol):
     f = open(data_path, 'r')

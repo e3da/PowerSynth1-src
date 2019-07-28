@@ -5,7 +5,7 @@ import pstats
 
 from powercad.design.module_data import gen_test_module_data
 from powercad.design.module_design import ModuleDesign
-from powercad.electrical_mdl.e_mesh import *
+from powercad.electrical_mdl.e_mesh_direct import *
 from powercad.electrical_mdl.e_struct import *
 from powercad.electrical_mdl.spice_eval.rl_mat_eval import *
 from powercad.general.settings import settings
@@ -284,7 +284,7 @@ def make_test_setup2(f, directory):
     #bs_plate=E_plate(rect=bs_copper, z=0, dz=0.2)
     #plates.append(bs_plate)
     sheets = [P1,P2]
-    new_module = EModule(plate=plates, components = [Bw1, Bw2], sheet=sheets)#,layer_stack=es)
+    new_module = EModule(plate=plates, components = [Bw1, Bw2], sheet=sheets)#,all_layers_info=es)
     new_module.form_group_split_rect()
     new_module.split_layer_group()
 

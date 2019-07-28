@@ -55,7 +55,7 @@ class Tree():
     def __init__(self):
         self.nodes=[]
         self.root = T_Node(None,'ROOT','ROOT',tree=self)
-        self.digraph=nx.OrderedDiGraph()
+        self.digraph=nx.DiGraph()
         self.max_rank =0
         self.cm=cm.jet
     def __del__(self):
