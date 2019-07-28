@@ -373,8 +373,8 @@ class New_layout_engine():
         #mode-0
         if level == 0:
 
-            Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=None, W=None, H=None, XLoc=None, YLoc=None,seed=None,individual=None,Types=self.Types) # for minimum sized layout only one solution is generated
-            CS_SYM_information, Layout_Rects = CG1.update_min(Evaluated_X, Evaluated_Y , sym_to_cs, scaler)
+            #Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=None, W=None, H=None, XLoc=None, YLoc=None,seed=None,individual=None,Types=self.Types) # for minimum sized layout only one solution is generated
+            #CS_SYM_information, Layout_Rects = CG1.update_min(Evaluated_X, Evaluated_Y , sym_to_cs, scaler)
             #-------------------------------for debugging----------------------
             #print "Before update"
             #for island in cs_islands:
@@ -420,10 +420,7 @@ class New_layout_engine():
             md_data.islands[0] = cs_islands_up
             md_data.footprint = k
             module_data.append(md_data) # collect list of module_data
-            #print "After update"
-            #for island in cs_islands_up:
-            #    island.print_island(plot=True,size=k)
-                #island.plot_mesh_nodes(size=k)
+
 
 
 
@@ -725,7 +722,7 @@ class New_layout_engine():
         if bar:
             p_bar.close()
 
-            return CS_SYM_Updated, module_data
+        return CS_SYM_Updated, module_data
 
     def apply_IV_loading(self,cs_islands=None,voltage_info=None,current_info=None):
 

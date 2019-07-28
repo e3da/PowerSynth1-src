@@ -37,7 +37,7 @@ class ScriptInputMethod():
         if input_script!=None:
             self.input_script=input_script
 
-
+    # creates bondwire connection table (a dictionary) from the information given by the user in a text file
     def bond_wire_table(self,bondwire_info=None):
         '''
         :param bondwire_info: text file location of bonding wire connection information
@@ -46,6 +46,7 @@ class ScriptInputMethod():
         #name , source pad, destination pad, number of wires, spacing information are from text file
         '''
         input_file = bondwire_info
+        # in the file, there are two parts: one is the wire definition and other is the connection information
         with open(input_file, 'rb') as fp:
             lines = fp.readlines()
             Definition=[]
@@ -195,26 +196,25 @@ class ScriptInputMethod():
             self.info_files[key] = i[1]
 
         # updates type list according to definition input
-
         for i in self.Definition:
-
             if i[0] not in constraint.constraint.all_component_types:
                 c=constraint.constraint()
                 constraint.constraint.add_component_type(c,i[0])
         self.all_components_list =  constraint.constraint.all_component_types  # set of all components considered so far
 
-
+        # populating routing path objects and creating a dictionary with keys: 'trace', 'bonding wire pad', 'via'
         self.all_route_info = {}
         for j in range(1, len(layout_info)):
-            if layout_info[j][1][0] == 'T':
-                key = 'trace'
-                self.all_route_info.setdefault(key, [])
-            elif layout_info[j][1][0] == 'B':
-                key = 'bonding wire pad'
-                self.all_route_info.setdefault(key, [])
-            elif layout_info[j][1][0] == 'V':
-                key = 'via'
-                self.all_route_info.setdefault(key, [])
+            for k in range(len(layout_info[j])):
+                if layout_info[j][k][0] == 'T':
+                    key = 'trace'
+                    self.all_route_info.setdefault(key, [])
+                elif layout_info[j][k][0] == 'B':
+                    key = 'bonding wire pad'
+                    self.all_route_info.setdefault(key, [])
+                elif layout_info[j][k][0] == 'V':
+                    key = 'via'
+                    self.all_route_info.setdefault(key, [])
 
 
         for j in range (1,len(layout_info)):

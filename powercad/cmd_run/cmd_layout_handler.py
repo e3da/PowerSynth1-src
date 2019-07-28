@@ -230,23 +230,27 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True,rel_c
 
     :return: list of CornerStitch Solution objects
     '''
-    plot = False
+    plot = True
 
 
     # GET MEASUREMENT NAME:
     measure_names = []
-    for m in measures:
-        measure_names.append(m.name)
+    if len(measures)>0:
+        for m in measures:
+            measure_names.append(m.name)
+    else:
+        measure_names=["perf_1","perf_2"]
 
     if mode == 0:
         # module_data: list of ModuleDataCornerStitch objects
         cs_sym_info,module_data = layout_engine.generate_solutions(mode, num_layouts=1, W=None, H=None,
                                                                  fixed_x_location=None, fixed_y_location=None,
                                                                  seed=None,
-                                                                 individual=None,db=db_file, bar=False)
+                                                                 individual=None,db=db_file,count=None, bar=False)
 
 
-
+        print"here,", cs_sym_info
+        print module_data
         if optimization == True:
 
             opt_problem = new_engine_opt(engine=layout_engine, W=None, H=None, seed=None, level=mode, method=None,

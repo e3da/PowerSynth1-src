@@ -55,6 +55,7 @@ class CornerStitch_Tmodel_API:
         self.mat_lib = '..//..//..//tech_lib//Material//Materials.csv'
         self.measure = []
         self.model = 2
+        self.temp_res={}
         # Objects for PowerSynth 1D thermal
         self.dev_thermal_feature_dict = {}
         self.sub_thermal_feature = None

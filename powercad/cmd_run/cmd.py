@@ -238,7 +238,7 @@ class Cmd_Handler:
 
                 self.setup_thermal(mode='macro', setup_data=t_setup_data, meas_data=t_measure_data)
                 self.solutions=generate_optimize_layout(layout_engine=self.engine, mode=layout_mode,
-                                         optimization=True, db_file=self.db_file,fig_dir=self.fig_dir,sol_dir=self.db_dir,
+                                         optimization=True,rel_cons=None, db_file=self.db_file,fig_dir=self.fig_dir,sol_dir=self.db_dir,
                                          apis={'E': self.e_api, 'T': self.t_api}, num_layouts=num_layouts, seed=seed,
                                          algorithm=algorithm, floor_plan=floor_plan,num_gen=num_gen,measures=self.measures)
         else:
