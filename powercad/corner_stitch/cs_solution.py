@@ -94,9 +94,9 @@ class CornerStitchSolution:
                 all_lines.append(l)
 
 
-            colors = ['white', 'green', 'red', 'blue', 'yellow', 'purple','pink','magenta','orange','violet']
+            colors = ['white', 'green', 'red', 'blue', 'yellow', 'purple','pink','magenta','orange','violet','black']
 
-            colours=["'white'","'green'","'red'","'blue'","'yellow'","'purple'","'pink'","'magenta'","'orange'","'violet'"]
+            colours=["'white'","'green'","'red'","'blue'","'yellow'","'purple'","'pink'","'magenta'","'orange'","'violet'","'black'"]
 
 
             for row in all_lines:

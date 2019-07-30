@@ -236,7 +236,8 @@ class Cmd_Handler:
                 e_measure_data = {'name':e_name,'type':type,'source':source,'sink':sink}
                 self.setup_electrical(mode='macro', dev_conn=dev_conn, frequency=frequency, meas_data=e_measure_data)
 
-                self.setup_thermal(mode='macro', setup_data=t_setup_data, meas_data=t_measure_data)
+                self.setup_thermal(mode='macro', setup_data=t_setup_data,meas_data=t_measure_data,model_type=thermal_model)
+
                 self.solutions=generate_optimize_layout(layout_engine=self.engine, mode=layout_mode,
                                          optimization=True,rel_cons=None, db_file=self.db_file,fig_dir=self.fig_dir,sol_dir=self.db_dir,
                                          apis={'E': self.e_api, 'T': self.t_api}, num_layouts=num_layouts, seed=seed,

@@ -54,7 +54,7 @@ class CornerStitch_Tmodel_API:
         self.dev_powerload_table = {}
         self.mat_lib = '..//..//..//tech_lib//Material//Materials.csv'
         self.measure = []
-        self.model = 2
+        self.model = 1
         self.temp_res={}
         # Objects for PowerSynth 1D thermal
         self.dev_thermal_feature_dict = {}
@@ -138,7 +138,6 @@ class CornerStitch_Tmodel_API:
             tg.trace_islands = islands
             tg.sublayer_features = self.sub_thermal_feature
             res = solve_TFSM(tg,1.0)
-            print list(res)
             self.temp_res = dict(zip(names, list(res)))
             print self.temp_res
 
@@ -158,6 +157,7 @@ class CornerStitch_Tmodel_API:
                 temp = compound_top_surface_avg(t_bp, layer, devices, self.devices.keys().index(k))
                 temp += self.t_amb + dev_delta
                 self.temp_res[k] = temp
+            print "here"
             print self.temp_res
 
     def characterize_with_gmsh_and_elmer(self):
@@ -334,8 +334,11 @@ class CornerStitch_Tmodel_API:
             return self.measure
 
     def eval_max_temp(self, module_data):
+        print self.model
+        raw_input("check model")
         module_data.layer_stack = self.layer_stack
         self.dev_result_table_eval(module_data)
+        print self.temp_res
         return max(self.temp_res.values())
 
 
