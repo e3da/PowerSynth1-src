@@ -54,6 +54,7 @@ def plot_layout(fig_data=None, rects=None, size=None, fig_dir=None):
     ax.set_aspect('equal')
 
     plt.savefig(fig_dir + '/_init_layout' + '.png')
+    plt.close()
 
 
 def opt_choices(algorithm=None):
@@ -243,14 +244,16 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True,rel_c
 
     if mode == 0:
         # module_data: list of ModuleDataCornerStitch objects
+        print "Here"
+        print"rel",
         cs_sym_info,module_data = layout_engine.generate_solutions(mode, num_layouts=1, W=None, H=None,
                                                                  fixed_x_location=None, fixed_y_location=None,
                                                                  seed=None,
                                                                  individual=None,db=db_file,count=None, bar=False)
 
 
-        print"here,", cs_sym_info
-        print module_data
+        #print"here,", cs_sym_info
+        #print module_data
         if optimization == True:
 
             opt_problem = new_engine_opt(engine=layout_engine, W=None, H=None, seed=None, level=mode, method=None,
@@ -613,6 +616,7 @@ def script_translator(input_script=None, bond_wire_info=None, fig_dir=None, cons
 
     New_engine = New_layout_engine()
     #cons_df = show_constraint_table(parent=window, cons_df=ScriptMethod.df)
+    New_engine.reliability_constraints=rel_cons
     if mode==0:
         cons_df = pd.read_csv(constraint_file)
 
@@ -623,7 +627,7 @@ def script_translator(input_script=None, bond_wire_info=None, fig_dir=None, cons
             cons_df = pd.read_csv(constraint_file)
 
     # if reliability constraints are available creates two dictionaries to have voltage and current values, where key=layout component id and value=[min voltage,max voltage], value=max current
-    if rel_cons == 1:
+    if rel_cons != 0:
         for index, row in cons_df.iterrows():
             if row[0] == 'Voltage Specification':
                 v_start = index + 2
@@ -637,12 +641,15 @@ def script_translator(input_script=None, bond_wire_info=None, fig_dir=None, cons
         for index, row in cons_df.iterrows():
             if index in range(v_start, v_end + 1):
                 name = row[0]
-                voltage_range = [float(row[1]), float(row[2])]
+                #voltage_range = [float(row[1]), float(row[2])]
+                voltage_range = {'DC': float(row[1]), 'AC': float(row[2]), 'Freq': float(row[3]), 'Phi': float(row[4])}
                 voltage_info[name] = voltage_range
             if index in range(c_start, c_end + 1):
                 name = row[0]
                 max_current = float(row[1])
-                current_info[name] = max_current
+                #current_info[name] = max_current
+                current_info[name] = {'DC': float(row[1]), 'AC': float(row[2]), 'Freq': float(row[3]),
+                                      'Phi': float(row[4])}
     else:
         voltage_info=None
         current_info=None

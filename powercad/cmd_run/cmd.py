@@ -80,7 +80,7 @@ class Cmd_Handler:
                     self.constraint_file = info[1]
 
                 if info[0]=="Reliability-awareness:":
-                    self.i_v_constraint= int(info[1])
+                    self.i_v_constraint= int(info[1]) #0: no reliability constraints, 1: worst case, 2: average case
 
                 if info[0] =="New:":
                     self.new_mode = int(info[1])
@@ -158,9 +158,11 @@ class Cmd_Handler:
         print check_dir(self.db_dir)
         print check_file(self.constraint_file)
         if cont:
+
             print "run the optimization"
             self.init_cs_objects()
             self.set_up_db()
+
             if run_option == 0:
                 self.solutions=generate_optimize_layout(layout_engine=self.engine, mode=layout_mode,rel_cons=self.i_v_constraint,
                                          optimization=False, db_file=self.db_file,fig_dir=self.fig_dir,sol_dir=self.db_dir, num_layouts=num_layouts, seed=seed,
@@ -182,8 +184,8 @@ class Cmd_Handler:
                 for k, v in patch_dict.items():
                     fig_dict[(fp_width, fp_height)].append(v)
                 init_rects = {}
-                print self.engine.init_data
-                print "here"
+                #print self.engine.init_data
+                #print "here"
                 for k, v in self.engine.init_data[1].items():
                     rects = []
                     i=v[0]
@@ -238,8 +240,8 @@ class Cmd_Handler:
 
                 self.setup_thermal(mode='macro', setup_data=t_setup_data,meas_data=t_measure_data,model_type=thermal_model)
 
-                self.solutions=generate_optimize_layout(layout_engine=self.engine, mode=layout_mode,
-                                         optimization=True,rel_cons=None, db_file=self.db_file,fig_dir=self.fig_dir,sol_dir=self.db_dir,
+                self.solutions=generate_optimize_layout(layout_engine=self.engine, mode=layout_mode,rel_cons=self.i_v_constraint,
+                                         optimization=True, db_file=self.db_file,fig_dir=self.fig_dir,sol_dir=self.db_dir,
                                          apis={'E': self.e_api, 'T': self.t_api}, num_layouts=num_layouts, seed=seed,
                                          algorithm=algorithm, floor_plan=floor_plan,num_gen=num_gen,measures=self.measures)
         else:
@@ -323,7 +325,7 @@ class Cmd_Handler:
             else:
                 print "wrong input"
     def rel_cons_request(self):
-        self.i_v_constraint=int(raw_input("Please eneter 1 if you want to apply reliability constraints, otherwise enter 0"))
+        self.i_v_constraint=int(raw_input("Please eneter: 1 if you want to apply reliability constraints for worst case, 2 if you want to evaluate average case, 0 if there is no reliability constraints"))
     def cons_file_edit_request(self):
         self.new_mode=int(raw_input( "If you want to edit the constraint file, enter 1. Else enter 0: "))
 
@@ -401,7 +403,7 @@ class Cmd_Handler:
         '''
         self.layer_stack.import_layer_stack_from_csv(self.layer_stack_file)
         self.engine, self.raw_layout_info, self.wire_table = script_translator(
-            input_script=self.layout_script, bond_wire_info=self.bondwire_setup, fig_dir=self.fig_dir, constraint_file=self.constraint_file,mode=self.new_mode)
+            input_script=self.layout_script, bond_wire_info=self.bondwire_setup, fig_dir=self.fig_dir, constraint_file=self.constraint_file,rel_cons=self.i_v_constraint,mode=self.new_mode)
         for comp in self.engine.all_components:
             self.comp_dict[comp.layout_component_id] = comp
 
@@ -525,6 +527,7 @@ class Cmd_Handler:
             elif opt == 2:  # Peform layout evaluation based on the list of measures
                 self.init_apis()  # Setup measurement
                 cont, layout_mode = self.option_layout_gen()
+
                 if layout_mode in range(3):
                     self.set_up_db()
                     self.soluions = generate_optimize_layout(layout_engine=self.engine, mode=layout_mode,

@@ -30,6 +30,7 @@ class New_layout_engine():
         self.Types = None  # added for new flow (list of all cs_type)
         self.all_components = None  # added for new flow (holds all layout component objects)
         self.init_size = []
+        self.reliability_constraints=None # reliability constraint flag: 0: No reliability constraints are applied, 1: worst case, 2: Average case
 
         # for initialize only
         self.init_data = []
@@ -302,7 +303,7 @@ class New_layout_engine():
 
 
         #self.cons_df.to_csv('out_2.csv', sep=',', header=None, index=None)
-        Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=None, W=None, H=None,XLoc=None, YLoc=None, seed=None, individual=None,Types=self.Types)  #
+        Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=None, W=None, H=None,XLoc=None, YLoc=None, seed=None, individual=None,Types=self.Types,rel_cons=self.reliability_constraints)  #
 
 
         return Evaluated_X, Evaluated_Y
@@ -384,7 +385,7 @@ class New_layout_engine():
             #CS_SYM_information, Layout_Rects = CG1.UPDATE_min(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree ,sym_to_cs,scaler)  # CS_SYM_information is a dictionary where key=path_id(component name) and value=list of updated rectangles, Layout Rects is a dictionary for minimum HCS and VCS evaluated rectangles (used for plotting only)
             Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=None, W=None, H=None,
                                                       XLoc=None, YLoc=None, seed=None, individual=None,
-                                                      Types=self.Types)  # for minimum sized layout only one solution is generated
+                                                      Types=self.Types,rel_cons=self.reliability_constraints)  # for minimum sized layout only one solution is generated
 
             CS_SYM_information, Layout_Rects = CG1.update_min(Evaluated_X, Evaluated_Y, sym_to_cs, scaler)
             # raw_input()
@@ -431,7 +432,8 @@ class New_layout_engine():
 
         #mode-1
         elif level == 1:
-            Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=num_layouts, W=None, H=None,XLoc=None, YLoc=None, seed=seed, individual=individual,Types=self.Types)
+            '''
+            Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=num_layouts, W=None, H=None,XLoc=None, YLoc=None, seed=seed, individual=individual,Types=self.Types,rel_cons=self.reliability_constraints)
             #CS_SYM_Updated, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree, sym_to_cs,scaler)
             CS_SYM_Updated=[]
             Layout_Rects=[]
@@ -448,10 +450,10 @@ class New_layout_engine():
                 cs_islands_up = self.update_islands(CS_SYM_Updated1, Evaluated_X[i], Evaluated_Y[i], cs_islands)
                 updated_cs_islands.append(cs_islands_up)
                 Layout_Rects.append(Layout_Rects1)
-
+            '''
             Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=num_layouts, W=None, H=None,
                                                       XLoc=None, YLoc=None, seed=seed, individual=individual,
-                                                      Types=self.Types)
+                                                      Types=self.Types,rel_cons=self.reliability_constraints)
             # CS_SYM_Updated, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree, sym_to_cs,scaler)
             CS_SYM_Updated = []
             Layout_Rects = []
@@ -547,7 +549,7 @@ class New_layout_engine():
 
             Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=num_layouts, W=W, H=H,
                                                       XLoc=Min_X_Loc, YLoc=Min_Y_Loc, seed=seed, individual=individual,
-                                                      Types=self.Types)  # evaluates and finds updated locations for each coordinate
+                                                      Types=self.Types,rel_cons=self.reliability_constraints)  # evaluates and finds updated locations for each coordinate
             '''
             CS_SYM_Updated, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree, sym_to_cs,scaler)
             CS_SYM_Updated = CS_SYM_Updated['H'] # takes only horizontal corner stitch data
@@ -703,7 +705,7 @@ class New_layout_engine():
 
             Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=num_layouts,
                                                       W=W, H=H, XLoc=Min_X_Loc, YLoc=Min_Y_Loc, seed=seed,
-                                                      individual=individual,Types=self.Types)
+                                                      individual=individual,Types=self.Types,rel_cons=self.reliability_constraints)
 
             CS_SYM_Updated, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree, sym_to_cs,scaler)
 

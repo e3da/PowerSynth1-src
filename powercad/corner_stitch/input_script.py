@@ -664,24 +664,24 @@ class ScriptInputMethod():
                     all_rows.append(row)
 
         # Voltage-Current dependent constraints application
-        if rel_cons==1:
+        if rel_cons!=0:
             # Populating voltage input table
             r7= ['Voltage Specification']
             all_rows.append(r7)
-            r8=['Component Name','Minimum Voltage','Maximum Voltage']
+            r8=['Component Name','DC magnitude','AC magnitude','Frequency (Hz)', 'Phase angle (degree)']
             all_rows.append(r8)
             if islands!=None:
                 for island in islands:
-                    all_rows.append([island.element_names[0],0,0])
+                    all_rows.append([island.element_names[0],0,0,0,0])
 
             # Populating Current input table
             r9 = ['Current Specification']
             all_rows.append(r9)
-            r10 = ['Component Name', 'Maximum Current']
+            r10 = ['Component Name','DC magnitude','AC magnitude','Frequency (Hz)', 'Phase angle (degree)']
             all_rows.append(r10)
             if islands!=None:
                 for island in islands:
-                    all_rows.append([island.element_names[0],0])
+                    all_rows.append([island.element_names[0],0,0,0,0])
 
             r10=['Voltage Difference','Minimum Spacing']
             all_rows.append(r10)

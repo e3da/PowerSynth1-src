@@ -2593,6 +2593,10 @@ class CS_to_CG():
         CONSTRAINT.setupMinSpacing(minSpacing)
         CONSTRAINT.setupMinEnclosure(minEnclosure)
 
+        start_v = None
+        end_v = None
+        start_c = None
+        end_c = None
         for index,row in data.iterrows():
             if row[0]=='Voltage Difference':
                 start_v=index+1
@@ -2601,11 +2605,7 @@ class CS_to_CG():
                 start_c=index+1
             if index==len(data)-1:
                 end_c=index
-            else:
-                start_v=None
-                end_v=None
-                start_c=None
-                end_c=None
+
         if start_v!=None and end_v!=None:
             voltage_constraints=[]
             current_constraints=[]
@@ -2666,7 +2666,7 @@ class CS_to_CG():
         return SYM_CS
 
     ## Evaluates constraint graph depending on modes of operation
-    def evaluation(self,Htree,Vtree,N,W,H,XLoc,YLoc,seed,individual,Types):
+    def evaluation(self,Htree,Vtree,N,W,H,XLoc,YLoc,seed,individual,Types,rel_cons):
         '''
         :param Htree: Horizontal tree
         :param Vtree: Vertical tree
@@ -2679,7 +2679,7 @@ class CS_to_CG():
         '''
         if self.level==1:
             CG = constraintGraph( W=None, H=None,XLocation=None, YLocation=None)
-            CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList,self.level, N,seed,individual,Types=Types)
+            CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList,self.level, N,seed,individual,Types=Types,rel_cons=rel_cons)
         elif self.level==2 or self.level==3:
             if W==None or H ==None:
                 print"Please enter Width and Height of the floorplan"
@@ -2687,11 +2687,11 @@ class CS_to_CG():
                 print"Please enter Number of layouts to be generated"
             else:
                 CG = constraintGraph(W, H, XLoc, YLoc)
-                CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList, self.level, N,seed,individual,Types=Types)
+                CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList, self.level, N,seed,individual,Types=Types,rel_cons=rel_cons)
         else:
 
             CG = constraintGraph( W=None, H=None,XLocation=None, YLocation=None)
-            CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList, self.level,Types=Types)
+            CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList, self.level,Types=Types,rel_cons=rel_cons)
         MIN_X, MIN_Y = CG.minValueCalculation(Htree.hNodeList, Vtree.vNodeList, self.level)
         return MIN_X, MIN_Y
         '''

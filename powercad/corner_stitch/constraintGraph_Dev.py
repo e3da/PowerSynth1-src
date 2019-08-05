@@ -83,7 +83,7 @@ class constraintGraph:
 
 
 
-    def graphFromLayer(self, H_NODELIST, V_NODELIST, level,N=None,seed=None,individual=None,Types=None):
+    def graphFromLayer(self, H_NODELIST, V_NODELIST, level,N=None,seed=None,individual=None,Types=None,rel_cons=None):
         """
 
         :param H_NODELIST: Horizontal node list from horizontal tree
@@ -123,7 +123,7 @@ class constraintGraph:
 
             # i=Htree.hNodeList[0]
             for j in i.stitchList:
-                k = j.cell.x, j.cell.y, j.getWidth(), j.getHeight(), j.cell.id, j.cell.type, j.nodeId, j.voltage,j.bw, j.name
+                k = j.cell.x, j.cell.y, j.getWidth(), j.getHeight(), j.cell.id, j.cell.type, j.nodeId, j.voltage,j.current,j.bw, j.name
                 print k
 
             if i.parent == None:
@@ -196,7 +196,7 @@ class constraintGraph:
 
         # setting up edges for constraint graph from corner stitch tiles using minimum constraint values
         for i in range(len(self.HorizontalNodeList)):
-            self.setEdgesFromLayer(self.HorizontalNodeList[i], self.VerticalNodeList[i],Types)
+            self.setEdgesFromLayer(self.HorizontalNodeList[i], self.VerticalNodeList[i],Types,rel_cons)
 
         # _new are after adding missing edges
         self.edgesh_new = collections.OrderedDict(sorted(self.edgesh_new.items()))
@@ -563,8 +563,64 @@ class constraintGraph:
                         continue
         return Final_List_H,Final_List_V
 
+    # calculates maximum voltage difference
+    def find_voltage_difference(self,voltage1, voltage2,rel_cons):
+        '''
+        :param voltage1: a dictionary of voltage components:{'DC': , 'AC': , 'Freq': , 'Phi': }
+        :param voltage2: a dictionary of voltage components:{'DC': , 'AC': , 'Freq': , 'Phi': }
+        :param rel_cons: 1: worst case, 2: average case
+        :return: voltage difference between voltage 1 and voltage 2
+        '''
+
+        # there are 3 cases: 1. voltage1 is DC, voltage2 is also DC, 2. voltage1 is DC, voltage2 is AC, 3. voltage1 is AC and voltage2 is AC.
+        if (voltage1['Freq']!=0 and voltage2['Freq']==0): #swaps if first one is AC
+            voltage3=voltage1
+            voltage1=voltage2
+            voltage2=voltage3
+
+        # need to be handled based on net (connectivity checking)
+        if voltage1==voltage2:
+            return 0
+        else:
+            # Average case
+            if rel_cons==2:
+                # DC-DC voltage difference
+                if voltage1['Freq']==0 and voltage2['Freq']==0:
+                    return abs(voltage1['DC'] - voltage2['DC'])
+                # DC-AC voltage difference
+                elif (voltage1['Freq']==0 and voltage2['Freq']!=0):
+                    return abs(voltage1['DC']-voltage2['DC'])
+                # AC-AC voltage difference
+                elif (voltage1['Freq']!=0 and voltage2['Freq']!=0):
+                    if voltage1['Freq']==voltage2['Freq']:
+                        if voltage1['Phi']!=voltage2['Phi']:
+                            v_diff=abs(voltage1['DC']-voltage2['DC'])+math.sqrt(voltage1['AC']**2+voltage2['AC']**2-2*voltage1['AC']*voltage2['AC']*math.cos(voltage1['Phi'])*math.cos(voltage2['Phi'])-2*voltage1['AC']*voltage2['AC']*math.sin(voltage1['Phi'])*math.sin(voltage2['Phi']))
+                            return v_diff
+                        elif voltage1['Phi']==voltage2['Phi']:
+                            return abs(voltage1['DC']-voltage2['DC'])+abs(voltage2['AC']-voltage1['AC'])
+                    else:
+                        return abs(voltage1['DC']-voltage2['DC'])+abs(voltage1['AC']+voltage2['AC'])
+            # Worst case
+            elif rel_cons==1:
+                # DC-DC voltage difference
+                if voltage1['Freq'] == 0 and voltage2['Freq'] == 0:
+                    return abs(voltage1['DC'] - voltage2['DC'])
+                # DC-AC voltage difference
+                elif (voltage1['Freq'] == 0 and voltage2['Freq'] != 0):
+                    v1=abs(voltage1['DC']-voltage2['DC']+voltage2['AC'])
+                    v2=abs(voltage1['DC']-voltage2['DC']-voltage2['AC'])
+                    return max(v1,v2)
+                elif (voltage1['Freq'] != 0 and voltage2['Freq'] != 0):
+                    return  abs(voltage1['DC']-voltage2['DC'])+abs(voltage1['AC']+voltage2['AC'])
+
+
+
+
+
+
+
     ## creating edges from corner stitched tiles
-    def setEdgesFromLayer(self, cornerStitch_h, cornerStitch_v,Types):
+    def setEdgesFromLayer(self, cornerStitch_h, cornerStitch_v,Types,rel_cons):
 
         #print "Voltage",constraint.constraint.voltage_constraints
         #print "Current",constraint.constraint.current_constraints
@@ -629,7 +685,8 @@ class constraintGraph:
                 # getting appropriate constraint value
                 value1 = constraint.constraint.getConstraintVal(c,type=rect.cell.type,Types=Types)
                 if rect.current!=None:
-                    current_rating=rect.current
+                    if rect.current['AC']!=0 or rect.current['DC']!=0:
+                        current_rating=rect.current['AC']+rect.current['DC']
                     current_ratings=constraint.constraint.current_constraints.keys()
                     current_ratings.sort()
                     if len(current_ratings)>1:
@@ -651,6 +708,7 @@ class constraintGraph:
                         value=value1
                 else:
                     value=value1
+
                 Weight = 2 * value
                 for k, v in constraint.constraint.comp_type.items():
                     if str(Types.index(rect.cell.type)) in v:
@@ -677,7 +735,8 @@ class constraintGraph:
                     #value = constraint.constraint.getConstraintVal(c, type=rect.cell.type,Types=Types)
                     value1 = constraint.constraint.getConstraintVal(c, type=rect.cell.type, Types=Types)
                     if rect.current != None:
-                        current_rating = rect.current
+                        if rect.current['AC'] != 0 or rect.current['DC'] != 0:
+                            current_rating = rect.current['AC'] + rect.current['DC']
                         current_ratings = constraint.constraint.current_constraints.keys()
                         current_ratings.sort()
                         if len(current_ratings) > 1:
@@ -739,29 +798,46 @@ class constraintGraph:
                     value1 = constraint.constraint.getConstraintVal(c, source=t1, dest=t2,Types=Types)
 
                     if rect.NORTH.voltage!=None and rect.SOUTH.voltage!=None:
-                        voltage_diff1=abs(rect.NORTH.voltage[0]-rect.SOUTH.voltage[1])
-                        voltage_diff2=abs(rect.NORTH.voltage[1]-rect.SOUTH.voltage[0])
-                        voltage_diff=max(voltage_diff1,voltage_diff2)
+                        #voltage_diff1=abs(rect.NORTH.voltage[0]-rect.SOUTH.voltage[1])
+                        #voltage_diff2=abs(rect.NORTH.voltage[1]-rect.SOUTH.voltage[0])
+                        #voltage_diff=max(voltage_diff1,voltage_diff2)
+                        print "N",rect.NORTH.voltage,rect.NORTH.cell.x,rect.NORTH.cell.y
+                        print "S",rect.SOUTH.voltage,rect.SOUTH.cell.x,rect.SOUTH.cell.y
+                        print rel_cons
+                        voltage_diff=self.find_voltage_difference(rect.NORTH.voltage,rect.SOUTH.voltage,rel_cons)
+
+                        # tolerance is considered 10%
+
+                        if voltage_diff-0.1*voltage_diff>100:
+                            voltage_diff=voltage_diff-0.1*voltage_diff
+                        else:
+                            voltage_diff=0
+                        #print "V_DIFF", voltage_diff
                         voltage_differences = constraint.constraint.voltage_constraints.keys()
                         voltage_differences.sort()
+
                         if len(voltage_differences) > 1:
                             range_v = voltage_differences[1] - voltage_differences[0]
                             index = math.ceil(voltage_diff / range_v) * range_v
                             if index in constraint.constraint.voltage_constraints:
                                 value2 = constraint.constraint.voltage_constraints[index]
+
                             else:
-                                print "ERROR!!!Constraint for the Voltage difference is not defined"
+                                print "ERROR!!!Constraint for the Voltage difference is not defined",voltage_diff
+                                print voltage_differences
                         else:
                             value2 = constraint.constraint.voltage_constraints[voltage_diff]
 
                     else:
                         value2 = None
                     if value2 != None:
+                        #print"value", value2
                         if value2 > value1:
                             value = value2
                         else:
                             value = value1
                     else:
+
                         value = value1
                     Weight = 2 * value
                     e = Edge(origin, dest, value, index, str(Types.index(rect.cell.type)), id, Weight,North,
@@ -819,7 +895,8 @@ class constraintGraph:
                     value1 = constraint.constraint.getConstraintVal(c, type=rect.cell.type,Types=Types)
                     # Applying I-V constraints
                     if rect.current != None:
-                        current_rating = rect.current
+                        if rect.current['AC'] != 0 or rect.current['DC'] != 0:
+                            current_rating = rect.current['AC'] + rect.current['DC']
                         current_ratings = constraint.constraint.current_constraints.keys()
                         current_ratings.sort()
                         if len(current_ratings) > 1:
@@ -902,7 +979,8 @@ class constraintGraph:
                 # applying I-V constraint values
                 value1 = constraint.constraint.getConstraintVal(c, type=rect.cell.type, Types=Types)
                 if rect.current != None:
-                    current_rating = rect.current
+                    if rect.current['AC']!=0 or rect.current['DC']!=0:
+                        current_rating=rect.current['AC']+rect.current['DC']
                     current_ratings = constraint.constraint.current_constraints.keys()
                     current_ratings.sort()
                     if len(current_ratings) > 1:
@@ -952,7 +1030,8 @@ class constraintGraph:
 
                     value1 = constraint.constraint.getConstraintVal(c, type=rect.cell.type, Types=Types)
                     if rect.current != None:
-                        current_rating = rect.current
+                        if rect.current['AC'] != 0 or rect.current['DC'] != 0:
+                            current_rating = rect.current['AC'] + rect.current['DC']
                         current_ratings = constraint.constraint.current_constraints.keys()
                         current_ratings.sort()
                         if len(current_ratings) > 1:
@@ -1017,9 +1096,20 @@ class constraintGraph:
                     value1 = constraint.constraint.getConstraintVal(c, source=t1, dest=t2, Types=Types)
 
                     if rect.EAST.voltage != None and rect.WEST.voltage != None:
-                        voltage_diff1 = abs(rect.EAST.voltage[0] - rect.WEST.voltage[1])
-                        voltage_diff2 = abs(rect.EAST.voltage[1] - rect.WEST.voltage[0])
-                        voltage_diff = max(voltage_diff1, voltage_diff2)
+                        #voltage_diff1 = abs(rect.EAST.voltage[0] - rect.WEST.voltage[1])
+                        #voltage_diff2 = abs(rect.EAST.voltage[1] - rect.WEST.voltage[0])
+                        #voltage_diff = max(voltage_diff1, voltage_diff2)
+                        #print "E",rect.EAST.voltage,rect.EAST.cell.x,rect.EAST.cell.y
+                        #print "W",rect.WEST.voltage,rect.WEST.cell.x,rect.WEST.cell.y
+                        voltage_diff=self.find_voltage_difference(rect.EAST.voltage,rect.WEST.voltage,rel_cons)
+                        # tolerance is considered 10%
+                        if voltage_diff - 0.1 * voltage_diff > 100:
+                            voltage_diff = voltage_diff - 0.1 * voltage_diff
+                        else:
+                            voltage_diff=0
+                        #print "V_DIFF", voltage_diff
+                        voltage_differences = constraint.constraint.voltage_constraints.keys()
+                        voltage_differences.sort()
                         voltage_differences = constraint.constraint.voltage_constraints.keys()
                         voltage_differences.sort()
                         if len(voltage_differences) > 1:
@@ -1027,6 +1117,7 @@ class constraintGraph:
                             index = math.ceil(voltage_diff / range_v) * range_v
                             if index in constraint.constraint.voltage_constraints:
                                 value2 = constraint.constraint.voltage_constraints[index]
+
                             else:
                                 print "ERROR!!!Constraint for the Voltage difference is not defined"
                         else:
@@ -1035,6 +1126,7 @@ class constraintGraph:
                     else:
                         value2 = None
                     if value2 != None:
+                        #print"value", value2
                         if value2 > value1:
                             value = value2
                         else:
@@ -1093,7 +1185,8 @@ class constraintGraph:
                     value1 = constraint.constraint.getConstraintVal(c, type=rect.cell.type,Types=Types)
                     # Applying I-V constraints
                     if rect.current != None:
-                        current_rating = rect.current
+                        if rect.current['AC'] != 0 or rect.current['DC'] != 0:
+                            current_rating = rect.current['AC'] + rect.current['DC']
                         current_ratings = constraint.constraint.current_constraints.keys()
                         current_ratings.sort()
                         if len(current_ratings) > 1:
@@ -1134,7 +1227,7 @@ class constraintGraph:
                              East, West, northWest, southEast))
                     self.vertexMatrixh[ID][origin][dest].append(Edge.getEdgeWeight(e, origin, dest))
 
-        ## adding missing edges for shaed coordinate patterns
+        ## adding missing edges for shared coordinate patterns
         for i in Horizontal_patterns:
             r1=i[0]
             r2=i[1]
@@ -1144,8 +1237,41 @@ class constraintGraph:
             t1 = Types.index(r1.cell.type)
             c = constraint.constraint(1) #sapcing constraints
             index = 1
+            #value = constraint.constraint.getConstraintVal(c, source=t1, dest=t2,Types=Types)
+            # Applying I-V constraints
+            value1 = constraint.constraint.getConstraintVal(c, source=t1, dest=t2, Types=Types)
 
-            value = constraint.constraint.getConstraintVal(c, source=t1, dest=t2,Types=Types)
+            if r1.voltage != None and r2.voltage != None:
+                # voltage_diff1 = abs(rect.EAST.voltage[0] - rect.WEST.voltage[1])
+                # voltage_diff2 = abs(rect.EAST.voltage[1] - rect.WEST.voltage[0])
+                # voltage_diff = max(voltage_diff1, voltage_diff2)
+                voltage_diff = self.find_voltage_difference(rect.EAST.voltage, rect.WEST.voltage, rel_cons)
+                voltage_differences = constraint.constraint.voltage_constraints.keys()
+                voltage_differences.sort()
+                if len(voltage_differences) > 1:
+                    range_v = voltage_differences[1] - voltage_differences[0]
+                    index = math.ceil(voltage_diff / range_v) * range_v
+                    if index in constraint.constraint.voltage_constraints:
+                        value2 = constraint.constraint.voltage_constraints[index]
+                    else:
+                        print "ERROR!!!Constraint for the Voltage difference is not defined"
+                else:
+                    value2 = constraint.constraint.voltage_constraints[voltage_diff]
+
+            else:
+                value2 = None
+            if value2 != None:
+                if value2 > value1:
+                    value = value2
+                else:
+                    value = value1
+            else:
+                value = value1
+
+
+
+
+
             e = Edge(origin, dest, value, index, type=None,id=None)
             edgesh.append(Edge(origin, dest, value, index, type=None,id=None))
             self.vertexMatrixh[ID][origin][dest].append(Edge.getEdgeWeight(e, origin, dest))
@@ -1159,8 +1285,39 @@ class constraintGraph:
             t1 = Types.index(r1.cell.type)
             c = constraint.constraint(1)
             index = 1
+            #value = constraint.constraint.getConstraintVal(c, source=t1, dest=t2,Types=Types)
 
-            value = constraint.constraint.getConstraintVal(c, source=t1, dest=t2,Types=Types)
+            # Applying I-V constraints
+            value1 = constraint.constraint.getConstraintVal(c, source=t1, dest=t2, Types=Types)
+
+            if r1.voltage != None and r2.voltage != None:
+                # voltage_diff1 = abs(rect.EAST.voltage[0] - rect.WEST.voltage[1])
+                # voltage_diff2 = abs(rect.EAST.voltage[1] - rect.WEST.voltage[0])
+                # voltage_diff = max(voltage_diff1, voltage_diff2)
+                voltage_diff = self.find_voltage_difference(rect.EAST.voltage, rect.WEST.voltage, rel_cons)
+                voltage_differences = constraint.constraint.voltage_constraints.keys()
+                voltage_differences.sort()
+                if len(voltage_differences) > 1:
+                    range_v = voltage_differences[1] - voltage_differences[0]
+                    index = math.ceil(voltage_diff / range_v) * range_v
+                    if index in constraint.constraint.voltage_constraints:
+                        value2 = constraint.constraint.voltage_constraints[index]
+                    else:
+                        print "ERROR!!!Constraint for the Voltage difference is not defined"
+                else:
+                    value2 = constraint.constraint.voltage_constraints[voltage_diff]
+
+            else:
+                value2 = None
+            if value2 != None:
+                if value2 > value1:
+                    value = value2
+                else:
+                    value = value1
+            else:
+                value = value1
+
+
             e = Edge(origin, dest, value, index,type=None,id=None)
 
             edgesv.append(

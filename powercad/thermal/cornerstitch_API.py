@@ -334,8 +334,7 @@ class CornerStitch_Tmodel_API:
             return self.measure
 
     def eval_max_temp(self, module_data):
-        print self.model
-        raw_input("check model")
+
         module_data.layer_stack = self.layer_stack
         self.dev_result_table_eval(module_data)
         print self.temp_res
