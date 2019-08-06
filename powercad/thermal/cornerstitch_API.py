@@ -341,6 +341,9 @@ class CornerStitch_Tmodel_API:
         return max(self.temp_res.values())
 
 
+
+
+
 if __name__ == '__main__':
     app = QtGui.QApplication(sys.argv)
     cs_temp = CornerStitch_Tmodel_API()

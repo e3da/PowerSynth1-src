@@ -599,7 +599,9 @@ class constraintGraph:
                         elif voltage1['Phi']==voltage2['Phi']:
                             return abs(voltage1['DC']-voltage2['DC'])+abs(voltage2['AC']-voltage1['AC'])
                     else:
-                        return abs(voltage1['DC']-voltage2['DC'])+abs(voltage1['AC']+voltage2['AC'])
+                        v1 = abs(voltage1['DC'] - voltage2['DC'] + voltage1['AC'] + voltage2['AC'])
+                        v2 = abs(voltage1['DC'] - voltage2['DC'] - voltage1['AC'] - voltage2['AC'])
+                        return max(v1, v2)
             # Worst case
             elif rel_cons==1:
                 # DC-DC voltage difference
@@ -611,7 +613,10 @@ class constraintGraph:
                     v2=abs(voltage1['DC']-voltage2['DC']-voltage2['AC'])
                     return max(v1,v2)
                 elif (voltage1['Freq'] != 0 and voltage2['Freq'] != 0):
-                    return  abs(voltage1['DC']-voltage2['DC'])+abs(voltage1['AC']+voltage2['AC'])
+                    v1 = abs(voltage1['DC'] - voltage2['DC'] + voltage1['AC']+ voltage2['AC'])
+                    v2 = abs(voltage1['DC'] - voltage2['DC'] - voltage1['AC']- voltage2['AC'])
+                    return max(v1, v2)
+                    #return  abs(voltage1['DC']-voltage2['DC'])+abs(voltage1['AC']+voltage2['AC'])
 
 
 
@@ -803,7 +808,7 @@ class constraintGraph:
                         #voltage_diff=max(voltage_diff1,voltage_diff2)
                         print "N",rect.NORTH.voltage,rect.NORTH.cell.x,rect.NORTH.cell.y
                         print "S",rect.SOUTH.voltage,rect.SOUTH.cell.x,rect.SOUTH.cell.y
-                        print rel_cons
+
                         voltage_diff=self.find_voltage_difference(rect.NORTH.voltage,rect.SOUTH.voltage,rel_cons)
 
                         # tolerance is considered 10%
@@ -812,7 +817,7 @@ class constraintGraph:
                             voltage_diff=voltage_diff-0.1*voltage_diff
                         else:
                             voltage_diff=0
-                        #print "V_DIFF", voltage_diff
+                        print "V_DIFF", voltage_diff
                         voltage_differences = constraint.constraint.voltage_constraints.keys()
                         voltage_differences.sort()
 
@@ -831,7 +836,7 @@ class constraintGraph:
                     else:
                         value2 = None
                     if value2 != None:
-                        #print"value", value2
+                        print"value", value2
                         if value2 > value1:
                             value = value2
                         else:
@@ -1099,15 +1104,15 @@ class constraintGraph:
                         #voltage_diff1 = abs(rect.EAST.voltage[0] - rect.WEST.voltage[1])
                         #voltage_diff2 = abs(rect.EAST.voltage[1] - rect.WEST.voltage[0])
                         #voltage_diff = max(voltage_diff1, voltage_diff2)
-                        #print "E",rect.EAST.voltage,rect.EAST.cell.x,rect.EAST.cell.y
-                        #print "W",rect.WEST.voltage,rect.WEST.cell.x,rect.WEST.cell.y
+                        print "E",rect.EAST.voltage,rect.EAST.cell.x,rect.EAST.cell.y
+                        print "W",rect.WEST.voltage,rect.WEST.cell.x,rect.WEST.cell.y
                         voltage_diff=self.find_voltage_difference(rect.EAST.voltage,rect.WEST.voltage,rel_cons)
                         # tolerance is considered 10%
                         if voltage_diff - 0.1 * voltage_diff > 100:
                             voltage_diff = voltage_diff - 0.1 * voltage_diff
                         else:
                             voltage_diff=0
-                        #print "V_DIFF", voltage_diff
+                        print "V_DIFF", voltage_diff
                         voltage_differences = constraint.constraint.voltage_constraints.keys()
                         voltage_differences.sort()
                         voltage_differences = constraint.constraint.voltage_constraints.keys()
@@ -1126,7 +1131,7 @@ class constraintGraph:
                     else:
                         value2 = None
                     if value2 != None:
-                        #print"value", value2
+                        print"value", value2
                         if value2 > value1:
                             value = value2
                         else:
