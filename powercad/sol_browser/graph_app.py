@@ -33,7 +33,7 @@ from powercad.sol_browser.solution_lib import SolutionLibrary
 
 from powercad.sym_layout.plot import plot_layout
 from powercad.electro_thermal.ElectroThermal_toolbox import ET_analysis
-from powercad.Spice_handler.spice_export.thermal_netlist_graph import Module_Full_Thermal_Netlist_Graph
+from powercad.spice_handler.spice_export.thermal_netlist_graph import Module_Full_Thermal_Netlist_Graph
 from powercad.export.py_csv import py_csv 
 
 class GrapheneWindow(QtGui.QMainWindow):
@@ -394,7 +394,8 @@ class GrapheneWindow(QtGui.QMainWindow):
             self.preview_figure.clear()
             self.preview_axes = self.preview_figure.add_subplot(1,1,1, aspect=1.0)
             filletFlag = False
-            plot_layout(self.sym_layout, filletFlag, self.preview_axes, new_window=False)
+            flag=0  # for new layout engine plotting 0:old engine, 1:new engine
+            plot_layout(self.sym_layout,flag, filletFlag, self.preview_axes, new_window=False)
             self.preview_canvas.draw()
         
     def save_solution(self):
@@ -409,10 +410,13 @@ class GrapheneWindow(QtGui.QMainWindow):
                 else:
                     self.solution.name = self.sol_name[0]
             # ----> what if the name already exists?
-            
+                #print"index", self.sol_index
                 self.solution.index = self.sol_index
                 self.solution.params = self.sol_params
+                #print "in graph",self.solution.name, self.solution.index
                 self.parent.add_solution(self.solution)
+                #self.parent.project.add_solution(self.solution)
+
             else:
                 self.sol_count -= 1
         else:

@@ -188,8 +188,8 @@ def output_solidworks_vbscript(md, output_filename, data_dir, final_dir):
         trace.scale(0.001) # Convert to meters
         trace.translate(sub_origin_x, sub_origin_y)
         TraceName = "trace" + str(index+1)
-        #print index+1, ':', trace.center_x(), trace.center_y(), trace.width(), trace.height()
-        BuildParts += create_trace.format(trace.width(), trace.height(), TraceZSize, SubMatName, TraceName, final_dir=part_dir, temp_dir=template_dir, material_path=material_path)
+        #print index+1, ':', trace.center_x(), trace.center_y(), trace.width_eval(), trace.height_eval()
+        BuildParts += create_trace.format(trace.width_eval(), trace.height_eval(), TraceZSize, SubMatName, TraceName, final_dir=part_dir, temp_dir=template_dir, material_path=material_path)
         BuildAssembly += add_trace.format(TraceName, trace.center_x(), trace.center_y(), zpos+(0.5*MetalZSize), final_dir=part_dir)
     
     zpos += MetalZSize

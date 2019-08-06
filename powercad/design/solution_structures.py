@@ -5,7 +5,7 @@ Created on Nov 16, 2012
 '''
 
 class BondwireSolution(object):
-    def __init__(self, positions, beg_height, height, bondwire_tech, eff_diameter):
+    def __init__(self, positions, beg_height, height, bondwire_tech, eff_diameter, device=None):
         """
         Keyword arguments:
         positions -- start and stop positions of bond wire (wrt substrate) - tuple of tuples ((x0, y0), (x1, y1)) (units in mm)
@@ -20,7 +20,8 @@ class BondwireSolution(object):
         self.height = height
         self.bondwire_tech = bondwire_tech
         self.eff_diameter = eff_diameter
-    
+        self.device = device
+
 class LeadSolution(object):
     def __init__(self, position, orientation, lead_tech):
         """
@@ -34,7 +35,7 @@ class LeadSolution(object):
         self.lead_tech = lead_tech
     
 class DeviceSolution(object):
-    def __init__(self, position, device_instance, footprint_rect):
+    def __init__(self, position, device_instance, footprint_rect, name=None):
         """
         Keyword arguments:
         position -- center position of device (wrt substrate) -- tuple (x0, y0) (units in mm)
@@ -44,4 +45,4 @@ class DeviceSolution(object):
         self.position = position
         self.device_instance = device_instance
         self.footprint_rect = footprint_rect
-        
+        self.name = name

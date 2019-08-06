@@ -2084,7 +2084,7 @@ class SymbolicLayout(object):
     '''-----------------------------------------------------------------------------------------------------------------------------------------------------'''
     def optimize(self, iseed=None, inum_gen=800, mu=15, ilambda=30, progress_fn=None):
 
-
+        self.trial=0
         self.eval_count = 0
         self.eval_total = inum_gen*ilambda    # check this... this sounds not correct to me -- Quang
         self.opt_progress_fn = progress_fn
@@ -2233,6 +2233,7 @@ class SymbolicLayout(object):
         #fig, ax = plt.subplots()
         #plot_layout(self, ax=ax)
         #plt.show()
+        self.trial+=1
         if drc_count > 0:   # Non-convergence case
             #Brett's method
             for i in xrange(len(self.perf_measures)):
@@ -2316,7 +2317,7 @@ class SymbolicLayout(object):
                     ret.append(val)
         # Update progress bar and eval count
         self.eval_count += 1
-        print "Running... Current number of evaluations:", self.eval_count
+        print "Running... Current number of evaluations:", self.eval_count,self.trial
         return ret
     '''-----------------------------------------------------------------------------------------------------------------------------------------------------'''
     def _measure_capacitance(self, measure):
@@ -2587,7 +2588,7 @@ def make_test_setup_journal_paper(p1,p2,f,h,tamb):
     module = gen_test_module_data(f,h,tamb)
     sym_layout.form_design_problem(module, temp_dir)
     #mdl = load_file("C://PowerSynth_git//Response_Surface//PowerCAD-full//tech_lib//Model//Trace//t1.rsmdl")
-    mdl = load_file("C://Users//qmle//Desktop//Testing//FastHenry//Fasthenry3_test_gp//WorkSpace//test5.rsmdl")
+    mdl = load_file("C://Users//qmle//Desktop//Testing//FastHenry//Fasthenry3_test_gp//WorkSpace//model_tutorial.rsmdl")
     sym_layout.set_RS_model(mdl)
     sym_layout._map_design_vars()
     setup_model(sym_layout)
@@ -2743,7 +2744,7 @@ def corner_overestimate(w1,w2,l,f):
     return sum(ind_corner)
 
 def continuity_test(w,l1,l2,f):
-    mdl = load_file("C://Users//qmle//Desktop//Testing//FastHenry//Fasthenry3_test_gp//WorkSpace//test5.rsmdl")
+    mdl = load_file("C://Users//qmle//Desktop//Testing//FastHenry//Fasthenry3_test_gp//WorkSpace//model_tutorial.rsmdl")
     print "discontinuous",trace_ind_krige(f,w,l1,mdl['L'])+trace_ind_krige(f,w,l2,mdl['L'])
     print "continuous",trace_ind_krige(f,w,l1+l2,mdl['L'])
 
@@ -2808,7 +2809,7 @@ if __name__ == '__main__':
 
 
     '''
-    mdl = load_file("C://Users//qmle//Desktop//Testing//FastHenry//Fasthenry3_test_gp//WorkSpace//test5.rsmdl")
+    mdl = load_file("C://Users//qmle//Desktop//Testing//FastHenry//Fasthenry3_test_gp//WorkSpace//model_tutorial.rsmdl")
     #mdl = load_file("C://PowerSynth_git//Response_Surface//PowerCAD-full//tech_lib//Model//Trace//t1.rsmdl")
     sym_layout = SymbolicLayout()
     sym_layout.set_RS_model(mdl)
