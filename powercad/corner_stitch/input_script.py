@@ -807,6 +807,51 @@ class ScriptInputMethod():
 
         return islands
 
+    def form_initial_islands(self):
+        '''
+
+        :return: created islands from initial input script based on connectivity
+        '''
+        all_rects=[]# holds initial input rectangles as rectangle objects
+        netid=0
+        for i in range(len(self.cs_info)):
+            rect=self.cs_info[i]
+            if rect[5][0]=='T':
+                rectangle = Rectangle(x=rect[1], y=rect[2], width=rect[3], height=rect[4],name=rect[5],Netid=netid)
+                all_rects.append(rectangle)
+                netid+=1
+        #for rect in all_rects:
+            #print rect.left,rect.bottom,rect.right-rect.left,rect.top-rect.bottom,rect.name,rect.Netid
+        #rectangles=[]
+
+        for i in range (len(all_rects)):
+            rect1=all_rects[i]
+            connected_rects = []
+            connected_rects.append(rect1)
+            for j in range(len(all_rects)):
+                rect2=all_rects[j]
+
+                if (rect1.right == rect2.left or rect1.bottom == rect2.top or rect1.left == rect2.right or rect1.top == rect2.bottom):
+                    print rect2
+                    connected_rects.append(rect2)
+            if len(connected_rects)>1:
+                ids=[rect.Netid for rect in connected_rects]
+                id=min(ids)
+                for rect in connected_rects:
+                    print rect.Netid
+                    rect.Netid=id
+
+
+        for rect in all_rects:
+            print rect.left,rect.bottom,rect.right-rect.left,rect.top-rect.bottom,rect.name,rect.Netid
+
+        raw_input()
+
+
+
+
+
+
     # adds child elements to each island. Island elements are traces (hier_level=0), children are on hier_level=1 (Devices, Leads, Bonding wire pads)
     def populate_child(self,islands=None):
         '''

@@ -576,7 +576,7 @@ def script_translator(input_script=None, bond_wire_info=None, fig_dir=None, cons
     ScriptMethod.gather_part_route_info()  # gathers part and route info
     ScriptMethod.gather_layout_info()  # gathers layout info
     # finding islands for a given layout
-    islands = ScriptMethod.form_island() # list of island objects
+    islands = ScriptMethod.form_initial_islands() # list of island objects
     # finding child of each island
     islands = ScriptMethod.populate_child(islands)
     # updating the order of the rectangles in cs_info for corner stitch

@@ -221,7 +221,9 @@ def plot_solutions(file_location=None):
 
 if __name__ == '__main__':
 
-    #plot_solutions('D:\Demo\New_Flow_w_Hierarchy\Journal_Case\Version_6\Solution_NG\Pareto_Solutions')
+    plot_solutions('D:\Demo\New_Flow_w_Hierarchy\Journal_Case\Version_6\Solution_NSGA\\50X50\Layout_Solutions')
+    '''
+    
     sol_data={}
     file='D:\Demo\New_Flow_w_Hierarchy\Journal_Case\Version_6\Solution_NG\Layout_Solutions\plot_data.csv'
     with open(file) as csvfile:
@@ -242,6 +244,9 @@ if __name__ == '__main__':
             data=[k,v[0],v[1]]
             csv_writer.writerow(data)
     my_csv.close()
+    
+    '''
+
 
 
 
