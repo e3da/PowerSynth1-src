@@ -174,7 +174,7 @@ class EWires(EComp):
         else:
             self.mode = 'interpolated'
 
-    def update_wires_parasitic(self):
+    def  update_wires_parasitic(self):
         '''
         Update the parasitics of a wire group. Return single R,L,C result
 

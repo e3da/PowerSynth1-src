@@ -403,10 +403,10 @@ def get_overlap_interval(interval1, interval2):
     return (max(interval1[0], interval2[0]), min(interval1[1], interval2[1]))
 
 
-def draw_rect_list(rectlist,color,pattern,text=None,ax=None):
+def draw_rect_list(rectlist,color,pattern,ax=None):
     patch=[]
-    plt.xlim(0, 50)
-    plt.ylim(0, 40)
+    plt.xlim(0, 85)
+    plt.ylim(0, 85)
     for r in rectlist:
         p = patches.Rectangle((r.left, r.bottom), r.width_eval(), r.height_eval(),fill=True,
             edgecolor='black',facecolor=color,hatch=pattern,linewidth=1,alpha=0.5)

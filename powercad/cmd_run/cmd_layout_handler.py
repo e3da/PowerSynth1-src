@@ -592,9 +592,9 @@ def script_translator(input_script=None, bond_wire_info=None, fig_dir=None, cons
     input_rects = ScriptMethod.convert_rectangle()  # converts layout info to cs rectangle info
 
     #-------------------------------------for debugging-------------------
-    #fig,ax=plt.subplots()
-    #draw_rect_list(rectlist=input_rects,ax=ax,size=ScriptMethod.size)
-    #plt.show()
+    fig,ax=plt.subplots()
+    draw_rect_list(rectlist=input_rects,color='blue',pattern='//',ax=ax)
+    plt.show()
     #---------------------------------------------------------------------
 
     input_info = [input_rects, ScriptMethod.size]

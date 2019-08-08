@@ -27,7 +27,7 @@ else:   # For debugging and running PowerSynth from Eclipse
     TEMP_DIR = os.path.abspath(r"../../../export_data/temp")
     #TRMP_DIR="D:\PS\export_data\temp"
     CACHED_CHAR_PATH = os.path.abspath("../../../export_data/cached_thermal") # sxm063
-    MATERIAL_LIB_PATH='..//..//..//tech_lib//Material//Materials.csv'
+    MATERIAL_LIB_PATH='../../../tech_lib/Material/Materials.csv'
     EXPORT_DATA_PATH=os.path.abspath("../../../export_data/")
     GMSH_BIN_PATH = "C:\PowerSynth\gmsh-2.7.0-Windows"
     ELMER_BIN_PATH = os.path.abspath("C:\PowerSynth\Elmer 8.2-Release\\bin")  # Emler on Imam's PC

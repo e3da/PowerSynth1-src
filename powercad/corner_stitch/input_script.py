@@ -529,7 +529,9 @@ class ScriptInputMethod():
                         else:
                             continue
 
-
+        # print "cs_info"
+        #for rect in rects_info:
+            #print rect
         self.cs_info=[0 for i in range(len(rects_info))]
         layout_info=layout_info[1:]
         for i in range(len(layout_info)):

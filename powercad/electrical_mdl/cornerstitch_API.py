@@ -178,7 +178,7 @@ class CornerStitch_Emodel_API:
         self.hier.form_hierachy()
         self.emesh = EMesh_CS(islands=islands,hier_E=self.hier, freq=self.freq, mdl=self.rs_model)
         self.emesh.mesh_update()
-
+        '''
         fig = plt.figure(1)
         ax = Axes3D(fig)
         ax.set_xlim3d(0, self.width+2)
@@ -192,6 +192,9 @@ class CornerStitch_Emodel_API:
         ax.set_zlim3d(0, 2)
         plot_rect3D(rect2ds=self.module.plate + self.module.sheet, ax=ax)
         plt.show()
+        
+        '''
+
 
         self.emesh.update_trace_RL_val()
         self.emesh.update_hier_edge_RL()
@@ -456,6 +459,7 @@ class CornerStitch_Emodel_API:
         I_min = min(all_I)
         I_max = max(all_I)
         normI = Normalize(I_min, I_max)
+        '''
         fig = plt.figure("current vectors")
         ax = fig.add_subplot(111)
         plt.xlim([-2.5, self.width])
@@ -465,5 +469,8 @@ class CornerStitch_Emodel_API:
                 0, self.height], numvecs=31, name='frequency ' + str(freq) + ' kHz', mesh='grid')
         plt.title('frequency ' + str(freq) + ' kHz')
         plt.show()
+        
+        '''
+
         self.emesh.graph.clear()
         self.emesh.m_graph.clear()

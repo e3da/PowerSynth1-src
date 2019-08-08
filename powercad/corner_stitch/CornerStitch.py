@@ -1476,7 +1476,7 @@ class Hnode(Node):
         #if self.areaSearch(x1, y1, x2, y2,type): #check to ensure that the area is empty
 
             #RESP=1
-
+        print"ENTRY",x1,y1,x2,y2
         # finds top left and bottom right coordinate containing tile and then start for finding all tiles which should be split
         topLeft = self.findPoint(x1, y1, self.stitchList[0])
         bottomRight = self.findPoint(x2, y2, self.stitchList[0])
@@ -1505,7 +1505,8 @@ class Hnode(Node):
         splitList = []
         splitList.append(topLeft)
         cc = topLeft
-
+        print "TL",cc.cell.x, cc.cell.y, cc.cell.type,cc.getWidth(),cc.getHeight(),cc.cell.type
+        print"TR",tr.cell.x,tr.cell.y, tr.cell.type,tr.getWidth(),tr.getHeight(),tr.cell.type
 
         if start!=Schar:
             if cc.WEST not in self.boundaries and cc.WEST.cell.type == type and cc.WEST.cell.x + cc.WEST.getWidth() == x1 or cc.cell.type == type:
@@ -1522,10 +1523,9 @@ class Hnode(Node):
                 if cc2 not in self.boundaries:
                     splitList.append(cc2)
 
-
+            print "HSP", len(splitList)
             while cc.cell.x <= tr.cell.x and cc not in self.boundaries:
                 if cc not in splitList:
-
                     splitList.append(cc)
 
                 cc = cc.EAST
@@ -1538,18 +1538,19 @@ class Hnode(Node):
 
                 splitList.append(cc)
 
-                if cc.EAST not in self.boundaries:
+                if cc.EAST not in self.boundaries : # added cc.cell.type==type
                     cc = cc.EAST
 
                     while cc.cell.y >= y1:
                         cc = cc.SOUTH
-
-                    splitList.append(cc)
+                    if cc.cell.type==type:
+                        splitList.append(cc)
 
 
         # splitting tiles at y1 coordinate
+        print "HSP",len(splitList)
         for rect in splitList:
-            #print rect.cell.x,rect.cell.y,rect.cell.type
+            print rect.cell.x,rect.cell.y,rect.cell.type
             i = self.stitchList.index(rect)
             if y1 != rect.cell.y and y1 != rect.NORTH.cell.y: self.hSplit(i, y1)
 
@@ -1600,7 +1601,9 @@ class Hnode(Node):
 
 
         # splitting tiles at y2 coordinate
+        print"v_split",len(splitList)
         for rect in splitList:
+            print"s",rect.cell.x,rect.cell.y,rect.cell.type,rect.getWidth(),rect.getHeight()
             i=self.stitchList.index(rect)
             if y2 != rect.cell.y and y2 != rect.NORTH.cell.y: self.hSplit(i, y2)
 
@@ -3186,6 +3189,13 @@ class CS_to_CG():
 
 
     """
+    def final_merge(self,node,h=False):
+        if h==True:
+            Hnode.Final_Merge(node)
+        else:
+            Vnode.Final_Merge(node)
+
+
     def update_min(self,minx,miny,sym_to_cs,s=1000.0):
         '''
 
@@ -3195,6 +3205,7 @@ class CS_to_CG():
         :param s: divider
         :return:
         '''
+
 
         layout_rects=[]
         cs_sym_info={}
@@ -3217,7 +3228,7 @@ class CS_to_CG():
                 name = k
                 #print x,y,w,h
                 new_rect = [float(x) / s, float(y) / s, float(w) / s, float(h) / s, type,v[2]+1,rect.rotation_index]
-                #print "NN",new_rect
+                #print "NN",new_rect,name
                 layout_rects.append(new_rect)
                 cs_sym_info[name]=[type,x,y,w,h]
 

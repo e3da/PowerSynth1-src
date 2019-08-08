@@ -198,6 +198,7 @@ class Material_lib:
         '''
         if self.mat_lib != []:
             for material in self.mat_lib:
+
                 if material.name == mat_name:
                     print 'found material',material.name
                     return material

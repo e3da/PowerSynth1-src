@@ -203,6 +203,7 @@ class LayerStack:
                 t_conds.append(layer.material.thermal_cond)
             elif layer.type == 'a':
                 mat_id =device.material_id
+                print"mat_id",mat_id
                 dev_mat = self.material_lib.get_mat(mat_id)
                 t_conds.append(dev_mat.thermal_cond)
         return t_conds

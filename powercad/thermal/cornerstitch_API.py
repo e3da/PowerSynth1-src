@@ -227,7 +227,7 @@ class CornerStitch_Tmodel_API:
                     converged=elmer_solve(dir_name, sif_name, mesh_name)  # solving the sif file
                     split*=2
                 print 'Model Solved.'
-                raw_input()
+                #raw_input()
 
                 print 'Characterizing data...'
                 data_path = os.path.join(dir_name, mesh_name, data_name + '.ep') # data path for the simulation results

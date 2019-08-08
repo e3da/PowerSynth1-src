@@ -134,7 +134,96 @@ class New_layout_engine():
 
 
     
+    def plotrectH_old(self, node,format=None):###plotting each node in HCS before minimum location evaluation
+        """
+        Draw all cells in this cornerStitch with stitches pointing to their stitch neighbors
+        TODO:
+         Also should probably change the dimensions of the object window depending on the cornerStitch size.
+        """
 
+        # fig2 = matplotlib.pyplot.figure()
+        #node=nodelist[0]
+        Rect_H=[]
+        for rect in node.stitchList:
+            if rect.cell.type=='Type_1' or rect.cell.type=='Type_2' or rect.cell.type=='EMPTY':
+                zorder=0
+            else:
+                zorder=1
+            r=[rect.cell.x,rect.cell.y,rect.getWidth(),rect.getHeight(),rect.cell.type,zorder]
+            Rect_H.append(r)
+
+
+        max_x=0
+        max_y=0
+        min_x=10000
+        min_y=10000
+        for i in Rect_H:
+            if i[0]+i[2]>max_x:
+                max_x=i[0]+i[2]
+            if i[1]+i[3]>max_y:
+                max_y=i[1]+i[3]
+            if i[0]<min_x:
+                min_x=i[0]
+            if i[1]<min_y:
+                min_y=i[1]
+        #print max_x,max_y
+        fig10, ax5 = plt.subplots()
+        for i in Rect_H:
+
+            if not i[-2] == "EMPTY":
+
+
+                if i[-2]=="Type_1":
+                    colour='green'
+                    #pattern = '\\'
+                elif i[-2]=="Type_2":
+                    colour='red'
+                    #pattern='*'
+                elif i[-2]=="Type_3":
+                    colour='blue'
+                    #pattern = '+'
+                elif i[-2]=="Type_4":
+                    colour="#00bfff"
+                    #pattern = '.'
+                elif i[-2]=="Type_5":
+                    colour="yellow"
+                elif i[-2]=='Type_6':
+                    colour="pink"
+                elif i[-2]=='Type_7':
+                    colour="cyan"
+                elif i[-2]=='Type_8':
+                    colour="purple"
+
+
+                ax5.add_patch(
+                    matplotlib.patches.Rectangle(
+                        (i[0], i[1]),  # (x,y)
+                        i[2],  # width
+                        i[3],  # height
+                        facecolor=colour, edgecolor='black',
+                        zorder=i[-1]
+
+
+                    )
+                )
+            else:
+                #pattern = ''
+
+                ax5.add_patch(
+                    matplotlib.patches.Rectangle(
+                        (i[0], i[1]),  # (x,y)
+                        i[2],  # width
+                        i[3],  # height
+                        facecolor="white", edgecolor='black'
+                    )
+                )
+
+
+
+        plt.xlim(min_x, max_x)
+        plt.ylim(min_y, max_y)
+        plt.show()
+        #plt.xlim(0, 60)
 
 
     def create_cornerstitch(self,input_rects=None, size=None,islands=None,voltage_info=None,current_info=None):
@@ -148,6 +237,17 @@ class New_layout_engine():
         input = self.cornerstitch.read_input('list',Rect_list=input_rects)  # Makes the rectangles compaitble to new layout engine input format
         self.Htree, self.Vtree = self.cornerstitch.input_processing(input, size[0],size[1])  # creates horizontal and vertical corner stitch layouts
         patches, combined_graph = self.cornerstitch.draw_layout(rects=input_rects, Htree=self.Htree,Vtree=self.Vtree)  # collects initial layout patches and combined HCS,VCS points as a graph for mode-3 representation
+
+        for node in self.Htree.hNodeList:
+            node.Final_Merge()
+            #self.plotrectH_old(node)
+        for node in self.Vtree.vNodeList:
+            node.Final_Merge()
+        #------------------------for debugging-----------------
+        #for node in self.Htree.hNodeList:
+            #self.plotrectH_old(node)
+            #raw_input()
+        #-------------------------------------------------------
 
         plot = False
         if plot:
@@ -392,11 +492,6 @@ class New_layout_engine():
 
             print CS_SYM_information
 
-            # print "Before update"
-            # for island in cs_islands:
-            # island.print_island(plot=True)
-
-
 
 
             # cs_islands_up=self.update_points(cs_islands)
@@ -413,8 +508,8 @@ class New_layout_engine():
             cs_islands_up = self.update_islands(CS_SYM_information, Evaluated_X, Evaluated_Y, cs_islands)
             # -------------------------------for debugging----------------------
             # print "After update"
-            # for island in cs_islands_up:
-            # island.print_island(plot=True,size=k)
+            for island in cs_islands_up:
+                island.print_island(plot=False,size=k)
             # island.plot_mesh_nodes(size=k)
             # -------------------------------------------------
             md_data = ModuleDataCornerStitch()
@@ -597,7 +692,7 @@ class New_layout_engine():
                     # self.save_layouts(Layout_Rects[i], db=db)
             else:
                 # for i in range(len(Layout_Rects)):
-                self.save_layouts(Layout_Rects, count=count, db=db)
+                self.save_layouts(Layout_Rects[0], count=count, db=db)
 
 
 
@@ -777,7 +872,6 @@ class New_layout_engine():
             for element in island.elements:
 
                 if element[-3] in cs_sym_info:
-
                     element[1]=cs_sym_info[element[-3]][1]
                     element[2]=cs_sym_info[element[-3]][2]
                     element[3]=cs_sym_info[element[-3]][3]
@@ -1057,6 +1151,8 @@ class New_layout_engine():
         cs_islands = []
         cs_mapped_input = {}
         for island in copy_islands:
+            print"I"
+            island.print_island(plot=False)
             cs_island = Island()
             cs_island.name = island.name
             elements = island.elements
@@ -1088,11 +1184,12 @@ class New_layout_engine():
                 node_h=Htree.hNodeList[0]
                 node_v=Vtree.vNodeList[0]
 
+
                 #raw_input()
                 for point in bottom_left_coordinates:
                     tile=node_h.findPoint(point[0],point[1],node_h.stitchList[0])
                     if tile.cell.type==type and tile not in cs_tiles_h:
-                        #print tile.cell.x,tile.cell.y,tile.getWidth(),tile.getHeight()
+                        #print "BT",tile.cell.x,tile.cell.y,tile.getWidth(),tile.getHeight()
                         cs_tiles_h.append(tile)
                             #break
                 for point in bottom_left_coordinates:
@@ -1104,7 +1201,7 @@ class New_layout_engine():
                     rect=elements[i]
                     #print"EL", rect[0],rect[1],rect[2],rect[3],rect[4]
                     r = [cs_tiles_h[i].cell.type, cs_tiles_h[i].cell.x, cs_tiles_h[i].cell.y, cs_tiles_h[i].getWidth(), cs_tiles_h[i].getHeight(), rect[5], rect[8],cs_tiles_h[i].nodeId]  # type,x,y,width,height,name, hierarchy_level, nodeId
-                    #print r[0],r[1],r[2],r[3],r[4]
+
                     cs_elements.append(r)
                     cs_mapped_input[rect[5]] = [cs_tiles_h[i], cs_tiles_h[i].nodeId, rect[8]]
                     cs_island.element_names.append(rect[5])
@@ -1261,6 +1358,7 @@ class New_layout_engine():
         min_y = 1e30
         Total_H = {}
         for i in Layout_Rects:
+            print i
             if i[0] + i[2] > max_x:
                 max_x = i[0] + i[2]
             if i[1] + i[3] > max_y:

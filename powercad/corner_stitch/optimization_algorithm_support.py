@@ -187,11 +187,12 @@ class new_engine_opt:
                                                      fixed_x_location=None, fixed_y_location=None, seed=self.seed,
                                                      individual=individual,db=self.db,count=self.count)
 
-        result = self.eval_layout(cs_sym_info[0], module_data[0])
+        result = self.eval_layout( module_data[0])
         self.count += 1
         # self.solutions[(ret[0], ret[1])] = figure
         # if ret not in self.solution_data:
         #self.fig_data.append(fig_data)
+        print "added layout",self.count, result
         self.layout_data.append(cs_sym_info)
         self.module_info.append(module_data)
         self.perf_results.append(result)
