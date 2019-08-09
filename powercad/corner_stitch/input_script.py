@@ -820,32 +820,104 @@ class ScriptInputMethod():
                 rectangle = Rectangle(x=rect[1], y=rect[2], width=rect[3], height=rect[4],name=rect[5],Netid=netid)
                 all_rects.append(rectangle)
                 netid+=1
-        #for rect in all_rects:
-            #print rect.left,rect.bottom,rect.right-rect.left,rect.top-rect.bottom,rect.name,rect.Netid
-        #rectangles=[]
-
         for i in range (len(all_rects)):
             rect1=all_rects[i]
             connected_rects = []
-            connected_rects.append(rect1)
+
             for j in range(len(all_rects)):
                 rect2=all_rects[j]
 
-                if (rect1.right == rect2.left or rect1.bottom == rect2.top or rect1.left == rect2.right or rect1.top == rect2.bottom):
-                    print rect2
+                #if (rect1.right == rect2.left or rect1.bottom == rect2.top or rect1.left == rect2.right or rect1.top == rect2.bottom)  :
+                if rect1.find_contact_side(rect2)!=-1 and rect1.intersects(rect2):
+
+                    if rect1 not in connected_rects:
+                        connected_rects.append(rect1)
+
                     connected_rects.append(rect2)
             if len(connected_rects)>1:
                 ids=[rect.Netid for rect in connected_rects]
                 id=min(ids)
                 for rect in connected_rects:
-                    print rect.Netid
+                    #print rect.Netid
                     rect.Netid=id
 
 
-        for rect in all_rects:
-            print rect.left,rect.bottom,rect.right-rect.left,rect.top-rect.bottom,rect.name,rect.Netid
+        #for rect in all_rects:
+            #print rect.left,rect.bottom,rect.right-rect.left,rect.top-rect.bottom,rect.name,rect.Netid
 
-        raw_input()
+        islands = []
+        connected_rectangles={}
+        ids = [rect.Netid for rect in all_rects]
+        for id in ids:
+            connected_rectangles[id]=[]
+
+        for rect in all_rects:
+            if rect.Netid in connected_rectangles:
+                connected_rectangles[rect.Netid].append(rect)
+
+        #print connected_rectangles
+        for k,v in connected_rectangles.items():
+            island = Island()
+            name = 'island'
+            for rectangle in v:
+                for i in range(len(self.cs_info)):
+                    rect = self.cs_info[i]
+                    if rect[5]==rectangle.name:
+                        island.rectangles.append(rectangle)
+                        island.elements.append(rect)
+                        name = name + '_'+rect[5].strip('T')
+                        island.element_names.append(rect[5])
+
+            island.name=name
+            islands.append(island)
+
+            # sorting connected traces on an island
+            for island in islands:
+                sort_required=False
+                if len(island.elements) > 1:
+                    for element in island.elements:
+                        if element[-4]=='-' or element[-3]=='-':
+                            sort_required=True
+                        else:
+                            sort_required=False
+                    if sort_required==True:
+                        netid = 0
+                        all_rects = island.rectangles
+                        for i in range(len(all_rects)):
+                            all_rects[i].Netid = netid
+                            netid += 1
+                        rectangles = [all_rects[0]]
+                        for rect1 in rectangles:
+                            for rect2 in all_rects:
+                                if (rect1.right == rect2.left or rect1.bottom == rect2.top or rect1.left == rect2.right or rect1.top == rect2.bottom) and rect2.Netid != rect1.Netid:
+                                    if rect2.Netid > rect1.Netid:
+                                        if rect2 not in rectangles:
+                                            rectangles.append(rect2)
+                                            rect2.Netid = rect1.Netid
+                                else:
+                                    continue
+                        if len(rectangles) != len(island.elements):
+                            print "Check input script !! : Group of traces are not defined in proper way."
+                        elements = island.elements
+                        ordered_rectangle_names = [rect.name for rect in rectangles]
+                        ordered_elements = []
+                        for name in ordered_rectangle_names:
+                            for element in elements:
+                                if name == element[5]:
+                                    if element[5] == ordered_rectangle_names[0]:
+                                        element[-4] = '+'
+                                        element[-3] = '-'
+                                    elif element[5] != ordered_rectangle_names[-1]:
+                                        element[-4] = '-'
+                                        element[-3] = '-'
+                                    elif element[5] == ordered_rectangle_names[-1]:
+                                        element[-4] = '-'
+                                        element[-3] = '+'
+                                    ordered_elements.append(element)
+                        island.elements = ordered_elements
+                        island.element_names = ordered_rectangle_names
+
+        return islands
 
 
 
