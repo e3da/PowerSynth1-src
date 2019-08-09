@@ -2,6 +2,7 @@
 import matplotlib.pyplot as plt
 from powercad.electrical_mdl.e_mesh_direct import MeshNode
 import numpy as np
+from powercad.corner_stitch.CornerStitch import draw_rect_list_cs
 class Island():
     def __init__(self):
         self.elements=[] # list of elements on an island
@@ -34,8 +35,11 @@ class Island():
             print "Num_child", len(self.child)
             for i in range(len(self.child)):
                 print self.child[i]
+        if plot == True and size!=None:
+            self.plot_island_rects(size=size)
         if len(self.mesh_nodes)>0:
             if plot==True:
+
                 self.plot_mesh_nodes(size=size)
             else:
                 print "Nodes_num", len(self.mesh_nodes)
@@ -56,6 +60,14 @@ class Island():
                         all_points.remove(point)
                 self.plot_points(all_points,all_boundaries,size)
         '''
+
+    def plot_island_rects(self,size=None):
+        rectlist=[]
+        for element in self.elements:
+            rectlist.append([element[1],element[2],element[3],element[4],element[0]])
+
+        fig,ax=plt.subplots()
+        draw_rect_list_cs(rectlist,ax,x_max=size[0],y_max=size[1])
 
     def plot_points(self,all_points,all_boundaries,size=None):
         s = set(tuple(x) for x in all_points)

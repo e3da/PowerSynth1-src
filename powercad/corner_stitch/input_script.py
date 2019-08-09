@@ -933,17 +933,27 @@ class ScriptInputMethod():
         all_layout_component_ids=[]
         for island in islands:
             all_layout_component_ids+=island.element_names
+
+        visited=[]
         for island in islands:
+            print island.name
             layout_component_ids=island.element_names
+            #print layout_component_ids
             end=10000
+            start=-10000
             for i in range(len(self.cs_info)):
                 rect = self.cs_info[i]
-                if rect[5] in layout_component_ids:
+
+                if rect[5] in layout_component_ids and start<0 :
                     start=i
-                elif rect[5] in all_layout_component_ids and i>start:
+                elif rect[5] in all_layout_component_ids and rect[5] not in layout_component_ids and i>start and rect[5] not in visited:
+                    visited+=layout_component_ids
                     end=i
                     break
+                else:
+                    continue
 
+            #print start,end
             for i in range(len(self.cs_info)):
                 rect = self.cs_info[i]
                 if rect[5] in layout_component_ids and rect[5] in all_layout_component_ids:
@@ -951,6 +961,7 @@ class ScriptInputMethod():
                 elif rect[5] not in all_layout_component_ids and i>start and i<end:
                     island.child.append(rect)
                     island.child_names.append(rect[5])
+            #print island.child_names
 
         #--------------------------for debugging---------------------------------
         #for island in islands:
@@ -965,14 +976,21 @@ class ScriptInputMethod():
         :param islands: initial islands created from input script
         :return: updated cs_info due to reordering of rectangles in input script to ensure connectivity among components in the same island
         '''
+
+
         for island in islands:
+            not_connected_group=False
             if len(island.element_names)>2:
-                for i in range(len(self.cs_info)):
-                    if self.cs_info[i][5] == island.element_names[0]:
-                        start=i
-                        end=len(island.element_names)
-                        break
-                self.cs_info[start:start+end]=island.elements
+                for element in island.elements:
+                    if element[-3]=='-' or element[-4]=='-':
+                        not_connected_group=True
+                if not_connected_group==True:
+                    for i in range(len(self.cs_info)):
+                        if self.cs_info[i][5] == island.element_names[0]:
+                            start=i
+                            end=len(island.element_names)
+                            break
+                    self.cs_info[start:start+end]=island.elements
 
 
 def save_constraint_table(cons_df=None,file=None):
