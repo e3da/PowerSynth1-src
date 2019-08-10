@@ -1144,7 +1144,7 @@ class EMesh():
                         store_edge(n, East.node_id, edge_data)
             except:
                 print "-------"
-                print node.node_id, node.b_type
+                print node.node_id, node.b_type,node.pos
                 print "N", node.North
                 print "S", node.South
                 print "E", node.East

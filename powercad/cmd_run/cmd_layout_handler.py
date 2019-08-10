@@ -244,8 +244,7 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True,rel_c
 
     if mode == 0:
         # module_data: list of ModuleDataCornerStitch objects
-        print "Here"
-        print"rel",
+
         cs_sym_info,module_data = layout_engine.generate_solutions(mode, num_layouts=1, W=None, H=None,
                                                                  fixed_x_location=None, fixed_y_location=None,
                                                                  seed=None,

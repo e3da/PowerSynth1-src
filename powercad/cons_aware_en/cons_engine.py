@@ -282,9 +282,9 @@ class New_layout_engine():
 
 
         #--------------------------------------for debugging----------------------
-        for island in cs_islands:
-            island.print_island(plot=True,size=[57,75])
-        raw_input()
+        #for island in cs_islands:
+            #island.print_island(plot=True,size=[57,75])
+        #raw_input()
         #for k,v in sym_to_cs.items():
             #print k,v
         #--------------------------------------------------------------------------
@@ -313,8 +313,8 @@ class New_layout_engine():
         #------------------------------------------------------------------------------------
 
         #To access globally, patches=initial input rectangle patch list, sym_to_cs= dictionary mapped between input rectangle(s) and corner stitch tile(s)
-        # cs_islands: updated islands having cs tiles as elements and mesh node objects, combined_graph is for mode 3 (initial layout with nodes)
-        self.init_data = [patches, sym_to_cs,cs_islands, combined_graph]
+        # cs_islands: updated islands having cs tiles as elements and mesh node objects,islands=initial islands based on input, combined_graph is for mode 3 (initial layout with nodes)
+        self.init_data = [patches, sym_to_cs,cs_islands,islands, combined_graph]
 
 
     def collect_sym_cons_info(self, sym_layout):
@@ -474,6 +474,7 @@ class New_layout_engine():
             #print k,v[0],v[1],v[2]
         #----------------------------------------------------------------------
         cs_islands=self.init_data[2]
+        initial_islands=self.init_data[3]
         scaler = 1000  # to get back original dimensions all coordinated will be scaled down by 1000
         #mode-0
         if level == 0:
@@ -509,7 +510,7 @@ class New_layout_engine():
                     k = (k[0] * scaler, k[1] * scaler)
                     CS_SYM_Updated[k] = CS_SYM_information
             CS_SYM_Updated = [CS_SYM_Updated]  # mapped solution layout information to symbolic layout objects
-            cs_islands_up = self.update_islands(CS_SYM_information, Evaluated_X, Evaluated_Y, cs_islands)
+            cs_islands_up = self.update_islands(CS_SYM_information, Evaluated_X, Evaluated_Y, cs_islands,initial_islands)
             # -------------------------------for debugging----------------------
             #print "After update"
             #for island in cs_islands_up:
@@ -566,7 +567,7 @@ class New_layout_engine():
                         k = (k[0] * scaler, k[1] * scaler)
                         CS_SYM_info[k] = CS_SYM_Updated1
                 CS_SYM_Updated.append(CS_SYM_info)
-                cs_islands_up = self.update_islands(CS_SYM_Updated1, Evaluated_X[i], Evaluated_Y[i], cs_islands)
+                cs_islands_up = self.update_islands(CS_SYM_Updated1, Evaluated_X[i], Evaluated_Y[i], cs_islands,initial_islands)
                 md_data = ModuleDataCornerStitch()
                 md_data.islands[0] = cs_islands_up
                 md_data.footprint = k
@@ -671,7 +672,7 @@ class New_layout_engine():
                         k = (k[0] * scaler, k[1] * scaler)
                         CS_SYM_info[k] = CS_SYM_Updated1
                 CS_SYM_Updated.append(CS_SYM_info)
-                cs_islands_up = self.update_islands(CS_SYM_Updated1, Evaluated_X[i], Evaluated_Y[i], cs_islands)
+                cs_islands_up = self.update_islands(CS_SYM_Updated1, Evaluated_X[i], Evaluated_Y[i], cs_islands,initial_islands)
                 md_data = ModuleDataCornerStitch()
                 md_data.islands[0] = cs_islands_up
                 md_data.footprint = k
@@ -863,17 +864,101 @@ class New_layout_engine():
                         if rect1[0]==rect.cell.type and rect1[1]==rect.cell.x and rect1[2]==rect.cell.y and rect1[3]==rect.getWidth() and rect1[4]==rect.getHeight() and rect1[-1]==rect.nodeId:
                             rect.current=current[island.name]
 
-    def update_islands(self,cs_sym_info,minx,miny,cs_islands1):
+    def update_islands(self,cs_sym_info,minx,miny,cs_islands1,init_islands):
         '''
-        :param cs_sym_info:
-        :param cs_islands:
+        updates all elements and child information based on initial island information, updates mesh node information based on cs_island information
+
+        :param cs_sym_info: updated location of each rectangle from user input
+        :param minx: evaluated x location mapped dictionary
+        :param miny: evaluated y location mapped dictionary
+        :param cs_islands1: corner stitch islands created from initial islands
+        :param init_islands: initial islands based on user input
         :return:
         '''
 
         cs_islands=copy.deepcopy(cs_islands1)
+
+        for island in cs_islands:
+            if len(island.child) == 0:
+
+                #for element in island.elements:
+
+                node_id = 1
+                for node in island.mesh_nodes:
+                    if node.pos[0] in minx[node_id] and node.pos[1] in miny[node_id]:
+                        node.pos[0] = minx[node_id][node.pos[0]]
+                        node.pos[1] = miny[node_id][node.pos[1]]
+
+
+            else:
+
+                nodeids=[]
+                for element in island.elements:
+                    if element[-1] not in nodeids:
+                        nodeids.append( element[-1])
+                        #break  # to consider not connected but in same island
+                '''
+                print "NI",nodeids
+                if len(nodeids)==1:
+                    for node in island.mesh_nodes:
+                        print "B", node.pos
+                        if node.pos[0] in minx[node_id] and node.pos[1] in miny[node_id]:
+                            node.pos[0] = minx[node_id][node.pos[0]]
+                            node.pos[1] = miny[node_id][node.pos[1]]
+                        print "A", node.pos
+                else:
+                
+                '''
+
+                min_x_combined={}
+                min_y_combined={}
+                for node_id in nodeids:
+                    for k,v in minx.items():
+                        if k==node_id:
+                            min_x_combined.update(v)
+                    for k, v in miny.items():
+                        if k == node_id:
+                            min_y_combined.update(v)
+
+                for node in island.mesh_nodes:
+                    if node.pos[0] in min_x_combined and node.pos[1] in min_y_combined:
+                        node.pos[0] = min_x_combined[node.pos[0]]
+                        node.pos[1] = min_y_combined[node.pos[1]]
+
+
+
+        updated_islands=copy.deepcopy(init_islands)
+        for i in range(len(updated_islands)):
+            island=updated_islands[i]
+            updated_elements=[]
+            for element in island.elements:
+                if element[5] in cs_sym_info:
+                    updated_info=cs_sym_info[element[5]]
+                    updated_info+=[element[5],element[-2]]
+                    new_element=updated_info
+                    updated_elements.append(new_element)
+            island.elements=updated_elements
+
+            if len(island.child)>0:
+                updated_child=[]
+                for element in island.child:
+                    if element[5] in cs_sym_info:
+                        updated_info = cs_sym_info[element[5]]
+                        updated_info += [element[5],element[-2]]
+                        new_element = updated_info
+                        updated_child.append(new_element)
+                island.child = updated_child
+            for island1 in cs_islands:
+                if island.name==island1.name:
+                    island.mesh_nodes= copy.deepcopy(island1.mesh_nodes)
+        return updated_islands
+
+
+        """
         for i in range(len(cs_islands)):
             island=cs_islands[i]
             for element in island.elements:
+                print "inside_up",element
 
                 if element[-3] in cs_sym_info:
                     element[1]=cs_sym_info[element[-3]][1]
@@ -908,6 +993,10 @@ class New_layout_engine():
                     if node.pos[0] in minx[node_id] and node.pos[1] in miny[node_id]:
                         node.pos[0] = minx[node_id][node.pos[0]]
                         node.pos[1] = miny[node_id][node.pos[1]]
+
+        
+        
+        """
 
 
         return cs_islands
@@ -1105,32 +1194,55 @@ class New_layout_engine():
 
                     for nodeid in node_id:
                         if nodeid==1:
-                            for tile in Htree.hNodeList[nodeid - 1].stitchList:
-                                if tile == rect:
-                                    coordinate1 = [tile.cell.x, tile.cell.y]
-                                    coordinate6 = [tile.cell.x + tile.getWidth(), tile.cell.y + tile.getHeight()]
-                                    coordinate7 = [tile.cell.x, tile.cell.y + tile.getHeight()]
-                                    coordinate8 = [tile.cell.x + tile.getWidth(), tile.cell.y]
-                                    if coordinate1 not in points:
-                                        points.append(coordinate1)
-                                    if coordinate6 not in points:
-                                        points.append(coordinate6)
-                                    if coordinate7 not in points:
-                                        points.append(coordinate7)
-                                    if coordinate8 not in points:
-                                        points.append(coordinate8)
-                                    if tile.EAST.cell.type == 'EMPTY':
-                                        E.append(coordinate8)
-                                        E.append(coordinate6)
-                                    if tile.WEST.cell.type == "EMPTY":
-                                        W.append(coordinate1)
-                                        W.append(coordinate7)
-                                    if tile.NORTH.cell.type == 'EMPTY':
-                                        N.append(coordinate7)
-                                        N.append(coordinate6)
-                                    if tile.SOUTH.cell.type == "EMPTY":
-                                        S.append(coordinate1)
-                                        S.append(coordinate8)
+                            for rect in island.elements:
+                                for tile in Htree.hNodeList[nodeid - 1].stitchList:
+                                    if tile.cell.x == rect[1] and tile.cell.y==rect[2] and tile.cell.type==rect[0] and tile.getWidth()==rect[3] and tile.getHeight()==rect[4]:
+                                        coordinate1 = [tile.cell.x, tile.cell.y]
+                                        coordinate6 = [tile.cell.x + tile.getWidth(), tile.cell.y + tile.getHeight()]
+                                        coordinate7 = [tile.cell.x, tile.cell.y + tile.getHeight()]
+                                        coordinate8 = [tile.cell.x + tile.getWidth(), tile.cell.y]
+                                        if coordinate1 not in points:
+                                            points.append(coordinate1)
+                                        if coordinate6 not in points:
+                                            points.append(coordinate6)
+                                        if coordinate7 not in points:
+                                            points.append(coordinate7)
+                                        if coordinate8 not in points:
+                                            points.append(coordinate8)
+                                        '''
+                                        if tile.EAST.cell.type == 'EMPTY':
+                                            E.append(coordinate8)
+                                            E.append(coordinate6)
+                                        if tile.WEST.cell.type == "EMPTY":
+                                            W.append(coordinate1)
+                                            W.append(coordinate7)
+                                        if tile.NORTH.cell.type == 'EMPTY':
+                                            N.append(coordinate7)
+                                            N.append(coordinate6)
+                                        if tile.SOUTH.cell.type == "EMPTY":
+                                            S.append(coordinate1)
+                                            S.append(coordinate8)
+                                        '''
+                                        if tile.EAST.cell.type == 'EMPTY' :
+                                            # E.append(coordinate8)
+                                            E.append(coordinate6)
+                                        if tile.WEST.cell.type == "EMPTY" :
+                                            W.append(coordinate1)
+                                            # W.append(coordinate7)
+                                        if tile.NORTH.cell.type == 'EMPTY' :
+                                            # N.append(coordinate7)
+                                            N.append(coordinate6)
+                                        if tile.SOUTH.cell.type == "EMPTY":
+                                            S.append(coordinate1)
+                                            # S.append(coordinate8)
+                                        if tile.westNorth(tile).cell.type == 'EMPTY' :
+                                            N.append(coordinate7)
+                                        if tile.northWest(tile).cell.type == 'EMPTY':
+                                            W.append(coordinate7)
+                                        if tile.southEast(tile).cell.type == 'EMPTY':
+                                            E.append(coordinate8)
+                                        if tile.eastSouth(tile).cell.type == 'EMPTY':
+                                            S.append(coordinate8)
                         else:
 
                             elements=island.elements
@@ -1138,7 +1250,7 @@ class New_layout_engine():
                                 child=island.child
                             else:
                                 child=None
-                            print"here",len(elements),elements
+
                             zdl_h = []
                             zdl_v = []
 
@@ -1189,7 +1301,7 @@ class New_layout_engine():
                                     if point[0]==element[1] and point[1]>element[2] and point[1]<element[2]+element[4]  and point not in common:
                                         W.append(point)
                                     elif point[0]==element[1]+element[3] and point[1]>element[2] and point[1]<element[2]+element[4] and point not in common:
-                                        print"H1",point
+
                                         E.append(point)
                                     elif point[1]==element[2] and point[0]>element[1] and point[0]<element[1]+element[3]  and point not in common:
                                         S.append(point)
@@ -1354,7 +1466,7 @@ class New_layout_engine():
                     for node in HorizontalNodeList:
                         for i in node.stitchList:
                             if rect[1] == i.cell.x and rect[2] == i.cell.y and rect[3] == i.getWidth() and rect[4] == i.getHeight() and rect[0] == i.cell.type:
-                                r = [rect[0], rect[1], rect[2], rect[3], rect[4], i.nodeId]  # type,x,y,width,height,name, hierarchy_level, nodeId
+                                r = [rect[0], rect[1], rect[2], rect[3], rect[4],i.cell.type, i.nodeId]  # type,x,y,width,height,name, hierarchy_level, nodeId
                                 cs_elements.append(r)
                                 #cs_mapped_input[rect[5]] = [i, node.id, rect[8]]
                                 #cs_island.element_names.append(rect[5])
@@ -1374,22 +1486,25 @@ class New_layout_engine():
                                 r = [rect[0], rect[1], rect[2], rect[3], rect[4], node.id]  # type,x,y,width,height, hierarchy_level, parent nodeId
                                 cs_child.append(r)
                                 #cs_mapped_input[rect[5]] = [i, node.id, rect[8]]
+                                cs_mapped_input[rect[5]] = [[rect[1], rect[2], rect[1] + rect[3], rect[2] + rect[4]],[node.id],rect[0], rect[8], i.rotation_index]
                                 cs_island.child_names.append(rect[5])
 
             cs_island.child = cs_child
 
             cs_element_nodes=[]
+
             for element in cs_island.elements:
                 if element[-1] not in cs_element_nodes:
                     cs_element_nodes.append(element[-1])
-            cs_child_nodes=[]
-            for element in cs_island.child:
-                if element[-1] not in cs_child_nodes:
-                    cs_child_nodes.append(element[-1])
+
+            #cs_child_nodes=[]
+            #for element in cs_island.child:
+                #if element[-1] not in cs_child_nodes:
+                    #cs_child_nodes.append(element[-1])
             for rect in island.elements:
-                cs_mapped_input[rect[5]]=[rect[1],rect[2],rect[1]+rect[3],rect[2]+rect[4],cs_element_nodes,rect[8]] # bottom left corner x,y, top right corner x,y, nodeid list,hierarchy level
-            for rect in island.child:
-                cs_mapped_input[rect[5]]=[rect[1],rect[2],rect[1]+rect[3],rect[2]+rect[4],cs_child_nodes,rect[8]] # bottom left corner x,y, top right corner x,y, nodeid list,hierarchy level
+                cs_mapped_input[rect[5]]=[[rect[1],rect[2],rect[1]+rect[3],rect[2]+rect[4]],cs_element_nodes,rect[0],rect[8],0] # bottom left corner x,y, top right corner x,y, nodeid list,hierarchy level,rotation index
+            #for rect in island.child:
+                #cs_mapped_input[rect[5]]=[[rect[1],rect[2],rect[1]+rect[3],rect[2]+rect[4]],cs_child_nodes,rect[8],rect.rotation_index] # bottom left corner x,y, top right corner x,y, nodeid list,hierarchy level,rotation_index
 
             cs_islands.append(cs_island)
 

@@ -3212,25 +3212,41 @@ class CS_to_CG():
 
         sub_width=max(minx[1].values())
         sub_length=max(miny[1].values())
+
+        #for k, v in sym_to_cs.items():
+            #print k,v
+
+        #raw_input()
+
+
         for k, v in sym_to_cs.items():
 
-            rect = v[0]
-            #nodeid=v[1].id
-            nodeid = v[1]
+            coordinates=v[0] # x1,y1,x2,y2 (bottom left and top right)
+            left=coordinates[0]
+            bottom=coordinates[1]
+            right=coordinates[2]
+            top=coordinates[3]
+            nodeids = v[1]
+            type=v[2]
+            hier_level=v[3]
+            rotation_index=v[4]
             #print "UP",k,rect.cell.x,rect.cell.y,rect.EAST.cell.x,rect.NORTH.cell.y
+            for nodeid in nodeids:
+                if left in minx[nodeid] and bottom in miny[nodeid] and top in miny[nodeid] and right in minx[nodeid]:
+                    x = minx[nodeid][left]
+                    y = miny[nodeid][bottom]
+                    w = minx[nodeid][right] - minx[nodeid][left]
+                    h = miny[nodeid][top] - miny[nodeid][bottom]
+                    break
+                else:
+                    continue
 
-            if rect.cell.x in minx[nodeid] and rect.EAST.cell.x in minx[nodeid] and rect.cell.y in miny[nodeid] and rect.NORTH.cell.y in miny[nodeid]:
-                x = minx[nodeid][rect.cell.x]
-                y = miny[nodeid][rect.cell.y]
-                w = minx[nodeid][rect.EAST.cell.x] - minx[nodeid][rect.cell.x]
-                h = miny[nodeid][rect.NORTH.cell.y] - miny[nodeid][rect.cell.y]
-                type = rect.cell.type
-                name = k
-                #print x,y,w,h
-                new_rect = [float(x) / s, float(y) / s, float(w) / s, float(h) / s, type,v[2]+1,rect.rotation_index]
-                #print "NN",new_rect,name
-                layout_rects.append(new_rect)
-                cs_sym_info[name]=[type,x,y,w,h]
+            name = k
+            #print x,y,w,h
+            new_rect = [float(x) / s, float(y) / s, float(w) / s, float(h) / s, type,hier_level+1,rotation_index]
+            #print "NN",new_rect,name
+            layout_rects.append(new_rect)
+            cs_sym_info[name]=[type,x,y,w,h]
 
         substrate_rect = ["EMPTY",0,0,sub_width,sub_length]
         cs_sym_info['Substrate'] = substrate_rect

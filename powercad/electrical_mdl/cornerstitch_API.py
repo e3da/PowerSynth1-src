@@ -116,6 +116,7 @@ class CornerStitch_Emodel_API:
                 p.name=trace[5]
                 self.e_plates.append(p)
             for comp in isl.child: # get all components in isl
+                print "elec",comp
                 x, y, w, h = comp[1:5]
                 name = comp[5] # get the comp name from layout script
                 obj = self.comp_dict[name]
