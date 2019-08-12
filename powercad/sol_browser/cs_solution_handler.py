@@ -221,11 +221,11 @@ def plot_solutions(file_location=None):
 
 if __name__ == '__main__':
 
-    plot_solutions('D:\Demo\New_Flow_w_Hierarchy\Journal_Case\Version_6\Solution_NSGA\\50X50\Layout_Solutions')
-    '''
+    #plot_solutions('D:\Demo\New_Flow_w_Hierarchy\Journal_Case\Version_6\Solution_NSGA\\35X35\Layout_Solutions')
+    #'''
     
     sol_data={}
-    file='D:\Demo\New_Flow_w_Hierarchy\Journal_Case\Version_6\Solution_NG\Layout_Solutions\plot_data.csv'
+    file='D:\Demo\New_Flow_w_Hierarchy\Journal_Case\Version_6\Solution_NSGA\\35X35\Layout_Solutions\plot_data.csv'
     with open(file) as csvfile:
         readCSV = csv.reader(csvfile, delimiter=',')
         for row in readCSV:
@@ -237,7 +237,7 @@ if __name__ == '__main__':
     print sol_data
     pareto_data = pareto_frontiter2D(sol_data)
     print len(pareto_data)
-    file_name='D:\Demo\New_Flow_w_Hierarchy\Journal_Case\Version_6\Solution_NG\Pareto_Solutions\plot_data.csv'
+    file_name='D:\Demo\New_Flow_w_Hierarchy\Journal_Case\Version_6\Solution_NSGA\\35X35\Pareto_Solutions\plot_pareto_data.csv'
     with open(file_name, 'wb') as my_csv:
         csv_writer = csv.writer(my_csv, delimiter=',')
         for k,v in pareto_data.items():
@@ -245,7 +245,7 @@ if __name__ == '__main__':
             csv_writer.writerow(data)
     my_csv.close()
     
-    '''
+    #'''
 
 
 
