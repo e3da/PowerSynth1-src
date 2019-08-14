@@ -665,7 +665,6 @@ def script_translator(input_script=None, bond_wire_info=None, fig_dir=None, cons
     plot_layout(fig_data=New_engine.init_data[0], size=New_engine.init_size, fig_dir=fig_dir) # plots initial layout
 
     # New_engine.open_new_layout_engine(window=window)
-    cs_sym_data = New_engine.generate_solutions(level=0, num_layouts=1, W=None, H=None, fixed_x_location=None,
-                                                         fixed_y_location=None, seed=None, individual=None)
+    #cs_sym_data = New_engine.generate_solutions(level=0, num_layouts=1, W=None, H=None, fixed_x_location=None,fixed_y_location=None, seed=None, individual=None)
 
-    return New_engine, cs_sym_data, bondwires
+    return New_engine,  bondwires

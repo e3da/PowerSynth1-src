@@ -483,8 +483,8 @@ class New_layout_engine():
             #CS_SYM_information, Layout_Rects = CG1.update_min(Evaluated_X, Evaluated_Y , sym_to_cs, scaler)
             #-------------------------------for debugging----------------------
             #print "Before update"
-            for island in cs_islands:
-                island.print_island(plot=True)
+            #for island in cs_islands:
+                #island.print_island(plot=True)
             #------------------------------------------------------------------
             #cs_islands_up=self.update_points(cs_islands)
             #CS_SYM_information, Layout_Rects = CG1.UPDATE_min(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree ,sym_to_cs,scaler)  # CS_SYM_information is a dictionary where key=path_id(component name) and value=list of updated rectangles, Layout Rects is a dictionary for minimum HCS and VCS evaluated rectangles (used for plotting only)
@@ -513,8 +513,8 @@ class New_layout_engine():
             cs_islands_up = self.update_islands(CS_SYM_information, Evaluated_X, Evaluated_Y, cs_islands,initial_islands)
             # -------------------------------for debugging----------------------
             #print "After update"
-            for island in cs_islands_up:
-                island.print_island(plot=True,size=k)
+            #for island in cs_islands_up:
+                #island.print_island(plot=True,size=k)
             # island.plot_mesh_nodes(size=k)
             # -------------------------------------------------
             md_data = ModuleDataCornerStitch()
@@ -1293,7 +1293,11 @@ class New_layout_engine():
                                                     if (x1!=rect.cell.x and y1!=rect.cell.y) or (x1!=rect.cell.x and y1!=rect.cell.y+rect.getHeight()) or (x1!=rect.cell.x+rect.getWidth() and y1!=rect.cell.y+rect.getHeight()) and (x1!=rect.cell.x+rect.getWidth() and y1!=rect.cell.y) :
                                                         common.append(point)
 
-
+                            # removing four corner points of each element from common list
+                            for point in common:
+                                for element in island.elements:
+                                    if (point[0]==element[1] and point[1]==element[2]) or (point[0]==element[1]+element[3] and point[1]==element[2]+element[4]) or (point[0]==element[1] and point[1]==element[2]+element[4]) or (point[0]==element[1]+element[3] and point[1]==element[2]):
+                                        common.remove(point)
                             #print "C",common
 
                             for point in filter:

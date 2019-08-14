@@ -1476,7 +1476,7 @@ class Hnode(Node):
         #if self.areaSearch(x1, y1, x2, y2,type): #check to ensure that the area is empty
 
             #RESP=1
-        print"ENTRY",x1,y1,x2,y2
+        #print"ENTRY",x1,y1,x2,y2
         # finds top left and bottom right coordinate containing tile and then start for finding all tiles which should be split
         topLeft = self.findPoint(x1, y1, self.stitchList[0])
         bottomRight = self.findPoint(x2, y2, self.stitchList[0])
@@ -1505,8 +1505,8 @@ class Hnode(Node):
         splitList = []
         splitList.append(topLeft)
         cc = topLeft
-        print "TL",cc.cell.x, cc.cell.y, cc.cell.type,cc.getWidth(),cc.getHeight(),cc.cell.type
-        print"TR",tr.cell.x,tr.cell.y, tr.cell.type,tr.getWidth(),tr.getHeight(),tr.cell.type
+        #print "TL",cc.cell.x, cc.cell.y, cc.cell.type,cc.getWidth(),cc.getHeight(),cc.cell.type
+        #print"TR",tr.cell.x,tr.cell.y, tr.cell.type,tr.getWidth(),tr.getHeight(),tr.cell.type
 
         if start!=Schar:
             if cc.WEST not in self.boundaries and cc.WEST.cell.type == type and cc.WEST.cell.x + cc.WEST.getWidth() == x1 or cc.cell.type == type:
@@ -1523,7 +1523,7 @@ class Hnode(Node):
                 if cc2 not in self.boundaries:
                     splitList.append(cc2)
 
-            print "HSP", len(splitList)
+            #print "HSP", len(splitList)
             while cc.cell.x <= tr.cell.x and cc not in self.boundaries:
                 if cc not in splitList:
                     splitList.append(cc)
@@ -1548,9 +1548,9 @@ class Hnode(Node):
 
 
         # splitting tiles at y1 coordinate
-        print "HSP",len(splitList)
+        #print "HSP",len(splitList)
         for rect in splitList:
-            print rect.cell.x,rect.cell.y,rect.cell.type
+            #print rect.cell.x,rect.cell.y,rect.cell.type
             i = self.stitchList.index(rect)
             if y1 != rect.cell.y and y1 != rect.NORTH.cell.y: self.hSplit(i, y1)
 
@@ -1601,9 +1601,9 @@ class Hnode(Node):
 
 
         # splitting tiles at y2 coordinate
-        print"v_split",len(splitList)
+        #print"v_split",len(splitList)
         for rect in splitList:
-            print"s",rect.cell.x,rect.cell.y,rect.cell.type,rect.getWidth(),rect.getHeight()
+            #print"s",rect.cell.x,rect.cell.y,rect.cell.type,rect.getWidth(),rect.getHeight()
             i=self.stitchList.index(rect)
             if y2 != rect.cell.y and y2 != rect.NORTH.cell.y: self.hSplit(i, y2)
 

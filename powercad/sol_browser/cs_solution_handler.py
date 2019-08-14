@@ -221,8 +221,8 @@ def plot_solutions(file_location=None):
 
 if __name__ == '__main__':
 
-    #plot_solutions('D:\Demo\New_Flow_w_Hierarchy\Journal_Case\Version_6\Solution_NSGA\\35X35\Layout_Solutions')
-    #'''
+    plot_solutions('D:\Demo\New_Flow_w_Hierarchy\Journal_Case\Final_Version\Solution\\60X60\Layout_Solutions')
+    '''
     
     sol_data={}
     file='D:\Demo\New_Flow_w_Hierarchy\Journal_Case\Version_6\Solution_NSGA\\35X35\Layout_Solutions\plot_data.csv'
@@ -245,7 +245,7 @@ if __name__ == '__main__':
             csv_writer.writerow(data)
     my_csv.close()
     
-    #'''
+    '''
 
 
 
