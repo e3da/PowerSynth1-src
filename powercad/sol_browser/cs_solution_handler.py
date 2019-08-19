@@ -67,8 +67,32 @@ def pareto_frontiter2D(data_in=None, MinX=True, MinY=True):
 
         return p_data
 
+def export_to_eagle(solutions=None, sol_path = None):
+    # export to eagle format
+    for i in range(len(solutions)):
+        item = solutions[i].name
+        file_name = sol_path + '/' + item + '.txt'
+        with open(file_name, 'wb') as my_file:
+            for k, v in solutions[i].abstract_info[item]['rect_info'].items():
+                if k[0] == 'T':
+                    x1 = v.x / 1000.0
+                    x2 = (v.x + v.width) / 1000.0
+                    y1 = v.y / 1000.0
+                    y2 = (v.y + v.height) / 1000.0
+                    print >> my_file, '<rectangle x1="{}" y1="{}" x2="{}" y2="{}" layer="1"/>'.format(str(x1), str(y1),
+                                                                                                      str(x2), str(y2))
+            for k, v in solutions[i].abstract_info[item]['rect_info'].items():
+                if k == 'Substrate':
+                    x1 = v.x / 1000.0
+                    x2 = (v.x + v.width) / 1000.0
+                    y1 = v.y / 1000.0
+                    y2 = (v.y + v.height) / 1000.0
+                    print >> my_file, '<rectangle x1="{}" y1="{}" x2="{}" y2="{}" layer="16"/>'.format(str(x1), str(y1),
+                                                                                                       str(x2), str(y2))
+                    break
 
-def export_solutions(solutions=None,directory=None,pareto_data=None):
+        my_file.close()
+def export_solutions(solutions=None,directory=None,pareto_data=None,export = False):
     sol_path = directory + '/Layout_Solutions'
     pareto_path = directory + '/Pareto_Solutions'
     if not os.path.exists(sol_path):
@@ -77,7 +101,8 @@ def export_solutions(solutions=None,directory=None,pareto_data=None):
     if len(solutions) > 1000:
         print "Thousands of csv files are going to be generated"
 
-
+    if export:
+        export_to_eagle(solutions=solutions,sol_path=sol_path)
     params=solutions[0].params
     performance_names=params.keys()
     for i in range(len(solutions)):

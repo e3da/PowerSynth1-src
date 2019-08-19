@@ -135,7 +135,7 @@ class CornerStitch_Emodel_API:
                         print x, y, w, h
                         new_rect = Rect(top=(y + h) / 1000, bottom=y / 1000, left=x / 1000, right=(x + w) / 1000)
                         z = self.layer_to_z[type][0]
-                        pin = Sheet(rect=new_rect, net_name=name, net_type='internal', n=(0, 0, 1), z=z)
+                        pin = Sheet(rect=new_rect, net_name=name, net_type='external', n=(0, 0, 1), z=z)
                         self.net_to_sheet[name] = pin
                         self.e_sheets.append(pin)
                     elif obj.type == 1:  # If this is a component
@@ -179,25 +179,20 @@ class CornerStitch_Emodel_API:
         self.emesh = EMesh_CS(islands=islands,hier_E=self.hier, freq=self.freq, mdl=self.rs_model)
         self.emesh.mesh_update()
 
-        fig = plt.figure(1)
-        ax = Axes3D(fig)
-        ax.set_xlim3d(0, self.width+2)
-        ax.set_ylim3d(0, self.height + 2)
-        ax.set_zlim3d(0, 2)
-        self.emesh.plot_3d(fig=fig, ax=ax, show_labels=True)
-        fig = plt.figure(2)
-        ax = a3d.Axes3D(fig)
-        ax.set_xlim3d(-2, self.width + 2)
-        ax.set_ylim3d(-2, self.height +2)
-        ax.set_zlim3d(0, 2)
-        plot_rect3D(rect2ds=self.module.plate + self.module.sheet, ax=ax)
-        plt.show()
+
 
         self.emesh.update_trace_RL_val()
         self.emesh.update_hier_edge_RL()
         self.emesh.mutual_data_prepare(mode=0)
         self.emesh.update_mutual(mode=0)
 
+        # fig = plt.figure(2)
+        # ax = a3d.Axes3D(fig)
+        # ax.set_xlim3d(-2, self.width + 2)
+        # ax.set_ylim3d(-2, self.height +2)
+        # ax.set_zlim3d(0, 2)
+        # plot_rect3D(rect2ds=self.module.plate + self.module.sheet, ax=ax)
+        plt.show()
     def init_layout(self, layout_data=None):
         '''
         Read part info and link them with part info, from an updaed layout, update the electrical network
@@ -306,7 +301,8 @@ class CornerStitch_Emodel_API:
 
         self.emesh.mutual_data_prepare(mode=0)
         self.emesh.update_mutual(mode=0)
-
+        netlist = ENetlist(self.module, self.emesh)
+        netlist.export_netlist_to_ads(file_name='Half_bridge.net')
         # pr.disable()
         # pr.create_stats()
         # file = open('C:\Users\qmle\Desktop\New_Layout_Engine\New_design_flow\mystats.txt', 'w')
@@ -330,7 +326,7 @@ class CornerStitch_Emodel_API:
                           frequency=self.freq, circuit=RL_circuit())
 
             self.wires.append(wire)
-        self.e_comps+=self.wires
+        #self.e_comps+=self.wires
     def plot_3d(self):
         fig = plt.figure(1)
         ax = a3d.Axes3D(fig)
@@ -402,11 +398,25 @@ class CornerStitch_Emodel_API:
         R = abs(np.real(imp) * 1e3)
         L = abs(np.imag(imp)) * 1e9 / (2 * np.pi * self.circuit.freq)
         self.hier.tree.__del__()
+
+        gc.collect()
+        print R, L
+        check = raw_input("do you want to extract netlist ? y/n")
+        if check == 'y':
+            self.emesh.update_C_val(mode=2, t=0.2,
+                                    h=0.6)  # added cap to ground node; Note: this is for 2 layers DBC only
+
+            netlist = ENetlist(self.module, self.emesh)
+            netlist.export_netlist_to_ads(file_name='Half_bridge.net')
+        fig = plt.figure(1)
+        ax = Axes3D(fig)
+        ax.set_xlim3d(0, self.width + 2)
+        ax.set_ylim3d(0, self.height + 2)
+        ax.set_zlim3d(0, 2)
+        self.emesh.plot_3d(fig=fig, ax=ax, show_labels=True)
         del self.circuit
         self.emesh.graph.clear()
         self.emesh.m_graph.clear()
-        gc.collect()
-        print R, L
         return R, L
 
         '''
