@@ -305,7 +305,7 @@ class New_layout_engine():
                 r = [rect.cell.x, rect.cell.y, rect.getWidth(), rect.getHeight()]
                 rectlist2.append(r)
         fig,ax=plt.subplots()
-        draw_rect_list_cs(rectlist=rectlist1,ax=ax,x_max=80,y_max=80)
+        draw_rect_list_cs(rectlist=rectlist1,ax=ax,x_max=80000,y_max=80000)
 
         fig, ax = plt.subplots()
         draw_rect_list_cs(rectlist=rectlist2, ax=ax,x_max=80,y_max=80)
@@ -995,11 +995,14 @@ class New_layout_engine():
                         node.pos[1] = miny[node_id][node.pos[1]]
 
 
-        
+        return cs_islands
         """
 
 
-        return cs_islands
+
+
+
+
 
 
 
@@ -1093,102 +1096,102 @@ class New_layout_engine():
                         node_id.append(int(rect[-1]))
                 if len(node_id)==1:
                     nodeid=node_id[0]
-                for tile in Htree.hNodeList[nodeid - 1].stitchList:
-                    coordinate1 = [tile.cell.x, tile.cell.y]
-                    coordinate6 = [tile.cell.x + tile.getWidth(), tile.cell.y + tile.getHeight()]
-                    coordinate7 = [tile.cell.x, tile.cell.y + tile.getHeight()]
-                    coordinate8 = [tile.cell.x + tile.getWidth(), tile.cell.y]
+                    for tile in Htree.hNodeList[nodeid - 1].stitchList:
+                        coordinate1 = [tile.cell.x, tile.cell.y]
+                        coordinate6 = [tile.cell.x + tile.getWidth(), tile.cell.y + tile.getHeight()]
+                        coordinate7 = [tile.cell.x, tile.cell.y + tile.getHeight()]
+                        coordinate8 = [tile.cell.x + tile.getWidth(), tile.cell.y]
 
-                    if coordinate1 not in points:
-                        points.append(coordinate1)
-                    if coordinate6 not in points:
-                        points.append(coordinate6)
-                    if coordinate7 not in points:
-                        points.append(coordinate7)
-                    if coordinate8 not in points:
-                        points.append(coordinate8)
+                        if coordinate1 not in points:
+                            points.append(coordinate1)
+                        if coordinate6 not in points:
+                            points.append(coordinate6)
+                        if coordinate7 not in points:
+                            points.append(coordinate7)
+                        if coordinate8 not in points:
+                            points.append(coordinate8)
 
-                    if tile.EAST.cell.type == 'EMPTY':
-                        E.append(coordinate8)
-                        E.append(coordinate6)
-                    if tile.WEST.cell.type == "EMPTY":
-                        W.append(coordinate1)
-                        W.append(coordinate7)
-                    if tile.NORTH.cell.type == 'EMPTY':
-                        N.append(coordinate7)
-                        N.append(coordinate6)
-                    if tile.SOUTH.cell.type == "EMPTY":
-                        S.append(coordinate1)
-                        S.append(coordinate8)
+                        if tile.EAST.cell.type == 'EMPTY':
+                            E.append(coordinate8)
+                            E.append(coordinate6)
+                        if tile.WEST.cell.type == "EMPTY":
+                            W.append(coordinate1)
+                            W.append(coordinate7)
+                        if tile.NORTH.cell.type == 'EMPTY':
+                            N.append(coordinate7)
+                            N.append(coordinate6)
+                        if tile.SOUTH.cell.type == "EMPTY":
+                            S.append(coordinate1)
+                            S.append(coordinate8)
 
 
-                    # points.append(coordinate4)
+                        # points.append(coordinate4)
 
-                for tile in Vtree.vNodeList[nodeid - 1].stitchList:
-                    coordinate1 = [tile.cell.x, tile.cell.y]
-                    coordinate6 = [tile.cell.x + tile.getWidth(), tile.cell.y + tile.getHeight()]
-                    coordinate7 = [tile.cell.x, tile.cell.y + tile.getHeight()]
-                    coordinate8 = [tile.cell.x + tile.getWidth(), tile.cell.y]
-                    if tile.EAST.cell.type == 'EMPTY':
-                        E.append(coordinate8)
-                        E.append(coordinate6)
-                    if tile.WEST.cell.type == "EMPTY":
-                        W.append(coordinate1)
-                        W.append(coordinate7)
-                    if tile.NORTH.cell.type == 'EMPTY':
-                        N.append(coordinate7)
-                        N.append(coordinate6)
-                    if tile.SOUTH.cell.type == "EMPTY":
-                        S.append(coordinate1)
-                        S.append(coordinate8)
+                    for tile in Vtree.vNodeList[nodeid - 1].stitchList:
+                        coordinate1 = [tile.cell.x, tile.cell.y]
+                        coordinate6 = [tile.cell.x + tile.getWidth(), tile.cell.y + tile.getHeight()]
+                        coordinate7 = [tile.cell.x, tile.cell.y + tile.getHeight()]
+                        coordinate8 = [tile.cell.x + tile.getWidth(), tile.cell.y]
+                        if tile.EAST.cell.type == 'EMPTY':
+                            E.append(coordinate8)
+                            E.append(coordinate6)
+                        if tile.WEST.cell.type == "EMPTY":
+                            W.append(coordinate1)
+                            W.append(coordinate7)
+                        if tile.NORTH.cell.type == 'EMPTY':
+                            N.append(coordinate7)
+                            N.append(coordinate6)
+                        if tile.SOUTH.cell.type == "EMPTY":
+                            S.append(coordinate1)
+                            S.append(coordinate8)
 
-                    if coordinate1 not in points:
-                        points.append(coordinate1)
-                    if coordinate6 not in points:
-                        points.append(coordinate6)
-                    if coordinate7 not in points:
-                        points.append(coordinate7)
-                    if coordinate8 not in points:
-                        points.append(coordinate8)
+                        if coordinate1 not in points:
+                            points.append(coordinate1)
+                        if coordinate6 not in points:
+                            points.append(coordinate6)
+                        if coordinate7 not in points:
+                            points.append(coordinate7)
+                        if coordinate8 not in points:
+                            points.append(coordinate8)
 
-                hnode = Htree.hNodeList[nodeid - 1]
-                vnode = Vtree.vNodeList[nodeid - 1]
-                cg = constraintGraph()
-                zdl_h, zdl_v = cg.dimListFromLayer(hnode, vnode)
+                    hnode = Htree.hNodeList[nodeid - 1]
+                    vnode = Vtree.vNodeList[nodeid - 1]
+                    cg = constraintGraph()
+                    zdl_h, zdl_v = cg.dimListFromLayer(hnode, vnode)
 
-                intersections = list(itertools.product(zdl_h, zdl_v))
-                intersection_points = [list(elem) for elem in intersections]
+                    intersections = list(itertools.product(zdl_h, zdl_v))
+                    intersection_points = [list(elem) for elem in intersections]
 
-                for element in island.elements:
-                    for rect in Htree.hNodeList[0].stitchList:
+                    for element in island.elements:
+                        for rect in Htree.hNodeList[0].stitchList:
 
-                        if rect.cell.x == element[1] and rect.cell.y == element[2]  and rect.cell.type == element[0]:
+                            if rect.cell.x == element[1] and rect.cell.y == element[2]  and rect.cell.type == element[0]:
 
-                            for point in intersection_points:
-                                x1 = point[0]
-                                y1 = point[1]
-                                if x1 >= rect.cell.x and x1 <= rect.cell.x + rect.getWidth() and y1 >= rect.cell.y and y1 <= rect.cell.y + rect.getHeight():
+                                for point in intersection_points:
+                                    x1 = point[0]
+                                    y1 = point[1]
+                                    if x1 >= rect.cell.x and x1 <= rect.cell.x + rect.getWidth() and y1 >= rect.cell.y and y1 <= rect.cell.y + rect.getHeight():
 
-                                    points.append(point)
-                                    if point[0] == rect.cell.x:
-                                        W.append(point)
-                                    if point[0] == rect.cell.x + rect.getWidth():
-                                        E.append(point)
+                                        points.append(point)
+                                        if point[0] == rect.cell.x :
+                                            W.append(point)
+                                        if point[0] == rect.cell.x + rect.getWidth() :
+                                            E.append(point)
 
-                for element in island.elements_v:
+                    for element in island.elements_v:
 
-                    for rect in Vtree.vNodeList[0].stitchList:
+                        for rect in Vtree.vNodeList[0].stitchList:
 
-                        if rect.cell.x == element[1] and rect.cell.y == element[2] and rect.cell.type == str(element[0]):
-                            for point in intersection_points:
-                                x1 = point[0]
-                                y1 = point[1]
-                                if x1 >= rect.cell.x and x1 <= rect.cell.x + rect.getWidth() and y1 >= rect.cell.y and y1 <= rect.cell.y + rect.getHeight():
-                                    points.append(point)
-                                    if point[1] == rect.cell.y:
-                                        S.append(point)
-                                    if point[1] == rect.cell.y + rect.getHeight():
-                                        N.append(point)
+                            if rect.cell.x == element[1] and rect.cell.y == element[2] and rect.cell.type == str(element[0]):
+                                for point in intersection_points:
+                                    x1 = point[0]
+                                    y1 = point[1]
+                                    if x1 >= rect.cell.x and x1 <= rect.cell.x + rect.getWidth() and y1 >= rect.cell.y and y1 <= rect.cell.y + rect.getHeight():
+                                        points.append(point)
+                                        if point[1] == rect.cell.y :
+                                            S.append(point)
+                                        if point[1] == rect.cell.y + rect.getHeight() :
+                                            N.append(point)
 
                 else:
 
@@ -1378,7 +1381,6 @@ class New_layout_engine():
 
 
         return cs_islands
-
     def form_cs_island(self,islands=None, Htree=None, Vtree=None):
         copy_islands = copy.deepcopy(islands)  # list of islands converting input rects to corner stitch tiles
         HorizontalNodeList = []

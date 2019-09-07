@@ -984,13 +984,15 @@ class ScriptInputMethod():
                 for element in island.elements:
                     if element[-3]=='-' or element[-4]=='-':
                         not_connected_group=True
+                start=-1
                 if not_connected_group==True:
                     for i in range(len(self.cs_info)):
                         if self.cs_info[i][5] == island.element_names[0]:
                             start=i
                             end=len(island.element_names)
                             break
-                self.cs_info[start:start+end]=island.elements
+                if start>0:
+                    self.cs_info[start:start+end]=island.elements
 
 
 def save_constraint_table(cons_df=None,file=None):
