@@ -573,8 +573,8 @@ class New_layout_engine():
                 md_data.footprint = k
                 module_data.append(md_data)  # collect list of module_data
                 Layout_Rects.append(Layout_Rects1)
-                for island in cs_islands_up:
-                    island.print_island(plot=True, size=k)
+                #for island in cs_islands_up:
+                    #island.print_island(plot=True, size=k)
 
             # print "1",CS_SYM_Updated
             # print Layout_Rects
