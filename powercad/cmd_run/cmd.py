@@ -177,8 +177,9 @@ class Cmd_Handler:
 
                 # Convert a list of patch to rectangles
                 patch_dict = self.engine.init_data[0]
-                init_data_islands = self.engine.init_data[2]
-                print init_data_islands
+                init_data_islands = self.engine.init_data[3]
+                init_cs_islands=self.engine.init_data[2]
+                #print init_data_islands
                 fp_width, fp_height = self.engine.init_size
                 fig_dict = {(fp_width, fp_height): []}
                 for k, v in patch_dict.items():
@@ -186,17 +187,20 @@ class Cmd_Handler:
                 init_rects = {}
                 #print self.engine.init_data
                 #print "here"
-                for k, v in self.engine.init_data[1].items():
-                    rects = []
-                    i=v[0]
-                    x,y,width,height= [i.cell.x,i.cell.y,i.getWidth(),i.getHeight()]
-                    type = i.cell.type
-                    #rect = Rectangle(x=x * 1000, y=y * 1000, width=width * 1000, height=height * 1000, type=type)
-                    rect=[type,x,y,width,height]
-                    #rects.append(rect)
-                    init_rects[k] = rect
-                cs_sym_info = {(fp_width * 1000, fp_height * 1000): init_rects}
+                for k, v in self.engine.init_data[1].items(): # sym_to_cs={'T1':[[x1,y1,x2,y2],[nodeid],type,hierarchy_level]
 
+                    rect=v[0]
+                    x,y,width,height= [rect[0],rect[1],rect[2]-rect[0],rect[3]-rect[1]]
+                    type = v[2]
+                    #rect = Rectangle(x=x * 1000, y=y * 1000, width=width * 1000, height=height * 1000, type=type)
+                    rect_up=[type,x,y,width,height]
+                    #rects.append(rect)
+                    init_rects[k] = rect_up
+                cs_sym_info = {(fp_width * 1000, fp_height * 1000): init_rects}
+                for isl in init_cs_islands:
+                    for node in isl.mesh_nodes:
+                        node.pos[0] = node.pos[0] * 1000
+                        node.pos[1] = node.pos[1] * 1000
                 for island in init_data_islands:
                     for element in island.elements:
 
@@ -214,11 +218,10 @@ class Cmd_Handler:
                             element[2] = element[2] * 1000
                             element[3] = element[3] * 1000
                             element[4] = element[4] * 1000
-                            print"C", element
 
-                    for node in island.mesh_nodes:
-                        node.pos[0]=node.pos[0]*1000
-                        node.pos[1]=node.pos[1]*1000
+                    for isl in init_cs_islands:
+                        if isl.name==island.name:
+                            island.mesh_nodes= copy.deepcopy(isl.mesh_nodes)
 
                 md_data = ModuleDataCornerStitch()
                 md_data.islands[0] = init_data_islands
@@ -402,7 +405,7 @@ class Cmd_Handler:
         :return:
         '''
         self.layer_stack.import_layer_stack_from_csv(self.layer_stack_file)
-        self.engine, self.raw_layout_info, self.wire_table = script_translator(
+        self.engine, self.wire_table = script_translator(
             input_script=self.layout_script, bond_wire_info=self.bondwire_setup, fig_dir=self.fig_dir, constraint_file=self.constraint_file,rel_cons=self.i_v_constraint,mode=self.new_mode)
         for comp in self.engine.all_components:
             self.comp_dict[comp.layout_component_id] = comp
@@ -496,6 +499,8 @@ class Cmd_Handler:
         cont = True
         while (cont):
             cont, opt = self.option_request()
+            self.init_cs_objects()
+            self.set_up_db()
             if opt == 0:  # Perform layout generation only without evaluation
                 cont, layout_mode = self.option_layout_gen()
                 if layout_mode in range(3):
@@ -505,24 +510,60 @@ class Cmd_Handler:
                                                              apis={'E': self.e_api, 'T': self.t_api})
 
             if opt == 1:
-                self.init_apis()  # Setup measurement
+
+                self.init_apis()
                 # Convert a list of patch to rectangles
                 patch_dict = self.engine.init_data[0]
-                width, height = self.engine.init_size
-                fig_dict = {(width, height): []}
+                init_data_islands = self.engine.init_data[3]
+                init_cs_islands = self.engine.init_data[2]
+                print init_data_islands
+                fp_width, fp_height = self.engine.init_size
+                fig_dict = {(fp_width, fp_height): []}
                 for k, v in patch_dict.items():
-                    fig_dict[(width, height)].append(v)
-                fig_data = [fig_dict]
+                    fig_dict[(fp_width, fp_height)].append(v)
                 init_rects = {}
-                for k, v in self.engine.init_data[1].items():
-                    rects = []
-                    for i in v:
-                        rect = Rectangle(x=i[0] * 1000, y=i[1] * 1000, width=i[2] * 1000, height=i[3] * 1000, type=i[4])
-                        rects.append(rect)
-                    init_rects[k] = rects
-                cs_sym_info = {(width * 1000, height * 1000): init_rects}
-                eval_single_layout(layout_engine=self.engine, layout_data=cs_sym_info, apis={'E': self.e_api,
-                                                                                             'T': self.t_api},measures=self.measures)
+                # print self.engine.init_data
+                # print "here"
+                for k, v in self.engine.init_data[1].items():  # sym_to_cs={'T1':[[x1,y1,x2,y2],[nodeid],type,hierarchy_level]
+
+                    rect = v[0]
+                    x, y, width, height = [rect[0], rect[1], rect[2] - rect[0], rect[3] - rect[1]]
+                    type = v[2]
+                    # rect = Rectangle(x=x * 1000, y=y * 1000, width=width * 1000, height=height * 1000, type=type)
+                    rect_up = [type, x, y, width, height]
+                    # rects.append(rect)
+                    init_rects[k] = rect_up
+                cs_sym_info = {(fp_width * 1000, fp_height * 1000): init_rects}
+                for isl in init_cs_islands:
+                    for node in isl.mesh_nodes:
+                        node.pos[0] = node.pos[0] * 1000
+                        node.pos[1] = node.pos[1] * 1000
+                for island in init_data_islands:
+                    for element in island.elements:
+                        element[1] = element[1] * 1000
+                        element[2] = element[2] * 1000
+                        element[3] = element[3] * 1000
+                        element[4] = element[4] * 1000
+
+                    if len(island.child) > 0:
+                        for element in island.child:
+                            element[1] = element[1] * 1000
+                            element[2] = element[2] * 1000
+                            element[3] = element[3] * 1000
+                            element[4] = element[4] * 1000
+
+                    for isl in init_cs_islands:
+                        if isl.name == island.name:
+                            island.mesh_nodes = copy.deepcopy(isl.mesh_nodes)
+
+                md_data = ModuleDataCornerStitch()
+                md_data.islands[0] = init_data_islands
+                md_data.footprint = [fp_width * 1000, fp_height * 1000]
+
+                self.solutions = eval_single_layout(layout_engine=self.engine, layout_data=cs_sym_info,
+                                                    apis={'E': self.e_api,
+                                                          'T': self.t_api}, measures=self.measures,
+                                                    module_info=md_data)
 
             elif opt == 2:  # Peform layout evaluation based on the list of measures
                 self.init_apis()  # Setup measurement

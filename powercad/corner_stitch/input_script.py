@@ -807,6 +807,123 @@ class ScriptInputMethod():
 
         return islands
 
+    def form_initial_islands(self):
+        '''
+
+        :return: created islands from initial input script based on connectivity
+        '''
+        all_rects=[]# holds initial input rectangles as rectangle objects
+        netid=0
+        for i in range(len(self.cs_info)):
+            rect=self.cs_info[i]
+            if rect[5][0]=='T':
+                rectangle = Rectangle(x=rect[1], y=rect[2], width=rect[3], height=rect[4],name=rect[5],Netid=netid)
+                all_rects.append(rectangle)
+                netid+=1
+        for i in range (len(all_rects)):
+            rect1=all_rects[i]
+            connected_rects = []
+
+            for j in range(len(all_rects)):
+                rect2=all_rects[j]
+
+                #if (rect1.right == rect2.left or rect1.bottom == rect2.top or rect1.left == rect2.right or rect1.top == rect2.bottom)  :
+                if rect1.find_contact_side(rect2)!=-1 and rect1.intersects(rect2):
+
+                    if rect1 not in connected_rects:
+                        connected_rects.append(rect1)
+
+                    connected_rects.append(rect2)
+            if len(connected_rects)>1:
+                ids=[rect.Netid for rect in connected_rects]
+                id=min(ids)
+                for rect in connected_rects:
+                    #print rect.Netid
+                    rect.Netid=id
+
+
+        #for rect in all_rects:
+            #print rect.left,rect.bottom,rect.right-rect.left,rect.top-rect.bottom,rect.name,rect.Netid
+
+        islands = []
+        connected_rectangles={}
+        ids = [rect.Netid for rect in all_rects]
+        for id in ids:
+            connected_rectangles[id]=[]
+
+        for rect in all_rects:
+            if rect.Netid in connected_rectangles:
+                connected_rectangles[rect.Netid].append(rect)
+
+        #print connected_rectangles
+        for k,v in connected_rectangles.items():
+            island = Island()
+            name = 'island'
+            for rectangle in v:
+                for i in range(len(self.cs_info)):
+                    rect = self.cs_info[i]
+                    if rect[5]==rectangle.name:
+                        island.rectangles.append(rectangle)
+                        island.elements.append(rect)
+                        name = name + '_'+rect[5].strip('T')
+                        island.element_names.append(rect[5])
+
+            island.name=name
+            islands.append(island)
+
+            # sorting connected traces on an island
+            for island in islands:
+                sort_required=False
+                if len(island.elements) > 1:
+                    for element in island.elements:
+                        if element[-4]=='-' or element[-3]=='-':
+                            sort_required=True
+                        else:
+                            sort_required=False
+                    if sort_required==True:
+                        netid = 0
+                        all_rects = island.rectangles
+                        for i in range(len(all_rects)):
+                            all_rects[i].Netid = netid
+                            netid += 1
+                        rectangles = [all_rects[0]]
+                        for rect1 in rectangles:
+                            for rect2 in all_rects:
+                                if (rect1.right == rect2.left or rect1.bottom == rect2.top or rect1.left == rect2.right or rect1.top == rect2.bottom) and rect2.Netid != rect1.Netid:
+                                    if rect2.Netid > rect1.Netid:
+                                        if rect2 not in rectangles:
+                                            rectangles.append(rect2)
+                                            rect2.Netid = rect1.Netid
+                                else:
+                                    continue
+                        if len(rectangles) != len(island.elements):
+                            print "Check input script !! : Group of traces are not defined in proper way."
+                        elements = island.elements
+                        ordered_rectangle_names = [rect.name for rect in rectangles]
+                        ordered_elements = []
+                        for name in ordered_rectangle_names:
+                            for element in elements:
+                                if name == element[5]:
+                                    if element[5] == ordered_rectangle_names[0]:
+                                        element[-4] = '+'
+                                        element[-3] = '-'
+                                    elif element[5] != ordered_rectangle_names[-1]:
+                                        element[-4] = '-'
+                                        element[-3] = '-'
+                                    elif element[5] == ordered_rectangle_names[-1]:
+                                        element[-4] = '-'
+                                        element[-3] = '+'
+                                    ordered_elements.append(element)
+                        island.elements = ordered_elements
+                        island.element_names = ordered_rectangle_names
+
+        return islands
+
+
+
+
+
+
     # adds child elements to each island. Island elements are traces (hier_level=0), children are on hier_level=1 (Devices, Leads, Bonding wire pads)
     def populate_child(self,islands=None):
         '''
@@ -816,16 +933,25 @@ class ScriptInputMethod():
         all_layout_component_ids=[]
         for island in islands:
             all_layout_component_ids+=island.element_names
+
+        visited=[]
         for island in islands:
+            print island.name
             layout_component_ids=island.element_names
+            #print layout_component_ids
             end=10000
+            start=-10000
             for i in range(len(self.cs_info)):
                 rect = self.cs_info[i]
-                if rect[5] in layout_component_ids:
+
+                if rect[5] in layout_component_ids and start<0 :
                     start=i
-                elif rect[5] in all_layout_component_ids and i>start:
+                elif rect[5] in all_layout_component_ids and rect[5] not in layout_component_ids and i>start and rect[5] not in visited:
+                    visited+=layout_component_ids
                     end=i
                     break
+                else:
+                    continue
 
             for i in range(len(self.cs_info)):
                 rect = self.cs_info[i]
@@ -834,6 +960,7 @@ class ScriptInputMethod():
                 elif rect[5] not in all_layout_component_ids and i>start and i<end:
                     island.child.append(rect)
                     island.child_names.append(rect[5])
+            #print island.child_names
 
         #--------------------------for debugging---------------------------------
         #for island in islands:
@@ -848,19 +975,26 @@ class ScriptInputMethod():
         :param islands: initial islands created from input script
         :return: updated cs_info due to reordering of rectangles in input script to ensure connectivity among components in the same island
         '''
+
+
         for island in islands:
+            not_connected_group=False
             if len(island.element_names)>2:
-                for i in range(len(self.cs_info)):
-                    if self.cs_info[i][5] == island.element_names[0]:
-                        start=i
-                        end=len(island.element_names)
-                        break
+                for element in island.elements:
+                    if element[-3]=='-' or element[-4]=='-':
+                        not_connected_group=True
+                if not_connected_group==True:
+                    for i in range(len(self.cs_info)):
+                        if self.cs_info[i][5] == island.element_names[0]:
+                            start=i
+                            end=len(island.element_names)
+                            break
                 self.cs_info[start:start+end]=island.elements
 
 
 def save_constraint_table(cons_df=None,file=None):
-    if file!=None:
-        cons_df.to_csv(file, sep=',', header=None, index=None)
+        if file!=None:
+            cons_df.to_csv(file, sep=',', header=None, index=None)
 
 
 # ---------------------------------------These functions are not used---------------------------------------

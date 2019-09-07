@@ -124,7 +124,7 @@ class new_engine_opt:
         return converted_data
 
     def eval_layout(self,module_data=None):
-        print"Here_eval",module_data
+        #print"Here_eval",module_data
         result = []
         #print "DATA",layout_data
         for measure in self.measures:

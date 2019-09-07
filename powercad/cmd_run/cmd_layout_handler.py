@@ -244,8 +244,7 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True,rel_c
 
     if mode == 0:
         # module_data: list of ModuleDataCornerStitch objects
-        print "Here"
-        print"rel",
+
         cs_sym_info,module_data = layout_engine.generate_solutions(mode, num_layouts=1, W=None, H=None,
                                                                  fixed_x_location=None, fixed_y_location=None,
                                                                  seed=None,
@@ -576,7 +575,7 @@ def script_translator(input_script=None, bond_wire_info=None, fig_dir=None, cons
     ScriptMethod.gather_part_route_info()  # gathers part and route info
     ScriptMethod.gather_layout_info()  # gathers layout info
     # finding islands for a given layout
-    islands = ScriptMethod.form_island() # list of island objects
+    islands = ScriptMethod.form_initial_islands() # list of island objects
     # finding child of each island
     islands = ScriptMethod.populate_child(islands)
     # updating the order of the rectangles in cs_info for corner stitch
@@ -666,7 +665,6 @@ def script_translator(input_script=None, bond_wire_info=None, fig_dir=None, cons
     plot_layout(fig_data=New_engine.init_data[0], size=New_engine.init_size, fig_dir=fig_dir) # plots initial layout
 
     # New_engine.open_new_layout_engine(window=window)
-    cs_sym_data = New_engine.generate_solutions(level=0, num_layouts=1, W=None, H=None, fixed_x_location=None,
-                                                         fixed_y_location=None, seed=None, individual=None)
+    #cs_sym_data = New_engine.generate_solutions(level=0, num_layouts=1, W=None, H=None, fixed_x_location=None,fixed_y_location=None, seed=None, individual=None)
 
-    return New_engine, cs_sym_data, bondwires
+    return New_engine,  bondwires
