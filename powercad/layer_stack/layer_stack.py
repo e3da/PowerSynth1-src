@@ -93,7 +93,7 @@ class LayerStack:
 
 
     def import_layer_stack_from_csv(self,filename):
-        debug = True
+        debug = False
         max_width = 0
         max_length =0
         with open(filename) as csvfile:

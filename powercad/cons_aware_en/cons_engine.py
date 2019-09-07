@@ -958,6 +958,7 @@ class New_layout_engine():
         for i in range(len(cs_islands)):
             island=cs_islands[i]
             for element in island.elements:
+                print "inside_up",element
 
                 if element[-3] in cs_sym_info:
                     element[1]=cs_sym_info[element[-3]][1]
@@ -1293,12 +1294,11 @@ class New_layout_engine():
                                                         common.append(point)
 
                             # removing four corner points of each element from common list
-                            print "C", common
                             for point in common:
                                 for element in island.elements:
                                     if (point[0]==element[1] and point[1]==element[2]) or (point[0]==element[1]+element[3] and point[1]==element[2]+element[4]) or (point[0]==element[1] and point[1]==element[2]+element[4]) or (point[0]==element[1]+element[3] and point[1]==element[2]):
                                         common.remove(point)
-                            print "C",common
+                            #print "C",common
 
                             for point in filter:
                                 for element in island.elements:
@@ -1352,6 +1352,7 @@ class New_layout_engine():
             S = [list(item) for item in set(tuple(x) for x in S)]
             E = [list(item) for item in set(tuple(x) for x in E)]
             W = [list(item) for item in set(tuple(x) for x in W)]
+
             points=[list(item) for item in set(tuple(x) for x in points)]
             all_boundaries += N
             all_boundaries += S

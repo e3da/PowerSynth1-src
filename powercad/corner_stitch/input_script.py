@@ -953,6 +953,7 @@ class ScriptInputMethod():
                 else:
                     continue
 
+            #print start,end
             for i in range(len(self.cs_info)):
                 rect = self.cs_info[i]
                 if rect[5] in layout_component_ids and rect[5] in all_layout_component_ids:

@@ -3212,6 +3212,13 @@ class CS_to_CG():
 
         sub_width=max(minx[1].values())
         sub_length=max(miny[1].values())
+
+        #for k, v in sym_to_cs.items():
+            #print k,v
+
+        #raw_input()
+
+
         for k, v in sym_to_cs.items():
 
             coordinates=v[0] # x1,y1,x2,y2 (bottom left and top right)
