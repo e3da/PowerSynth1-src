@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import os
 import csv
 import glob
+import matplotlib
 
 def pareto_solutions(solutions):
     all_data={}
@@ -214,16 +215,52 @@ def plot_solutions(file_location=None):
         z.append(v[keys[3]])
     
     '''
+def plot_solution(rectlist,name):
+    patches=[]
+    for r in rectlist:
+        if r[0][0]=='T':
+            colour='green'
+            zorder=0
+        elif r[0]=='Substrate':
+            size=[float(r[3]),float(r[4])]
+            continue
+        else:
+            zorder=1
+            if r[0][0]=='D':
+                colour='red'
+            if r[0][0]=='L':
+                colour='purple'
+            if r[0][0]=='B':
+                colour='blue'
 
+        P = matplotlib.patches.Rectangle(
+            (r[1], r[2]),  # (x,y)
+            r[3],  # width
+            r[4],  # height
+            facecolor=colour,
+            alpha=0.5,
+            zorder=zorder,
+            edgecolor='black',
+            linewidth=1,
+        )
+        patches.append(P)
 
-
+    fig2, ax2 = plt.subplots()
+    for p in patches:
+        ax2.add_patch(p)
+    ax2.set_xlim(0, size[0])
+    ax2.set_ylim(0, size[1])
+    ax2.set_aspect('equal')
+    #plt.show()
+    plt.savefig('D:\Demo\New_Flow_w_Hierarchy\Journal_Case\Final_Version\Figs\\40X50'+'/'+name+'.png')
 
 
 if __name__ == '__main__':
 
-    #plot_solutions('D:\Demo\New_Flow_w_Hierarchy\Journal_Case\Version_6\Solution_NG\Pareto_Solutions')
+    #plot_solutions('D:\Demo\New_Flow_w_Hierarchy\Journal_Case\Final_Version\Solution\\60X60_new\Layout_Solutions')
+    '''
     sol_data={}
-    file='D:\Demo\New_Flow_w_Hierarchy\Journal_Case\Version_6\Solution_NG\Layout_Solutions\plot_data.csv'
+    file='D:\Demo\New_Flow_w_Hierarchy\Journal_Case\Final_Version\Solution\Updated_plot_data\\all_pareto_data.csv'
     with open(file) as csvfile:
         readCSV = csv.reader(csvfile, delimiter=',')
         for row in readCSV:
@@ -232,30 +269,84 @@ if __name__ == '__main__':
             else:
                 sol_data[row[0]]=([float(row[2]), float(row[3])])
     #sol_data = np.array(sol_data)
-    print sol_data
+    #print sol_data
     pareto_data = pareto_frontiter2D(sol_data)
     print len(pareto_data)
-    file_name='D:\Demo\New_Flow_w_Hierarchy\Journal_Case\Version_6\Solution_NG\Pareto_Solutions\plot_data.csv'
+    file_name='D:\Demo\New_Flow_w_Hierarchy\Journal_Case\Final_Version\Solution\Updated_plot_data\\final_pareto.csv'
     with open(file_name, 'wb') as my_csv:
         csv_writer = csv.writer(my_csv, delimiter=',')
         for k,v in pareto_data.items():
             data=[k,v[0],v[1]]
             csv_writer.writerow(data)
     my_csv.close()
+    '''
+    #plot a layout
+    '''
+    names=[
+        'Layout_1708',
+        'Layout_1709',
+        'Layout_1710',
+        'Layout_1711',
+        'Layout_1712',
+        'Layout_1713',
+        'Layout_1714',
+        'Layout_1715',
+        'Layout_1716',
+        'Layout_1717',
+        'Layout_1718',
+       'Layout_1719',
+        'Layout_1720',
+        'Layout_1721',
+        'Layout_1722',
+        'Layout_1723',
+        'Layout_1724',
+        'Layout_1725',
+        'Layout_1726',
+        'Layout_1727',
+        'Layout_1728',
+        'Layout_1729',
+        'Layout_1730',
+        'Layout_1731',
+        'Layout_1732',
+        'Layout_1733',
+        'Layout_1734',
+        'Layout_1735',
+        'Layout_1736',
+        'Layout_1737',
+        'Layout_1738',
+        'Layout_1739',
+        'Layout_1740',
+        'Layout_1741',
+        'Layout_1742',
+        'Layout_1743'
 
-
+    ]
+    #for name in names:
+    rectlist=[]
+    name='Layout_1568'
+    file = 'D:\Demo\New_Flow_w_Hierarchy\Journal_Case\Final_Version\Solution\\40X50\Layout_Solutions\\'+name+'.csv'
+    start=0
+    with open(file) as csvfile:
+        c=0
+        readCSV = csv.reader(csvfile, delimiter=',')
+        for row in readCSV:
+            c+=1
+            if row[0]=='Component_Name':
+                start=c
+                break
+    print start
+    with open(file) as csvfile:
+        c=0
+        readCSV = csv.reader(csvfile, delimiter=',')
+        for row in readCSV:
+            c+=1
+            if c>start:
+                rect=[row[0],float(row[1]),float(row[2]),float(row[3]),float(row[4])]
+                rectlist.append(rect)
+    plot_solution(rectlist,name)
 
     '''
-    solutions=[]
-    for i in range((10)):
-        sol=CornerStitchSolution(index=i)
-        sol.params={'inductance':i+2.4,'temp':50-i}
-        print sol.params
-        solutions.append(sol)
-    print solutions
-
-    pareto_solutions(solutions)
 
     
     
-    '''
+
