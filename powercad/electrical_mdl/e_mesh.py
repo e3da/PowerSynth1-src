@@ -15,7 +15,7 @@ from powercad.parasitics.mdl_compare import trace_ind_krige, trace_res_krige, tr
 from powercad.parasitics.mutual_inductance.mutual_inductance import *
 import time
 import gc
-
+from memory_profiler import profile
 
 class MeshNode:
     def __init__(self, pos, type, node_id, group_id=None, mode=1):
@@ -209,7 +209,6 @@ class EMesh():
             n_capt_dict[n] = Rect(top=top, bottom=bottom, left=left, right=right)
 
         return n_capt_dict
-
     def update_trace_RL_val(self, p=1.68e-8, t=0.035, h=1.5, mode='RS'):
 
         if self.f != 0:  # AC mode
@@ -220,7 +219,7 @@ class EMesh():
                 # all_l = [trace_inductance(w, l, t, h) for w, l in zip(self.all_W, self.all_L)]
 
                 # all_c = self.compute_all_cap()
-                for i in range(len(self.all_W)):
+                for i in xrange(len(self.all_W)):
                     n1 = self.all_n1[i]
                     n2 = self.all_n2[i]
 
@@ -236,11 +235,11 @@ class EMesh():
                             edge_data.L = all_l[i] * 1e-9
                             # edge_data.C = all_c[i]*1e-12
                         else:
-                            print all_r[i]
-                            print all_l[i]
+                            #print all_r[i]
+                            #print all_l[i]
 
-                            print self.all_W[i]
-                            print self.all_L[i]
+                            #print self.all_W[i]
+                            #print self.all_L[i]
 
                             self.graph[n1][n2].values()[0]['res'] = 1e-6
                             self.graph[n1][n2].values()[0]['ind'] = 1e-12
@@ -248,7 +247,7 @@ class EMesh():
                             # raw_input()
         else:  # DC mode
             all_r = p * np.array(self.all_L) / (np.array(self.all_W) * t) * 1e-3
-            for i in range(len(self.all_W)):
+            for i in xrange(len(self.all_W)):
                 n1 = self.all_n1[i]
                 n2 = self.all_n2[i]
                 self.graph[n1][n2].values()[0]['res'] = all_r[i]
@@ -256,7 +255,8 @@ class EMesh():
                 edge_data.R = all_r[i]
 
     def update_hier_edge_RL(self):
-        for e in self.hier_edge_data.keys():
+        for i_e in xrange(len(self.hier_edge_data.keys())):
+            e = self.hier_edge_data.keys()[i_e]
             # print self.hier_edge_data[e]
             # Case 1 hierarchial edge for device connection to trace nodes
             if isinstance(self.hier_edge_data[e], list):
@@ -488,7 +488,6 @@ class EMesh():
                                     m_m_append([w1, l1, w2, l2, l3, p, E])  # collect data for plane equation
 
                                 e_append([e1_name, e2_name])
-
     def update_mutual(self, mode=0):
         '''
 
@@ -503,7 +502,7 @@ class EMesh():
         ''' Evaluation in Cython '''
         mutual_matrix = np.array(self.mutual_matrix)
         result = np.asarray(mutual_mat_eval(mutual_matrix, 12, mode)).tolist()
-        for n in range(len(self.edges)):
+        for n in xrange(len(self.edges)):
             edge = self.edges[n]
             if result[n] > 0:
                 add_M_edge(edge[0], edge[1], attr={'Mval': result[n] * 1e-9})
@@ -527,7 +526,7 @@ class EMesh():
             nb = []
             for n2 in bound_nodes:
                 if n1 != n2 and n1.group_id != n2.group_id:
-                    dis = [(n1.pos[i] - n2.pos[i]) ** 2 for i in range(2)]
+                    dis = [(n1.pos[i] - n2.pos[i]) ** 2 for i in xrange(2)]
                     dis = sum(dis)
                     if dis <= min_dis:
                         min_dis = dis
@@ -562,7 +561,6 @@ class EMesh():
         for c in comp_dict.keys():
             for e in c.net_graph.edges(data=True):
                 self.add_hier_edge(net[e[0]], net[e[1]], edge_data=e[2]['edge_data'])
-
     def mesh_grid_hier(self, Nx=3, Ny=3, corner_stitch=False):
 
         self.comp_dict = {}  # Use to remember the component that has its graph built (so we dont do it again)

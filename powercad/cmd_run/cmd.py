@@ -6,6 +6,9 @@ from powercad.cmd_run.cmd_layout_handler import generate_optimize_layout, script
 import objgraph
 from pympler import muppy,summary
 import types
+import os
+import sys
+
 class Cmd_Handler:
     def __init__(self):
         # Input files
@@ -33,6 +36,21 @@ class Cmd_Handler:
         # Solutions
         self.soluions = None
 
+        self.macro =None
+
+    def setup_file(self,file):
+        self.macro=os.path.abspath(file)
+        if not(os.path.isfile(self.macro)):
+            print "file path is wrong, please give another input"
+            sys.exit()
+
+    def run_parse(self):
+        if self.macro!=None:
+            self.load_macro_file(self.macro)
+        else:
+            print "Error, please check your test case"
+            sys.exit()
+
     def load_macro_file(self, file):
         '''
 
@@ -59,19 +77,19 @@ class Cmd_Handler:
                 if line[0] == '#':  # Comments
                     continue
                 if info[0] == "Layout_script:":
-                    self.layout_script = info[1]
+                    self.layout_script = os.path.abspath(info[1])
                 if info[0] == "Bondwire_setup:":
-                    self.bondwire_setup = info[1]
+                    self.bondwire_setup = os.path.abspath(info[1])
                 if info[0] == "Layer_stack:":
-                    self.layer_stack_file = info[1]
+                    self.layer_stack_file = os.path.abspath(info[1])
                 if info[0] == "Parasitic_model:":
-                    self.rs_model_file = info[1]
+                    self.rs_model_file = os.path.abspath(info[1])
                 if info[0] == "Fig_dir:":
-                    self.fig_dir = info[1]
+                    self.fig_dir = os.path.abspath(info[1])
                 if info[0] == "Solution_dir:":
-                    self.db_dir = info[1]
+                    self.db_dir = os.path.abspath(info[1])
                 if info[0] == "Constraint_file:":
-                    self.constraint_file = info[1]
+                    self.constraint_file = os.path.abspath(info[1])
                 if info[0] =="New:":
                     self.new_mode = int(info[1])
                 if info[0] == "Option:":  # engine option
@@ -135,9 +153,25 @@ class Cmd_Handler:
         check_file = os.path.isfile
         check_dir = os.path.isdir
         # Check if these files exist
-        cont = check_file(self.layout_script) and check_file(self.bondwire_setup) and check_file(
-            self.layer_stack_file) and check_file(self.rs_model_file) and check_dir(self.fig_dir) and check_dir(
-            self.db_dir) and check_file(self.constraint_file)
+        cont = check_file(self.layout_script) \
+               and check_file(self.bondwire_setup) \
+               and check_file(self.layer_stack_file) \
+               and check_file(self.rs_model_file) \
+               and check_file(self.constraint_file)
+        # make dir if they are not existed
+        print "self.new_mode",self.new_mode
+        if not (check_dir(self.fig_dir)) or not(check_dir(self.db_dir)):
+            try:
+                os.mkdir(self.fig_dir)
+            except:
+                print "cant make directory for figures"
+                cont =False
+            try:
+                os.mkdir(self.db_dir)
+            except:
+                print "cant make directory for database"
+                cont =False
+
         if cont:
             print "run the optimization"
             self.init_cs_objects()
@@ -184,6 +218,23 @@ class Cmd_Handler:
                                          apis={'E': self.e_api, 'T': self.t_api}, num_layouts=num_layouts, seed=seed,
                                          algorithm=algorithm, floor_plan=floor_plan,num_gen=num_gen,measures=self.measures)
         else:
+            # First check all file path
+            if not (check_file(self.layout_script)):
+                print self.layout_script, "is not a valid file path"
+            elif not(check_file(self.bondwire_setup)):
+                print self.bondwire_setup, "is not a valid file path"
+            elif not (check_file(self.layer_stack_file)):
+                print self.layer_stack_file, "is not a valid file path"
+            elif not (check_file(self.rs_model_file)):
+                print self.rs_model_file, "is not a valid file path"
+            elif not (check_dir(self.fig_dir)):
+                print self.fig_dir, "is not a valid directory"
+            elif not (check_dir(self.db_dir)):
+                print self.db_dir, "is not a valid directory"
+            elif not(check_file(self.constraint_file)):
+                print self.constraint_file, "is not a valid file path"
+            print "Check your input again ! "
+
             return cont
 
     # ------------------ File Resquest -------------------------------------------------
@@ -400,8 +451,15 @@ class Cmd_Handler:
             elif mode[0:2] == '-m':
                 print "Loading macro file"
                 m, file = mode.split(" ")
+                file =os.path.abspath(file)
                 if os.path.isfile(file):
                     # macro file exists
+                    filename = os.path.basename(file)
+                    # change current directory to workspace
+                    work_dir = file.replace(filename,'')
+                    os.chdir(work_dir)
+                    print "Jump to current working dir"
+                    print work_dir
                     checked = self.load_macro_file(file)
                     if not (checked):
                         continue
@@ -461,10 +519,14 @@ class Cmd_Handler:
 
 
 if __name__ == "__main__":
+    #os.chdir(os.curdir)
     cmd = Cmd_Handler()
-    cmd.cmd_handler_flow()
+    #cmd.cmd_handler_flow()
+    cmd.setup_parser()
+    '''
     objgraph.show_most_common_types()
     all_objects = muppy.get_objects()
     my_types = muppy.filter(all_objects, Type=types.DictType)
     sum1 = summary.summarize(my_types)
     summary.print_(sum1)
+    '''

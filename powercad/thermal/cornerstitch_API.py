@@ -11,7 +11,7 @@ from powercad.thermal.rect_flux_channel_model import Baseplate, ExtaLayer, Devic
 from powercad.design.parts import Part
 import sys
 from collections import deque
-
+from memory_profiler import profile
 class ThermalMeasure(object):
     FIND_MAX = 1
     FIND_AVG = 2
@@ -41,7 +41,7 @@ class CornerStitch_Tmodel_API:
         self.module_data = ModuleData()
         self.devices = {}
         self.dev_powerload_table = {}
-        self.mat_lib = '..//..//..//tech_lib//Material//Materials.csv'
+        self.mat_lib = 'C:\Users\erago\PycharmProjects\git\Fix_memory_issue\PowerCAD-full\\tech_lib\Material\Materials.csv' # Hard coded for now, need to include in macro
         self.measure = []
 
     def import_layer_stack(self, filename=None):  # Import layer stack from CSV file
@@ -62,7 +62,6 @@ class CornerStitch_Tmodel_API:
             self.module_data.baseplate = self.layer_stack_import.baseplate
             self.module_data.substrate_attach = self.layer_stack_import.substrate_attach
             self.module_data.substrate = self.layer_stack_import.substrate
-
 
 
     def set_up_thermal_props(self, layout_data=None):  # for analytical model of a simple 6 layers
@@ -111,7 +110,6 @@ class CornerStitch_Tmodel_API:
             temp = compound_top_surface_avg(t_bp, layer, devices, self.devices.keys().index(k))
             temp += self.t_amb + dev_delta
             self.temp_res[k] = temp
-        del t_bp,layer,devices
     def set_up_device_power(self, data=None):
         if data==None:
             print "load a table to collect power load"

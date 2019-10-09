@@ -5,6 +5,7 @@ from powercad.design.library_structures import MaterialProperties
 import csv
 import re
 from powercad.general.settings.settings import MATERIAL_LIB_PATH
+import os
 class Material_lib:
     def __init__(self):
         self.mat_lib=[]

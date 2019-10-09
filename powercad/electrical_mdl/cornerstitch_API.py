@@ -3,11 +3,14 @@ from powercad.electrical_mdl.spice_eval.rl_mat_eval import *
 from powercad.electrical_mdl.e_mesh import *
 from powercad.corner_stitch.input_script import *
 from powercad.parasitics.mdl_compare import load_mdl
+from datetime import datetime
+import psutil
 import cProfile
 import pstats
 from mpl_toolkits.mplot3d import Axes3D
 from collections import deque
 import gc
+import objgraph
 
 
 class ElectricalMeasure(object):
@@ -49,7 +52,7 @@ class CornerStitch_Emodel_API:
         self.height = 0
         self.measure = []
         self.circuit = RL_circuit()
-
+        self.hier =None # same hierarchy for all layouts
     def form_connection_table(self, mode=None, dev_conn=None):
         '''
         Form a connection table only once, which can be reused for multiple evaluation
@@ -86,7 +89,7 @@ class CornerStitch_Emodel_API:
 
     def load_rs_model(self, mdl_file):
         self.rs_model = load_mdl(file=mdl_file)
-
+    @profile
     def init_layout(self, layout_data=None):
         '''
         Read part info and link them with part info, from an updaed layout, update the electrical network
@@ -172,6 +175,14 @@ class CornerStitch_Emodel_API:
         self.module = EModule(plate=self.e_plates, sheet=self.e_sheets, components=self.wires + self.e_comps)
         self.module.form_group()
         self.module.split_layer_group()
+        ''' # for other branches not gonna work here
+        if self.hier ==None:
+            self.hier = EHier(module=self.module)
+            self.hier.form_hierachy()
+        else: # just update, no new objects
+            self.hier.update_module(self.module)
+            self.hier.update_hierarchy()
+        '''
         self.hier = EHier(module=self.module)
         self.hier.form_hierachy()
         self.emesh = EMesh(hier_E=self.hier, freq=self.freq, mdl=self.rs_model)
@@ -204,6 +215,7 @@ class CornerStitch_Emodel_API:
             num_wires = int(wire_data['num_wires'])
             start = wire_data['Source']
             stop = wire_data['Destination']
+            #print self.net_to_sheet
             s1 = self.net_to_sheet[start]
             s2 = self.net_to_sheet[stop]
             spacing = float(wire_data['spacing'])
@@ -256,8 +268,13 @@ class CornerStitch_Emodel_API:
             sink = meas_data['sink']
             self.measure.append(ElectricalMeasure(measure=type, name=name, source=source, sink=sink))
             return self.measure
+    def extract_RL(self,src=None,sink=None):
+        "use to test mem leak"
+        gc.collect()
+        return 1,1
 
-    def extract_RL(self, src=None, sink=None):
+    #@profile
+    def extract_RL_1(self, src=None, sink=None):
         '''
         Input src and sink name, then extract the inductance/resistance between them
         :param src:
@@ -279,10 +296,19 @@ class CornerStitch_Emodel_API:
         imp = self.circuit.results[vname]
         R = abs(np.real(imp) * 1e3)
         L = abs(np.imag(imp)) * 1e9 / (2 * np.pi * self.circuit.freq)
-        self.hier.tree.__del__()
-        del self.circuit
         self.emesh.graph.clear()
         self.emesh.m_graph.clear()
-        gc.collect()
+        self.emesh.graph=None
+        self.emesh.m_graph=None
+        del self.emesh
+        del self.circuit
+        del self.hier
+        del self.module
+        #gc.collect()
         #print R, L
+        #process = psutil.Process(os.getpid())
+        #now = datetime.now()
+        #dt_string = now.strftime("%d-%m-%Y-%H-%M-%S")
+        #print "Mem use at:", dt_string
+        #print(process.memory_info().rss), 'bytes'  # in bytes
         return R[0], L[0]

@@ -28,6 +28,7 @@ class LayerStackHandler:
         self.material_lib=Material_lib()
         if mat_lib==None:
             self.material_lib.load_csv(MATERIAL_LIB_PATH)
+            print os.path.abspath(MATERIAL_LIB_PATH)
         else:
             self.material_lib.load_csv(mat_lib)
         # Initialize design stucture
