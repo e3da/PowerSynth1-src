@@ -208,7 +208,7 @@ def get_dims(floor_plan = None):
 
 #@profile
 def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_file=None,fig_dir=None,sol_dir=None, apis={}, measures=[],seed=None,
-                             num_layouts = None,num_gen= None , num_disc=None,max_temp=None,floor_plan=None,algorithm=None):
+                             num_layouts = None,num_gen= None , num_disc=None,max_temp=None,floor_plan=None,algorithm=None,rel_cons=None):
     '''
 
     :param layout_engine: Layout engine object for layout generation

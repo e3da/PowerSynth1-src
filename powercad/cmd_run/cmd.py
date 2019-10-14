@@ -264,12 +264,13 @@ class Cmd_Handler:
                 if self.thermal_mode!=None:
                     t_setup_data = {'Power': power, 'heat_conv': h_conv, 't_amb': t_amb}
                     t_measure_data = {'name': t_name, 'devices': devices}
-                    self.setup_thermal(mode='macro', setup_data=t_setup_data, meas_data=t_measure_data)
+                    self.setup_thermal(mode='macro', setup_data=t_setup_data, meas_data=t_measure_data,
+                                       model_type=thermal_model)
+
                 if self.electrical_mode!=None:
                     e_measure_data = {'name':e_name,'type':type,'source':source,'sink':sink}
                     self.setup_electrical(mode='macro', dev_conn=dev_conn, frequency=frequency, meas_data=e_measure_data)
 
-                self.setup_thermal(mode='macro', setup_data=t_setup_data,meas_data=t_measure_data,model_type=thermal_model)
 
                 self.solutions=generate_optimize_layout(layout_engine=self.engine, mode=layout_mode,rel_cons=self.i_v_constraint,
                                          optimization=True, db_file=self.db_file,fig_dir=self.fig_dir,sol_dir=self.db_dir,

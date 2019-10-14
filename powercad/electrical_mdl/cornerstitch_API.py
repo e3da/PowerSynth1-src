@@ -55,6 +55,7 @@ class CornerStitch_Emodel_API:
         self.measure = []
         self.circuit = RL_circuit()
         self.module_data =None# ModuleDataCOrnerStitch object for layout and footprint info
+        self.hier = None
     def form_connection_table(self, mode=None, dev_conn=None):
         '''
         Form a connection table only once, which can be reused for multiple evaluation
@@ -91,6 +92,7 @@ class CornerStitch_Emodel_API:
 
     def load_rs_model(self, mdl_file):
         self.rs_model = load_mdl(file=mdl_file)
+
     def init_layout_isl(self,module_data=None):
         '''
 
@@ -193,7 +195,7 @@ class CornerStitch_Emodel_API:
 
         self.emesh = EMesh_CS(islands=islands,hier_E=self.hier, freq=self.freq, mdl=self.rs_model)
         self.emesh.mesh_update()
-        '''
+
         fig = plt.figure(1)
         ax = Axes3D(fig)
         ax.set_xlim3d(0, self.width+2)
@@ -207,9 +209,6 @@ class CornerStitch_Emodel_API:
         ax.set_zlim3d(0, 2)
         plot_rect3D(rect2ds=self.module.plate + self.module.sheet, ax=ax)
         plt.show()
-        
-        '''
-
 
         self.emesh.update_trace_RL_val()
         self.emesh.update_hier_edge_RL()
@@ -401,14 +400,14 @@ class CornerStitch_Emodel_API:
             self.measure.append(ElectricalMeasure(measure=type, name=name, source=source, sink=sink))
             return self.measure
 
-    def extract_RL_1(self,src=None,sink =None):
+    def extract_RL(self,src=None,sink =None):
         print "TEST HIERARCHY LEAK"
         del self.emesh
         del self.circuit
         del self.module
         return 1,1
 
-    def extract_RL(self, src=None, sink=None):
+    def extract_RL_1(self, src=None, sink=None):
         '''
         Input src and sink name, then extract the inductance/resistance between them
         :param src:
