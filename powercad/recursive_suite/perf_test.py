@@ -10,7 +10,7 @@ import psutil
 
 def run_test():
     test_cases_dirs={
-    'Quang_Journal_S_para': 'C:\Users\erago\OneDrive\Desktop\Memory_Leak\Layout_Cases\Case1_S-param\Layout1_macro.txt'
+    'Quang_Journal_S_para': 'D:\Demo\POETS_ANNUAL_MEETING_2019\\testcases_setup\Memory_Leak\Layout_Cases\Case1_S-param\Layout1_macro.txt'
     }
 
     # Loop through
@@ -34,8 +34,8 @@ def run_test():
         sum1 = summary.summarize(my_types)
         summary.print_(sum1)
 
-    sys.stdout = orig_stdout
-    f.close()
+    #sys.stdout = orig_stdout
+    #f.close()
 
 run_test()
 

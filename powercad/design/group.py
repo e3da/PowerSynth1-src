@@ -95,14 +95,20 @@ class Island():
         all_boundaries=[]
         print "Mesh_nodes_num",len(self.mesh_nodes)
         for node in self.mesh_nodes:
+            if len(self.mesh_nodes)==4:
+                print node.pos
             if len(node.b_type)==0:
                 all_points.append(node.pos)
             else:
                 all_boundaries.append(node.pos)
 
-        s = set(tuple(x) for x in all_points)
-        print len(all_points)
-        x, y = zip(*s)
+        print"internal_points", len(all_points)
+        if len(all_points)>0:
+            s = set(tuple(x) for x in all_points)
+
+
+            x, y = zip(*s)
+            plt.scatter(x, y, s=10, c='b')
 
         # plt.axis([0, 30, 0, 42])
         # plt.show()
@@ -112,7 +118,7 @@ class Island():
         # plt.axis([0, 30, 0, 42])
         # plt.show()
 
-        plt.scatter(x, y, s=10, c='b')
+
         #plt.text(x + .03, y + .03, word, fontsize=9)
         plt.scatter(x2, y2, s=30, c='r')
         if size == None:

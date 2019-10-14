@@ -55,6 +55,7 @@ def plot_layout(fig_data=None, rects=None, size=None, fig_dir=None):
     ax.set_aspect('equal')
 
     plt.savefig(fig_dir + '/_init_layout' + '.png')
+    plt.close()
 
 
 def opt_choices(algorithm=None):
@@ -589,9 +590,9 @@ def script_translator(input_script=None, bond_wire_info=None, fig_dir=None, cons
     input_rects = ScriptMethod.convert_rectangle()  # converts layout info to cs rectangle info
 
     #-------------------------------------for debugging-------------------
-    fig,ax=plt.subplots()
-    draw_rect_list(rectlist=input_rects,color='blue',pattern='//',ax=ax)
-    plt.show()
+
+    draw_rect_list(rectlist=input_rects,color='blue',pattern='//')
+    #plt.show()
     #---------------------------------------------------------------------
 
     input_info = [input_rects, ScriptMethod.size]

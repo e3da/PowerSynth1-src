@@ -404,6 +404,9 @@ def get_overlap_interval(interval1, interval2):
 
 
 def draw_rect_list(rectlist,color,pattern,ax=None):
+    #fig = plt.figure()
+    ax = plt.axes()
+    #fig, ax = plt.subplots()
     patch=[]
     plt.xlim(0, 85)
     plt.ylim(0, 85)
@@ -413,6 +416,7 @@ def draw_rect_list(rectlist,color,pattern,ax=None):
         #print r.left,r.bottom,r.width(),r.height()
         patch.append(p)
         ax.add_patch(p)
+    plt.show()
 
 
 

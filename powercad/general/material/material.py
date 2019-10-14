@@ -94,6 +94,7 @@ class Material_lib:
         else:
             self.mat_lib=[]
             print 'overwrite material list'
+        print fname
         with open(fname) as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:

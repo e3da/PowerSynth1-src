@@ -248,7 +248,7 @@ class New_layout_engine():
             #self.plotrectH_old(node)
             #raw_input()
         #-------------------------------------------------------
-
+        '''
         plot = False
         if plot:
             fig2, ax2 = plt.subplots()
@@ -273,6 +273,7 @@ class New_layout_engine():
             ax2.set_ylim(0, size[1])
             ax2.set_aspect('equal')
             plt.savefig('D:\Demo\New_Flow_w_Hierarchy\Figs'+'/_initial_layout.png')
+        '''
 
         # creating corner stitch islands and map between input rectangle(s) and corner stitch tile(s)
         cs_islands,sym_to_cs= self.form_cs_island(islands, self.Htree, self.Vtree) # creates a list of island objects populated with corner stitch tiles
@@ -305,7 +306,7 @@ class New_layout_engine():
                 r = [rect.cell.x, rect.cell.y, rect.getWidth(), rect.getHeight()]
                 rectlist2.append(r)
         fig,ax=plt.subplots()
-        draw_rect_list_cs(rectlist=rectlist1,ax=ax,x_max=80000,y_max=80000)
+        draw_rect_list_cs(rectlist=rectlist1,ax=ax,x_max=80,y_max=80)
 
         fig, ax = plt.subplots()
         draw_rect_list_cs(rectlist=rectlist2, ax=ax,x_max=80,y_max=80)
@@ -483,9 +484,9 @@ class New_layout_engine():
             #Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=None, W=None, H=None, XLoc=None, YLoc=None,seed=None,individual=None,Types=self.Types) # for minimum sized layout only one solution is generated
             #CS_SYM_information, Layout_Rects = CG1.update_min(Evaluated_X, Evaluated_Y , sym_to_cs, scaler)
             #-------------------------------for debugging----------------------
-            #print "Before update"
-            #for island in cs_islands:
-                #island.print_island(plot=True)
+            print "Before update"
+            for island in cs_islands:
+                island.print_island(plot=True)
             #------------------------------------------------------------------
             #cs_islands_up=self.update_points(cs_islands)
             #CS_SYM_information, Layout_Rects = CG1.UPDATE_min(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree ,sym_to_cs,scaler)  # CS_SYM_information is a dictionary where key=path_id(component name) and value=list of updated rectangles, Layout Rects is a dictionary for minimum HCS and VCS evaluated rectangles (used for plotting only)
@@ -1030,63 +1031,106 @@ class New_layout_engine():
             W=[]
 
             if len(island.child)==0:
+                node_id = []
                 for rect in island.elements:
-                    nodeid=int(rect[-1])
-                    for tile in Htree.hNodeList[nodeid-1].stitchList:
-                        coordinate1=[tile.cell.x,tile.cell.y]
-                        coordinate6=[tile.cell.x+tile.getWidth(),tile.cell.y+tile.getHeight()]
-                        coordinate7 = [tile.cell.x, tile.cell.y + tile.getHeight()]
-                        coordinate8 = [tile.cell.x + tile.getWidth(), tile.cell.y]
+                    # print rect
+                    if int(rect[-1]) not in node_id:
+                        node_id.append(int(rect[-1]))
+                for nodeid in node_id:
+                    if nodeid == 1:
+                        for rect in island.elements:
+                            for tile in Htree.hNodeList[nodeid - 1].stitchList:
+                                if tile.cell.x == rect[1] and tile.cell.y == rect[2] and tile.cell.type == rect[0] and tile.getWidth() == rect[3] and tile.getHeight() == rect[4]:
+                                    coordinate1 = [tile.cell.x, tile.cell.y]
+                                    coordinate6 = [tile.cell.x + tile.getWidth(), tile.cell.y + tile.getHeight()]
+                                    coordinate7 = [tile.cell.x, tile.cell.y + tile.getHeight()]
+                                    coordinate8 = [tile.cell.x + tile.getWidth(), tile.cell.y]
+                                    if coordinate1 not in points:
+                                        points.append(coordinate1)
+                                    if coordinate6 not in points:
+                                        points.append(coordinate6)
+                                    if coordinate7 not in points:
+                                        points.append(coordinate7)
+                                    if coordinate8 not in points:
+                                        points.append(coordinate8)
+                                    if tile.EAST.cell.type == 'EMPTY':
+                                        # E.append(coordinate8)
+                                        E.append(coordinate6)
+                                    if tile.WEST.cell.type == "EMPTY":
+                                        W.append(coordinate1)
+                                        # W.append(coordinate7)
+                                    if tile.NORTH.cell.type == 'EMPTY':
+                                        # N.append(coordinate7)
+                                        N.append(coordinate6)
+                                    if tile.SOUTH.cell.type == "EMPTY":
+                                        S.append(coordinate1)
+                                        # S.append(coordinate8)
+                                    if tile.westNorth(tile).cell.type == 'EMPTY':
+                                        N.append(coordinate7)
+                                    if tile.northWest(tile).cell.type == 'EMPTY':
+                                        W.append(coordinate7)
+                                    if tile.southEast(tile).cell.type == 'EMPTY':
+                                        E.append(coordinate8)
+                                    if tile.eastSouth(tile).cell.type == 'EMPTY':
+                                        S.append(coordinate8)
+                    else:
+                        for rect in island.elements:
+                            nodeid=rect[-1]
+                            for tile in Htree.hNodeList[nodeid-1].stitchList:
+                                coordinate1=[tile.cell.x,tile.cell.y]
+                                coordinate6=[tile.cell.x+tile.getWidth(),tile.cell.y+tile.getHeight()]
+                                coordinate7 = [tile.cell.x, tile.cell.y + tile.getHeight()]
+                                coordinate8 = [tile.cell.x + tile.getWidth(), tile.cell.y]
 
-                        if coordinate1 not in points:
-                            points.append(coordinate1)
-                        if coordinate6 not in points:
-                            points.append(coordinate6)
-                        if coordinate7 not in points:
-                            points.append(coordinate7)
-                        if coordinate8 not in points:
-                            points.append(coordinate8)
+                                if coordinate1 not in points:
+                                    points.append(coordinate1)
+                                if coordinate6 not in points:
+                                    points.append(coordinate6)
+                                if coordinate7 not in points:
+                                    points.append(coordinate7)
+                                if coordinate8 not in points:
+                                    points.append(coordinate8)
 
-                        if tile.EAST.cell.type=='EMPTY':
-                            E.append(coordinate8)
-                            E.append(coordinate6)
-                        if tile.WEST.cell.type=="EMPTY":
-                            W.append(coordinate1)
-                            W.append(coordinate7)
-                        if tile.NORTH.cell.type=='EMPTY':
-                            N.append(coordinate7)
-                            N.append(coordinate6)
-                        if tile.SOUTH.cell.type=="EMPTY":
-                            S.append(coordinate1)
-                            S.append(coordinate8)
+                                if tile.EAST.cell.type=='EMPTY':
+                                    E.append(coordinate8)
+                                    E.append(coordinate6)
+                                if tile.WEST.cell.type=="EMPTY":
+                                    W.append(coordinate1)
+                                    W.append(coordinate7)
+                                if tile.NORTH.cell.type=='EMPTY':
+                                    N.append(coordinate7)
+                                    N.append(coordinate6)
+                                if tile.SOUTH.cell.type=="EMPTY":
+                                    S.append(coordinate1)
+                                    S.append(coordinate8)
 
 
-                    for tile in Vtree.vNodeList[nodeid-1].stitchList:
-                        coordinate1=[tile.cell.x,tile.cell.y]
-                        coordinate6=[tile.cell.x+tile.getWidth(),tile.cell.y+tile.getHeight()]
-                        coordinate7 = [tile.cell.x, tile.cell.y + tile.getHeight()]
-                        coordinate8 = [tile.cell.x + tile.getWidth(), tile.cell.y]
-                        if tile.EAST.cell.type=='EMPTY':
-                            E.append(coordinate8)
-                            E.append(coordinate6)
-                        if tile.WEST.cell.type=="EMPTY":
-                            W.append(coordinate1)
-                            W.append(coordinate7)
-                        if tile.NORTH.cell.type=='EMPTY':
-                            N.append(coordinate7)
-                            N.append(coordinate6)
-                        if tile.SOUTH.cell.type=="EMPTY":
-                            S.append(coordinate1)
-                            S.append(coordinate8)
+                            for tile in Vtree.vNodeList[nodeid-1].stitchList:
+                                coordinate1=[tile.cell.x,tile.cell.y]
+                                coordinate6=[tile.cell.x+tile.getWidth(),tile.cell.y+tile.getHeight()]
+                                coordinate7 = [tile.cell.x, tile.cell.y + tile.getHeight()]
+                                coordinate8 = [tile.cell.x + tile.getWidth(), tile.cell.y]
+                                if tile.EAST.cell.type=='EMPTY':
+                                    E.append(coordinate8)
+                                    E.append(coordinate6)
+                                if tile.WEST.cell.type=="EMPTY":
+                                    W.append(coordinate1)
+                                    W.append(coordinate7)
+                                if tile.NORTH.cell.type=='EMPTY':
+                                    N.append(coordinate7)
+                                    N.append(coordinate6)
+                                if tile.SOUTH.cell.type=="EMPTY":
+                                    S.append(coordinate1)
+                                    S.append(coordinate8)
 
-                        if coordinate1 not in points:
-                            points.append(coordinate1)
-                        if coordinate6 not in points:
-                            points.append(coordinate6)
-                        if coordinate7 not in points:
-                            points.append(coordinate7)
-                        if coordinate8 not in points:
-                            points.append(coordinate8)
+                                if coordinate1 not in points:
+                                    points.append(coordinate1)
+                                if coordinate6 not in points:
+                                    points.append(coordinate6)
+                                if coordinate7 not in points:
+                                    points.append(coordinate7)
+                                if coordinate8 not in points:
+                                    points.append(coordinate8)
 
 
             else:
@@ -1473,7 +1517,7 @@ class New_layout_engine():
                     for node in HorizontalNodeList:
                         for i in node.stitchList:
                             if rect[1] == i.cell.x and rect[2] == i.cell.y and rect[3] == i.getWidth() and rect[4] == i.getHeight() and rect[0] == i.cell.type:
-                                r = [rect[0], rect[1], rect[2], rect[3], rect[4],i.cell.type, i.nodeId]  # type,x,y,width,height,name, hierarchy_level, nodeId
+                                r = [rect[0], rect[1], rect[2], rect[3], rect[4], i.nodeId]  # type,x,y,width,height,name, hierarchy_level, nodeId
                                 cs_elements.append(r)
                                 #cs_mapped_input[rect[5]] = [i, node.id, rect[8]]
                                 #cs_island.element_names.append(rect[5])
