@@ -206,11 +206,16 @@ class EWires(EComp):
             self.circuit.assign_freq(self.f)
             self.circuit.indep_current_source(0, 1, val=1)
             self.circuit.build_current_info()
-            self.circuit.solve_iv()
-            imp =self.circuit.results['v1']
-            R = abs(np.real(imp))
-            L = abs(np.imag(imp) / (2 * np.pi * self.f))
-            print "wire R,L", R,L
+            try:
+                self.circuit.solve_iv()
+                imp =self.circuit.results['v1']
+                R = abs(np.real(imp))
+                L = abs(np.imag(imp) / (2 * np.pi * self.f))
+                print "wire R,L", R,L
+            except:
+                print "failed due to meshing, memory test"
+                R=1
+                L=1
             self.net_graph.add_edge(self.sheet[0].net, self.sheet[1].net, edge_data={'R': R, 'L': L, 'C': None})
             # print self.net_graph.edges(data=True)
 

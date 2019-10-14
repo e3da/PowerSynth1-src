@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from powercad.corner_stitch.input_script import *
 from powercad.sol_browser.cs_solution_handler import pareto_solutions,export_solutions
+from memory_profiler import profile
 import time
 
 # --------------Plot function---------------------
@@ -204,6 +205,8 @@ def get_dims(floor_plan = None):
         width = floor_plan[0]*1000
         height = floor_plan[1]*1000
         return [width, height]
+
+@profile
 def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_file=None,fig_dir=None,sol_dir=None, apis={}, measures=[],seed=None,
                              num_layouts = None,num_gen= None , num_disc=None,max_temp=None,floor_plan=None,algorithm=None):
     '''
@@ -226,7 +229,7 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_f
 
     :return: list of CornerStitch Solution objects
     '''
-    plot = True
+    plot = False
 
 
     # GET MEASUREMENT NAME:
@@ -614,7 +617,7 @@ def script_translator(input_script=None, bond_wire_info=None, fig_dir=None, cons
     New_engine.Types = ScriptMethod.Types
     New_engine.all_components = ScriptMethod.all_components
     New_engine.init_size = ScriptMethod.size
-    plot_layout(fig_data=New_engine.init_data[0], size=New_engine.init_size, fig_dir=fig_dir)
+    #plot_layout(fig_data=New_engine.init_data[0], size=New_engine.init_size, fig_dir=fig_dir) TODO: UNCOMMENT
 
     # New_engine.open_new_layout_engine(window=window)
     cs_sym_data = New_engine.generate_solutions(level=0, num_layouts=1, W=None, H=None, fixed_x_location=None,

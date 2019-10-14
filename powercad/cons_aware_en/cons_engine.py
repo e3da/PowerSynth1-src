@@ -12,7 +12,7 @@ from powercad.corner_stitch.constraintGraph_Dev import constraintGraph
 import itertools
 from powercad.general.data_struct.util import *
 from powercad.design.layout_module_data import ModuleDataCornerStitch
-
+from memory_profiler import profile
 class New_layout_engine():
     def __init__(self):
         self.W = None
@@ -120,9 +120,9 @@ class New_layout_engine():
             size = input_format[1]
             self.W = size[0]
             self.H = size[1]
-            fig, ax = plt.subplots()
-            draw_rect_list(rectlist=input_rects, ax=ax, color='green',pattern='//')
-            plt.show()
+            #fig, ax = plt.subplots()
+            #draw_rect_list(rectlist=input_rects, ax=ax, color='green',pattern='//')
+            #plt.show()
             self.create_cornerstitch(input_rects, size, islands)
 
 
@@ -280,6 +280,7 @@ class New_layout_engine():
                 self.min_dimensions[type] = footprint
 
     # generate layout solutions using constraint graph edge weights randomization for different modes(level)
+    @profile
     def generate_solutions(self, level, num_layouts=1, W=None, H=None, fixed_x_location=None, fixed_y_location=None,
                            seed=None, individual=None, db=None, count=None, bar=False):
         """
