@@ -14,11 +14,11 @@ def run_test():
     }
 
     # Loop through
-    orig_stdout = sys.stdout
+    #orig_stdout = sys.stdout
     now = datetime.now()
     dt_string = now.strftime("%d-%m-%Y-%H-%M-%S")
-    f = open(dt_string+'.log', 'w')
-    sys.stdout = f
+    #f = open(dt_string+'.log', 'w')
+    #sys.stdout = f
 
     for k in test_cases_dirs.keys():
         cmd_run = Cmd_Handler()

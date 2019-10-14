@@ -206,7 +206,7 @@ def get_dims(floor_plan = None):
         height = floor_plan[1]*1000
         return [width, height]
 
-@profile
+#@profile
 def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_file=None,fig_dir=None,sol_dir=None, apis={}, measures=[],seed=None,
                              num_layouts = None,num_gen= None , num_disc=None,max_temp=None,floor_plan=None,algorithm=None):
     '''

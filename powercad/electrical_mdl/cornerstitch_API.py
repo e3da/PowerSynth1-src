@@ -199,7 +199,7 @@ class CornerStitch_Emodel_API:
         #self.emesh.update_hier_edge_RL()
         #self.emesh.mutual_data_prepare(mode=0)
         #self.emesh.update_mutual(mode=0)
-        '''
+
         fig = plt.figure(4)
         ax = Axes3D(fig)
         ax.set_xlim3d(0, 42)
@@ -207,7 +207,7 @@ class CornerStitch_Emodel_API:
         ax.set_zlim3d(0, 2)
         self.emesh.plot_3d(fig=fig, ax=ax, show_labels=True)
         plt.show()
-        '''
+        
     def init_layout(self, layout_data=None):
         '''
         Read part info and link them with part info, from an updaed layout, update the electrical network

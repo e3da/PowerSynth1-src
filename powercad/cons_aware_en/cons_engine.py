@@ -280,7 +280,7 @@ class New_layout_engine():
                 self.min_dimensions[type] = footprint
 
     # generate layout solutions using constraint graph edge weights randomization for different modes(level)
-    @profile
+    #@profile
     def generate_solutions(self, level, num_layouts=1, W=None, H=None, fixed_x_location=None, fixed_y_location=None,
                            seed=None, individual=None, db=None, count=None, bar=False):
         """
