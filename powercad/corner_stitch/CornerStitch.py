@@ -2305,6 +2305,7 @@ class CornerStitch():
                 if len(c) > 4:
                     In = line.split(',')
                     Input.append(In)
+            f.close()
         elif input_mode=='list':
             Modified_input=[]
 

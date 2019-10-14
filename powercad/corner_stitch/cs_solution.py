@@ -151,6 +151,9 @@ class CornerStitchSolution:
             ax1.set_aspect('equal')
             plt.savefig(fig_dir+'/layout_'+str(layout_ind)+'.png')
             plt.savefig(fig_dir + '/layout_' + str(layout_ind) + '.eps')
+            # Try to release memory
+            fig1.clf()
+            plt.close()
 
         conn.close()
 

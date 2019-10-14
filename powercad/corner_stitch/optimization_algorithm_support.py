@@ -134,9 +134,9 @@ class new_engine_opt:
                 self.e_api.init_layout_isl(module_data=module_data)
                 start=time.time()
                 R, L = self.e_api.extract_RL(src=measure.source, sink=measure.sink)
-                print 'R',R,'L',L
+                #print 'R',R,'L',L
                 end = time.time()
-                print "RT", end - start
+                #print "RT", end - start
 
 
                 if type == 0:  # LOOP RESISTANCE

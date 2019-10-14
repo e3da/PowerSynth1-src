@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import time
 import scipy
-#from memory_profiler import profile
+from memory_profiler import profile
 import warnings
 warnings.filterwarnings("ignore")
 class diag_prec:
@@ -95,7 +95,8 @@ class RL_circuit():
         self.C_count = 0
         self.M_count = 0
 
-    def clean_dicts(self):
+    '''
+    def __del__(self):
         del self.pnode
         del self.nnode
         del self.cp_node
@@ -107,7 +108,10 @@ class RL_circuit():
         del self.Lname1
         del self.Lname2
         del self.L_id  # A relationship between Lname and current id in the matrix
-
+        del self.element
+        del self.node_dict
+        del self.results_dict
+    '''
     def assign_freq(self,freq=1000):
         self.freq = freq
         self.s = 2 * freq * np.pi * 1j
@@ -269,7 +273,7 @@ class RL_circuit():
 
     def build_current_info(self):
         ''' collect all branches'''
-        for i in range(len(self.element)):
+        for i in xrange(len(self.element)):
             # process all the elements creating unknown currents
             el = self.element[i]
             x = self.element[i][0]  # get 1st letter of element name
@@ -316,7 +320,7 @@ class RL_circuit():
         return v_port/self.Rport
 
     def find_vname(self, name):
-        for i in range(len(self.cur_element)):
+        for i in xrange(len(self.cur_element)):
             el = self.cur_element[i]
             if name == el:
                 n1 = self.cur_pnode[name]
@@ -329,7 +333,7 @@ class RL_circuit():
         s = self.s
         sn =0
 
-        for i in range(len(self.element)):
+        for i in xrange(len(self.element)):
             el = self.element[i]
 
             x = el[0]
@@ -425,20 +429,20 @@ class RL_circuit():
 
     def V_mat(self, num_nodes):
         # generate the V matrix
-        for i in range(num_nodes):
+        for i in xrange(num_nodes):
             self.V[i] = 'v{0}'.format(i + 1)
 
     def J_mat(self):
         # The J matrix is an mx1 matrix, with one entry for each i_unk from a source
         # sn = 0   # count i_unk source number
         # oan = 0   #count op amp number
-        for i in range(len(self.cur_element)):
+        for i in xrange(len(self.cur_element)):
             # process all the unknown currents
             self.J[i] = 'I_{0}'.format(self.cur_element[i])
 
     def Ii_mat(self):
         if self.cur_src!=[]:
-            for i in range(len(self.cur_src)):
+            for i in xrange(len(self.cur_src)):
                 el = self.cur_src[i]
                 n1 = self.src_pnode[el]
                 n2 = self.src_nnode[el]
@@ -451,7 +455,7 @@ class RL_circuit():
     def Vi_mat(self):
         # generate the E matrix
         sn = 0  # count source number
-        for i in range(len(self.cur_element)):
+        for i in xrange(len(self.cur_element)):
             # process all the passive elements
             el = self.cur_element[i]
             x = el[0]
@@ -566,7 +570,7 @@ class RL_circuit():
             names = self.J
             print self.J.shape
         if rlmode:
-            for i in range(len(names)):
+            for i in xrange(len(names)):
                 self.results_dict[str(names[i,0])]=self.results[i]
 
         self.results=self.results_dict

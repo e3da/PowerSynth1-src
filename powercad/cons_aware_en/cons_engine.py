@@ -12,7 +12,7 @@ from powercad.corner_stitch.constraintGraph_Dev import constraintGraph
 import itertools
 from powercad.general.data_struct.util import *
 from powercad.design.layout_module_data import ModuleDataCornerStitch
-
+from memory_profiler import profile
 class New_layout_engine():
     def __init__(self):
         self.W = None
@@ -133,7 +133,7 @@ class New_layout_engine():
         # ------------------------------------------
 
 
-    
+
     def plotrectH_old(self, node,format=None):###plotting each node in HCS before minimum location evaluation
         """
         Draw all cells in this cornerStitch with stitches pointing to their stitch neighbors
@@ -426,6 +426,7 @@ class New_layout_engine():
                 self.min_dimensions[type]=[footprint,parent_type]
 
     # generate layout solutions using constraint graph edge weights randomization for different modes(level)
+    #@profile
     def generate_solutions(self, level, num_layouts=1, W=None, H=None, fixed_x_location=None, fixed_y_location=None,
                            seed=None, individual=None, db=None, count=None, bar=False):
         """
@@ -2102,5 +2103,6 @@ def Sym_to_CS(input_rects,Htree,Vtree):
     
     
     '''
+
 
 

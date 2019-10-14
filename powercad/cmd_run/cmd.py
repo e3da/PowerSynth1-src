@@ -7,6 +7,8 @@ import objgraph
 from pympler import muppy,summary
 from powercad.layer_stack.layer_stack import LayerStack
 import types
+import os
+import sys
 
 class Cmd_Handler:
     def __init__(self):
@@ -39,6 +41,21 @@ class Cmd_Handler:
         # Solutions
         self.soluions = None
 
+        self.macro =None
+
+    def setup_file(self,file):
+        self.macro=os.path.abspath(file)
+        if not(os.path.isfile(self.macro)):
+            print "file path is wrong, please give another input"
+            sys.exit()
+
+    def run_parse(self):
+        if self.macro!=None:
+            self.load_macro_file(self.macro)
+        else:
+            print "Error, please check your test case"
+            sys.exit()
+
     def load_macro_file(self, file):
         '''
 
@@ -54,8 +71,8 @@ class Cmd_Handler:
         e_name = None
         dev_conn ={}
         with open(file, 'rb') as inputfile:
-            thermal_mode = False
-            electrical_mode =False
+            self.thermal_mode = None
+            self.electrical_mode =None
             dev_conn_mode=False
             for line in inputfile.readlines():
                 line = line.strip("\r\n")
@@ -65,23 +82,21 @@ class Cmd_Handler:
                 if line[0] == '#':  # Comments
                     continue
                 if info[0] == "Layout_script:":
-                    self.layout_script = info[1]
+                    self.layout_script = os.path.abspath(info[1])
                 if info[0] == "Bondwire_setup:":
-                    self.bondwire_setup = info[1]
+                    self.bondwire_setup = os.path.abspath(info[1])
                 if info[0] == "Layer_stack:":
-                    self.layer_stack_file = info[1]
+                    self.layer_stack_file = os.path.abspath(info[1])
                 if info[0] == "Parasitic_model:":
-                    self.rs_model_file = info[1]
+                    self.rs_model_file = os.path.abspath(info[1])
                 if info[0] == "Fig_dir:":
-                    self.fig_dir = info[1]
+                    self.fig_dir = os.path.abspath(info[1])
                 if info[0] == "Solution_dir:":
-                    self.db_dir = info[1]
+                    self.db_dir = os.path.abspath(info[1])
                 if info[0] == "Constraint_file:":
-                    self.constraint_file = info[1]
-
-                if info[0]=="Reliability-awareness:":
-                    self.i_v_constraint= int(info[1]) #0: no reliability constraints, 1: worst case, 2: average case
-
+                    self.constraint_file = os.path.abspath(info[1])
+                if info[0] == "Reliability-awareness:":
+                    self.i_v_constraint = int(info[1])  # 0: no reliability constraints, 1: worst case, 2: average case
                 if info[0] =="New:":
                     self.new_mode = int(info[1])
                 if info[0] == "Option:":  # engine option
@@ -101,14 +116,14 @@ class Cmd_Handler:
                 if info[0] == 'Num_generations:':
                     num_gen = int(info[1])
                 if info[0]== 'Thermal_Setup:':
-                    thermal_mode = True
+                    self.thermal_mode = True
                 if info[0] == 'End_Thermal_Setup.':
-                    thermal_mode = False
+                    self.thermal_mode = False
                 if info[0] == 'Electrical_Setup:':
-                    electrical_mode = True
+                    self.electrical_mode = True
                 if info[0] == 'End_Electrical_Setup..':
-                    electrical_mode = False
-                if thermal_mode:
+                    self.electrical_mode = False
+                if self.thermal_mode:
                     if info[0] == 'Model_Select:':
                         thermal_model = int(info[1])
                     if info[0] == 'Measure_Name:' and t_name==None:
@@ -122,7 +137,7 @@ class Cmd_Handler:
                         h_conv = float(info[1])
                     if info[0] == 'Ambient_Temperature:':
                         t_amb = float(info[1])
-                if electrical_mode:
+                if self.electrical_mode:
                     if info[0] == 'Measure_Name:' and e_name==None:
                         e_name = info[1]
                     if info[0] == 'Measure_Type:':
@@ -147,16 +162,25 @@ class Cmd_Handler:
         check_file = os.path.isfile
         check_dir = os.path.isdir
         # Check if these files exist
-        cont = check_file(self.layout_script) and check_file(self.bondwire_setup) and check_file(
-            self.layer_stack_file) and check_file(self.rs_model_file) and check_dir(self.fig_dir) and check_dir(
-            self.db_dir) and check_file(self.constraint_file)
-        print check_file(self.layout_script)
-        print check_file(self.bondwire_setup)
-        print check_file(self.layer_stack_file)
-        print check_file(self.rs_model_file)
-        print check_dir(self.fig_dir)
-        print check_dir(self.db_dir)
-        print check_file(self.constraint_file)
+        cont = check_file(self.layout_script) \
+               and check_file(self.bondwire_setup) \
+               and check_file(self.layer_stack_file) \
+               and check_file(self.rs_model_file) \
+               and check_file(self.constraint_file)
+        # make dir if they are not existed
+        print "self.new_mode",self.new_mode
+        if not (check_dir(self.fig_dir)) or not(check_dir(self.db_dir)):
+            try:
+                os.mkdir(self.fig_dir)
+            except:
+                print "cant make directory for figures"
+                cont =False
+            try:
+                os.mkdir(self.db_dir)
+            except:
+                print "cant make directory for database"
+                cont =False
+
         if cont:
 
             print "run the optimization"
@@ -169,17 +193,18 @@ class Cmd_Handler:
                                          floor_plan=floor_plan)
             elif run_option == 1:
                 self.measures=[]
-                t_setup_data={'Power': power,'heat_conv':h_conv,'t_amb':t_amb}
-                t_measure_data={'name':t_name,'devices':devices}
-                e_measure_data = {'name': e_name, 'type': type, 'source': source, 'sink': sink}
-                self.setup_thermal(mode='macro', setup_data=t_setup_data,meas_data=t_measure_data,model_type=thermal_model)
-                self.setup_electrical(mode='macro', dev_conn=dev_conn, frequency=frequency, meas_data=e_measure_data)
+                if self.thermal_mode!=None:
+                    t_setup_data={'Power': power,'heat_conv':h_conv,'t_amb':t_amb}
+                    t_measure_data={'name':t_name,'devices':devices}
+                    self.setup_thermal(mode='macro', setup_data=t_setup_data,meas_data=t_measure_data,model_type=thermal_model)
+                if self.electrical_mode!=None:
+                    e_measure_data = {'name': e_name, 'type': type, 'source': source, 'sink': sink}
+                    self.setup_electrical(mode='macro', dev_conn=dev_conn, frequency=frequency, meas_data=e_measure_data)
 
                 # Convert a list of patch to rectangles
                 patch_dict = self.engine.init_data[0]
-                init_data_islands = self.engine.init_data[3]
-                init_cs_islands=self.engine.init_data[2]
-                #print init_data_islands
+                init_data_islands = self.engine.init_data[2]
+                print init_data_islands
                 fp_width, fp_height = self.engine.init_size
                 fig_dict = {(fp_width, fp_height): []}
                 for k, v in patch_dict.items():
@@ -226,7 +251,7 @@ class Cmd_Handler:
                 md_data = ModuleDataCornerStitch()
                 md_data.islands[0] = init_data_islands
                 md_data.footprint = [fp_width * 1000, fp_height * 1000]
-
+                md_data.layer_stack = self.layer_stack
 
 
                 self.solutions = eval_single_layout(layout_engine=self.engine, layout_data=cs_sym_info,
@@ -236,10 +261,13 @@ class Cmd_Handler:
             if run_option == 2:
 
                 self.measures = []
-                t_setup_data = {'Power': power, 'heat_conv': h_conv, 't_amb': t_amb}
-                t_measure_data = {'name': t_name, 'devices': devices}
-                e_measure_data = {'name':e_name,'type':type,'source':source,'sink':sink}
-                self.setup_electrical(mode='macro', dev_conn=dev_conn, frequency=frequency, meas_data=e_measure_data)
+                if self.thermal_mode!=None:
+                    t_setup_data = {'Power': power, 'heat_conv': h_conv, 't_amb': t_amb}
+                    t_measure_data = {'name': t_name, 'devices': devices}
+                    self.setup_thermal(mode='macro', setup_data=t_setup_data, meas_data=t_measure_data)
+                if self.electrical_mode!=None:
+                    e_measure_data = {'name':e_name,'type':type,'source':source,'sink':sink}
+                    self.setup_electrical(mode='macro', dev_conn=dev_conn, frequency=frequency, meas_data=e_measure_data)
 
                 self.setup_thermal(mode='macro', setup_data=t_setup_data,meas_data=t_measure_data,model_type=thermal_model)
 
@@ -248,6 +276,23 @@ class Cmd_Handler:
                                          apis={'E': self.e_api, 'T': self.t_api}, num_layouts=num_layouts, seed=seed,
                                          algorithm=algorithm, floor_plan=floor_plan,num_gen=num_gen,measures=self.measures)
         else:
+            # First check all file path
+            if not (check_file(self.layout_script)):
+                print self.layout_script, "is not a valid file path"
+            elif not(check_file(self.bondwire_setup)):
+                print self.bondwire_setup, "is not a valid file path"
+            elif not (check_file(self.layer_stack_file)):
+                print self.layer_stack_file, "is not a valid file path"
+            elif not (check_file(self.rs_model_file)):
+                print self.rs_model_file, "is not a valid file path"
+            elif not (check_dir(self.fig_dir)):
+                print self.fig_dir, "is not a valid directory"
+            elif not (check_dir(self.db_dir)):
+                print self.db_dir, "is not a valid directory"
+            elif not(check_file(self.constraint_file)):
+                print self.constraint_file, "is not a valid file path"
+            print "Check your input again ! "
+
             return cont
 
     # ------------------ File Resquest -------------------------------------------------
@@ -415,16 +460,19 @@ class Cmd_Handler:
 
     # --------------- API --------------------------------
     def setup_electrical(self,mode='command',dev_conn={},frequency=None,meas_data={}):
-
+        print "init api"
         layer_to_z = {'T': [0, 0.2], 'D': [0.2, 0], 'B': [0.2, 0],
                       'L': [0.2, 0]}
         self.e_api = CornerStitch_Emodel_API(comp_dict=self.comp_dict, layer_to_z=layer_to_z, wire_conn=self.wire_table)
         self.e_api.load_rs_model(self.rs_model_file)
+        print mode
         if mode == 'command':
             self.e_api.form_connection_table(mode='command')
             self.e_api.get_frequency()
             self.measures += self.e_api.measurement_setup()
         elif mode == 'macro':
+            print "macro mode"
+
             self.e_api.form_connection_table(mode='macro',dev_conn=dev_conn)
             self.e_api.get_frequency(frequency)
             self.measures += self.e_api.measurement_setup(meas_data)
@@ -485,6 +533,12 @@ class Cmd_Handler:
                 m, file = mode.split(" ")
                 if os.path.isfile(file):
                     # macro file exists
+                    filename = os.path.basename(file)
+                    # change current directory to workspace
+                    work_dir = file.replace(filename,'')
+                    os.chdir(work_dir)
+                    print "Jump to current working dir"
+                    print work_dir
                     checked = self.load_macro_file(file)
                     if not (checked):
                         continue
@@ -568,7 +622,6 @@ class Cmd_Handler:
             elif opt == 2:  # Peform layout evaluation based on the list of measures
                 self.init_apis()  # Setup measurement
                 cont, layout_mode = self.option_layout_gen()
-
                 if layout_mode in range(3):
                     self.set_up_db()
                     self.soluions = generate_optimize_layout(layout_engine=self.engine, mode=layout_mode,

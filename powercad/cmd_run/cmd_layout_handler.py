@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from powercad.corner_stitch.input_script import *
 from powercad.sol_browser.cs_solution_handler import pareto_solutions,export_solutions
+from memory_profiler import profile
 import time
 
 # --------------Plot function---------------------
@@ -54,7 +55,6 @@ def plot_layout(fig_data=None, rects=None, size=None, fig_dir=None):
     ax.set_aspect('equal')
 
     plt.savefig(fig_dir + '/_init_layout' + '.png')
-    plt.close()
 
 
 def opt_choices(algorithm=None):
@@ -206,10 +206,8 @@ def get_dims(floor_plan = None):
         height = floor_plan[1]*1000
         return [width, height]
 
-
-
-
-def generate_optimize_layout(layout_engine=None, mode=0, optimization=True,rel_cons=None, db_file=None,fig_dir=None,sol_dir=None, apis={}, measures=[],seed=None,
+#@profile
+def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_file=None,fig_dir=None,sol_dir=None, apis={}, measures=[],seed=None,
                              num_layouts = None,num_gen= None , num_disc=None,max_temp=None,floor_plan=None,algorithm=None):
     '''
 

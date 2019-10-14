@@ -4,12 +4,15 @@ from powercad.electrical_mdl.e_mesh_direct import *
 from powercad.electrical_mdl.e_mesh_corner_stitch import *
 from powercad.corner_stitch.input_script import *
 from powercad.parasitics.mdl_compare import load_mdl
+from datetime import datetime
+import psutil
 from powercad.electrical_mdl.e_netlist import ENetlist
 import cProfile
 import pstats
 from mpl_toolkits.mplot3d import Axes3D
 from collections import deque
 import gc
+import objgraph
 
 
 class ElectricalMeasure(object):
@@ -78,7 +81,7 @@ class CornerStitch_Emodel_API:
                         for conns in comp.conn_dict:
                             states[conns] = dev_conn[name][comp.conn_dict.keys().index(conns)]
                         self.conn_dict[name] = states
-        print self.conn_dict
+        #print self.conn_dict
     def get_frequency(self, frequency=None):
         if frequency == None:
             freq = raw_input("Frequency for the extraction in kHz:")
@@ -116,7 +119,6 @@ class CornerStitch_Emodel_API:
                 p.name=trace[5]
                 self.e_plates.append(p)
             for comp in isl.child: # get all components in isl
-                print "elec",comp
                 x, y, w, h = comp[1:5]
                 name = comp[5] # get the comp name from layout script
                 obj = self.comp_dict[name]
@@ -132,11 +134,11 @@ class CornerStitch_Emodel_API:
                     self.net_to_sheet[name] = pin
                 elif isinstance(obj, Part):
                     if obj.type == 0:  # If this is lead type:
-                        print name
-                        print x, y, w, h
+                        #print name
+                        #print x, y, w, h
                         new_rect = Rect(top=(y + h) / 1000, bottom=y / 1000, left=x / 1000, right=(x + w) / 1000)
                         z = self.layer_to_z[type][0]
-                        pin = Sheet(rect=new_rect, net_name=name, net_type='internal', n=(0, 0, 1), z=z)
+                        pin = Sheet(rect=new_rect, net_name=name, net_type='external', n=(0, 0, 1), z=z)
                         self.net_to_sheet[name] = pin
                         self.e_sheets.append(pin)
                     elif obj.type == 1:  # If this is a component
@@ -175,8 +177,20 @@ class CornerStitch_Emodel_API:
         # Update module object
         self.module = EModule(plate=self.e_plates, sheet=self.e_sheets, components=self.wires + self.e_comps)
         self.module.form_group_cs_hier()
-        self.hier = EHier(module=self.module)
-        self.hier.form_hierachy()
+        #'''
+        if self.hier == None:
+            self.hier = EHier(module=self.module)
+            self.hier.form_hierachy()
+        else:  # just update, no new objects
+            #self.hier = EHier(module=self.module)
+            #self.hier.form_hierachy()
+            self.hier.update_module(self.module)
+            self.hier.update_hierarchy()
+        #'''
+        #self.hier = EHier(module=self.module)
+        #self.hier.form_hierachy()
+
+
         self.emesh = EMesh_CS(islands=islands,hier_E=self.hier, freq=self.freq, mdl=self.rs_model)
         self.emesh.mesh_update()
         '''
@@ -289,8 +303,13 @@ class CornerStitch_Emodel_API:
         self.module = EModule(plate=self.e_plates, sheet=self.e_sheets, components=self.wires + self.e_comps)
         self.module.form_group_cs_flat()
         self.module.split_layer_group()
-        self.hier = EHier(module=self.module)
-        self.hier.form_hierachy()
+        if self.hier ==None:
+            self.hier = EHier(module=self.module)
+            self.hier.form_hierachy()
+        else: # just update, no new objects
+            self.hier.update_module(self.module)
+            self.hier.update_hierarchy()
+
         self.emesh = EMesh(hier_E=self.hier, freq=self.freq, mdl=self.rs_model)
         self.emesh.mesh_grid_hier(corner_stitch=True)
         self.emesh.update_trace_RL_val()
@@ -310,7 +329,8 @@ class CornerStitch_Emodel_API:
 
         self.emesh.mutual_data_prepare(mode=0)
         self.emesh.update_mutual(mode=0)
-
+        netlist = ENetlist(self.module, self.emesh)
+        netlist.export_netlist_to_ads(file_name='Half_bridge.net')
         # pr.disable()
         # pr.create_stats()
         # file = open('C:\Users\qmle\Desktop\New_Layout_Engine\New_design_flow\mystats.txt', 'w')
@@ -326,6 +346,7 @@ class CornerStitch_Emodel_API:
             num_wires = int(wire_data['num_wires'])
             start = wire_data['Source']
             stop = wire_data['Destination']
+            #print self.net_to_sheet
             s1 = self.net_to_sheet[start]
             s2 = self.net_to_sheet[stop]
             spacing = float(wire_data['spacing'])
@@ -334,7 +355,7 @@ class CornerStitch_Emodel_API:
                           frequency=self.freq, circuit=RL_circuit())
 
             self.wires.append(wire)
-        self.e_comps+=self.wires
+        #self.e_comps+=self.wires
     def plot_3d(self):
         fig = plt.figure(1)
         ax = a3d.Axes3D(fig)
@@ -343,6 +364,7 @@ class CornerStitch_Emodel_API:
         ax.set_zlim3d(0, 2)
         ax.set_aspect('equal')
         plot_rect3D(rect2ds=self.module.plate + self.module.sheet, ax=ax)
+
         fig = plt.figure(2)
         ax = a3d.Axes3D(fig)
         ax.set_xlim3d(-2, self.width + 2)
@@ -379,6 +401,13 @@ class CornerStitch_Emodel_API:
             self.measure.append(ElectricalMeasure(measure=type, name=name, source=source, sink=sink))
             return self.measure
 
+    def extract_RL_1(self,src=None,sink =None):
+        print "TEST HIERARCHY LEAK"
+        del self.emesh
+        del self.circuit
+        del self.module
+        return 1,1
+
     def extract_RL(self, src=None, sink=None):
         '''
         Input src and sink name, then extract the inductance/resistance between them
@@ -405,12 +434,22 @@ class CornerStitch_Emodel_API:
         imp = self.circuit.results[vname]
         R = abs(np.real(imp) * 1e3)
         L = abs(np.imag(imp)) * 1e9 / (2 * np.pi * self.circuit.freq)
-        self.hier.tree.__del__()
-        del self.circuit
-        self.emesh.graph.clear()
-        self.emesh.m_graph.clear()
-        gc.collect()
-        print R, L
+        #self.emesh.graph.clear()
+        #self.emesh.m_graph.clear()
+        #self.emesh.graph=None
+        #self.emesh.m_graph=None
+        #del self.emesh
+        #del self.circuit
+        #del self.hier
+        #del self.module
+        #gc.collect()
+        #print R, L
+        #process = psutil.Process(os.getpid())
+        #now = datetime.now()
+        #dt_string = now.strftime("%d-%m-%Y-%H-%M-%S")
+        #print "Mem use at:", dt_string
+        #print(process.memory_info().rss), 'bytes'  # in bytes
+        #return R[0], L[0]
         return R, L
 
         '''

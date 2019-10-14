@@ -174,8 +174,8 @@ class EMesh():
         C_tot = 0
         num_nodes = len(self.graph.nodes())
         cap_eval = trace_capacitance
-        for n1 in self.graph.nodes():
-            if mode == 1:
+        for n1 in self.graph.nodes(data=True):
+            if mode == 1: # Split each layer into small
                 for n2 in self.graph.nodes():
                     if n1 != n2:
                         rect1 = n_cap_dict[n1]
@@ -187,11 +187,13 @@ class EMesh():
                             #cap_val= 48*1e-12/num_nodes/2
                             C_tot+=cap_val
                             self.cap_dict[(n1, n2)]=cap_val
-            elif mode==2:
-                rect1 = n_cap_dict[n1]
-                cap_val = cap_eval(rect1.width(), rect1.height(), t, h, 4.6, True) * 1e-12
+            elif mode==2:    # Using the Pi network circuit, for 2 layers DBC ground is the backside
+                nid=n1[0]
+                rect1 = n_cap_dict[nid]
+                cap_val = cap_eval(rect1.width_eval(), rect1.height_eval(), t, h, 9.1, True) * 1e-12
+                print cap_val
                 C_tot += cap_val
-                self.cap_dict[(n1, 0)] = cap_val
+                self.cap_dict[(nid, 0)] = cap_val
         #print self.cap_dict
         print "total cap", C_tot
 
@@ -318,7 +320,7 @@ class EMesh():
 
                 #R = 1e-6 #if R == 0 else R
                 #L = 1e-10 #if L == 0 else L
-                L = 1e-10
+                #L = 1e-10
             else: # Case 2, we dont need to compute the hierarchical edge, this is provided from the components objects
                 parent_data = self.hier_edge_data[e]
                 R = parent_data['R']

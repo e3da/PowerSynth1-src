@@ -49,7 +49,6 @@ class EMesh_CS(EMesh):
         points = []
         mesh_nodes = isl.mesh_nodes  # get all mesh nodes object from the trace island
         # for each island set the
-        plt.figure(10)
         print "num nodes",len(mesh_nodes)
         for node in mesh_nodes:
             node.pos[0] = node.pos[0] / 1000.0

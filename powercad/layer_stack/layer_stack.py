@@ -5,7 +5,7 @@ from powercad.design.library_structures import *
 from powercad.general.material.material import *
 from powercad.general.settings.settings import MATERIAL_LIB_PATH
 import csv
-
+import getpass
 
 
 class Layer:
@@ -65,6 +65,8 @@ class LayerStack:
         self.current_id = 0  # to check the current layer id
         self.max_z = 0  # the z level of the highest layer
         self.material_lib = Material_lib()
+        if getpass.getuser()=="erago": # Quang PC hard code case to be removed in main
+            MATERIAL_LIB_PATH = "C:\Users\erago\PycharmProjects\git\Fix_memory_issue\PowerCAD-full\\tech_lib\Material\Materials.csv"
         self.material_lib.load_csv(MATERIAL_LIB_PATH) # load the mat_lib from the default directory
         self.foot_print = [0,0]
 
