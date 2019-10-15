@@ -1,9 +1,13 @@
-import sys
-import numpy as np
-# from simplejson import JSONEncoder
 import simplejson as json
 import matlab.engine
 import cPickle as pickle
+import numpy as np
+import matplotlib.pyplot as plt
+import mpl_toolkits.mplot3d.art3d as art3d
+from matplotlib.patches import Rectangle
+import matplotlib.cm as cm
+# from matplotlib.pylab import *
+import seaborn as sns
 
 
 class Feature(object):
@@ -292,7 +296,7 @@ class ParaPowerWrapper(object):
         pickle.dump(self.module_design, open(filename, 'wb'), protocol=pickle.HIGHEST_PROTOCOL)
 
 
-class FeaturesClass(object):
+class FeaturesClassDict(object):
     def __init__(self, dictionary):
         for k, v in dictionary.items():
             setattr(self, k, v)
@@ -321,13 +325,11 @@ class ParaPower(object):
         eng.cd(self.path)
         return eng
 
-    def run_parapower_thermal(self, matlab_engine=None):
+    def run_parapower_thermal(self, matlab_engine=None, visualize=False):
         if not matlab_engine:
             matlab_engine = self.init_matlab()
-            print '=' * 50
-            print 'oops, I self-started'
         md_json = json.dumps(self.to_dict())
-        temperature = matlab_engine.PowerSynthImport(md_json)
+        temperature = matlab_engine.PowerSynthImport(md_json, visualize)
         # self.eng.workspace['test_md'] = self.eng.ImportPSModuleDesign(json.dumps(self.to_dict()), nargout=1)
         # self.eng.save('test_md_file.mat', 'test_md')
         # return temperature + 273.5
@@ -344,15 +346,6 @@ def init_matlab(path):
     eng = matlab.engine.start_matlab()
     eng.cd(path)
     return eng
-
-
-import numpy as np
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import axes3d
-import mpl_toolkits.mplot3d.art3d as art3d
-from matplotlib.patches import Rectangle
-import matplotlib.cm as cm
-from matplotlib.pylab import *
 
 
 class Coordinates(object):
@@ -483,6 +476,67 @@ class MD_General_v1(object):
 '''
 
 
+class ParaPowerData(object):
+    def __init__(self, data):
+        """
+        Gathers data from MATLAB via PreparePlotData.m and converts MATLAB arrays into Numpy ones.
+        Current data structure includes:
+        - x, y, z: coordinate arrays
+        - origin: coordinate array
+        - model: A 3D matrix containing integers at each location specifying material
+        - temp: A 3D matrix holding temperature results
+        - materials: A list of all materials, referenced by their index in 'model'. Note: This uses MATLAB indexing!
+        :param data: Data from PreparePlotData.m
+        :type data: Dictionary
+        """
+        self.x = None
+        self.y = None
+        self.z = None
+        self.origin = None
+        self.model = None
+        self.temp = None
+        self.materials = None
+        self.material_lookup = {}
+
+        # Read in data and set attributes. Convert numpy arrays to MATLAB ones as necessary
+        for name, entry in data.iteritems():
+            if type(entry) == matlab.double:
+                setattr(self, name, np.array(entry))
+            else:
+                setattr(self, name, entry)
+
+        # Make a dictionary of materials with keys corresponding to values in self.model
+        for index, material in enumerate(self.materials, 1):
+            self.material_lookup[index] = material
+
+
+    def make_mesh(self, plot_data):
+        origin = self.origin[0]
+        dx = self.x[0]
+        dy = self.y[0]
+        dz = self.z[0]
+
+        x = np.concatenate([[0], np.cumsum(dx)[:-1]])
+        y = np.concatenate([[0], np.cumsum(dy)[:-1]])
+        z = np.concatenate([[0], np.cumsum(dz)[:-1]])
+
+        temp = self.temp[:, :, :, 1]
+        cell_list = []
+        index = 0
+        print len(x), len(dx)
+        for i in range(len(x)):
+            for j in range(len(y)):
+                for k in range(len(z)):
+                    temp_cell = Cell(index, [x[i], y[j], z[k]], [dx[i], dy[j], dz[k]])
+                    temp_cell.T = temp[i, j, k]
+                    temp_cell.material_name = self.material_lookup[self.model[i, j, k]]
+                    cell_list.append(temp_cell)
+                    index += 1
+
+        return [x, y, z], [dx, dy, dz], cell_list
+
+
+
 def plot_data_convert(data):
     out = {}
     for name, entry in data.iteritems():
@@ -499,11 +553,12 @@ def make_mesh(plot_data):
     dy = plot_data['y'][0]
     dz = plot_data['z'][0]
 
-    x = np.concatenate([[0], np.cumsum(dx)[:-1]])
-    y = np.concatenate([[0], np.cumsum(dy)[:-1]])
-    z = np.concatenate([[0], np.cumsum(dz)[:-1]])
+    x = np.concatenate([[origin[0]], np.cumsum(dx)])
+    y = np.concatenate([[origin[1]], np.cumsum(dy)])
+    z = np.concatenate([[origin[2]], np.cumsum(dz)])
 
     temp = plot_data['temp'][:, :, :, 1]
+    '''
     cell_list = []
     index = 0
     print len(x), len(dx)
@@ -514,8 +569,8 @@ def make_mesh(plot_data):
                 temp_cell.T = temp[i, j, k]
                 cell_list.append(temp_cell)
                 index += 1
-
-    return [x, y, z], [dx, dy, dz], cell_list
+    '''
+    return [x, y, z], [dx, dy, dz] # cell_list
 
 
 def plot_parapower(plot_data):
@@ -532,7 +587,7 @@ def plot_parapower(plot_data):
     ax.set_zlabel('Z (mm)')
 
     my_cmap = cm.get_cmap('jet')  # or any other one
-    norm = matplotlib.colors.Normalize(min_val, max_val)  # the color maps work for [0, 1]
+    norm = plt.colors.Normalize(min_val, max_val)  # the color maps work for [0, 1]
     for cell in cells:
         color_i = my_cmap(norm(cell.T))
         cell.draw_cell(ax, cmap=color_i)
@@ -546,15 +601,71 @@ def plot_parapower(plot_data):
     ax.view_init(elev=90, azim=90)
     plt.show()
 
+
+def plot_parapower_2d(plot_data, min_val=345, max_layer=5):
+    pdc = plot_data_convert(plot_data)
+    xyz, wlh = make_mesh(pdc)
+    # min_val = np.amin(pdc['temp'][:, :, :, 1])
+    temp = pdc['temp'][:, :, :, 1]
+    min_val = min_val
+    max_val = np.amax(pdc['temp'][:, :, :, 1])
+    X, Y = np.meshgrid(xyz[0], xyz[1])
+
+    fig, ax = plt.subplots()
+
+    my_cmap = cm.get_cmap('jet')  # or any other one
+    norm = plt.colors.Normalize(min_val, max_val)  # the color maps work for [0, 1]
+    for i in range(max_layer):
+        temp_i = temp[:, :, i]
+        temp_i_ma = np.ma.masked_where(temp_i == 0, temp_i)
+        ax.pcolormesh(X, Y, temp_i_ma.T, cmap=my_cmap)
+
+    cmmapable = cm.ScalarMappable(norm, my_cmap)
+    cmmapable.set_array(range(int(min_val), int(max_val)))
+    plt.colorbar(cmmapable)
+
+    plt.show()
+
+
+def plot_parapower_2d_mats(plot_data, max_layer=5):
+    pdc = plot_data_convert(plot_data)
+    xyz, wlh = make_mesh(pdc)
+    # min_val = np.amin(pdc['temp'][:, :, :, 1])
+    mat_labels = np.unique(pdc['model'])
+    materials = pdc['materials']
+    print materials.shape
+    material_lookup = {}
+    for index, material in enumerate(materials, 1):
+        material_lookup[index] = material
+
+    rgb_values = sns.color_palette("Set2", len(mat_labels))
+    color_map = dict(zip(mat_labels, rgb_values))
+
+
+    X, Y = np.meshgrid(xyz[0], xyz[1])
+
+    fig, ax = plt.subplots()
+
+    for i in range(max_layer):
+        mat_i = materials[:, :, i]
+        mat_i_ma = np.ma.masked_where(mat_i == 0, mat_i)
+        ax.pcolormesh(X, Y, mat_i_ma.T, cmap=color_map)
+
+
+    plt.show()
 '''
 matlab_path = 'C:/Users/tmevans/Documents/MATLAB/ParaPower/ARL_ParaPower/ARL_ParaPower'
 eng = init_matlab(matlab_path)
 plotdata = eng.PreparePlotData()
+ppd = ParaPowerData(plotdata)
 pdc = plot_data_convert(plotdata)
-xyz, wlh, cells = make_mesh(pdc)
+# xyz, wlh, cells = make_mesh(pdc)
 
-plot_parapower(plotdata)
+# plot_parapower(plotdata)
+plot_parapower_2d(plotdata, max_layer=4)
+plot_parapower_2d_mats(plotdata)
 '''
+
 if __name__ == '__main__':
     pass
 
