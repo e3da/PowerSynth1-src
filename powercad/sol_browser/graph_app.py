@@ -35,7 +35,7 @@ from powercad.sym_layout.plot import plot_layout
 from powercad.electro_thermal.ElectroThermal_toolbox import ET_analysis
 from powercad.Spice_handler.spice_export.thermal_netlist_graph import Module_Full_Thermal_Netlist_Graph
 from powercad.export.py_csv import py_csv
-
+from powercad.thermal.analysis import parapower_thermal_analysis
 import csv
 
 class GrapheneWindow(QtGui.QMainWindow):
@@ -351,6 +351,7 @@ class GrapheneWindow(QtGui.QMainWindow):
         p_frontX = [pair[0] for pair in p_front]
         p_frontY = [pair[1] for pair in p_front]
         return p_frontX, p_frontY
+
     def select_solution(self, event):
         # check that there are some indices
         if not len(event.ind): return True
@@ -385,6 +386,9 @@ class GrapheneWindow(QtGui.QMainWindow):
         self.sel_ind=closest_point
         self.draw_graph()
         self.draw_layout_preview(self.sol_index)
+        self.sym_layout.gen_solution_layout(self.sol_index)
+        # TODO: Bug in MATLAB visualization causes the figure window to be destroyed following creation.
+        # parapower_thermal_analysis(self.sym_layout, visualize=1)
 
 
     def draw_layout_preview(self, index):

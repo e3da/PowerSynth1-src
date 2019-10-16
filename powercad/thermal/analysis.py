@@ -5,13 +5,9 @@ Created on Nov 2, 2012
          qmle added successive approximation model (date - time)
 '''
 
-import numpy as np
-
-from powercad.thermal.fast_thermal import ThermalGeometry, TraceIsland, DieThermal, solve_TFSM,\
-    ThermalProperties
+from powercad.thermal.fast_thermal import ThermalGeometry, TraceIsland, DieThermal, solve_TFSM
 from powercad.thermal.rect_flux_channel_model import Baseplate, ExtaLayer, Device, layer_average, compound_top_surface_avg
-from powercad.electro_thermal.ElectroThermal_toolbox import *
-import powercad.design.MDConverter as mdc
+import powercad.interfaces.ParaPowerAPI.MDConverter as mdc
 import powercad.design.module_design as md
 
 TFSM_MODEL = 1
@@ -189,10 +185,10 @@ def tfsm_analysis(sym_layout):
     return res
 
 
-def parapower_thermal_analysis(sym_layout, matlab_engine=None):
+def parapower_thermal_analysis(sym_layout, matlab_engine=None, visualize=False):
     module_design = md.ModuleDesign(sym_layout)
     parapower_design = mdc.ParaPowerWrapper(module_design)
-    max_temperature = parapower_design.parapower.run_parapower_thermal(matlab_engine)
+    max_temperature = parapower_design.parapower.run_parapower_thermal(matlab_engine, visualize=visualize)
     return max_temperature
 
 

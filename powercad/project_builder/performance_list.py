@@ -4,10 +4,10 @@ Created on Apr 29, 2013
 @author: bxs003
 '''
 
-from PySide import QtCore, QtGui
+from PySide import QtGui
 from matplotlib.patches import Circle, Rectangle
 import psidialogs
-from powercad.sym_layout.symbolic_layout import ThermalMeasure, ElectricalMeasure,SymLine,SymPoint
+from powercad.sym_layout.symbolic_layout import ThermalMeasure, ElectricalMeasure,SymLine
 from powercad.project_builder.proj_dialogs import Device_states_dialog
 class PerformanceItem(object):
     def __init__(self, PerfUI, measure, row_item):
@@ -333,7 +333,7 @@ class PerformanceListUI(object):
                 model = 'RECT_FLUX_MODEL'
             elif self.ui.cmb_thermal_model.currentText() == "ParaPower Thermal":
                 model = 'ParaPowerThermal'
-                import powercad.design.MDConverter as mdc
+                import powercad.interfaces.ParaPowerAPI.MDConverter as mdc
                 try:
                     from powercad.general.settings import MATLAB_PATH
                 except:

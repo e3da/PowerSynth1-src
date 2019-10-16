@@ -10,7 +10,59 @@ import matplotlib.cm as cm
 import seaborn as sns
 
 
+class Params(object):
+    """The :class:`Params` object contains attributes that are used in the solver setting of ParaPower.
+
+    **Attributes**
+
+    :ivar Tsteps: A list of time steps to be used in analysis. If the list is empty, static analysis will be performed.
+    :type Tsteps: list
+    :ivar DeltaT: Time step size.
+    :type DeltaT: float
+    :ivar Tinit: The initial temperature for the solution setup.
+    :type Tinit: float
+
+    """
+    def __init__(self):
+        self.Tsteps = []
+        self.DeltaT = 1
+        self.Tinit = 20.
+
+    def to_dict(self):
+        """A function to return the attributes of the :class:`Params` object as a dictionary. This dictionary is used
+        to generate the JSON text stream in :class:`ParaPowerInterface`.
+
+        :return params_dict: A dictionary of the solver parameters.
+        :type params_dict: dict
+        """
+        return self.__dict__
+
+
 class Feature(object):
+    """A feature definition class containing all of the relevant information from
+    a :class:`~PowerSynthStructures.ModuleDesign` object as it pertains to forming a ParaPower model.
+
+
+    :param entity: The type of entity to be converted. This can be one of either baseplate, substrate_attach, substrate,traces, or devices.
+    :type entity: str
+    :param ref_loc: Reference location for the geometry.
+    :type ref_loc: list of reference coordinates
+    :param x: Feature relative x-coordinate.
+    :param y: Feature relative y-coordinate.
+    :param z: Feature relative z-coordinate.
+    :param w: Feature width.
+    :param l: Feature length.
+    :param h: Feature height.
+    :param dx: Feature x-direction meshing discretization.
+    :param dy: Feature y-direction meshing discretization.
+    :param dz: Feature z-direction meshing discretization.
+    :param material: Feature material properties
+    :type material: A :class:`~MaterialProperties` object
+    :param substrate: Parent substrate if applicable.
+    :param power: Heat dissipation to be provided by the feature.
+    :param name: Name of the feature.
+
+    """
     def __init__(self, entity=None, ref_loc=[0., 0., 0.],  x=None, y=None, z=None, w=None, l=None, h=None,
                  dx=1, dy=1, dz=1, material=None, substrate=None, power=0, name=None):
         self.name = name
@@ -176,17 +228,27 @@ class ExternalConditions(object):
         return self.__dict__
 
 
-class Params(object):
-    def __init__(self):
-        self.Tsteps = []
-        self.DeltaT = 1
-        self.Tinit = 20.
-
-    def to_dict(self):
-        return self.__dict__
-
-
 class ParaPowerWrapper(object):
+    """The :class:`ParaPowerWrapper` object takes a PowerSynth module design and converts it to features, parameters,
+    and external conditions to be used in ParaPower analysis routines.
+
+    A module design is of the form :class:`~PowerSynthStructures.ModuleDesign` and is passed to this wrapper class as
+    the parameter module_design. This wrapper class identifies all of the necessary components in a PowerSynth
+    :class:`~PowerSynthStructures.ModuleDesign` and runs :func:`get_features` to generate a list of ParaPower compatible
+    features. External conditions are set based on the ambient temperature found in
+    :class:`~PowerSynthStructures.ModuleDesign`. Parameters used to specify static versus transient analysis and
+    desired timesteps can optionally be passed to this wrapper as a :class:`Params` object. The default parameters are
+    for static analysis.
+
+    :param  module_design: A PowerSynth module design.
+    :type module_design: :class:`~PowerSynthStructures.ModuleDesign`
+    :param solution_parameters: Static or transient solver settings (optional, default is static solver settings).
+    :type solution_parameters: :class:`Params`
+    :return parapower: A ParaPower solution model with external conditions, parameters, and features.
+    :rtype parapower: :class:`~ParaPowerInterface`
+
+    """
+
     def __init__(self, module_design):
         self.module_design = module_design
         self.device_id = self.module_design.dv_id
@@ -197,13 +259,28 @@ class ParaPowerWrapper(object):
         self.features_list = self.get_features()
         self.features = [feature.to_dict() for feature in self.features_list]
 
-        self.parapower = ParaPower(self.external_conditions.to_dict(),
-                                   self.parameters.to_dict(),
-                                   self.features)
+        self.parapower = ParaPowerInterface(self.external_conditions.to_dict(),
+                                            self.parameters.to_dict(),
+                                            self.features)
         # self.output = PPEncoder().encode(self.parapower)
         # self.write_md_output()
 
     def get_ref_locs(self):
+        """Returns reference locations for each of the following:
+
+        **PowerSynth Components**
+
+        * Baseplate from :class:`~PowerSynthStructures.BaseplateInstance`
+        * Substrate Attach  from :class:`~PowerSynthStructures.SubstrateAttachInstance`
+        * Substrate from :class:`~PowerSynthStructures.SubstrateInstance`
+        * Traces from :class:`~PowerSynthStructures.SubstrateInstance`
+        * Devices from :class:`~PowerSynthStructures.DeviceInstance`
+
+
+        :return ref_locs: Reference locations for each of the PowerSynth structures listed above.
+        :rtype: dict
+        """
+
         baseplate_w, baseplate_l, baseplate_h = self.module_design.baseplate.dimensions
         substrate_attach_h = self.module_design.substrate_attach.thickness
         substrate_metal_h = self.module_design.substrate.substrate_tech.metal_thickness
@@ -231,6 +308,13 @@ class ParaPowerWrapper(object):
         return ref_locs
 
     def get_features(self):
+        """A function that returns all of the relevant features necessary for a ParaPower analysis run from the
+        :class:`~PowerSynthStructures.ModuleDesign` object as a list.
+
+        :return features: A list of features for ParaPower.
+        :rtype features: list of :class:`Feature` objects
+        """
+
         features = []
         features_1 = []
         features_2 = []
@@ -302,7 +386,23 @@ class FeaturesClassDict(object):
             setattr(self, k, v)
 
 
-class ParaPower(object):
+class ParaPowerInterface(object):
+    """The main interface between ParaPower and PowerSynth.
+
+    This class accepts external conditions, parameters, and all of the features that have been previously converted from
+    a :class:`~PowerSynthStructures.ModuleDesign` object. Additionally, given a path to the MATLAB workspace containing
+    ParaPower, the function :func:`~run_parapower_thermal` sends the necessary information to the receiving script in
+    MATLAB and will run a ParaPower analysis before returning temperature results.
+
+
+    :param external_conditions: External conditions for the ParaPower solver
+    :type external_conditions: dict of :class:`~ExternalConditions`
+    :param parameters: ParaPower solver parameters
+    :type parameters: dict of :class:`~Params`
+    :param features: All of the features to be included from a :class:`~PowerSynthStructures.ModuleDesign` object.
+    :param matlab_path: dict of :class:`~Feature`
+
+    """
     def __init__(self, external_conditions=None, parameters=None, features=None,
                  matlab_path='C:/Users/tmevans/Documents/MATLAB/ParaPower/ARL_ParaPower/ARL_ParaPower'):
         self.ExternalConditions = external_conditions
@@ -314,6 +414,12 @@ class ParaPower(object):
         #self.eng = self.init_matlab()
 
     def to_dict(self):
+        """Converts all of the external conditions, parameters, features, and potting material to a dictionary.
+        This dictionary is then converted to a JSON text stream in :func:`~run_parapower_thermal`.
+
+        :return model_dict: A dictionary collection of the ParaPower model.
+        :rtype model_dict: dict
+        """
         model_dict = {'ExternalConditions': self.ExternalConditions,
                       'Params': self.Params,
                       'Features': self.Features,
@@ -321,11 +427,33 @@ class ParaPower(object):
         return model_dict
 
     def init_matlab(self):
+        """Initializes the MATLAB for Python engine and starts it in the working directory specified in the path
+        attribute.
+
+        :return eng: An instance of the MATLAB engine.
+        """
         eng = matlab.engine.start_matlab()
         eng.cd(self.path)
         return eng
 
     def run_parapower_thermal(self, matlab_engine=None, visualize=False):
+        """Executes the ParaPower thermal analysis on the given PowerSynth design and returns temperature results.
+
+        This function accepts a currently running MATLAB engine or defaults to instantiating its own. All of the
+        relevant structures necessary to run the ParaPower thermal analysis are first converted to a JSON text stream.
+        Next this information is sent to the receiving MATLAB script, **ImportPSModuleDesign.m**, where a ParaPower
+        model is formed and evaluated. Currently, the maximum temperature is returned to be used in PowerSynth
+        optimization.
+
+        If this function is being called outside of the optimization routine, the visualize flag can be set to 1 to
+        invoke ParaPower's visualization routines.
+
+        :param matlab_engine: Instance of a running MATLAB engine.
+        :param visualize: Flag for turning on or off visualization. The default is 0 for off.
+        :type visualize: int (0 or 1)
+        :return temperature: The maximum temperature result from ParaPower thermal analysis.
+        :rtype temperature: float
+        """
         if not matlab_engine:
             matlab_engine = self.init_matlab()
         md_json = json.dumps(self.to_dict())
@@ -337,6 +465,11 @@ class ParaPower(object):
         return temperature
 
     def save_parapower(self):
+        """Saves the current JSON text stream so that it can be analyzed later. This is only used for debugging right
+        now.
+
+        :return: None
+        """
         fname = self.path + 'PowerSynth_MD_JSON.json'
         with open(fname, 'w') as outfile:
             json.dump(self.to_dict(), outfile)
@@ -347,7 +480,7 @@ def init_matlab(path):
     eng.cd(path)
     return eng
 
-
+# The following classes and methods are currently only used for visualization testing in Python
 class Coordinates(object):
     def __init__(self, lower_left_coordinate=[0., 0., 0.], width_length_height=[1., 1., 1.]):
         self.location = lower_left_coordinate

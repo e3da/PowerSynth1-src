@@ -17,7 +17,7 @@ import powercad.design.module_design as md
 
 import matplotlib.pyplot as plt
 import pandas as pd
-import powercad.design.MDConverter as mdc
+import powercad.interfaces.ParaPowerAPI.MDConverter as mdc
 
 
 def make_test_symmetries(sym_layout):
