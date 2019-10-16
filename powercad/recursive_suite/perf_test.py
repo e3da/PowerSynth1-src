@@ -10,7 +10,7 @@ import psutil
 
 def run_test():
     test_cases_dirs={
-    'Quang_Journal_S_para': 'D:\Demo\POETS_ANNUAL_MEETING_2019\\testcases_setup\Memory_Leak\Layout_Cases\Case1_S-param\Layout1_macro.txt'
+    'Quang_Journal_S_para': 'D:\Demo\POETS_ANNUAL_MEETING_2019\\testcases_setup\Test\Layout_Cases\Case1_S-param\Layout1_macro.txt'
     }
 
     # Loop through
