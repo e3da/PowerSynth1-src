@@ -89,7 +89,24 @@ class ScriptInputMethod():
             for j in bond_wire_objects:
 
                 if j.name==table_info[i][1]:
-                    wires[name]={'BW_object':j,'Source':table_info[i][2],'Destination':table_info[i][3],'num_wires':table_info[i][4],'spacing':table_info[i][5]}
+                    pads_s=table_info[i][2].split('_')
+                    if len(pads_s)>1:
+                        source_pad=pads_s[-1]
+                        source = table_info[i][2].strip('_'+source_pad)
+                    else:
+                        source_pad=pads_s[0]
+                        source=source_pad
+
+                    pads_d = table_info[i][3].split('_')
+                    if len(pads_d) > 1:
+                        dest_pad = pads_d[-1]
+                        destination =table_info[i][3].strip('_'+dest_pad)
+                    else:
+                        dest_pad=pads_d[0]
+                        destination=dest_pad
+
+                    #print source,source_pad,destination,dest_pad
+                    wires[name]={'BW_object':j,'Source':source,'Destination':destination,'num_wires':table_info[i][4],'spacing':table_info[i][5],'source_pad':source_pad,'destination_pad':dest_pad}
 
         '''
         # ------------------- for debugging --------------------------------------
@@ -474,14 +491,18 @@ class ScriptInputMethod():
         hier_input_info={}
         for j in range(1, len(layout_info)):
             hier_level = 0
+            dots = 0
             for m in range(len(layout_info[j])):
+
                 if layout_info[j][m] == '.':
-                    hier_level += 1
+                    dots+=1
+
                     continue
                 else:
                     start=m
                     break
-
+            if dots>0:
+                hier_level=dots
             hier_input_info.setdefault(hier_level,[])
             hier_input_info[hier_level].append(layout_info[j][start:])
 

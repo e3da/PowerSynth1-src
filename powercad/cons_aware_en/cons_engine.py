@@ -296,6 +296,7 @@ class New_layout_engine():
 
         #--------------------------------------------for debugging----------------------
 
+
         # populating node ids in bondwire objects
         bondwire_to_trace={} # to find traces on which bondwire pads are located
         for wire in bondwires:

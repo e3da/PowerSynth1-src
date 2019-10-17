@@ -408,7 +408,7 @@ class constraintGraph:
             for id in node_ids:
                 connection_coordinates_x[id]=[]
                 connection_coordinates_y[id]=[]
-            print connection_coordinates_x
+            #print connection_coordinates_x
             for wire in bondwires:
                 if wire.source_node_id in connection_coordinates_x:
                     if wire.source_coordinate[0] not in connection_coordinates_x[wire.source_node_id]:
@@ -1279,7 +1279,7 @@ class constraintGraph:
                 value1 = constraint.constraint.getConstraintVal(c,type=rect.cell.type,Types=Types)
                 for connected_coordinates in self.connected_y_coordinates:
                     if ID in connected_coordinates:
-                        if dest1-origin1>1:
+                        if dest1-origin1>1 :
                             # Adding bondingwire edges for each node in the connected coordinate list
                             bw_vertiecs_inside_device=[]
                             for i in range(len(vertex_list_v)):
@@ -1313,12 +1313,16 @@ class constraintGraph:
                                     t2 = Types.index(self.bw_type)
                                     value = constraint.constraint.getConstraintVal(c2, source=t2, dest=t2,Types=Types)  # spacing between two bondwire inside a device
                                     value=(len(bw_vertiecs_inside_device)-1)*value
+                                    if rect.cell.type.strip('Type_') in constraint.constraint.comp_type['Device']:
+                                        comp_type='Device'
+                                    else:
+                                        comp_type=None
                                     if value> value1:
                                         print "ERROR!! Spacing between bondwire is exceeding the device boundary. Not enough space to place all bondwires inside the device"
                                         exit()
                                     else:
-                                        e = Edge(end1, end2, value, index, type=str(t2), id=None, comp_type='Device')
-                                        edgesv.append(Edge(end1, end2, value, index, type=str(t2), id=None, comp_type='Device'))
+                                        e = Edge(end1, end2, value, index, type=str(t2), id=None, comp_type=comp_type)
+                                        edgesv.append(Edge(end1, end2, value, index, type=str(t2), id=None, comp_type=comp_type))
                                         self.vertexMatrixv[ID][end1][end2].append(Edge.getEdgeWeight(e, end1, end2))
                                         #print"V", ID, end1, end2, value, index,e.comp_type
 
@@ -1738,7 +1742,7 @@ class constraintGraph:
                 # handling bonding wire inside a device
                 for connected_coordinates in self.connected_x_coordinates:
                     if ID in connected_coordinates:
-                        if dest1-origin1>1:
+                        if dest1-origin1>1 :
                             # Adding bondingwire edges for each node in the connected coordinate list
                             bw_vertiecs_inside_device = []
                             for i in range(len(vertex_list_h)):
@@ -1749,7 +1753,7 @@ class constraintGraph:
                                                 bw_vertiecs_inside_device.append(vertex_list_h[i])
                                             if wire.dest_coordinate[1]>rect.cell.y and wire.dest_coordinate[1]<rect.cell.y+rect.getHeight() and vertex_list_h[i] not in bw_vertiecs_inside_device:
                                                 bw_vertiecs_inside_device.append(vertex_list_h[i])
-                            #print "LenH", ID, len(bw_vertiecs_inside_device)
+                            print "LenH", ID, len(bw_vertiecs_inside_device)
                             if len(bw_vertiecs_inside_device)>0:
                                 end1 = bw_vertiecs_inside_device[0].index
                                 c1 = constraint.constraint(2)  # min enclosure constraint #So, i-1 to i=enclosure
@@ -1771,12 +1775,16 @@ class constraintGraph:
                                     t2 = Types.index(self.bw_type)
                                     value = constraint.constraint.getConstraintVal(c2, source=t2, dest=t2,Types=Types)  # spacing between two bondwire inside a device
                                     value = (len(bw_vertiecs_inside_device) - 1) * value
+                                    if rect.cell.type.strip('Type_') in constraint.constraint.comp_type['Device']:
+                                        comp_type='Device'
+                                    else:
+                                        comp_type=None
                                     if value > value1:
                                         print "ERROR!! Spacing between bondwire is exceeding the device boundary. Not enough space to place all bondwires inside the device"
                                         exit()
                                     else:
-                                        e = Edge(end1, end2, value, index, type=str(t2), id=None, comp_type='Device')
-                                        edgesh.append(Edge(end1, end2, value, index, type=str(t2), id=None, comp_type='Device'))
+                                        e = Edge(end1, end2, value, index, type=str(t2), id=None, comp_type=comp_type)
+                                        edgesh.append(Edge(end1, end2, value, index, type=str(t2), id=None, comp_type=comp_type))
                                         self.vertexMatrixh[ID][end1][end2].append(Edge.getEdgeWeight(e, end1, end2))
                                         #print"H", ID, end1, end2, value, index,e.comp_type
 
@@ -2173,7 +2181,7 @@ class constraintGraph:
                 dest1 = vertex_list_h[i].index
                 dest2 = vertex_list_h[i + 1].index
                 #if 'EMPTY' in vertex_list_h[i - 1].associated_type:
-                if len(vertex_list_h[i - 1].hier_type)==0 or 0 in vertex_list_h[i - 1].hier_type or ( 'EMPTY' in vertex_list_v[i - 1].associated_type):
+                if len(vertex_list_h[i - 1].hier_type)==0 or 0 in vertex_list_h[i - 1].hier_type or ( 'EMPTY' in vertex_list_h[i - 1].associated_type):
                     max_val=0
                     for t in vertex_list_h[i - 1].associated_type:
                         if t!='EMPTY':
@@ -3191,7 +3199,9 @@ class constraintGraph:
                                     ZDL_H.append(rect.EAST.cell.x)
                             # print ZDL_V
 
-
+                        for vertex in self.vertex_list_h[node.id]:
+                            if vertex.init_coord in self.ZDL_H[element.parentID] and self.bw_type in vertex.associated_type:
+                                ZDL_H.append(vertex.init_coord)
 
                         P = set(ZDL_H)
                         ZDL_H = list(P)
@@ -3397,7 +3407,8 @@ class constraintGraph:
                         loct = []
                         count=0
                         for location in V:
-                            print "x_location",location
+                        #print "Node_H",element.ID,location
+                            count+=1
                             self.Loc_X = {}
 
                             # print NLIST
@@ -3504,21 +3515,21 @@ class constraintGraph:
                                 for k, v in td_eval_edges.items():
                                     for (src, dest), weight in v.items():
                                         if src in self.Loc_X:
-                                            if src in self.Loc_X:
-                                                val1 = self.Loc_X[src] + weight
-                                                if dest > src:
-                                                    val2 = self.Loc_X[src] + X[(src, dest)]
-                                                else:
-                                                    val2 = self.Loc_X[src] - X[(dest, src)]
-                                                val3 = 0
-                                                if dest - 1 in self.Loc_X:
-                                                    if (dest - 1, dest) in X:
-                                                        val3 = self.Loc_X[dest - 1] + X[(dest - 1, dest)]
 
-                                                self.Loc_X[dest] = max(val1, val2, val3)
-                            # print "Before",element.ID,self.Loc_X
+                                            val1 = self.Loc_X[src] + weight
+                                            if dest > src and (src,dest) in X:
+                                                val2 = self.Loc_X[src] + X[(src, dest)]
+                                            elif dest<src and (dest,src) in X:
+                                                val2 = self.Loc_X[src] - X[(dest, src)]
+                                            val3 = 0
+                                            if dest - 1 in self.Loc_X:
+                                                if (dest - 1, dest) in X:
+                                                    val3 = self.Loc_X[dest - 1] + X[(dest - 1, dest)]
+
+                                            self.Loc_X[dest] = max(val1, val2, val3)
+                            print "Before",element.ID,self.Loc_X
                             self.FUNCTION(G,element.ID, Random,sid=seed)
-                            # print"FINX",self.Loc_X
+                            print"FINX",self.Loc_X
                             loct.append(self.Loc_X)
                         #print "loct", loct
                         xloc = []
@@ -3707,8 +3718,9 @@ class constraintGraph:
         d3 = defaultdict(list)
         for i in edge_label:
             k, v = list(i.items())[0]  # an alternative to the single-iterating inner loop from the previous solution
+            print k,v
             d3[k].append(v)
-        # print d3
+        #print d3
         X = {}
         H = []
         for i, j in d3.items():
@@ -3839,7 +3851,8 @@ class constraintGraph:
                     parent_coord.append(vertex.init_coord)
                     if vertex.index in self.removable_nodes_h[ID]:
                         self.removable_nodes_h[parentID].append(self.ZDL_H[parentID].index(vertex.init_coord))
-                        self.reference_nodes_h[parentID]={}
+                        if parentID not in self.reference_nodes_h:
+                            self.reference_nodes_h[parentID]={}
             '''
             for i in range(len(self.propagation_dicts)):
                 prop_dict = self.propagation_dicts[i]
@@ -3860,8 +3873,8 @@ class constraintGraph:
             P = set(parent_coord)
             parent_coord = list(P)
             parent_coord.sort()
-            #print"COH", ID, parent_coord, self.ZDL_H[ID]
-            #print"NR", self.removable_nodes_h[parentID]
+            print"COH", ID, parent_coord, self.ZDL_H[ID]
+            print"NR", self.removable_nodes_h[parentID]
 
 
 
@@ -3906,7 +3919,7 @@ class constraintGraph:
                         #if ID in self.removable_nodes_h and (parentID in self.removable_nodes_h or parentID==-1):
                         if dest in self.removable_nodes_h[parentID] and t in self.removable_nodes_h[ID] and s==self.reference_nodes_h[ID][t][0] :
                             self.reference_nodes_h[parentID][dest]=[origin,x]
-                            #print"H",parentID,self.reference_nodes_h[parentID]
+                            print"propagated_H",parentID,self.reference_nodes_h[parentID],origin,x
                             edge1 = (Edge(source=origin, dest=dest, constraint=x, index=0, type=type, Weight=w,
                                           id=None,comp_type='Device'))  # propagating an edge from child to parent with minimum room for child in the parnet HCG
 
@@ -3972,7 +3985,7 @@ class constraintGraph:
                                 incoming_edges = {}
                                 outgoing_edges = {}
                                 for edge in self.edgesh_new[parentID]:
-                                    # print edge.source,edge.dest,edge.constraint,edge.type,edge.index,edge.comp_type
+                                    #print"P_ID",parentID, edge.source,edge.dest,edge.constraint,edge.type,edge.index,edge.comp_type
                                     if edge.comp_type != 'Device' and edge.dest == node:
                                         incoming_edges[edge.source] = edge.constraint
                                     elif edge.comp_type != 'Device' and edge.source == node:
@@ -3981,7 +3994,10 @@ class constraintGraph:
                                 incoming_edges_to_removable_nodes_h[node] = incoming_edges
                                 outgoing_edges_to_removable_nodes_h[node] = outgoing_edges
                                 #print "in",incoming_edges_to_removable_nodes_h
-                                #print "out",outgoing_edges_to_removable_nodes_h
+                                for k,v in incoming_edges_to_removable_nodes_h[node].items(): # double checking if any fixed edge is considered in the incoming edges
+                                    if  v==self.reference_nodes_h[parentID][node][1] and k ==self.reference_nodes_h[parentID][node][0]:
+                                        del incoming_edges_to_removable_nodes_h[node][k]
+
                                 G = nx.DiGraph()
                                 dictList1 = []
                                 for edge in self.edgesh_new[parentID]:
@@ -4020,7 +4036,7 @@ class constraintGraph:
                                         #print "Re_i",n
                                         for edge in self.edgesh_new[parentID]:
                                             if edge.source == n and edge.dest == node and edge.constraint == incoming_edges[n]:
-                                                # print "RE_i",edge.source,edge.dest,edge.constraint
+                                                #print "RE_i",edge.source,edge.dest,edge.constraint
                                                 self.edgesh_new[parentID].remove(edge)
                                     for n in outgoing_edges_to_removable_nodes_h[node]:
                                         #print "Re_o", n
@@ -4037,7 +4053,7 @@ class constraintGraph:
                                     self.removable_nodes_h[parentID].remove(node)
                                     if node in self.reference_nodes_h[parentID]:
                                         del self.reference_nodes_h[parentID][node]
-                                    #print "EL",self.removable_nodes_h[parentID]
+                                    print "EL",self.removable_nodes_h[parentID]
 
             if parentID in self.removable_nodes_h and parentID in self.reference_nodes_h:
                 for node in self.removable_nodes_h[parentID]:
@@ -4561,9 +4577,9 @@ class constraintGraph:
                                     for (src, dest), weight in v.items():
                                         if src in self.Loc_Y:
                                             val1 = self.Loc_Y[src] + weight
-                                            if dest > src:
+                                            if dest > src and (src,dest) in Y:
                                                 val2 = self.Loc_Y[src] + Y[(src, dest)]
-                                            else:
+                                            elif dest<src and (dest,src) in Y:
                                                 val2 = self.Loc_Y[src] - Y[(dest, src)]
                                             val3 = 0
                                             if dest - 1 in self.Loc_Y:
@@ -4853,7 +4869,8 @@ class constraintGraph:
                     parent_coord.append(vertex.init_coord)
                     if vertex.index in self.removable_nodes_v[ID] :
                         self.removable_nodes_v[parentID].append(self.ZDL_V[parentID].index(vertex.init_coord))
-                        self.reference_nodes_v[parentID]={}
+                        if parentID not in self.reference_nodes_v:
+                            self.reference_nodes_v[parentID]={}
             '''
             for i in range(len(self.propagation_dicts)):
                 prop_dict = self.propagation_dicts[i]
@@ -4984,6 +5001,9 @@ class constraintGraph:
                                 outgoing_edges_to_removable_nodes_v[node] = outgoing_edges
                                 # print "in",incoming_edges_to_removable_nodes_h
                                 # print "out",outgoing_edges_to_removable_nodes_h
+                                for k,v in incoming_edges_to_removable_nodes_v[node].items():
+                                    if  v==self.reference_nodes_v[parentID][node][1] and k ==self.reference_nodes_v[parentID][node][0]:
+                                        del incoming_edges_to_removable_nodes_v[node][k]
                                 G = nx.DiGraph()
                                 dictList1 = []
                                 for edge in self.edgesv_new[parentID]:
@@ -5253,7 +5273,7 @@ class constraintGraph:
                     for node in removable_nodes:
                         reference=self.reference_nodes_h[ID][node][0]
                         value=self.reference_nodes_h[ID][node][1]
-                        if reference in self.Loc_X:
+                        if reference in self.Loc_X and node not in self.Loc_X:
                             self.Loc_X[node] = self.Loc_X[reference] + value
 
 
@@ -5272,7 +5292,8 @@ class constraintGraph:
                                     val3 = self.Loc_X[dest - 1] + B[dest - 1][dest]
                                 else:
                                     val3 = 0
-                                self.Loc_X[dest] = max(val1, val2, val3)
+                                if dest not in self.Loc_X:
+                                    self.Loc_X[dest] = max(val1, val2, val3)
 
 
                 # then evaluation with flag=true is performed
@@ -5304,7 +5325,7 @@ class constraintGraph:
                     for node in removable_nodes:
                         reference=self.reference_nodes_h[ID][node][0]
                         value=self.reference_nodes_h[ID][node][1]
-                        if reference in self.Loc_X:
+                        if reference in self.Loc_X and node not in self.Loc_X:
                             self.Loc_X[node]=self.Loc_X[reference]+value
 
 
@@ -5322,7 +5343,8 @@ class constraintGraph:
                                     val3 = self.Loc_X[dest - 1] + B[dest - 1][dest]
                                 else:
                                     val3 = 0
-                                self.Loc_X[dest] = max(val1, val2, val3)
+                                if dest not in self.Loc_X:
+                                    self.Loc_X[dest] = max(val1, val2, val3)
 
             Fixed_Node = self.Loc_X.keys()
             for i in Fixed_Node:
@@ -5760,7 +5782,7 @@ class constraintGraph:
                     for node in removable_nodes:
                         reference=self.reference_nodes_v[ID][node][0]
                         value=self.reference_nodes_v[ID][node][1]
-                        if reference in self.Loc_Y:
+                        if reference in self.Loc_Y and node not in self.Loc_Y:
                             self.Loc_Y[node] = self.Loc_Y[reference] + value
 
                 if ID in self.top_down_eval_edges_v.keys():
@@ -5777,7 +5799,8 @@ class constraintGraph:
                                     val3 = self.Loc_Y[dest - 1] + B[dest-1][dest]
                                 else:
                                     val3 = 0
-                                self.Loc_Y[dest] = max(val1, val2, val3)
+                                if dest not in self.Loc_Y:
+                                    self.Loc_Y[dest] = max(val1, val2, val3)
 
 
                 Fixed_Node = self.Loc_Y.keys()
@@ -5806,7 +5829,7 @@ class constraintGraph:
                     for node in removable_nodes:
                         reference=self.reference_nodes_v[ID][node][0]
                         value=self.reference_nodes_v[ID][node][1]
-                        if reference in self.Loc_Y:
+                        if reference in self.Loc_Y and node not in self.Loc_Y:
                             self.Loc_Y[node]=self.Loc_Y[reference]+value
                 if ID in self.top_down_eval_edges_v.keys():
                     td_eval_edges = self.top_down_eval_edges_v[ID]
@@ -5823,7 +5846,8 @@ class constraintGraph:
                                     val3 = self.Loc_Y[dest - 1] + B[dest-1][dest]
                                 else:
                                     val3 = 0
-                                self.Loc_Y[dest] = max(val1, val2, val3)
+                                if dest not in self.Loc_Y:
+                                    self.Loc_Y[dest] = max(val1, val2, val3)
 
             Fixed_Node = self.Loc_Y.keys()
 

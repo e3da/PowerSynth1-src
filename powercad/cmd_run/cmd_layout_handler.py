@@ -607,8 +607,8 @@ def script_translator(input_script=None, bond_wire_info=None, fig_dir=None, cons
 
     #Temporary # need to take from input
     #source_coordinate={'D2_Source':[21.0,30.0],'D2_Gate':[17.0,30.0],'D1_Source':[21.0,24.0],'D1_Gate':[17.0,24.0],'D3_Source':[36.0,17.0],'D3_Gate':[36.0,21.0],'D4_Source':[45.0,17.0],'D4_Gate':[45.0,21.0]}
-    source_coordinate={'L2':[7,16],'L3':[18,8]}
-    destination_coordinate = {'D2_Source': [7, 8],'D4_Source': [18, 16]}
+    #source_coordinate={'L2':[7,16],'L3':[18,8]}
+    #destination_coordinate = {'D2_Source': [7, 8],'D4_Source': [18, 16]}
     #source_coordinate={}
     #destination_coordinate = {}
     bondwire_objects=[]
@@ -621,16 +621,29 @@ def script_translator(input_script=None, bond_wire_info=None, fig_dir=None, cons
         cs_type=constraint.constraint.Type[index]
     for k,v in bondwires.items():
         wire=copy.deepcopy(v['BW_object'])
+        print k,v
         if '_' in v['Source']:
             head, sep, tail = v['Source'].partition('_')
-            wire.source_comp = head # layout component id for wire source location
+            wire.source_comp = head  # layout component id for wire source location
         else:
-            wire.source_comp=v['Source']
+            wire.source_comp = v['Source']
         if '_' in v['Destination']:
             head, sep, tail = v['Destination'].partition('_')
             wire.dest_comp = head  # layout component id for wire source location
         else:
             wire.dest_comp = v['Destination']
+
+        if v['source_pad'] in bondwire_landing_info:
+
+            wire.source_coordinate = [float(bondwire_landing_info[v['source_pad']][0]),
+                                      float(bondwire_landing_info[v['source_pad']][1])]
+        if v['destination_pad'] in bondwire_landing_info:
+            #print"DESTINATION_PAD",bondwire_landing_info[v['destination_pad']][0],bondwire_landing_info[v['destination_pad']][1]
+            wire.dest_coordinate = [float(bondwire_landing_info[v['destination_pad']][0]),
+                                      float(bondwire_landing_info[v['destination_pad']][1])]
+
+        '''
+        
 
         if wire.dest_comp in bondwire_landing_info:
             wire.dest_coordinate = [float(bondwire_landing_info[wire.dest_comp][0]),float(bondwire_landing_info[wire.dest_comp][1])]  # coordinate for wire destination location
@@ -641,14 +654,14 @@ def script_translator(input_script=None, bond_wire_info=None, fig_dir=None, cons
                 wire.dest_coordinate = destination_coordinate[v['Destination']]
             if len(source_coordinate) > 0:
                 wire.source_coordinate = source_coordinate[v['Source']]   # coordinate for wire source location
-
+        '''
         wire.source_node_id = None  # node id of source comp from nodelist
         wire.dest_node_id = None  # nodeid of destination comp from node list
-        wire.set_dir_type() # horizontal:0,vertical:1
+        #wire.set_dir_type() # horizontal:0,vertical:1
         wire.cs_type=cs_type
         bondwire_objects.append(wire)
         wire.printWire()
-
+    #raw_input()
 
     try:
         app = QtGui.QApplication(sys.argv)
