@@ -66,9 +66,10 @@ class LayerStack:
         self.max_z = 0  # the z level of the highest layer
         self.material_lib = Material_lib()
 
-        if getpass.getuser()=="ialrazi": # Quang PC hard code case to be removed in main
-            material_path = "CAN YOU READ THE COMMENT ABOVE IMAM ? IF YOU WANT TO HARD CODE MAKE AN ELSE IF"
-        else:
+        if getpass.getuser() in ["ialrazi","erago","qmle"]: # For developer use only. Add your name if you run into this
+            material_path = raw_input("Put your hardcoded path here:")
+            material_path = os.path.abspath(material_path)
+        else: # Normal assumption for Mat Lib
             material_path = MATERIAL_LIB_PATH
         self.material_lib.load_csv(material_path) # load the mat_lib from the default directory
         self.foot_print = [0,0]
