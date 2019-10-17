@@ -1,6 +1,6 @@
 # This is the layout generation and optimization flow using command line only
-from powercad.electrical_mdl.cornerstitch_API import *
-from powercad.thermal.cornerstitch_API import *
+import powercad.electrical_mdl.cornerstitch_API
+import powercad.thermal.cornerstitch_API
 from glob import glob
 from powercad.cmd_run.cmd_layout_handler import generate_optimize_layout, script_translator, eval_single_layout
 import objgraph

@@ -2,7 +2,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import time
 import scipy
-from memory_profiler import profile
 import warnings
 warnings.filterwarnings("ignore")
 class diag_prec:

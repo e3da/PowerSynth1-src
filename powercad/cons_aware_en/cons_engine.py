@@ -6,13 +6,12 @@ from powercad.design.library_structures import *
 from powercad.cons_aware_en.database import *
 from tqdm import tqdm
 from powercad.design import parts
-from powercad.design.group import Island, MeshNode
+from powercad.design.group import Island
 import matplotlib.pyplot as plt
 from powercad.corner_stitch.constraintGraph_Dev import constraintGraph
 import itertools
 from powercad.general.data_struct.util import *
 from powercad.design.layout_module_data import ModuleDataCornerStitch
-from memory_profiler import profile
 class New_layout_engine():
     def __init__(self):
         self.W = None
