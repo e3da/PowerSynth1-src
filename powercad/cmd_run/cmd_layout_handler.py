@@ -207,9 +207,11 @@ def get_dims(floor_plan = None):
         height = floor_plan[1]*1000
         return [width, height]
 
-#@profile
-def generate_optimize_layout(layout_engine=None, mode=0, optimization=True, db_file=None,fig_dir=None,sol_dir=None, apis={}, measures=[],seed=None,
-                             num_layouts = None,num_gen= None , num_disc=None,max_temp=None,floor_plan=None,algorithm=None,rel_cons=None):
+
+
+
+def generate_optimize_layout(layout_engine=None, mode=0, optimization=True,rel_cons=None, db_file=None,fig_dir=None,sol_dir=None, apis={}, measures=[],seed=None,
+                             num_layouts = None,num_gen= None , num_disc=None,max_temp=None,floor_plan=None,algorithm=None):
     '''
 
     :param layout_engine: Layout engine object for layout generation
@@ -587,11 +589,11 @@ def script_translator(input_script=None, bond_wire_info=None, fig_dir=None, cons
     ScriptMethod.update_constraint_table(rel_cons,islands)  # updates constraint table in the given csv file
     ScriptMethod.update_cs_info(islands) # updates the order of the input rectangle list for corner stitch data structure
 
-    input_rects = ScriptMethod.convert_rectangle()  # converts layout info to cs rectangle info
+    input_rects,bondwire_landing_info = ScriptMethod.convert_rectangle()  # converts layout info to cs rectangle info, bonding wire landing info={B1:[x,y,type],....}
 
     #-------------------------------------for debugging-------------------
-
-    draw_rect_list(rectlist=input_rects,color='blue',pattern='//')
+    #fig,ax=plt.subplots()
+    #draw_rect_list(rectlist=input_rects,color='blue',pattern='//',ax=ax)
     #plt.show()
     #---------------------------------------------------------------------
 
@@ -602,6 +604,50 @@ def script_translator(input_script=None, bond_wire_info=None, fig_dir=None, cons
         bondwires = ScriptMethod.bond_wire_table(bondwire_info=bond_wire_info)
     # output format of bondwire storing
     # Bond wire table={'BW1': {'BW_object': <powercad.design.Routing_paths.BondingWires instance at 0x16F4D648>, 'Source': 'D1_Drain', 'num_wires': '4', 'Destination': 'B1', 'spacing': '0.1'}, 'BW2': {'BW....}
+
+    #Temporary # need to take from input
+    #source_coordinate={'D2_Source':[21.0,30.0],'D2_Gate':[17.0,30.0],'D1_Source':[21.0,24.0],'D1_Gate':[17.0,24.0],'D3_Source':[36.0,17.0],'D3_Gate':[36.0,21.0],'D4_Source':[45.0,17.0],'D4_Gate':[45.0,21.0]}
+    source_coordinate={'L2':[7,16],'L3':[18,8]}
+    destination_coordinate = {'D2_Source': [7, 8],'D4_Source': [18, 16]}
+    #source_coordinate={}
+    #destination_coordinate = {}
+    bondwire_objects=[]
+    if len(bondwire_landing_info)>0:
+        for k,v in bondwire_landing_info.items():
+            print "BL",k,v
+            cs_type=v[2] # cs_type for constraint handling
+    else:
+        index=constraint.constraint.all_component_types.index('bonding wire pad')
+        cs_type=constraint.constraint.Type[index]
+    for k,v in bondwires.items():
+        wire=copy.deepcopy(v['BW_object'])
+        if '_' in v['Source']:
+            head, sep, tail = v['Source'].partition('_')
+            wire.source_comp = head # layout component id for wire source location
+        else:
+            wire.source_comp=v['Source']
+        if '_' in v['Destination']:
+            head, sep, tail = v['Destination'].partition('_')
+            wire.dest_comp = head  # layout component id for wire source location
+        else:
+            wire.dest_comp = v['Destination']
+
+        if wire.dest_comp in bondwire_landing_info:
+            wire.dest_coordinate = [float(bondwire_landing_info[wire.dest_comp][0]),float(bondwire_landing_info[wire.dest_comp][1])]  # coordinate for wire destination location
+        if wire.source_comp in bondwire_landing_info:
+            wire.source_coordinate=[float(bondwire_landing_info[wire.source_comp][0]),float(bondwire_landing_info[wire.source_comp][1])]
+        else:
+            if len(destination_coordinate)>0:
+                wire.dest_coordinate = destination_coordinate[v['Destination']]
+            if len(source_coordinate) > 0:
+                wire.source_coordinate = source_coordinate[v['Source']]   # coordinate for wire source location
+
+        wire.source_node_id = None  # node id of source comp from nodelist
+        wire.dest_node_id = None  # nodeid of destination comp from node list
+        wire.set_dir_type() # horizontal:0,vertical:1
+        wire.cs_type=cs_type
+        bondwire_objects.append(wire)
+        wire.printWire()
 
 
     try:
@@ -656,7 +702,9 @@ def script_translator(input_script=None, bond_wire_info=None, fig_dir=None, cons
     #print"C", current_info
 
     New_engine.cons_df = cons_df
-    New_engine.init_layout(input_format=input_info,islands=islands,voltage_info=voltage_info,current_info=current_info)
+
+
+    New_engine.init_layout(input_format=input_info,islands=islands,bondwires=bondwire_objects,voltage_info=voltage_info,current_info=current_info) # added bondwires to populate node id information
 
     New_engine.Types = ScriptMethod.Types # gets all types to pass in constraint graph creation
     New_engine.all_components = ScriptMethod.all_components

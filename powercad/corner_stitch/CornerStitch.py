@@ -2305,7 +2305,6 @@ class CornerStitch():
                 if len(c) > 4:
                     In = line.split(',')
                     Input.append(In)
-            f.close()
         elif input_mode=='list':
             Modified_input=[]
 
@@ -2442,8 +2441,7 @@ class CornerStitch():
                 ParentH = med.child[-1]
                 CHILDH = ParentH
 
-
-
+                #print x1, y1, x2, y2
                 CHILDH.insert(start,x1,y1,x2,y2, inp[7], inp[8],Htree,ParentH,rotate_angle=inp[-1])
 
                 for i in reversed(Vtree.vNodeList):
@@ -2670,7 +2668,7 @@ class CS_to_CG():
         return SYM_CS
 
     ## Evaluates constraint graph depending on modes of operation
-    def evaluation(self,Htree,Vtree,N,W,H,XLoc,YLoc,seed,individual,Types,rel_cons):
+    def evaluation(self,Htree,Vtree,bondwires,N,cs_islands,W,H,XLoc,YLoc,seed,individual,Types,rel_cons):
         '''
         :param Htree: Horizontal tree
         :param Vtree: Vertical tree
@@ -2683,7 +2681,7 @@ class CS_to_CG():
         '''
         if self.level==1:
             CG = constraintGraph( W=None, H=None,XLocation=None, YLocation=None)
-            CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList,self.level, N,seed,individual,Types=Types,rel_cons=rel_cons)
+            CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList,bondwires,self.level,cs_islands, N,seed,individual,Types=Types,rel_cons=rel_cons)
         elif self.level==2 or self.level==3:
             if W==None or H ==None:
                 print"Please enter Width and Height of the floorplan"
@@ -2691,11 +2689,11 @@ class CS_to_CG():
                 print"Please enter Number of layouts to be generated"
             else:
                 CG = constraintGraph(W, H, XLoc, YLoc)
-                CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList, self.level, N,seed,individual,Types=Types,rel_cons=rel_cons)
+                CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList,bondwires, self.level,cs_islands,N,seed,individual,Types=Types,rel_cons=rel_cons)
         else:
 
             CG = constraintGraph( W=None, H=None,XLocation=None, YLocation=None)
-            CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList, self.level,Types=Types,rel_cons=rel_cons)
+            CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList,bondwires, self.level,cs_islands,Types=Types,rel_cons=rel_cons)
         MIN_X, MIN_Y = CG.minValueCalculation(Htree.hNodeList, Vtree.vNodeList, self.level)
         return MIN_X, MIN_Y
         '''
@@ -3197,7 +3195,7 @@ class CS_to_CG():
             Vnode.Final_Merge(node)
 
 
-    def update_min(self,minx,miny,sym_to_cs,s=1000.0):
+    def update_min(self,minx,miny,sym_to_cs,bondwires,s=1000.0):
         '''
 
         :param minx: Evaluated minimum x coordinates
@@ -3213,6 +3211,36 @@ class CS_to_CG():
 
         sub_width=max(minx[1].values())
         sub_length=max(miny[1].values())
+        updated_wires=[]
+        for wire in bondwires:
+            #wire2=BondingWires()
+            wire2=copy.deepcopy(wire)
+            ##print wire.source_coordinate
+            #print wire.dest_coordinate
+            if wire.source_node_id in minx and wire.dest_node_id in minx:
+                wire2.source_coordinate[0]=minx[wire.source_node_id][wire.source_coordinate[0]]
+                wire2.dest_coordinate[0] = minx[wire.dest_node_id][wire.dest_coordinate[0]]
+            if wire.source_node_id in miny and wire.dest_node_id in miny:
+                wire2.source_coordinate[1]=miny[wire.source_node_id][wire.source_coordinate[1]]
+                wire2.dest_coordinate[1] = miny[wire.dest_node_id][wire.dest_coordinate[1]]
+            #print"A", wire2.source_coordinate
+            #print"AD", wire2.dest_coordinate
+            updated_wires.append(wire2)
+            wire_1=[wire2.source_coordinate[0]/s,wire2.source_coordinate[1]/s,0.5,0.5,"Type_3",3,0]
+            wire_2 = [wire2.dest_coordinate[0]/s, wire2.dest_coordinate[1]/s, 0.5, 0.5, "Type_3", 3, 0]
+            if wire_1[0]<wire_2[0]:
+                x=wire_1[0]
+            else:
+                x=wire_2[0]
+            if wire_1[1]<wire_2[1]:
+                y=wire_1[1]
+            else:
+                y = wire_2[1]
+            wire=[x,y,abs(wire_2[1]-wire_1[1]),abs(wire_2[2]-wire_1[2]),wire_1[-2],wire_1[-1]]#xA,yA,xB,yB,type,zorder
+            print wire
+            layout_rects.append(wire_1)
+            layout_rects.append(wire_2)
+            #layout_rects.append(wire)
 
         #for k, v in sym_to_cs.items():
             #print k,v
@@ -3249,10 +3277,32 @@ class CS_to_CG():
             layout_rects.append(new_rect)
             cs_sym_info[name]=[type,x,y,w,h]
 
+        for wire in updated_wires:
+            if wire.dest_comp[0]=='B':
+                x=wire.dest_coordinate[0]
+                y=wire.dest_coordinate[1]
+                w=1
+                h=1
+                name=wire.dest_comp
+                type=wire.cs_type
+                cs_sym_info[name] = [type, x, y, w, h]
+            if wire.source_comp[0]=='B':
+                x=wire.source_coordinate[0]
+                y=wire.source_coordinate[1]
+                w=1
+                h=1
+                name=wire.source_comp
+                type=wire.cs_type
+                cs_sym_info[name] = [type, x, y, w, h]
+
+
+
         substrate_rect = ["EMPTY",0,0,sub_width,sub_length]
         cs_sym_info['Substrate'] = substrate_rect
         new_rect = [0, 0, float(sub_width)/s, float(sub_length) / s, "EMPTY", 0,0] # z_order,rotation_index
         layout_rects.append(new_rect)
+
+
         return cs_sym_info,layout_rects
 
 

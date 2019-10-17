@@ -20,6 +20,7 @@ class New_layout_engine():
         self.window = None
         self.Htree = None
         self.Vtree = None
+        self.bondwires=None
         self.cons_df = None
         self.Min_X = None
         self.Min_Y = None
@@ -90,7 +91,7 @@ class New_layout_engine():
         return
 
 
-    def init_layout(self, sym_layout=None,input_format=None,islands=None,voltage_info=None,current_info=None):
+    def init_layout(self, sym_layout=None,input_format=None,islands=None,bondwires=None,voltage_info=None,current_info=None):
         '''
 
         :param sym_layout: old symbolic layout
@@ -126,7 +127,7 @@ class New_layout_engine():
             self.W=size[0] # width
             self.H=size[1] # hieght
             # creates horizontal and vertical corner stitch
-            self.create_cornerstitch(input_rects,size,islands,voltage_info,current_info)
+            self.create_cornerstitch(input_rects,size,islands,bondwires,voltage_info,current_info)
 
 
 
@@ -226,7 +227,7 @@ class New_layout_engine():
         #plt.xlim(0, 60)
 
 
-    def create_cornerstitch(self,input_rects=None, size=None,islands=None,voltage_info=None,current_info=None):
+    def create_cornerstitch(self,input_rects=None, size=None,islands=None,bondwires=None,voltage_info=None,current_info=None):
         '''
         :param input_rects: list of rectangle objects for corner stitch input
         :param size: floorplan size given by user
@@ -294,6 +295,59 @@ class New_layout_engine():
             self.apply_IV_loading(cs_islands,voltage_info,current_info)
 
         #--------------------------------------------for debugging----------------------
+
+        # populating node ids in bondwire objects
+        bondwire_to_trace={} # to find traces on which bondwire pads are located
+        for wire in bondwires:
+
+            if wire.source_comp[0]=='B':
+                for island in islands:
+                    for element in island.child:
+                        if wire.source_comp in element:
+                            bondwire_to_trace[wire.source_comp]=island.name
+
+            if wire.dest_comp[0]=='B':
+                for island in islands:
+                    for element in island.child:
+                        if wire.dest_comp in element:
+                            bondwire_to_trace[wire.dest_comp]=island.name
+        print bondwire_to_trace
+        # adding source and destination node ids for each wire
+        for wire in bondwires:
+            print "wire", wire.dest_coordinate,wire.dest_comp
+            for island in cs_islands:
+                print island.child_names
+                if wire.source_comp in island.child_names:
+                    for child in island.child:
+                        if wire.source_coordinate[0]>=child[1] and wire.source_coordinate[0]<=child[1]+child[3] and  wire.source_coordinate[1]>=child[2] and wire.source_coordinate[1]<=child[2]+child[4]:
+                            wire.source_node_id=child[-1]
+            for island in cs_islands:
+                if wire.dest_comp in island.child_names:
+                    print "Here"
+                    for child in island.child:
+                        print child
+                        if wire.dest_coordinate[0]>=child[1] and wire.dest_coordinate[0]<=child[1]+child[3] and  wire.dest_coordinate[1]>=child[2] and wire.dest_coordinate[1]<=child[2]+child[4]:
+                            wire.dest_node_id=child[-1]
+
+        for wire in bondwires:
+            for island in cs_islands:
+                if wire.dest_comp in bondwire_to_trace:
+                    if island.name==bondwire_to_trace[wire.dest_comp]:
+                        for element in island.elements:
+                            wire.dest_node_id=element[-1] # node id
+                            break
+                if wire.source_comp in bondwire_to_trace:
+                    if island.name==bondwire_to_trace[wire.source_comp]:
+                        for element in island.elements:
+                            wire.source_node_id=element[-1] # node id
+                            break
+        self.bondwires = copy.deepcopy(bondwires)  # to pass bondwire info to CG
+        for wire in self.bondwires:
+            wire.printWire()
+
+
+
+
         """
         rectlist1=[]
         rectlist2=[]
@@ -408,7 +462,7 @@ class New_layout_engine():
 
 
         #self.cons_df.to_csv('out_2.csv', sep=',', header=None, index=None)
-        Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=None, W=None, H=None,XLoc=None, YLoc=None, seed=None, individual=None,Types=self.Types,rel_cons=self.reliability_constraints)  #
+        Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree,bondwires=self.bondwires, N=None,cs_islands=self.init_data[2], W=None, H=None,XLoc=None, YLoc=None, seed=None, individual=None,Types=self.Types,rel_cons=self.reliability_constraints)  #
 
 
         return Evaluated_X, Evaluated_Y
@@ -484,17 +538,17 @@ class New_layout_engine():
             #Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=None, W=None, H=None, XLoc=None, YLoc=None,seed=None,individual=None,Types=self.Types) # for minimum sized layout only one solution is generated
             #CS_SYM_information, Layout_Rects = CG1.update_min(Evaluated_X, Evaluated_Y , sym_to_cs, scaler)
             #-------------------------------for debugging----------------------
-            print "Before update"
-            for island in cs_islands:
-                island.print_island(plot=True)
+            #print "Before update"
+            #for island in cs_islands:
+                #island.print_island(plot=True)
             #------------------------------------------------------------------
             #cs_islands_up=self.update_points(cs_islands)
             #CS_SYM_information, Layout_Rects = CG1.UPDATE_min(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree ,sym_to_cs,scaler)  # CS_SYM_information is a dictionary where key=path_id(component name) and value=list of updated rectangles, Layout Rects is a dictionary for minimum HCS and VCS evaluated rectangles (used for plotting only)
-            Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=None, W=None, H=None,
+            Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree,bondwires=self.bondwires, N=None,cs_islands=cs_islands, W=None, H=None,
                                                       XLoc=None, YLoc=None, seed=None, individual=None,
                                                       Types=self.Types,rel_cons=self.reliability_constraints)  # for minimum sized layout only one solution is generated
 
-            CS_SYM_information, Layout_Rects = CG1.update_min(Evaluated_X, Evaluated_Y, sym_to_cs, scaler)
+            CS_SYM_information, Layout_Rects = CG1.update_min(Evaluated_X, Evaluated_Y, sym_to_cs,self.bondwires, scaler)
             # raw_input()
 
             print CS_SYM_information
@@ -553,7 +607,7 @@ class New_layout_engine():
                 updated_cs_islands.append(cs_islands_up)
                 Layout_Rects.append(Layout_Rects1)
             '''
-            Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=num_layouts, W=None, H=None,
+            Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=num_layouts,cs_islands=cs_islands, W=None, H=None,
                                                       XLoc=None, YLoc=None, seed=seed, individual=individual,
                                                       Types=self.Types,rel_cons=self.reliability_constraints)
             # CS_SYM_Updated, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree, sym_to_cs,scaler)
@@ -649,7 +703,7 @@ class New_layout_engine():
             Min_X_Loc = collections.OrderedDict(sorted(Min_X_Loc.items()))
             Min_Y_Loc = collections.OrderedDict(sorted(Min_Y_Loc.items()))
 
-            Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=num_layouts, W=W, H=H,
+            Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree,bondwires=self.bondwires, N=num_layouts,cs_islands=cs_islands, W=W, H=H,
                                                       XLoc=Min_X_Loc, YLoc=Min_Y_Loc, seed=seed, individual=individual,
                                                       Types=self.Types,rel_cons=self.reliability_constraints)  # evaluates and finds updated locations for each coordinate
             '''
@@ -666,7 +720,7 @@ class New_layout_engine():
             CS_SYM_Updated = []
             Layout_Rects = []
             for i in range(len(Evaluated_X)):
-                CS_SYM_Updated1, Layout_Rects1 = CG1.update_min(Evaluated_X[i], Evaluated_Y[i], sym_to_cs, scaler)
+                CS_SYM_Updated1, Layout_Rects1 = CG1.update_min(Evaluated_X[i], Evaluated_Y[i], sym_to_cs,self.bondwires, scaler)
                 self.cur_fig_data = plot_layout(Layout_Rects1, level=0)
                 CS_SYM_info = {}
                 for item in self.cur_fig_data:
@@ -1697,8 +1751,9 @@ class New_layout_engine():
                 # print "C",c,len(v)
                 data = []
                 Rectangles = v[c]
-                print Rectangles
+                #print Rectangles
                 for i in Rectangles:
+
 
                     for t in type:
                         if i[4] == t:

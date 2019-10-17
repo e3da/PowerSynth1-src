@@ -711,17 +711,21 @@ class ScriptInputMethod():
         :return: list of rectangles with rectangle objects having all properties to pass it into corner stitch data structure
         '''
         input_rects = []
+        bondwire_landing_info={} # stores bonding wire landing pad location information
         for rect in self.cs_info:
-            type = rect[0]
-            x = rect[1]
-            y = rect[2]
-            width = rect[3]
-            height = rect[4]
-            name = rect[5]
-            Schar = rect[6]
-            Echar = rect[7]
-            hier_level=rect[8]
-            input_rects.append(Rectangle(type, x, y, width, height, name, Schar=Schar, Echar=Echar,hier_level=hier_level,rotate_angle=rect[9]))
+            if rect[5][0]!='B':
+                type = rect[0]
+                x = rect[1]
+                y = rect[2]
+                width = rect[3]
+                height = rect[4]
+                name = rect[5]
+                Schar = rect[6]
+                Echar = rect[7]
+                hier_level=rect[8]
+                input_rects.append(Rectangle(type, x, y, width, height, name, Schar=Schar, Echar=Echar,hier_level=hier_level,rotate_angle=rect[9]))
+            else:
+                bondwire_landing_info[rect[5]]=[rect[1],rect[2],rect[0],rect[-2]] #{B1:[x,y,type,hier_level],.....}
         #--------------------for debugging-----------------------------
         #for rectangle in input_rects:
             #print rectangle.print_rectangle()
@@ -729,7 +733,7 @@ class ScriptInputMethod():
         #fig,ax=plt.subplots()
         #draw_rect_list(rectlist=input_rects,ax=ax)
         #-----------------------------------------------------------------
-        return input_rects
+        return input_rects, bondwire_landing_info
 
 
     # creates initial island from input script information

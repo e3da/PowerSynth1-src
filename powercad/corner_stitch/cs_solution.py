@@ -103,7 +103,10 @@ class CornerStitchSolution:
                 #print"R", row
                 if len(row) < 4:
                     k1 = (float(row[0]), float(row[1]))
+
                 else:
+
+
 
                     x = float(row[0])
                     y = float(row[1])
