@@ -400,14 +400,14 @@ class CornerStitch_Emodel_API:
             self.measure.append(ElectricalMeasure(measure=type, name=name, source=source, sink=sink))
             return self.measure
 
-    def extract_RL(self,src=None,sink =None):
+    def extract_RL_MEMLEAK(self,src=None,sink =None):
         print "TEST HIERARCHY LEAK"
         del self.emesh
         del self.circuit
         del self.module
         return 1,1
 
-    def extract_RL_1(self, src=None, sink=None):
+    def extract_RL(self, src=None, sink=None):
         '''
         Input src and sink name, then extract the inductance/resistance between them
         :param src:
