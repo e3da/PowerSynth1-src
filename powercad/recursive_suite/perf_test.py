@@ -1,4 +1,4 @@
-from powercad.cmd_run.cmd_run import Cmd_Handler
+from powercad.cmd_run.cmd import Cmd_Handler
 import argparse
 import os
 import sys

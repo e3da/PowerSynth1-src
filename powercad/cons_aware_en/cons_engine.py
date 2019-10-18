@@ -7,6 +7,7 @@ from powercad.cons_aware_en.database import *
 from tqdm import tqdm
 from powercad.design import parts
 from powercad.design.group import Island
+from powercad.electrical_mdl.e_mesh_direct import MeshNode
 import matplotlib.pyplot as plt
 from powercad.corner_stitch.constraintGraph_Dev import constraintGraph
 import itertools
@@ -539,8 +540,8 @@ class New_layout_engine():
             #CS_SYM_information, Layout_Rects = CG1.update_min(Evaluated_X, Evaluated_Y , sym_to_cs, scaler)
             #-------------------------------for debugging----------------------
             #print "Before update"
-            for island in cs_islands:
-                island.print_island(plot=True)
+            #for island in cs_islands:
+                #island.print_island(plot=True)
             #------------------------------------------------------------------
             #cs_islands_up=self.update_points(cs_islands)
             #CS_SYM_information, Layout_Rects = CG1.UPDATE_min(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree ,sym_to_cs,scaler)  # CS_SYM_information is a dictionary where key=path_id(component name) and value=list of updated rectangles, Layout Rects is a dictionary for minimum HCS and VCS evaluated rectangles (used for plotting only)

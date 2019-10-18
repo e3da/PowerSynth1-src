@@ -172,6 +172,7 @@ class ScriptInputMethod():
         bondwires = []
         for i in range(1,len(Input)):
             inp = Input[i]
+            print inp
             if inp[0][0] == 'C':
                 bondwires.append(inp)
             else:

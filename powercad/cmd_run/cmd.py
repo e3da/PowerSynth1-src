@@ -1,6 +1,6 @@
 # This is the layout generation and optimization flow using command line only
-import powercad.electrical_mdl.cornerstitch_API
-import powercad.thermal.cornerstitch_API
+from powercad.electrical_mdl.cornerstitch_API import *
+from powercad.thermal.cornerstitch_API import *
 from glob import glob
 from powercad.cmd_run.cmd_layout_handler import generate_optimize_layout, script_translator, eval_single_layout
 import objgraph
@@ -11,8 +11,9 @@ import os
 import sys
 
 class Cmd_Handler:
-    def __init__(self):
+    def __init__(self,debug=False):
         # Input files
+
         self.layout_script = None  # layout file dir
         self.bondwire_setup = None  # bondwire setup dir
         self.layer_stack_file = None  # layerstack file dir
@@ -33,7 +34,7 @@ class Cmd_Handler:
         self.raw_layout_info = {}
         self.min_size_rect_patches = {}
         # Struture
-        self.layer_stack = LayerStack()
+        self.layer_stack = LayerStack(debug=debug)
         # APIs
         self.measures = []
         self.e_api = None
@@ -638,7 +639,7 @@ class Cmd_Handler:
 
 
 if __name__ == "__main__":
-    cmd = Cmd_Handler()
+    cmd = Cmd_Handler(debug=True)
     cmd.cmd_handler_flow()
     objgraph.show_most_common_types()
     all_objects = muppy.get_objects()

@@ -132,7 +132,7 @@ class constraintGraph:
                 continue
             else:
                 self.VerticalNodeList.append(node)# only appending all vertical tree nodes which have children. Nodes having no children are not included
-        #"""
+        """
         print "Horizontal NodeList"
         for i in self.HorizontalNodeList:
 
@@ -173,7 +173,7 @@ class constraintGraph:
                 else:
                     k = j.cell.x, j.cell.y, j.cell.type, j.nodeId
         
-        #"""
+        """
         Key = []
         ValueH = []
         ValueV = []
@@ -195,7 +195,7 @@ class constraintGraph:
         # Ordered dictionary of vertical cuts where key is node id and value is a list of coordinates
         self.ZDL_V = collections.OrderedDict(sorted(ZDL_V.items()))
 
-        print "B",self.ZDL_H
+        #print "B",self.ZDL_H
         #print self.ZDL_V
         # Adds bondwire coordinates to CG nodelist
         self.bondwires=bondwires # making bondwires global
@@ -224,7 +224,7 @@ class constraintGraph:
             v = list(set(v))
             v.sort()
             self.ZDL_V[k]=v
-        print"BH", self.ZDL_H
+        #print"BH", self.ZDL_H
         #print"BV", self.ZDL_V
         #raw_input()
 
@@ -294,12 +294,12 @@ class constraintGraph:
                 print vertex.index, vertex.init_coord, vertex.associated_type
         raw_input()
         '''
-        print "rem_h",self.removable_nodes_h
-        print "ref_h",self.reference_nodes_h
-        print "rem_v", self.removable_nodes_v
-        print "ref_v", self.reference_nodes_v
-        print "top_down_eval_h",self.top_down_eval_edges_h
-        print "top_down_eval_v",self.top_down_eval_edges_v
+        #print "rem_h",self.removable_nodes_h
+        #print "ref_h",self.reference_nodes_h
+        #print "rem_v", self.removable_nodes_v
+        #print "ref_v", self.reference_nodes_v
+        #print "top_down_eval_h",self.top_down_eval_edges_h
+        #print "top_down_eval_v",self.top_down_eval_edges_v
         #raw_input()
 
         for k, v in list(self.edgesh_new.iteritems())[::-1]:
@@ -320,8 +320,8 @@ class constraintGraph:
 
             self.cgToGraph_h(ID, self.edgesh_new[ID], parent, level)
 
-        print "rem_h", self.removable_nodes_h
-        print "ref_h", self.reference_nodes_h
+        #print "rem_h", self.removable_nodes_h
+        #print "ref_h", self.reference_nodes_h
 
         for k, v in list(self.edgesv_new.iteritems())[::-1]:
             ID, edgev = k, v
@@ -342,8 +342,8 @@ class constraintGraph:
             else:
                 individual_v=None
             self.cgToGraph_v(ID, self.edgesv_new[ID], parent, level)
-        print "rem_v", self.removable_nodes_v
-        print "ref_v", self.reference_nodes_v
+        #print "rem_v", self.removable_nodes_v
+        #print "ref_v", self.reference_nodes_v
 
         if level != 0:
             self.HcgEval(level,individual_h,seed, N)
@@ -402,7 +402,7 @@ class constraintGraph:
 
 
 
-        print self.connected_node_ids
+        #print self.connected_node_ids
         for node_ids in self.connected_node_ids:
             connection_coordinates_x={}
             connection_coordinates_y={}
@@ -444,12 +444,12 @@ class constraintGraph:
                 for i in range(len(self.HorizontalNodeList)):
                     if len(self.HorizontalNodeList[i].child)>0:
                         for child in self.HorizontalNodeList[i].child:
-                            print"PC", self.HorizontalNodeList[i].id,child.id
+                            #print"PC", self.HorizontalNodeList[i].id,child.id
                             if child.id in node_ids:
                                 base_node_id=self.HorizontalNodeList[i].id
                                 break
                     break
-            print"base", base_node_id
+            #print"base", base_node_id
             propagation_dict = {}
             for id in node_ids:
                 key=id
@@ -484,7 +484,7 @@ class constraintGraph:
         :return: evaluated X and Y locations for mode-0
         """
         if level == 0:
-            print "minH",self.minLocationH
+            #print "minH",self.minLocationH
             for node in hNodeList:
                 if node.parent == None:
                     self.minX[node.id] = self.minLocationH[node.id]
@@ -576,7 +576,7 @@ class constraintGraph:
             #print "ZDL_H",node.id,ZDL_H
             #print "ID",node.id,self.ZDL_H[node.id]
             #print"parent",P_ID,self.minX[P_ID]
-            print self.top_down_eval_edges_h[node.id]
+            #print self.top_down_eval_edges_h[node.id]
             min_loc={}
             for coord in self.ZDL_H[node.id]:
                 min_loc[coord]=[]
@@ -647,7 +647,7 @@ class constraintGraph:
                 if coord not in ZDL_H and coord in L1:
                     if len(min_loc[K[i-1]])>0:
                         min_loc[coord].append(max(min_loc[K[i - 1]]) + L1[K[i]])
-                    print min_loc
+                    #print min_loc
                 elif len(removed_coord)>0:
                     for data in removed_coord:
 
@@ -661,11 +661,11 @@ class constraintGraph:
 
             final={}
             for k,v in min_loc.items():
-                print k,v
+                #print k,v
                 if k not in final:
                     final[k]=max(v)
             self.minX[node.id] = final
-            print "minx",self.minX[node.id]
+            #print "minx",self.minX[node.id]
 
             '''
             raw_input()
@@ -781,7 +781,7 @@ class constraintGraph:
             P = set(ZDL_V)
             ZDL_V = list(P)
             ZDL_V.sort()
-            print "ZDL_V", ZDL_V
+            #print "ZDL_V", ZDL_V
             '''
             else:
                 ZDL_V=self.ZDL_V[P_ID]
@@ -806,7 +806,7 @@ class constraintGraph:
                         reference_coord = self.ZDL_V[node.id][reference]
                         # print"ref",reference_coord
                         removed_coord.append([reference_coord, self.ZDL_V[node.id][vertex], value])
-            print "MINV", node.id,min_loc, removed_coord
+            #print "MINV", node.id,min_loc, removed_coord
 
             K = L.keys()
             V = L.values()
@@ -816,7 +816,7 @@ class constraintGraph:
             for k, v in top_down_locations.items():
                 for k1, v1 in v.items():
                     tp_dn_loc.append([k1[0], k1[1], v1])
-            print "TDL", tp_dn_loc
+            #print "TDL", tp_dn_loc
             for i in range(len(K)):
                 # if K[i] not in self.ZDL_H[P_ID]:
                 if K[i] in ZDL_V:
@@ -827,7 +827,7 @@ class constraintGraph:
                         if self.ZDL_V[node.id].index(K[i]) == loc[1]:
                             if K[i] in self.minY[P_ID]:
                                 L2[self.ZDL_V[node.id][loc[0]]] = self.minY[P_ID][K[i]] + loc[2]
-            print"L2", L2
+            #print"L2", L2
             for k, v in L2.items():
                 if k in min_loc:
                     min_loc[k].append(v)
@@ -847,28 +847,28 @@ class constraintGraph:
                         V1 = V[i - 1]
                         L1[K[i]] = V2 - V1
 
-            print"L1,", L1
+            #print"L1,", L1
             for i in range(len(K)):
                 coord = K[i]
                 if coord not in ZDL_V and coord in L1:
                     if len(min_loc[K[i - 1]]) > 0:
                         min_loc[coord].append(max(min_loc[K[i - 1]]) + L1[K[i]])
-                    print min_loc
+                    #print min_loc
                 elif len(removed_coord) > 0:
                     for data in removed_coord:
                         if K[i] == data[1] and len(min_loc[data[0]]) > 0:
                             min_loc[K[i]].append(max(min_loc[data[0]]) + data[2])
 
-            print "MINV_L", min_loc, removed_coord, L1
+            #print "MINV_L", min_loc, removed_coord, L1
 
 
             final={}
             for k, v in min_loc.items():
-                print k, v
+                #print k, v
                 if k not in final:
                     final[k] = max(v)
             self.minY[node.id] = final
-            print "miny", self.minY[node.id]
+            print "miny", node.id,self.minY[node.id]
             '''
             for i in range(len(K)):
                 # if K[i] not in self.ZDL_V[P_ID]:
@@ -1507,7 +1507,7 @@ class constraintGraph:
 
                             else:
                                 print "ERROR!!!Constraint for the Voltage difference is not defined",voltage_diff
-                                print voltage_differences
+                                #print voltage_differences
                         else:
                             value2 = constraint.constraint.voltage_constraints[voltage_diff]
 
@@ -1754,7 +1754,7 @@ class constraintGraph:
                                                 bw_vertiecs_inside_device.append(vertex_list_h[i])
                                             if wire.dest_coordinate[1]>rect.cell.y and wire.dest_coordinate[1]<rect.cell.y+rect.getHeight() and vertex_list_h[i] not in bw_vertiecs_inside_device:
                                                 bw_vertiecs_inside_device.append(vertex_list_h[i])
-                            print "LenH", ID, len(bw_vertiecs_inside_device)
+                            #print "LenH", ID, len(bw_vertiecs_inside_device)
                             if len(bw_vertiecs_inside_device)>0:
                                 end1 = bw_vertiecs_inside_device[0].index
                                 c1 = constraint.constraint(2)  # min enclosure constraint #So, i-1 to i=enclosure
@@ -2418,7 +2418,7 @@ class constraintGraph:
         reference_nodes_v={}
         for edge in edgesh_new:
             if edge.comp_type=='Device':
-                print "EH", ID, edge.source, edge.dest, edge.constraint
+                #print "EH", ID, edge.source, edge.dest, edge.constraint
                 if edge.dest not in self.removable_nodes_h[ID]: # if the potential fixed node not in removable nodes
                     self.removable_nodes_h[ID].append(edge.dest)
                     reference_nodes_h[edge.dest]=[edge.source,edge.constraint]
@@ -2459,7 +2459,7 @@ class constraintGraph:
         # similar as above for vertical constraint graph edges
         for edge in edgesv_new:
             if edge.comp_type=='Device':
-                print "EV", ID, edge.source, edge.dest, edge.constraint
+                #print "EV", ID, edge.source, edge.dest, edge.constraint
                 if edge.dest not in self.removable_nodes_v[ID]: # if the potential fixed node not in removable nodes
                     self.removable_nodes_v[ID].append(edge.dest)
                     reference_nodes_v[edge.dest]=[edge.source,edge.constraint]
@@ -2505,7 +2505,7 @@ class constraintGraph:
         # testing whether a node is actually removable based on the given constraints. Make necessary changes to remove nodes
         if len(self.removable_nodes_h[ID])>0:
             self.top_down_eval_edges_h[ID]={}
-            print "ID",ID,self.removable_nodes_h[ID]
+            #print "ID",ID,self.removable_nodes_h[ID]
             incoming_edges_to_removable_nodes_h={}
             outgoing_edges_to_removable_nodes_h={}
 
@@ -2647,7 +2647,7 @@ class constraintGraph:
                 incoming_edges_to_removable_nodes_v[node]=incoming_edges
                 outgoing_edges_to_removable_nodes_v[node]=outgoing_edges
                 #print "in",incoming_edges_to_removable_nodes_h
-                print "out",outgoing_edges_to_removable_nodes_v
+                #print "out",outgoing_edges_to_removable_nodes_v
                 G=nx.DiGraph()
                 dictList1 = []
                 for edge in edgesv_new:
@@ -2698,121 +2698,7 @@ class constraintGraph:
                     if node in self.reference_nodes_v[ID]:
                         del self.reference_nodes_v[ID][node]
 
-        """
 
-        # creating a dictionary of HCG edges where key=(src,dest) and value=[constraint value,type,index of constraint, weight, component type("Device")]
-        for foo in edgesh_new:
-            dictList1.append(foo.getEdgeDict())
-        dict_edge_h = defaultdict(list)
-        for i in dictList1:
-            k, v = list(i.items())[0]
-            dict_edge_h[k].append(v)
-
-        # finding all removable vertices in the HCG # All fixed edge destination are removable candidate
-        print"ID",ID
-        for i in range(len(self.vertexMatrixh[ID])):
-            for j in range(len(self.vertexMatrixh[ID])):
-                for k in self.vertexMatrixh[ID][i][j]:
-                    if k[4] == 'Device':
-                        print i,j,k
-
-                        remove_node = self.node_remove_check(i, j, ID, dict_edge_h,h=1)  # calling function to check if the node is removable
-                        if remove_node != None:
-                            key = ID
-                            self.remove_nodes_h.setdefault(key, [])
-                            if remove_node not in self.remove_nodes_h[ID]:
-                                self.remove_nodes_h[ID].append(remove_node)  # maintaining a dictionary of removable vertices where key= node ID of the tree and value=list of removable vertices
-                                edgesh_new,dict_edge_h=self.node_remove_h(ID,dict_edge_h,edgesh_new)
-                                # on that node of the tree
-        print"Removed",ID, self.remove_nodes_h
-
-        dictList2 = []
-        edgesv_new = copy.deepcopy(edgesv)
-        for foo in edgesv_new:
-            dictList2.append(foo.getEdgeDict())
-        d2 = defaultdict(list)
-        for i in dictList2:
-            k, v = list(i.items())[0]
-            d2[k].append(v)
-
-
-        nodes = [x for x in range(len(self.ZDL_V[ID]))]
-        for i in range(len(nodes) - 1):
-            if (nodes[i], nodes[i + 1]) not in d2.keys():
-                source = nodes[i]
-                destination = nodes[i + 1]
-                '''
-                for edge in edgesv:
-                    if (edge.dest == source or edge.source == source) and edge.index == 0:
-                        t1 = types.index(edge.type)
-                    elif (edge.source == destination or edge.dest == destination) and edge.index == 0:
-                        t2 = types.index(edge.type)
-                '''
-                c = constraint.constraint(1)
-                index = 1
-                value = 1000 # still there maybe some missing edges .Adding a value of spacing to maintain relative  location
-                edgesv_new.append(Edge(source, destination, value, index, type='missing', Weight=2 * value, id=None))
-
-        dictList2 = []
-        for foo in edgesv_new:
-            dictList2.append(foo.getEdgeDict())
-            # print"F", foo.getEdgeDict()
-        dict_edge_v = defaultdict(list)
-        for i in dictList2:
-            k, v = list(i.items())[0]  # an alternative to the single-iterating inner loop from the previous solution
-            dict_edge_v[k].append(v)
-        # print "D",ID,dict_edge_v
-        for i in range(len(self.vertexMatrixv[ID])):
-            for j in range(len(self.vertexMatrixv[ID])):
-                for k in self.vertexMatrixv[ID][i][j]:
-                    if k[4] == 'Device':
-
-                        remove_node = self.node_remove_check(i, j, ID, dict_edge_v, h=0)
-
-                        if remove_node != None:
-                            key = ID
-                            self.remove_nodes_v.setdefault(key, [])
-                            if remove_node not in self.remove_nodes_v[ID]:
-                                self.remove_nodes_v[ID].append(remove_node)
-                                edgesv_new,dict_edge_v=self.node_remove_v(ID,dict_edge_v,edgesv_new)
-
-        #print"RemovedV", ID, self.remove_nodes_v
-        '''
-        if ID in self.remove_nodes_v.keys():
-            for j in self.remove_nodes_v[ID]:
-                for key, value in dict_edge_v.items():
-                    for v in value:
-                        if v[4] == 'Device' and key[1] == j:
-                            k = key[0]
-
-                targets = {}
-
-                for i in range(j, len(self.vertexMatrixv[ID])):
-
-                    if len(dict_edge_v[(j, i)]) > 0:
-
-                        values = []
-                        for v in dict_edge_v[(j, i)]:
-                            values.append(v[0])
-                        max_value = max(values)
-                        targets[i] = max_value
-                # print"T",targets
-                for i in targets.keys():
-                    src = k
-                    dest = i
-                    for v in dict_edge_v[(k, j)]:
-                        value = v[0] + targets[i]
-                        index = 1
-                        # print"VB",v[0] ,src,dest,value
-
-                        edgesv_new.append(Edge(src, dest, value, index, type='bypassed', Weight=2 * value, id=None))
-                        # dict_edge_v[(src,dest)]=[value,index,2*value,'bypassed']
-                for edge in edgesv_new:
-                    if edge.source == j:
-                        edgesv_new.remove(edge)
-        '''
-        ################### Fixed edge handling end###########################################
-        """
 
         self.edgesh_new[ID] = edgesh_new
         self.edgesv_new[ID] = edgesv_new
@@ -2851,6 +2737,7 @@ class constraintGraph:
                 else:
                     removable = False
             elif node< reference_node:
+                removable=True
                 path, value, max = self.LONGEST_PATH(B=matrix, source=node, target=reference_node)
                 #print node, max
                 weight = incoming_edges[node] - reference_value
@@ -2861,8 +2748,8 @@ class constraintGraph:
                     new_weight = weight
                     edge = Edge(source=node, dest=reference_node, constraint=new_weight, index=1, type='0',id=None)
                     added_edges.append(edge)
-                else:
-                    removable = False
+                #else:
+                    #removable = False
             elif node==reference_node:
                 if incoming_edges[node]>reference_value:
                     removable=True
@@ -2969,45 +2856,7 @@ class constraintGraph:
             dict_edge_v[k].append(v)
         return edgesv_new,dict_edge_v
 
-    def node_remove_check(self,src,dest,ID,dict_edge,h):
-        """
 
-        :param src: source of fixed edge
-        :param dest: potential removable vertex (destination of fixed edge)
-        :param ID: node ID of the tree
-        :param dict_edge: dictionary of edges for that node of the tree
-        :param h: h=0: VCG,1: HCG
-        :return: whether destination vertex is removable or not
-        """
-        flag=False
-        i=src
-        j=dest
-
-        if h==1:
-            n=len(self.vertexMatrixh[ID])-1
-        else:
-            n = len(self.vertexMatrixv[ID])-1
-
-
-        allowed=[0,i,j,n] # if any incoming edge from source vertex or fixed edge src vertex it should be ok
-
-
-        for m in range(0,n):
-
-            #,ID,m,j, dict_edge[(m,j)]
-
-            if len(dict_edge[(m,j)])!=0 and m not in allowed :
-                print "m",ID,m,j,dict_edge[(m,j)]
-                flag=False
-                break
-            else:
-                flag=True
-
-
-        if flag==True:
-            return j
-        else:
-            return None
 
     def HcgEval(self, level,Random,seed, N):
         """
@@ -3283,25 +3132,27 @@ class constraintGraph:
                                         if src in self.Loc_X:
 
                                             val1 = self.Loc_X[src] + weight
-                                            '''
+
                                             if dest > src and (src,dest) in X:
                                                 val2 = self.Loc_X[src] + X[(src, dest)]
                                             elif dest<src and (dest,src) in X:
                                                 val2 = self.Loc_X[src] - X[(dest, src)]
-                                            '''
-                                            val3 = 0
-                                            if dest - 1 in self.Loc_X:
-                                                if (dest - 1, dest) in X:
-                                                    val3 = self.Loc_X[dest - 1] + X[(dest - 1, dest)]
-                                            #print src,dest,val1,val3
-                                            self.Loc_X[dest] = max(val1, val3)
-                                            if element.ID in self.removable_nodes_h.keys():
-                                                removable_nodes = self.removable_nodes_h[element.ID]
-                                                for node in removable_nodes:
-                                                    reference = self.reference_nodes_h[element.ID][node][0]
-                                                    value = self.reference_nodes_h[element.ID][node][1]
-                                                    if reference in self.Loc_X:
-                                                        self.Loc_X[node] = self.Loc_X[reference] + value
+
+                                            val3 = None
+                                            for pair,value in X.items():
+                                                if pair[1]==dest and pair[1] in self.Loc_X:
+                                                    val3 = self.Loc_X[pair[0]] + X[(pair[0], dest)]
+                                                    break
+                                                # print src,dest,val1,val3
+                                            if val3!=None:
+                                                self.Loc_X[dest] = max(val1,val2,val3)
+                                                if element.ID in self.removable_nodes_h.keys():
+                                                    removable_nodes = self.removable_nodes_h[element.ID]
+                                                    for node in removable_nodes:
+                                                        reference = self.reference_nodes_h[element.ID][node][0]
+                                                        value = self.reference_nodes_h[element.ID][node][1]
+                                                        if reference in self.Loc_X:
+                                                            self.Loc_X[node] = self.Loc_X[reference] + value
 
                             #print "after_h",self.Loc_X
 
@@ -3324,7 +3175,7 @@ class constraintGraph:
                             G.add_weighted_edges_from(H)
                             #self.drawGraph_h("new",G,None)
                             self.FUNCTION(G,element.ID,Random,sid=seed)
-                            print"FINX",self.Loc_X
+                            #print"FINX",self.Loc_X
                             loct.append(self.Loc_X)
                         #print "loct", loct
                         xloc = []
@@ -3523,7 +3374,7 @@ class constraintGraph:
 
                                     else:
                                         continue
-                            print "v3",element.ID, self.Loc_X
+                            #print "v3",element.ID, self.Loc_X
                             for i, j in d4.items():
                                 Fix[i] = max(j)
                             #print Fix
@@ -3559,15 +3410,21 @@ class constraintGraph:
                                                 val2 = self.Loc_X[src] + X[(src, dest)]
                                             elif dest<src and (dest,src) in X:
                                                 val2 = self.Loc_X[src] - X[(dest, src)]
-                                            val3 = 0
-                                            if dest - 1 in self.Loc_X:
-                                                if (dest - 1, dest) in X:
-                                                    val3 = self.Loc_X[dest - 1] + X[(dest - 1, dest)]
-
-                                            self.Loc_X[dest] = max(val1, val2, val3)
-                            print "Before",element.ID,self.Loc_X
+                                            for pair,value in X.items():
+                                                if pair[1]==dest and pair[1] in self.Loc_X:
+                                                    val3 = self.Loc_X[pair[0]] + X[(pair[0], dest)]
+                                                    # print src,dest,val1,val3
+                                                    self.Loc_X[dest] = max(val1, val2,val3)
+                                                    if element.ID in self.removable_nodes_h.keys():
+                                                        removable_nodes = self.removable_nodes_h[element.ID]
+                                                        for node in removable_nodes:
+                                                            reference = self.reference_nodes_h[element.ID][node][0]
+                                                            value = self.reference_nodes_h[element.ID][node][1]
+                                                            if reference in self.Loc_X:
+                                                                self.Loc_X[node] = self.Loc_X[reference] + value
+                            #print "Before",element.ID,self.Loc_X
                             self.FUNCTION(G,element.ID, Random,sid=seed)
-                            print"FINX",self.Loc_X
+                            #print"FINX",self.Loc_X
                             loct.append(self.Loc_X)
                         #print "loct", loct
                         xloc = []
@@ -3687,83 +3544,18 @@ class constraintGraph:
         self.Tbeval.append(mem)
 
 
-        """
-        ############## (weight sum calculation)
-        d4 = defaultdict(list)
-        for i in edge_weight:
-            print i
-            k, v = list(i.items())[0]  # an alternative to the single-iterating inner loop from the previous solution
-            d4[k].append(v)
-        # print d3
-        X1 = {}
-        H1 = []
-        for i, j in d4.items():
-            X1[i] = max(j)
-        print"X", X1
-        for k, v in X1.items():
-            H1.append((k[0], k[1], v))
-        GW = nx.MultiDiGraph()
-        n = list(G2.nodes())
 
-        GW.add_nodes_from(n)
-        # G.add_weighted_edges_from([(0,1,2),(1,2,3),(2,3,4),(3,4,4),(4,5,3),(5,6,2),(1,4,15),(2,5,16),(1,5,20)])
-        GW.add_weighted_edges_from(H1)
-
-        w, h = len(n), len(n);
-        B1 = [[0 for x in range(w)] for y in range(h)]
-        for i in H1:
-            B1[i[0]][i[1]] = i[2]
-
-        # A1 = nx.adjacency_matrix(GW)
-        # B1 = A1.toarray()
-        # print B
-        Location_w = {}
-        for i in range(len(n)):
-            if n[i] == 0:
-                Location_w[n[i]] = 0
-            else:
-                k = 0
-                val = []
-                for j in range(len(B1)):
-                    if B1[j][i] > k:
-                        # k=B[j][i]
-                        pred = j
-                        # print n[pred],Location_w
-                        val.append(Location_w[n[pred]] + B1[j][i])
-                # loc1=Location[n[i-1]]+X[(n[i-1],n[i])]
-                # loc2=Location[n[pred]]+k
-                Location_w[n[i]] = max(val)
-        # print Location
-        # Graph_pos_h = []
-
-        dist1 = {}
-        for node in Location_w:
-            key = node
-
-            dist1.setdefault(key, [])
-            dist1[node].append(node)
-            dist1[node].append(Location_w[node])
-        # Graph_pos_h.append(dist)
-        # print Graph_pos_h
-        # print"LOC=",Graph_pos_h
-        # print "D",Location
-        LOC_W = {}
-        for i in Location_w.keys():
-            # print i,self.ZDL_H[ID][i]
-            LOC_W[self.ZDL_H[ID][i]] = Location_w[i]
-        #####################################################
-        """
         d3 = defaultdict(list)
         for i in edge_label:
             k, v = list(i.items())[0]  # an alternative to the single-iterating inner loop from the previous solution
-            print k,v
+            #print k,v
             d3[k].append(v)
         #print d3
         X = {}
         H = []
         for i, j in d3.items():
             X[i] = max(j)
-        print"X",ID, X
+        #print"X",ID, X
         for k, v in X.items():
             H.append((k[0], k[1], v))
         G = nx.MultiDiGraph()
@@ -3815,7 +3607,7 @@ class constraintGraph:
         odH = collections.OrderedDict(sorted(LOC_H.items()))
 
         self.minLocationH[ID] = odH
-        print "MIN", ID, odH
+        #print "MIN", ID, odH
 
         if level == 0:
             '''
@@ -3891,28 +3683,12 @@ class constraintGraph:
                         self.removable_nodes_h[parentID].append(self.ZDL_H[parentID].index(vertex.init_coord))
                         if parentID not in self.reference_nodes_h:
                             self.reference_nodes_h[parentID]={}
-            '''
-            for i in range(len(self.propagation_dicts)):
-                prop_dict = self.propagation_dicts[i]
 
-                if node.id in prop_dict:
-                    if node.id in prop_dict[node.id]:
-                        for coord in self.connected_x_coordinates[i][node.id]:
-                            if coord in self.ZDL_H[parentID] and coord not in parent_coord:
-                                parent_coord.append(coord)
-                                for vertex in self.vertex_list_h[ID]:
-                                    if vertex.init_coord==coord:
-                                        if vertex.index in self.removable_nodes_h[ID]:
-                                            self.removable_nodes_h[parentID].append(
-                                                self.ZDL_H[parentID].index(vertex.init_coord))
-                                            self.reference_nodes_h[parentID] = {}
-
-            '''
             P = set(parent_coord)
             parent_coord = list(P)
             parent_coord.sort()
-            print"COH", ID, parent_coord, self.ZDL_H[ID]
-            print"NR", self.removable_nodes_h[parentID]
+            #print"COH", ID, parent_coord, self.ZDL_H[ID]
+            #print"NR", self.removable_nodes_h[parentID]
 
 
 
@@ -3946,18 +3722,12 @@ class constraintGraph:
                                 if self.bw_type in vertex.associated_type:
                                     type = self.bw_type.strip('Type_')
 
-                        '''
-                        if t in self.removable_nodes_h[ID] and s in self.removable_nodes_h[ID]:
-                            self.reference_nodes_v[parentID][dest] = [origin, x]
-                            # print"H",self.reference_nodes_h[parentID]
-                            edge1 = (Edge(source=origin, dest=dest, constraint=x, index=0, type=type,
-                                          Weight=w, id=None, comp_type='Device'))
-                        '''
+
                         #print"r_I",ID,self.removable_nodes_h[ID],self.reference_nodes_h[ID],s,t,origin,dest,x
                         #if ID in self.removable_nodes_h and (parentID in self.removable_nodes_h or parentID==-1):
                         if dest in self.removable_nodes_h[parentID] and t in self.removable_nodes_h[ID] and s==self.reference_nodes_h[ID][t][0] :
                             self.reference_nodes_h[parentID][dest]=[origin,x]
-                            print"propagated_H",parentID,self.reference_nodes_h[parentID],origin,x
+                            #print"propagated_H",parentID,self.reference_nodes_h[parentID],origin,x
                             edge1 = (Edge(source=origin, dest=dest, constraint=x, index=0, type=type, Weight=w,
                                           id=None,comp_type='Device'))  # propagating an edge from child to parent with minimum room for child in the parnet HCG
 
@@ -4009,6 +3779,7 @@ class constraintGraph:
                     for edge in self.edgesh_new[parentID]:
                         for w in weight:
                             if edge.source==w[0] and edge.dest==w[1] and edge.constraint!=w[2]:
+
                                 self.edgesh_new[parentID].remove(edge)
 
                     if len(self.removable_nodes_h[parentID]) > 0:
@@ -4031,11 +3802,11 @@ class constraintGraph:
 
                                 incoming_edges_to_removable_nodes_h[node] = incoming_edges
                                 outgoing_edges_to_removable_nodes_h[node] = outgoing_edges
-                                #print "in",incoming_edges_to_removable_nodes_h
+
                                 for k,v in incoming_edges_to_removable_nodes_h[node].items(): # double checking if any fixed edge is considered in the incoming edges
                                     if  v==self.reference_nodes_h[parentID][node][1] and k ==self.reference_nodes_h[parentID][node][0]:
                                         del incoming_edges_to_removable_nodes_h[node][k]
-
+                                #print "in", ID, parentID, incoming_edges_to_removable_nodes_h
                                 G = nx.DiGraph()
                                 dictList1 = []
                                 for edge in self.edgesh_new[parentID]:
@@ -4069,6 +3840,7 @@ class constraintGraph:
                                     incoming_edges=incoming_edges_to_removable_nodes_h[node],
                                     outgoing_edges=outgoing_edges_to_removable_nodes_h[node],
                                     reference=self.reference_nodes_h[parentID][node], matrix=B)
+                                #print "RE",parentID,node,removable
                                 if removable == True:
                                     for n in removed_edges:
                                         #print "Re_i",n
@@ -4091,7 +3863,7 @@ class constraintGraph:
                                     self.removable_nodes_h[parentID].remove(node)
                                     if node in self.reference_nodes_h[parentID]:
                                         del self.reference_nodes_h[parentID][node]
-                                    print "EL",self.removable_nodes_h[parentID]
+                                    #print "EL",self.removable_nodes_h[parentID]
 
             if parentID in self.removable_nodes_h and parentID in self.reference_nodes_h:
                 for node in self.removable_nodes_h[parentID]:
@@ -4103,41 +3875,6 @@ class constraintGraph:
 
 
 
-
-
-            '''
-            # if propagated edge's destination vertex is in removable vertex list, then that edge should by pass that removable node and pass to it's successors.
-                if parentID in self.removable_nodes_h.keys():
-
-                    if dest in self.removable_nodes_h[parentID]:
-                        for edge in self.edgesh_new[parentID]:
-                            if edge.comp_type == "Device" and edge.source == origin:
-                                v0 = edge.constraint
-                            if edge.type == 'bypassed' and edge.source == origin:
-                                dest1 = edge.dest
-                                v = edge.constraint
-                                value = x + (v - v0)  # retreiving constraint value from removable vertex to new target vertex by (v-v0)
-                                edge = (Edge(source=origin, dest=dest1, constraint=value, index=0, type=ID, Weight=2 * value,id=None))  # creating new edge bypassing removable node
-                                if edge not in edgelist:
-                                    edgelist.append(edge)
-                self.edgesh_new[parentID] = edgelist
-            
-            
-            
-            
-            source = self.ZDL_H[parentID].index(min(KEYS))
-            dest = self.ZDL_H[parentID].index(max(KEYS))
-            # print self.edgesh_new[parentID]
-            W = LOC_W[dest] - LOC_W[source]
-            #if Count != 0:
-            edge = (Edge(source=source, dest=dest, constraint=Location[n[-1]], index=0, type=ID, Weight=W,id=None))
-
-            #edge = (Edge(source=source, dest=dest, constraint=Location[n[-1]], index=1, type=ID, id=None,Weight=Count))
-            # print edge.source,edge.dest,edge.constraint
-            edgelist = self.edgesh_new[parentID]
-            edgelist.append(edge)
-            self.edgesh_new[parentID] = edgelist
-            '''
 
     def VcgEval(self, level,Random,seed, N):
 
@@ -4335,6 +4072,7 @@ class constraintGraph:
                         loct = []
                         count=0
                         for location in V:
+                            #print "location",element.ID, location
 
                             seed = s + count * 1000
                             count+=1
@@ -4365,13 +4103,14 @@ class constraintGraph:
                                     W[k].append(v[3])
                                 '''
                             # print "D3", d3, W
+                            #print "Before_V",element.ID,self.Loc_Y
                             Y = {}
                             V = []
                             Fix = {}
                             Weights_V = {}
                             for i, j in d3.items():
                                 Y[i] = max(j)
-
+                            #print"Y",element.ID,Y
                             if element.ID in self.removable_nodes_v.keys():
                                 removable_nodes = self.removable_nodes_v[element.ID]
                                 for node in removable_nodes:
@@ -4379,6 +4118,8 @@ class constraintGraph:
                                     value = self.reference_nodes_v[element.ID][node][1]
                                     if reference in self.Loc_Y:
                                         self.Loc_Y[node] = self.Loc_Y[reference] + value
+
+
                             if element.ID in self.top_down_eval_edges_v.keys():
                                 # print"TD", self.top_down_eval_edges_v[element.ID]
                                 td_eval_edges = self.top_down_eval_edges_v[element.ID]
@@ -4386,28 +4127,27 @@ class constraintGraph:
                                     for (src, dest), weight in v.items():
                                         if src in self.Loc_Y:
                                             val1 = self.Loc_Y[src] + weight
-                                            '''
+
                                             if dest > src and (src,dest) in Y:
                                                 val2 = self.Loc_Y[src] + Y[(src, dest)]
                                             elif dest<src and (dest,src) in Y:
                                                 val2 = self.Loc_Y[src] - Y[(dest, src)]
-                                            '''
-                                            val3 = 0
-                                            if dest - 1 in self.Loc_Y:
-                                                if (dest - 1, dest) in Y:
-                                                    val3 = self.Loc_Y[dest - 1] + Y[(dest - 1, dest)]
 
-                                            self.Loc_Y[dest] = max(val1, val3)
-                                            if element.ID in self.removable_nodes_v.keys():
-                                                removable_nodes = self.removable_nodes_v[element.ID]
-                                                for node in removable_nodes:
-                                                    reference = self.reference_nodes_v[element.ID][node][0]
-                                                    value = self.reference_nodes_v[element.ID][node][1]
-                                                    if reference in self.Loc_Y:
-                                                        self.Loc_Y[node] = self.Loc_Y[reference] + value
-
+                                            for pair,value in Y.items():
+                                                if pair[1]==dest and pair[1] in self.Loc_Y:
+                                                    val3 = self.Loc_Y[pair[0]] + Y[(pair[0], dest)]
+                                                    # print src,dest,val1,val3
+                                                    self.Loc_Y[dest] = max(val1, val2,val3)
+                                                    if element.ID in self.removable_nodes_v.keys():
+                                                        removable_nodes = self.removable_nodes_v[element.ID]
+                                                        for node in removable_nodes:
+                                                            reference = self.reference_nodes_v[element.ID][node][0]
+                                                            value = self.reference_nodes_v[element.ID][node][1]
+                                                            if reference in self.Loc_Y:
+                                                                self.Loc_Y[node] = self.Loc_Y[reference] + value
 
 
+                            #print"Between",self.Loc_Y
                             for i, j in d4.items():
                                 Fix[i] = max(j)
                             # print"X", X
@@ -4423,7 +4163,7 @@ class constraintGraph:
                             # G.add_weighted_edges_from([(0,1,2),(1,2,3),(2,3,4),(3,4,4),(4,5,3),(5,6,2),(1,4,15),(2,5,16),(1,5,20)])
                             GV.add_weighted_edges_from(V)
                             self.FUNCTION_V(GV, element.ID, Random,sid=seed)
-                            # print"FINX",self.Loc_X
+                            #print"FINY",self.Loc_Y
                             loct.append(self.Loc_Y)
                         # print loct
                         yloc = []
@@ -4449,8 +4189,8 @@ class constraintGraph:
                         d3 = defaultdict(list)
                         d4 = defaultdict(list)
                         WV = defaultdict(list)
-                        for i in element.labels:
-                            k, v = list(i.items())[0]
+                        for label in element.labels:
+                            k, v = list(label.items())[0]
                             # print v[0]
                             d3[k].append(v[0])
                             WV[k].append(v[3])
@@ -4464,11 +4204,11 @@ class constraintGraph:
                         Y = {}
                         V = []
                         Weights_V = {}
-                        for i, j in d3.items():
-                            Y[i] = max(j)
+                        for k1, v1 in d3.items():
+                            Y[k1] = max(v1)
                         # print"X", X
-                        for i, j in WV.items():
-                            Weights_V[i] = max(j)
+                        for k2, v2 in WV.items():
+                            Weights_V[k2] = max(v2)
                         # print Y,Weights
                         for k, v in Y.items():
                             V.append((k[0], k[1], v))
@@ -4487,12 +4227,12 @@ class constraintGraph:
                         elif level == 3:
                             self.Loc_Y = {}
 
-                            for i, j in self.YLoc.items():
+                            for k3, v3 in self.YLoc.items():
                                 # print j
-                                if i == 1:
-                                    for k, v in j.items():
+                                if k3 == 1:
+                                    for k, v in v3.items():
                                         self.Loc_Y[k] = v
-                        self.FUNCTION_V(GV, element.ID, Random,sid=i)
+                        self.FUNCTION_V(GV, element.ID, Random,sid=self.seed_v[i])
                         # print"FINX",self.Loc_V
                         loct.append(self.Loc_Y)
 
@@ -4545,6 +4285,7 @@ class constraintGraph:
                         count=0
                         for location in V:
                             self.Loc_Y = {}
+                            count+=1
 
                             for coordinate in self.ZDL_V[element.ID]:
                                 # if element.parentID == 1:
@@ -4641,7 +4382,7 @@ class constraintGraph:
                             GV.add_nodes_from(nV)
                             # G.add_weighted_edges_from([(0,1,2),(1,2,3),(2,3,4),(3,4,4),(4,5,3),(5,6,2),(1,4,15),(2,5,16),(1,5,20)])
                             GV.add_weighted_edges_from(V)
-                            seed = count * 1000
+                            seed = s+count * 1000
                             if element.ID in self.removable_nodes_v.keys():
                                 removable_nodes = self.removable_nodes_v[element.ID]
                                 for node in removable_nodes:
@@ -4656,25 +4397,26 @@ class constraintGraph:
                                     for (src, dest), weight in v.items():
                                         if src in self.Loc_Y:
                                             val1 = self.Loc_Y[src] + weight
-                                            '''
-                                            if dest > src and (src,dest) in Y:
-                                                val2 = self.Loc_Y[src] + Y[(src, dest)]
-                                            elif dest<src and (dest,src) in Y:
-                                                val2 = self.Loc_Y[src] - Y[(dest, src)]
-                                            '''
-                                            val3 = 0
-                                            if dest - 1 in self.Loc_Y:
-                                                if (dest - 1, dest) in Y:
-                                                    val3 = self.Loc_Y[dest - 1] + Y[(dest - 1, dest)]
-                                            self.Loc_Y[dest] = max(val1, val3)
-                                            if element.ID in self.removable_nodes_v.keys():
-                                                removable_nodes = self.removable_nodes_v[element.ID]
-                                                for node in removable_nodes:
-                                                    reference = self.reference_nodes_v[element.ID][node][0]
-                                                    value = self.reference_nodes_v[element.ID][node][1]
-                                                    if reference in self.Loc_Y:
-                                                        self.Loc_Y[node] = self.Loc_Y[reference] + value
 
+                                            if dest > src and (src, dest) in Y:
+                                                val2 = self.Loc_Y[src] + Y[(src, dest)]
+                                            elif dest < src and (dest, src) in Y:
+                                                val2 = self.Loc_Y[src] - Y[(dest, src)]
+
+                                            for pair, value in Y.items():
+                                                if pair[1] == dest and pair[1] in self.Loc_Y:
+                                                    val3 = self.Loc_Y[pair[0]] + Y[(pair[0], dest)]
+                                                    # print src,dest,val1,val3
+                                                    self.Loc_Y[dest] = max(val1, val2, val3)
+                                                    if element.ID in self.removable_nodes_v.keys():
+                                                        removable_nodes = self.removable_nodes_v[element.ID]
+                                                        for node in removable_nodes:
+                                                            reference = self.reference_nodes_v[element.ID][node][0]
+                                                            value = self.reference_nodes_v[element.ID][node][1]
+                                                            if reference in self.Loc_Y:
+                                                                self.Loc_Y[node] = self.Loc_Y[reference] + value
+
+                            #print "R_SEED",seed
                             self.FUNCTION_V(GV, element.ID, Random,sid=seed)
                             # print"FINX",self.Loc_X
                             loct.append(self.Loc_Y)
@@ -4795,70 +4537,7 @@ class constraintGraph:
         #print "VC",ID,parentID
         mem = Top_Bottom(ID, parentID, GV, label)  # top to bottom evaluation purpose
         self.TbevalV.append(mem)
-        """
-        # else:
-        d4 = defaultdict(list)
-        for i in edge_weight:
-            k, v = list(i.items())[0]  # an alternative to the single-iterating inner loop from the previous solution
-            d4[k].append(v)
 
-        X1 = {}
-        H1 = []
-        for i, j in d4.items():
-            X1[i] = max(j)
-
-        for k, v in X1.items():
-            H1.append((k[0], k[1], v))
-
-        GW = nx.MultiDiGraph()
-        n = list(GV.nodes())
-
-        GW.add_nodes_from(n)
-        # G.add_weighted_edges_from([(0,1,2),(1,2,3),(2,3,4),(3,4,4),(4,5,3),(5,6,2),(1,4,15),(2,5,16),(1,5,20)])
-        GW.add_weighted_edges_from(H1)
-        w, h = len(n), len(n);
-        B1 = [[0 for x in range(w)] for y in range(h)]
-        for i in H1:
-            B1[i[0]][i[1]] = i[2]
-        # A1 = nx.adjacency_matrix(GW)
-        # B1 = A1.toarray()
-        # print B
-        Location_w = {}
-        for i in range(len(n)):
-            if n[i] == 0:
-                Location_w[n[i]] = 0
-            else:
-                k = 0
-                val = []
-                # for j in range(len(B1)):
-                for j in range(0, i):
-                    if B1[j][i] > k:
-                        # k=B[j][i]
-                        pred = j
-                        val.append(Location_w[n[pred]] + B1[j][i])
-                # loc1=Location[n[i-1]]+X[(n[i-1],n[i])]
-                # loc2=Location[n[pred]]+k
-                Location_w[n[i]] = max(val)
-        # print Location
-        # Graph_pos_h = []
-
-        dist1 = {}
-        for node in Location_w:
-            key = node
-
-            dist1.setdefault(key, [])
-            dist1[node].append(node)
-            dist1[node].append(Location_w[node])
-        # Graph_pos_h.append(dist)
-        # print Graph_pos_h
-        # print"LOC=",Graph_pos_h
-        # print "D",Location
-        LOC_W = {}
-        for i in Location_w.keys():
-            # print i,self.ZDL_H[ID][i]
-            LOC_W[self.ZDL_V[ID][i]] = Location_w[i]
-        #####################################################
-        """
         d3 = defaultdict(list)
         for i in edge_label:
             k, v = list(i.items())[0]  # an alternative to the single-iterating inner loop from the previous solution
@@ -4870,7 +4549,7 @@ class constraintGraph:
             Y[i] = max(j)
         #print"Y",ID, Y
         for k, v in Y.items():
-            print k,v
+            #print k,v
             V.append((k[0], k[1], v))
         G = nx.MultiDiGraph()
         n = list(GV.nodes())
@@ -4925,7 +4604,7 @@ class constraintGraph:
             self.minLocationV[ID] = odV
             # print"ID", ID, self.minLocationV[ID]
 
-        print "MINV",ID,self.minLocationV[ID]
+        #print "MINV",ID,self.minLocationV[ID]
 
         if parentID != None:
             # N=len(self.ZDL_H[parentID])
@@ -4959,24 +4638,7 @@ class constraintGraph:
                         self.removable_nodes_v[parentID].append(self.ZDL_V[parentID].index(vertex.init_coord))
                         if parentID not in self.reference_nodes_v:
                             self.reference_nodes_v[parentID]={}
-            '''
-            for i in range(len(self.propagation_dicts)):
-                prop_dict = self.propagation_dicts[i]
 
-                if node.id in prop_dict:
-                    if node.id in prop_dict[node.id]:
-                        for coord in self.connected_y_coordinates[i][node.id]:
-                            if coord in self.ZDL_V[parentID] and coord not in parent_coord:
-                                parent_coord.append(coord)
-                                for vertex in self.vertex_list_v[ID]:
-                                    if vertex.init_coord==coord:
-                                        if vertex.index in self.removable_nodes_v[ID]:
-                                            self.removable_nodes_v[parentID].append(
-                                                self.ZDL_V[parentID].index(vertex.init_coord))
-                                            self.reference_nodes_v[parentID] = {}
-
-
-            '''
             P = set(parent_coord)
 
             # SRC = self.ZDL_V[parentID].index(min(KEYS))
@@ -5156,28 +4818,7 @@ class constraintGraph:
                     if node not in self.reference_nodes_v[parentID]:
                         self.removable_nodes_v[parentID].remove(node)
 
-            '''
-            # propagating minimum room to new target if destination is in removable vertex list.
-            if parentID in self.remove_nodes_v.keys():
-                if dest in self.remove_nodes_v[parentID]:
-                    for edge in self.edgesv_new[parentID]:
-                        if edge.comp_type == "Device" and edge.source == origin:
-                            v0 = edge.constraint
-                    for edge in self.edgesv_new[parentID]:
 
-                        if edge.type == 'bypassed' and edge.source == origin:
-
-                            dest1 = edge.dest
-                            v = edge.constraint
-                            value = y + (v - v0)
-                            edge = (
-                            Edge(source=origin, dest=dest1, constraint=value, index=4, type=ID, Weight=2 * value,
-                                 id=None))
-                            if edge not in edgelist:
-                                edgelist.append(edge)
-
-            self.edgesv_new[parentID] = edgelist
-            '''
 
     # Applies algorithms for evaluating mode-2 and mode-3 solutions
     def FUNCTION(self, G,ID,Random,sid):
@@ -5185,7 +4826,7 @@ class constraintGraph:
         B = A.toarray()
         Fixed_Node = self.Loc_X.keys() # list of vertices which are given from user as fixed vertices (vertices with user defined locations)
         Fixed_Node.sort()
-
+        ''''''
         #trying to split all possible edges
         Splitlist = [] # list of edges which are split candidate. Edges which has either source or destination as fixed vertex and bypassing a fixed vertex
         for i, j in G.edges():
@@ -5219,6 +4860,7 @@ class constraintGraph:
         for i in Fixed_Node:
             for j in Fixed_Node:
                 if G.has_edge(i, j):
+                    B[i][j]=0
                     G.remove_edge(i, j)
 
 
@@ -5236,116 +4878,41 @@ class constraintGraph:
             if len(node) > 2:
                 Node_List.append(node)
 
-        nodes.sort()
-        '''
-        start = nodes[0]
-        end = nodes[-1]
-        LONGESTPATH, Value, Sum = self.LONGEST_PATH(B, start, end)
-        if (len(LONGESTPATH)) == len(nodes):
-            H = []
-            for i in range(len(Node_List)):
-                H.append(G.subgraph(Node_List[i]))  # finds all subgraphs according to node list
-            for graph in H:
-                n = list(graph.nodes())
-                n.sort()
-                start = n[0]
-                end = n[-1]
-                self.Location_finding(B, start, end,Random, SOURCE=None, TARGET=None, flag=False,sid=sid)  # evaluates each subgraph (Random is added to test optimization)
-            Fixed_Node = self.Loc_X.keys()
-            for i in Fixed_Node:
-                for j in Fixed_Node:
-                    if G.has_edge(i, j):
-                        G.remove_edge(i, j)
-            if len(G.edges()) == 0:
-                return
-            else:
-                self.FUNCTION(G,Random,sid)
-        else:
-        '''
-        Connected_List = []
-        for k in range(len(Node_List)):
-            for m in range(len(Node_List)):
-                LIST = []
-                for i in range(len(B)):
-                    for j in range(len(B)):
-                        if i in Node_List[k] and j in Node_List[m]:
-                            if i not in Node_List[m] and j not in Node_List[k]:
-                                if B[i][j] != 0:
-                                    LIST = Node_List[k] + Node_List[m]
+        #nodes.sort()
+        #print Node_List
 
-                if len(LIST) > 0:
-                    Connected_List.append(list(set(LIST)))
-
-        '''
-        # Checks whether those subgraph vertices are connected among themselves
-        List=[] # This list
         for i in range(len(B)):
             for j in range(len(B)):
-                for k in range(len(Node_List)):
-                    if i in Node_List[k] and j not in Node_List[k] and B[i][j]!=0:
-                        for m in range(len(Node_List)):
-                            if j in Node_List[m]:
-                                if Node_List[k] not in List:
-                                    List.append(Node_List[k])
-                                if Node_List[m] not in List:
-                                    List.append(Node_List[m])
+                if j>i and B[i][j]>0:
+                    for node_list1 in Node_List:
+                        if i in node_list1:
+                            if j in node_list1:
+                                continue
+                            else:
+                                for node_list2 in Node_List:
+                                    if node_list2!=node_list1 and j in node_list2:
+                                        node_list1+=node_list2
+                                        Node_List.remove(node_list1)
+                                        Node_List.remove(node_list2)
+                                        Node_List.append(node_list1)
+                                    else:
+                                        continue
 
-        Connected_List = []
+        #print "New", Node_List
+        Connected_List=[]
+        for node_list in Node_List:
+            node_list=list(set(node_list))
+            node_list.sort()
+            Connected_List.append(node_list)
+        #raw_input()
+        #print "CON",Connected_List
 
-        # if they are connected among themselves then essentially graph splitting is not possible
-        if len(List) > 0:
-            L = []
-            for i in List:
-                L += i
-            Connected_List.append(list(set(L)))
-
-        # if there are connected subgraphs but not the whole graph is connected. then finds subgraphs which are disconnected
-        else:
-            for k in range(len(Node_List)):
-                for m in range(len(Node_List)):
-                    LIST = []
-                    for i in range(len(B)):
-                        for j in range(len(B)):
-                            if i in Node_List[k] and j in Node_List[m]:
-                                if i not in Node_List[m] and j not in Node_List[k]:
-                                    if B[i][j] != 0:
-                                        LIST = Node_List[k] + Node_List[m]
-
-                    if len(LIST) > 0:
-                        Connected_List.append(list(set(LIST)))
-
-
-        # if the whole graph is connected and all vertices are on the longest path, then the graph can be split into subgraphs at fixed vertices.
-        if len(Connected_List)==1:
-            PATH = Connected_List[0]
-            start = PATH[0]
-            end = PATH[-1]
-            LONGESTPATH, Value, Sum = self.LONGEST_PATH(B, start, end)
-            if LONGESTPATH == PATH:
-                H = []
-                for i in range(len(Node_List)):
-                    H.append(G.subgraph(Node_List[i])) # finds all subgraphs according to node list
-                for graph in H:
-                    n = list(graph.nodes())
-                    n.sort()
-                    start = n[0]
-                    end = n[-1]
-                    self.Location_finding(B, start, end, SOURCE=None, TARGET=None, flag=False) # evaluates each subgraph
-                Fixed_Node = self.Loc_X.keys()
-                for i in Fixed_Node:
-                    for j in Fixed_Node:
-                        if G.has_edge(i, j):
-                            G.remove_edge(i, j)
-                if len(G.edges()) == 0:
-                    return
-                else:
-                    self.FUNCTION(G)
-        '''
         if len(Connected_List) > 0:
             for i in range(len(Connected_List)):
                 PATH = Connected_List[i]
                 start = PATH[0]
                 end = PATH[-1]
+                #print PATH
                 SOURCE = []
                 for i in range(len(PATH) - 1):
                     if PATH[i] in self.Loc_X.keys():
@@ -5355,7 +4922,7 @@ class constraintGraph:
                 for i in range(1, len(PATH)):
                     if PATH[i] in self.Loc_X.keys():
                         TARGET.append(PATH[i])
-                self.Location_finding(B, start, end,Random, SOURCE, TARGET, flag=True,sid=sid) # if split into subgraph is not possible and there is edge in the longest path which is bypassing a fixed vertex,
+                self.Location_finding(B, start, end,Random, SOURCE, TARGET,ID, flag=True,sid=sid) # if split into subgraph is not possible and there is edge in the longest path which is bypassing a fixed vertex,
                 if ID in self.removable_nodes_h.keys():
                     removable_nodes=self.removable_nodes_h[ID]
                     for node in removable_nodes:
@@ -5372,25 +4939,32 @@ class constraintGraph:
                             if src in self.Loc_X:
 
                                 val1 = self.Loc_X[src] + weight
-                                '''
+
                                 if dest > src:
                                     val2 = self.Loc_X[src] + B[src][dest]
                                 else:
                                     val2 = self.Loc_X[src] - B[dest][src]
-                                '''
-                                if dest - 1 in self.Loc_X:
-                                    val3 = self.Loc_X[dest - 1] + B[dest - 1][dest]
-                                else:
-                                    val3 = 0
-                                if dest not in self.Loc_X:
-                                    self.Loc_X[dest] = max(val1, val3)
+
+                                val3=None
+                                for pred in range(len(B)):
+                                    if B[pred][dest]>0 and pred in self.Loc_X:
+                                        val3 = self.Loc_X[pred] + B[pred][dest]
+                                        break
+                                        # print src,dest,val1,val3
+                                if val3!=None:
+                                    self.Loc_X[dest] = max(val1,val2, val3)
                                     if ID in self.removable_nodes_h.keys():
                                         removable_nodes = self.removable_nodes_h[ID]
                                         for node in removable_nodes:
                                             reference = self.reference_nodes_h[ID][node][0]
                                             value = self.reference_nodes_h[ID][node][1]
-                                            if reference in self.Loc_X and node not in self.Loc_X:
+                                            if reference in self.Loc_X:
                                                 self.Loc_X[node] = self.Loc_X[reference] + value
+
+
+
+
+
 
 
                 # then evaluation with flag=true is performed
@@ -5416,7 +4990,7 @@ class constraintGraph:
                 n.sort()
                 start = n[0]
                 end = n[-1]
-                self.Location_finding(B, start, end,Random, SOURCE=None, TARGET=None, flag=False,sid=sid)
+                self.Location_finding(B, start, end,Random,ID, SOURCE=None, TARGET=None, flag=False,sid=sid)
                 if ID in self.removable_nodes_h.keys():
                     removable_nodes=self.removable_nodes_h[ID]
                     for node in removable_nodes:
@@ -5432,24 +5006,26 @@ class constraintGraph:
                         for (src, dest), weight in v.items():
                             if src in self.Loc_X:
                                 val1 = self.Loc_X[src] + weight
-                                '''
+
                                 if dest > src:
                                     val2 = self.Loc_X[src] + B[src][dest]
                                 else:
                                     val2 = self.Loc_X[src] - B[dest][src]
-                                '''
-                                if dest - 1 in self.Loc_X:
-                                    val3 = self.Loc_X[dest - 1] + B[dest - 1][dest]
-                                else:
-                                    val3 = 0
-                                if dest not in self.Loc_X:
-                                    self.Loc_X[dest] = max(val1, val3)
+
+                                val3 = None
+                                for pred in range(len(B)):
+                                    if B[pred][dest] > 0 and pred in self.Loc_X:
+                                        val3 = self.Loc_X[pred] + B[pred][dest]
+                                        break
+                                        # print src,dest,val1,val3
+                                if val3 != None:
+                                    self.Loc_X[dest] = max(val1,val2, val3)
                                     if ID in self.removable_nodes_h.keys():
                                         removable_nodes = self.removable_nodes_h[ID]
                                         for node in removable_nodes:
                                             reference = self.reference_nodes_h[ID][node][0]
                                             value = self.reference_nodes_h[ID][node][1]
-                                            if reference in self.Loc_X and node not in self.Loc_X:
+                                            if reference in self.Loc_X:
                                                 self.Loc_X[node] = self.Loc_X[reference] + value
 
             Fixed_Node = self.Loc_X.keys()
@@ -5496,7 +5072,7 @@ class constraintGraph:
 
 
         else:
-            '''
+
             variable = []
             #D_V_Newval = [0]
 
@@ -5548,9 +5124,10 @@ class constraintGraph:
             for i in range(len(V)):
                 x=V[i]+D_V_Newval[i]
                 variable.append(x) # randomized edge weights without violating minimum constraint values
+            return variable
+            '''
 
 
-        return variable
 
     #longest path evaluation function
     def LONGEST_PATH(self, B, source, target):
@@ -5559,11 +5136,14 @@ class constraintGraph:
             for j in range(len(B[i])):
                 if B[i][j] != 0:
                     X[(i, j)] = B[i][j]
+        #'''
         for i in range(source, target):  ### adding missing edges between 2 fixed nodes (due to edge removal)
             j = i + 1
             if B[i][j] == 0 and i in self.Loc_X.keys() and j in self.Loc_X.keys():
                 X[(i, i + 1)] = self.Loc_X[i + 1] - self.Loc_X[i]
                 B[i][j] = self.Loc_X[i + 1] - self.Loc_X[i]
+        #'''
+        #print X
         Pred = {}  ## Saves all predecessors of each node{node1:[p1,p2],node2:[p1,p2..]}
         for i in range(source, target + 1):
             j = source
@@ -5578,49 +5158,93 @@ class constraintGraph:
                     Pred[key].append(j)
                 j += 1
         n = list(Pred.keys())  ## list of all nodes
-        dist = {}  ## Saves each node's (cumulative maximum weight from source,predecessor) {node1:(cum weight,predecessor)}
-        position = {}
-        for j in range(source, target + 1):
-            node = j
-            for i in range(len(Pred[node])):
-                pred = Pred[node][i]
-                if j == source:
-                    dist[node] = (0, pred)
-                    key = node
-                    position.setdefault(key, [])
-                    position[key].append(0)
-                else:
-                    pairs = (max(position[pred]) + (X[(pred, node)]), pred)
-                    f = 0
-                    for x, v in dist.items():
-                        if node == x:
-                            if v[0] > pairs[0]:
-                                f = 1
-                    if f == 0:
-                        dist[node] = pairs
-                    key = node
-                    position.setdefault(key, [])
-                    position[key].append(pairs[0])
-        i = target
-        path = []
-        while i > source:
-            if i not in path:
-                path.append(i)
-            i = dist[i][1]
-            path.append(i)
-        PATH = list(reversed(path))  ## Longest path
-        Value = []
-        for i in range(len(PATH) - 1):
-            if (PATH[i], PATH[i + 1]) in X.keys():
-                Value.append(X[(PATH[i], PATH[i + 1])])
-        #print "Val",Value
-        Max = sum(Value)
+        #print Pred
+        Path=True
+        Preds=[]
+        for k,v in Pred.items():
+            Preds+=v
+        #Preds=Pred.values()
 
-        # returns longest path, list of minimum constraint values in that path and summation of the values
-        return PATH, Value, Max
+        Preds=list(set(Preds))
+        #print Preds,source,target
+        Preds.sort()
+        if len(Preds)<2 and target not in Pred:
+
+            Path=False
+        elif len(Preds)>=2:
+            Paths=[]
+            for i in range(len(Preds)):
+                for j in range(len(Preds)):
+                    if j>i and (Preds[i],Preds[j]) in X:
+                        Paths.append(Preds[i])
+                        Paths.append(Preds[j])
+            Paths=list(set(Paths))
+            #print Paths
+            if target in Pred:
+                for vert in Pred[target]:
+                    if vert not in Paths:
+                        Path=False
+            else:
+                Path=False
+            if source in Pred:
+                for vert in Pred[source]:
+                    if vert not in Paths:
+                        Path=False
+            else:
+                Path=False
+
+        if Path==True:
+
+            dist = {}  ## Saves each node's (cumulative maximum weight from source,predecessor) {node1:(cum weight,predecessor)}
+            position = {}
+            for j in range(source, target + 1):
+                node = j
+                if node in Pred:
+                    for i in range(len(Pred[node])):
+                        pred = Pred[node][i]
+                        if j == source:
+                            dist[node] = (0, pred)
+                            key = node
+                            position.setdefault(key, [])
+                            position[key].append(0)
+                        else:
+                            pairs = (max(position[pred]) + (X[(pred, node)]), pred)
+                            f = 0
+                            for x, v in dist.items():
+                                if node == x:
+                                    if v[0] > pairs[0]:
+                                        f = 1
+                            if f == 0:
+                                dist[node] = pairs
+                            key = node
+                            position.setdefault(key, [])
+                            position[key].append(pairs[0])
+                else:
+                    continue
+            i = target
+            path = []
+            while i > source:
+                if i not in path:
+                    path.append(i)
+                i = dist[i][1]
+                path.append(i)
+            PATH = list(reversed(path))  ## Longest path
+            Value = []
+            for i in range(len(PATH) - 1):
+                if (PATH[i], PATH[i + 1]) in X.keys():
+                    Value.append(X[(PATH[i], PATH[i + 1])])
+            #print "Val",Value
+            Max = sum(Value)
+
+            # returns longest path, list of minimum constraint values in that path and summation of the values
+            return PATH, Value, Max
+        else:
+            return [None,None, None]
 
     # function that splits edge into parts, where med is the list of fixed nodes in between source and destination of the edge
     def edge_split(self, start, med, end, Fixed_Node, B):
+        #print"F_N", Fixed_Node
+        #print start,med,end
         f = 0
         if start in Fixed_Node and med in Fixed_Node:
             f = 1
@@ -5628,19 +5252,24 @@ class constraintGraph:
             Weight = B[start][end]
             if B[med][end] < Weight - Diff:
                 B[med][end] = Weight - Diff
+            else:
+                f=0
         elif end in Fixed_Node and med in Fixed_Node:
             f = 1
             Diff = self.Loc_X[end] - self.Loc_X[med]
             Weight = B[start][end]
             if B[start][med] < Weight - Diff:
                 B[start][med] = Weight - Diff
+            else:
+                f=0
         if f == 1:
+            #print "B",start,end
             B[start][end] = 0
         return B
 
 
     # this function evaluates the case where the connected whole graph has edges bypassing fixed node in the longest path
-    def Evaluation_connected(self, B, PATH, SOURCE, TARGET,sid):
+    def Evaluation_connected(self, B, PATH, SOURCE, TARGET,sid,ID):
         """
 
         :param B: Adjacency matrix
@@ -5654,27 +5283,44 @@ class constraintGraph:
         for i in PATH:
             if i not in Fixed:
                 UnFixed.append(i)  # making list of all non-fixed nodes
+        Fixed.sort()
+        UnFixed.sort()
+        #print "FX", Fixed, UnFixed
+        #print SOURCE,TARGET,B
+        #print "ID",ID
+        #print self.Loc_X
+
         while (len(UnFixed)) > 0:
             Min_val = {}  # incrementally updates minimum distances from source to each non-fixed vertex
             for i in SOURCE:
                 for j in UnFixed:
-                    key = j
-                    Min_val.setdefault(key, [])
-                    Val = self.LONGEST_PATH(B, i, j)
+                    if j>i:
+                        key = j
+                        Min_val.setdefault(key, [])
+                        #print"in", self.Loc_X,UnFixed
 
-                    if Val[2] != 0:
-                        x = (self.Loc_X[i] + Val[2])
-                        Min_val[key].append(x)
+
+                        Val = self.LONGEST_PATH(B, i, j)
+                        if Val!=[None,None,None]:
+                            if Val[2] != 0:
+                                x = (self.Loc_X[i] + Val[2])
+                                Min_val[key].append(x)
+                        else:
+                            continue
 
             Max_val = {} # incrementally updates minimum distances from each non-fixed vertex to target
             for i in UnFixed:
                 for j in TARGET:
-                    key = i
-                    Max_val.setdefault(key, [])
-                    Val = self.LONGEST_PATH(B, i, j)
-                    if Val[2] != 0:
-                        x = (self.Loc_X[j] - Val[2])
-                        Max_val[key].append(x)
+                    if j>i:
+                        key = i
+                        Max_val.setdefault(key, [])
+                        Val = self.LONGEST_PATH(B, i, j)
+                        if Val != [None,None,None]:
+                            if Val[2] != 0:
+                                x = (self.Loc_X[j] - Val[2])
+                                Max_val[key].append(x)
+                        else:
+                            continue
             i = UnFixed.pop(0)
             v_low = max(Min_val[i])
             v_h2 = min(Max_val[i])
@@ -5685,14 +5331,68 @@ class constraintGraph:
             if v1 < v2:
                 random.seed(sid)
                 self.Loc_X[i] = randrange(v1, v2)
+
             else:
                 self.Loc_X[i] = max(v1, v2)
+            #print "HERE",self.Loc_X,i
+            '''
+            if ID in self.removable_nodes_h.keys():
+                removable_nodes = self.removable_nodes_h[ID]
+                for node in removable_nodes:
+                    reference = self.reference_nodes_h[ID][node][0]
+                    value = self.reference_nodes_h[ID][node][1]
+                    if reference in self.Loc_X and node not in self.Loc_X:
+                        self.Loc_X[node] = self.Loc_X[reference] + value
+                        if node in UnFixed:
+                            UnFixed.remove(node)
+                            SOURCE.append(node)
+                            TARGET.append(node)
+            '''
+            if ID in self.top_down_eval_edges_h.keys():
+                td_eval_edges = self.top_down_eval_edges_h[ID]
+                for k, v in td_eval_edges.items():
+                    for (src, dest), weight in v.items():
+                        #print "SD",src,dest
+                        if src in self.Loc_X:
+
+                            val1 = self.Loc_X[src] + weight
+
+                            if dest > src:
+                                val2 = self.Loc_X[src] + B[src][dest]
+                            else:
+                                val2 = self.Loc_X[src] - B[dest][src]
+
+                            val3=None
+                            for pred in range(len(B)):
+                                if B[pred][dest] > 0 and pred in self.Loc_X:
+                                    val3 = self.Loc_X[pred] + B[pred][dest]
+                                    break
+                                    # print src,dest,val1,val3
+                            if val3!=None:
+                                self.Loc_X[dest] = max(val1,val2, val3)
+                                if dest in UnFixed:
+                                    UnFixed.remove(dest)
+                                    SOURCE.append(dest)
+                                    TARGET.append(dest)
+                                if ID in self.removable_nodes_h.keys():
+                                    removable_nodes = self.removable_nodes_h[ID]
+                                    for node in removable_nodes:
+                                        reference = self.reference_nodes_h[ID][node][0]
+                                        value = self.reference_nodes_h[ID][node][1]
+                                        if reference in self.Loc_X:
+                                            self.Loc_X[node] = self.Loc_X[reference] + value
+                                            if node in UnFixed:
+                                                UnFixed.remove(node)
+                                                SOURCE.append(node)
+                                                TARGET.append(node)
+
+            #print "THERE", self.Loc_X, node
             SOURCE.append(i) # when a non-fixed vertex location is determined it becomes a fixed vertex and may treat as source to others
             TARGET.append(i) # when a non-fixed vertex location is determined it becomes a fixed vertex and may treat as target to others
 
 
 
-    def Location_finding(self, B, start, end,Random, SOURCE, TARGET, flag,sid):
+    def Location_finding(self, B, start, end,Random, SOURCE, TARGET,ID, flag,sid):
         """
 
         :param B: Adjacency matrix
@@ -5706,21 +5406,27 @@ class constraintGraph:
 
         PATH, Value, Sum = self.LONGEST_PATH(B, start, end)
 
-        if flag == True:
-            self.Evaluation_connected(B, PATH, SOURCE, TARGET,sid)
-        else:
-            Max = self.Loc_X[end] - self.Loc_X[start]
+        if PATH!=None:
 
-            Range = Max - Sum
-            variable = self.randomvaluegenerator(Range, Value,Random,sid)
-            loc = {}
-            for i in range(len(PATH)):
-                if PATH[i] in self.Loc_X:
-                    loc[PATH[i]] = self.Loc_X[PATH[i]]
-                else:
-                    loc[PATH[i]] = self.Loc_X[PATH[i - 1]] + variable[i - 1]
-                    self.Loc_X[PATH[i]] = self.Loc_X[PATH[i - 1]] + variable[i - 1]
-        return
+            if flag == True:
+                self.Evaluation_connected(B, PATH, SOURCE, TARGET,sid,ID)
+                #print"LOCX",self.Loc_X
+            else:
+                Max = self.Loc_X[end] - self.Loc_X[start]
+
+                Range = Max - Sum
+                variable = self.randomvaluegenerator(Range, Value,Random,sid)
+                loc = {}
+                for i in range(len(PATH)):
+                    if PATH[i] in self.Loc_X:
+                        loc[PATH[i]] = self.Loc_X[PATH[i]]
+                    else:
+                        loc[PATH[i]] = self.Loc_X[PATH[i - 1]] + variable[i - 1]
+                        self.Loc_X[PATH[i]] = self.Loc_X[PATH[i - 1]] + variable[i - 1]
+            return
+        else:
+            print "ERROR: NO LONGEST PATH FROM", start, "TO", end
+            exit()
 
     ###########################################################
 
@@ -5763,10 +5469,12 @@ class constraintGraph:
         for i in Fixed_Node:
             for j in Fixed_Node:
                 if G.has_edge(i, j):
+                    B[i][j]=0
                     G.remove_edge(i, j)
 
         nodes = list(G.nodes())
         nodes.sort()
+        # Creates all possible disconnected subgraph vertices
         Node_List = []
         for i in range(len(Fixed_Node) - 1):
             node = [Fixed_Node[i]]
@@ -5776,94 +5484,35 @@ class constraintGraph:
             if len(node) > 2:
                 Node_List.append(node)
 
-        List = []
+        #nodes.sort()
+        #print Node_List
+
         for i in range(len(B)):
             for j in range(len(B)):
-                for k in range(len(Node_List)):
-                    if i in Node_List[k] and j not in Node_List[k] and B[i][j] != 0:
-                        for m in range(len(Node_List)):
-                            if j in Node_List[m]:
-                                if Node_List[k] not in List:
-                                    List.append(Node_List[k])
-                                if Node_List[m] not in List:
-                                    List.append(Node_List[m])
+                if j > i and B[i][j] > 0:
+                    for node_list1 in Node_List:
+                        if i in node_list1:
+                            if j in node_list1:
+                                continue
+                            else:
+                                for node_list2 in Node_List:
+                                    if node_list2 != node_list1 and j in node_list2:
+                                        node_list1 += node_list2
+                                        Node_List.remove(node_list1)
+                                        Node_List.remove(node_list2)
+                                        Node_List.append(node_list1)
+                                    else:
+                                        continue
 
+        # print "New", Node_List
         Connected_List = []
-        if len(List) > 0:
-            L = []
-            for i in List:
-                L += i
-            Connected_List.append(list(set(L)))
+        for node_list in Node_List:
+            node_list = list(set(node_list))
+            node_list.sort()
+            Connected_List.append(node_list)
+        # raw_input()
+        #print "CON", Connected_List
 
-        else:
-            for k in range(len(Node_List)):
-                for m in range(len(Node_List)):
-                    LIST = []
-                    for i in range(len(B)):
-                        for j in range(len(B)):
-                            if i in Node_List[k] and j in Node_List[m]:
-                                if i not in Node_List[m] and j not in Node_List[k]:
-                                    if B[i][j] != 0:
-                                        # print i,j
-                                        # LIST.append(Node_List[k])
-                                        # LIST.append(Node_List[m])
-                                        # print Node_List[k],Node_List[m]
-                                        LIST = Node_List[k] + Node_List[m]
-                    if len(LIST) > 0:
-                        Connected_List.append(list(set(LIST)))
-
-        #print Connected_List
-        '''
-        if len(Connected_List)==1:
-            flag=True
-            while(flag):
-                PATH = Connected_List[0]
-                start = PATH[0]
-                end = PATH[-1]
-                LONGESTPATH, Value, Sum = self.LONGEST_PATH(B, start, end)
-
-                if LONGESTPATH == PATH:
-                    flag=False
-                    H = []
-                    for i in range(len(Node_List)):
-                        H.append(G.subgraph(Node_List[i]))
-
-                    for graph in H:
-                        n = list(graph.nodes())
-                        n.sort()
-                        start = n[0]
-                        end = n[-1]
-                    self.Location_finding_V(B, start, end,Random, SOURCE=None, TARGET=None, flag=False,sid=sid)  # evaluates each subgraph (Random is added tot est optimization)
-                    Fixed_Node = self.Loc_Y.keys()
-                    for i in Fixed_Node:
-                        for j in Fixed_Node:
-                            if G.has_edge(i, j):
-                                G.remove_edge(i, j)
-
-
-
-                    if len(G.edges()) == 0:
-                        return
-                    else:
-                        self.FUNCTION_V(G,ID,Random,sid)
-                else:
-                    split_candidates = []
-                    for i in range(len(LONGESTPATH) - 1):
-                        if LONGESTPATH[i + 1] - LONGESTPATH[i] > 1:
-                            split_candidates.append([LONGESTPATH[i], LONGESTPATH[i + 1]])
-                    # print split_candidates
-                    if len(split_candidates) > 0:
-                        for i in range(len(split_candidates)):
-                            pair = split_candidates[i]
-                            parts = [0 for j in range(pair[1] - pair[0])]
-                            weight = B[pair[0]][pair[1]]
-                            ind_weight = float(weight / len(parts))
-
-                            nodes = [pair[0] + i for i in range(len(parts) + 1)]
-                            for k in range(len(nodes) - 1):
-                                B[nodes[k]][nodes[k + 1]] = ind_weight
-                                B[pair[0]][pair[1]] = 0
-        '''
 
         if len(Connected_List) > 0:
             for i in range(len(Connected_List)):
@@ -5882,7 +5531,7 @@ class constraintGraph:
                         TARGET.append(PATH[i])
                 TARGET.sort()
                 # print Weights
-                self.Location_finding_V(B, start, end,ID,Random, SOURCE, TARGET, flag=True,sid=sid)
+                self.Location_finding_V(B, start, end,Random, SOURCE, TARGET,ID, flag=True,sid=sid)
                 if ID in self.removable_nodes_v.keys():
                     removable_nodes=self.removable_nodes_v[ID]
                     for node in removable_nodes:
@@ -5897,18 +5546,20 @@ class constraintGraph:
                         for (src, dest), weight in v.items():
                             if src in self.Loc_Y:
                                 val1 = self.Loc_Y[src] + weight
-                                '''
+
                                 if dest > src:
                                     val2 = self.Loc_Y[src] + B[src][dest]
                                 else:
                                     val2 = self.Loc_Y[src] - B[dest][src]
-                                '''
-                                if dest - 1 in self.Loc_Y:
-                                    val3 = self.Loc_Y[dest - 1] + B[dest-1][dest]
-                                else:
-                                    val3 = 0
-                                if dest not in self.Loc_Y:
-                                    self.Loc_Y[dest] = max(val1, val3)
+
+                                val3 = None
+                                for pred in range(len(B)):
+                                    if B[pred][dest] > 0 and pred in self.Loc_Y:
+                                        val3 = self.Loc_Y[pred] + B[pred][dest]
+                                        break
+                                        # print src,dest,val1,val3
+                                if val3 != None:
+                                    self.Loc_Y[dest] = max(val1,val2, val3)
                                     if ID in self.removable_nodes_v.keys():
                                         removable_nodes = self.removable_nodes_v[ID]
                                         for node in removable_nodes:
@@ -5936,7 +5587,7 @@ class constraintGraph:
                 n.sort()
                 start = n[0]
                 end = n[-1]
-                self.Location_finding_V(B, start, end,ID,Random, SOURCE=None, TARGET=None, flag=False,sid=sid)
+                self.Location_finding_V(B, start, end,Random, SOURCE=None, TARGET=None,ID=ID, flag=False,sid=sid)
                 if ID in self.removable_nodes_v.keys():
                     #print self.removable_nodes_v[ID]
                     #print "ref",ID,self.reference_nodes_v[ID]
@@ -5951,24 +5602,22 @@ class constraintGraph:
                     for k, v in td_eval_edges.items():
                         for (src, dest), weight in v.items():
                             if src in self.Loc_Y:
-                                val1=self.Loc_Y[src] + weight
-                                '''
+                                val1 = self.Loc_Y[src] + weight
+
                                 if dest > src:
                                     val2 = self.Loc_Y[src] + B[src][dest]
                                 else:
                                     val2 = self.Loc_Y[src] - B[dest][src]
-                                '''
-                                #print"LOCY", val1,val2
-                                if dest - 1 in self.Loc_Y:
-                                    val3 = self.Loc_Y[dest - 1] + B[dest-1][dest]
 
-                                else:
-                                    val3 = 0
-                                if dest not in self.Loc_Y:
-                                    self.Loc_Y[dest] = max(val1, val3)
+                                val3 = None
+                                for pred in range(len(B)):
+                                    if B[pred][dest] > 0 and pred in self.Loc_Y:
+                                        val3 = self.Loc_Y[pred] + B[pred][dest]
+                                        break
+                                        # print src,dest,val1,val3
+                                if val3 != None:
+                                    self.Loc_Y[dest] = max(val1,val2, val3)
                                     if ID in self.removable_nodes_v.keys():
-                                        # print self.removable_nodes_v[ID]
-                                        # print "ref",ID,self.reference_nodes_v[ID]
                                         removable_nodes = self.removable_nodes_v[ID]
                                         for node in removable_nodes:
                                             reference = self.reference_nodes_v[ID][node][0]
@@ -6026,7 +5675,7 @@ class constraintGraph:
 
         else:
 
-            '''
+
             variable = []
             # D_V_Newval = [0]
 
@@ -6045,6 +5694,7 @@ class constraintGraph:
             # D_V_Newval = [i*Range for i in Prob]
             Range = Range / 1000
             random.seed(sid)
+            #print"SEED",sid
             D_V_Newval = list(np.random.multinomial(Range, Prob))
 
 
@@ -6091,6 +5741,7 @@ class constraintGraph:
                 x = V[i] + D_V_Newval[i]
                 variable.append(x)
             #print "Var", variable
+            '''
 
         return variable
 
@@ -6132,45 +5783,83 @@ class constraintGraph:
 
 
         n = list(Pred.keys())  ## list of all nodes
-        dist = {}  ## Saves each node's (cumulative maximum weight from source,predecessor) {node1:(cum weight,predecessor)}
-        position = {}
-        for j in range(source, target + 1):
-            node = j
-            for i in range(len(Pred[node])):
-                pred = Pred[node][i]
-                if j == source:
-                    dist[node] = (0, pred)
-                    key = node
-                    position.setdefault(key, [])
-                    position[key].append(0)
-                else:
-                    pairs = (max(position[pred]) + (X[(pred, node)]), pred)
-                    f = 0
-                    for x, v in dist.items():
-                        if node == x:
-                            if v[0] > pairs[0]:
-                                f = 1
-                    if f == 0:
-                        dist[node] = pairs
-                    key = node
-                    position.setdefault(key, [])
-                    position[key].append(pairs[0])
+        Path = True
+        Preds = []
+        for k, v in Pred.items():
+            Preds += v
+        # Preds=Pred.values()
 
-        i = target
-        path = []
-        while i > source:
-            if i not in path:
+        Preds = list(set(Preds))
+        # print Preds,target
+        Preds.sort()
+        if len(Preds) < 2 and target not in Pred:
+
+            Path = False
+        elif len(Preds) >= 2:
+            Paths = []
+            for i in range(len(Preds)):
+                for j in range(len(Preds)):
+                    if j > i and (Preds[i], Preds[j]) in X:
+                        Paths.append(Preds[i])
+                        Paths.append(Preds[j])
+            Paths = list(set(Paths))
+            # print Paths
+            if target in Pred:
+                for vert in Pred[target]:
+                    if vert not in Paths:
+                        Path = False
+            else:
+                Path=False
+            if source in Pred:
+                for vert in Pred[source]:
+                    if vert not in Paths:
+                        Path = False
+            else:
+                Path=False
+
+        if Path == True:
+
+            dist = {}  ## Saves each node's (cumulative maximum weight from source,predecessor) {node1:(cum weight,predecessor)}
+            position = {}
+            for j in range(source, target + 1):
+                node = j
+                for i in range(len(Pred[node])):
+                    pred = Pred[node][i]
+                    if j == source:
+                        dist[node] = (0, pred)
+                        key = node
+                        position.setdefault(key, [])
+                        position[key].append(0)
+                    else:
+                        pairs = (max(position[pred]) + (X[(pred, node)]), pred)
+                        f = 0
+                        for x, v in dist.items():
+                            if node == x:
+                                if v[0] > pairs[0]:
+                                    f = 1
+                        if f == 0:
+                            dist[node] = pairs
+                        key = node
+                        position.setdefault(key, [])
+                        position[key].append(pairs[0])
+
+            i = target
+            path = []
+            while i > source:
+                if i not in path:
+                    path.append(i)
+                i = dist[i][1]
                 path.append(i)
-            i = dist[i][1]
-            path.append(i)
-        PATH = list(reversed(path))  ## Longest path
-        Value = []
-        for i in range(len(PATH) - 1):
-            if (PATH[i], PATH[i + 1]) in X.keys():
-                Value.append(X[(PATH[i], PATH[i + 1])])
-        Max = sum(Value)
+            PATH = list(reversed(path))  ## Longest path
+            Value = []
+            for i in range(len(PATH) - 1):
+                if (PATH[i], PATH[i + 1]) in X.keys():
+                    Value.append(X[(PATH[i], PATH[i + 1])])
+            Max = sum(Value)
 
-        return PATH, Value, Max
+            return PATH, Value, Max
+        else:
+            return [None, None,None]
 
     def edge_split_V(self, start, med, end, Fixed_Node, B):
         """
@@ -6189,19 +5878,23 @@ class constraintGraph:
             Weight = B[start][end]
             if B[med][end] < Weight - Diff:
                 B[med][end] = Weight - Diff
+            else:
+                f=0
         elif end in Fixed_Node and med in Fixed_Node:
             f = 1
             Diff = self.Loc_Y[end] - self.Loc_Y[med]
             Weight = B[start][end]
             if B[start][med] < Weight - Diff:
                 B[start][med] = Weight - Diff
+            else:
+                f=0
 
         if f == 1:
             B[start][end] = 0
 
         return B
 
-    def Evaluation_connected_V(self, B, PATH, SOURCE, TARGET,sid):
+    def Evaluation_connected_V(self, B, PATH, SOURCE, TARGET,sid,ID):
         """
 
         :param B: Adjacency matrix
@@ -6215,26 +5908,35 @@ class constraintGraph:
         for i in PATH:
             if i not in Fixed:
                 UnFixed.append(i)
+        Fixed.sort()
+        UnFixed.sort()
         while len(UnFixed) > 0:
             Min_val = {}
             for i in SOURCE:
-
                 for j in UnFixed:
-                    key = j
-                    Min_val.setdefault(key, [])
-                    Val = self.LONGEST_PATH_V(B, i, j)
-                    if Val[2] != 0:
-                        x = (self.Loc_Y[i] + Val[2])
-                        Min_val[key].append(x)
+                    if j>i:
+                        key = j
+                        Min_val.setdefault(key, [])
+                        Val = self.LONGEST_PATH_V(B, i, j)
+                        if Val!=[None,None,None]:
+                            if Val[2] != 0:
+                                x = (self.Loc_Y[i] + Val[2])
+                                Min_val[key].append(x)
+                        else:
+                            continue
             Max_val = {}
             for i in UnFixed:
                 for j in TARGET:
-                    key = i
-                    Max_val.setdefault(key, [])
-                    Val = self.LONGEST_PATH_V(B, i, j)
-                    if Val[2] != 0:
-                        x = (self.Loc_Y[j] - Val[2])
-                        Max_val[key].append(x)
+                    if j>i:
+                        key = i
+                        Max_val.setdefault(key, [])
+                        Val = self.LONGEST_PATH_V(B, i, j)
+                        if Val!=[None,None,None]:
+                            if Val[2] != 0:
+                                x = (self.Loc_Y[j] - Val[2])
+                                Max_val[key].append(x)
+                        else:
+                            continue
 
             i = UnFixed.pop(0)
 
@@ -6244,13 +5946,67 @@ class constraintGraph:
             v2 = v_h2
             if v1 < v2:
                 random.seed(sid)
+                #print "SEED",sid
                 self.Loc_Y[i] = randrange(v1, v2)
             else:
                 self.Loc_Y[i] = max(v1, v2)
+            #print "THERE", self.Loc_Y
+            '''
+            if ID in self.removable_nodes_v.keys():
+                removable_nodes = self.removable_nodes_v[ID]
+                for node in removable_nodes:
+                    reference = self.reference_nodes_v[ID][node][0]
+                    value = self.reference_nodes_v[ID][node][1]
+                    if reference in self.Loc_Y and node not in self.Loc_Y:
+                        self.Loc_Y[node] = self.Loc_Y[reference] + value
+                        if node in UnFixed:
+                            UnFixed.remove(node)
+                            SOURCE.append(node)
+                            TARGET.append(node)
+            '''
+            if ID in self.top_down_eval_edges_v.keys():
+                td_eval_edges = self.top_down_eval_edges_v[ID]
+                for k, v in td_eval_edges.items():
+                    for (src, dest), weight in v.items():
+
+                        if src in self.Loc_Y:
+                            val1 = self.Loc_Y[src] + weight
+
+                            if dest > src:
+                                val2 = self.Loc_Y[src] + B[src][dest]
+                            else:
+                                val2 = self.Loc_Y[src] - B[dest][src]
+
+                            val3 = None
+                            for pred in range(len(B)):
+                                if B[pred][dest] > 0 and pred in self.Loc_Y:
+                                    val3 = self.Loc_Y[pred] + B[pred][dest]
+                                    break
+                                    # print src,dest,val1,val3
+                            if val3 != None:
+                                self.Loc_Y[dest] = max(val1, val2,val3)
+                                #print "MID",self.Loc_Y
+                                if dest in UnFixed:
+                                    UnFixed.remove(dest)
+                                    SOURCE.append(dest)
+                                    TARGET.append(dest)
+
+                                if ID in self.removable_nodes_v.keys():
+                                    removable_nodes = self.removable_nodes_v[ID]
+                                    for node in removable_nodes:
+                                        reference = self.reference_nodes_v[ID][node][0]
+                                        value = self.reference_nodes_v[ID][node][1]
+                                        if reference in self.Loc_Y and node not in self.Loc_Y:
+                                            self.Loc_Y[node] = self.Loc_Y[reference] + value
+                                            if node in UnFixed:
+                                                UnFixed.remove(node)
+                                                SOURCE.append(node)
+                                                TARGET.append(node)
+            #print"HERE",self.Loc_Y
             SOURCE.append(i)
             TARGET.append(i)
 
-    def Location_finding_V(self, B, start, end,ID,Random, SOURCE, TARGET, flag,sid):
+    def Location_finding_V(self, B, start, end,Random, SOURCE, TARGET, ID,flag,sid):
         """
 
            :param B: Adjacency matrix
@@ -6263,21 +6019,28 @@ class constraintGraph:
         """
         PATH, Value, Sum = self.LONGEST_PATH_V(B, start, end)
 
-        if flag == True:
-            self.Evaluation_connected_V(B, PATH, SOURCE, TARGET,sid)
-        else:
-            Max = self.Loc_Y[end] - self.Loc_Y[start]
+        if PATH!=None:
 
-            Range = Max - Sum
-            variable = self.randomvaluegenerator_V(Range, Value,Random,sid)
-            loc = {}
-            for i in range(len(PATH)):
-                if PATH[i] in self.Loc_Y:
-                    loc[PATH[i]] = self.Loc_Y[PATH[i]]
-                else:
-                    loc[PATH[i]] = self.Loc_Y[PATH[i - 1]] + variable[i - 1]
-                    self.Loc_Y[PATH[i]] = self.Loc_Y[PATH[i - 1]] + variable[i - 1]
-        return
+            if flag == True:
+                self.Evaluation_connected_V(B, PATH, SOURCE, TARGET,sid,ID)
+            else:
+                Max = self.Loc_Y[end] - self.Loc_Y[start]
+
+                Range = Max - Sum
+                #print "SEED",sid
+                variable = self.randomvaluegenerator_V(Range, Value,Random,sid)
+                loc = {}
+                for i in range(len(PATH)):
+                    if PATH[i] in self.Loc_Y:
+                        loc[PATH[i]] = self.Loc_Y[PATH[i]]
+                    else:
+                        loc[PATH[i]] = self.Loc_Y[PATH[i - 1]] + variable[i - 1]
+                        self.Loc_Y[PATH[i]] = self.Loc_Y[PATH[i - 1]] + variable[i - 1]
+            return
+        else:
+            print"ERROR: NO LONGEST PATH FROM",start , "TO", end
+            exit()
+
 
 
 class Vertex():

@@ -8,8 +8,8 @@ import numpy as np
 import random
 import timeit
 import os
-import powercad.thermal.cornerstitch_API
-import powercad.electrical_mdl.cornerstitch_API
+from powercad.electrical_mdl.cornerstitch_API import ElectricalMeasure
+from powercad.thermal.cornerstitch_API import ThermalMeasure
 import matplotlib.pyplot as plt
 from powercad.corner_stitch.CornerStitch import Rectangle
 import time

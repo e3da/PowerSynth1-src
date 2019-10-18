@@ -213,7 +213,7 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True,rel_c
     '''
 
     :param layout_engine: Layout engine object for layout generation
-    :param mode: 0->3 see in cmd_run.py
+    :param mode: 0->3 see in cmd.py
     :param optimization: (or evaluation for mode 0) set to be True for layout evaluation
     :param db_file: database file to store the layout info
     :param apis: {'E':e_api,'T':t_api} some apis for electrical and thermal models
