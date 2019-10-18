@@ -269,7 +269,7 @@ class EMesh():
         for e in self.hier_edge_data:
             #print self.hier_edge_data[e]
             # Case 1 hierarchial edge for device connection to trace nodes
-            print "H_E",self.hier_edge_data[e]
+            #print "H_E",self.hier_edge_data[e]
             if isinstance(self.hier_edge_data[e],list):
 
                 parent_data = self.hier_edge_data[e][1]

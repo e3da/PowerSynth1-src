@@ -200,7 +200,7 @@ class CornerStitch_Emodel_API:
             self.hier.update_hierarchy()
         self.emesh = EMesh_CS(islands=islands,hier_E=self.hier, freq=self.freq, mdl=self.rs_model)
         self.emesh.mesh_update()
-
+        #'''
         fig = plt.figure(1)
         ax = Axes3D(fig)
         ax.set_xlim3d(0, self.width+2)
@@ -214,6 +214,7 @@ class CornerStitch_Emodel_API:
         ax.set_zlim3d(0, 2)
         plot_rect3D(rect2ds=self.module.plate + self.module.sheet, ax=ax)
         plt.show()
+        #'''
 
         self.emesh.update_trace_RL_val()
         self.emesh.update_hier_edge_RL()

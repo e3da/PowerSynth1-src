@@ -1515,8 +1515,54 @@ class New_layout_engine():
             if (len(island.child))>0:
                 for rect in island.child:
                     if rect[0]=='Type_3':
-                        point1=[rect[1],rect[2]] # bondwire pad bottom left corner x,y coordinate
-                        points.append(point1)
+                        # removing bondwire points from device
+                        inside_device=False
+                        for dev in island.child:
+                            if dev[1]<rect[1] and dev[2]<rect[2] and dev[1]+dev[3]>rect[1] and dev[2]+dev[4]>rect[2]:
+                                inside_device=True
+
+                        if inside_device==False:
+                            point1=[rect[1],rect[2]] # bondwire pad bottom left corner x,y coordinate
+                            points.append(point1)
+                            for h_element in island.elements:
+                                if h_element[1]<rect[1] and h_element[2]<rect[2] and h_element[1]+h_element[3]>rect[1] and h_element[2]+h_element[4]>rect[2]:
+                                    point_left=[h_element[1],rect[2]] # adding left boundary
+                                    point_right=[h_element[1]+h_element[3],rect[2]] # adding right boundary
+                                    points.append(point_left)
+                                    points.append(point_right)
+                                    E.append(point_right)
+                                    W.append(point_left)
+
+
+                            for v_element in island.elements_v:
+                                if v_element[1] < rect[1] and v_element[2] < rect[2] and v_element[1] + v_element[3] > rect[1] and v_element[2] + v_element[4] > rect[2]:
+
+                                    point_top=[rect[1], v_element[2]+v_element[4]] # top boundary
+                                    point_bottom=[rect[1], v_element[2]] # bottom boundary
+                                    points.append(point_top)
+                                    points.append(point_bottom)
+                                    N.append(point_top)
+                                    S.append(point_bottom)
+
+                            # internal neighbors for bondwire points
+                            for h_element in island.elements:
+                                if h_element[1]<rect[1] and h_element[2]<rect[2] and h_element[1]+h_element[3]>rect[1] and h_element[2]+h_element[4]>rect[2]:
+                                    point_top = [rect[1], h_element[2] + h_element[4]]
+                                    if point_top not in points:
+                                        points.append(point_top)
+
+                                    point_bottom = [rect[1], h_element[2]]
+                                    if point_bottom not in points:
+                                        points.append(point_bottom)
+                            for v_element in island.elements_v:
+                                if v_element[1] < rect[1] and v_element[2] < rect[2] and v_element[1] + v_element[3] > rect[1] and v_element[2] + v_element[4] > rect[2]:
+                                    point_left = [v_element[1], rect[2]]
+                                    if point_left not in points:
+                                        points.append(point_left)
+                                    point_right = [v_element[1] + v_element[3], rect[2]]
+                                    if point_right not in points:
+                                        points.append(point_right)
+
 
 
 

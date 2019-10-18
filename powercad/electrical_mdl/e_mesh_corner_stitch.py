@@ -33,7 +33,7 @@ class EMesh_CS(EMesh):
             self.hier_group_dict = {}
             self.mesh_edges(thick=0.2)  # the thickness is fixed right now but need to be updated by MDK later
             print"BEFORE_PLOT"
-            plot = True
+            plot = False
             if plot:
                 fig = plt.figure(1)
                 ax = Axes3D(fig)
