@@ -13,6 +13,11 @@ from powercad.corner_stitch.constraintGraph_Dev import constraintGraph
 import itertools
 from powercad.general.data_struct.util import *
 from powercad.design.layout_module_data import ModuleDataCornerStitch
+
+# GLOBAL VARIABLE FOR DEBUG ONLY
+plot_CS = False
+
+
 class New_layout_engine():
     def __init__(self):
         self.W = None
@@ -245,8 +250,9 @@ class New_layout_engine():
         for node in self.Vtree.vNodeList:
             node.Final_Merge()
         #------------------------for debugging-----------------
-        #for node in self.Htree.hNodeList:
-            #self.plotrectH_old(node)
+        if plot_CS:
+            for node in self.Htree.hNodeList:
+                self.plotrectH_old(node)
             #raw_input()
         #-------------------------------------------------------
         '''
@@ -1509,43 +1515,10 @@ class New_layout_engine():
             if (len(island.child))>0:
                 for rect in island.child:
                     if rect[0]=='Type_3':
-                        point1=[rect[1],rect[2]]
-                        #point2=[rect[1],rect[2]+rect[4]]
-                        #point3=[rect[1]+rect[3],rect[2]]
-                        #point4=[rect[1]+rect[3],rect[2]+rect[4]]
+                        point1=[rect[1],rect[2]] # bondwire pad bottom left corner x,y coordinate
                         points.append(point1)
-                        #points.append(point2)
-                        #points.append(point3)
-                        #points.append(point4)
-                        #print rect
-                        '''
-                        for element in island.elements :
 
-                            if element[-1]==rect[-1]:
-                                coordinate_top1=[rect[1],element[2]+element[4]]
-                                coordinate_bottom1=[rect[1],element[2]]
-                                #points.append(coordinate_top1)
-                                #points.append(coordinate_bottom1)
-                                for tile in Vtree.vNodeList[rect[-1] - 1].stitchList:
-                                    if tile.NORTH.cell.type == 'EMPTY' and tile.cell.x == element[1] and tile.cell.y ==element[2]:
-                                        points.append(coordinate_top1)
-                                        N.append(coordinate_top1)
-                                    if tile.SOUTH.cell.type == 'EMPTY' and tile.cell.x == element[1] and tile.cell.y == element[2]:
-                                        points.append(coordinate_bottom1)
-                                        S.append(coordinate_bottom1)
-                                coordinate_left1 = [element[1], rect[2]]
-                                coordinate_right1 = [element[1]+element[3], rect[2]]
 
-                                for tile in Htree.hNodeList[rect[-1] - 1].stitchList:
-                                    if tile.WEST.cell.type == 'EMPTY' and tile.cell.x == element[1] and tile.cell.y ==element[2]:
-                                        points.append(coordinate_left1)
-
-                                        W.append(coordinate_left1)
-                                    if tile.EAST.cell.type == 'EMPTY' and tile.cell.x == element[1] and tile.cell.y == element[2]:
-                                        points.append(coordinate_right1)
-                                        E.append(coordinate_right1)
-                                
-                        '''
 
 
 

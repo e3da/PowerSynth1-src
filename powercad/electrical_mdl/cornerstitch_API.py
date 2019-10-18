@@ -112,8 +112,8 @@ class CornerStitch_Emodel_API:
         self.net_to_sheet = {}  # quick look up table to find the sheet object based of the net_name
         islands = self.module_data.islands[0]
 
-        for island in islands:
-            island.print_island(plot=True,size=[52000,50000])
+        #for island in islands:
+            #island.print_island(plot=True,size=[52000,50000])
 
         #raw_input()
 
@@ -129,14 +129,20 @@ class CornerStitch_Emodel_API:
             for comp in isl.child: # get all components in isl
                 x, y, w, h = comp[1:5]
                 name = comp[5] # get the comp name from layout script
-                obj = self.comp_dict[name]
+                obj = self.comp_dict[name] # Get object type based on the name
                 type = name[0]
 
-                if isinstance(obj, RoutingPath):  # If this is a routing object
+                if isinstance(obj, RoutingPath):  # If this is a routing object Trace or Bondwire "Pad"
                     # reuse the rect info and create a sheet
                     z = self.layer_to_z[type][0]
-                    new_rect = Rect(top=(y + h) / 1000, bottom=y / 1000, left=x / 1000, right=(x + w) / 1000)
+                    if type == 'B': # Handling bondwires
+                    # ToDO: For new wire implementation, need to send a Point data type instead a Rect data type
+                    # TODo: Threat them as very small rects with width height of 1(layout units) for now.
+                        new_rect = Rect(top=y / 1000 + h, bottom=y / 1000, left=x / 1000, right=x / 1000 + w)
+                    elif type == 'T': # Traces
+                        new_rect = Rect(top=(y+h) / 1000 , bottom=y / 1000, left=x / 1000, right=(x +w) / 1000)
                     pin = Sheet(rect=new_rect, net_name=name, net_type='internal', n=(0, 0, 1), z=z)
+
                     self.e_sheets.append(pin)
                     # need to have a more generic way in the future
                     self.net_to_sheet[name] = pin
@@ -190,15 +196,8 @@ class CornerStitch_Emodel_API:
             self.hier = EHier(module=self.module)
             self.hier.form_hierachy()
         else:  # just update, no new objects
-            #self.hier = EHier(module=self.module)
-            #self.hier.form_hierachy()
             self.hier.update_module(self.module)
             self.hier.update_hierarchy()
-        #'''
-        #self.hier = EHier(module=self.module)
-        #self.hier.form_hierachy()
-
-
         self.emesh = EMesh_CS(islands=islands,hier_E=self.hier, freq=self.freq, mdl=self.rs_model)
         self.emesh.mesh_update()
 
