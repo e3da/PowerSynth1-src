@@ -1,7 +1,5 @@
 from powercad.general.data_struct.Tree import *
 import warnings
-from memory_profiler import profile
-import weakref
 warnings.filterwarnings("ignore")
 
 
@@ -15,7 +13,6 @@ class EHier():
         self.isl_group_data = {}
 
     # Form tree based on sheet + plate intersection
-    @profile
     def __del__(self):
         #print "delete hier object"
         del self.isl_group_data

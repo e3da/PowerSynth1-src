@@ -3,7 +3,7 @@ import matplotlib.patches as patches
 from collections import OrderedDict
 from powercad.design.library_structures import *
 from powercad.general.material.material import *
-from powercad.general.settings.settings import MATERIAL_LIB_PATH
+import powercad.general.settings.settings
 import csv
 import getpass
 
@@ -66,9 +66,12 @@ class LayerStack:
         self.max_z = 0  # the z level of the highest layer
         self.material_lib = Material_lib()
 
-        if getpass.getuser()=="ialrazi": # Quang PC hard code case to be removed in main
-            MATERIAL_LIB_PATH = "C:\Users\ialrazi\PowerSynth\CornerStitch_Dev\PowerCAD-full\\tech_lib\Material\Materials.csv"
-        self.material_lib.load_csv(MATERIAL_LIB_PATH) # load the mat_lib from the default directory
+        if getpass.getuser() in ["ialrazi","erago","qmle"]: # For developer use only. Add your name if you run into this
+            material_path = raw_input("Put your hardcoded path here:")
+            material_path = os.path.abspath(material_path)
+        else: # Normal assumption for Mat Lib
+            material_path = MATERIAL_LIB_PATH
+        self.material_lib.load_csv(material_path) # load the mat_lib from the default directory
         self.foot_print = [0,0]
 
     def add_new_layer(self, width=0, length=0, thick=0, type='p', color='blue'):

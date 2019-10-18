@@ -1,6 +1,5 @@
 
 import matplotlib.pyplot as plt
-from powercad.electrical_mdl.e_mesh_direct import MeshNode
 import numpy as np
 from powercad.corner_stitch.CornerStitch import draw_rect_list_cs
 class Island():
