@@ -3226,8 +3226,8 @@ class CS_to_CG():
             #print"A", wire2.source_coordinate
             #print"AD", wire2.dest_coordinate
             updated_wires.append(wire2)
-            wire_1=[wire2.source_coordinate[0]/s,wire2.source_coordinate[1]/s,0.5,0.5,"Type_3",3,0]
-            wire_2 = [wire2.dest_coordinate[0]/s, wire2.dest_coordinate[1]/s, 0.5, 0.5, "Type_3", 3, 0]
+            wire_1=[wire2.source_coordinate[0]/float(s),wire2.source_coordinate[1]/float(s),0.5,0.5,"Type_3",3,0]
+            wire_2 = [wire2.dest_coordinate[0]/float(s), wire2.dest_coordinate[1]/float(s), 0.5, 0.5, "Type_3", 3, 0]
             if wire_1[0]<wire_2[0]:
                 x=wire_1[0]
             else:
@@ -3236,11 +3236,12 @@ class CS_to_CG():
                 y=wire_1[1]
             else:
                 y = wire_2[1]
-            wire=[x,y,abs(wire_2[1]-wire_1[1]),abs(wire_2[2]-wire_1[2]),wire_1[-2],wire_1[-1]]#xA,yA,xB,yB,type,zorder
-            print wire
-            layout_rects.append(wire_1)
-            layout_rects.append(wire_2)
-            #layout_rects.append(wire)
+            #wire=[x,y,abs(wire_2[1]-wire_1[1]),abs(wire_2[2]-wire_1[2]),wire_1[-2],wire_1[-1]]
+            wire=[wire_1[0],wire_1[1],wire_2[0],wire_2[1],wire_1[-3],wire_1[-2]]#xA,yA,xB,yB,type,zorder
+            #print "final_wire", wire
+            #layout_rects.append(wire_1)
+            #layout_rects.append(wire_2)
+            layout_rects.append(wire)
 
         #for k, v in sym_to_cs.items():
             #print k,v

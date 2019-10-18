@@ -2,6 +2,7 @@ from powercad.corner_stitch.CornerStitch import Rectangle
 from powercad.cons_aware_en.database import *
 import matplotlib.pyplot as plt
 import matplotlib
+from matplotlib.path import Path
 class CornerStitchSolution:
 
     def __init__(self, name='', index=None, params=None,fig_data=None):
@@ -103,52 +104,67 @@ class CornerStitchSolution:
                 #print"R", row
                 if len(row) < 4:
                     k1 = (float(row[0]), float(row[1]))
+                    #print "plot",k1
 
                 else:
+                    if row[5] == "'Type_3'":
+
+                        point1 = (float(row[0]), float(row[1]))
+                        point2 = (float(row[2]), float(row[3]))
+                        verts = [point1, point2]
+                        #print"here", verts
+                        codes = [Path.MOVETO, Path.LINETO]
+                        path = Path(verts, codes)
+                        colour = str(row[4])
+                        ind = colours.index(colour)
+                        colour = colors[ind]
+                        patch = matplotlib.patches.PathPatch(path, edgecolor=colour, lw=0.5,zorder=3)
+                        v1.append(patch)
 
 
-
-                    x = float(row[0])
-                    y = float(row[1])
-                    w = float(row[2])
-                    h = float(row[3])
-                    colour = str(row[4])
-                    ind=colours.index(colour)
-                    colour=colors[ind]
-                    order = int(row[5])
-                    if row[6] != "'None'":
-                        #linestyle = row[6]
-                        edgecolor = row[7]
-                        ind = colours.index(edgecolor)
-                        edgecolor = colors[ind]
-
-                    if row[6] == "'None'":
-                        #print "IN"
-                        R1 = matplotlib.patches.Rectangle(
-                            (x, y),  # (x,y)
-                            w,  # width
-                            h,  # height
-                            facecolor=colour,
-                            zorder=order
-
-                        )
                     else:
-                        #print x, y, w, h, colour, order, row[6], row[7]
-                        #print "here"
-                        R1 = matplotlib.patches.Rectangle(
-                            (x, y),  # (x,y)
-                            w,  # width
-                            h,  # height
-                            facecolor=colour,
-                            linestyle='--',
-                            edgecolor=edgecolor,
-                            zorder=order
+                        x = float(row[0])
+                        y = float(row[1])
+                        w = float(row[2])
+                        h = float(row[3])
+                        colour = str(row[4])
+                        ind=colours.index(colour)
+                        colour=colors[ind]
+                        order = int(row[5])
+                        if row[6] != "'None'":
+                            #linestyle = row[6]
+                            edgecolor = row[7]
+                            ind = colours.index(edgecolor)
+                            edgecolor = colors[ind]
 
-                        )
-                    v1.append(R1)
+                        if row[6] == "'None'":
+                            #print "IN"
+                            R1 = matplotlib.patches.Rectangle(
+                                (x, y),  # (x,y)
+                                w,  # width
+                                h,  # height
+                                facecolor=colour,
+                                zorder=order
+
+                            )
+                        else:
+                            #print x, y, w, h, colour, order, row[6], row[7]
+                            #print "here"
+                            R1 = matplotlib.patches.Rectangle(
+                                (x, y),  # (x,y)
+                                w,  # width
+                                h,  # height
+                                facecolor=colour,
+                                linestyle='--',
+                                edgecolor=edgecolor,
+                                zorder=order
+
+                            )
+                        v1.append(R1)
 
             for p in v1:
                 ax1.add_patch(p)
+            print"here", k1
             ax1.set_xlim(0, k1[0])
             ax1.set_ylim(0, k1[1])
             ax1.set_aspect('equal')

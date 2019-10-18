@@ -131,13 +131,17 @@ class new_engine_opt:
             # TODO: APPLY LAYOUT INFO INTO ELECTRICAL MODEL
             if isinstance(measure, ElectricalMeasure):
                 type = measure.measure
+
                 self.e_api.init_layout_isl(module_data=module_data)
                 start=time.time()
                 R, L = self.e_api.extract_RL(src=measure.source, sink=measure.sink)
                 #print 'R',R,'L',L
                 end = time.time()
                 #print "RT", end - start
-
+                '''
+                R=10
+                L=10
+                '''
 
                 if type == 0:  # LOOP RESISTANCE
                     result.append(R)  # resistance in mOhm

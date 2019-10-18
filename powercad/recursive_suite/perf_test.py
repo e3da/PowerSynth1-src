@@ -1,4 +1,4 @@
-from powercad.cmd_run.cmd import Cmd_Handler
+from powercad.cmd_run.cmd_run import Cmd_Handler
 import argparse
 import os
 import sys
@@ -10,7 +10,7 @@ import psutil
 
 def run_test():
     test_cases_dirs={
-    'Quang_Journal_S_para': 'D:\Demo\POETS_ANNUAL_MEETING_2019\\testcases_setup\Test\Layout_Cases\Journal_Case\Layout1_macro.txt'
+    'Quang_Journal_S_para': 'D:\Demo\POETS_ANNUAL_MEETING_2019\\testcases_setup\Test\Layout_Cases\Case1_S-param\Layout1_macro.txt'
     }
 
     # Loop through

@@ -111,6 +111,12 @@ class CornerStitch_Emodel_API:
         self.e_comps = []  # list of all components
         self.net_to_sheet = {}  # quick look up table to find the sheet object based of the net_name
         islands = self.module_data.islands[0]
+
+        for island in islands:
+            island.print_island(plot=True,size=[52000,50000])
+
+        #raw_input()
+
         for isl in islands:
             for trace in isl.elements: # get all trace in isl
                 x,y,w,h = trace[1:5]
@@ -400,14 +406,14 @@ class CornerStitch_Emodel_API:
             self.measure.append(ElectricalMeasure(measure=type, name=name, source=source, sink=sink))
             return self.measure
 
-    def extract_RL(self,src=None,sink =None):
+    def extract_RL_1(self,src=None,sink =None):
         print "TEST HIERARCHY LEAK"
         del self.emesh
         del self.circuit
         del self.module
         return 1,1
 
-    def extract_RL_1(self, src=None, sink=None):
+    def extract_RL(self, src=None, sink=None):
         '''
         Input src and sink name, then extract the inductance/resistance between them
         :param src:

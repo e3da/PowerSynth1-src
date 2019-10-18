@@ -174,8 +174,8 @@ class EMesh():
         C_tot = 0
         num_nodes = len(self.graph.nodes())
         cap_eval = trace_capacitance
-        for n1 in self.graph.nodes(data=True):
-            if mode == 1: # Split each layer into small
+        for n1 in self.graph.nodes():
+            if mode == 1:
                 for n2 in self.graph.nodes():
                     if n1 != n2:
                         rect1 = n_cap_dict[n1]
@@ -187,13 +187,11 @@ class EMesh():
                             #cap_val= 48*1e-12/num_nodes/2
                             C_tot+=cap_val
                             self.cap_dict[(n1, n2)]=cap_val
-            elif mode==2:    # Using the Pi network circuit, for 2 layers DBC ground is the backside
-                nid=n1[0]
-                rect1 = n_cap_dict[nid]
-                cap_val = cap_eval(rect1.width_eval(), rect1.height_eval(), t, h, 9.1, True) * 1e-12
-                print cap_val
+            elif mode==2:
+                rect1 = n_cap_dict[n1]
+                cap_val = cap_eval(rect1.width(), rect1.height(), t, h, 4.6, True) * 1e-12
                 C_tot += cap_val
-                self.cap_dict[(nid, 0)] = cap_val
+                self.cap_dict[(n1, 0)] = cap_val
         #print self.cap_dict
         print "total cap", C_tot
 
@@ -271,56 +269,64 @@ class EMesh():
         for e in self.hier_edge_data:
             #print self.hier_edge_data[e]
             # Case 1 hierarchial edge for device connection to trace nodes
+            print "H_E",self.hier_edge_data[e]
             if isinstance(self.hier_edge_data[e],list):
+
                 parent_data = self.hier_edge_data[e][1]
-                hier_node = self.hier_edge_data[e][0]
-                nb_node = e[1]
-                SW = parent_data['SW']
-                NW = parent_data['NW']
-                SE = parent_data['SE']
-                NE = parent_data['NE']
-                x_h = hier_node.pos[0]
-                y_h = hier_node.pos[1]
-                if nb_node==SW.node_id:
-                    d_x = abs(SW.pos[0] - x_h)
-                    d_y = abs(SW.pos[1] - y_h)
-                    Rx = SW.E_edge.R * d_x / SW.E_edge.len
-                    Lx = SW.E_edge.L * d_x / SW.E_edge.len
-                    Ry = SW.N_edge.R * d_y / SW.N_edge.len
-                    Ly = SW.N_edge.L * d_y / SW.N_edge.len
+                if len(parent_data) == 1:
+                    # HANDLE NEW BONDWIRE, no need hier computation
+                    R = 1e-6
+                    L = 1e-10
+                else:
+                    # HANDLE OLD BONDWIRE
+                    hier_node = self.hier_edge_data[e][0]
+                    nb_node = e[1]
+                    SW = parent_data['SW']
+                    NW = parent_data['NW']
+                    SE = parent_data['SE']
+                    NE = parent_data['NE']
+                    x_h = hier_node.pos[0]
+                    y_h = hier_node.pos[1]
+                    if nb_node==SW.node_id:
+                        d_x = abs(SW.pos[0] - x_h)
+                        d_y = abs(SW.pos[1] - y_h)
+                        Rx = SW.E_edge.R * d_x / SW.E_edge.len
+                        Lx = SW.E_edge.L * d_x / SW.E_edge.len
+                        Ry = SW.N_edge.R * d_y / SW.N_edge.len
+                        Ly = SW.N_edge.L * d_y / SW.N_edge.len
 
-                elif nb_node ==NW.node_id:
-                    d_x = abs(NW.pos[0] - x_h)
-                    d_y = abs(NW.pos[1] - y_h)
-                    Rx = NW.E_edge.R * d_x / NW.E_edge.len
-                    Lx = NW.E_edge.L * d_x / NW.E_edge.len
-                    Ry = NW.S_edge.R * d_y / NW.S_edge.len
-                    Ly = NW.S_edge.L * d_y / NW.S_edge.len
+                    elif nb_node ==NW.node_id:
+                        d_x = abs(NW.pos[0] - x_h)
+                        d_y = abs(NW.pos[1] - y_h)
+                        Rx = NW.E_edge.R * d_x / NW.E_edge.len
+                        Lx = NW.E_edge.L * d_x / NW.E_edge.len
+                        Ry = NW.S_edge.R * d_y / NW.S_edge.len
+                        Ly = NW.S_edge.L * d_y / NW.S_edge.len
 
-                elif nb_node == NE.node_id:
-                    d_x = abs(NE.pos[0] - x_h)
-                    d_y = abs(NE.pos[1] - y_h)
-                    Rx = NE.W_edge.R * d_x / NE.W_edge.len
-                    Lx = NE.W_edge.L * d_x / NE.W_edge.len
-                    Ry = NE.S_edge.R * d_y / NE.S_edge.len
-                    Ly = NE.S_edge.L * d_y / NE.S_edge.len
+                    elif nb_node == NE.node_id:
+                        d_x = abs(NE.pos[0] - x_h)
+                        d_y = abs(NE.pos[1] - y_h)
+                        Rx = NE.W_edge.R * d_x / NE.W_edge.len
+                        Lx = NE.W_edge.L * d_x / NE.W_edge.len
+                        Ry = NE.S_edge.R * d_y / NE.S_edge.len
+                        Ly = NE.S_edge.L * d_y / NE.S_edge.len
 
-                elif nb_node == SE.node_id:
-                    d_x = abs(SE.pos[0] - x_h)
-                    d_y = abs(SE.pos[1] - y_h)
-                    Rx = SE.W_edge.R * d_x / SE.W_edge.len
-                    Lx = SE.W_edge.L * d_x / SE.W_edge.len
-                    Ry = SE.N_edge.R * d_y / SE.N_edge.len
-                    Ly = SE.N_edge.L * d_y / SE.N_edge.len
+                    elif nb_node == SE.node_id:
+                        d_x = abs(SE.pos[0] - x_h)
+                        d_y = abs(SE.pos[1] - y_h)
+                        Rx = SE.W_edge.R * d_x / SE.W_edge.len
+                        Lx = SE.W_edge.L * d_x / SE.W_edge.len
+                        Ry = SE.N_edge.R * d_y / SE.N_edge.len
+                        Ly = SE.N_edge.L * d_y / SE.N_edge.len
 
-                R = (Rx + Ry)/2
-                L = (Lx + Ly)/2
-                #print "Rcomp", R,Rx,Ry
-                #print "Lcomp", L, Lx, Ly
+                    R = (Rx + Ry)/2
+                    L = (Lx + Ly)/2
+                    #print "Rcomp", R,Rx,Ry
+                    #print "Lcomp", L, Lx, Ly
 
-                #R = 1e-6 #if R == 0 else R
-                #L = 1e-10 #if L == 0 else L
-                #L = 1e-10
+                    #R = 1e-6 #if R == 0 else R
+                    #L = 1e-10 #if L == 0 else L
+                    #L = 1e-10
             else: # Case 2, we dont need to compute the hierarchical edge, this is provided from the components objects
                 parent_data = self.hier_edge_data[e]
                 R = parent_data['R']
@@ -341,10 +347,19 @@ class EMesh():
         Returns:
 
         '''
-        SW = parent_data['SW']
-        NW = parent_data['NW']
-        SE = parent_data['SE']
-        NE = parent_data['NE']
+        if len(parent_data)==1:
+            # NEW BONDWIRE HANDLER
+            hier_node = hier_nodes[0]
+            key = parent_data.keys()[0]
+            edge_data = [hier_node, parent_data]
+            self.add_hier_edge(n1=hier_node.node_id, n2=parent_data[key].node_id, edge_data=edge_data)
+
+        else:
+            # OLD BONDWIRE HANDLER
+            SW = parent_data['SW']
+            NW = parent_data['NW']
+            SE = parent_data['SE']
+            NE = parent_data['NE']
         # when adding hier node, the first node is the hier node, the second node is the neighbour node.
         if 1: # In case only one hierarchical node is made
             hier_node = hier_nodes[0]
@@ -666,7 +681,7 @@ class EMesh():
 
         plot_E_map_test(G=bound_graph,ax=ax,cmap=self.c_map)
 
-        plt.show()
+        #plt.show()
 
     def check_bound_type(self,rect,point):
         b_type =[]
@@ -875,7 +890,12 @@ class EMesh():
                 SW = None
                 cp = cp_node.pos
                 # Finding the closest point on South West corner
+                special_case = False
                 for p in points:  # all point in group
+                    if cp[0]==p[0] and cp[1]==p[1]:
+                        special_case=True
+                        anchor_node =p
+                        break
                     del_x = cp[0] - p[0]
                     del_y = cp[1] - p[1]
                     distance = math.sqrt(del_x ** 2 + del_y ** 2)
@@ -883,19 +903,29 @@ class EMesh():
                         if distance < min_dis:
                             min_dis = distance
                             SW = p
-                node_name = str(SW[0]) + '_' + str(SW[1])
-                # Compute SW data:
-                # 4 points on parent trace
-                SW = self.node_dict[node_name]  # SW - anchor node
-                NW = SW.North
-                NE = NW.East
-                SE = NE.South
 
-                self.hier_data = {'SW': SW, 'NW': NW, 'NE': NE, 'SE': SE}  # 4 points on the corners of parent net
-                if not (SW.node_id in self.hier_group_dict):  # form new group based on SW_id
-                    self.hier_group_dict[SW.node_id] = {'node_group': [cp_node], 'parent_data': self.hier_data}
-                else:  # if SW_id exists, add new hier node to group
-                    self.hier_group_dict[SW.node_id]['node_group'].append(cp_node)
+                if special_case:
+                    node_name = str(anchor_node[0]) + '_' + str(anchor_node[1])
+                    anchor_node=self.node_dict[node_name]
+                    # special case to handle new bondwire
+                    self.hier_data = {"BW_anchor": anchor_node}
+                    self.hier_group_dict[anchor_node.node_id] = {'node_group': [cp_node],
+                                                        'parent_data': self.hier_data}
+                else:
+                    node_name = str(SW[0]) + '_' + str(SW[1])
+                    # Compute SW data:
+                    # 4 points on parent trace
+                    SW = self.node_dict[node_name]  # SW - anchor node
+
+                    NW = SW.North
+                    NE = NW.East
+                    SE = NE.South
+
+                    self.hier_data = {'SW': SW, 'NW': NW, 'NE': NE, 'SE': SE}  # 4 points on the corners of parent net
+                    if not (SW.node_id in self.hier_group_dict):  # form new group based on SW_id
+                        self.hier_group_dict[SW.node_id] = {'node_group': [cp_node], 'parent_data': self.hier_data}
+                    else:  # if SW_id exists, add new hier node to group
+                        self.hier_group_dict[SW.node_id]['node_group'].append(cp_node)
 
         for k in self.hier_group_dict.keys():  # Based on group to form hier node
             node_group = self.hier_group_dict[k]['node_group']
@@ -911,6 +941,7 @@ class EMesh():
                 self.comp_nodes[group] = []
 
             comp = sh.data.component  # Get the component of a sheet.
+            #print "C_DICT",len(self.comp_dict),self.comp_dict
             if comp != None and not (comp in self.comp_dict):
                 print "case 1"
                 comp.build_graph()
@@ -933,8 +964,10 @@ class EMesh():
                         x, y = sheet_data.rect.center()
                         z = sheet_data.z
                         cp = [x, y, z]
+                        #print "CP",cp
                         if not (sheet_data.net in self.comp_net_id):
                             cp_node = MeshNode(pos=cp, type=conn_type, node_id=self.node_count, group_id=None)
+                            #print self.node_count
                             self.comp_net_id[sheet_data.net] = self.node_count
                             self.add_node(cp_node)
                             self.comp_dict[comp] = 1
