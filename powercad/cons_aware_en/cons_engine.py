@@ -1609,6 +1609,7 @@ class New_layout_engine():
 
 
         return cs_islands
+
     def form_cs_island(self,islands=None, Htree=None, Vtree=None):
         copy_islands = copy.deepcopy(islands)  # list of islands converting input rects to corner stitch tiles
         HorizontalNodeList = []
