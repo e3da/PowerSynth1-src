@@ -484,7 +484,7 @@ class RL_circuit():
     #precision = 10
     #fp = open('memory_profiler_basic_mean.log', 'w+')
     #@profile(precision=precision, stream=fp)
-    def solve_iv(self,mode = 0):
+    def solve_iv(self,mode = 2):
         debug=False
         # initialize some symbolic matrix with zeros
         # A is formed by [[G, M] [M_t, D]]
@@ -529,7 +529,7 @@ class RL_circuit():
             A = self.D
 
         t = time.time()
-        method=1
+        method=2
         if method ==1:
             self.results= scipy.sparse.linalg.spsolve(A,Z)
         elif method ==2:

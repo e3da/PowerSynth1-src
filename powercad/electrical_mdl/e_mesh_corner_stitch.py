@@ -32,7 +32,6 @@ class EMesh_CS(EMesh):
             points = self.mesh_nodes(isl=isl)
             self.hier_group_dict = {}
             self.mesh_edges(thick=0.2)  # the thickness is fixed right now but need to be updated by MDK later
-            print"BEFORE_PLOT"
             plot = False
             if plot:
                 fig = plt.figure(1)

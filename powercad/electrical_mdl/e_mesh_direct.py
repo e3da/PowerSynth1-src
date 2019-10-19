@@ -231,6 +231,7 @@ class EMesh():
                 #print all_r
                 #print all_l
                 #all_c = self.compute_all_cap()
+                check_neg = False
                 for i in range(len(self.all_W)):
                     n1 = self.all_n1[i]
                     n2 = self.all_n2[i]
@@ -249,9 +250,12 @@ class EMesh():
                             #edge_data.C = all_c[i]*1e-12
 
                         else:
-                            print all_r[i]
-                            print all_l[i]
-                            print 'w','l',self.all_W[i], self.all_L[i]
+                            check_neg =True
+                            debug =False
+                            if debug:
+                                print all_r[i]
+                                print all_l[i]
+                                print 'w','l',self.all_W[i], self.all_L[i]
 
 
 
@@ -264,6 +268,8 @@ class EMesh():
                 self.graph[n1][n2].values()[0]['res'] = all_r[i]
                 edge_data = self.graph[n1][n2].values()[0]['data']
                 edge_data.R = all_r[i]
+        if check_neg:
+            print "Found some negative values during RS model evaluation, please re-characterize the model. Switch to microstrip for evaluation"
 
     def update_hier_edge_RL(self):
         for e in self.hier_edge_data:
@@ -271,7 +277,6 @@ class EMesh():
             # Case 1 hierarchial edge for device connection to trace nodes
             #print "H_E",self.hier_edge_data[e]
             if isinstance(self.hier_edge_data[e],list):
-
                 parent_data = self.hier_edge_data[e][1]
                 if len(parent_data) == 1:
                     # HANDLE NEW BONDWIRE, no need hier computation
@@ -360,8 +365,7 @@ class EMesh():
             NW = parent_data['NW']
             SE = parent_data['SE']
             NE = parent_data['NE']
-        # when adding hier node, the first node is the hier node, the second node is the neighbour node.
-        if 1: # In case only one hierarchical node is made
+            # when adding hier node, the first node is the hier node, the second node is the neighbour node.
             hier_node = hier_nodes[0]
             edge_data = [hier_node, parent_data]
 

@@ -189,34 +189,42 @@ class EWires(EComp):
             R_val = wire_resistance(f=self.f, r=self.r, p=self.p, l=length) * 1e-3
             L_val = wire_inductance(r=self.r, l=length) * 1e-9
             branch_val = 1j * L_val + R_val
-            for i in range(self.num_wires):
-                RLname = 'B{0}'.format(i)
-                self.circuit._graph_add_comp(name=RLname, pnode=start, nnode=end, val=branch_val)
-            for i in range(self.num_wires):
-                for j in range(self.num_wires):
-                    if i != j and not ((i, j) in group):
-                        group[(i, j)] = None  # save new key
-                        group[(j, i)] = None  # save new key
-                        distance = abs(j - i) * self.d
-                        L1_name = 'B{0}'.format(i)
-                        L2_name = 'B{0}'.format(j)
-                        M_name = 'M' + '_' + L1_name + '_' + L2_name
-                        M_val = wire_partial_mutual_ind(length, distance) * 1e-9
-                        self.circuit._graph_add_M(M_name, L1_name, L2_name, M_val)
-            self.circuit.assign_freq(self.f)
-            self.circuit.indep_current_source(0, 1, val=1)
-            self.circuit.build_current_info()
-            try:
-                self.circuit.solve_iv()
-                imp =self.circuit.results['v1']
-                R = abs(np.real(imp))
-                L = abs(np.imag(imp) / (2 * np.pi * self.f))
-                print "wire R,L", R,L
-            except:
-                print "failed due to meshing, memory test"
-                R=1
-                L=1
-            self.net_graph.add_edge(self.sheet[0].net, self.sheet[1].net, edge_data={'R': R, 'L': L, 'C': None})
+            if self.num_wires>1: # CASE 1 we need to care about mutual between wires
+                for i in range(self.num_wires):
+                    RLname = 'B{0}'.format(i)
+                    self.circuit._graph_add_comp(name=RLname, pnode=start, nnode=end, val=branch_val)
+                for i in range(self.num_wires):
+                    for j in range(self.num_wires):
+                        if i != j and not ((i, j) in group):
+                            group[(i, j)] = None  # save new key
+                            group[(j, i)] = None  # save new key
+                            distance = abs(j - i) * self.d
+                            L1_name = 'B{0}'.format(i)
+                            L2_name = 'B{0}'.format(j)
+                            M_name = 'M' + '_' + L1_name + '_' + L2_name
+                            M_val = wire_partial_mutual_ind(length, distance) * 1e-9
+                            self.circuit._graph_add_M(M_name, L1_name, L2_name, M_val)
+                self.circuit.assign_freq(self.f)
+                self.circuit.indep_current_source(0, 1, val=1)
+                self.circuit.build_current_info()
+                try:
+                    self.circuit.solve_iv()
+                    imp =self.circuit.results['v1']
+                    R = abs(np.real(imp))
+                    L = abs(np.imag(imp) / (2 * np.pi * self.f))
+                except:
+                    print "Error occur, fast estimation used"
+                    debug = True
+                    if debug:
+                        print "num wires" ,self.num_wires
+                        print "connections", self.conn
+                    R=R_val/self.num_wires
+                    L=L_val/self.num_wires
+                print "wire R,L", R, L
+                self.net_graph.add_edge(self.sheet[0].net, self.sheet[1].net, edge_data={'R': R, 'L': L, 'C': None})
+            else : # No mutual eval needed, fast evaluation
+                self.net_graph.add_edge(self.sheet[0].net, self.sheet[1].net, edge_data={'R': R_val, 'L': L_val, 'C': None})
+
             # print self.net_graph.edges(data=True)
 
     def build_graph(self):
