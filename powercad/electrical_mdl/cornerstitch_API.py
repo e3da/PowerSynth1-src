@@ -7,6 +7,7 @@ from powercad.parasitics.mdl_compare import load_mdl
 from datetime import datetime
 import psutil
 from powercad.electrical_mdl.e_netlist import ENetlist
+import networkx
 import cProfile
 import pstats
 from mpl_toolkits.mplot3d import Axes3D
@@ -112,11 +113,6 @@ class CornerStitch_Emodel_API:
         self.net_to_sheet = {}  # quick look up table to find the sheet object based of the net_name
         islands = self.module_data.islands[0]
 
-        #for island in islands:
-            #island.print_island(plot=True,size=[52000,50000])
-
-        #raw_input()
-
         for isl in islands:
             for trace in isl.elements: # get all trace in isl
                 x,y,w,h = trace[1:5]
@@ -138,9 +134,13 @@ class CornerStitch_Emodel_API:
                     if type == 'B': # Handling bondwires
                     # ToDO: For new wire implementation, need to send a Point data type instead a Rect data type
                     # TODo: Threat them as very small rects with width height of 1(layout units) for now.
-                        new_rect = Rect(top=y / 1000 + h, bottom=y / 1000, left=x / 1000, right=x / 1000 + w)
+                        #new_rect = Rect(top=y / 1000 + h, bottom=y / 1000, left=x / 1000, right=x / 1000 + w) # Expected
+                        # This is a temp before CS can send correct bw info
+                        # Try to move the center point to exact same bondwire landing location, assuming all w,h =1
+                        new_rect = Rect(top=y / 1000.0 + 0.5, bottom=y / 1000.0-0.5, left=x / 1000.0-0.5, right=x / 1000.0 + 0.5)
+                        #ToDO: After POETS, fix the info sent to electrical model
                     elif type == 'T': # Traces
-                        new_rect = Rect(top=(y+h) / 1000 , bottom=y / 1000, left=x / 1000, right=(x +w) / 1000)
+                        new_rect = Rect(top=(y+h) / 1000.0 , bottom=y / 1000.0, left=x / 1000.0, right=(x +w) / 1000.0)
                     pin = Sheet(rect=new_rect, net_name=name, net_type='internal', n=(0, 0, 1), z=z)
 
                     self.e_sheets.append(pin)
@@ -200,21 +200,23 @@ class CornerStitch_Emodel_API:
             self.hier.update_hierarchy()
         self.emesh = EMesh_CS(islands=islands,hier_E=self.hier, freq=self.freq, mdl=self.rs_model)
         self.emesh.mesh_update()
-        #'''
+        '''
         fig = plt.figure(1)
         ax = Axes3D(fig)
         ax.set_xlim3d(0, self.width+2)
         ax.set_ylim3d(0, self.height + 2)
         ax.set_zlim3d(0, 2)
         self.emesh.plot_3d(fig=fig, ax=ax, show_labels=True)
+        plt.show()
+        '''
+        '''
         fig = plt.figure(2)
         ax = a3d.Axes3D(fig)
         ax.set_xlim3d(-2, self.width + 2)
         ax.set_ylim3d(-2, self.height +2)
         ax.set_zlim3d(0, 2)
         plot_rect3D(rect2ds=self.module.plate + self.module.sheet, ax=ax)
-        plt.show()
-        #'''
+        '''
 
         self.emesh.update_trace_RL_val()
         self.emesh.update_hier_edge_RL()
@@ -428,6 +430,11 @@ class CornerStitch_Emodel_API:
         #pt2=97
         self.circuit = RL_circuit()
         self.circuit._graph_read(self.emesh.graph)
+        # CHECK IF A PATH EXIST
+        if not(networkx.has_path(self.emesh.graph,pt1,pt2)):
+           raw_input("NO CONNECTION BETWEEN SOURCE AND SINK")
+        else:
+            print "PATH EXISTS"
         self.circuit.m_graph_read(self.emesh.m_graph)
         self.circuit.assign_freq(self.freq)
         self.circuit.indep_current_source(pt1, 0, 1)
@@ -448,7 +455,7 @@ class CornerStitch_Emodel_API:
         #del self.hier
         #del self.module
         #gc.collect()
-        #print R, L
+        print R, L
         #process = psutil.Process(os.getpid())
         #now = datetime.now()
         #dt_string = now.strftime("%d-%m-%Y-%H-%M-%S")
