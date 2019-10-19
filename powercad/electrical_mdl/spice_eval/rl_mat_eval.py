@@ -591,8 +591,9 @@ class RL_circuit():
                 for c in range(N):
                     if int(mat_A[r,c]) != 0:
                         V[r,c] =1
-            print V
-            raw_input()
+            #print V
+            print np.where(~V.any(axis=1))[0]
+            #raw_input()
 
 def test_RL_circuit1():
     print "new method"

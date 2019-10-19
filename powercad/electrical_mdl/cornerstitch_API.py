@@ -113,6 +113,9 @@ class CornerStitch_Emodel_API:
         self.net_to_sheet = {}  # quick look up table to find the sheet object based of the net_name
         islands = self.module_data.islands[0]
 
+        #for island in islands:
+            #island.print_island(plot=True,size=[50000,50000])
+
         for isl in islands:
             for trace in isl.elements: # get all trace in isl
                 x,y,w,h = trace[1:5]

@@ -367,7 +367,7 @@ class constraintGraph:
             dest_node_id=wire.dest_node_id
             if dest_node_id not in all_node_ids:
                 all_node_ids.append(dest_node_id)
-        #print node_ids
+        #print all_node_ids
         connected_node_ids=[[id] for id in all_node_ids]
         for wire in bondwires:
             for i in range(len(connected_node_ids)):

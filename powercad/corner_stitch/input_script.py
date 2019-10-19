@@ -115,7 +115,7 @@ class ScriptInputMethod():
         print wires
         # ------------------- for debugging --------------------------------------
         '''
-
+        #raw_input()
         return wires
 
 

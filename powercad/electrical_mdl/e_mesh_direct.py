@@ -261,7 +261,7 @@ class EMesh():
                             edge_data.R = temp_R * 1e-3
                             edge_data.L = temp_L * 1e-9
                     # Debug
-                    debug = True
+                    debug = False
                     if debug: # This is to detect very small inductance/resistance values that might lead to singular matrix
                         list_of_nodes = [140, 146, 160, 161, 165, 170,193]
                         print n1
