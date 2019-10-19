@@ -75,8 +75,8 @@ class MeshEdge:
         '''
         self.type= m_type  # Edge type, internal, boundary
         # Edge parasitics (R, L for now). Handling C will be different
-        self.R=1
-        self.L=1
+        self.R=1e-6
+        self.L=1e-12
         self.len=length
         self.width=width
         self.z=z # if None this is an hier edge
@@ -127,8 +127,8 @@ class EMesh():
         self.hier_edge_data = {} # edge name : parent edge data
         self.comp_net_id ={} # a dictionary for relationship between graph index and components net-names
 
-    def plot_3d(self,fig,ax, show_labels=False):
-        network_plot_3D(G=self.graph,ax=ax, show_labels=show_labels)
+    def plot_3d(self,fig,ax, show_labels=False,highlight_nodes=None):
+        network_plot_3D(G=self.graph,ax=ax, show_labels=show_labels,highlight_nodes=highlight_nodes)
 
     def plot_lumped_graph(self):
         pos = {}
@@ -219,11 +219,10 @@ class EMesh():
         return n_capt_dict
 
     def update_trace_RL_val(self, p=1.68e-8,t=0.035,h=1.5,mode='RS'):
-
         if self.f != 0: # AC mode
             if mode =='RS':
                 all_r = trace_res_krige(self.f, self.all_W, self.all_L, t=0, p=0, mdl=self.mdl['R']).tolist()
-                #all_r = [trace_resistance(self.f,w,l,t,h) for w, l in zip(self.all_W, self.all_L)]
+                all_r = [trace_resistance(self.f,w,l,t,h) for w, l in zip(self.all_W, self.all_L)]
                 all_l = trace_ind_krige(self.f, self.all_W, self.all_L, mdl=self.mdl['L']).tolist()
                 #all_l = [trace_inductance(w, l, t, h) for w, l in zip(self.all_W, self.all_L)]
                 #print self.all_W
@@ -231,11 +230,10 @@ class EMesh():
                 #print all_r
                 #print all_l
                 #all_c = self.compute_all_cap()
-                check_neg = False
+                check_neg = True
                 for i in range(len(self.all_W)):
                     n1 = self.all_n1[i]
                     n2 = self.all_n2[i]
-
                     #print 'bf',self.graph[n1][n2].values()[0]
                     if not ([n1,n2] in self.rm_edges):
                         if all_r[i] >0 and all_l[i]>0:
@@ -251,15 +249,28 @@ class EMesh():
 
                         else:
                             check_neg =True
-                            debug =False
                             if debug:
                                 print all_r[i]
                                 print all_l[i]
                                 print 'w','l',self.all_W[i], self.all_L[i]
-
-
-
-                            #raw_input()
+                            # RECOMPUTE USING MICROSTRIP FOR CASES THE RS MODEL IS NOT STABLE
+                            temp_L = trace_inductance(self.all_W[i], self.all_L[i], t, h)
+                            temp_R = trace_resistance(self.f,self.all_W[i],self.all_L[i],t,h)
+                            self.graph[n1][n2].values()[0]['res'] = temp_R * 1e-3
+                            self.graph[n1][n2].values()[0]['ind'] = temp_L * 1e-9
+                            edge_data.R = temp_R * 1e-3
+                            edge_data.L = temp_L * 1e-9
+                    # Debug
+                    debug = True
+                    if debug: # This is to detect very small inductance/resistance values that might lead to singular matrix
+                        list_of_nodes = [140, 146, 160, 161, 165, 170,193]
+                        print n1
+                        print type(n1)
+                        if n1 in list_of_nodes or n2 in list_of_nodes:
+                            print "edge between: ",n1,n2
+                            print edge_data.R
+                            print edge_data.L
+                            raw_input()
         else: # DC mode
             all_r = p * np.array(self.all_L) / (np.array(self.all_W) * t) * 1e-3
             for i in range(len(self.all_W)):
@@ -336,7 +347,7 @@ class EMesh():
                 parent_data = self.hier_edge_data[e]
                 R = parent_data['R']
                 L = parent_data['L']
-                #print "comp_edge",R,L
+                print "comp_edge",R,L
 
             self.graph[e[0]][e[1]][0]['res'] = R
             self.graph[e[0]][e[1]][0]['ind'] = L
@@ -393,7 +404,7 @@ class EMesh():
     def add_hier_edge(self, n1, n2,edge_data=None):
         # default values as place holder, will be updated later
         res = 1e-6
-        ind = 1e-12
+        ind = 1e-9
         cap = 1 * 1e-13
 
         parent_data= edge_data # info of neighbouring nodes.

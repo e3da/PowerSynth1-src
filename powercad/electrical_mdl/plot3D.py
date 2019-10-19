@@ -63,7 +63,7 @@ def plot_E_map_test(G=None,ax=None,cmap=None):
         pos = node.pos
         color = cmap(normV(node.V))
         ax.scatter(pos[0],pos[1],color=color,s= 20, alpha=0.5)
-def network_plot_3D(G, ax, cmap_node={}, cmap_edge={},show_labels = False):
+def network_plot_3D(G, ax, cmap_node={}, cmap_edge={},show_labels = False,highlight_nodes=None):
     pos = {}
     labels = {}
     type = {}
@@ -87,17 +87,27 @@ def network_plot_3D(G, ax, cmap_node={}, cmap_edge={},show_labels = False):
 
             # Scatter plot
             if cmap_node == {}:
-                if type[key]=='internal':
-                    ax.scatter(xi, yi, zi, c='blue', s=10, edgecolors='k', alpha=1)
+                if highlight_nodes==None:
+                    size = 10
+                elif lbl in highlight_nodes:
+                    size = 15
                 else:
-                    ax.scatter(xi, yi, zi, c='red', s=10, edgecolors='k', alpha=1)
-
+                    size =10
+                if type[key]=='internal':
+                    ax.scatter(xi, yi, zi, c='blue', s=size, edgecolors='k', alpha=1)
+                else:
+                    ax.scatter(xi, yi, zi, c='red', s=size, edgecolors='k', alpha=1)
             else:
                 name = str(xi) + str(yi) + str(zi)
                 color = cmap_node[name]
                 ax.scatter(xi, yi, zi, c=color, s=10, edgecolors='k', alpha=0.5)
             if show_labels:
-                ax.text(xi, yi, zi, lbl,fontsize=12)
+                if highlight_nodes==None: # All Labels
+                    ax.text(xi, yi, zi, lbl,fontsize=12)
+                elif lbl in highlight_nodes: # Highlight this node only
+                    print "node type",type[key]
+                    ax.text(xi, yi, zi, lbl,fontsize=12)
+
         # Loop on the list of edges to get the x,y,z, coordinates of the connected nodes
         # Those two points are the extrema of the line to be plotted
         for e in G.edges(data=True):

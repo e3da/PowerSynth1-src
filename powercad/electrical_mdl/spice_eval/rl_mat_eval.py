@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import time
 import scipy
 import warnings
+import sys
 warnings.filterwarnings("ignore")
 class diag_prec:
     def __init__(self, A):
@@ -484,7 +485,7 @@ class RL_circuit():
     #precision = 10
     #fp = open('memory_profiler_basic_mean.log', 'w+')
     #@profile(precision=precision, stream=fp)
-    def solve_iv(self,mode = 2):
+    def solve_iv(self,mode = 0):
         debug=False
         # initialize some symbolic matrix with zeros
         # A is formed by [[G, M] [M_t, D]]
@@ -529,7 +530,10 @@ class RL_circuit():
             A = self.D
 
         t = time.time()
-        method=2
+        self.debug_singular_mat_issue(A)
+
+        method=1
+
         if method ==1:
             self.results= scipy.sparse.linalg.spsolve(A,Z)
         elif method ==2:
@@ -574,6 +578,22 @@ class RL_circuit():
 
         self.results=self.results_dict
         #print "R,L,M", self.R_count,self.L_count,self.M_count
+    def debug_singular_mat_issue(self,mat_A):
+        '''
+        :param mat_A: a square matrix to analyze
+        :return: a debug sequence. Use pycharm debugger for better view
+        '''
+        if not (np.linalg.cond(mat_A) < 1 / sys.float_info.epsilon):
+            print "A is singular, check it"
+            N = mat_A.shape[0]
+            V=np.zeros((N,N)) # Make a matrix V for view, to see if a row or a collumn is all 0
+            for r in range(N):
+                for c in range(N):
+                    if int(mat_A[r,c]) != 0:
+                        V[r,c] =1
+            print V
+            raw_input()
+
 def test_RL_circuit1():
     print "new method"
     circuit = RL_circuit()
