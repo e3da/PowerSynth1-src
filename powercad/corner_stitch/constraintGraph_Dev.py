@@ -868,7 +868,7 @@ class constraintGraph:
                 if k not in final:
                     final[k] = max(v)
             self.minY[node.id] = final
-            print "miny", node.id,self.minY[node.id]
+            #print "miny", node.id,self.minY[node.id]
             '''
             for i in range(len(K)):
                 # if K[i] not in self.ZDL_V[P_ID]:
@@ -5362,29 +5362,43 @@ class constraintGraph:
                             else:
                                 val2 = self.Loc_X[src] - B[dest][src]
 
-                            val3=None
-                            for pred in range(len(B)):
-                                if B[pred][dest] > 0 and pred in self.Loc_X:
-                                    val3 = self.Loc_X[pred] + B[pred][dest]
-                                    break
-                                    # print src,dest,val1,val3
-                            if val3!=None:
-                                self.Loc_X[dest] = max(val1,val2, val3)
-                                if dest in UnFixed:
-                                    UnFixed.remove(dest)
-                                    SOURCE.append(dest)
-                                    TARGET.append(dest)
-                                if ID in self.removable_nodes_h.keys():
-                                    removable_nodes = self.removable_nodes_h[ID]
-                                    for node in removable_nodes:
-                                        reference = self.reference_nodes_h[ID][node][0]
-                                        value = self.reference_nodes_h[ID][node][1]
-                                        if reference in self.Loc_X:
-                                            self.Loc_X[node] = self.Loc_X[reference] + value
-                                            if node in UnFixed:
-                                                UnFixed.remove(node)
-                                                SOURCE.append(node)
-                                                TARGET.append(node)
+                            #val3=None
+                            if dest in self.Loc_X:
+                                val3=self.Loc_X[dest]
+                            else:
+                                val3=0
+
+
+                            #if val3!=None:
+                            self.Loc_X[dest] = max(val1,val2, val3)
+                            if dest in UnFixed:
+                                UnFixed.remove(dest)
+                                SOURCE.append(dest)
+                                TARGET.append(dest)
+                            if ID in self.removable_nodes_h.keys():
+                                removable_nodes = self.removable_nodes_h[ID]
+                                for node in removable_nodes:
+
+                                    reference = self.reference_nodes_h[ID][node][0]
+                                    value = self.reference_nodes_h[ID][node][1]
+                                    if reference ==dest:
+                                        self.Loc_X[node] = self.Loc_X[reference] + value
+                                        if node in UnFixed:
+                                            UnFixed.remove(node)
+                                            SOURCE.append(node)
+                                            TARGET.append(node)
+            if ID in self.removable_nodes_h.keys():
+                removable_nodes = self.removable_nodes_h[ID]
+                for node in removable_nodes:
+
+                    reference = self.reference_nodes_h[ID][node][0]
+                    value = self.reference_nodes_h[ID][node][1]
+                    if reference == i:
+                        self.Loc_X[node] = self.Loc_X[reference] + value
+                        if node in UnFixed:
+                            UnFixed.remove(node)
+                            SOURCE.append(node)
+                            TARGET.append(node)
 
             #print "THERE", self.Loc_X, node
             SOURCE.append(i) # when a non-fixed vertex location is determined it becomes a fixed vertex and may treat as source to others
@@ -5976,32 +5990,48 @@ class constraintGraph:
                                 val2 = self.Loc_Y[src] + B[src][dest]
                             else:
                                 val2 = self.Loc_Y[src] - B[dest][src]
-
+                            '''
                             val3 = None
                             for pred in range(len(B)):
                                 if B[pred][dest] > 0 and pred in self.Loc_Y:
                                     val3 = self.Loc_Y[pred] + B[pred][dest]
                                     break
                                     # print src,dest,val1,val3
-                            if val3 != None:
-                                self.Loc_Y[dest] = max(val1, val2,val3)
-                                #print "MID",self.Loc_Y
-                                if dest in UnFixed:
-                                    UnFixed.remove(dest)
-                                    SOURCE.append(dest)
-                                    TARGET.append(dest)
+                            '''
+                            if dest in self.Loc_Y:
+                                val3=self.Loc_Y[dest]
+                            else:
+                                val3=0
+                            #if val3 != None:
+                            self.Loc_Y[dest] = max(val1, val2,val3)
+                            #print "MID",self.Loc_Y
+                            if dest in UnFixed:
+                                UnFixed.remove(dest)
+                                SOURCE.append(dest)
+                                TARGET.append(dest)
+                            if ID in self.removable_nodes_v.keys():
+                                removable_nodes = self.removable_nodes_v[ID]
+                                for node in removable_nodes:
+                                    reference = self.reference_nodes_v[ID][node][0]
+                                    value = self.reference_nodes_v[ID][node][1]
+                                    if reference == dest:
+                                        self.Loc_Y[node] = self.Loc_Y[reference] + value
+                                        if node in UnFixed:
+                                            UnFixed.remove(node)
+                                            SOURCE.append(node)
+                                            TARGET.append(node)
 
-                                if ID in self.removable_nodes_v.keys():
-                                    removable_nodes = self.removable_nodes_v[ID]
-                                    for node in removable_nodes:
-                                        reference = self.reference_nodes_v[ID][node][0]
-                                        value = self.reference_nodes_v[ID][node][1]
-                                        if reference in self.Loc_Y and node not in self.Loc_Y:
-                                            self.Loc_Y[node] = self.Loc_Y[reference] + value
-                                            if node in UnFixed:
-                                                UnFixed.remove(node)
-                                                SOURCE.append(node)
-                                                TARGET.append(node)
+            if ID in self.removable_nodes_v.keys():
+                removable_nodes = self.removable_nodes_v[ID]
+                for node in removable_nodes:
+                    reference = self.reference_nodes_v[ID][node][0]
+                    value = self.reference_nodes_v[ID][node][1]
+                    if reference ==i:
+                        self.Loc_Y[node] = self.Loc_Y[reference] + value
+                        if node in UnFixed:
+                            UnFixed.remove(node)
+                            SOURCE.append(node)
+                            TARGET.append(node)
             #print"HERE",self.Loc_Y
             SOURCE.append(i)
             TARGET.append(i)

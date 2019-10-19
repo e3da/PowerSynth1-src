@@ -172,7 +172,7 @@ class ScriptInputMethod():
         bondwires = []
         for i in range(1,len(Input)):
             inp = Input[i]
-            print inp
+            #print inp
             if inp[0][0] == 'C':
                 bondwires.append(inp)
             else:
@@ -263,6 +263,7 @@ class ScriptInputMethod():
                     if rotate==False:
                         element = Part(name=layout_info[j][k+1], info_file=self.info_files[layout_info[j][k+1]],layout_component_id=layout_info[j][k])
                         element.load_part()
+                        #print"Foot",element.footprint
                         self.all_parts_info[layout_info[j][k+1]].append(element)
 
                     else:
@@ -562,10 +563,44 @@ class ScriptInputMethod():
                     self.cs_info[i]=rects_info[j]
         #---------------------------------for debugging---------------------------
         #print "cs_info"
-        #for rect in self.cs_info:
-            #print rect
+        for rect in self.cs_info:
+            print rect
         #---------------------------------------------------------------------------
         return self.size,self.cs_info,self.component_to_cs_type,self.all_components
+    def plot_init_layout(self):
+        rectlist=[]
+        colors = ['green', 'red', 'blue', 'yellow', 'purple', 'pink', 'magenta', 'orange', 'violet']
+        type = ['Type_1', 'Type_2', 'Type_3', 'Type_4', 'Type_5', 'Type_6', 'Type_7', 'Type_8', 'Type_9']
+        for rect in self.cs_info:
+            color_ind=type.index(rect[0])
+            color=colors[color_ind]
+            r=[rect[1],rect[2],rect[3],rect[4],color,rect[-2]]# x,y,w,h,cs_type,zorder
+            rectlist.append(r)
+
+        Patches = []
+
+        for r in rectlist:
+            # print i,r.name
+            P = patches.Rectangle(
+                (r[0], r[1]),  # (x,y)
+                r[2],  # width
+                r[3],  # height
+                facecolor=r[4],
+                zorder=r[-1],
+                linewidth=1,
+            )
+            Patches.append(P)
+
+        fig,ax=plt.subplots()
+        for p in Patches:
+            ax.add_patch(p)
+
+        ax.set_xlim(0, 120)
+        ax.set_ylim(0, 120)
+        ax.set_aspect('equal')
+
+        plt.show()
+
 
     # generate initial constraint table based on the types in the input script and saves information in the given csv file as constraint
     def update_constraint_table(self,rel_cons=0,islands=None):
@@ -962,7 +997,7 @@ class ScriptInputMethod():
 
         visited=[]
         for island in islands:
-            print island.name
+            #print island.name
             layout_component_ids=island.element_names
             #print layout_component_ids
             end=10000

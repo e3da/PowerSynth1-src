@@ -204,8 +204,9 @@ class Cmd_Handler:
 
                 # Convert a list of patch to rectangles
                 patch_dict = self.engine.init_data[0]
-                init_data_islands = self.engine.init_data[2]
-                print init_data_islands
+                init_data_islands = self.engine.init_data[3]
+                #print init_data_islands
+                init_cs_islands=self.engine.init_data[2]
                 fp_width, fp_height = self.engine.init_size
                 fig_dict = {(fp_width, fp_height): []}
                 for k, v in patch_dict.items():
@@ -220,30 +221,33 @@ class Cmd_Handler:
                     type = v[2]
                     #rect = Rectangle(x=x * 1000, y=y * 1000, width=width * 1000, height=height * 1000, type=type)
                     rect_up=[type,x,y,width,height]
+                    #print rect_up
                     #rects.append(rect)
                     init_rects[k] = rect_up
-                cs_sym_info = {(fp_width * 1000, fp_height * 1000): init_rects}
+                s1=1000
+                #s=1000
+                cs_sym_info = {(fp_width * s, fp_height * s): init_rects}
                 for isl in init_cs_islands:
                     for node in isl.mesh_nodes:
-                        node.pos[0] = node.pos[0] * 1000
-                        node.pos[1] = node.pos[1] * 1000
+                        node.pos[0] = node.pos[0] * s1
+                        node.pos[1] = node.pos[1] * s1
                 for island in init_data_islands:
                     for element in island.elements:
 
 
-                        element[1]=element[1]*1000
-                        element[2] = element[2] * 1000
-                        element[3] = element[3] * 1000
-                        element[4] = element[4] * 1000
+                        element[1]=element[1]*s1
+                        element[2] = element[2] * s1
+                        element[3] = element[3] * s1
+                        element[4] = element[4] * s1
 
                     if len(island.child)>0:
                         for element in island.child:
 
 
-                            element[1] = element[1] * 1000
-                            element[2] = element[2] * 1000
-                            element[3] = element[3] * 1000
-                            element[4] = element[4] * 1000
+                            element[1] = element[1] * s1
+                            element[2] = element[2] * s1
+                            element[3] = element[3] * s1
+                            element[4] = element[4] * s1
 
                     for isl in init_cs_islands:
                         if isl.name==island.name:
@@ -251,7 +255,7 @@ class Cmd_Handler:
 
                 md_data = ModuleDataCornerStitch()
                 md_data.islands[0] = init_data_islands
-                md_data.footprint = [fp_width * 1000, fp_height * 1000]
+                md_data.footprint = [fp_width * s1, fp_height * s1]
                 md_data.layer_stack = self.layer_stack
 
 
@@ -456,7 +460,7 @@ class Cmd_Handler:
             input_script=self.layout_script, bond_wire_info=self.bondwire_setup, fig_dir=self.fig_dir, constraint_file=self.constraint_file,rel_cons=self.i_v_constraint,mode=self.new_mode)
         for comp in self.engine.all_components:
             self.comp_dict[comp.layout_component_id] = comp
-        print "COMP_DICT",self.comp_dict
+
 
 
 
@@ -468,7 +472,7 @@ class Cmd_Handler:
                       'L': [0.2, 0]}
         self.e_api = CornerStitch_Emodel_API(comp_dict=self.comp_dict, layer_to_z=layer_to_z, wire_conn=self.wire_table)
         self.e_api.load_rs_model(self.rs_model_file)
-        print mode
+        #print mode
         if mode == 'command':
             self.e_api.form_connection_table(mode='command')
             self.e_api.get_frequency()
@@ -573,7 +577,7 @@ class Cmd_Handler:
                 patch_dict = self.engine.init_data[0]
                 init_data_islands = self.engine.init_data[3]
                 init_cs_islands = self.engine.init_data[2]
-                print init_data_islands
+                #print init_data_islands
                 fp_width, fp_height = self.engine.init_size
                 fig_dict = {(fp_width, fp_height): []}
                 for k, v in patch_dict.items():

@@ -318,21 +318,21 @@ class New_layout_engine():
                     for element in island.child:
                         if wire.dest_comp in element:
                             bondwire_to_trace[wire.dest_comp]=island.name
-        print bondwire_to_trace
+
         # adding source and destination node ids for each wire
         for wire in bondwires:
-            print "wire", wire.dest_coordinate,wire.dest_comp
+
             for island in cs_islands:
-                print island.child_names
+
                 if wire.source_comp in island.child_names:
                     for child in island.child:
                         if wire.source_coordinate[0]>=child[1] and wire.source_coordinate[0]<=child[1]+child[3] and  wire.source_coordinate[1]>=child[2] and wire.source_coordinate[1]<=child[2]+child[4]:
                             wire.source_node_id=child[-1]
             for island in cs_islands:
                 if wire.dest_comp in island.child_names:
-                    print "Here"
+
                     for child in island.child:
-                        print child
+
                         if wire.dest_coordinate[0]>=child[1] and wire.dest_coordinate[0]<=child[1]+child[3] and  wire.dest_coordinate[1]>=child[2] and wire.dest_coordinate[1]<=child[2]+child[4]:
                             wire.dest_node_id=child[-1]
 
@@ -349,8 +349,8 @@ class New_layout_engine():
                             wire.source_node_id=element[-1] # node id
                             break
         self.bondwires = copy.deepcopy(bondwires)  # to pass bondwire info to CG
-        for wire in self.bondwires:
-            wire.printWire()
+        #for wire in self.bondwires:
+            #wire.printWire()
 
 
 
@@ -558,7 +558,7 @@ class New_layout_engine():
             CS_SYM_information, Layout_Rects = CG1.update_min(Evaluated_X, Evaluated_Y, sym_to_cs,self.bondwires, scaler)
             # raw_input()
 
-            print CS_SYM_information
+            #print CS_SYM_information
 
 
 
@@ -654,7 +654,7 @@ class New_layout_engine():
         #mode-2
         elif level == 2:
             Evaluated_X0, Evaluated_Y0 = self.mode_zero()  # mode-0 evaluation is required to check the validity of given floorplan size
-            print Evaluated_X0, Evaluated_Y0
+            #print Evaluated_X0, Evaluated_Y0
 
             ZDL_H = {}
             ZDL_V = {}
@@ -1554,7 +1554,13 @@ class New_layout_engine():
                                     point_bottom = [rect[1], h_element[2]]
                                     if point_bottom not in points:
                                         points.append(point_bottom)
+                                for point in points:
+                                    if h_element[1] < point[0] and h_element[2] < point[1] and h_element[1] + h_element[3] > point[0] and h_element[2] + h_element[4] > point[1]:
+                                        new_point=[point[0],rect[2]]
+                                        if new_point not in points:
+                                            points.append(new_point)
                             for v_element in island.elements_v:
+
                                 if v_element[1] < rect[1] and v_element[2] < rect[2] and v_element[1] + v_element[3] > rect[1] and v_element[2] + v_element[4] > rect[2]:
                                     point_left = [v_element[1], rect[2]]
                                     if point_left not in points:
@@ -1562,6 +1568,11 @@ class New_layout_engine():
                                     point_right = [v_element[1] + v_element[3], rect[2]]
                                     if point_right not in points:
                                         points.append(point_right)
+                                for point in points:
+                                    if v_element[1] < point[0] and v_element[2] < point[1] and v_element[1] + v_element[3] > point[0] and v_element[2] + v_element[4] > point[1]:
+                                        new_point=[rect[1],point[1]]
+                                        if new_point not in points:
+                                            points.append(new_point)
 
 
 

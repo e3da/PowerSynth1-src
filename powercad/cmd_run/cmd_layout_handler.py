@@ -573,6 +573,7 @@ def script_translator(input_script=None, bond_wire_info=None, fig_dir=None, cons
     ScriptMethod.read_input_script()  # reads input script and make two sections
     ScriptMethod.gather_part_route_info()  # gathers part and route info
     ScriptMethod.gather_layout_info()  # gathers layout info
+    #ScriptMethod.plot_init_layout()
     # finding islands for a given layout
     islands = ScriptMethod.form_initial_islands() # list of island objects
     # finding child of each island
@@ -612,14 +613,14 @@ def script_translator(input_script=None, bond_wire_info=None, fig_dir=None, cons
     bondwire_objects=[]
     if len(bondwire_landing_info)>0:
         for k,v in bondwire_landing_info.items():
-            print "BL",k,v
+            #print "BL",k,v
             cs_type=v[2] # cs_type for constraint handling
     else:
         index=constraint.constraint.all_component_types.index('bonding wire pad')
         cs_type=constraint.constraint.Type[index]
     for k,v in bondwires.items():
         wire=copy.deepcopy(v['BW_object'])
-        print k,v
+        #print k,v
         if '_' in v['Source']:
             head, sep, tail = v['Source'].partition('_')
             wire.source_comp = head  # layout component id for wire source location
@@ -658,7 +659,7 @@ def script_translator(input_script=None, bond_wire_info=None, fig_dir=None, cons
         #wire.set_dir_type() # horizontal:0,vertical:1
         wire.cs_type=cs_type
         bondwire_objects.append(wire)
-        wire.printWire()
+        #wire.printWire()
     #raw_input()
 
     try:
