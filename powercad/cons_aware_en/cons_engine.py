@@ -548,8 +548,8 @@ class New_layout_engine():
             #CS_SYM_information, Layout_Rects = CG1.update_min(Evaluated_X, Evaluated_Y , sym_to_cs, scaler)
             #-------------------------------for debugging----------------------
             #print "Before update"
-            #for island in cs_islands:
-                #island.print_island(plot=True)
+            for island in cs_islands:
+                island.print_island(plot=True)
             #------------------------------------------------------------------
             #cs_islands_up=self.update_points(cs_islands)
             #CS_SYM_information, Layout_Rects = CG1.UPDATE_min(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree ,sym_to_cs,scaler)  # CS_SYM_information is a dictionary where key=path_id(component name) and value=list of updated rectangles, Layout Rects is a dictionary for minimum HCS and VCS evaluated rectangles (used for plotting only)
@@ -1425,75 +1425,7 @@ class New_layout_engine():
                                     S.append(coordinate8)
 
 
-            if (len(island.child))>0:
-                for rect in island.child:
-                    if rect[0]=='Type_3':
-                        # removing bondwire points from device
-                        inside_device=False
-                        for dev in island.child:
-                            if dev[1]<rect[1] and dev[2]<rect[2] and dev[1]+dev[3]>rect[1] and dev[2]+dev[4]>rect[2]:
-                                inside_device=True
-
-                        if inside_device==False:
-                            point1=[rect[1],rect[2]] # bondwire pad bottom left corner x,y coordinate
-                            points.append(point1)
-                            for h_element in island.elements:
-                                if h_element[1]<rect[1] and h_element[2]<rect[2] and h_element[1]+h_element[3]>rect[1] and h_element[2]+h_element[4]>rect[2]:
-                                    point_left=[h_element[1],rect[2]] # adding left boundary
-                                    point_right=[h_element[1]+h_element[3],rect[2]] # adding right boundary
-                                    points.append(point_left)
-                                    points.append(point_right)
-                                    E.append(point_right)
-                                    W.append(point_left)
-
-
-                            for v_element in island.elements_v:
-                                if v_element[1] < rect[1] and v_element[2] < rect[2] and v_element[1] + v_element[3] > rect[1] and v_element[2] + v_element[4] > rect[2]:
-
-                                    point_top=[rect[1], v_element[2]+v_element[4]] # top boundary
-                                    point_bottom=[rect[1], v_element[2]] # bottom boundary
-                                    points.append(point_top)
-                                    points.append(point_bottom)
-                                    N.append(point_top)
-                                    S.append(point_bottom)
-
-                            # internal neighbors for bondwire points
-                            for h_element in island.elements:
-                                if h_element[1]<rect[1] and h_element[2]<rect[2] and h_element[1]+h_element[3]>rect[1] and h_element[2]+h_element[4]>rect[2]:
-                                    point_top = [rect[1], h_element[2] + h_element[4]]
-                                    if point_top not in points:
-                                        points.append(point_top)
-
-                                    point_bottom = [rect[1], h_element[2]]
-                                    if point_bottom not in points:
-                                        points.append(point_bottom)
-
-                                for point in points:
-                                    if h_element[1] < point[0] and h_element[2] < point[1] and h_element[1] + h_element[3] > point[0] and h_element[2] + h_element[4] > point[1]:
-                                        new_point=[point[0],rect[2]]
-                                        if new_point not in points:
-                                            if (self.point_inside(h_element, new_point)):
-                                                points.append(new_point)
-
-                            for v_element in island.elements_v:
-
-                                if v_element[1] < rect[1] and v_element[2] < rect[2] and v_element[1] + v_element[3] > rect[1] and v_element[2] + v_element[4] > rect[2]:
-                                    point_left = [v_element[1], rect[2]]
-                                    if point_left not in points:
-                                        points.append(point_left)
-                                    point_right = [v_element[1] + v_element[3], rect[2]]
-                                    if point_right not in points:
-                                        points.append(point_right)
-
-                                for point in points:
-                                    if (self.point_inside(v_element,point)):
-                                        new_point=[rect[1],point[1]]
-                                        if new_point not in points:
-                                            if (self.point_inside(v_element, new_point)):
-                                                points.append(new_point)
-
-
-
+            self.handle_bondwires_neighbours(island=island,N=N,S=S,E=E,W=W,points=points)
 
 
 
@@ -1527,6 +1459,110 @@ class New_layout_engine():
 
 
         return cs_islands
+
+    def handle_bondwires_neighbours(self,island,N,S,E,W,points):
+        '''
+
+        :param island: cs_island
+        :param N: North boundary points list
+        :param S: South boundary points list
+        :param E: East boundary points list
+        :param W: West boundary points list
+        :param points: All mesh points on the island
+        :return: Extra points for current island
+
+        '''
+        bw_points=[]
+        xs=[]
+        ys =[]
+        for p in points:
+            xs.append(p[0])
+            ys.append(p[1])
+        xs=list(set(xs))
+        ys=list(set(ys))
+
+        if (len(island.child)) > 0:
+
+            for rect in island.child:
+                type,x,y,w,h=rect[0:5] # Get bondwire parameters
+
+                if type == 'Type_3':
+                    # removing bondwire points from device
+                    inside_device = False
+                    for dev in island.child:
+                        if dev[1] < x and dev[2] < y and dev[1] + dev[3] > x and dev[2] + dev[4] > y:
+                            inside_device = True
+
+                    if inside_device == False:
+                        point1 = (x,y)  # bondwire pad bottom left corner x,y coordinate
+                        bw_points.append(point1)
+                        # Find horizontal boundary points
+                        for h_element in island.elements:
+                            if h_element[1] < x and h_element[2] < y and h_element[1] + h_element[3] > x and h_element[2] + h_element[4] >y:
+                                point_left = (h_element[1], y)  # adding left boundary
+                                point_right = (h_element[1] + h_element[3], y) # adding right boundary
+                                bw_points.append(point_left)
+                                bw_points.append(point_right)
+                                E.append(point_right)
+                                W.append(point_left)
+
+                        # Find vertical boundary points
+                        for v_element in island.elements_v:
+                            if v_element[1] <x and v_element[2] < y and v_element[1] + v_element[3] > x and v_element[2] + v_element[4] > y:
+                                point_top = (x, v_element[2] + v_element[4])  # top boundary
+                                point_bottom = (x, v_element[2])  # bottom boundary
+                                bw_points.append(point_top)
+                                bw_points.append(point_bottom)
+                                N.append(point_top)
+                                S.append(point_bottom)
+
+                        # internal neighbors for bondwire points
+                        new_points=[]
+                        '''
+                        for h_element in island.elements:
+                            h_x,h_y,h_w,h_h=h_element[1:5]
+                            # is the bw x location within the range of the h_element
+                            if x>h_x and x<h_x+h_w:
+                                # append the vertical cut points
+                                point_top = [x, h_y + h_h]
+                                bw_points.append(point_top)
+                                point_bottom = [x, h_y]
+                                bw_points.append(point_bottom)
+                        '''
+                        for y_cut in ys:
+                            new_point = (x,y_cut)
+                            new_points.append(new_point)
+
+
+
+                        '''
+                        for v_element in island.elements_v:
+                            v_x, v_y, v_w, v_h = v_element[1:5]
+                            # is the bw x location within the range of the h_element
+                            if y > v_y and y < v_y + v_h:
+                                # append the vertical cut points
+                                point_left = [v_x,y]
+                                bw_points.append(point_left)
+                                point_right = [v_x+v_w, y]
+                                bw_points.append(point_right)
+                        '''
+                        for x_cut in xs:
+                            new_point = (x_cut,y)
+                            new_points.append(new_point)
+                        selected_pt=[]
+                        for new_pt in new_points:
+                            new_x ,new_y = new_pt
+                            for h_element in island.elements:
+                                h_x, h_y, h_w, h_h = h_element[1:5]
+                                if h_x < new_x and h_y < new_y and h_x + h_w > new_x and h_y + h_h > new_y:
+                                    selected_pt.append(new_pt)
+
+                        bw_points +=selected_pt
+                        #print bw_points
+            bw_points = list(set(bw_points))
+
+            bw_points=[list(pt) for pt in bw_points]
+            points+=bw_points
     def point_inside(self,rect,point):
         '''
 

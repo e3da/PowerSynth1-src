@@ -34,8 +34,13 @@ class EHier():
         Since the hierarchy is the same for all layout, need to update hierarchy data
         :return:
         '''
+        self.isl_group = []
+        self.sheet = []
         print "UPDATING HIERARCHY"
         for isl in self.module.group:
+            isl_name =str(isl)
+            isl_node = self.tree.get_node_by_name(isl_name)
+            self.isl_group.append(isl_node)
             for trace in self.module.group[isl]:
                 trace_node_name = trace.name
                 trace_node = self.tree.get_node_by_name(trace_node_name)
@@ -47,7 +52,7 @@ class EHier():
                     sheet_node = self.tree.get_node_by_name(sheet_node_name)
                     sheet_node.data =sh
                     sh.node = sheet_node
-
+                    self.sheet.append(sheet_node)
 
     def form_hierachy(self):
         '''

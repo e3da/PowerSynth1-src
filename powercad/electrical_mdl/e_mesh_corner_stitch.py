@@ -39,7 +39,7 @@ class EMesh_CS(EMesh):
                 ax.set_xlim3d(0, 22)
                 ax.set_ylim3d(0, 42)
                 ax.set_zlim3d(0, 2)
-                self.plot_3d(fig=fig, ax=ax, show_labels=True,highlight_nodes=[147, 149, 154, 157, 158, 169, 173, 183, 206])
+                self.plot_3d(fig=fig, ax=ax, show_labels=True,highlight_nodes=[12])
                 plt.show()
             self.handle_hier_node(points, g)
 

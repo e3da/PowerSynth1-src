@@ -901,7 +901,7 @@ class EMesh():
         '''
         if self.comp_nodes != {} and key in self.comp_nodes:  # case there are components
             for cp_node in self.comp_nodes[key]:
-                min_dis = 1000
+                min_dis = 1000.0
                 SW = None
                 cp = cp_node.pos
                 # Finding the closest point on South West corner
@@ -914,7 +914,7 @@ class EMesh():
                     del_x = cp[0] - p[0]
                     del_y = cp[1] - p[1]
                     distance = math.sqrt(del_x ** 2 + del_y ** 2)
-                    if del_x > 0 and del_y > 0:
+                    if del_x >= 0 and del_y >= 0:
                         if distance < min_dis:
                             min_dis = distance
                             SW = p
@@ -927,10 +927,17 @@ class EMesh():
                     self.hier_group_dict[anchor_node.node_id] = {'node_group': [cp_node],
                                                         'parent_data': self.hier_data}
                 else:
+
+
+                    if SW == None:
+                        print "ERROR"
+                        print node_name
                     node_name = str(SW[0]) + '_' + str(SW[1])
                     # Compute SW data:
                     # 4 points on parent trace
+
                     SW = self.node_dict[node_name]  # SW - anchor node
+
 
                     NW = SW.North
                     NE = NW.East
