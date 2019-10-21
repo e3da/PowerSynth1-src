@@ -548,8 +548,8 @@ class New_layout_engine():
             #CS_SYM_information, Layout_Rects = CG1.update_min(Evaluated_X, Evaluated_Y , sym_to_cs, scaler)
             #-------------------------------for debugging----------------------
             #print "Before update"
-            for island in cs_islands:
-                island.print_island(plot=True)
+            #for island in cs_islands:
+                #island.print_island(plot=True)
             #------------------------------------------------------------------
             #cs_islands_up=self.update_points(cs_islands)
             #CS_SYM_information, Layout_Rects = CG1.UPDATE_min(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree ,sym_to_cs,scaler)  # CS_SYM_information is a dictionary where key=path_id(component name) and value=list of updated rectangles, Layout Rects is a dictionary for minimum HCS and VCS evaluated rectangles (used for plotting only)
@@ -1498,7 +1498,9 @@ class New_layout_engine():
                         bw_points.append(point1)
                         # Find horizontal boundary points
                         for h_element in island.elements:
-                            if h_element[1] < x and h_element[2] < y and h_element[1] + h_element[3] > x and h_element[2] + h_element[4] >y:
+                            if h_element[1] <= x and h_element[2] <= y and h_element[1] + h_element[3] >= x and h_element[2] + h_element[4] >=y:
+                                if  not (h_element[2] in ys):
+                                    raw_input()
                                 point_left = (h_element[1], y)  # adding left boundary
                                 point_right = (h_element[1] + h_element[3], y) # adding right boundary
                                 bw_points.append(point_left)
@@ -1508,7 +1510,7 @@ class New_layout_engine():
 
                         # Find vertical boundary points
                         for v_element in island.elements_v:
-                            if v_element[1] <x and v_element[2] < y and v_element[1] + v_element[3] > x and v_element[2] + v_element[4] > y:
+                            if v_element[1] <=x and v_element[2] <= y and v_element[1] + v_element[3] >= x and v_element[2] + v_element[4] >= y:
                                 point_top = (x, v_element[2] + v_element[4])  # top boundary
                                 point_bottom = (x, v_element[2])  # bottom boundary
                                 bw_points.append(point_top)
@@ -1554,7 +1556,7 @@ class New_layout_engine():
                             new_x ,new_y = new_pt
                             for h_element in island.elements:
                                 h_x, h_y, h_w, h_h = h_element[1:5]
-                                if h_x < new_x and h_y < new_y and h_x + h_w > new_x and h_y + h_h > new_y:
+                                if h_x <= new_x and h_y <= new_y and h_x + h_w >= new_x and h_y + h_h >= new_y:
                                     selected_pt.append(new_pt)
 
                         bw_points +=selected_pt

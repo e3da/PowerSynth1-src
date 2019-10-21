@@ -39,7 +39,7 @@ class EMesh_CS(EMesh):
                 ax.set_xlim3d(0, 22)
                 ax.set_ylim3d(0, 42)
                 ax.set_zlim3d(0, 2)
-                self.plot_3d(fig=fig, ax=ax, show_labels=True,highlight_nodes=[12])
+                self.plot_3d(fig=fig, ax=ax, show_labels=True,highlight_nodes=None)
                 plt.show()
             self.handle_hier_node(points, g)
 
@@ -58,7 +58,7 @@ class EMesh_CS(EMesh):
         points = []
         mesh_nodes = isl.mesh_nodes  # get all mesh nodes object from the trace island
         # for each island set the
-        print "num nodes",len(mesh_nodes)
+        #print "num nodes",len(mesh_nodes)
         for node in mesh_nodes:
             node.pos[0] = node.pos[0] / 1000.0
             node.pos[1] = node.pos[1] / 1000.0

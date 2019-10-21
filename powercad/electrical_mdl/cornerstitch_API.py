@@ -199,9 +199,9 @@ class CornerStitch_Emodel_API:
             self.hier = EHier(module=self.module)
             self.hier.form_hierachy()
         else:  # just update, no new objects
-            self.hier = EHier(module=self.module)
-            #self.hier.update_module(self.module)
-            self.hier.form_hierachy()
+            #self.hier = EHier(module=self.module)
+            self.hier.update_module(self.module)
+            self.hier.update_hierarchy()
         '''
         fig = plt.figure(1)
         ax = a3d.Axes3D(fig)
@@ -431,8 +431,8 @@ class CornerStitch_Emodel_API:
         '''
         pt1 = self.emesh.comp_net_id[src]
         pt2 = self.emesh.comp_net_id[sink]
-        print src, sink
-        print pt1,pt2
+        #print src, sink
+        #print pt1,pt2
         #pt1=36
         #pt2=97
         self.circuit = RL_circuit()
@@ -441,7 +441,8 @@ class CornerStitch_Emodel_API:
         if not(networkx.has_path(self.emesh.graph,pt1,pt2)):
            raw_input("NO CONNECTION BETWEEN SOURCE AND SINK")
         else:
-            print "PATH EXISTS"
+            pass
+            #print "PATH EXISTS"
         self.circuit.m_graph_read(self.emesh.m_graph)
         self.circuit.assign_freq(self.freq)
         self.circuit.indep_current_source(pt1, 0, 1)
@@ -462,7 +463,7 @@ class CornerStitch_Emodel_API:
         #del self.hier
         #del self.module
         #gc.collect()
-        print R, L
+        #print R, L
         #process = psutil.Process(os.getpid())
         #now = datetime.now()
         #dt_string = now.strftime("%d-%m-%Y-%H-%M-%S")

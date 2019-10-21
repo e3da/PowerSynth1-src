@@ -530,7 +530,7 @@ class RL_circuit():
             A = self.D
 
         t = time.time()
-        self.debug_singular_mat_issue(A)
+        #self.debug_singular_mat_issue(A)
 
         method=1
 

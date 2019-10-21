@@ -620,7 +620,7 @@ def script_translator(input_script=None, bond_wire_info=None, fig_dir=None, cons
         cs_type=constraint.constraint.Type[index]
     for k,v in bondwires.items():
         wire=copy.deepcopy(v['BW_object'])
-        print k,v
+        #print k,v
         if '_' in v['Source']:
             head, sep, tail = v['Source'].partition('_')
             wire.source_comp = head  # layout component id for wire source location
