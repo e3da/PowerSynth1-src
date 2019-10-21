@@ -75,7 +75,7 @@ class Tree():
             # This wouldnt work in REU branch.
             if n.name == node_name:
                 return n
-        print "cant find node",node_name
+        #print "cant find node",node_name
 
     def remove(self, start_node=None, node_name=None):
         for n in start_node.nodes.keys():

@@ -9,7 +9,8 @@ class EHier():
         self.module = module
         self.tree = None
         self.isl_group = []
-        self.sheet = []
+        self.sheets = []
+        self.traces=[]
         self.isl_group_data = {}
 
     # Form tree based on sheet + plate intersection
@@ -17,9 +18,9 @@ class EHier():
         #print "delete hier object"
         del self.isl_group_data
         self.module =None
-        for sh in self.sheet:
+        for sh in self.sheets:
             sh.__del__()
-        del self.sheet
+        del self.sheets
         for isl_node in self.isl_group:
             isl_node.__del__()
         del self.isl_group
@@ -34,8 +35,19 @@ class EHier():
         Since the hierarchy is the same for all layout, need to update hierarchy data
         :return:
         '''
-        print "UPDATING HIERARCHY"
+        self.isl_group = []
+        # clean up binding between old data and tree
+        for sh in self.sheets:
+            sh.node=None
+        for tr in self.traces:
+            tr.node=None
+        self.sheets = []
+        self.traces = []
+        #print "UPDATING HIERARCHY"
         for isl in self.module.group:
+            isl_name =str(isl)
+            isl_node = self.tree.get_node_by_name(isl_name)
+            self.isl_group.append(isl_node)
             for trace in self.module.group[isl]:
                 trace_node_name = trace.name
                 trace_node = self.tree.get_node_by_name(trace_node_name)
@@ -45,10 +57,11 @@ class EHier():
                 for sh in self.module.sheet:
                     sheet_node_name = sh.net
                     sheet_node = self.tree.get_node_by_name(sheet_node_name)
-                    sheet_node.data =sh
-                    sh.node = sheet_node
-
-
+                    if sheet_node!=None:
+                        sheet_node.data =sh
+                        sh.node = sheet_node
+                        self.sheets.append(sheet_node)
+        #print "bla bla"
     def form_hierachy(self):
         '''
         Form the hierachy the first time
@@ -69,13 +82,14 @@ class EHier():
                 isl_node.add_child(trace_node)
                 trace_node.update_rank()
                 trace.node = trace_node
+                self.traces.append(trace)
                 for sh in self.module.sheet:
-                    sh_node = T_Node(name=sh.net, type='sheet', data=sh, tree=self.tree)
-                    sh.node = sh_node
                     if trace.include_sheet(sh):
+                        sh_node = T_Node(name=sh.net, type='sheet', data=sh, tree=self.tree)
+                        sh.node = sh_node
                         trace_node.add_child(sh_node)
                         sh_node.update_rank()
-                        self.sheet.append(sh_node)
+                        self.sheets.append(sh_node)
 
                         # Test plot of the hierarchy
-                        # self.tree.print_tree()
+        self.tree.print_tree()

@@ -230,7 +230,7 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True,rel_c
 
     :return: list of CornerStitch Solution objects
     '''
-    plot = True
+    plot = False
 
 
     # GET MEASUREMENT NAME:
@@ -641,19 +641,7 @@ def script_translator(input_script=None, bond_wire_info=None, fig_dir=None, cons
             wire.dest_coordinate = [float(bondwire_landing_info[v['destination_pad']][0]),
                                       float(bondwire_landing_info[v['destination_pad']][1])]
 
-        '''
-        
 
-        if wire.dest_comp in bondwire_landing_info:
-            wire.dest_coordinate = [float(bondwire_landing_info[wire.dest_comp][0]),float(bondwire_landing_info[wire.dest_comp][1])]  # coordinate for wire destination location
-        if wire.source_comp in bondwire_landing_info:
-            wire.source_coordinate=[float(bondwire_landing_info[wire.source_comp][0]),float(bondwire_landing_info[wire.source_comp][1])]
-        else:
-            if len(destination_coordinate)>0:
-                wire.dest_coordinate = destination_coordinate[v['Destination']]
-            if len(source_coordinate) > 0:
-                wire.source_coordinate = source_coordinate[v['Source']]   # coordinate for wire source location
-        '''
         wire.source_node_id = None  # node id of source comp from nodelist
         wire.dest_node_id = None  # nodeid of destination comp from node list
         #wire.set_dir_type() # horizontal:0,vertical:1

@@ -231,6 +231,8 @@ class EMesh():
                 #print all_l
                 #all_c = self.compute_all_cap()
                 check_neg = True
+                debug = False
+
                 for i in range(len(self.all_W)):
                     n1 = self.all_n1[i]
                     n2 = self.all_n2[i]
@@ -261,7 +263,6 @@ class EMesh():
                             edge_data.R = temp_R * 1e-3
                             edge_data.L = temp_L * 1e-9
                     # Debug
-                    debug = False
                     if debug: # This is to detect very small inductance/resistance values that might lead to singular matrix
                         list_of_nodes = [140, 146, 160, 161, 165, 170,193]
                         print n1
@@ -347,7 +348,7 @@ class EMesh():
                 parent_data = self.hier_edge_data[e]
                 R = parent_data['R']
                 L = parent_data['L']
-                print "comp_edge",R,L
+                #print "comp_edge",R,L
 
             self.graph[e[0]][e[1]][0]['res'] = R
             self.graph[e[0]][e[1]][0]['ind'] = L
@@ -518,7 +519,7 @@ class EMesh():
         :param mode: 0 for bar, 1 for plane
         :return:
         '''
-        print "start data collection"
+        #print "start data collection"
         start = time.time()
         dis = 4
         get_node = self.graph.node
@@ -632,7 +633,7 @@ class EMesh():
 
                             e_append([e1_name, e2_name])
 
-        print "data collection finished",time.time()-start
+        #print "data collection finished",time.time()-start
 
     def update_mutual(self,mode=0,lang ="Cython"):
         '''
@@ -647,7 +648,7 @@ class EMesh():
 
         ''' Evaluation in Cython '''
         mutual_matrix=np.array(self.mutual_matrix)
-        print "start mutual eval"
+        #print "start mutual eval"
         result=[]
         start = time.time()
         if lang=="Cython": # evaluation with parallel programming
@@ -655,7 +656,7 @@ class EMesh():
         elif lang == "Python": # normally use to double-check the evaluation
             for para in self.mutual_matrix:
                 result.append(mutual_between_bars(*para))
-        print "finished mutual eval", time.time()-start
+        #print "finished mutual eval", time.time()-start
 
         for n in range(len(self.edges)):
             edge = self.edges[n]
@@ -901,7 +902,7 @@ class EMesh():
         '''
         if self.comp_nodes != {} and key in self.comp_nodes:  # case there are components
             for cp_node in self.comp_nodes[key]:
-                min_dis = 1000
+                min_dis = 1000.0
                 SW = None
                 cp = cp_node.pos
                 # Finding the closest point on South West corner
@@ -914,7 +915,7 @@ class EMesh():
                     del_x = cp[0] - p[0]
                     del_y = cp[1] - p[1]
                     distance = math.sqrt(del_x ** 2 + del_y ** 2)
-                    if del_x > 0 and del_y > 0:
+                    if del_x >= 0 and del_y >= 0:
                         if distance < min_dis:
                             min_dis = distance
                             SW = p
@@ -927,10 +928,17 @@ class EMesh():
                     self.hier_group_dict[anchor_node.node_id] = {'node_group': [cp_node],
                                                         'parent_data': self.hier_data}
                 else:
+
+
+                    if SW == None:
+                        print "ERROR"
+                        print node_name
                     node_name = str(SW[0]) + '_' + str(SW[1])
                     # Compute SW data:
                     # 4 points on parent trace
+
                     SW = self.node_dict[node_name]  # SW - anchor node
+
 
                     NW = SW.North
                     NE = NW.East
@@ -950,7 +958,7 @@ class EMesh():
     def _handle_pins_connections(self):
 
         # First search through all sheet (device pins) and add their edges, nodes to the mesh
-        for sh in self.hier_E.sheet:
+        for sh in self.hier_E.sheets:
             group = sh.parent.parent  # Define the trace island (containing a sheet)
             if not (group in self.comp_nodes):  # Create a list in dictionary to store all hierarchy node for each group
                 self.comp_nodes[group] = []
@@ -958,7 +966,6 @@ class EMesh():
             comp = sh.data.component  # Get the component of a sheet.
             #print "C_DICT",len(self.comp_dict),self.comp_dict
             if comp != None and not (comp in self.comp_dict):
-                print "case 1"
                 comp.build_graph()
                 sheet_data = sh.data
                 conn_type = "hier"
@@ -975,7 +982,7 @@ class EMesh():
                 for n in comp.net_graph.nodes(data=True):  # node without parents
                     sheet_data = n[1]['node']
 
-                    if sheet_data.node.parent == None:  # floating net
+                    if sheet_data.node == None:  # floating net
                         x, y = sheet_data.rect.center()
                         z = sheet_data.z
                         cp = [x, y, z]

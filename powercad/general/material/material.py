@@ -202,7 +202,7 @@ class Material_lib:
             for material in self.mat_lib:
 
                 if material.name == mat_name:
-                    print 'found material',material.name
+                    #print 'found material',material.name
                     return material
 
 if __name__ == "__main__":

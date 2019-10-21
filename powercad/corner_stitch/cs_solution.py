@@ -58,7 +58,7 @@ class CornerStitchSolution:
 
         layout_symb_dict[self.name] = {'rect_info': layout_rect_dict, 'Dims': [W, H]}
         #print layout_symb_dict[layout]
-        print layout_symb_dict
+        #print layout_symb_dict
 
         return layout_symb_dict
 

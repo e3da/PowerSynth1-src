@@ -90,7 +90,7 @@ def network_plot_3D(G, ax, cmap_node={}, cmap_edge={},show_labels = False,highli
                 if highlight_nodes==None:
                     size = 10
                 elif lbl in highlight_nodes:
-                    size = 15
+                    size = 25
                 else:
                     size =10
                 if type[key]=='internal':

@@ -319,6 +319,8 @@ class New_layout_engine():
                         if wire.dest_comp in element:
                             bondwire_to_trace[wire.dest_comp]=island.name
 
+
+
         # adding source and destination node ids for each wire
         for wire in bondwires:
 
@@ -350,7 +352,7 @@ class New_layout_engine():
                             break
         self.bondwires = copy.deepcopy(bondwires)  # to pass bondwire info to CG
         #for wire in self.bondwires:
-            #wire.printWire()
+            #print"here", wire.printWire()
 
 
 
@@ -574,6 +576,7 @@ class New_layout_engine():
                     CS_SYM_Updated[k] = CS_SYM_information
             CS_SYM_Updated = [CS_SYM_Updated]  # mapped solution layout information to symbolic layout objects
             cs_islands_up = self.update_islands(CS_SYM_information, Evaluated_X, Evaluated_Y, cs_islands,initial_islands)
+
             # -------------------------------for debugging----------------------
             # print "After update"
             #for island in cs_islands_up:
@@ -631,6 +634,7 @@ class New_layout_engine():
                         CS_SYM_info[k] = CS_SYM_Updated1
                 CS_SYM_Updated.append(CS_SYM_info)
                 cs_islands_up = self.update_islands(CS_SYM_Updated1, Evaluated_X[i], Evaluated_Y[i], cs_islands,initial_islands)
+
                 md_data = ModuleDataCornerStitch()
                 md_data.islands[0] = cs_islands_up
                 md_data.footprint = k
@@ -942,9 +946,10 @@ class New_layout_engine():
         cs_islands=copy.deepcopy(cs_islands1)
 
         for island in cs_islands:
+
             if len(island.child) == 0:
 
-                #for element in island.elements:
+
 
                 node_id = 1
                 for node in island.mesh_nodes:
@@ -959,19 +964,11 @@ class New_layout_engine():
                 for element in island.elements:
                     if element[-1] not in nodeids:
                         nodeids.append( element[-1])
-                        #break  # to consider not connected but in same island
-                '''
-                print "NI",nodeids
-                if len(nodeids)==1:
-                    for node in island.mesh_nodes:
-                        print "B", node.pos
-                        if node.pos[0] in minx[node_id] and node.pos[1] in miny[node_id]:
-                            node.pos[0] = minx[node_id][node.pos[0]]
-                            node.pos[1] = miny[node_id][node.pos[1]]
-                        print "A", node.pos
-                else:
-                
-                '''
+                for child in island.child:
+                    if child[-1] not in nodeids:
+                        nodeids.append( child[-1])
+
+
 
                 min_x_combined={}
                 min_y_combined={}
@@ -1011,61 +1008,12 @@ class New_layout_engine():
                         new_element = updated_info
                         updated_child.append(new_element)
                 island.child = updated_child
+
             for island1 in cs_islands:
                 if island.name==island1.name:
                     island.mesh_nodes= copy.deepcopy(island1.mesh_nodes)
+
         return updated_islands
-
-
-        """
-        for i in range(len(cs_islands)):
-            island=cs_islands[i]
-            for element in island.elements:
-                print "inside_up",element
-
-                if element[-3] in cs_sym_info:
-                    element[1]=cs_sym_info[element[-3]][1]
-                    element[2]=cs_sym_info[element[-3]][2]
-                    element[3]=cs_sym_info[element[-3]][3]
-                    element[4] = cs_sym_info[element[-3]][4]
-
-            for element in island.child:
-                if element[-3] in cs_sym_info:
-                    element[1]=cs_sym_info[element[-3]][1]
-                    element[2]=cs_sym_info[element[-3]][2]
-                    element[3]=cs_sym_info[element[-3]][3]
-                    element[4] = cs_sym_info[element[-3]][4]
-        #keys = ['N', 'S', 'E', 'W']
-        for island in cs_islands:
-            if len(island.child) == 0:
-
-                #for element in island.elements:
-
-                node_id = 1
-                for node in island.mesh_nodes:
-                    if node.pos[0] in minx[node_id] and node.pos[1] in miny[node_id]:
-                        node.pos[0] = minx[node_id][node.pos[0]]
-                        node.pos[1] = miny[node_id][node.pos[1]]
-
-
-            else:
-                for element in island.elements:
-                    node_id = element[-1]
-                    break
-                for node in island.mesh_nodes:
-                    if node.pos[0] in minx[node_id] and node.pos[1] in miny[node_id]:
-                        node.pos[0] = minx[node_id][node.pos[0]]
-                        node.pos[1] = miny[node_id][node.pos[1]]
-
-
-        return cs_islands
-        """
-
-
-
-
-
-
 
 
 
@@ -1197,7 +1145,6 @@ class New_layout_engine():
             else:
                 node_id=[]
                 for rect in island.elements:
-                    #print rect
                     if int(rect[-1]) not in node_id :
                         node_id.append(int(rect[-1]))
                 if len(node_id)==1:
@@ -1219,20 +1166,7 @@ class New_layout_engine():
                                         points.append(coordinate7)
                                     if coordinate8 not in points:
                                         points.append(coordinate8)
-                                    '''
-                                    if tile.EAST.cell.type == 'EMPTY':
-                                        E.append(coordinate8)
-                                        E.append(coordinate6)
-                                    if tile.WEST.cell.type == "EMPTY":
-                                        W.append(coordinate1)
-                                        W.append(coordinate7)
-                                    if tile.NORTH.cell.type == 'EMPTY':
-                                        N.append(coordinate7)
-                                        N.append(coordinate6)
-                                    if tile.SOUTH.cell.type == "EMPTY":
-                                        S.append(coordinate1)
-                                        S.append(coordinate8)
-                                    '''
+
                                     if tile.EAST.cell.type == 'EMPTY':
                                         # E.append(coordinate8)
                                         E.append(coordinate6)
@@ -1285,7 +1219,6 @@ class New_layout_engine():
                                 S.append(coordinate8)
 
 
-                            # points.append(coordinate4)
 
                         for tile in Vtree.vNodeList[nodeid - 1].stitchList:
                             coordinate1 = [tile.cell.x, tile.cell.y]
@@ -1372,20 +1305,7 @@ class New_layout_engine():
                                             points.append(coordinate7)
                                         if coordinate8 not in points:
                                             points.append(coordinate8)
-                                        '''
-                                        if tile.EAST.cell.type == 'EMPTY':
-                                            E.append(coordinate8)
-                                            E.append(coordinate6)
-                                        if tile.WEST.cell.type == "EMPTY":
-                                            W.append(coordinate1)
-                                            W.append(coordinate7)
-                                        if tile.NORTH.cell.type == 'EMPTY':
-                                            N.append(coordinate7)
-                                            N.append(coordinate6)
-                                        if tile.SOUTH.cell.type == "EMPTY":
-                                            S.append(coordinate1)
-                                            S.append(coordinate8)
-                                        '''
+
                                         if tile.EAST.cell.type == 'EMPTY' :
                                             # E.append(coordinate8)
                                             E.append(coordinate6)
@@ -1434,9 +1354,7 @@ class New_layout_engine():
                             zdl_v = list(set(zdl_v))
                             zdl_h.sort()
                             zdl_v.sort()
-                            # print len(zdl_h),len(zdl_v)
                             grid_points = list(itertools.product(zdl_h[:], zdl_v[:]))
-                            #print len(grid_points)
                             intersection_points = [list(elem) for elem in grid_points]
                             filter=[]
                             common=[]
@@ -1461,7 +1379,6 @@ class New_layout_engine():
                                 for element in island.elements:
                                     if (point[0]==element[1] and point[1]==element[2]) or (point[0]==element[1]+element[3] and point[1]==element[2]+element[4]) or (point[0]==element[1] and point[1]==element[2]+element[4]) or (point[0]==element[1]+element[3] and point[1]==element[2]):
                                         common.remove(point)
-                            #print "C",common
 
                             for point in filter:
                                 for element in island.elements:
@@ -1491,17 +1408,13 @@ class New_layout_engine():
                                     points.append(coordinate8)
 
                                 if tile.EAST.cell.type == 'EMPTY' and coordinate6 not in common:
-                                    #E.append(coordinate8)
                                     E.append(coordinate6)
                                 if tile.WEST.cell.type == "EMPTY" and coordinate1 not in common :
                                     W.append(coordinate1)
-                                    #W.append(coordinate7)
                                 if tile.NORTH.cell.type == 'EMPTY'  and coordinate6 not in common:
-                                    #N.append(coordinate7)
                                     N.append(coordinate6)
                                 if tile.SOUTH.cell.type == "EMPTY" and coordinate1 not in common :
                                     S.append(coordinate1)
-                                    #S.append(coordinate8)
                                 if tile.westNorth(tile).cell.type=='EMPTY' and coordinate7 not in common:
                                     N.append(coordinate7)
                                 if tile.northWest(tile).cell.type=='EMPTY' and coordinate7 not in common:
@@ -1512,70 +1425,7 @@ class New_layout_engine():
                                     S.append(coordinate8)
 
 
-            if (len(island.child))>0:
-                for rect in island.child:
-                    if rect[0]=='Type_3':
-                        # removing bondwire points from device
-                        inside_device=False
-                        for dev in island.child:
-                            if dev[1]<rect[1] and dev[2]<rect[2] and dev[1]+dev[3]>rect[1] and dev[2]+dev[4]>rect[2]:
-                                inside_device=True
-
-                        if inside_device==False:
-                            point1=[rect[1],rect[2]] # bondwire pad bottom left corner x,y coordinate
-                            points.append(point1)
-                            for h_element in island.elements:
-                                if h_element[1]<rect[1] and h_element[2]<rect[2] and h_element[1]+h_element[3]>rect[1] and h_element[2]+h_element[4]>rect[2]:
-                                    point_left=[h_element[1],rect[2]] # adding left boundary
-                                    point_right=[h_element[1]+h_element[3],rect[2]] # adding right boundary
-                                    points.append(point_left)
-                                    points.append(point_right)
-                                    E.append(point_right)
-                                    W.append(point_left)
-
-
-                            for v_element in island.elements_v:
-                                if v_element[1] < rect[1] and v_element[2] < rect[2] and v_element[1] + v_element[3] > rect[1] and v_element[2] + v_element[4] > rect[2]:
-
-                                    point_top=[rect[1], v_element[2]+v_element[4]] # top boundary
-                                    point_bottom=[rect[1], v_element[2]] # bottom boundary
-                                    points.append(point_top)
-                                    points.append(point_bottom)
-                                    N.append(point_top)
-                                    S.append(point_bottom)
-
-                            # internal neighbors for bondwire points
-                            for h_element in island.elements:
-                                if h_element[1]<rect[1] and h_element[2]<rect[2] and h_element[1]+h_element[3]>rect[1] and h_element[2]+h_element[4]>rect[2]:
-                                    point_top = [rect[1], h_element[2] + h_element[4]]
-                                    if point_top not in points:
-                                        points.append(point_top)
-
-                                    point_bottom = [rect[1], h_element[2]]
-                                    if point_bottom not in points:
-                                        points.append(point_bottom)
-                                for point in points:
-                                    if h_element[1] < point[0] and h_element[2] < point[1] and h_element[1] + h_element[3] > point[0] and h_element[2] + h_element[4] > point[1]:
-                                        new_point=[point[0],rect[2]]
-                                        if new_point not in points:
-                                            points.append(new_point)
-                            for v_element in island.elements_v:
-
-                                if v_element[1] < rect[1] and v_element[2] < rect[2] and v_element[1] + v_element[3] > rect[1] and v_element[2] + v_element[4] > rect[2]:
-                                    point_left = [v_element[1], rect[2]]
-                                    if point_left not in points:
-                                        points.append(point_left)
-                                    point_right = [v_element[1] + v_element[3], rect[2]]
-                                    if point_right not in points:
-                                        points.append(point_right)
-                                for point in points:
-                                    if v_element[1] < point[0] and v_element[2] < point[1] and v_element[1] + v_element[3] > point[0] and v_element[2] + v_element[4] > point[1]:
-                                        new_point=[rect[1],point[1]]
-                                        if new_point not in points:
-                                            points.append(new_point)
-
-
-
+            self.handle_bondwires_neighbours(island=island,N=N,S=S,E=E,W=W,points=points)
 
 
 
@@ -1609,6 +1459,129 @@ class New_layout_engine():
 
 
         return cs_islands
+
+    def handle_bondwires_neighbours(self,island,N,S,E,W,points):
+        '''
+
+        :param island: cs_island
+        :param N: North boundary points list
+        :param S: South boundary points list
+        :param E: East boundary points list
+        :param W: West boundary points list
+        :param points: All mesh points on the island
+        :return: Extra points for current island
+
+        '''
+        bw_points=[]
+        xs=[]
+        ys =[]
+        for p in points:
+            xs.append(p[0])
+            ys.append(p[1])
+        xs=list(set(xs))
+        ys=list(set(ys))
+
+        if (len(island.child)) > 0:
+
+            for rect in island.child:
+                type,x,y,w,h=rect[0:5] # Get bondwire parameters
+
+                if type == 'Type_3':
+                    # removing bondwire points from device
+                    inside_device = False
+                    for dev in island.child:
+                        if dev[1] < x and dev[2] < y and dev[1] + dev[3] > x and dev[2] + dev[4] > y:
+                            inside_device = True
+
+                    if inside_device == False:
+                        point1 = (x,y)  # bondwire pad bottom left corner x,y coordinate
+                        bw_points.append(point1)
+                        # Find horizontal boundary points
+                        for h_element in island.elements:
+                            if h_element[1] <= x and h_element[2] <= y and h_element[1] + h_element[3] >= x and h_element[2] + h_element[4] >=y:
+                                if  not (h_element[2] in ys):
+                                    raw_input()
+                                point_left = (h_element[1], y)  # adding left boundary
+                                point_right = (h_element[1] + h_element[3], y) # adding right boundary
+                                bw_points.append(point_left)
+                                bw_points.append(point_right)
+                                E.append(point_right)
+                                W.append(point_left)
+
+                        # Find vertical boundary points
+                        for v_element in island.elements_v:
+                            if v_element[1] <=x and v_element[2] <= y and v_element[1] + v_element[3] >= x and v_element[2] + v_element[4] >= y:
+                                point_top = (x, v_element[2] + v_element[4])  # top boundary
+                                point_bottom = (x, v_element[2])  # bottom boundary
+                                bw_points.append(point_top)
+                                bw_points.append(point_bottom)
+                                N.append(point_top)
+                                S.append(point_bottom)
+
+                        # internal neighbors for bondwire points
+                        new_points=[]
+                        '''
+                        for h_element in island.elements:
+                            h_x,h_y,h_w,h_h=h_element[1:5]
+                            # is the bw x location within the range of the h_element
+                            if x>h_x and x<h_x+h_w:
+                                # append the vertical cut points
+                                point_top = [x, h_y + h_h]
+                                bw_points.append(point_top)
+                                point_bottom = [x, h_y]
+                                bw_points.append(point_bottom)
+                        '''
+                        for y_cut in ys:
+                            new_point = (x,y_cut)
+                            new_points.append(new_point)
+
+
+
+                        '''
+                        for v_element in island.elements_v:
+                            v_x, v_y, v_w, v_h = v_element[1:5]
+                            # is the bw x location within the range of the h_element
+                            if y > v_y and y < v_y + v_h:
+                                # append the vertical cut points
+                                point_left = [v_x,y]
+                                bw_points.append(point_left)
+                                point_right = [v_x+v_w, y]
+                                bw_points.append(point_right)
+                        '''
+                        for x_cut in xs:
+                            new_point = (x_cut,y)
+                            new_points.append(new_point)
+                        selected_pt=[]
+                        for new_pt in new_points:
+                            new_x ,new_y = new_pt
+                            for h_element in island.elements:
+                                h_x, h_y, h_w, h_h = h_element[1:5]
+                                if h_x <= new_x and h_y <= new_y and h_x + h_w >= new_x and h_y + h_h >= new_y:
+                                    selected_pt.append(new_pt)
+
+                        bw_points +=selected_pt
+                        #print bw_points
+            bw_points = list(set(bw_points))
+
+            bw_points=[list(pt) for pt in bw_points]
+            points+=bw_points
+    def point_inside(self,rect,point):
+        '''
+
+        :param rect: a list of rectangle info: rect=[type,x,y,w,h,...] or corner stitch tile object
+        :param point: 2D point (x,y)
+        :return: returns 1 id the point is inside the rectangle else return 0
+        '''
+        if isinstance(rect,list):
+            if point[0] >= rect[1] and point[0] <= rect[1] + rect[3] and point[1] >= rect[2] and point[1] <= rect[4]:
+                return 1
+            else:
+                return 0
+        if isinstance(rect,CornerStitch.tile):
+            if point[0] >= rect.cell.x and point[0] <= rect.cell.x+ rect.getWidth() and point[1] >= rect.cell.y and point[1] <= rect.cell.y+rect.getHeight():
+                return 1
+            else:
+                return 0
 
     def form_cs_island(self,islands=None, Htree=None, Vtree=None):
         copy_islands = copy.deepcopy(islands)  # list of islands converting input rects to corner stitch tiles
@@ -1655,45 +1628,29 @@ class New_layout_engine():
                 zdl_v=list(set(zdl_v))
                 zdl_h.sort()
                 zdl_v.sort()
-                #print len(zdl_h),len(zdl_v)
                 grid_points=list(itertools.product(zdl_h[:],zdl_v[:]))
                 bottom_left_coordinates=list(itertools.product(zdl_h[0:-1],zdl_v[0:-1]))
-                #print bottom_left_coordinates
-                #for node in HorizontalNodeList:
                 node_h=Htree.hNodeList[0]
                 node_v=Vtree.vNodeList[0]
 
 
-                #raw_input()
                 for point in bottom_left_coordinates:
                     tile=node_h.findPoint(point[0],point[1],node_h.stitchList[0])
                     if tile.cell.type==type and tile not in cs_tiles_h and (tile.cell.x,tile.cell.y+tile.getHeight()) in grid_points and (tile.cell.x+tile.getWidth(),tile.cell.y+tile.getHeight()) in grid_points and (tile.cell.x+tile.getWidth(),tile.cell.y) in grid_points :
-                        #print "BT",tile.cell.x,tile.cell.y,tile.getWidth(),tile.getHeight()
                         cs_tiles_h.append(tile)
-                            #break
                 for point in bottom_left_coordinates:
                     tile=node_v.findPoint(point[0],point[1],node_v.stitchList[0])
                     if tile.cell.type==type and tile not in cs_tiles_v and (tile.cell.x,tile.cell.y+tile.getHeight()) in grid_points and (tile.cell.x+tile.getWidth(),tile.cell.y+tile.getHeight()) in grid_points and (tile.cell.x+tile.getWidth(),tile.cell.y) in grid_points :
-                        #print tile.cell.x,tile.cell.y,tile.getWidth(),tile.getHeight()
                         cs_tiles_v.append(tile)
                 for i in range(len(cs_tiles_h)):
 
-                    #print"EL", rect[0],rect[1],rect[2],rect[3],rect[4]
                     r = [cs_tiles_h[i].cell.type, cs_tiles_h[i].cell.x, cs_tiles_h[i].cell.y, cs_tiles_h[i].getWidth(), cs_tiles_h[i].getHeight(), cs_tiles_h[i].nodeId]  # type,x,y,width,height,name, hierarchy_level, nodeId
 
                     cs_elements.append(r)
-                    #cs_mapped_input[rect[5]] = [cs_tiles_h[i], cs_tiles_h[i].nodeId, rect[8]]
-                    #cs_island.element_names.append(rect[5])
                 for i in range(len(cs_tiles_v)):
 
-                    #print"EL", rect[0],rect[1],rect[2],rect[3],rect[4]
                     r = [cs_tiles_v[i].cell.type, cs_tiles_v[i].cell.x, cs_tiles_v[i].cell.y, cs_tiles_v[i].getWidth(), cs_tiles_v[i].getHeight(), cs_tiles_v[i].nodeId]  # type,x,y,width,height,name, hierarchy_level, nodeId
-                    #print r[0],r[1],r[2],r[3],r[4]
                     cs_elements_v.append(r)
-                    #cs_mapped_input[rect[5]] = [cs_tiles_h[i], cs_tiles_h[i].nodeId, rect[8]]
-                    #cs_island.element_names.append(rect[5])
-
-
 
 
             else:
@@ -1703,8 +1660,6 @@ class New_layout_engine():
                             if rect[1] == i.cell.x and rect[2] == i.cell.y and rect[3] == i.getWidth() and rect[4] == i.getHeight() and rect[0] == i.cell.type:
                                 r = [rect[0], rect[1], rect[2], rect[3], rect[4], i.nodeId]  # type,x,y,width,height,name, hierarchy_level, nodeId
                                 cs_elements.append(r)
-                                #cs_mapped_input[rect[5]] = [i, node.id, rect[8]]
-                                #cs_island.element_names.append(rect[5])
                     for node in VerticalNodeList:
                         for i in node.stitchList:
                             if rect[1] == i.cell.x and rect[2] == i.cell.y and rect[3] == i.getWidth() and rect[4] == i.getHeight() and rect[0] == i.cell.type:
@@ -1728,7 +1683,6 @@ class New_layout_engine():
                                 if rect[1] == i.cell.x and rect[2] == i.cell.y and rect[3] == i.getWidth() and rect[4] == i.getHeight() and rect[0] == i.cell.type:
                                     r = [rect[0], rect[1], rect[2], rect[3], rect[4], node.id]  # type,x,y,width,height, hierarchy_level, parent nodeId
                                     cs_child.append(r)
-                                    #cs_mapped_input[rect[5]] = [i, node.id, rect[8]]
                                     cs_mapped_input[rect[5]] = [[rect[1], rect[2], rect[1] + rect[3], rect[2] + rect[4]],[node.id],rect[0], rect[8], i.rotation_index]
                                     cs_island.child_names.append(rect[5])
 
@@ -1742,14 +1696,9 @@ class New_layout_engine():
                 if element[-1] not in cs_element_nodes:
                     cs_element_nodes.append(element[-1])
 
-            #cs_child_nodes=[]
-            #for element in cs_island.child:
-                #if element[-1] not in cs_child_nodes:
-                    #cs_child_nodes.append(element[-1])
+
             for rect in island.elements:
                 cs_mapped_input[rect[5]]=[[rect[1],rect[2],rect[1]+rect[3],rect[2]+rect[4]],cs_element_nodes,rect[0],rect[8],0] # bottom left corner x,y, top right corner x,y, nodeid list,hierarchy level,rotation index
-            #for rect in island.child:
-                #cs_mapped_input[rect[5]]=[[rect[1],rect[2],rect[1]+rect[3],rect[2]+rect[4]],cs_child_nodes,rect[8],rect.rotation_index] # bottom left corner x,y, top right corner x,y, nodeid list,hierarchy level,rotation_index
 
             cs_islands.append(cs_island)
 
@@ -1886,12 +1835,9 @@ class New_layout_engine():
         else:
             j = count
         for k, v in Total_H.items():
-            # print v, len(v)
             for c in range(len(v)):
-                # print "C",c,len(v)
                 data = []
                 Rectangles = v[c]
-                #print Rectangles
                 for i in Rectangles:
 
 
@@ -1900,7 +1846,6 @@ class New_layout_engine():
                         if i[4] == t:
                             type_ind = type.index(t)
                             colour = colors[type_ind]
-                            #print "MD",self.min_dimensions
                             if type[type_ind] in self.min_dimensions:
                                 if i[-1]==1 or i[-1]==3:  # rotation_index
                                     h = self.min_dimensions[t][0][0]
@@ -1927,7 +1872,6 @@ class New_layout_engine():
                         R_in1 = [x, y, w, h, colour, i[-2], 'None', 'None']
                         data.append(R_in1)
                     data.append(R_in)
-                #print k[0],k[1]
                 data.append([k[0], k[1]])
 
                 l_data = [j, data]
@@ -1945,100 +1889,7 @@ class New_layout_engine():
 
 
 
-    """
-    def save_layouts(self,Layout_Rects,count=None, db=None):
 
-
-
-        for k,v in Layout_Rects.items():
-
-            if k=='H':
-                Total_H = {}
-
-                for j in range(len(v)):
-
-
-                    Rectangles = []
-                    for rect in v[j]:  # rect=[x,y,width,height,type]
-
-                        Rectangles.append(rect)
-                    max_x = 0
-                    max_y = 0
-                    min_x = 1e30
-                    min_y = 1e30
-
-                    for i in Rectangles:
-
-                        if i[0] + i[2] > max_x:
-                            max_x = i[0] + i[2]
-                        if i[1] + i[3] > max_y:
-                            max_y = i[1] + i[3]
-                        if i[0] < min_x:
-                            min_x = i[0]
-                        if i[1] < min_y:
-                            min_y = i[1]
-                    key=(max_x,max_y)
-
-                    Total_H.setdefault(key,[])
-                    Total_H[(max_x,max_y)].append(Rectangles)
-        colors = ['white', 'green', 'red', 'blue', 'yellow', 'purple', 'pink', 'magenta', 'orange', 'violet']
-        type = ['EMPTY', 'Type_1', 'Type_2', 'Type_3', 'Type_4', 'Type_5', 'Type_6', 'Type_7', 'Type_8', 'Type_9']
-        if count==None:
-            j=0
-        else:
-            j=count
-        for k, v in Total_H.items():
-            #print v, len(v)
-            for c in range(len(v)):
-                #print "C",c,len(v)
-                data = []
-                Rectangles = v[c]
-
-                for i in Rectangles:
-                    for t in type:
-                        if i[4] == t:
-                            type_ind = type.index(t)
-                            colour = colors[type_ind]
-                            if type_ind in self.min_dimensions:
-                                w=self.min_dimensions[t][0]
-                                h=self.min_dimensions[t][1]
-                            else:
-                                w=None
-                                h=None
-                    if w==None and h==None:
-                        R_in=[i[0],i[1],i[2],i[3],colour,1,'None','None']
-                    else:
-
-                        center_x=(i[0]+i[0]+i[2])/float(2)
-                        center_y=(i[1]+i[1]+i[3])/float(2)
-                        x=center_x-w/float(2)
-                        y=center_y-h/float(2)
-                        R_in = [i[0], i[1], i[2], i[3],'green',1,'--','black']
-                        R_in1 = [x, y, w, h, colour, 2,'None','None']
-                        data.append(R_in1)
-                    data.append(R_in)
-                
-
-
-                data.append([k[0], k[1]])
-                l_data = [j, data]
-                directory = os.path.dirname(db)
-                temp_file = directory + '/out.txt'
-                with open(temp_file, 'wb') as f:
-                    f.writelines(["%s\n" % item for item in data])
-                conn = create_connection(db)
-                with conn:
-                    insert_record(conn, l_data, temp_file)
-
-               
-                if count==None:
-                    j+=1
-            conn.close()
-    
-    
-    
-
-    """
 
 
 def plot_layout(Layout_Rects,level,min_dimensions=None,Min_X_Loc=None,Min_Y_Loc=None):
@@ -2046,16 +1897,7 @@ def plot_layout(Layout_Rects,level,min_dimensions=None,Min_X_Loc=None,Min_Y_Loc=
     # Prepares solution rectangles as patches according to the requirement of mode of operation
     Patches=[]
     if level==0:
-        Rectangles=[]
-        '''
-        for k,v in Layout_Rects.items():
-            if k=='H':
-                for rect in v:                    #rect=[x,y,width,height,type]
 
-                    Rectangles.append(rect)
-
-
-        '''
         Rectangles = Layout_Rects
 
         max_x = 0
@@ -2078,12 +1920,10 @@ def plot_layout(Layout_Rects,level,min_dimensions=None,Min_X_Loc=None,Min_Y_Loc=
         type = ['EMPTY','Type_1', 'Type_2', 'Type_3', 'Type_4', 'Type_5', 'Type_6', 'Type_7', 'Type_8', 'Type_9']
         ALL_Patches={}
         key=(max_x,max_y)
-        #print key
         ALL_Patches.setdefault(key,[])
         for i in Rectangles:
             for t in type:
                 if i[4]==t:
-                    #print i
 
                     type_ind=type.index(t)
                     colour=colors[type_ind]
@@ -2173,23 +2013,7 @@ def plot_layout(Layout_Rects,level,min_dimensions=None,Min_X_Loc=None,Min_Y_Loc=
 
                             )
                     else:
-                        #print Min_X_Loc
-                        #print Min_Y_Loc
-                        '''
-                        if (i[0]+i[2])*1000 in Min_X_Loc.values():
-                            x=i[0]+i[2]-w
-                            y=i[1]
-                        elif (i[1]+i[3])*1000 in Min_Y_Loc.values():
-                            x=i[0]
-                            y=i[1]+i[3]-h
-                        elif (i[0]+i[2])*1000 in Min_X_Loc.values() and (i[1]+i[3])*1000 in Min_Y_Loc.values():
-                            x = [0]+i[2] - w
-                            y = i[1]+i[3]-h
-                        elif (i[0])*1000 in Min_X_Loc.values() or (i[1])*1000 in Min_Y_Loc.values():
-                            x=i[0]
-                            y=i[1]
-                        else:
-                        '''
+
                         center_x=(i[0]+i[0]+i[2])/float(2)
                         center_y=(i[1]+i[1]+i[3])/float(2)
                         x=center_x-w/float(2)
@@ -2310,42 +2134,11 @@ def Sym_to_CS(input_rects,Htree,Vtree):
                     if dict not in ALL_RECTS['V']:
                         ALL_RECTS['V'].append(dict)
 
-    '''
-    for i in ALL_RECTS['H']:
-        for k,v in i.items():
-            print v[0].name,v[0].parent_name
-    
-    '''
+
     return ALL_RECTS['H']
 
-    #return ALL_RECTS
-    '''
-    raw_input()
 
 
-    SYM_CS={}
-    for rect in input_rects:
-        x1=rect.x
-        y1=rect.y
-        x2=rect.x+rect.width
-        y2=rect.y+rect.height
-        type=rect.type
-        name=rect.name
-        for k,v in ALL_RECTS.items():
-            if k=='H':
-                key=name
-                SYM_CS.setdefault(key,[])
-                for i in v:
-                    if i[0]>=x1 and i[1]>=y1 and i[0]+i[2]<=x2 and i[1]+i[3]<=y2 and i[4]==type:
-                        SYM_CS[key].append(i)
-
-                    else:
-                        continue
-
-    return SYM_CS
-    
-    
-    '''
 
 
 

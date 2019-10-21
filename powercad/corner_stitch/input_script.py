@@ -115,7 +115,7 @@ class ScriptInputMethod():
         print wires
         # ------------------- for debugging --------------------------------------
         '''
-
+        #raw_input()
         return wires
 
 
@@ -553,6 +553,7 @@ class ScriptInputMethod():
                             continue
 
         # print "cs_info"
+        #print len(rects_info)
         #for rect in rects_info:
             #print rect
         self.cs_info=[0 for i in range(len(rects_info))]
@@ -562,9 +563,9 @@ class ScriptInputMethod():
                 if rects_info[j][5] in layout_info[i]:
                     self.cs_info[i]=rects_info[j]
         #---------------------------------for debugging---------------------------
-        #print "cs_info"
-        for rect in self.cs_info:
-            print rect
+        #print "cs_info",len(self.cs_info)
+        #for rect in self.cs_info:
+            #print rect
         #---------------------------------------------------------------------------
         return self.size,self.cs_info,self.component_to_cs_type,self.all_components
     def plot_init_layout(self):
@@ -572,6 +573,7 @@ class ScriptInputMethod():
         colors = ['green', 'red', 'blue', 'yellow', 'purple', 'pink', 'magenta', 'orange', 'violet']
         type = ['Type_1', 'Type_2', 'Type_3', 'Type_4', 'Type_5', 'Type_6', 'Type_7', 'Type_8', 'Type_9']
         for rect in self.cs_info:
+
             color_ind=type.index(rect[0])
             color=colors[color_ind]
             r=[rect[1],rect[2],rect[3],rect[4],color,rect[-2]]# x,y,w,h,cs_type,zorder

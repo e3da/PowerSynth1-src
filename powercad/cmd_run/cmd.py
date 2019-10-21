@@ -225,7 +225,7 @@ class Cmd_Handler:
                     #rects.append(rect)
                     init_rects[k] = rect_up
                 s1=1000
-                #s=1000
+                s=1000
                 cs_sym_info = {(fp_width * s, fp_height * s): init_rects}
                 for isl in init_cs_islands:
                     for node in isl.mesh_nodes:

@@ -213,14 +213,14 @@ class EWires(EComp):
                     R = abs(np.real(imp))
                     L = abs(np.imag(imp) / (2 * np.pi * self.f))
                 except:
-                    print "Error occur, fast estimation used"
-                    debug = True
+                    #print "Error occur, fast estimation used"
+                    debug = False
                     if debug:
                         print "num wires" ,self.num_wires
                         print "connections", self.conn
                     R=R_val/self.num_wires
                     L=L_val/self.num_wires
-                print "wire R,L", R, L
+                #print "wire R,L", R, L
                 self.net_graph.add_edge(self.sheet[0].net, self.sheet[1].net, edge_data={'R': R, 'L': L, 'C': None})
             else : # No mutual eval needed, fast evaluation
                 self.net_graph.add_edge(self.sheet[0].net, self.sheet[1].net, edge_data={'R': R_val, 'L': L_val, 'C': None})
@@ -228,7 +228,7 @@ class EWires(EComp):
             # print self.net_graph.edges(data=True)
 
     def build_graph(self):
-        print "update wires para"
+        #print "update wires para"
         self.update_wires_parasitic()
 
 

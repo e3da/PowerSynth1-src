@@ -105,19 +105,22 @@ class CornerStitch_Emodel_API:
         '''
         self.module_data = module_data
         self.width, self.height = self.module_data.footprint
-        self.width/=1000
-        self.height/=1000
+        self.width/=1000.0
+        self.height/=1000.0
         self.e_plates = []  # list of electrical components
         self.e_sheets = []  # list of sheets for connector presentaion
         self.e_comps = []  # list of all components
         self.net_to_sheet = {}  # quick look up table to find the sheet object based of the net_name
         islands = self.module_data.islands[0]
 
+        #for island in islands:
+            #island.print_island(plot=True,size=[50000,50000])
+
         for isl in islands:
             for trace in isl.elements: # get all trace in isl
                 x,y,w,h = trace[1:5]
-                new_rect = Rect(top=(y + h) / 1000
-                                , bottom=y/1000, left=x/1000, right=(x + w)/1000)
+                new_rect = Rect(top=(y + h) / 1000.0
+                                , bottom=y/1000.0, left=x/1000.0, right=(x + w)/1000.0)
                 p = E_plate(rect=new_rect, z=self.layer_to_z['T'][0], dz=self.layer_to_z['T'][1])
                 p.group_id=isl.name
                 p.name=trace[5]
@@ -150,7 +153,7 @@ class CornerStitch_Emodel_API:
                     if obj.type == 0:  # If this is lead type:
                         #print name
                         #print x, y, w, h
-                        new_rect = Rect(top=(y + h) / 1000, bottom=y / 1000, left=x / 1000, right=(x + w) / 1000)
+                        new_rect = Rect(top=(y + h) / 1000.0, bottom=y / 1000.0, left=x / 1000.0, right=(x + w) / 1000.0)
                         z = self.layer_to_z[type][0]
                         pin = Sheet(rect=new_rect, net_name=name, net_type='external', n=(0, 0, 1), z=z)
                         self.net_to_sheet[name] = pin
@@ -168,10 +171,10 @@ class CornerStitch_Emodel_API:
                                 z = self.layer_to_z[type][0]
                             elif side == 'T':  # if the pin on the top side of the device
                                 z = self.layer_to_z[type][0] + obj.thickness
-                            top = y / 1000 + (py + pheight)
-                            bot = y / 1000 + py
-                            left = x / 1000 + px
-                            right = x / 1000 + (px + pwidth)
+                            top = y / 1000.0 + (py + pheight)
+                            bot = y / 1000.0 + py
+                            left = x / 1000.0 + px
+                            right = x / 1000.0 + (px + pwidth)
                             rect = Rect(top=top, bottom=bot, left=left, right=right)
                             pin = Sheet(rect=rect, net_name=net_name, z=z)
                             self.net_to_sheet[net_name] = pin
@@ -196,8 +199,18 @@ class CornerStitch_Emodel_API:
             self.hier = EHier(module=self.module)
             self.hier.form_hierachy()
         else:  # just update, no new objects
+            #self.hier = EHier(module=self.module)
             self.hier.update_module(self.module)
             self.hier.update_hierarchy()
+        '''
+        fig = plt.figure(1)
+        ax = a3d.Axes3D(fig)
+        ax.set_xlim3d(-2, self.width + 2)
+        ax.set_ylim3d(-2, self.height + 2)
+        ax.set_zlim3d(0, 2)
+        plot_rect3D(rect2ds=self.module.plate + self.module.sheet, ax=ax)
+        plt.show()
+        '''
         self.emesh = EMesh_CS(islands=islands,hier_E=self.hier, freq=self.freq, mdl=self.rs_model)
         self.emesh.mesh_update()
         '''
@@ -209,14 +222,8 @@ class CornerStitch_Emodel_API:
         self.emesh.plot_3d(fig=fig, ax=ax, show_labels=True)
         plt.show()
         '''
-        '''
-        fig = plt.figure(2)
-        ax = a3d.Axes3D(fig)
-        ax.set_xlim3d(-2, self.width + 2)
-        ax.set_ylim3d(-2, self.height +2)
-        ax.set_zlim3d(0, 2)
-        plot_rect3D(rect2ds=self.module.plate + self.module.sheet, ax=ax)
-        '''
+
+
 
         self.emesh.update_trace_RL_val()
         self.emesh.update_hier_edge_RL()
@@ -424,8 +431,8 @@ class CornerStitch_Emodel_API:
         '''
         pt1 = self.emesh.comp_net_id[src]
         pt2 = self.emesh.comp_net_id[sink]
-        print src, sink
-        print pt1,pt2
+        #print src, sink
+        #print pt1,pt2
         #pt1=36
         #pt2=97
         self.circuit = RL_circuit()
@@ -434,7 +441,8 @@ class CornerStitch_Emodel_API:
         if not(networkx.has_path(self.emesh.graph,pt1,pt2)):
            raw_input("NO CONNECTION BETWEEN SOURCE AND SINK")
         else:
-            print "PATH EXISTS"
+            pass
+            #print "PATH EXISTS"
         self.circuit.m_graph_read(self.emesh.m_graph)
         self.circuit.assign_freq(self.freq)
         self.circuit.indep_current_source(pt1, 0, 1)
@@ -455,7 +463,7 @@ class CornerStitch_Emodel_API:
         #del self.hier
         #del self.module
         #gc.collect()
-        print R, L
+        #print R, L
         #process = psutil.Process(os.getpid())
         #now = datetime.now()
         #dt_string = now.strftime("%d-%m-%Y-%H-%M-%S")

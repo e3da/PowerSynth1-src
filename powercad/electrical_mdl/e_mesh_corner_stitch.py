@@ -32,14 +32,14 @@ class EMesh_CS(EMesh):
             points = self.mesh_nodes(isl=isl)
             self.hier_group_dict = {}
             self.mesh_edges(thick=0.2)  # the thickness is fixed right now but need to be updated by MDK later
-            plot = True
+            plot = False
             if plot:
                 fig = plt.figure(1)
                 ax = Axes3D(fig)
                 ax.set_xlim3d(0, 22)
                 ax.set_ylim3d(0, 42)
                 ax.set_zlim3d(0, 2)
-                self.plot_3d(fig=fig, ax=ax, show_labels=True,highlight_nodes=[140,146,160,161,165,170,193,198])
+                self.plot_3d(fig=fig, ax=ax, show_labels=True,highlight_nodes=None)
                 plt.show()
             self.handle_hier_node(points, g)
 
@@ -58,7 +58,7 @@ class EMesh_CS(EMesh):
         points = []
         mesh_nodes = isl.mesh_nodes  # get all mesh nodes object from the trace island
         # for each island set the
-        print "num nodes",len(mesh_nodes)
+        #print "num nodes",len(mesh_nodes)
         for node in mesh_nodes:
             node.pos[0] = node.pos[0] / 1000.0
             node.pos[1] = node.pos[1] / 1000.0

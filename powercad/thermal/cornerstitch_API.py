@@ -82,7 +82,7 @@ class CornerStitch_Tmodel_API:
                          conv_coeff=self.bp_conv,
                          thermal_cond=bp_layer.material.thermal_cond)
         # device thermal
-        print self.devices
+        #print self.devices
         module_device_locs = module_data.get_devices_on_layer()
 
         devices = []
@@ -139,7 +139,7 @@ class CornerStitch_Tmodel_API:
             tg.sublayer_features = self.sub_thermal_feature
             res = solve_TFSM(tg,1.0)
             self.temp_res = dict(zip(names, list(res)))
-            print self.temp_res
+            #print self.temp_res
 
         elif self.model == 1:
             t_bp, layer, devices = self.set_up_thermal_props(module_data)
@@ -157,8 +157,8 @@ class CornerStitch_Tmodel_API:
                 temp = compound_top_surface_avg(t_bp, layer, devices, self.devices.keys().index(k))
                 temp += self.t_amb + dev_delta
                 self.temp_res[k] = temp
-            print "here"
-            print self.temp_res
+            #print "here"
+            #print self.temp_res
 
     def characterize_with_gmsh_and_elmer(self):
         # First setup the characterization based on device dimensions and layerstack
@@ -337,7 +337,7 @@ class CornerStitch_Tmodel_API:
 
         module_data.layer_stack = self.layer_stack
         self.dev_result_table_eval(module_data)
-        print self.temp_res
+        #print self.temp_res
         return max(self.temp_res.values())
 
 
