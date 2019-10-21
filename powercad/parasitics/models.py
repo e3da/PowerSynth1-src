@@ -252,7 +252,7 @@ def wire_inductance(l, r):
 #-----------------------------------------------------------------
 #----------- mutual-partial inductance of wire-bond --------------
 #-----------------------------------------------------------------
-def wire_partial_mutual_ind(l, r, d):
+def wire_partial_mutual_ind(l, d):
     # l: mm (length of wires)
     # r: mm (radius of wires)
     # d: mm (distance between wires)

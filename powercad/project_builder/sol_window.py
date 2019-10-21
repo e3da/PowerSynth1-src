@@ -87,7 +87,7 @@ class SolutionWindow(QtGui.QWidget):
             self.export_q3d()
         elif selected== 'Solidworks':
             self.export_solidworks()
-        elif selected == 'Electrical netlist ':
+        elif selected == 'electrical_mdl netlist ':
             self.export_spice_parasitics(self.sym_layout)
         elif selected == 'Thermal netlist':
             self.export_spice_thermal()
@@ -171,9 +171,9 @@ class SolutionWindow(QtGui.QWidget):
                 spice_netlist._graph_read(self.sym_layout.lumped_graph)
                 ads_net = Netlis_export_ADS(df=spice_netlist.df_circuit_info, pm=spice_netlist.portmap)
                 ads_net.export_ads2(outname)
-                QtGui.QMessageBox.about(None, "SPICE Electrical Parasitics Netlist", "Export successful.")
+                QtGui.QMessageBox.about(None, "SPICE electrical_mdl Parasitics Netlist", "Export successful.")
             except:
-                QtGui.QMessageBox.warning(None, "SPICE Electrical Parasitics Netlist", "Failed to export netlist! Check log/console.")
+                QtGui.QMessageBox.warning(None, "SPICE electrical_mdl Parasitics Netlist", "Failed to export netlist! Check log/console.")
                 print traceback.format_exc()
 
     def Run_Sucessive_approximation(self):
@@ -207,9 +207,9 @@ class SolutionWindow(QtGui.QWidget):
             try:
                 spice_reduced_netlist_graph = Module_SPICE_lumped_graph(os.path.basename(outname), self.sym_layout, self.solution.index, template_graph=None)
                 spice_reduced_netlist_graph.write_SPICE_reduced_subcircuit(os.path.dirname(outname))
-                QtGui.QMessageBox.about(None, "SPICE Electrical Parasitics (reduced) Netlist", "Export successful.")
+                QtGui.QMessageBox.about(None, "SPICE electrical_mdl Parasitics (reduced) Netlist", "Export successful.")
             except:
-                QtGui.QMessageBox.warning(None, "SPICE Electrical Parasitics (reduced) Netlist", "Failed to export netlist! Check log/console.")
+                QtGui.QMessageBox.warning(None, "SPICE electrical_mdl Parasitics (reduced) Netlist", "Failed to export netlist! Check log/console.")
                 print traceback.format_exc()
 
 

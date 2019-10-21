@@ -90,7 +90,9 @@ class Part:
         self.thickness = 0  # define part thickness
         self.cs_type=None # corner stitch type (Type_1,Type_2...)
         self.rotate_angle= 0 #0:0 degree, 1:90 degree, 2:180 degree, 3:270 degree
-        self.thermal_cond =0 # thermal conductivity for thermal evaluation # TODO: REPLACE WITH MATERIAL
+        self.material_id = None # A string represent selected material in material lib
+        self.parent_component_id=None # in hierarchy parent component layout id
+
     def load_part(self):
         # Update part info from file
         all_parasitic =[]
@@ -101,37 +103,38 @@ class Part:
             for line in inputfile.readlines():
                 line = line.strip("\r\n")
                 info = line.split(" ")
-                if info[0] == "+Thermal_Conductivity":
-                    self.thermal_cond = float(info[1])
-                if info[0] == "+Name":
+                print info
+                if info[0] == "Material":
+                    self.material_id = info[1]
+                if info[0] == "Name":
                     self.raw_name = info[1]
-                elif info[0] == "+Type":
+                elif info[0] == "Type":
                     if info[1] == "component":
                         self.type = 1
                     elif info[1] == "connector":
                         self.type = 0
-                elif info[0] == "+Link":
+                elif info[0] == "Link":
                     self.datasheet_link = info[1]
-                elif info[0] == "+Footprint":
+                elif info[0] == "Footprint":
                     self.footprint[0] = float(info[1])  # Width
                     self.footprint[1] = float(info[2])  # Length
-                elif info[0] == '+Thickness':
+                elif info[0] == 'Thickness':
                     self.thickness = float(info[1])
-                if info[0] == "+Pins":
+                if info[0] == "Pins":
                     pin_read = True
                     for p in range(1, len(info)):
                         self.pin_name.append(info[p])
                     continue
                 # Handle Pins info
                 if ("\t" in info[0]) and pin_read:
-                    pin_name = info[0].strip("\t+")
+                    pin_name = info[0].strip("\t")
                     pin_loc = info[1:-1]
                     pin_loc = [float(i) for i in pin_loc]
                     pin_loc.append(info[-1])
                     self.pin_locs[pin_name] = pin_loc
                 else:
                     pin_read = False
-                if info[0] == "+Parasitics":
+                if info[0] == "Parasitics":
                     para_read = True
                     continue
                 # Handle Connections info

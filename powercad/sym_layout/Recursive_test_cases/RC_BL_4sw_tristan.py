@@ -4,13 +4,16 @@ import os
 
 import matplotlib.pyplot as plt
 import networkx as nx
+import pandas as pd
 
 from powercad.spice_handler.spice_import.NetlistImport import Netlist, Netlis_export_ADS
 from powercad.design.module_data import gen_test_module_data_BL_te
+from powercad.design.module_design import ModuleDesign
 from powercad.general.settings import settings
 from powercad.general.settings.save_and_load import load_file
-from powercad.interfaces.FastHenry.fh_layers import output_fh_script, read_result
-from powercad.parasitics.analysis import parasitic_analysis
+from powercad.interfaces.EMPro.EMProExport import EMProScript
+from powercad.interfaces.FastHenry.fh_layers import read_result
+from powercad.parasitics.analytical.analysis import parasitic_analysis
 from powercad.sym_layout.Recursive_test_cases.Netlist.circuit import Circuit
 from powercad.sym_layout.Recursive_test_cases.map_id_net import map_id_net
 from powercad.sym_layout.plot import plot_layout
@@ -26,9 +29,9 @@ def make_test_symmetries(sym_layout):
     symm2 = []
 
     for obj in sym_layout.all_sym:
-        if obj.element.path_id == '0006' or obj.element.path_id == '0007':
+        if obj.element.path_id == 'T7' or obj.element.path_id == 'T8':
             symm1.append(obj)
-        if obj.element.path_id == '0000' or obj.element.path_id == '0001':
+        if obj.element.path_id == 'T1' or obj.element.path_id == 'T2':
             symm2.append(obj)
 
     sym_layout.symmetries.append(symm1)
@@ -37,7 +40,7 @@ def make_test_symmetries(sym_layout):
 
 def make_test_constraints(symbols):
     for obj in symbols:
-        if obj.element.path_id == '0000' or obj.element.path_id == '0007' or obj.element.path_id == '0006' or obj.element.path_id == '0001':
+        if obj.element.path_id == 'T1' or obj.element.path_id == 'T2' or obj.element.path_id == 'T7' or obj.element.path_id == 'T8':
             obj.constraint = (None, None, 2.0)
 
 def make_test_devices(symbols, dev,dev_id):
@@ -54,15 +57,27 @@ def make_test_leads(symbols, lead_type,lead_id):
             if obj.element.path_id == id:
                 obj.tech = lead_type
 
-
-def make_test_bonds(symbols, bond_type, bond_id,wire_spec):
+def make_dev_states(symbols):
     for obj in symbols:
-        for id in bond_id:
-            if obj.element.path_id == id:
-                obj.make_bondwire(bond_type)
-                obj.wire_sep = wire_spec[0]
-                obj.num_wires = wire_spec[1]
-
+        if isinstance(obj,SymPoint):
+            if obj.name[0]=='M':
+                obj.states=[0,1,0]
+def make_test_bonds(df, bw_sig, bw_power):
+    bw_data = [['POWER', 'M4', 'T4', 'a', bw_power],
+               ['POWER', 'M2', 'T5', 'a', bw_power],
+               ['POWER', 'M1', 'T5', 'a', bw_power],
+               ['POWER', 'M3', 'T4', 'a', bw_power],
+               ['SIGNAL', 'M4', 'T2', 'a', bw_sig],
+               ['SIGNAL', 'M2', 'T7', 'a', bw_sig],
+               ['SIGNAL', 'M1', 'T7', 'a', bw_sig],
+               ['SIGNAL', 'M3', 'T2', 'a', bw_sig]]
+    cols = ['bw_type', 'start', 'stop', 'obj']
+    for row in range(8):
+        for col in range(5):
+            df.loc[row, col] = bw_data[row][col]
+    print df
+    print df.iloc[0, 0]
+    return df
 
 def make_test_design_values(sym_layout, dimlist, default):
     hdv = []
@@ -173,6 +188,8 @@ def plot_lumped_graph(sym_layout):
     plt.show()
     plot_layout(sym_layout)
 
+
+
 def make_test_setup2(f,directory):
 
     temp_dir = os.path.abspath(settings.TEMP_DIR)  # The directory where thermal characterization files are stored
@@ -184,36 +201,37 @@ def make_test_setup2(f,directory):
     sym_layout.load_layout(test_file, 'script')  # load the script
 
     layout_ratio = 1.0
-    dev_mos = DeviceInstance(0.1, 5.0, get_mosfet(layout_ratio),get_dieattach())  # Create a device instance with 10 W power dissipation. Highlight + "Crtl+Shift+I" to see the definition of this object
+    dev_mos = DeviceInstance(0.1, 5.0, get_mosfet(),get_dieattach())  # Create a device instance with 10 W power dissipation. Highlight + "Crtl+Shift+I" to see the definition of this object
 
     pow_lead = get_power_lead()  # Get a power lead object
 
-    sig_lead = get_signal_lead(layout_ratio)  # Get a signal lead object
+    sig_lead = get_signal_lead()  # Get a signal lead object
 
     power_bw = get_power_bondwire()  # Get bondwire object
     signal_bw = get_signal_bondwire()  # Get bondwire object
     # This will be added into the UI later based on Tristan import
-    net_id={'0013':'DC_plus','0012':'DC_neg','0016':'G_High','0015':'G_Low','0014':'Out','0010':'M1','0011':'M2','0008':'M3',
-            '0009':'M4'}
+    net_id={'L2':'DC_plus','L1':'DC_neg','L5':'G_High','L4':'G_Low','L3':'Out','M1':'M1','M2':'M2','M3':'M3',
+            'M4':'M4'}
     map_id_net(dict=net_id,symbols=sym_layout.all_sym)
 
     make_test_leads(symbols=sym_layout.all_sym, lead_type=sig_lead,
-                    lead_id=['0016','0015'])
-    make_test_leads(symbols=sym_layout.all_sym,lead_type=pow_lead,lead_id=['0014', '0013','0012'])
-    make_test_bonds(symbols=sym_layout.all_sym, bond_type=signal_bw,
-                    bond_id=['0019', '0023','0022','0026'], wire_spec=[2, 10])
-    make_test_bonds(symbols=sym_layout.all_sym, bond_type=power_bw,
-                    bond_id=['0024','0020','0021','0025'], wire_spec=[2, 10])
-    make_test_devices(symbols=sym_layout.all_sym,dev=dev_mos,dev_id=['0008','0009','0010','0011'])
+                    lead_id=['L4','L5'])
+    make_test_leads(symbols=sym_layout.all_sym,lead_type=pow_lead,lead_id=['L1', 'L2','L3'])
 
+    table_df = pd.DataFrame()
+
+    table_df = make_test_bonds(table_df, signal_bw, power_bw)
+
+    make_test_devices(symbols=sym_layout.all_sym,dev=dev_mos,dev_id=['M1','M2','M3','M4'])
+    make_dev_states(sym_layout.all_sym)
     make_test_symmetries(sym_layout) # You can assign the symmetry objects here
     make_test_constraints(sym_layout.all_sym)
     add_test_measures(sym_layout)  # Assign a measurement between 2 SYM-Points (using their IDs)
 
-    module = gen_test_module_data_BL_te(f, 100, 300.0, layout_ratio)
+    module = gen_test_module_data_BL_te(f, 100, 300.0)
     # Pepare for optimization.
+    sym_layout.form_design_problem(module, table_df, temp_dir)  # Collect data to user interface
 
-    sym_layout.form_design_problem(module, temp_dir) # Collect data to user interface
     sym_layout._map_design_vars()
     setup_model(sym_layout)
     #sym_layout.optimize()
@@ -223,11 +241,13 @@ def make_test_setup2(f,directory):
     print "opt_to_sym_index", sym_layout.opt_to_sym_index
     sym_layout.rev_map_design_vars(individual)
     sym_layout.generate_layout()
-
-    mdl = load_file("C://PowerSynth_git//Response_Surface//PowerCAD-full//tech_lib//Model//Trace//test6.rsmdl")
-    sym_layout.set_RS_model(mdl)
     plot_layout(sym_layout)
-    plt.show()
+    #plt.show()
+
+    mdl = load_file("C:\Users\qmle\Desktop\Testing\FastHenry\Fasthenry3_test_gp\WorkSpace//high_f_bl.rsmdl")
+    sym_layout.mdl_type['E'] = 'RS'
+    sym_layout.set_RS_model(mdl)
+
     sym_layout._build_lumped_graph()
 
     this_circuit=Circuit()
@@ -235,11 +255,13 @@ def make_test_setup2(f,directory):
     #sym_layout.E_graph.export_graph_to_file(sym_layout.lumped_graph)
     # form netlist assignment form netlist import
     netlist= Netlist('Netlist//H_bridge4sw.txt')
-    netlist.form_assignment_list_fh()
-    external=netlist.get_external_list_fh()
-    output_fh_script(sym_layout,"C:\Users\qmle\Desktop\Balancing\Mutual_test\layout cases//BL_layout_pos_TE",external=external)
+    #netlist.form_assignment_list_fh()
+    #external=netlist.get_external_list_fh()
+    #output_fh_script(sym_layout,"C:\Users\qmle\Desktop\Balancing\Mutual_test\layout cases//BL_layout_pos_TE",external=external)
     ads_net = Netlis_export_ADS(df=this_circuit.df_circuit_info, pm=this_circuit.portmap)
-    ads_net.export_ads2('RC_BL_4sw_TE.net')
+    ads_net.export_ads2('RC_BL_4sw_TE'+'_'+str(f)+'kHz'+'.net')
+    empro_script = EMProScript(ModuleDesign(sym_layout), 'RC_BL_4sw_TE' + '_' + str(f) + 'kHz'+'.py')
+    empro_script.generate()
     #plot_lumped_graph(sym_layout)
     #print one_measure(sym_layout)
 def make_netlist():
@@ -255,4 +277,4 @@ def make_netlist():
 # The test goes here, moddify the path below as you wish...
 
 directory ='Layout//balancing_4sw_te.psc' # directory to layout script
-make_test_setup2(100.0,directory)
+make_test_setup2(10000.0,directory)
