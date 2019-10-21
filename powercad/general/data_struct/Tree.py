@@ -2,7 +2,7 @@
 import matplotlib.cm as cm
 import networkx as nx
 from matplotlib.colors import Normalize
-
+import weakref
 ''' This is a general Tree structure'''
 
 
@@ -43,6 +43,7 @@ class T_Node():
         node.depth = self.depth + 1
         self.nodes[node.name] = node
 
+
     def remove_all_children(self):
         self.nodes = {}
 
@@ -50,37 +51,31 @@ class T_Node():
         self.nodes.pop(name, None)
 
     def __del__(self):
-        self.nodes.clear()
         del self.nodes
+        self.parent = None
+        self.nodes=None
+        self.tree =None
 
 
 class Tree():
     def __init__(self):
         self.nodes = []
         self.root = T_Node(None, 'ROOT', 'ROOT', tree=self)
-        self.digraph = nx.DiGraph()
+        self.graph = nx.Graph()
         self.max_rank = 0
-        self.cm = cm.jet
 
     def __del__(self):
         del self.nodes
         del self.root
-        self.digraph.clear()
-        del self.digraph
+        self.graph.clear()
+        del self.graph
 
-    def search_tree(self, start_node=None, kname='ROOT'):
-        ''' Perform a recursive search for node with name kname'''
-        result = None
-        for n in start_node.nodes.keys():
-            if kname in start_node.nodes.keys():
-                result = start_node.nodes[kname]
-            else:
-                node = start_node.nodes[n]
-                # print " Searching for children of ", node.name
-                result = self.search_tree(node, kname)
-
-        if result != None:
-            return result
+    def get_node_by_name(self,node_name):
+        for n in self.nodes:
+            # This wouldnt work in REU branch.
+            if n.name == node_name:
+                return n
+        #print "cant find node",node_name
 
     def remove(self, start_node=None, node_name=None):
         for n in start_node.nodes.keys():
@@ -115,27 +110,18 @@ class Tree():
                 else:
                     self.test_mesh(func, node)
 
-    def update_digraph(self):
+    def update_graph(self):
         for n in self.nodes:
-            self.digraph.add_node(n.name, rank=n.rank)
+            self.graph.add_node(n.name, rank=n.rank)
         for n in self.nodes:
             for c in n.nodes.keys():
-                self.digraph.add_edge(n.name, c)
-
-    def plot_tree(self, ax=None):
-        G = self.digraph
-        self.update_color()
-        pos = self.update_pos()
-        nx.draw_networkx_nodes(G, pos, node_size=500, ax=ax, node_color=self.clist, font_size=16, weight='bold',
-                               alpha=0.7)
-        nx.draw_networkx_labels(G, pos)
-        nx.draw_networkx_edges(G, pos, edgelist=G.edges(), edge_color='black', width=2, arrows=True, ax=ax)
+                self.graph.add_edge(n.name, c)
 
     def update_pos(self):
         pos = {}
         for i in range(self.max_rank + 1):
             counter = 0
-            for n in self.digraph.nodes(data=True):
+            for n in self.graph.nodes(data=True):
                 node = n[0]
                 rank = n[1]['rank']
                 if i == rank:
@@ -149,7 +135,7 @@ class Tree():
         ''' for plotting only based on rank'''
         self.clist = []
         norm_rank = Normalize(0, self.max_rank)
-        for n in self.digraph.nodes(data=True):
+        for n in self.graph.nodes(data=True):
             rank = n[1]['rank']
             for i in range(self.max_rank + 1):
                 if i == rank:

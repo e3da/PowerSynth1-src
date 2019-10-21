@@ -15,7 +15,7 @@ class ModuleDesignError(Exception):
         self.args = [msg]
         
 class ModuleDesign(object):
-    def __init__(self, sym_layout):
+    def __init__(self, sym_layout=None):
         """Holds all of the design geometry information for a specific layout.
         
         Public Access Properties
@@ -35,10 +35,23 @@ class ModuleDesign(object):
         self.substrate = None
         self.substrate_attach = None
         self.baseplate = None
-        
+        self.zpos = []  # Note: this is for fixed dimension only. solder, metal 1, dielectric, metal 2(trace), component
         self.sym_layout = sym_layout # reference of symbolic layout object
-        self._symbolic_layout_to_design() # convert layout to full design object
-        
+        if sym_layout!=None:
+            self._symbolic_layout_to_design() # convert layout to full design object
+    def _update_zpos(self):
+        ''' temp function to get z positions of a simple power moudle stack
+        Need to be updated for more generic cases (from layer stack input file)
+        update self.zpos
+        '''
+        SolderZPos = self.baseplate.dimensions[2]
+        MetalZPos = self.substrate_attach.thickness + SolderZPos
+        DielectricZPos = self.substrate.substrate_tech.metal_thickness + MetalZPos
+        TraceZPos = self.substrate.substrate_tech.isolation_thickness + DielectricZPos
+        MetalZSize = self.substrate.substrate_tech.metal_thickness
+        ComponentZPos = TraceZPos + MetalZSize
+        self.zpos = [SolderZPos,MetalZPos,DielectricZPos,TraceZPos,ComponentZPos]
+
     def _symbolic_layout_to_design(self):
         layout = self.sym_layout
         
@@ -112,7 +125,8 @@ class ModuleDesign(object):
                     rect.translate(ledge_width, ledge_width)
                     self.traces.append(rect)
                     self.orient.append(line.element.vertical)
-
+        # Update Z position info
+        self._update_zpos()
 
 if __name__ == '__main__':
     sym_layout = build_test_layout()

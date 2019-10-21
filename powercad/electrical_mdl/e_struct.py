@@ -41,7 +41,7 @@ class E_plate:
         self.mesh_nodes=[]
         self.name =None # String to represent object name (serve for hierarchy later)
         self.node = None  # node reference to Tree
-
+        self.group_id = None # if we know the group to begin with.
     def include_sheet(self,sheet):
         '''
 

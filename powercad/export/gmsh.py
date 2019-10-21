@@ -8,7 +8,7 @@ import os
 import subprocess
 
 from powercad.general.settings.settings import GMSH_BIN_PATH, TEMP_DIR
-
+import numpy as np
 gmsh_script_top = """
 Function BoxSurfaces
     // Box Points
@@ -177,6 +177,29 @@ thicks[] = {{ {ts} }};
 lcs[] = {{ {lcs} }};
 """
 
+
+def gmsh_setup_layer_stack(layer_stack=None, device=None, directory="", geo_file="", msh_file="",divide=1):
+    '''
+    Perform characterization for device type, still assume bottom up setup due to limited number of boundaries in Elmer
+    Args:
+        layer_stack: LayerStack object
+        device: device object (Part object)
+        directory: workspace directory
+        geo_file: geometry file name
+        msh_file: msh file name
+        divide: divide the min size of the device for n times to make minimum mesh
+    Returns:
+
+    '''
+    ws,ls,ts = layer_stack.get_all_dims(device)
+    min_split = min(device.footprint) / divide # use a half of minimum side value of device to generate the mesh
+    ws = np.array(ws) * 1e-3
+    ls = np.array(ls) * 1e-3
+    ts = np.array(ts) * 1e-3
+    lcs = np.ones((1,len(ws)))*min_split * 1e-3
+    lcs=lcs[0]
+    create_box_stack_mesh(directory=directory, geo_fn=geo_file, mesh_fn=msh_file, ws=ws, ls=ls, ts=ts, lcs=lcs)
+
 def create_box_stack_mesh(directory, geo_fn, mesh_fn, ws, ls, ts, lcs):
     """
     Generates a mesh of a stack of boxes all centered on each other with gmsh.
@@ -187,7 +210,7 @@ def create_box_stack_mesh(directory, geo_fn, mesh_fn, ws, ls, ts, lcs):
         mesh_fn -- .msh filename
         ws  -- list of widths (x axis)
         ls -- list of lengths (y axis)
-        ts -- list of widths (z axis)
+        ts -- list of thickness (z axis)
         lcs -- list of characteristic lengths (characteristic element sizes for each box in stack)
         
         Note: All 4 of the above lists are required to be the same length.
@@ -202,28 +225,31 @@ def create_box_stack_mesh(directory, geo_fn, mesh_fn, ws, ls, ts, lcs):
     lengths = gen_str_list(ls)
     thicks = gen_str_list(ts)
     ele_lengths = gen_str_list(lcs)
+    print widths
+    print lengths
+    print thicks
+    print ele_lengths
     dims = box_stack.format(ws=widths, ls=lengths, 
                             ts=thicks, lcs=ele_lengths)
-    
+    print dims
     geo_string = gmsh_script_top + dims + gmsh_script_bottom
     geo_path = os.path.join(directory, geo_fn)
     f = open(geo_path, 'w')
     f.write(geo_string)
-    print geo_string
     f.close()
     msh_path = os.path.join(directory, mesh_fn)
     "define Gmsh's file path"
-    print GMSH_BIN_PATH
+    #print GMSH_BIN_PATH
     exec_path = os.path.join(GMSH_BIN_PATH, "gmsh").replace("/","\\")
-    print 'gmsh bin path:', exec_path
-    print "geo_path=", geo_path
+    #print 'gmsh bin path:', exec_path
+    #print "geo_path=", geo_path
     args = [exec_path, "-3", "-algo", "front3d", "-optimize", geo_path]
     
-    print args
+    #print args
     p = subprocess.Popen(args, shell=True, stdout=subprocess.PIPE)
     stdout, stderr = p.communicate()
     print 'GMSH RUN'
-    print stdout, stderr
+    #print stdout, stderr
     
 def gen_str_list(ws):
     out = ""
@@ -234,12 +260,12 @@ def gen_str_list(ws):
 if __name__ == "__main__":
     geo_file = 'thermal_char.geo'
     mesh_file = 'thermal_char.msh'
-    direct = "C:\\Users\\bxs003\\Dropbox\\PMLST\\code\\workspace\\PowerCAD\\export_data\\temp"
+    direct = "C:\Users\qmle\Desktop\New_Layout_Engine\GMSH_test\Test1"
     
-    ws = [0.09144, 0.08382, 0.08382, 0.08382, 0.08128, 0.0048, 0.0048]
-    ls = [0.07493, 0.05461, 0.05461, 0.05461, 0.05207, 0.0024, 0.0024]
-    ts = [0.00381, 0.0001, 0.00041, 0.00064, 0.00041, 0.0001, 0.00037]
-    lcs = [0.003, 0.002, 0.002, 0.002, 0.002, 0.0002, 0.0002]
+    ws = [0.05,0.038,0.04,0.038,0.003]
+    ls = [0.06,0.048,0.05,0.048,0.003]
+    ts = [0.001,0.0002,0.00064,0.0002,0.00018]
+    lcs = [0.001,0.001,0.001,0.001,0.001]
 
     create_box_stack_mesh(direct, geo_file, mesh_file, ws, ls, ts, lcs)
     

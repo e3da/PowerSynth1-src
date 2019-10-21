@@ -14,7 +14,7 @@ class ElectricalMeasure(object):
     
     def __init__(self, pt1, pt2, measure, freq, name, lines=None):
         """
-        Electrical parasitic measure object
+        electrical_mdl parasitic measure object
         
         Keyword Arguments:
         pt1 -- SymPoint object which represents start of electrical path

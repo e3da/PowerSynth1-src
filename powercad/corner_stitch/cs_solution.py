@@ -2,6 +2,7 @@ from powercad.corner_stitch.CornerStitch import Rectangle
 from powercad.cons_aware_en.database import *
 import matplotlib.pyplot as plt
 import matplotlib
+from matplotlib.path import Path
 class CornerStitchSolution:
 
     def __init__(self, name='', index=None, params=None,fig_data=None):
@@ -37,30 +38,28 @@ class CornerStitchSolution:
         W, H = p_data.keys()[0]
         W = float(W) / div
         H = float(H) / div
-        rect_dict = p_data.values()[0]
-        for r_id in rect_dict.keys():
-            # print 'rect id',r_id
-            left = 1e32
-            bottom = 1e32
-            right = 0
-            top = 0
-            for rect in rect_dict[r_id]:
-                type = rect.type
-                min_x = float(rect.left) / div
-                max_x = float(rect.right) / div
-                min_y = float(rect.bottom) / div
-                max_y = float(rect.top) / div
-                if min_x <= left:
-                    left = float(min_x)
-                if min_y <= bottom:
-                    bottom = float(min_y)
-                if max_x >= right:
-                    right = float(max_x)
-                if max_y >= top:
-                    top = float(max_y)
-            layout_rect_dict[r_id] = Rectangle(x=left, y=bottom, width=right - left, height=top - bottom, type=type)
+
+        rect_dict=p_data.values()[0]
+
+        #for rect_dict in dict_list:
+        for k,v in rect_dict.items():
+            if not isinstance(v,Rectangle):
+                x=v[1]
+                y=v[2]
+                width=v[3]
+                height=v[4]
+                type=v[0]
+
+                layout_rect_dict[k] = Rectangle(x=x, y=y, width=width, height=height, type=type)
+            else:
+                layout_rect_dict[k]=v
+
+
+
         layout_symb_dict[self.name] = {'rect_info': layout_rect_dict, 'Dims': [W, H]}
         #print layout_symb_dict[layout]
+        #print layout_symb_dict
+
         return layout_symb_dict
 
 
@@ -96,62 +95,84 @@ class CornerStitchSolution:
                 all_lines.append(l)
 
 
-            colors = ['white', 'green', 'red', 'blue', 'yellow', 'purple','pink','magenta','orange','violet']
+            colors = ['white', 'green', 'red', 'blue', 'yellow', 'purple','pink','magenta','orange','violet','black']
 
-            colours=["'white'","'green'","'red'","'blue'","'yellow'","'purple'","'pink'","'magenta'","'orange'","'violet'"]
+            colours=["'white'","'green'","'red'","'blue'","'yellow'","'purple'","'pink'","'magenta'","'orange'","'violet'","'black'"]
 
 
             for row in all_lines:
                 #print"R", row
                 if len(row) < 4:
                     k1 = (float(row[0]), float(row[1]))
+                    #print "plot",k1
+
                 else:
+                    if row[5] == "'Type_3'":
 
-                    x = float(row[0])
-                    y = float(row[1])
-                    w = float(row[2])
-                    h = float(row[3])
-                    colour = str(row[4])
-                    ind=colours.index(colour)
-                    colour=colors[ind]
-                    order = int(row[5])
-                    if row[6] != "'None'":
-                        #linestyle = row[6]
-                        edgecolor = row[7]
-                        ind = colours.index(edgecolor)
-                        edgecolor = colors[ind]
+                        point1 = (float(row[0]), float(row[1]))
+                        point2 = (float(row[2]), float(row[3]))
+                        verts = [point1, point2]
+                        #print"here", verts
+                        codes = [Path.MOVETO, Path.LINETO]
+                        path = Path(verts, codes)
+                        colour = str(row[4])
+                        ind = colours.index(colour)
+                        colour = colors[ind]
+                        patch = matplotlib.patches.PathPatch(path, edgecolor=colour, lw=0.5,zorder=3)
+                        v1.append(patch)
 
-                    if row[6] == "'None'":
-                        #print "IN"
-                        R1 = matplotlib.patches.Rectangle(
-                            (x, y),  # (x,y)
-                            w,  # width
-                            h,  # height
-                            facecolor=colour,
-                            zorder=order
 
-                        )
                     else:
-                        #print x, y, w, h, colour, order, row[6], row[7]
-                        #print "here"
-                        R1 = matplotlib.patches.Rectangle(
-                            (x, y),  # (x,y)
-                            w,  # width
-                            h,  # height
-                            facecolor=colour,
-                            linestyle='--',
-                            edgecolor=edgecolor,
-                            zorder=order
+                        x = float(row[0])
+                        y = float(row[1])
+                        w = float(row[2])
+                        h = float(row[3])
+                        colour = str(row[4])
+                        ind=colours.index(colour)
+                        colour=colors[ind]
+                        order = int(row[5])
+                        if row[6] != "'None'":
+                            #linestyle = row[6]
+                            edgecolor = row[7]
+                            ind = colours.index(edgecolor)
+                            edgecolor = colors[ind]
 
-                        )
-                    v1.append(R1)
+                        if row[6] == "'None'":
+                            #print "IN"
+                            R1 = matplotlib.patches.Rectangle(
+                                (x, y),  # (x,y)
+                                w,  # width
+                                h,  # height
+                                facecolor=colour,
+                                zorder=order
+
+                            )
+                        else:
+                            #print x, y, w, h, colour, order, row[6], row[7]
+                            #print "here"
+                            R1 = matplotlib.patches.Rectangle(
+                                (x, y),  # (x,y)
+                                w,  # width
+                                h,  # height
+                                facecolor=colour,
+                                linestyle='--',
+                                edgecolor=edgecolor,
+                                zorder=order
+
+                            )
+                        v1.append(R1)
 
             for p in v1:
                 ax1.add_patch(p)
+
             ax1.set_xlim(0, k1[0])
             ax1.set_ylim(0, k1[1])
             ax1.set_aspect('equal')
             plt.savefig(fig_dir+'/layout_'+str(layout_ind)+'.png')
+            #plt.savefig(fig_dir + '/layout_' + str(layout_ind) + '.eps')
+            # Try to release memory
+            fig1.clf()
+            plt.close()
 
         conn.close()
 

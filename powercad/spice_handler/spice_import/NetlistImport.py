@@ -166,7 +166,6 @@ class Netlis_export_ADS():
         text_file = open(file_name,'w')
         lr_text=""
         mu_text=""
-        print self.ports_map
 
         N=len(self.net_data[0])
         mu_check={} # a collection to check which mutual term is added

@@ -31,7 +31,7 @@ class Rectangle():
         self.Super=Super
 
 
-def draw_rect_list(rectlist, ax, color='blue', pattern='//',x_max=None, y_max=None):
+def draw_rect_list_cs(rectlist, ax, color='blue', pattern='//',x_max=None, y_max=None):
     patch = []
     for r in rectlist:
         p = patches.Rectangle((r[0], r[1]), r[2], r[3], fill=True,

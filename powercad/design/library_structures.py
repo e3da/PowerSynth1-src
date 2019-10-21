@@ -23,8 +23,8 @@ class MaterialProperties:
         young_modulus -- -- "Young Modulus"
         poissons_ratios -- "Poissons Ratios"
         thermal_expansion_coeffcient -- -- "Thermal Expansion Coefficient"
-        --- Electrical constants
-        electrical_res -- (ohm*m) -- "Electrical Resistivity"
+        --- electrical_mdl constants
+        electrical_res -- (ohm*m) -- "electrical_mdl Resistivity"
         rel_permit -- (unitless) -- "Relative Permittivity"
         rel_permeab -- (unitless) -- "Relative Permeability"
 

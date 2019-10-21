@@ -1,17 +1,20 @@
 #@authors: Quang Le
-from powercad.sym_layout.symbolic_layout import SymbolicLayout,DeviceInstance,SymLine,SymPoint,ElectricalMeasure,ThermalMeasure
 import os
-from powercad.tech_lib.test_techlib import get_power_lead, get_signal_lead
-from powercad.tech_lib.test_techlib import get_power_bondwire, get_signal_bondwire
-from powercad.design.module_design import ModuleDesign
-from powercad.tech_lib.test_techlib import get_device, get_dieattach
-from powercad.export.Q3D import output_q3d_vbscript
-from powercad.general.settings import settings
-from powercad.design.module_data import gen_test_module_data
+
 import networkx as nx
-from powercad.sym_layout.plot import plot_layout
-from powercad.parasitics.analysis import parasitic_analysis
+
+from powercad.design.module_data import gen_test_module_data
+from powercad.general.settings import settings
 from powercad.general.settings.save_and_load import load_file
+from powercad.parasitics.analytical.analysis import parasitic_analysis
+from powercad.sym_layout.plot import plot_layout
+from powercad.sym_layout.symbolic_layout import SymbolicLayout, DeviceInstance, SymLine, SymPoint, ElectricalMeasure, \
+    ThermalMeasure
+from powercad.tech_lib.test_techlib import get_device, get_dieattach
+from powercad.tech_lib.test_techlib import get_power_bondwire, get_signal_bondwire
+from powercad.tech_lib.test_techlib import get_signal_lead
+
+
 def make_test_symmetries(sym_layout):
     symm1 = []
     symm2 = []
