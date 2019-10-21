@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from powercad.corner_stitch.input_script import *
 from powercad.sol_browser.cs_solution_handler import pareto_solutions,export_solutions
-
+import time
 # --------------Plot function---------------------
 def plot_layout(fig_data=None, rects=None, size=None, fig_dir=None):
     if rects != None:
@@ -129,6 +129,7 @@ def update_solution_data(layout_dictionary=None,module_info=None, opt_problem=No
     :return:
     '''
     Solutions = []
+    start=time.time()
     for i in range(len(layout_dictionary)):
 
         if opt_problem != None:  # Evaluatio mode
@@ -143,6 +144,8 @@ def update_solution_data(layout_dictionary=None,module_info=None, opt_problem=No
         solution.layout_info = layout_dictionary[i]
         solution.abstract_info = solution.form_abs_obj_rect_dict()
         Solutions.append(solution)
+    end=time.time()
+    print "Eval",end-start
     return Solutions
 
 def get_seed(seed=None):
@@ -230,7 +233,7 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True,rel_c
 
     :return: list of CornerStitch Solution objects
     '''
-    plot = True
+    plot = False
 
 
     # GET MEASUREMENT NAME:
@@ -397,14 +400,17 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True,rel_c
             if choice == "NG-RANDOM":
                 params = get_params(num_layouts=num_layouts,alg='NG-RANDOM')
                 num_layouts = params[0]
+                start=time.time()
                 cs_sym_info, module_data = layout_engine.generate_solutions(mode, num_layouts=num_layouts, W=width,
                                                                          H=height,
                                                                          fixed_x_location=None, fixed_y_location=None,
                                                                          seed=seed, individual=None,db=db_file, bar=False)
-
+                end=time.time()
+                print "RT",end-start
                 opt_problem = new_engine_opt(engine=layout_engine, W=width, H=height, seed=seed, level=mode,
                                              method=None,
                                              apis=apis, measures=measures)
+
 
                 Solutions = update_solution_data(layout_dictionary=cs_sym_info,module_info=module_data, opt_problem=opt_problem,
                                                  measure_names=measure_names)
