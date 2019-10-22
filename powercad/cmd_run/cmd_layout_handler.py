@@ -7,6 +7,8 @@ import matplotlib.patches as patches
 from powercad.corner_stitch.input_script import *
 from powercad.sol_browser.cs_solution_handler import pareto_solutions,export_solutions
 import time
+from powercad.electrical_mdl.cornerstitch_API import ElectricalMeasure
+from powercad.thermal.cornerstitch_API import ThermalMeasure
 # --------------Plot function---------------------
 def plot_layout(fig_data=None, rects=None, size=None, fig_dir=None):
     if rects != None:
@@ -135,12 +137,14 @@ def update_solution_data(layout_dictionary=None,module_info=None, opt_problem=No
         if opt_problem != None:  # Evaluatio mode
             results = opt_problem.eval_layout(module_data=module_info[i])
         else:
+
             results = perf_results[i]
         name = 'Layout_' + str(i)
 
         solution = CornerStitchSolution(name=name,index=i)
+
         solution.params = dict(zip(measure_names, results))  # A dictionary formed by result and measurement name
-        print "Added", name,"Perf_values: ", solution.params.values()
+        print "Added", name,"Perf_values: ", solution.params
         solution.layout_info = layout_dictionary[i]
         solution.abstract_info = solution.form_abs_obj_rect_dict()
         Solutions.append(solution)
@@ -233,14 +237,17 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True,rel_c
 
     :return: list of CornerStitch Solution objects
     '''
-    plot = False
+    plot = True
 
 
     # GET MEASUREMENT NAME:
-    measure_names = []
+    measure_names = [None,None]
     if len(measures)>0:
         for m in measures:
-            measure_names.append(m.name)
+            if isinstance(m,ElectricalMeasure):
+                measure_names[0]=m.name
+            if isinstance(m,ThermalMeasure):
+                measure_names[1]=m.name
     else:
         measure_names=["perf_1","perf_2"]
 
@@ -355,10 +362,15 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True,rel_c
                 sol_path = fig_dir + '/Mode_1_pareto'
                 if not os.path.exists(sol_path):
                     os.makedirs(sol_path)
+                if len(Solutions)<50:
+                    sol_path_all = fig_dir + '/Mode_1_solutions'
+                    if not os.path.exists(sol_path_all):
+                        os.makedirs(sol_path_all)
                 pareto_data = pareto_solutions(Solutions)
                 for solution in Solutions:
                     if solution.index in pareto_data.keys():
                         solution.layout_plot(layout_ind=solution.index, db=db_file, fig_dir=sol_path)
+                    solution.layout_plot(layout_ind=solution.index, db=db_file, fig_dir=sol_path_all)
 
 
 
@@ -460,12 +472,17 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True,rel_c
             export_solutions(solutions=Solutions, directory=sol_dir, pareto_data=pareto_data) # exporting solution info to csv file
             if plot:
                 sol_path = fig_dir + '/Mode_2_pareto'
+                if len(Solutions)<50:
+                    sol_path_all = fig_dir + '/Mode_2_solutions'
+                    if not os.path.exists(sol_path_all):
+                        os.makedirs(sol_path_all)
                 if not os.path.exists(sol_path):
                     os.makedirs(sol_path)
                 pareto_data = pareto_solutions(Solutions)
                 for solution in Solutions:
                     if solution.index in pareto_data.keys():
                         solution.layout_plot(layout_ind=solution.index, db=db_file, fig_dir=sol_path)
+                    solution.layout_plot(layout_ind=solution.index, db=db_file, fig_dir=sol_path_all)
 
 
 

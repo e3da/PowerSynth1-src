@@ -194,13 +194,16 @@ class Cmd_Handler:
                                          floor_plan=floor_plan)
             elif run_option == 1:
                 self.measures=[]
+                if self.electrical_mode != None:
+                    e_measure_data = {'name': e_name, 'type': type, 'source': source, 'sink': sink}
+                    self.setup_electrical(mode='macro', dev_conn=dev_conn, frequency=frequency,
+                                          meas_data=e_measure_data)
+
                 if self.thermal_mode!=None:
+
                     t_setup_data={'Power': power,'heat_conv':h_conv,'t_amb':t_amb}
                     t_measure_data={'name':t_name,'devices':devices}
                     self.setup_thermal(mode='macro', setup_data=t_setup_data,meas_data=t_measure_data,model_type=thermal_model)
-                if self.electrical_mode!=None:
-                    e_measure_data = {'name': e_name, 'type': type, 'source': source, 'sink': sink}
-                    self.setup_electrical(mode='macro', dev_conn=dev_conn, frequency=frequency, meas_data=e_measure_data)
 
                 # Convert a list of patch to rectangles
                 patch_dict = self.engine.init_data[0]
@@ -281,6 +284,8 @@ class Cmd_Handler:
                                          optimization=True, db_file=self.db_file,fig_dir=self.fig_dir,sol_dir=self.db_dir,
                                          apis={'E': self.e_api, 'T': self.t_api}, num_layouts=num_layouts, seed=seed,
                                          algorithm=algorithm, floor_plan=floor_plan,num_gen=num_gen,measures=self.measures)
+
+                self.export_solution_params(self.fig_dir,self.solutions,layout_mode)
         else:
             # First check all file path
             if not (check_file(self.layout_script)):
@@ -631,15 +636,48 @@ class Cmd_Handler:
                 cont, layout_mode = self.option_layout_gen()
                 if layout_mode in range(3):
                     self.set_up_db()
+
                     self.soluions = generate_optimize_layout(layout_engine=self.engine, mode=layout_mode,
                                                              optimization=True, db_file=self.db_file,fig_dir=self.fig_dir,sol_dir=self.db_dir,
                                                              apis={'E': self.e_api, 'T': self.t_api},
                                                              measures=self.measures)
 
 
+                    self.export_solution_params(self.fig_dir, self.solutions,layout_mode)
 
             elif opt == 'quit':
                 cont = False
+    def export_solution_params(self,sol_dir=None,solutions=None,opt=None):
+
+        data_x=[]
+        data_y=[]
+        for sol in solutions:
+            if sol.params['Inductance']>50:
+                continue
+            data_x.append(sol.params['Inductance'])
+            data_y.append(sol.params['Max_Temperature'])
+
+        plt.cla()
+
+
+        plt.scatter(data_x, data_y)
+
+        x_label = 'Inductance'
+        y_label = 'Max_Temperature'
+
+        plt.xlim(min(data_x)-2, max(data_x)+2)
+        plt.ylim(min(data_y)-0.5, max(data_y)+0.5)
+        # naming the x axis
+        plt.xlabel(x_label)
+        # naming the y axis
+        plt.ylabel(y_label)
+
+        # giving a title to my graph
+        plt.title('Solution Space')
+
+        # function to show the plot
+        #plt.show()
+        plt.savefig(sol_dir+'/'+'plot_'+str(opt)+'.png')
 
 
 if __name__ == "__main__":

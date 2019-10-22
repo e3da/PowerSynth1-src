@@ -127,17 +127,26 @@ class new_engine_opt:
         #print"Here_eval",module_data
         result = []
         #print "DATA",layout_data
+        #print "M", self.measures
+        measures=[None,None]
+
         for measure in self.measures:
+            if isinstance(measure,ElectricalMeasure):
+                measures[0]=measure
+            if isinstance(measure,ThermalMeasure):
+                measures[1]=measure
+        self.measures=measures
+        for i in range(len(self.measures)):
+            measure=self.measures[i]
             # TODO: APPLY LAYOUT INFO INTO ELECTRICAL MODEL
             if isinstance(measure, ElectricalMeasure):
                 type = measure.measure
 
                 self.e_api.init_layout_isl(module_data=module_data)
                 start=time.time()
-                try:
-                    R, L = self.e_api.extract_RL(src=measure.source, sink=measure.sink)
-                except:
-                    R, L=[100,100]
+
+                R, L = self.e_api.extract_RL(src=measure.source, sink=measure.sink)
+
                 #print 'R',R,'L',L
                 end = time.time()
                 #print "RT", end - start
