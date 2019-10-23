@@ -596,7 +596,7 @@ def script_translator(input_script=None, bond_wire_info=None, fig_dir=None, cons
     ScriptMethod.read_input_script()  # reads input script and make two sections
     ScriptMethod.gather_part_route_info()  # gathers part and route info
     ScriptMethod.gather_layout_info()  # gathers layout info
-    #ScriptMethod.plot_init_layout()
+    ScriptMethod.plot_init_layout()
     # finding islands for a given layout
     islands = ScriptMethod.form_initial_islands() # list of island objects
     # finding child of each island

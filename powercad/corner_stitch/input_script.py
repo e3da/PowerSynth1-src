@@ -545,6 +545,7 @@ class ScriptInputMethod():
                             width = float(layout_data[j][5])
                             height = float(layout_data[j][6])
                             name = layout_data[j][1]
+                            #print name
                             Schar = layout_data[j][0]
                             Echar = layout_data[j][-1]
                             rect_info = [type, x, y, width, height, name, Schar, Echar,k1,0] #k1=hierarchy level # 0 is for rotate angle (default=0 as r)
@@ -553,9 +554,9 @@ class ScriptInputMethod():
                             continue
 
         # print "cs_info"
-        #print len(rects_info)
-        #for rect in rects_info:
-            #print rect
+        print len(rects_info)
+        for rect in rects_info:
+            print rect
         self.cs_info=[0 for i in range(len(rects_info))]
         layout_info=layout_info[1:]
         for i in range(len(layout_info)):
@@ -573,6 +574,7 @@ class ScriptInputMethod():
         colors = ['green', 'red', 'blue', 'yellow', 'purple', 'pink', 'magenta', 'orange', 'violet']
         type = ['Type_1', 'Type_2', 'Type_3', 'Type_4', 'Type_5', 'Type_6', 'Type_7', 'Type_8', 'Type_9']
         for rect in self.cs_info:
+            #print rect
 
             color_ind=type.index(rect[0])
             color=colors[color_ind]
