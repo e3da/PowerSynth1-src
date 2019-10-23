@@ -353,6 +353,7 @@ class New_layout_engine():
         self.bondwires = copy.deepcopy(bondwires)  # to pass bondwire info to CG
         #for wire in self.bondwires:
             #print"here", wire.printWire()
+        #raw_input()
 
 
 
