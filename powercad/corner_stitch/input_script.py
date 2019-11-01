@@ -291,7 +291,7 @@ class ScriptInputMethod():
                         # print element.footprint
                         self.all_parts_info[layout_info[j][k + 1]].append(element)
 
-                elif layout_info[j][k][0] == 'L' and (layout_info[j][k+1] == 'power_lead' or layout_info[j][k+1]=='signal_lead') and layout_info[j][k+1] in self.all_components_list:
+                elif layout_info[j][k][0] == 'L' and (layout_info[j][k+1] == 'power_lead' or layout_info[j][k+1]=='signal_lead' or  layout_info[j][k+1]=='neutral_lead') and layout_info[j][k+1] in self.all_components_list:
                     rotate = False
                     angle = None
                     for m in range(len(layout_info[j])):
@@ -554,9 +554,9 @@ class ScriptInputMethod():
                             continue
 
         # print "cs_info"
-        print len(rects_info)
-        for rect in rects_info:
-            print rect
+        #print len(rects_info)
+        #for rect in rects_info:
+            #print rect
         self.cs_info=[0 for i in range(len(rects_info))]
         layout_info=layout_info[1:]
         for i in range(len(layout_info)):
