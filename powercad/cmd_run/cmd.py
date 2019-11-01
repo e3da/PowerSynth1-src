@@ -652,8 +652,8 @@ class Cmd_Handler:
         data_x=[]
         data_y=[]
         for sol in solutions:
-            if sol.params['Inductance']>50:
-                continue
+            #if sol.params['Inductance']>50:
+                #continue
             data_x.append(sol.params['Inductance'])
             data_y.append(sol.params['Max_Temperature'])
 
