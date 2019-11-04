@@ -16,6 +16,13 @@ import math
 from numpy import sign
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+
+
+class Point():
+    def __init__(self, pos):
+        self.pos = pos
+
+
 class Circle: # Todo: do this later
     '''
     A Filled Circle object mainly used for contours, most functions are used to interact with RECT
@@ -86,9 +93,70 @@ class Circle: # Todo: do this later
 
 
 class Line:
-    def __init__(self,x1,y1,x2,y2):
-        self.pt1=[x1,y1]
-        self.pt2=[x2,y2]
+    def __init__(self,pt1,pt2):
+        self.pt1=pt1
+        self.pt2=pt2
+
+    def __str__(self):
+        return str(self.pt1) + ', ' + str(self.pt2)
+
+    def find_line(self):
+        pt1=self.pt1
+        pt2=self.pt2
+        if pt1[0] == pt2[0] or pt1[1] == pt2[1]:
+            self.alpha = None
+        else:
+            self.alpha = float((pt2[1] - pt1[1]) / (pt2[0] - pt1[0]))
+        if self.alpha != None:
+            self.beta = pt1[1] - self.alpha * pt1[0]
+    def include(self,point):
+        xs = [self.pt1[0],self.pt2[0]]
+        ys = [self.pt1[1], self.pt2[1]]
+        xs.sort(),ys.sort()
+        # check if point is on the line
+        self.find_line()
+        if self.alpha!=None: # Diagonal line
+            if self.alpha*point[0]+self.beta == point[1]:
+                if point[0]>=xs[0] and point[0] <= xs[1]:
+                    return True
+                else:
+                    return False
+            else:
+                return False
+        else: # Horizontal or Vertical case
+            if point[0] == xs[0] and point[0] == xs [1]:
+                if point[1] >= ys[0] and point[1] <= ys[1]:
+                    return True
+                else:
+                    return False
+            elif point[1] == ys[0] and point[1] == ys[1]:
+                if point[0] >= xs[0] and point[0] <= xs[1]:
+                    return True
+                else:
+                    return False
+            else:
+                return False
+    def split(self,points):
+        all_line =[]
+        all_points =[self.pt1,self.pt2]
+        for p in points:
+            if self.include(p):
+                all_points.append(p)
+            else:
+                print ("some pts not online")
+                return None
+        points = list(set(all_points))
+        points.sort()
+        for i in range(len(points)-1):
+            all_line.append(Line(points[i], points[i + 1]))
+        return all_line
+    def equal(self,line):
+        if (self.pt1 == line.pt1 and self.pt2 == line.pt2) or (self.pt2 == line.pt1 and self.pt1 == line.pt2):
+            return True
+        else:
+            return False
+
+
 class Rect:
     TOP_SIDE = 1
     BOTTOM_SIDE = 2
@@ -102,7 +170,7 @@ class Rect:
         self.right = right
         self.width = self.width_eval()
         self.height = self.height_eval()
-
+        self.cs_type = 'h' # for cornerstich object, this defines if the rectangles are coming from H_CS or V_CS
     def __str__(self):
         return str(self.top)+', '+str(self.bottom)+', '+str(self.left)+', '+str(self.right)
 
@@ -135,6 +203,11 @@ class Rect:
         else:
             return False
 
+    def encloses1(self, x, y):
+        if x > self.left and x < self.right and y > self.bottom and y < self.top:
+            return True
+        else:
+            return False
     def translate(self, dx, dy):
         self.top += dy
         self.bottom += dy
@@ -212,9 +285,88 @@ class Rect:
             hside = self.LEFT_SIDE
         return hside, vside
 
+    def get_all_corners(self):
+        return [(self.left,self.bottom),(self.left,self.top),(self.right,self.bottom),(self.right,self.top)]
+
+    def get_all_lines(self):
+        l1 = Line((self.left, self.bottom), (self.left, self.top))
+        l2 = Line((self.left, self.bottom), (self.right, self.bottom))
+        l3 = Line((self.left, self.top), (self.right, self.top))
+        l4 = Line((self.right, self.bottom), (self.right, self.top))
+        return [l1,l2,l3,l4]
+
     def deepCopy(self):
         rect = Rect(self.top, self.bottom, self.left, self.right)
         return rect
+
+    def find_cut_intervals(self,dir=0,cut_set={}):
+        '''
+        Given a set of x or y locations and its interval, check if there is a cut.
+        Args:
+            dir: 0 for horizontal check and 1 for vertical check
+            cut_set: if dir=0, {yloc:[x intervals]} if dir=1, {xloc:[ y intervals]}
+
+        Returns: a list of cut x or y locations
+
+        '''
+        # first perform merge on the intervals that are touching
+        #print "after",new_cut_set
+        cuts = []
+        if dir == 0: # horizontal cut
+            for k in cut_set: # the key is y location in this case
+                if k>=self.bottom and k <=self.top:
+                    for i in cut_set[k]: # for each interval
+                        if not (i[1]<self.left) or not (i[0]>self.right):
+                            cuts.append(k)
+                            break
+        elif dir == 1:  # horizontal cut
+            for k in cut_set:  # the key is x location in this case
+                if k >= self.left and k <= self.right:
+                    for i in cut_set[k]:  # for each interval
+                        if not (i[1] < self.bottom) or not (i[0] > self.top):
+                            cuts.append(k)
+                            break
+
+        return cuts
+
+    def split_rect(self,cuts=[],dir=0):
+        '''
+        Split a rectangle into multiple rectangles
+        Args:
+            cuts: the x or y locations to make cuts
+            dir: 0 for horizontal 1 for vertical
+
+        Returns: list of rectangles
+        '''
+        # if the cuts include the rect boundary, exclude them first
+        if dir ==0:
+            min = self.left
+            max = self.right
+        elif dir == 1:
+            min = self.bottom
+            max = self.top
+        cuts.sort() # sort the cut positions from min to max
+        if cuts[0]!=min:
+            cuts = [min]+cuts
+        if cuts[-1]!= max:
+            cuts = cuts+[max]
+        if cuts[0]==min and cuts[-1]==max and len(cuts)==2:
+            return [self]
+        splitted_rects = []
+        if dir == 0:
+            top =self.top
+            bottom = self.bottom
+            for i in range(len(cuts)-1):
+                r =Rect(left=cuts[i],right=cuts[i+1],top=top,bottom=bottom)
+                splitted_rects.append(r)
+        elif dir == 1:
+            left = self.left
+            right = self.right
+            for i in range(len(cuts) - 1):
+                r = Rect(left=left, right=right, top=cuts[i+1], bottom=cuts[i])
+                splitted_rects.append(r)
+
+        return splitted_rects
 
 # Seed the random module
 def seed_rand(num):
@@ -224,8 +376,7 @@ def seed_rand(num):
 def rand(num_range):
     return random.uniform(num_range[0], num_range[1])
 def SolveVolume(dims):
-        #mm -> m
-        return dims[0]*dims[1]*dims[2]*1e-9
+    return dims[0]*dims[1]*dims[2]*1e-9
 def distance(x1, x2):
     dist = 0
     for i in range(len(x1)):
@@ -252,26 +403,31 @@ def get_overlap_interval(interval1, interval2):
     return (max(interval1[0], interval2[0]), min(interval1[1], interval2[1]))
 
 
-def draw_rect_list(rectlist,ax,color,pattern):
+def draw_rect_list(rectlist,color,pattern,ax=None):
+    #fig = plt.figure()
+    ax = plt.axes()
+    #fig, ax = plt.subplots()
     patch=[]
+    plt.xlim(0, 85)
+    plt.ylim(0, 85)
     for r in rectlist:
-        p = patches.Rectangle((r.left, r.bottom), r.width(), r.height(),fill=True,
-            edgecolor='black',facecolor=color,hatch=pattern)
+        p = patches.Rectangle((r.left, r.bottom), r.width_eval(), r.height_eval(),fill=True,
+            edgecolor='black',facecolor=color,hatch=pattern,linewidth=1,alpha=0.5)
+        #print r.left,r.bottom,r.width(),r.height()
         patch.append(p)
         ax.add_patch(p)
-    #ax1.autoscale_view(tight=True)
-    plt.xlim(0,60)
-    plt.ylim(0, 60)
-    plt.gca().set_aspect('equal', adjustable='box')
+    plt.show()
+
+
+
 
 
 if __name__ == '__main__':
 
-    l1=Line(1,3,2,2)
-    c1=Circle(2,2,2)
-    print c1.encloses([2,3])
-    print c1.move_frame([0, 0])
-    print c1.move_frame([5, 3])
-    print c1.inter_line(l1)
+    l1=Line((1,1),(1,5))
+    pts= [(1,2),(1,3),(1,4)]
+    new_set=l1.split(pts)
+    for l in new_set:
+        print l.pt1,l.pt2
 
 

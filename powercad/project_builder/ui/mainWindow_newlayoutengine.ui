@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1342</width>
-    <height>960</height>
+    <width>1442</width>
+    <height>838</height>
    </rect>
   </property>
   <property name="palette">
@@ -412,7 +412,7 @@ p, li { white-space: pre-wrap; }
           </font>
          </property>
          <property name="text">
-          <string>Test New Layout Engine</string>
+          <string>Constraint-Aware Layout Engine</string>
          </property>
         </widget>
        </item>
@@ -465,10 +465,16 @@ p, li { white-space: pre-wrap; }
     </item>
     <item row="0" column="0" colspan="2">
      <widget class="QLabel" name="label_4">
+      <property name="minimumSize">
+       <size>
+        <width>600</width>
+        <height>225</height>
+       </size>
+      </property>
       <property name="maximumSize">
        <size>
-        <width>500</width>
-        <height>200</height>
+        <width>600</width>
+        <height>225</height>
        </size>
       </property>
       <property name="palette">
@@ -668,7 +674,7 @@ p, li { white-space: pre-wrap; }
        <string/>
       </property>
       <property name="pixmap">
-       <pixmap resource="main_window_images.qrc">:/images/images/main_window/PowerSynth_Logo_Temp3.png</pixmap>
+       <pixmap>:/images/images/main_window/PowerSynth_Logo_Temp3.png</pixmap>
       </property>
       <property name="scaledContents">
        <bool>true</bool>
@@ -691,13 +697,13 @@ p, li { white-space: pre-wrap; }
       </property>
       <property name="minimumSize">
        <size>
-        <width>500</width>
+        <width>600</width>
         <height>0</height>
        </size>
       </property>
       <property name="maximumSize">
        <size>
-        <width>410</width>
+        <width>600</width>
         <height>16777215</height>
        </size>
       </property>
@@ -817,15 +823,15 @@ p, li { white-space: pre-wrap; }
        <number>2</number>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>5</number>
       </property>
       <widget class="QWidget" name="page_12">
        <property name="geometry">
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>479</width>
-         <height>614</height>
+         <width>276</width>
+         <height>653</height>
         </rect>
        </property>
        <attribute name="label">
@@ -1796,9 +1802,9 @@ p, li { white-space: pre-wrap; }
        <property name="geometry">
         <rect>
          <x>0</x>
-         <y>-71</y>
-         <width>479</width>
-         <height>620</height>
+         <y>0</y>
+         <width>270</width>
+         <height>698</height>
         </rect>
        </property>
        <attribute name="label">
@@ -2245,8 +2251,8 @@ p, li { white-space: pre-wrap; }
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>496</width>
-         <height>549</height>
+         <width>125</width>
+         <height>655</height>
         </rect>
        </property>
        <attribute name="label">
@@ -2541,8 +2547,8 @@ p, li { white-space: pre-wrap; }
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>496</width>
-         <height>549</height>
+         <width>215</width>
+         <height>386</height>
         </rect>
        </property>
        <attribute name="label">
@@ -2735,7 +2741,7 @@ p, li { white-space: pre-wrap; }
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>496</width>
+         <width>450</width>
          <height>549</height>
         </rect>
        </property>
@@ -3311,14 +3317,81 @@ p, li { white-space: pre-wrap; }
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>538</width>
-         <height>532</height>
+         <width>579</width>
+         <height>414</height>
         </rect>
        </property>
        <attribute name="label">
         <string>Results</string>
        </attribute>
        <layout class="QGridLayout" name="gridLayout_4">
+        <item row="1" column="0">
+         <widget class="QLabel" name="label_26">
+          <property name="text">
+           <string>Number of optimizer generations:</string>
+          </property>
+          <property name="margin">
+           <number>1</number>
+          </property>
+          <property name="indent">
+           <number>2</number>
+          </property>
+          <property name="buddy">
+           <cstring>txt_numGenerations</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="5" column="0">
+         <widget class="QCheckBox" name="checkBox_fillet">
+          <property name="minimumSize">
+           <size>
+            <width>150</width>
+            <height>20</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>150</width>
+            <height>20</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Fillet corners</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="2">
+         <widget class="QLineEdit" name="txt_numseed">
+          <property name="maximumSize">
+           <size>
+            <width>50</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">background-color: rgb(255, 255, 255);</string>
+          </property>
+          <property name="inputMask">
+           <string/>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="2">
+         <widget class="QLineEdit" name="txt_numGenerations">
+          <property name="maximumSize">
+           <size>
+            <width>50</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">background-color: rgb(255, 255, 255);</string>
+          </property>
+          <property name="inputMask">
+           <string/>
+          </property>
+         </widget>
+        </item>
         <item row="3" column="0">
          <widget class="QPushButton" name="btn_runSim">
           <property name="minimumSize">
@@ -3426,50 +3499,61 @@ p, li { white-space: pre-wrap; }
           </property>
          </widget>
         </item>
-        <item row="6" column="1">
+        <item row="5" column="1">
+         <widget class="QPushButton" name="btn_clr_all">
+          <property name="minimumSize">
+           <size>
+            <width>120</width>
+            <height>20</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>120</width>
+            <height>20</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Clear Saved Solution</string>
+          </property>
+         </widget>
+        </item>
+        <item row="5" column="2">
          <widget class="QPushButton" name="btn_open_sol_browser">
+          <property name="minimumSize">
+           <size>
+            <width>150</width>
+            <height>20</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>150</width>
+            <height>20</height>
+           </size>
+          </property>
           <property name="text">
            <string>Open Solution Browser</string>
           </property>
          </widget>
         </item>
-        <item row="6" column="0">
-         <widget class="QCheckBox" name="checkBox_fillet">
-          <property name="text">
-           <string>Fillet corners</string>
+        <item row="3" column="2">
+         <spacer name="horizontalSpacer">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
           </property>
-         </widget>
-        </item>
-        <item row="2" column="0">
-         <widget class="QLabel" name="label_34">
-          <property name="text">
-           <string>Control seed:</string>
+          <property name="sizeType">
+           <enum>QSizePolicy::Fixed</enum>
           </property>
-          <property name="alignment">
-           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-          </property>
-          <property name="buddy">
-           <cstring>txt_numGenerations</cstring>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="1">
-         <widget class="QLineEdit" name="txt_numseed">
-          <property name="maximumSize">
+          <property name="sizeHint" stdset="0">
            <size>
-            <width>50</width>
-            <height>16777215</height>
+            <width>20</width>
+            <height>20</height>
            </size>
           </property>
-          <property name="styleSheet">
-           <string notr="true">background-color: rgb(255, 255, 255);</string>
-          </property>
-          <property name="inputMask">
-           <string/>
-          </property>
-         </widget>
+         </spacer>
         </item>
-        <item row="0" column="0" colspan="2">
+        <item row="0" column="0" colspan="3">
          <widget class="QGroupBox" name="groupBox_6">
           <property name="minimumSize">
            <size>
@@ -3520,33 +3604,7 @@ p, li { white-space: pre-wrap; }
           </layout>
          </widget>
         </item>
-        <item row="1" column="1">
-         <widget class="QLineEdit" name="txt_numGenerations">
-          <property name="maximumSize">
-           <size>
-            <width>50</width>
-            <height>16777215</height>
-           </size>
-          </property>
-          <property name="styleSheet">
-           <string notr="true">background-color: rgb(255, 255, 255);</string>
-          </property>
-          <property name="inputMask">
-           <string/>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="0">
-         <widget class="QLabel" name="label_26">
-          <property name="text">
-           <string>Number of optimizer generations:</string>
-          </property>
-          <property name="buddy">
-           <cstring>txt_numGenerations</cstring>
-          </property>
-         </widget>
-        </item>
-        <item row="5" column="0" colspan="2">
+        <item row="4" column="0" colspan="3">
          <widget class="QGroupBox" name="groupBox_7">
           <property name="enabled">
            <bool>true</bool>
@@ -3689,18 +3747,21 @@ p, li { white-space: pre-wrap; }
           </layout>
          </widget>
         </item>
-        <item row="3" column="1">
-         <spacer name="horizontalSpacer">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
+        <item row="2" column="0">
+         <widget class="QLabel" name="label_34">
+          <property name="text">
+           <string>Control seed:</string>
           </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
+          <property name="margin">
+           <number>1</number>
           </property>
-         </spacer>
+          <property name="indent">
+           <number>2</number>
+          </property>
+          <property name="buddy">
+           <cstring>txt_numGenerations</cstring>
+          </property>
+         </widget>
         </item>
        </layout>
       </widget>
@@ -3713,7 +3774,7 @@ p, li { white-space: pre-wrap; }
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1342</width>
+     <width>1442</width>
      <height>21</height>
     </rect>
    </property>

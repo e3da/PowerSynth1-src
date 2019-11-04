@@ -5,6 +5,7 @@ from powercad.design.library_structures import MaterialProperties
 import csv
 import re
 from powercad.general.settings.settings import MATERIAL_LIB_PATH
+import os
 class Material_lib:
     def __init__(self):
         self.mat_lib=[]
@@ -63,7 +64,7 @@ class Material_lib:
                 stop = len(line) - 1
                 material.expansion_coeff = float(line[start:stop])
 
-                '''Electrical Constant'''
+                '''electrical_mdl Constant'''
             elif "permittivity" in line and 'simple' in line:
                 start=line.find('permittivity')+len('permittivity')+3
                 stop=len(line)-1
@@ -93,6 +94,7 @@ class Material_lib:
         else:
             self.mat_lib=[]
             print 'overwrite material list'
+        print fname
         with open(fname) as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
@@ -198,8 +200,9 @@ class Material_lib:
         '''
         if self.mat_lib != []:
             for material in self.mat_lib:
+
                 if material.name == mat_name:
-                    print 'found material',material.name
+                    #print 'found material',material.name
                     return material
 
 if __name__ == "__main__":

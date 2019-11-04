@@ -29,6 +29,7 @@ def perform_thermal_analysis(sym_layout, model=1, matlab_engine=None):
 
 
 def rect_flux_analysis(sym_layout):
+
     baseplate = sym_layout.module.baseplate
     sub = sym_layout.module.substrate.substrate_tech
     sub_attach = sym_layout.module.substrate_attach
@@ -38,7 +39,7 @@ def rect_flux_analysis(sym_layout):
                    thickness = baseplate.dimensions[2]*1e-3,
                    conv_coeff = baseplate.eff_conv_coeff,
                    thermal_cond = baseplate.baseplate_tech.properties.thermal_cond)
-    
+
     met = (sub.metal_thickness, sub.metal_properties.thermal_cond)
     iso = (sub.isolation_thickness, sub.isolation_properties.thermal_cond)
     attach = (sub_attach.thickness, sub_attach.attach_tech.properties.thermal_cond)

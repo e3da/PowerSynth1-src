@@ -31,7 +31,7 @@ class Rectangle():
         self.Super=Super
 
 
-def draw_rect_list(rectlist, ax, color='blue', pattern='//',x_max=None, y_max=None):
+def draw_rect_list_cs(rectlist, ax, color='blue', pattern='//',x_max=None, y_max=None):
     patch = []
     for r in rectlist:
         p = patches.Rectangle((r[0], r[1]), r[2], r[3], fill=True,
@@ -410,7 +410,6 @@ def input_conversion(sym_layout):
             name = obj.path_id
 
         Input_rects.append(Rectangle(type, x, y, width, height, name, Schar='/', Echar='/'))
-
     return Input_rects,x_max,y_max # Input_rects are input to corner stitch insert function, max_x,max_y are maximum x and y coordinate of the layout
 
 

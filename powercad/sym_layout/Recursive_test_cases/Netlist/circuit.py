@@ -85,14 +85,14 @@ class Circuit():
                     self.portmap.loc[rowid, "PS_node_id"] = node[0]
                     self.portmap.loc[rowid, "Type"] = node[1]['type']
                     self.portmap.loc[rowid, "Position"] = node[1]['point']
-                    self.portmap.loc[rowid, "Net_id"] = net_id
+                    self.portmap.loc[rowid, "Net_id"] = name
                     # node map
                     self.node_df.loc[rowid, "PS_node_id"] = node[0]
-                    self.node_df.loc[rowid, "Net_id"] = net_id
+                    self.node_df.loc[rowid, "Net_id"] = name
                     self.node_df.loc[rowid, "Type"] = node[1]['type']
                     # add to component list for each port node add a port impedance
                     self.df_circuit_info.loc[rowid, 'element'] = "R_in{0}".format(net_id)
-                    self.df_circuit_info.loc[rowid, 'p node'] = net_id
+                    self.df_circuit_info.loc[rowid, 'p node'] = name
                     self.df_circuit_info.loc[rowid, 'n node'] = 0
                     self.df_circuit_info.loc[rowid, 'value'] = float(port_impedance)
                     rowid += 1
@@ -155,7 +155,7 @@ class Circuit():
         self.portmap.to_csv('port.csv')
     def get_max_netid(self):
         return max(self.df_circuit_info['p node'].tolist()+self.df_circuit_info['n node'].tolist())
-    def _graph_s_params(self,file="spara.csv",ports=None,frange=[1.5e5,3e7,100]):
+    def _graph_s_params(self,file="test.net",ports=None,frange=[1.5e5,3e7,100],env='C:\Program Files\LTC\LTspiceXVII\XVIIx64.exe'):
         '''
         Given an electrical parasitic netlist this code will modify the data base and add a voltage source to each port
         . S-parameter of each collumn will be computed.
@@ -192,8 +192,8 @@ class Circuit():
             ckt_df.to_csv('netlist'+str(i)+'.csv')
             start=time.time()
             #self.solve_eq(mode="graph")
-            env=os.path.abspath('C:\Program Files\LTC\LTspiceXVII\XVIIx64.exe')
-            self.solver=LTSPICE(env=env,file='C:\Users\qmle\Desktop\TestPy\Electrical\Solver\MNA//test.net')
+            env=os.path.abspath(env)
+            self.solver=LTSPICE(env=env,file=file)
             self.solver.write(self.df_circuit_info,frange)
             self.solver.run()
             self.data=SimData('test.raw')
@@ -211,10 +211,6 @@ class Circuit():
                 if i==j:
                     Sname = "S_{0}_{1}".format(i, j)
                     zin=np.array(dictionary[v_inp])/(-np.array(dictionary['I(Vs)']))
-                    #print v_inp
-                    #print dictionary[v_inp]
-                    #print dictionary['I(Vs)']
-                    #print zin
                     Sdata=(zin-50)/(zin+50)
                     s_dataframe.loc[:,Sname]=Sdata.tolist()
                 if i!=j:

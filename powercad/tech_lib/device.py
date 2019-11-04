@@ -156,7 +156,7 @@ class DevicePage(object):
         if not error:
             dev = Device(None, None, None, None, None, None, None)
             dev.name = str(self.ui.DeviceNameInput.text())
-            dev.dimensions = (float(self.ui.DeviceLengthInput.text()), float(self.ui.DeviceWidthInput.text()), float(self.ui.DeviceHeightInput.text()))
+            dev.dimensions = (float(self.ui.DeviceWidthInput.text()),float(self.ui.DeviceLengthInput.text()), float(self.ui.DeviceHeightInput.text()))
             dev.properties = MaterialProperties(None, float(self.ui.DeviceThermalCondInput.text()),
                                                  float(self.ui.DeviceSpHeatInput.text()), 
                                                  float(self.ui.DeviceDensityInput.text()), 

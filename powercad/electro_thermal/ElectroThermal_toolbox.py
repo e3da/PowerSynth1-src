@@ -39,7 +39,7 @@ from matplotlib import colors
 from scipy.optimize import curve_fit
 '''@PowerSynth Packages'''
 from powercad.sym_layout.plot import plot_layout
-from powercad.Spice_handler.spice_export.thermal_netlist_graph import Module_Full_Thermal_Netlist_Graph
+from powercad.spice_handler.spice_export.thermal_netlist_graph import Module_Full_Thermal_Netlist_Graph
 
 '''Additional Function'''
 
@@ -52,7 +52,7 @@ def list2float(data):
 '''Main Class'''    
 class STMDL():
     def __init__(self,symbolic_layout):
-        '''Electrical variables: added as the inputs of constructor'''
+        '''electrical_mdl variables: added as the inputs of constructor'''
         '''Values below might be changed or interfaced with P.S now they are just hard-coded'''
         '''Below show the parameter for user input. For testing its just a fixed value now, we will decide how to interface later'''
         '''Information from CPMF 1200-S0080B datasheet'''
@@ -286,7 +286,7 @@ class ET_analysis():
         self.Cisl=[]
         self.Rsub={}
         self.Csub={}
-        '''Electrical variables: added as the inputs of constructor'''
+        '''electrical_mdl variables: added as the inputs of constructor'''
         '''Values below might be changed or interfaced with P.S now they are just hard-coded'''
         '''Below show the parameter for user input. For testing its just a fixed value now, we will decide how to interface later'''
         '''Information from CPMF 1200-S0080B datasheet'''

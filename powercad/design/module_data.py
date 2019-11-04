@@ -62,10 +62,11 @@ def update_sym_baseplate_dims(sym_layout,dims):
     bp_tech = module.baseplate.baseplate_tech
     module.baseplate = BaseplateInstance((width, height, z), h, bp_tech)
 
-def update_substrate_dims(sym_layout,dims,ledge_width=0):
+def update_substrate_dims(sym_layout,dims):
     module = sym_layout.module
     width = dims[0]
     height = dims[1]
+    ledge_width=module.substrate.ledge_width
     sub_tech = module.substrate.substrate_tech
     module.substrate = SubstrateInstance((width, height), ledge_width, sub_tech)
 

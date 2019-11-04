@@ -1,11 +1,14 @@
 #@authors: Quang Le
 import os
 
+import matplotlib.pyplot as plt
 import networkx as nx
-import numpy as np
+import pandas as pd
+
+import powercad.design.module_design as md
 from powercad.design.module_data import gen_test_module_data
 from powercad.general.settings import settings
-from powercad.parasitics.analysis import parasitic_analysis
+from powercad.parasitics.analytical.analysis import parasitic_analysis
 from powercad.sym_layout.plot import plot_layout
 from powercad.sym_layout.symbolic_layout import SymbolicLayout, DeviceInstance, SymLine, SymPoint, ElectricalMeasure, \
     ThermalMeasure
@@ -15,9 +18,11 @@ from powercad.tech_lib.test_techlib import get_signal_lead
 
 import powercad.design.module_design as md
 
-import matplotlib.pyplot as plt
+
 import pandas as pd
 import powercad.interfaces.ParaPowerAPI.MDConverter as mdc
+
+#from powercad.design.MDConverter import MDEncoder
 
 
 def make_test_symmetries(sym_layout):
@@ -216,6 +221,13 @@ def plot_lumped_graph(sym_layout):
     plt.show()
     plot_layout(sym_layout)
 
+def make_tbl_dev_states():
+    ''' This will set up dev states'''
+    data = [['M1', 1, 1, 1], ['M2', 1, 1, 1], ['M3', 1, 1, 1], ['M4', 1, 1, 1]]
+    ''' DEV_ID , Drain_Source, Gate_Source, Gate_Drain'''
+    df = pd.DataFrame(data)
+    print df
+    return df
 
 def make_test_setup2(f, directory):
 
@@ -241,10 +253,10 @@ def make_test_setup2(f, directory):
         print "Test Case", p, h
         sym_layout = SymbolicLayout()  # initiate a symbolic layout object
         sym_layout.load_layout(test_file, 'script')  # load the script
-        dev1 = DeviceInstance(0.1, p[0], get_device(), get_dieattach())  # Create a device instance with 10 W power dissipation. Highlight + "Crtl+Shift+I" to see the definition of this object
-        dev2 = DeviceInstance(0.1, p[1], get_device(), get_dieattach())  # Create a device instance with 10 W power dissipation. Highlight + "Crtl+Shift+I" to see the definition of this object
-        dev3 = DeviceInstance(0.1, p[2], get_device(), get_dieattach())  # Create a device instance with 10 W power dissipation. Highlight + "Crtl+Shift+I" to see the definition of this object
-        dev4 = DeviceInstance(0.1, p[3], get_device(), get_dieattach())  # Create a device instance with 10 W power dissipation. Highlight + "Crtl+Shift+I" to see the definition of this object
+        dev1 = DeviceInstance(0.1, p[0], get_device(),get_dieattach())  # Create a device instance with 10 W power dissipation. Highlight + "Crtl+Shift+I" to see the definition of this object
+        dev2 = DeviceInstance(0.1, p[1], get_device(),get_dieattach())  # Create a device instance with 10 W power dissipation. Highlight + "Crtl+Shift+I" to see the definition of this object
+        dev3 = DeviceInstance(0.1, p[2], get_device(),get_dieattach())  # Create a device instance with 10 W power dissipation. Highlight + "Crtl+Shift+I" to see the definition of this object
+        dev4 = DeviceInstance(0.1, p[3], get_device(),get_dieattach())  # Create a device instance with 10 W power dissipation. Highlight + "Crtl+Shift+I" to see the definition of this object
 
         pow_lead = None  # Get a power lead object
 

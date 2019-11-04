@@ -12,18 +12,22 @@ import pickle
 
 import matplotlib.pyplot as plt
 from matplotlib import lines
+from pyDOE import *
 from pykrige.ok import OrdinaryKriging as ok
+from pykrige.uk import UniversalKriging as uk
 from scipy.interpolate import *
 from scipy.optimize import curve_fit
-from RS_build_function import *
-from powercad.general.data_struct.Unit import Unit
-from powercad.general.settings.Error_messages import InputError,Notifier
-from powercad.parasitics.mdl_compare import trace_inductance
 from sklearn.kernel_ridge import KernelRidge
 from sklearn.svm import SVR
+
+from RS_build_function import *
 from powercad.general.data_struct.Abstract_Data import *
 from powercad.general.data_struct.BasicsFunction import *
-from pyDOE import *
+from powercad.general.data_struct.Unit import Unit
+from powercad.general.settings.Error_messages import InputError, Notifier
+from powercad.parasitics.mdl_compare import trace_inductance
+
+
 class RS_model:
     '''Surrogate/Response Surface model 
     '''
@@ -300,7 +304,7 @@ class RS_model:
             self.DOE[row]=doe_row
             not_ready=True
             
-    def build_RS_mdl(self,mode='Krigging',func=None,type=None):
+    def build_RS_mdl(self,mode='OrKrigg',func=None,type=None):
         '''
         type: 'R', 'L', 'C'
         Build all RS_mdl based on user specified inputs and outputs.
@@ -378,10 +382,11 @@ class RS_model:
                 self.model[i] = KernelRidge(alpha=0.001, kernel=best_kernel[i])
                 self.model[i].fit(self.DOE,self.input[i])
 
-        elif mode=='Krigging':
+        elif mode=='OrKrigg':
             variogram=['linear','power','gaussian','spherical','exponential']
-            variogram=['spherical']
-            best_score=[1000 for i in range(len(self.input))]    
+            #variogram = ['exponential']
+
+            best_score=[1000 for i in range(len(self.input))]
             best_variogram=['' for i in range(len(self.input))]
             self.model=[None for i in range(len(self.input))]
             data = self.DOE
@@ -399,17 +404,48 @@ class RS_model:
                             best_variogram[i]=v
                             best_score[i]=score
 
-                    #print best_variogram[i]
+                    print best_variogram[i]
                     OK=ok(data[:, 0], data[:, 1], self.input[i], variogram_model=best_variogram[i],
                          verbose=False, enable_plotting=False)
-                    #print 'score: ', best_score[i], 'best_v: ', best_variogram[i]
+                    print 'score: ', best_score[i], 'best_v: ', best_variogram[i]
 
                 else:
                     best_variogram[i]=func
                     OK = ok(data[:, 0], data[:, 1], self.input[i], variogram_model=best_variogram[i],
                     verbose=False, enable_plotting=False)
                 self.model[i] = OK
+        elif mode == 'UnKrigg':
+            variogram = ['linear', 'power', 'gaussian', 'spherical', 'exponential']
+            variogram = ['spherical']
 
+            best_score = [1000 for i in range(len(self.input))]
+            best_variogram = ['' for i in range(len(self.input))]
+            self.model = [None for i in range(len(self.input))]
+            data = self.DOE
+            for i in range(len(self.input)):
+                if func == None:
+                    for v in variogram:
+
+                        UK = uk(data[:, 0], data[:, 1], self.input[i], variogram_model=v,
+                                verbose=False, enable_plotting=False, drift_terms=['regional_linear'])
+                        test = UK.execute('points', data[:, 0], data[:, 1])
+                        test = np.ma.asarray(test[0])
+                        delta = test - self.input[i]
+                        score = np.sqrt(np.mean(delta ** 2))
+                        if score < best_score[i]:
+                            best_variogram[i] = v
+                            best_score[i] = score
+
+                    #print best_variogram[i]
+                    UK = uk(data[:, 0], data[:, 1], self.input[i], variogram_model=best_variogram[i],
+                            verbose=False, enable_plotting=False, drift_terms=['regional_linear'])
+                    #print 'score: ', best_score[i], 'best_v: ', best_variogram[i]
+
+                else:
+                    best_variogram[i] = func
+                    UK = uk(data[:, 0], data[:, 1], self.input[i], variogram_model=best_variogram[i],
+                            verbose=False, enable_plotting=False)
+                self.model[i] = UK
         elif mode=='Inter2D':
             method=['cubic','quintic']
             best_method = 'linear'

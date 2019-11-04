@@ -35,12 +35,8 @@ script that can be run inside EMPro.
 import numpy as np
 import pickle
 from powercad.design.library_structures import Lead
-from powercad.design.module_design import ModuleDesign
 from powercad.interfaces.EMPro.EMProFunctions import empro_func
 from powercad.sym_layout.testing_tools import load_symbolic_layout
-
-
-
 
 
 class BasePlate(object):
@@ -121,6 +117,7 @@ class Substrate(object):
 
 class Trace(object):
     """A class for holding trace entities as objects."""
+
     def __init__(self, trace, substrate):
         """
         Initialize the trace object given a reference substrate.
@@ -143,6 +140,7 @@ class Trace(object):
 
 class Lead(object):
     """A class for holding leads/terminals as objects."""
+
     def __init__(self, lead_index, module_design, baseplate, substrate):
         """
         Initialize a lead object and determine orientation.
@@ -160,7 +158,7 @@ class Lead(object):
         self.sub = substrate
         self.base = baseplate
         dim = self.lead.lead_tech.dimensions
-        (self.width, self.length) = dim[0:2]   # FIXME: may only work for cylindrical leads
+        (self.width, self.length) = dim[0:2]  # FIXME: may only work for cylindrical leads
         (self.x, self.y) = self.lead.position
         self.x += self.sub.isolation.x
         self.y += self.sub.isolation.y
@@ -512,6 +510,7 @@ createSheetPort(portName, tail, head, tail_end, head_end, feedDef)
 
 '''
 
+
 class EMProScript(object):
     """
     Object holding all of the relevant data from a module design object and functions necessary
@@ -528,7 +527,7 @@ class EMProScript(object):
         :param output_filename: user-specified filename for EMPro script export as string.
         """
         self.md = module_design
-        #self.functions = functions
+        # self.functions = functions
         self.gd = GeometryDescriptions()
         self.output_filename = output_filename
         self.output = []  # A container for all the output to be written
@@ -569,7 +568,7 @@ class EMProScript(object):
         :return:
         """
 
-        #with open(self.functions, 'r') as function_file:
+        # with open(self.functions, 'r') as function_file:
         #    for line in function_file.readlines():
         #        self.output.append(line)
 
@@ -660,7 +659,7 @@ class EMProScript(object):
                     head = np.copy(edge_left[1, :])
                     head[1] += pad_length / 2.0
                     tail = np.copy(head)
-                    #head[2] = self.substrate.topside.z + self.substrate.topside.height
+                    # head[2] = self.substrate.topside.z + self.substrate.topside.height
                     tail[2] = self.baseplate.height
                     end = edge_left[0, :]
 

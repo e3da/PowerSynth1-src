@@ -1542,7 +1542,7 @@ class Ui_MainWindow(object):
 "<p align=\"justify\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:8pt;\">Use the interface below to define electrical and thermal performance measures to be considered in the layout optimizer. First define the performance measure and give it a name. Then use the module layout to the right to choose the respective devices and leads to be considered when determining performance.  Finally, click &quot;Add Performance Measure&quot; in order to add it to the optimization criteria.</span></p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
         self.label_25.setText(QtGui.QApplication.translate("MainWindow", "Step 1:  Define a performance measure", None, QtGui.QApplication.UnicodeUTF8))
         self.txt_perform_name.setPlaceholderText(QtGui.QApplication.translate("MainWindow", "Performance name...", None, QtGui.QApplication.UnicodeUTF8))
-        self.lbl_sel_electrical_model.setText(QtGui.QApplication.translate("MainWindow", "Step 2:  Electrical Model:", None, QtGui.QApplication.UnicodeUTF8))
+        self.lbl_sel_electrical_model.setText(QtGui.QApplication.translate("MainWindow", "Step 2:  electrical_mdl Model:", None, QtGui.QApplication.UnicodeUTF8))
         self.cmb_elec_model.setItemText(0, QtGui.QApplication.translate("MainWindow", "Micro Strip", None, QtGui.QApplication.UnicodeUTF8))
         self.cmb_elec_model.setItemText(1, QtGui.QApplication.translate("MainWindow", "Response Surface", None, QtGui.QApplication.UnicodeUTF8))
         self.cmb_thermal_model.setItemText(0, QtGui.QApplication.translate("MainWindow", "Fast Thermal (FEM)", None, QtGui.QApplication.UnicodeUTF8))

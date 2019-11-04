@@ -7,19 +7,20 @@ Brett Shook - Added separate Component Selection system 3/21/2014
 '''
 '''----------------------------------'''
 import shutil
-import sys
 import time
 import traceback
-
 import psidialogs
 from PySide import QtCore, QtGui
 import webbrowser
 from PySide.QtGui import QFileDialog
+import warnings
+import matplotlib.cbook
+warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)
+
 from matplotlib import colors
 
 import powercad.sym_layout.plot as plot
 
-#plot.plt.matplotlib.use('Qt4Agg')
 plot.plt.matplotlib.rcParams['backend.qt4']='PySide'
 
 from matplotlib.patches import Rectangle, Circle
@@ -29,7 +30,7 @@ from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from powercad.project_builder.symmetry_list import SymmetryListUI
 from powercad.project_builder.performance_list import PerformanceListUI
 from powercad.project_builder.windows.mainWindow_newlayoutengine_parapower import Ui_MainWindow
-from powercad.project_builder.windows.sol_window import SolutionWindow
+from powercad.project_builder.sol_window import SolutionWindow
 from powercad.project_builder.proj_dialogs import NewProjectDialog, OpenProjectDialog, EditTechLibPathDialog, \
     GenericDeviceDialog,LayoutEditorDialog, ResponseSurfaceDialog,ModelSelectionDialog,EnvironmentSetupDialog,SetupDeviceDialogs\
     ,WireConnectionDialogs
@@ -37,20 +38,23 @@ from powercad.project_builder.proj_dialogs import NewProjectDialog, OpenProjectD
 from powercad.drc.process_design_rules_editor import ProcessDesignRulesEditor
 from powercad.tech_lib.tech_lib_wiz import TechLibWizDialog
 
-from powercad.layer_stack.layer_stack_import import LayerStackImport
+from powercad.layer_stack.layer_stack_import import LayerStackHandler
 from powercad.sym_layout.symbolic_layout import SymLine,SymPoint
-from powercad.design.library_structures import BondWire, Lead
 from powercad.sol_browser.graph_app import GrapheneWindow
-from powercad.design.project_structures import *
 from powercad.sym_layout.svg import LayoutLine, LayoutPoint
 from powercad.general.settings.save_and_load import save_file, load_file
 from powercad.general.settings.settings import *
 from powercad.general.settings.Error_messages import *
 from powercad.cons_aware_en.cons_engine import New_layout_engine
 import copy
+from powercad.sym_layout.symbolic_layout import LayoutError
+from powercad.general.data_struct.util import Rect
+from powercad.design.module_data import *
+from shutil import copyfile
+
 
 class ProjectBuilder(QtGui.QMainWindow):
-    
+
     # Relative paths -> use forward slashes for platform independence
     TEMP_DIR = os.path.abspath(TEMP_DIR)
     
@@ -68,9 +72,11 @@ class ProjectBuilder(QtGui.QMainWindow):
     
     """Main Window"""
     def __init__(self):
+
         QtGui.QMainWindow.__init__(self, None)
         # current project
         self.project = None
+
         self.init()
         
     def init(self):
@@ -80,9 +86,12 @@ class ProjectBuilder(QtGui.QMainWindow):
         self.ui.setupUi(self)
         # display logo
 #        self.ui.label_4.setPixmap(self.LOGO_PATH)
-        
+
         # display module stack image
-#        self.ui.lbl_modStackImg.setPixmap(self.STACK_IMG_PATH) 
+#        self.ui.lbl_modStackImg.setPixmap(self.STACK_IMG_PATH)
+        # Disable project interfaces until a project is loaded or created
+        self.enable_project_interfaces(False)
+        self.ui.btn_new_layout_engine.setEnabled(False)  # turn on until bondwires are defined
         # connect actions
         self.ui.navigation.currentChanged.connect(self.change_stacked)
         self.ui.btn_newProject.pressed.connect(self.new_project)
@@ -90,10 +99,11 @@ class ProjectBuilder(QtGui.QMainWindow):
         self.ui.btn_runSim.pressed.connect(self.start_optimization)
         self.ui.btn_open_sol_browser.pressed.connect(self.open_sol_browser)
         self.ui.lst_categories.clicked.connect(self.display_categ_items)
-        self.ui.lst_solution.itemDoubleClicked.connect(self.show_sol_doc)
+        self.ui.lst_solution.itemDoubleClicked.connect(self.load_single_sol)
         self.ui.cmb_elec_model.currentIndexChanged.connect(self.model_selection)
         self.ui.btn_previous.pressed.connect(self.previous)
         self.ui.btn_next.pressed.connect(self.next)
+        # self.ui.btn_clr_all.pressed.connect(self.clear_projet_solutions)
         self.ui.tbl_projDevices.cellPressed.connect(self.component_pressed)
         self.ui.btn_modify.pressed.connect(self.modify_component)
         self.ui.btn_removeDevice.pressed.connect(self.remove_component)
@@ -123,8 +133,7 @@ class ProjectBuilder(QtGui.QMainWindow):
         self.ui.actionResponse_Surface_Setup.triggered.connect(self.open_response_surface_dialog)
         self.ui.actionInterface_Setup.triggered.connect(self.setup_env)
         self.ui.actionOpen_User_Manual.triggered.connect(self.open_user_manual)
-        # Disable project interfaces until a project is loaded or created
-        self.enable_project_interfaces(False)
+
 
         # This is the current color wheel.
         # This is a temporary fix for something that should probably be more dynamic later. 
@@ -143,7 +152,6 @@ class ProjectBuilder(QtGui.QMainWindow):
                             QtGui.QColor(0,128,128)]
 
         self.default_color = '#454545'
-        
         # setup widgets used for plotting symbolic layouts
         self.setup_layout_plots()
         
@@ -168,7 +176,7 @@ class ProjectBuilder(QtGui.QMainWindow):
         self.ui.action_open_tech_lib_editor.setEnabled(enable)
         self.ui.action_edit_tech_path.setEnabled(enable)
         self.ui.action_load_symbolic_layout.setEnabled(enable)
-        self.ui.btn_new_layout_engine.setEnabled(enable)
+        #self.ui.btn_new_layout_engine.setEnabled(enable)
 
 
     def refresh_ui(self): #Quang: clear all the old project  data when new project is loaded
@@ -272,35 +280,51 @@ class ProjectBuilder(QtGui.QMainWindow):
         open_dialog = OpenProjectDialog(self)
         if(open_dialog.exec_()):
             self.project.tech_lib_dir=DEFAULT_TECH_LIB_DIR#Quang
+            #self.project.layer_stack_file = None
+
             self.export_layout_script()           # Export layout script to project directory
             self.reload_ui()
             # set navigation to first step
             self.ui.navigation.setCurrentIndex(0)
             self.ui.stackedWidget.setCurrentIndex(0)
             self.enable_project_interfaces(True)
+
             self.load_layout_plots(mode=0)
             self.load_moduleStack()
             self.load_deviceTable()
             self.symmetry_ui.load_symmetries()
             self.perf_list.load_measures()
+            #if self.project.layout_engine!='CS':
             self.load_saved_solutions_list()
-            self.fill_material_cmbBoxes() #Quang 
+            self.fill_material_cmbBoxes() #Quang
+            self.load_project_layer_stack()
+            #self.project.sym_info={}
             if self.project.module_data.design_rules is None:
                 QtGui.QMessageBox.warning(self, "Defualt Setup", "Process design rules is set to defaults got to Projects-> Design Rule to edit.")
                 self.project.module_data.design_rules = ProcessDesignRules(1.2, 1.2, 0.2, 0.1, 1.0, 0.2, 0.2, 0.2)
+
+
+    def load_project_layer_stack(self):
+        try:
+            if self.project.layer_stack_file==None:
+                return
+            else:
+                self.import_layer_stack(self.project.layer_stack_file)
+        except:
+            self.project.layer_stack_file = None
 
     def open_new_layout_engine(self):
         if self.layer_stack_import!=None:
             flag=False
         else:
             flag=True
+        print "FLAG",flag
         if not self.build_module_stack(flag=flag):
             QtGui.QMessageBox.warning(self, "Module Stack Error",
                                       "One or more settings on the module stack page have an error.")
-
-        self.project.symb_layout.form_api_cs(self.project.module_data, self.project.tbl_bondwire_connect, self.TEMP_DIR)
-        new_layout_engine = New_layout_engine()
         symlayout = copy.deepcopy(self.project.symb_layout)
+        symlayout.form_api_cs(self.project.module_data, self.project.tbl_bondwire_connect, self.TEMP_DIR)
+        new_layout_engine = New_layout_engine()
         new_layout_engine.init_layout_from_symlayout(symlayout)
         new_layout_engine.open_new_layout_engine(self)
 
@@ -402,7 +426,10 @@ class ProjectBuilder(QtGui.QMainWindow):
         """Selects next navigation section"""
         if self.ui.navigation.isEnabled():
             index = self.ui.navigation.currentIndex()
+            if index==1:
+                self.ui.btn_new_layout_engine.setEnabled(True)
             if index < (self.ui.navigation.count()-1):
+
                 self.ui.navigation.setCurrentIndex(index+1)
         
     def setup_layout_plots(self):
@@ -529,17 +556,23 @@ class ProjectBuilder(QtGui.QMainWindow):
         # ------------------------------------------------------------------------------------------
 # ------ Module Stack ----------------------------------------------------------------------
 
-    def import_layer_stack(self):   # Import layer stack from CSV file
+    def import_layer_stack(self,filename=None):   # Import layer stack from CSV file
         prev_folder = 'C://'
+        #print filename
         # Open a layer stack CSV file and extract the layer stack data from it
         try:
-            layer_stack_csv_file = QFileDialog.getOpenFileName(self, "Select Layer Stack File", prev_folder, "CSV Files (*.csv)")
-            layer_stack_csv_file=layer_stack_csv_file[0]
-            self.layer_stack_import = LayerStackImport(layer_stack_csv_file)
+            if filename==None:
+                layer_stack_csv_file = QFileDialog.getOpenFileName(self, "Select Layer Stack File", prev_folder, "CSV Files (*.csv)")
+                layer_stack_csv_file=layer_stack_csv_file[0]
+                new_flag = True
+            else:
+                new_flag=False
+                layer_stack_csv_file = filename
+            self.layer_stack_import = LayerStackHandler(layer_stack_csv_file)
             self.layer_stack_import.import_csv()
         except:
             QtGui.QMessageBox.warning(self, "Layer Stack Import Failed", "ERROR: Could not import layer stack from CSV.")
-
+            return
         if self.layer_stack_import.compatible:
             # Layer stack compatible - fill module stack UI fields with imported values
             self.ui.txt_baseWidth.setText(str(self.layer_stack_import.baseplate.dimensions[0]))
@@ -580,7 +613,20 @@ class ProjectBuilder(QtGui.QMainWindow):
                     for warning in self.layer_stack_import.warnings:
                         warnings_msg += ("WARNING: " + warning + "\n")
                     QtGui.QMessageBox.warning(self, "Layer Stack Import Warnings", warnings_msg)
+            self.project.layer_stack_file = os.path.join(self.project.directory, "all_layers_info.csv")
+            if not os.path.exists(os.path.dirname(self.project.layer_stack_file)):
+                try:
+                    os.makedirs(os.path.dirname(self.project.layer_stack_file))
+                except :
+                    print "No File exist"
 
+            if new_flag:
+
+                try:
+                    copyfile(layer_stack_csv_file, self.project.layer_stack_file)
+                except:
+                    print "No file exists. First save the project."
+                #copyfile(layer_stack_csv_file, self.project.layer_stack_file)
         else:
             # Layer stack not compatible - notify the user of import failure
             QtGui.QMessageBox.warning(self, "Layer Stack Import Failed", "ERROR: " + layer_stack_import.error_msg)
@@ -617,7 +663,7 @@ class ProjectBuilder(QtGui.QMainWindow):
         # Add materials to substrate combobox
         substrate_dir = os.path.join(self.project.tech_lib_dir, "Substrates")
         self.substrate_model = QtGui.QFileSystemModel()
-        filter=("pickle (*.p)")
+        filter=["*.p"]
         self.substrate_model.setRootPath(substrate_dir)
         self.ui.cmb_subMaterial.setModel(self.substrate_model)
         self.ui.cmb_subMaterial.setRootModelIndex(self.substrate_model.setRootPath(substrate_dir))
@@ -1151,7 +1197,8 @@ class ProjectBuilder(QtGui.QMainWindow):
                     if match:
                         patch.set_facecolor(color)
                         self.component_row_dict[patch] = row_count
-
+        if len(self.project.deviceTable)>0:
+            self.ui.btn_new_layout_engine.setEnabled(True)  # make sure bondwire connections are there
 # ------------------------------------------------------------------------------------------
 # ------ Constraint Creation ---------------------------------------------------------------
 
@@ -1374,10 +1421,10 @@ class ProjectBuilder(QtGui.QMainWindow):
             run_optimization = False
 
         if run_optimization:
+            self.project.layout_engine='SL'
             self.ui.btn_runSim.setEnabled(False)
             # clear out saved project solutions
             self.clear_saved_solutions_ui()
-            self.project.solutions = []
 
 
             try:
@@ -1436,61 +1483,239 @@ class ProjectBuilder(QtGui.QMainWindow):
         else:
             QtGui.QMessageBox.warning(self, "Solution Browser", "No solutions exist.")
         
-    def add_solution(self, solution):
+    def add_solution(self, solution=None,flag=0,sym_info=None):
+        '''
+        add solution to main window
+        :param solution: the solution information
+        :param flag: 0 for old engine 1 fore new engine
+        :return: nothing
+        '''
         # save solution in project
-        self.project.add_solution(solution)
-        self.add_to_solution_list(solution)
+
+        if flag==0:
+            self.project.add_solution(solution)
+            self.add_to_solution_list(solution)
+        elif flag==1:
+            #print "new functions"
+            self.project.add_solution(solution)
+            name=solution.name
+            self.project.add_symb(sym_info,name)
+            id = name
+            #print "id inside", id
+            self.add_to_solution_list(solution,id=id,flag=flag)
         
-    def add_to_solution_list(self, solution):
+    def add_to_solution_list(self, solution,flag=0,id=None):
         # add solution to solution list
+        #print "add",solution.index,solution.name
         self.ui.sol = QtGui.QListWidgetItem(solution.name)
         self.ui.lst_solution.addItem(self.ui.sol)
-        self.show_sol_doc(self.ui.sol)
-        
-    def show_sol_doc(self, item):
+        if flag==0:
+            self.show_sol_doc(self.ui.sol)
+        elif flag ==1:
+            self.show_sol_doc(self.ui.sol,id=id)
+
+
+    def load_single_sol(self):
+        if self.project.layout_engine=='CS':
+            id = self.ui.lst_solution.currentRow()
+            item = self.ui.lst_solution.currentItem()
+            id='Solution '+str(id+1)
+            self.show_sol_doc(item=item,id=id)
+        elif self.project.layout_engine=='SL':
+            item = self.ui.lst_solution.currentItem()
+            self.show_sol_doc(item=item) #item=item
+
+    def show_sol_doc(self, item=None,id=None):
         # add mdi window for viewing
 
         sol = self.project.solutions[self.ui.lst_solution.row(item)]
-        print sol.index
-        self.project.symb_layout.gen_solution_layout(sol.index)
-        filletFlag = self.ui.checkBox_fillet.isChecked() # Show filleted layout if fillet checkbox is checked
-        m = SolutionWindow(solution=sol, sym_layout=self.project.symb_layout,filletFlag= filletFlag,dir=self.project.directory)
+        filletFlag = self.ui.checkBox_fillet.isChecked()  # Show filleted layout if fillet checkbox is checked
+        if id ==None:
+            #print "sol_doc", sol.index,sol.name
+            for solution in self.project.solutions:
+                if solution.name==sol.name:
+                    sol.index=solution.index
+                    #print sol.index
+            self.project.symb_layout.gen_solution_layout(sol.index)
+            m = SolutionWindow(solution=sol, sym_layout=self.project.symb_layout,flag=0,filletFlag= filletFlag,dir=self.project.directory,parent=self)
+        else:
+            sym_layout = self.project.symb_layout
+            sym_info = self.project.sym_info[id]
+            symb_rect_dict = sym_info['sym_info']
+            dims = sym_info['Dims']
+            #print "D",dims
+            bp_dims = [dims[0], dims[1]]
+            self._sym_update_layout(sym_info=symb_rect_dict)
+            update_sym_baseplate_dims(sym_layout=sym_layout, dims=bp_dims)
+            update_substrate_dims(sym_layout=sym_layout, dims=dims)
+            sym_layout.layout_ready = True
+            m = SolutionWindow(solution=sol, sym_layout=sym_layout,flag=1,filletFlag= filletFlag,dir=self.project.directory,parent=self)
+
         self.ui.mdiArea.addSubWindow(m)
         m.show()
-        
-        '''
-        # create hspice export netlist (test)
-        from powercad.spice_export.netlist_graph import Module_SPICE_netlist_graph
-        from powercad.spice_export.hspice_interface import write_SPICE_netlist
-        from powercad.spice_export.simulations import TransientSimulation
-        
-        export_path = 'C:\Users\jhmain\Dropbox\Spice Import and Export files\spice export\R&D 100'
-        
-        spice_netlist_graph = Module_SPICE_netlist_graph('netlist_test', self.project.symb_layout, sol.index, template_graph=None)
-        spice_netlist_graph.write_SPICE_subcircuit(export_path)
+    def _sym_update_layout(self, sym_info=None):
+        # ToDo:Here we can add the automate symbolic layout - Corner Stitch interface to update thermal
+        self._sym_update_trace_lines(sym_info=sym_info)
+        self._sym_place_devices(sym_info=sym_info)
+        self._sym_place_leads(sym_info=sym_info)
+        self._sym_place_bondwires()
 
-        #trans_sim = TransientSimulation('Trans Simulation 1', 'NL1', 'NL2', 'NL1', 'NL3')
-        #netlist = write_SPICE_netlist(export_path,trans_sim, spice_netlist_graph)
-
-        #spice_netlist_graph.run_hspice()
-        #spice_netlist_graph.draw_HSPICE_output()
-        
-        print 'SPICE export path:', export_path
-        print 'SPICE export complete.'
+    def _sym_update_trace_lines(self, sym_info=None):
         '''
-        
+        *Only used when a symbolic layout is introduced
+        Use the rectangles built from corner stitch to make trace rectangles in sym layout
+        '''
+        # Handle traces
+        sym_layout = self.project.symb_layout
+        sym_layout.trace_rects = []
+
+        for tr in sym_layout.all_trace_lines:
+            rect = sym_info[tr.element.path_id]
+            sym_layout.trace_rects.append(rect)
+            tr.trace_rect = rect
+
+    def _sym_place_devices(self, sym_info=None):
+        '''
+        *Only used when a symbolic layout is introduced
+        Use the rectangles built from corner stitch to update device locations in sym layout
+        '''
+        sym_layout = self.project.symb_layout
+
+
+        for dev in sym_layout.devices:
+
+            dev_region = sym_info[dev.name]
+            width, height, thickness = dev.tech.device_tech.dimensions
+
+            line = dev.parent_line
+            trace_rect = line.trace_rect
+            if line.element.vertical:
+                dev.orientation = 1
+                dev.footprint_rect = Rect(dev_region.bottom + height, dev_region.bottom, dev_region.left,
+                                          dev_region.left + width)
+                xpos = trace_rect.center_x()
+                ypos = dev_region.bottom + height / 2
+            else:
+                dev.footprint_rect = Rect(dev_region.bottom + width, dev_region.bottom, dev_region.left,
+                                          dev_region.left + height)
+
+                xpos = dev_region.left + height / 2
+                ypos = trace_rect.center_y()
+                dev.orientation = 3
+            dev.center_position = (xpos, ypos)
+            if len(dev.sym_bondwires) > 0:
+                powerbond = None
+                for bw in dev.sym_bondwires:
+                    if bw.tech.wire_type == BondWire.POWER:
+                        powerbond = bw
+                        break
+
+                if powerbond is None:
+                    raise LayoutError('No connected power bondwire!')
+
+                if dev.orientation == 1:
+
+                    # On vertical trace
+                    # orient device by power bonds
+                    if powerbond.trace.trace_rect.left < trace_rect.left:
+                        dev.orientation = 2  # 180 degrees from ref.
+                    else:
+                        dev.orientation = 1  # 0 degrees from ref.
+                elif dev.orientation == 3:
+                    if powerbond.trace.trace_rect.top < trace_rect.top:
+                        dev.orientation = 3  # 180 degrees from ref.
+                    else:
+                        dev.orientation = 4  # 0 degrees from ref.
+
+    def _sym_place_leads(self, sym_info=None):
+        sym_layout = self.project.symb_layout
+
+
+        for lead in sym_layout.leads:
+            if lead.tech.shape == Lead.BUSBAR:
+                line = lead.parent_line
+                trace_rect = line.trace_rect
+
+                if line.element.vertical:
+                    hwidth = 0.5 * lead.tech.dimensions[1]
+                    hlength = 0.5 * lead.tech.dimensions[0]
+                    lead.orientation = 3
+
+                    # find if near left or right (decide orientation)
+                    # for power leads only right now
+                    edge_dist = sym_layout.sub_dim[0] - 0.5 * (trace_rect.left + trace_rect.right)
+                    if edge_dist < 0.5 * sym_layout.sub_dim[0]:
+                        # right
+                        xpos = trace_rect.right - hwidth
+                        lead.orientation = 3
+                    else:
+                        # left
+                        xpos = trace_rect.left + hwidth
+                        lead.orientation = 4
+
+                    ypos = 0.5 * (trace_rect.bottom + trace_rect.top)
+                    lead.footprint_rect = Rect(ypos + hlength, ypos - hlength, xpos - hwidth, xpos + hwidth)
+                else:
+                    # find if near top or bottom (decide orientation)
+                    hwidth = 0.5 * lead.tech.dimensions[0]
+                    hlength = 0.5 * lead.tech.dimensions[1]
+                    lead.orientation = 1
+
+                    edge_dist = sym_layout.sub_dim[1] - 0.5 * (trace_rect.top + trace_rect.bottom)
+                    if edge_dist < 0.5 * sym_layout.sub_dim[1]:
+                        # top
+                        ypos = trace_rect.top - hlength
+                        lead.orientation = 1
+                    else:
+                        # bottom
+                        ypos = trace_rect.bottom + hlength
+                        lead.orientation = 2
+
+                    xpos = 0.5 * (trace_rect.left + trace_rect.right)
+                    lead.footprint_rect = Rect(ypos + hlength, ypos - hlength, xpos - hwidth, xpos + hwidth)
+
+                lead.center_position = (xpos, ypos)
+            elif lead.tech.shape == Lead.ROUND:
+                lead_region = sym_info[lead.element.path_id]
+                radius = 0.5 * lead.tech.dimensions[0]
+                center = [lead_region.left + radius, lead_region.bottom]
+                lead.footprint_rect = Rect(center[1] + radius, center[1] - radius,
+                                           center[0] - radius, center[0] + radius)
+                lead.center_position = center
+
+    def _sym_place_bondwires(self):
+        sym_layout = self.project.symb_layout
+
+        for wire in sym_layout.bondwires:
+            if wire.dev_pt is not None:
+                sym_layout._place_device_bondwire(wire)
+
     def clear_saved_solutions_ui(self):
         # close windows in the mdi area
         self.ui.mdiArea.closeAllSubWindows()
         # remove solutions from list area
         self.ui.lst_solution.clear()
-        
-    def load_saved_solutions_list(self):
+    def clear_projet_solutions(self):
         self.clear_saved_solutions_ui()
+        self.project.symb_layouts=[]
+        self.project.solutions = []
 
-        # loads the list of previously saved solutions into the list display
-        for sol in self.project.solutions:
-            self.add_to_solution_list(sol)
+    def load_saved_solutions_list(self):
+        #self.clear_saved_solutions_ui()
+        if self.project.layout_engine=="CS":
+            flag =1
+            # loads the list of previously saved solutions into the list display
+            for id in range(len(self.project.solutions)):
+                sol = self.project.solutions[id]
+                id=sol.name
+                self.add_to_solution_list(solution=sol, flag=flag, id=id)
+        elif self.project.layout_engine=='SL':
+            flag=0
+            # loads the list of previously saved solutions into the list display
+            for id in range(len(self.project.solutions)):
+                sol = self.project.solutions[id]
+                self.add_to_solution_list(solution=sol, flag=flag)
+
             
         # display the number of generations ran in the last optimization run here
         self.ui.txt_numGenerations.setText(str(self.project.num_gen))

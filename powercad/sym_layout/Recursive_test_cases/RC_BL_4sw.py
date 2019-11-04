@@ -5,11 +5,11 @@ import os
 import matplotlib.pyplot as plt
 import networkx as nx
 
-from powercad.Spice_handler.spice_import.NetlistImport import Netlist, Netlist_export_ADS
+from powercad.spice_handler.spice_import.NetlistImport import Netlist, Netlist_export_ADS
 from powercad.design.module_data import gen_test_module_data_BL
 from powercad.general.settings import settings
 from powercad.interfaces.FastHenry.fh_layers import output_fh_script, read_result
-from powercad.parasitics.analysis import parasitic_analysis
+from powercad.parasitics.analytical.analysis import parasitic_analysis
 from powercad.sym_layout.Recursive_test_cases.map_id_net import map_id_net
 from powercad.sym_layout.plot import plot_layout
 from powercad.sym_layout.symbolic_layout import SymbolicLayout, DeviceInstance, SymLine, SymPoint, ElectricalMeasure, \

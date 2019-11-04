@@ -2,11 +2,11 @@ from powercad.interfaces.Q3D.Q3DGeometry import Q3D_rect_script
 
 
 class rect_q3d_box(Q3D_rect_script):
-    '''This class will be used to define an Electrical Rectangle Layer in PowerSynth
+    '''This class will be used to define an electrical_mdl Rectangle Layer in PowerSynth
     '''
     def __init__(self, type='layer'):
         '''
-        # Constructor for Electrical layer in PowerSynth
+        # Constructor for electrical_mdl layer in PowerSynth
              Position: [ x,y,z] position of Elayer Suggest: (0,0,0) for Q3dbox
              type:
              1: 'layer': normal layer (not for tracing)

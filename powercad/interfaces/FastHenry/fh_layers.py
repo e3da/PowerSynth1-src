@@ -55,9 +55,9 @@ class Plane(object):
             pt1, pt2 = tr[1]
             ori = tr[2]
             if ori == 0:
-                width = trace.height()
+                width = trace.height_eval()
             elif ori == 1:
-                width = trace.width()
+                width = trace.width_eval()
             mesh += contact_trace.format(pt1[0], pt1[1], self.z, pt2[0], pt2[1], self.z, width, 5)
 
 
@@ -68,9 +68,9 @@ class Plane(object):
             pt1,pt2=tr[1]
             ori=tr[2]
             if ori ==0:
-                width=trace.height()
+                width=trace.height_eval()
             elif ori==1:
-                width=trace.width()
+                width=trace.width_eval()
             mesh+=contact_decay_rect.format(pt1[0],pt1[1],self.z,width)
             mesh+=contact_decay_rect.format(pt2[0],pt2[1],self.z,width)
         return mesh
@@ -213,17 +213,17 @@ class Trace_script(object):
         self.conductivity = cond
         self.nwinc = nwinc
         self.nhinc = nhinc
-        left_pt = [rect.left, rect.bottom + rect.height() / 2]
-        right_pt = [rect.right, rect.bottom + rect.height() / 2]
-        bot_pt = [rect.left + rect.width() / 2,rect.bottom]
-        top_pt = [rect.left + rect.width() / 2, rect.top]
+        left_pt = [rect.left, rect.bottom + rect.height_eval() / 2]
+        right_pt = [rect.right, rect.bottom + rect.height_eval() / 2]
+        bot_pt = [rect.left + rect.width_eval() / 2,rect.bottom]
+        top_pt = [rect.left + rect.width_eval() / 2, rect.top]
 
         if ori == 0: # Horizontal
-            self.width=rect.height()
+            self.width=rect.height_eval()
             self.start_coords = left_pt
             self.end_coords = right_pt
         elif ori == 1:
-            self.width = rect.width()
+            self.width = rect.width_eval()
             self.start_coords = bot_pt
             self.end_coords = top_pt
 
@@ -496,7 +496,7 @@ def output_fh_script(layout,filename,freq=[10,1000],external=None):
                 type = '_Gate'
             elif data['type'] == 'bw power':
                 type = '_Source'
-            conn_name = 'N' + str(dev.net_name) + type
+            conn_name = 'N' + str(dev.name) + type
             dev_pt = dev.center_position
             dev_conn_pt=Conn_point(conn_name,dev_pt[0]+dx+sub_origin_x, dev_pt[1]+dy+sub_origin_y, BwZPos)
             if not (conn_name in device_term_name_list):
@@ -514,7 +514,7 @@ def output_fh_script(layout,filename,freq=[10,1000],external=None):
                     beg_height = dev.tech.device_tech.dimensions[2] + float(dev.tech.attach_thickness)
                     h2 = wire.tech.a
                     height = wire.tech.a +BwZPos
-                    name =  str(dev.net_name) + type +str(id)
+                    name =  str(dev.name) + type +str(id)
                     if not (name in wire_name_list):
                         # Create connection points for later connections
                         cp1 = Conn_point("NW" + name + 's', pt1[0], pt1[1], BwZPos)
@@ -584,7 +584,7 @@ def output_fh_script(layout,filename,freq=[10,1000],external=None):
     print "... Device connection ... "
     for id in xrange(len(layout.devices)):
         dev=layout.devices[id]
-        conn_name = 'N' + str(dev.net_name) + '_Drain'
+        conn_name = 'N' + str(dev.name) + '_Drain'
         dev_pt = dev.center_position
         dev_conn_pt = Conn_point(conn_name, dev_pt[0]+sub_origin_x, dev_pt[1]+sub_origin_y, BwZPos)
         external_list.append([conn_name, dev_pt])  # Add the lead to final external list info
@@ -753,8 +753,8 @@ def output_fh_script_mesh(md, filename):
 
 
         pt1 = np.array([trace.left,trace.bottom,TraceZPos])
-        pt2 = np.array([trace.left+trace.width(), trace.bottom, TraceZPos])
-        pt3 = np.array([trace.width()+ trace.left,trace.top,TraceZPos])
+        pt2 = np.array([trace.left+trace.width_eval(), trace.bottom, TraceZPos])
+        pt3 = np.array([trace.width_eval()+ trace.left,trace.top,TraceZPos])
         trace_script=Plane(name, index, pt1, pt2, pt3, TraceZSize, mp_cond)
         for line in line_list:
             if line.orient==0:

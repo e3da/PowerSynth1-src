@@ -219,7 +219,8 @@ def random_layout(directory):
 
 def test1():
     # The test goes here, moddify the path below as you wish...
-    directory ='Layout//CS-conversion//simple_switch.psc' # directory to layout script
+    #directory ='Layout//CS-conversion//simple_switch.psc' # directory to layout script
+    directory = 'D:\PowerSynth\Layout Script//simple_switch.psc'  # directory to layout script
     random_layout(directory)
 
 test1()
