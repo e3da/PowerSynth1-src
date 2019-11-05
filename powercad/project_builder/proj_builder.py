@@ -613,6 +613,7 @@ class ProjectBuilder(QtGui.QMainWindow):
                     for warning in self.layer_stack_import.warnings:
                         warnings_msg += ("WARNING: " + warning + "\n")
                     QtGui.QMessageBox.warning(self, "Layer Stack Import Warnings", warnings_msg)
+            #self.project.layer_stack_file = os.path.join(self.project.directory, "layer_stack.csv")
             self.project.layer_stack_file = os.path.join(self.project.directory, "all_layers_info.csv")
             if not os.path.exists(os.path.dirname(self.project.layer_stack_file)):
                 try:
