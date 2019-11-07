@@ -30,6 +30,7 @@ class New_layout_engine():
         self.Min_X = None
         self.Min_Y = None
         self.cons_info = None
+        self.flexible=False
         self.ledge_width=1000.0
         self.ledge_height=1000.0
 
@@ -96,7 +97,7 @@ class New_layout_engine():
         return
 
 
-    def init_layout(self, sym_layout=None,input_format=None,islands=None,bondwires=None,voltage_info=None,current_info=None):
+    def init_layout(self, sym_layout=None,input_format=None,islands=None,bondwires=None,flexible=None,voltage_info=None,current_info=None):
         '''
 
         :param sym_layout: old symbolic layout
@@ -131,6 +132,7 @@ class New_layout_engine():
             size=input_format[1] # list [width,height] initial floorplan size given by user
             self.W=size[0] # width
             self.H=size[1] # hieght
+            self.flexible=flexible
             # creates horizontal and vertical corner stitch
             self.create_cornerstitch(input_rects,size,islands,bondwires,voltage_info,current_info)
 
@@ -199,6 +201,8 @@ class New_layout_engine():
                     colour="cyan"
                 elif i[-2]=='Type_8':
                     colour="purple"
+                else:
+                    colour='black'
 
 
                 ax5.add_patch(
@@ -304,52 +308,54 @@ class New_layout_engine():
 
 
         # populating node ids in bondwire objects
-        bondwire_to_trace={} # to find traces on which bondwire pads are located
+        bondwire_to_trace = {}  # to find traces on which bondwire pads are located
         for wire in bondwires:
 
-            if wire.source_comp[0]=='B':
+            if wire.source_comp[0] == 'B':
                 for island in islands:
                     for element in island.child:
                         if wire.source_comp in element:
-                            bondwire_to_trace[wire.source_comp]=island.name
+                            bondwire_to_trace[wire.source_comp] = island.name
 
-            if wire.dest_comp[0]=='B':
+            if wire.dest_comp[0] == 'B':
                 for island in islands:
                     for element in island.child:
                         if wire.dest_comp in element:
-                            bondwire_to_trace[wire.dest_comp]=island.name
+                            bondwire_to_trace[wire.dest_comp] = island.name
 
+        #flexible=True
+        #if flexible==False:
+        if self.flexible==False:
+            # adding source and destination node ids for each wire
+            for wire in bondwires:
 
+                for island in cs_islands:
 
-        # adding source and destination node ids for each wire
-        for wire in bondwires:
+                    if wire.source_comp in island.child_names:
+                        for child in island.child:
+                            #if wire.source_coordinate!=None:
+                            if wire.source_coordinate[0]>=child[1] and wire.source_coordinate[0]<=child[1]+child[3] and  wire.source_coordinate[1]>=child[2] and wire.source_coordinate[1]<=child[2]+child[4]:
+                                wire.source_node_id=child[-1]
+                for island in cs_islands:
+                    if wire.dest_comp in island.child_names:
 
-            for island in cs_islands:
+                        for child in island.child:
+                            #if wire.dest_coordinate != None:
+                            if wire.dest_coordinate[0]>=child[1] and wire.dest_coordinate[0]<=child[1]+child[3] and  wire.dest_coordinate[1]>=child[2] and wire.dest_coordinate[1]<=child[2]+child[4]:
+                                wire.dest_node_id=child[-1]
 
-                if wire.source_comp in island.child_names:
-                    for child in island.child:
-                        if wire.source_coordinate[0]>=child[1] and wire.source_coordinate[0]<=child[1]+child[3] and  wire.source_coordinate[1]>=child[2] and wire.source_coordinate[1]<=child[2]+child[4]:
-                            wire.source_node_id=child[-1]
-            for island in cs_islands:
-                if wire.dest_comp in island.child_names:
-
-                    for child in island.child:
-
-                        if wire.dest_coordinate[0]>=child[1] and wire.dest_coordinate[0]<=child[1]+child[3] and  wire.dest_coordinate[1]>=child[2] and wire.dest_coordinate[1]<=child[2]+child[4]:
-                            wire.dest_node_id=child[-1]
-
-        for wire in bondwires:
-            for island in cs_islands:
-                if wire.dest_comp in bondwire_to_trace:
-                    if island.name==bondwire_to_trace[wire.dest_comp]:
-                        for element in island.elements:
-                            wire.dest_node_id=element[-1] # node id
-                            break
-                if wire.source_comp in bondwire_to_trace:
-                    if island.name==bondwire_to_trace[wire.source_comp]:
-                        for element in island.elements:
-                            wire.source_node_id=element[-1] # node id
-                            break
+            for wire in bondwires:
+                for island in cs_islands:
+                    if wire.dest_comp in bondwire_to_trace:
+                        if island.name==bondwire_to_trace[wire.dest_comp]:
+                            for element in island.elements:
+                                wire.dest_node_id=element[-1] # node id
+                                break
+                    if wire.source_comp in bondwire_to_trace:
+                        if island.name==bondwire_to_trace[wire.source_comp]:
+                            for element in island.elements:
+                                wire.source_node_id=element[-1] # node id
+                                break
         self.bondwires = copy.deepcopy(bondwires)  # to pass bondwire info to CG
         #for wire in self.bondwires:
             #print"here", wire.printWire()
@@ -472,7 +478,7 @@ class New_layout_engine():
 
 
         #self.cons_df.to_csv('out_2.csv', sep=',', header=None, index=None)
-        Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree,bondwires=self.bondwires, N=None,cs_islands=self.init_data[2], W=None, H=None,XLoc=None, YLoc=None, seed=None, individual=None,Types=self.Types,rel_cons=self.reliability_constraints)  #
+        Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree,bondwires=self.bondwires, N=None,cs_islands=self.init_data[2], W=None, H=None,XLoc=None, YLoc=None, seed=None, individual=None,Types=self.Types,rel_cons=self.reliability_constraints,flexible=self.flexible)  #
 
 
         return Evaluated_X, Evaluated_Y
@@ -556,7 +562,8 @@ class New_layout_engine():
             #CS_SYM_information, Layout_Rects = CG1.UPDATE_min(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree ,sym_to_cs,scaler)  # CS_SYM_information is a dictionary where key=path_id(component name) and value=list of updated rectangles, Layout Rects is a dictionary for minimum HCS and VCS evaluated rectangles (used for plotting only)
             Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree,bondwires=self.bondwires, N=None,cs_islands=cs_islands, W=None, H=None,
                                                       XLoc=None, YLoc=None, seed=None, individual=None,
-                                                      Types=self.Types,rel_cons=self.reliability_constraints)  # for minimum sized layout only one solution is generated
+                                                      Types=self.Types,rel_cons=self.reliability_constraints,flexible=self.flexible)  # for minimum sized layout only one solution is generated
+
 
             CS_SYM_information, Layout_Rects = CG1.update_min(Evaluated_X, Evaluated_Y, sym_to_cs,self.bondwires, scaler)
             # raw_input()
@@ -620,7 +627,7 @@ class New_layout_engine():
             '''
             Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree,bondwires=self.bondwires, N=num_layouts,cs_islands=cs_islands, W=None, H=None,
                                                       XLoc=None, YLoc=None, seed=seed, individual=individual,
-                                                      Types=self.Types,rel_cons=self.reliability_constraints)
+                                                      Types=self.Types,rel_cons=self.reliability_constraints,flexible=self.flexible)
             # CS_SYM_Updated, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree, sym_to_cs,scaler)
             CS_SYM_Updated = []
             Layout_Rects = []
@@ -717,7 +724,7 @@ class New_layout_engine():
 
             Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree,bondwires=self.bondwires, N=num_layouts,cs_islands=cs_islands, W=W, H=H,
                                                       XLoc=Min_X_Loc, YLoc=Min_Y_Loc, seed=seed, individual=individual,
-                                                      Types=self.Types,rel_cons=self.reliability_constraints)  # evaluates and finds updated locations for each coordinate
+                                                      Types=self.Types,rel_cons=self.reliability_constraints,flexible=self.flexible)  # evaluates and finds updated locations for each coordinate
             '''
             CS_SYM_Updated, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree, sym_to_cs,scaler)
             CS_SYM_Updated = CS_SYM_Updated['H'] # takes only horizontal corner stitch data
@@ -873,7 +880,7 @@ class New_layout_engine():
 
             Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=num_layouts,
                                                       W=W, H=H, XLoc=Min_X_Loc, YLoc=Min_Y_Loc, seed=seed,
-                                                      individual=individual,Types=self.Types,rel_cons=self.reliability_constraints)
+                                                      individual=individual,Types=self.Types,rel_cons=self.reliability_constraints,flexible=self.flexible)
 
             CS_SYM_Updated, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree, sym_to_cs,scaler)
 
@@ -1669,22 +1676,36 @@ class New_layout_engine():
 
             cs_island.elements = cs_elements
             cs_island.elements_v=cs_elements_v
+
             if len(child) > 0:
                 for rect in child:
-                    if rect[5][0]=='B':
-                        node_id=cs_elements[0][-1]
-                        r = [rect[0], rect[1], rect[2], rect[3], rect[4],node_id]  # type,x,y,width,height, hierarchy_level, parent nodeId
-                        cs_child.append(r)
+                    if self.flexible==False:
+                        if rect[5][0]=='B':
+                            node_id=cs_elements[0][-1]
+                            r = [rect[0], rect[1], rect[2], rect[3], rect[4],node_id]  # type,x,y,width,height, hierarchy_level, parent nodeId
+                            cs_child.append(r)
 
-                        cs_island.child_names.append(rect[5])
+                            cs_island.child_names.append(rect[5])
 
+                        else:
+                            for node in HorizontalNodeList:
+                                for i in node.stitchList:
+                                    if rect[1] == i.cell.x and rect[2] == i.cell.y and rect[3] == i.getWidth() and rect[4] == i.getHeight() and rect[0] == i.cell.type:
+                                        r = [rect[0], rect[1], rect[2], rect[3], rect[4], node.id]  # type,x,y,width,height, hierarchy_level, parent nodeId
+                                        cs_child.append(r)
+                                        cs_mapped_input[rect[5]] = [[rect[1], rect[2], rect[1] + rect[3], rect[2] + rect[4]],[node.id],rect[0], rect[8], i.rotation_index]
+                                        cs_island.child_names.append(rect[5])
                     else:
                         for node in HorizontalNodeList:
                             for i in node.stitchList:
-                                if rect[1] == i.cell.x and rect[2] == i.cell.y and rect[3] == i.getWidth() and rect[4] == i.getHeight() and rect[0] == i.cell.type:
-                                    r = [rect[0], rect[1], rect[2], rect[3], rect[4], node.id]  # type,x,y,width,height, hierarchy_level, parent nodeId
+                                if rect[1] == i.cell.x and rect[2] == i.cell.y and rect[3] == i.getWidth() and rect[
+                                    4] == i.getHeight() and rect[0] == i.cell.type:
+                                    r = [rect[0], rect[1], rect[2], rect[3], rect[4],
+                                         node.id]  # type,x,y,width,height, hierarchy_level, parent nodeId
                                     cs_child.append(r)
-                                    cs_mapped_input[rect[5]] = [[rect[1], rect[2], rect[1] + rect[3], rect[2] + rect[4]],[node.id],rect[0], rect[8], i.rotation_index]
+                                    cs_mapped_input[rect[5]] = [
+                                        [rect[1], rect[2], rect[1] + rect[3], rect[2] + rect[4]], [node.id], rect[0],
+                                        rect[8], i.rotation_index]
                                     cs_island.child_names.append(rect[5])
 
 

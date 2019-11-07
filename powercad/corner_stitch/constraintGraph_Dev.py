@@ -100,7 +100,7 @@ class constraintGraph:
 
 
 
-    def graphFromLayer(self, H_NODELIST, V_NODELIST,bondwires, level,cs_islands=None,N=None,seed=None,individual=None,Types=None,rel_cons=None):
+    def graphFromLayer(self, H_NODELIST, V_NODELIST,bondwires, level,cs_islands=None,N=None,seed=None,individual=None,Types=None,flexible=None,rel_cons=None):
         """
 
         :param H_NODELIST: Horizontal node list from horizontal tree
@@ -197,83 +197,106 @@ class constraintGraph:
 
         #print "B",self.ZDL_H
         #print self.ZDL_V
+
+
+
+
         # Adds bondwire coordinates to CG nodelist
         self.bondwires=bondwires # making bondwires global
-        self.findConnectionCoordinates(bondwires,cs_islands)
-        for i in range(len(self.propagation_dicts)):
-            prop_dict=self.propagation_dicts[i]
-            for k,v in prop_dict.items():
-                if k in self.ZDL_H:
-                    self.ZDL_H[k]+=self.connected_x_coordinates[i][k]
-                for node_id in v:
-                    if node_id in self.ZDL_H:
-                        self.ZDL_H[node_id] += self.connected_x_coordinates[i][k]
 
-            for k,v in prop_dict.items():
-                if k in self.ZDL_V:
-                    self.ZDL_V[k]+=self.connected_y_coordinates[i][k]
-                for node_id in v:
-                    if node_id in self.ZDL_V:
-                        self.ZDL_V[node_id] += self.connected_y_coordinates[i][k]
+        if flexible==False:
+            self.findConnectionCoordinates(bondwires,cs_islands)
+            for i in range(len(self.propagation_dicts)):
+                prop_dict=self.propagation_dicts[i]
+                for k,v in prop_dict.items():
+                    if k in self.ZDL_H:
+                        self.ZDL_H[k]+=self.connected_x_coordinates[i][k]
+                    for node_id in v:
+                        if node_id in self.ZDL_H:
+                            self.ZDL_H[node_id] += self.connected_x_coordinates[i][k]
 
-        for k,v in self.ZDL_H.items():
-            v=list(set(v))
-            v.sort()
-            self.ZDL_H[k]=v
-        for k, v in self.ZDL_V.items():
-            v = list(set(v))
-            v.sort()
-            self.ZDL_V[k]=v
-        print"BH", self.ZDL_H
-        print"BV", self.ZDL_V
-        #raw_input()
+                for k,v in prop_dict.items():
+                    if k in self.ZDL_V:
+                        self.ZDL_V[k]+=self.connected_y_coordinates[i][k]
+                    for node_id in v:
+                        if node_id in self.ZDL_V:
+                            self.ZDL_V[node_id] += self.connected_y_coordinates[i][k]
 
-        for ID, vertexlist in self.ZDL_H.items():
-            vertex_list_h = []
-            for i in range(len(vertexlist)):
-                v = Vertex(i)
-                v.init_coord = vertexlist[i]
-                vertex_list_h.append(v)
-            self.vertex_list_h[ID]=vertex_list_h
+            for k,v in self.ZDL_H.items():
+                v=list(set(v))
+                v.sort()
+                self.ZDL_H[k]=v
+            for k, v in self.ZDL_V.items():
+                v = list(set(v))
+                v.sort()
+                self.ZDL_V[k]=v
+            print"BH", self.ZDL_H
+            print"BV", self.ZDL_V
+            #raw_input()
+            for ID, vertexlist in self.ZDL_H.items():
+                vertex_list_h = []
+                for i in range(len(vertexlist)):
+                    v = Vertex(i)
+                    v.init_coord = vertexlist[i]
+                    vertex_list_h.append(v)
+                self.vertex_list_h[ID] = vertex_list_h
 
-        for ID, vertexlist in self.ZDL_V.items():
-            vertex_list_v = []
-            for i in range(len(vertexlist)):
-                v = Vertex(i)
-                v.init_coord = vertexlist[i]
-                vertex_list_v.append(v)
-            self.vertex_list_v[ID]=vertex_list_v
+            for ID, vertexlist in self.ZDL_V.items():
+                vertex_list_v = []
+                for i in range(len(vertexlist)):
+                    v = Vertex(i)
+                    v.init_coord = vertexlist[i]
+                    vertex_list_v.append(v)
+                self.vertex_list_v[ID] = vertex_list_v
 
 
-        for i in range(len(self.propagation_dicts)):
-            prop_dict=self.propagation_dicts[i]
-            for k,v in prop_dict.items():
-                if k in self.vertex_list_h:
-                    for coord in self.connected_x_coordinates[i][k]:
-                        for vertex in self.vertex_list_h[k]:
-                            if vertex.init_coord==coord:
-                                vertex.associated_type.append(self.bw_type)
-                for node_id in v:
-                    if node_id in self.vertex_list_h:
+
+
+            for i in range(len(self.propagation_dicts)):
+                prop_dict=self.propagation_dicts[i]
+                for k,v in prop_dict.items():
+                    if k in self.vertex_list_h:
                         for coord in self.connected_x_coordinates[i][k]:
-                            for vertex in self.vertex_list_h[node_id]:
-                                if vertex.init_coord == coord:
+                            for vertex in self.vertex_list_h[k]:
+                                if vertex.init_coord==coord:
                                     vertex.associated_type.append(self.bw_type)
+                    for node_id in v:
+                        if node_id in self.vertex_list_h:
+                            for coord in self.connected_x_coordinates[i][k]:
+                                for vertex in self.vertex_list_h[node_id]:
+                                    if vertex.init_coord == coord:
+                                        vertex.associated_type.append(self.bw_type)
 
-        for i in range(len(self.propagation_dicts)):
-            prop_dict=self.propagation_dicts[i]
-            for k,v in prop_dict.items():
-                if k in self.vertex_list_v:
-                    for coord in self.connected_y_coordinates[i][k]:
-                        for vertex in self.vertex_list_v[k]:
-                            if vertex.init_coord==coord:
-                                vertex.associated_type.append(self.bw_type)
-                for node_id in v:
-                    if node_id in self.vertex_list_v:
+            for i in range(len(self.propagation_dicts)):
+                prop_dict=self.propagation_dicts[i]
+                for k,v in prop_dict.items():
+                    if k in self.vertex_list_v:
                         for coord in self.connected_y_coordinates[i][k]:
-                            for vertex in self.vertex_list_v[node_id]:
-                                if vertex.init_coord == coord:
+                            for vertex in self.vertex_list_v[k]:
+                                if vertex.init_coord==coord:
                                     vertex.associated_type.append(self.bw_type)
+                    for node_id in v:
+                        if node_id in self.vertex_list_v:
+                            for coord in self.connected_y_coordinates[i][k]:
+                                for vertex in self.vertex_list_v[node_id]:
+                                    if vertex.init_coord == coord:
+                                        vertex.associated_type.append(self.bw_type)
+        else:
+            for ID, vertexlist in self.ZDL_H.items():
+                vertex_list_h = []
+                for i in range(len(vertexlist)):
+                    v = Vertex(i)
+                    v.init_coord = vertexlist[i]
+                    vertex_list_h.append(v)
+                self.vertex_list_h[ID] = vertex_list_h
+
+            for ID, vertexlist in self.ZDL_V.items():
+                vertex_list_v = []
+                for i in range(len(vertexlist)):
+                    v = Vertex(i)
+                    v.init_coord = vertexlist[i]
+                    vertex_list_v.append(v)
+                self.vertex_list_v[ID] = vertex_list_v
         # setting up edges for constraint graph from corner stitch tiles using minimum constraint values
         for i in range(len(self.HorizontalNodeList)):
             self.setEdgesFromLayer(self.HorizontalNodeList[i], self.VerticalNodeList[i],Types,rel_cons)
@@ -537,6 +560,7 @@ class constraintGraph:
         :param bondwires: list of bondwire objects
         :return:
         '''
+
         if len(bondwires)>0:
             self.bw_type=bondwires[0].cs_type
 
@@ -600,7 +624,7 @@ class constraintGraph:
 
 
 
-        print self.connected_node_ids
+        #print self.connected_node_ids
         for node_ids in self.connected_node_ids:
             connection_coordinates_x={}
             connection_coordinates_y={}
@@ -665,9 +689,9 @@ class constraintGraph:
                         propagation_dict[id].append(node.id)
             self.propagation_dicts.append(propagation_dict)
 
-        print self.propagation_dicts
-        print self.connected_x_coordinates
-        print self.connected_y_coordinates
+        #print self.propagation_dicts
+        #print self.connected_x_coordinates
+        #print self.connected_y_coordinates
         #raw_input()
 
 
@@ -4647,7 +4671,7 @@ class constraintGraph:
                         Weights_V = {}
                         for k1, v1 in d3.items():
                             Y[k1] = max(v1)
-                        print"X", Y
+                        #print"X", Y
                         for k2, v2 in WV.items():
                             Weights_V[k2] = max(v2)
                         # print Y,Weights
@@ -4675,7 +4699,7 @@ class constraintGraph:
                                         self.Loc_Y[k] = v
                         #print self.Loc_Y
                         self.FUNCTION_V(GV, element.ID, Random,sid=self.seed_v[i])
-                        print"FINX",self.Loc_Y
+                        #print"FINX",self.Loc_Y
                         loct.append(self.Loc_Y)
 
                     self.NEWYLOCATION = loct

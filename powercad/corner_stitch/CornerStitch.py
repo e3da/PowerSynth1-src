@@ -2668,7 +2668,7 @@ class CS_to_CG():
         return SYM_CS
 
     ## Evaluates constraint graph depending on modes of operation
-    def evaluation(self,Htree,Vtree,bondwires,N,cs_islands,W,H,XLoc,YLoc,seed,individual,Types,rel_cons):
+    def evaluation(self,Htree,Vtree,bondwires,N,cs_islands,W,H,XLoc,YLoc,seed,individual,Types,rel_cons,flexible):
         '''
         :param Htree: Horizontal tree
         :param Vtree: Vertical tree
@@ -2681,7 +2681,7 @@ class CS_to_CG():
         '''
         if self.level==1:
             CG = constraintGraph( W=None, H=None,XLocation=None, YLocation=None)
-            CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList,bondwires,self.level,cs_islands, N,seed,individual,Types=Types,rel_cons=rel_cons)
+            CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList,bondwires,self.level,cs_islands, N,seed,individual,Types=Types,flexible=flexible,rel_cons=rel_cons)
         elif self.level==2 or self.level==3:
             if W==None or H ==None:
                 print"Please enter Width and Height of the floorplan"
@@ -2689,11 +2689,11 @@ class CS_to_CG():
                 print"Please enter Number of layouts to be generated"
             else:
                 CG = constraintGraph(W, H, XLoc, YLoc)
-                CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList,bondwires, self.level,cs_islands,N,seed,individual,Types=Types,rel_cons=rel_cons)
+                CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList,bondwires, self.level,cs_islands,N,seed,individual,Types=Types,flexible=flexible,rel_cons=rel_cons)
         else:
 
             CG = constraintGraph( W=None, H=None,XLocation=None, YLocation=None)
-            CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList,bondwires, self.level,cs_islands,Types=Types,rel_cons=rel_cons)
+            CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList,bondwires, self.level,cs_islands,Types=Types,flexible=flexible,rel_cons=rel_cons)
         MIN_X, MIN_Y = CG.minValueCalculation(Htree.hNodeList, Vtree.vNodeList, self.level)
         return MIN_X, MIN_Y
         '''
@@ -3212,41 +3212,43 @@ class CS_to_CG():
         sub_width=max(minx[1].values())
         sub_length=max(miny[1].values())
         updated_wires=[]
-        for wire in bondwires:
-            #wire2=BondingWires()
-            wire2=copy.deepcopy(wire)
-            ##print wire.source_coordinate
-            #print wire.dest_coordinate
-            if wire.source_node_id in minx and wire.dest_node_id in minx:
-                wire2.source_coordinate[0]=minx[wire.source_node_id][wire.source_coordinate[0]]
-                wire2.dest_coordinate[0] = minx[wire.dest_node_id][wire.dest_coordinate[0]]
-            if wire.source_node_id in miny and wire.dest_node_id in miny:
-                wire2.source_coordinate[1]=miny[wire.source_node_id][wire.source_coordinate[1]]
-                wire2.dest_coordinate[1] = miny[wire.dest_node_id][wire.dest_coordinate[1]]
-            #print"A", wire2.source_coordinate
-            #print"AD", wire2.dest_coordinate
-            updated_wires.append(wire2)
-            wire_1=[wire2.source_coordinate[0]/float(s),wire2.source_coordinate[1]/float(s),0.5,0.5,"Type_3",3,0]
-            wire_2 = [wire2.dest_coordinate[0]/float(s), wire2.dest_coordinate[1]/float(s), 0.5, 0.5, "Type_3", 3, 0]
-            if wire_1[0]<wire_2[0]:
-                x=wire_1[0]
-            else:
-                x=wire_2[0]
-            if wire_1[1]<wire_2[1]:
-                y=wire_1[1]
-            else:
-                y = wire_2[1]
-            #wire=[x,y,abs(wire_2[1]-wire_1[1]),abs(wire_2[2]-wire_1[2]),wire_1[-2],wire_1[-1]]
-            wire=[wire_1[0],wire_1[1],wire_2[0],wire_2[1],wire_1[-3],wire_1[-2]]#xA,yA,xB,yB,type,zorder
-            #print "final_wire", wire
-            #layout_rects.append(wire_1)
-            #layout_rects.append(wire_2)
-            layout_rects.append(wire)
+        if bondwires!=None:
+            for wire in bondwires:
+                #wire2=BondingWires()
+                if wire.source_node_id!=None and wire.dest_node_id!=None:
+                    wire2=copy.deepcopy(wire)
+                    ##print wire.source_coordinate
+                    #print wire.dest_coordinate
+                    if wire.source_node_id in minx and wire.dest_node_id in minx:
+                        wire2.source_coordinate[0]=minx[wire.source_node_id][wire.source_coordinate[0]]
+                        wire2.dest_coordinate[0] = minx[wire.dest_node_id][wire.dest_coordinate[0]]
+                    if wire.source_node_id in miny and wire.dest_node_id in miny:
+                        wire2.source_coordinate[1]=miny[wire.source_node_id][wire.source_coordinate[1]]
+                        wire2.dest_coordinate[1] = miny[wire.dest_node_id][wire.dest_coordinate[1]]
+                    #print"A", wire2.source_coordinate
+                    #print"AD", wire2.dest_coordinate
+                    updated_wires.append(wire2)
+                    wire_1=[wire2.source_coordinate[0]/float(s),wire2.source_coordinate[1]/float(s),0.5,0.5,"Type_3",3,0]
+                    wire_2 = [wire2.dest_coordinate[0]/float(s), wire2.dest_coordinate[1]/float(s), 0.5, 0.5, "Type_3", 3, 0]
+                    if wire_1[0]<wire_2[0]:
+                        x=wire_1[0]
+                    else:
+                        x=wire_2[0]
+                    if wire_1[1]<wire_2[1]:
+                        y=wire_1[1]
+                    else:
+                        y = wire_2[1]
+                    #wire=[x,y,abs(wire_2[1]-wire_1[1]),abs(wire_2[2]-wire_1[2]),wire_1[-2],wire_1[-1]]
+                    wire=[wire_1[0],wire_1[1],wire_2[0],wire_2[1],wire_1[-3],wire_1[-2]]#xA,yA,xB,yB,type,zorder
+                    #print "final_wire", wire
+                    #layout_rects.append(wire_1)
+                    #layout_rects.append(wire_2)
+                    layout_rects.append(wire)
 
-        #for k, v in sym_to_cs.items():
-            #print k,v
+            #for k, v in sym_to_cs.items():
+                #print k,v
 
-        #raw_input()
+            #raw_input()
 
 
         for k, v in sym_to_cs.items():

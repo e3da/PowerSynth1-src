@@ -90,19 +90,22 @@ class ScriptInputMethod():
 
                 if j.name==table_info[i][1]:
                     pads_s=table_info[i][2].split('_')
-                    if len(pads_s)>1:
+
+                    if len(pads_s)>2:
                         source_pad=pads_s[-1]
                         source = table_info[i][2].strip('_'+source_pad)
                     else:
-                        source_pad=pads_s[0]
+                        #source_pad=pads_s[0]
+                        source_pad =table_info[i][2]
                         source=source_pad
 
                     pads_d = table_info[i][3].split('_')
-                    if len(pads_d) > 1:
+                    if len(pads_d) > 2:
                         dest_pad = pads_d[-1]
                         destination =table_info[i][3].strip('_'+dest_pad)
                     else:
-                        dest_pad=pads_d[0]
+                        #dest_pad=pads_d[0]
+                        dest_pad=table_info[i][3]
                         destination=dest_pad
 
                     #print source,source_pad,destination,dest_pad
@@ -767,14 +770,14 @@ class ScriptInputMethod():
         return self.df,self.Types
 
     # converts cs_info list into list of rectangles to pass into corner stitch input function
-    def convert_rectangle(self):
+    def convert_rectangle(self,flexible):
         '''
         :return: list of rectangles with rectangle objects having all properties to pass it into corner stitch data structure
         '''
         input_rects = []
         bondwire_landing_info={} # stores bonding wire landing pad location information
-        for rect in self.cs_info:
-            if rect[5][0]!='B':
+        if flexible==True:
+            for rect in self.cs_info:
                 type = rect[0]
                 x = rect[1]
                 y = rect[2]
@@ -783,10 +786,23 @@ class ScriptInputMethod():
                 name = rect[5]
                 Schar = rect[6]
                 Echar = rect[7]
-                hier_level=rect[8]
-                input_rects.append(Rectangle(type, x, y, width, height, name, Schar=Schar, Echar=Echar,hier_level=hier_level,rotate_angle=rect[9]))
-            else:
-                bondwire_landing_info[rect[5]]=[rect[1],rect[2],rect[0],rect[-2]] #{B1:[x,y,type,hier_level],.....}
+                hier_level = rect[8]
+                input_rects.append(Rectangle(type, x, y, width, height, name, Schar=Schar, Echar=Echar, hier_level=hier_level,rotate_angle=rect[9]))
+        else:
+            for rect in self.cs_info:
+                if rect[5][0]!='B':
+                    type = rect[0]
+                    x = rect[1]
+                    y = rect[2]
+                    width = rect[3]
+                    height = rect[4]
+                    name = rect[5]
+                    Schar = rect[6]
+                    Echar = rect[7]
+                    hier_level=rect[8]
+                    input_rects.append(Rectangle(type, x, y, width, height, name, Schar=Schar, Echar=Echar,hier_level=hier_level,rotate_angle=rect[9]))
+                else:
+                    bondwire_landing_info[rect[5]]=[rect[1],rect[2],rect[0],rect[-2]] #{B1:[x,y,type,hier_level],.....}
         #--------------------for debugging-----------------------------
         #for rectangle in input_rects:
             #print rectangle.print_rectangle()

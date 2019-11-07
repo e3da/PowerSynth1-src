@@ -591,7 +591,7 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True,rel_c
 
 
 # translates the input layout script and makes necessary information ready for corner stitch data structure
-def script_translator(input_script=None, bond_wire_info=None, fig_dir=None, constraint_file=None,rel_cons=None,mode=None):
+def script_translator(input_script=None, bond_wire_info=None, fig_dir=None, constraint_file=None,rel_cons=None,flexible=None,mode=None):
     ScriptMethod = ScriptInputMethod(input_script)  # initializes the class with filename
     ScriptMethod.read_input_script()  # reads input script and make two sections
     ScriptMethod.gather_part_route_info()  # gathers part and route info
@@ -611,7 +611,7 @@ def script_translator(input_script=None, bond_wire_info=None, fig_dir=None, cons
     ScriptMethod.update_constraint_table(rel_cons,islands)  # updates constraint table in the given csv file
     ScriptMethod.update_cs_info(islands) # updates the order of the input rectangle list for corner stitch data structure
 
-    input_rects,bondwire_landing_info = ScriptMethod.convert_rectangle()  # converts layout info to cs rectangle info, bonding wire landing info={B1:[x,y,type],....}
+    input_rects,bondwire_landing_info = ScriptMethod.convert_rectangle(flexible)  # converts layout info to cs rectangle info, bonding wire landing info={B1:[x,y,type],....}
 
     #-------------------------------------for debugging-------------------
     #fig,ax=plt.subplots()
@@ -727,7 +727,7 @@ def script_translator(input_script=None, bond_wire_info=None, fig_dir=None, cons
     New_engine.cons_df = cons_df
 
 
-    New_engine.init_layout(input_format=input_info,islands=islands,bondwires=bondwire_objects,voltage_info=voltage_info,current_info=current_info) # added bondwires to populate node id information
+    New_engine.init_layout(input_format=input_info,islands=islands,bondwires=bondwire_objects,flexible=flexible,voltage_info=voltage_info,current_info=current_info) # added bondwires to populate node id information
 
     New_engine.Types = ScriptMethod.Types # gets all types to pass in constraint graph creation
     New_engine.all_components = ScriptMethod.all_components

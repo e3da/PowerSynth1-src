@@ -23,6 +23,7 @@ class Cmd_Handler:
         self.constraint_file=None # Default csv file to save constraint table
         self.i_v_constraint=0 # reliability constraint flag
         self.new_mode=1 # 1: constraint table setup required, 0: constraint file will be reloaded
+        self.flexible=False # bondwire connection is flexible or strictly horizontal and vertical
         # Data storage
         self.db_file = None  # A file to store layout database
 
@@ -100,6 +101,12 @@ class Cmd_Handler:
                     self.i_v_constraint = int(info[1])  # 0: no reliability constraints, 1: worst case, 2: average case
                 if info[0] =="New:":
                     self.new_mode = int(info[1])
+                if info[0]=="Flexible_Wire:":
+                    if int(info[1])==1:
+                        self.flexible=True
+                    else:
+                        self.flexible = False
+
                 if info[0] == "Option:":  # engine option
                     run_option = int(info[1])
                 if info[0] == "Num_of_layouts:":  # engine option
@@ -170,6 +177,7 @@ class Cmd_Handler:
                and check_file(self.constraint_file)
         # make dir if they are not existed
         print "self.new_mode",self.new_mode
+        print "self.flex",self.flexible
         if not (check_dir(self.fig_dir)) or not(check_dir(self.db_dir)):
             try:
                 os.mkdir(self.fig_dir)
@@ -461,8 +469,9 @@ class Cmd_Handler:
         :return:
         '''
         self.layer_stack.import_layer_stack_from_csv(self.layer_stack_file)
+
         self.engine, self.wire_table = script_translator(
-            input_script=self.layout_script, bond_wire_info=self.bondwire_setup, fig_dir=self.fig_dir, constraint_file=self.constraint_file,rel_cons=self.i_v_constraint,mode=self.new_mode)
+            input_script=self.layout_script, bond_wire_info=self.bondwire_setup, fig_dir=self.fig_dir, constraint_file=self.constraint_file,rel_cons=self.i_v_constraint,flexible=self.flexible,mode=self.new_mode)
         for comp in self.engine.all_components:
             self.comp_dict[comp.layout_component_id] = comp
 

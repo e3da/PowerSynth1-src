@@ -128,6 +128,8 @@ class CornerStitch_Emodel_API:
             for comp in isl.child: # get all components in isl
                 x, y, w, h = comp[1:5]
                 name = comp[5] # get the comp name from layout script
+
+
                 obj = self.comp_dict[name] # Get object type based on the name
                 type = name[0]
 
@@ -148,6 +150,7 @@ class CornerStitch_Emodel_API:
 
                     self.e_sheets.append(pin)
                     # need to have a more generic way in the future
+
                     self.net_to_sheet[name] = pin
                 elif isinstance(obj, Part):
                     if obj.type == 0:  # If this is lead type:
@@ -249,6 +252,7 @@ class CornerStitch_Emodel_API:
         # Update based on layout info
         #print "inside",self.layout_data
         for k in self.layout_data:
+            #print "Here",k
             data = self.layout_data[k]
 
             for rect in data:
@@ -361,6 +365,7 @@ class CornerStitch_Emodel_API:
             start = wire_data['Source']
             stop = wire_data['Destination']
             #print self.net_to_sheet
+
             s1 = self.net_to_sheet[start]
             s2 = self.net_to_sheet[stop]
             spacing = float(wire_data['spacing'])
