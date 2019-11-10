@@ -1552,7 +1552,8 @@ class Hnode(Node):
         for rect in splitList:
             #print rect.cell.x,rect.cell.y,rect.cell.type
             i = self.stitchList.index(rect)
-            if y1 != rect.cell.y and y1 != rect.NORTH.cell.y: self.hSplit(i, y1)
+            if y1 != rect.cell.y and y1 != rect.NORTH.cell.y:
+                self.hSplit(i, y1)
 
 
 

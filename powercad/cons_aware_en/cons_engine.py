@@ -1382,6 +1382,7 @@ class New_layout_engine():
                                                     if (x1!=rect.cell.x and y1!=rect.cell.y) or (x1!=rect.cell.x and y1!=rect.cell.y+rect.getHeight()) or (x1!=rect.cell.x+rect.getWidth() and y1!=rect.cell.y+rect.getHeight()) and (x1!=rect.cell.x+rect.getWidth() and y1!=rect.cell.y) :
                                                         common.append(point)
 
+
                             # removing four corner points of each element from common list
                             for point in common:
                                 for element in island.elements:

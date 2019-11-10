@@ -93,6 +93,7 @@ class constraintGraph:
         self.reference_nodes_v={}
         self.top_down_eval_edges_h={}
         self.top_down_eval_edges_v = {}
+        self.flexible=False
 
 
         self.vertex_list_h={}
@@ -115,7 +116,7 @@ class constraintGraph:
         self.dimListFromLayer(cornerStitch_h, cornerStitch_v)
         self.setEdgesFromLayer(cornerStitch_h, cornerStitch_v)
         """
-
+        self.flexible=flexible
         # Here only those nodes are considered which have children in the tree
         self.HorizontalNodeList = []
         self.VerticalNodeList = []
@@ -230,8 +231,8 @@ class constraintGraph:
                 v = list(set(v))
                 v.sort()
                 self.ZDL_V[k]=v
-            print"BH", self.ZDL_H
-            print"BV", self.ZDL_V
+            #print"BH", self.ZDL_H
+            #print"BV", self.ZDL_V
             #raw_input()
             for ID, vertexlist in self.ZDL_H.items():
                 vertex_list_h = []
@@ -297,6 +298,8 @@ class constraintGraph:
                     v.init_coord = vertexlist[i]
                     vertex_list_v.append(v)
                 self.vertex_list_v[ID] = vertex_list_v
+        #print"BH", self.ZDL_H
+        #print"BV", self.ZDL_V
         # setting up edges for constraint graph from corner stitch tiles using minimum constraint values
         for i in range(len(self.HorizontalNodeList)):
             self.setEdgesFromLayer(self.HorizontalNodeList[i], self.VerticalNodeList[i],Types,rel_cons)
@@ -317,10 +320,10 @@ class constraintGraph:
                 print vertex.index, vertex.init_coord, vertex.associated_type
         raw_input()
         '''
-        print "rem_h",self.removable_nodes_h
-        print "ref_h",self.reference_nodes_h
+        #print "rem_h",self.removable_nodes_h
+        #print "ref_h",self.reference_nodes_h
         #print "rem_v", self.removable_nodes_v
-        print "top_down_eval_h",self.top_down_eval_edges_v
+        #print "top_down_eval_h",self.top_down_eval_edges_v
         #raw_input()
 
         for k, v in list(self.edgesh_new.iteritems())[::-1]:
@@ -343,9 +346,26 @@ class constraintGraph:
 
         if self.ZDL_H.keys()[0] in self.removable_nodes_h:
             self.root_node_removable_list_check_h(self.ZDL_H.keys()[0])
-        print "rem_h", self.removable_nodes_h
-        print "ref_h", self.reference_nodes_h
-        print "top_down_eval_h", self.top_down_eval_edges_h
+
+        #print "top_down_eval_h", self.top_down_eval_edges_h
+        for id,edges in self.top_down_eval_edges_h.items():
+            for edge2 in edges.values():
+                for (src,dest),value in edge2.items():
+                    if src>dest:
+                        for edge in edges.values():
+                            if (dest,src) in edge.keys():
+                                edge1 = (Edge(source=dest, dest=src, constraint=edge[(dest, src)], index=0, type='missing', Weight=None, id=None))
+                                self.edgesh_new[ID].append(edge1)
+                                for node,edge_info in edges.items():
+                                    if edge==edge_info:
+                                        del edges[node][(dest, src)]
+                                        break
+
+        #print "rem_h", self.removable_nodes_h
+        #print "ref_h", self.reference_nodes_h
+        #print "top_down_eval_h", self.top_down_eval_edges_h
+        #raw_input()
+
 
         for k, v in list(self.edgesv_new.iteritems())[::-1]:
             ID, edgev = k, v
@@ -370,9 +390,25 @@ class constraintGraph:
         if self.ZDL_V.keys()[0] in self.removable_nodes_v:
             self.root_node_removable_list_check_v(self.ZDL_V.keys()[0])
 
-        print "rem_v", self.removable_nodes_v
-        print "ref_v", self.reference_nodes_v
-        print "top_down_eval_v", self.top_down_eval_edges_v
+        for id,edges in self.top_down_eval_edges_v.items():
+            for edge2 in edges.values():
+                for (src,dest),value in edge2.items():
+                    if src>dest:
+                        for edge in edges.values():
+                            if (dest,src) in edge.keys():
+                                edge1 = (Edge(source=dest, dest=src, constraint=edge[(dest, src)], index=0, type='missing', Weight=None, id=None))
+                                self.edgesh_new[ID].append(edge1)
+                                for node,edge_info in edges.items():
+                                    if edge==edge_info:
+
+                                        del edges[node][(dest, src)]
+                                        break
+
+
+
+        #print "rem_v", self.removable_nodes_v
+        #print "ref_v", self.reference_nodes_v
+        #print "top_down_eval_v", self.top_down_eval_edges_v
 
         if level != 0:
             self.HcgEval(level,individual_h,seed, N)
@@ -3233,6 +3269,33 @@ class constraintGraph:
                                         destination = self.ZDL_H[element.ID].index(self.ZDL_H[el.ID][dest])
                                         td_eval_edges[(source, destination)] = value
 
+                    d3 = defaultdict(list)
+                    for (k), v in edgelabels.items():
+                        # print (k),v
+                        d3[k].append(v[0])
+                    # raw_input()
+                    X = {}
+                    V = []
+                    for k1, v1 in d3.items():
+                        X[k1] = max(v1)
+                    for k, v in X.items():
+                        V.append((k[0], k[1], v))
+                    G = nx.MultiDiGraph()
+                    n = list(element.graph.nodes())
+                    G.add_nodes_from(n)
+                    # G.add_weighted_edges_from([(0,1,2),(1,2,3),(2,3,4),(3,4,4),(4,5,3),(5,6,2),(1,4,15),(2,5,16),(1,5,20)])
+                    G.add_weighted_edges_from(V)
+                    A = nx.adjacency_matrix(G)
+                    B1 = A.toarray()
+                    n.sort()
+                    start = n[0]
+                    end = n[-1]
+                    PATH, Value, Sum = self.LONGEST_PATH(B1, start, end)
+                    edges_on_longest_path = {}
+                    for i in range(len(PATH) - 1):
+                        if (PATH[i], PATH[i + 1]) in X.keys():
+                            edges_on_longest_path[(PATH[i], PATH[i + 1])] = Value[i]
+
                     H_all=[]
                     s = seed
                     for i in range(N):
@@ -3241,25 +3304,47 @@ class constraintGraph:
                         H = []
 
                         for (k), v in edgelabels.items():
-                            #print k,v
                             count += 1
-                            if v[-1] == 'Device':  # ledge width
-                                val=v[0]
-                            elif (k[1], k[0]) in td_eval_edges:
-                                random.seed(seed + count * 1000)
-                                if (v[0]>abs(td_eval_edges[(k[1],k[0])])):
-                                    val=random.randrange(v[0],abs(td_eval_edges[(k[1],k[0])]))
+                            if (k) in edges_on_longest_path:
+
+
+                                if v[-1] == 'Device':  # ledge width
+
+                                    val = v[0]
+                                elif (k[1],k[0]) in td_eval_edges:
+                                    random.seed(seed + count * 1000)
+                                    if (v[0]>abs(td_eval_edges[(k[1],k[0])])):
+                                        val=random.randrange(v[0],abs(td_eval_edges[(k[1],k[0])]))
+                                    else:
+                                        val=v[0]
+                                elif v[1]=='0':
+                                    val=v[0]
+                                #elif v[2]==1:
+                                    #val=v[0]
+
+                                elif v[0]>1000 and v[0]<=3000:
+
+                                    random.seed(seed + count * 1000)
+                                    #val = int(min(1000 * v[0], max(v[0], random.gauss(v[0], SD))))
+                                    #print (k),v
+                                    if N>5:
+                                        val=random.randrange(v[0],(N/5.0)*v[0])
+                                    else:
+                                        val = random.randrange(v[0], N * v[0])
+                                elif v[0]>3000 :
+                                    random.seed(seed + count * 1000)
+                                    # val = int(min(1000 * v[0], max(v[0], random.gauss(v[0], SD))))
+                                    #print (k), v
+                                    if N>10.0:
+                                        val = random.randrange(v[0], (N/10.0)* v[0])
+                                    else:
+                                        val = random.randrange(v[0], N * v[0])
                                 else:
                                     val=v[0]
-
                             else:
-                                if (N < 150):
-                                    SD = N * 300  # standard deviation for randomization
-                                else:
-                                    SD = 10000
-                                random.seed(seed + count * 1000)
-                                val = int(min(1000 * v[0], max(v[0], random.gauss(v[0], SD))))
+                                val=v[0]
                             # print (k),v[0],val
+                            #print (k),v[0],val
                             H.append((k[0], k[1], val))
                         H_all.append(H)
                     # print len(D_3), D_3
@@ -3401,6 +3486,7 @@ class constraintGraph:
 
                         P = set(ZDL_H)
                         ZDL_H = list(P)
+                        #print "P_CORD", ZDL_H
 
                         V = self.LocationH[element.parentID]
                         #print "V",V
@@ -3456,13 +3542,13 @@ class constraintGraph:
                                 '''
 
                             X = {}
-                            H = []
+
                             Fix={}
                             #Fixed=[]
                             Weights = {}
                             for i, j in d3.items():
                                 X[i] = max(j)
-                            #print "XX",element.ID,X
+                            #print "XX",X
                             #print"Before_h",element.ID,self.Loc_X
 
                             if element.ID in self.removable_nodes_h.keys():
@@ -3476,6 +3562,7 @@ class constraintGraph:
                                             if dest != reference and node in self.Loc_X and reference not in self.Loc_X:
                                                 self.Loc_X[reference] = self.Loc_X[node] - value
 
+                            #if self.flexible==True:
                             if element.ID in self.removable_nodes_h.keys():
                                 removable_nodes = self.removable_nodes_h[element.ID]
                                 for node in removable_nodes:
@@ -3483,7 +3570,35 @@ class constraintGraph:
                                     value = self.reference_nodes_h[element.ID][node][1]
                                     if reference in self.Loc_X:
                                         self.Loc_X[node] = self.Loc_X[reference] + value
+
+                            if element.ID in self.top_down_eval_edges_h.keys():
+                                td_eval_edges = self.top_down_eval_edges_h[element.ID]
+                                for k, v in td_eval_edges.items():
+                                    for (src, dest), weight in v.items():
+                                        if src>dest:
+                                            for node in range(dest,src):
+                                                H = []
+                                                if node in self.Loc_X:
+                                                    for key, value in X.items():
+                                                        H.append((key[0], key[1], value))
+                                                    G = nx.MultiDiGraph()
+                                                    n = list(element.graph.nodes())
+                                                    G.add_nodes_from(n)
+                                                    G.add_weighted_edges_from(H)
+                                                    A = nx.adjacency_matrix(G)
+                                                    B = A.toarray()
+                                                    path,Value,distance=self.LONGEST_PATH(B,node,src)
+                                                    if distance!=None:
+                                                        if weight<0 and distance<abs(weight):
+                                                            new_weight=weight+distance
+                                                            v[(node,dest)]=new_weight
+                                                            del v[(src,dest)]
+                                                            break
+                                                    else:
+                                                        continue
+                                #print self.top_down_eval_edges_h[element.ID]
                             #print "step-1", self.Loc_X
+
                             if element.ID in self.top_down_eval_edges_h.keys():
                                 td_eval_edges = self.top_down_eval_edges_h[element.ID]
                                 for k, v in td_eval_edges.items():
@@ -3500,11 +3615,12 @@ class constraintGraph:
 
                                             val3 = None
                                             for pair,value in X.items():
-                                                if pair[1]==dest and pair[1] in self.Loc_X and pair[0] in self.Loc_X:
+                                                if pair[1]==dest and pair[0] in self.Loc_X:
                                                     val3 = self.Loc_X[pair[0]] + X[(pair[0], dest)]
                                                     break
                                                 # print src,dest,val1,val3
                                             if val3!=None and dest not in self.Loc_X:
+                                                #print val1,val2,val3,dest
                                                 self.Loc_X[dest] = max(val1,val2,val3)
                                                 if element.ID in self.removable_nodes_h.keys():
                                                     removable_nodes = self.removable_nodes_h[element.ID]
@@ -3515,7 +3631,7 @@ class constraintGraph:
                                                             self.Loc_X[node] = self.Loc_X[reference] + value
 
                             #print "step-2",self.Loc_X
-
+                            H = []
                             for i, j in d4.items():
                                 Fix[i] = max(j)
                             for i, j in W.items():
@@ -3555,6 +3671,19 @@ class constraintGraph:
                     s = seed
                     for i in range(N):
                         self.seed_h.append(s + i * 1000)
+
+                    td_eval_edges = {}
+                    for el in reversed(self.Tbeval):
+                        if el.parentID == element.ID and el.ID in self.top_down_eval_edges_h:
+                            for node, edge in self.top_down_eval_edges_h[el.ID].items():
+                                for (src, dest), value in edge.items():
+                                    if self.ZDL_H[el.ID][src] in self.ZDL_H[element.ID] and self.ZDL_H[el.ID][dest] in \
+                                            self.ZDL_H[element.ID]:
+                                        source = self.ZDL_H[element.ID].index(self.ZDL_H[el.ID][src])
+                                        destination = self.ZDL_H[element.ID].index(self.ZDL_H[el.ID][dest])
+                                        td_eval_edges[(source, destination)] = value
+
+
                     for m in range(N):  ### No. of outputs
 
                         d3 = defaultdict(list)
@@ -3769,6 +3898,27 @@ class constraintGraph:
                                     if reference in self.Loc_X:
                                         self.Loc_X[node] = self.Loc_X[reference] + value
 
+                            # if any node is already fixed and in between top down edge source and destination
+                            if element.ID in self.top_down_eval_edges_h.keys():
+                                td_eval_edges = self.top_down_eval_edges_h[element.ID]
+                                for k, v in td_eval_edges.items():
+                                    for (src, dest), weight in v.items():
+                                        if src>dest:
+                                            for node in range(dest,src):
+
+                                                if node in self.Loc_X:
+                                                    A = nx.adjacency_matrix(G)
+                                                    B = A.toarray()
+                                                    path,Value,distance=self.LONGEST_PATH(B,node,src)
+                                                    if distance!=None:
+                                                        if weight<0 and distance<abs(weight):
+                                                            new_weight=weight+distance
+                                                            v[(node,dest)]=new_weight
+                                                            del v[(src,dest)]
+                                                            break
+                                                    else:
+                                                        continue
+
                             if element.ID in self.top_down_eval_edges_h.keys():
                                 td_eval_edges = self.top_down_eval_edges_h[element.ID]
                                 for k, v in td_eval_edges.items():
@@ -3782,7 +3932,7 @@ class constraintGraph:
                                                 val2 = self.Loc_X[src] - X[(dest, src)]
                                             val3 = None
                                             for pair, value in X.items():
-                                                if pair[1] == dest and pair[1] in self.Loc_X and pair[0] in self.Loc_X:
+                                                if pair[1] == dest  and pair[0] in self.Loc_X:
                                                     val3 = self.Loc_X[pair[0]] + X[(pair[0], dest)]
                                                     break
                                                 # print src,dest,val1,val3
@@ -4305,9 +4455,39 @@ class constraintGraph:
 
                     #print "TD",td_eval_edges
 
-                    if len(td_eval_edges)>0:
-                        if element.ID in self.top_down_eval_edges_v:
-                            self.top_down_eval_edges_v[element.ID][len(self.ZDL_V[element.ID])-1]=td_eval_edges
+
+
+                    d3 = defaultdict(list)
+                    for (k), v in edgelabels.items():
+                        #print (k),v
+                        d3[k].append(v[0])
+                    #raw_input()
+                    Y = {}
+                    V=[]
+                    for k1, v1 in d3.items():
+                        Y[k1] = max(v1)
+                    for k, v in Y.items():
+                        V.append((k[0], k[1], v))
+                    GV = nx.MultiDiGraph()
+                    nV = list(element.graph.nodes())
+                    GV.add_nodes_from(nV)
+                    # G.add_weighted_edges_from([(0,1,2),(1,2,3),(2,3,4),(3,4,4),(4,5,3),(5,6,2),(1,4,15),(2,5,16),(1,5,20)])
+                    GV.add_weighted_edges_from(V)
+                    A = nx.adjacency_matrix(GV)
+                    B1 = A.toarray()
+                    nV.sort()
+                    start=nV[0]
+                    end=nV[-1]
+                    PATH,Value,Sum=self.LONGEST_PATH_V(B1,start,end)
+                    edges_on_longest_path={}
+                    for i in range(len(PATH) - 1):
+                        if (PATH[i], PATH[i + 1]) in Y.keys():
+                            edges_on_longest_path[(PATH[i], PATH[i + 1])]=Value[i]
+
+                    #print"here", PATH,Value,Sum
+                    #print edges_on_longest_path
+
+                    #raw_input()
 
 
                     H_all=[]
@@ -4316,31 +4496,52 @@ class constraintGraph:
                         seed = s + i * 1000
                         count = 0
                         V = []
+
                         for (k), v in edgelabels.items():
                             count += 1
+                            if (k) in edges_on_longest_path:
 
-                            if v[-1] == 'Device':  # ledge width
+                                if v[-1] == 'Device':  # ledge width
 
-                                val = v[0]
-                            elif (k[1],k[0]) in td_eval_edges:
-                                random.seed(seed + count * 1000)
-                                if (v[0]>abs(td_eval_edges[(k[1],k[0])])):
-                                    val=random.randrange(v[0],abs(td_eval_edges[(k[1],k[0])]))
+                                    val = v[0]
+                                elif (k[1],k[0]) in td_eval_edges:
+                                    random.seed(seed + count * 1000)
+                                    if (v[0]>abs(td_eval_edges[(k[1],k[0])])):
+                                        val=random.randrange(v[0],abs(td_eval_edges[(k[1],k[0])]))
+                                    else:
+                                        val=v[0]
+                                elif v[1] == '0':
+                                    val = v[0]
+                                    # elif v[2]==1:
+                                    # val=v[0]
+
+                                elif v[0] > 1000 and v[0] <= 3000:
+
+                                    random.seed(seed + count * 1000)
+                                    # val = int(min(1000 * v[0], max(v[0], random.gauss(v[0], SD))))
+                                    # print (k),v
+                                    if N>5:
+                                        val=random.randrange(v[0],(N/5.0)*v[0])
+                                    else:
+                                        val = random.randrange(v[0], N * v[0])
+                                elif v[0] > 3000:
+                                    random.seed(seed + count * 1000)
+                                    # val = int(min(1000 * v[0], max(v[0], random.gauss(v[0], SD))))
+                                    # print (k), v
+                                    if N>10:
+                                        val=random.randrange(v[0],(N/10.0)*v[0])
+                                    else:
+                                        val = random.randrange(v[0], N * v[0])
                                 else:
-                                    val=v[0]
-
+                                    val = v[0]
                             else:
-                                if (N < 150):
-                                    SD = N * 300 # standard deviation for randomization
-                                else:
-                                    SD = 10000  # 7000
-                                random.seed(seed + count * 1000)
-                                val = int(min(1000 * v[0], max(v[0], random.gauss(v[0], SD))))
+                                val=v[0]
                             # print (k),v[0],val
+                            #print (k),v[0],val
                             V.append((k[0], k[1], val))
                         H_all.append(V)
 
-
+                    #print H_all
 
                     G_all = []
                     for i in range(len(H_all)):
@@ -4548,6 +4749,33 @@ class constraintGraph:
                                     if reference in self.Loc_Y:
                                         self.Loc_Y[node] = self.Loc_Y[reference] + value
 
+
+                            if element.ID in self.top_down_eval_edges_v.keys():
+                                td_eval_edges = self.top_down_eval_edges_v[element.ID]
+                                for k, v in td_eval_edges.items():
+                                    for (src, dest), weight in v.items():
+                                        if src>dest:
+                                            for node in range(dest,src):
+                                                if node in self.Loc_Y:
+                                                    H=[]
+                                                    for key, value in Y.items():
+                                                        H.append((key[0], key[1], value))
+                                                    G = nx.MultiDiGraph()
+                                                    n = list(element.graph.nodes())
+                                                    G.add_nodes_from(n)
+                                                    G.add_weighted_edges_from(H)
+                                                    A = nx.adjacency_matrix(G)
+                                                    B = A.toarray()
+                                                    path,Value,distance=self.LONGEST_PATH_V(B,node,src)
+                                                    if distance!=None:
+                                                        if weight<0 and distance<abs(weight):
+                                                            new_weight=weight+distance
+                                                            v[(node,dest)]=new_weight
+                                                            del v[(src,dest)]
+                                                            break
+                                                    else:
+                                                        continue
+
                             #'''
                             if element.ID in self.top_down_eval_edges_v.keys():
                                 # print"TD", self.top_down_eval_edges_v[element.ID]
@@ -4564,7 +4792,7 @@ class constraintGraph:
 
                                             val3 = None
                                             for pair, value in Y.items():
-                                                if pair[1] == dest and pair[1] in self.Loc_Y and pair[0] in self.Loc_Y:
+                                                if pair[1] == dest  and pair[0] in self.Loc_Y:
                                                     val3 = self.Loc_Y[pair[0]] + Y[(pair[0], dest)]
                                                     break
                                                 # print src,dest,val1,val3
@@ -4643,12 +4871,13 @@ class constraintGraph:
                                         destination = self.ZDL_V[element.ID].index(self.ZDL_V[el.ID][dest])
                                         td_eval_edges[(source, destination)] = value
 
+                    '''
                     if len(td_eval_edges)>0:
                         if element.ID in self.top_down_eval_edges_v:
                             self.top_down_eval_edges_v[element.ID][len(self.ZDL_V[element.ID])-1]=td_eval_edges
+                    '''
 
-
-                    #print"TD", self.top_down_eval_edges_v
+                    #print"TD", td_eval_edges
                     for i in range(N):
 
                         d3 = defaultdict(list)
@@ -4826,7 +5055,7 @@ class constraintGraph:
                                 if i[0] in self.Loc_Y.keys() and i[1] in self.Loc_Y.keys():
                                     # print self.Loc_Y[i[0]],self.Loc_Y[i[1]]
                                     if (self.Loc_Y[i[1]] - self.Loc_Y[i[0]]) < max(j):
-                                        print "ERROR", i, max(j), self.Loc_Y[i[1]] - self.Loc_Y[i[0]]
+                                        print "ERROR", i,element.ID, max(j), self.Loc_Y[i[1]] - self.Loc_Y[i[0]]
 
                                         # distance=max(j)-abs((self.Loc_X[i[1]]-self.Loc_X[i[0]]))
                                         # self.Loc_X[i[1]]+=distance
@@ -4872,6 +5101,27 @@ class constraintGraph:
                                     value = self.reference_nodes_v[element.ID][node][1]
                                     if reference in self.Loc_Y:
                                         self.Loc_Y[node] = self.Loc_Y[reference] + value
+
+                            if element.ID in self.top_down_eval_edges_v.keys():
+                                td_eval_edges = self.top_down_eval_edges_v[element.ID]
+                                for k, v in td_eval_edges.items():
+                                    for (src, dest), weight in v.items():
+                                        if src>dest:
+                                            for node in range(dest,src):
+                                                if node in self.Loc_Y:
+                                                    A = nx.adjacency_matrix(GV)
+                                                    B = A.toarray()
+                                                    path,Value,distance=self.LONGEST_PATH_V(B,node,src)
+                                                    if distance!=None:
+                                                        if weight<0 and distance<abs(weight):
+                                                            new_weight=weight+distance
+                                                            v[(node,dest)]=new_weight
+                                                            del v[(src,dest)]
+                                                            break
+                                                    else:
+                                                        continue
+
+
                             if element.ID in self.top_down_eval_edges_v.keys():
                                 # print"TD", self.top_down_eval_edges_v[element.ID]
                                 td_eval_edges = self.top_down_eval_edges_v[element.ID]
@@ -4887,7 +5137,7 @@ class constraintGraph:
 
                                             val3 = None
                                             for pair, value in Y.items():
-                                                if pair[1] == dest and pair[1] in self.Loc_Y and pair[0] in self.Loc_Y:
+                                                if pair[1] == dest  and pair[0] in self.Loc_Y:
                                                     val3 = self.Loc_Y[pair[0]] + Y[(pair[0], dest)]
                                                     break
                                                 # print src,dest,val1,val3
@@ -5416,7 +5666,21 @@ class constraintGraph:
                 PATH = Connected_List[i]
                 start = PATH[0]
                 end = PATH[-1]
-                #print PATH
+
+                path_exist = self.LONGEST_PATH(B, start, end)
+                if path_exist == [None, None, None]:
+                    j = end - 1
+                    while path_exist == [None, None, None] and j > start:
+
+
+                        path_exist = self.LONGEST_PATH(B, start, j)
+                        # i=start
+                        j = end - 1
+                    end = j
+
+                for i in PATH:
+                    if i > end:
+                        PATH.remove(i)
                 SOURCE = []
                 for i in range(len(PATH) - 1):
                     if PATH[i] in self.Loc_X.keys():
@@ -5645,6 +5909,7 @@ class constraintGraph:
                 if B[i][j] != 0:
                     X[(i, j)] = B[i][j]
 
+        '''
         known_locations = self.Loc_X.keys()
         for i in range(source, target + 1):
             for node in range(len(known_locations)):
@@ -5652,7 +5917,7 @@ class constraintGraph:
                 if i > source and j <= target and i in self.Loc_X and j > i:
                     if B[i][j] == 0:
                         B[i][j] = self.Loc_X[j] - self.Loc_X[i]
-
+        '''
 
 
         '''
@@ -5828,6 +6093,7 @@ class constraintGraph:
         :param TARGET: list of all possible targets on the longest path
         :return: evaluated locations for the non-fixed vertices on the longest path
         """
+
         Fixed = self.Loc_X.keys()
         UnFixed = []
         for i in PATH:
@@ -5835,10 +6101,11 @@ class constraintGraph:
                 UnFixed.append(i)  # making list of all non-fixed nodes
         Fixed.sort()
         UnFixed.sort()
-        #print "FX", Fixed, UnFixed
-        #print SOURCE,TARGET,B
-        #print "ID",ID
-        #print self.Loc_X
+        #if ID==24:
+            #print "FX", Fixed, UnFixed
+            #print SOURCE,TARGET
+            #print "ID",ID
+            #print self.Loc_X
 
         while (len(UnFixed)) > 0:
             Min_val = {}  # incrementally updates minimum distances from source to each non-fixed vertex
@@ -5849,12 +6116,13 @@ class constraintGraph:
                         Min_val.setdefault(key, [])
                         #print"in", self.Loc_X,UnFixed
 
-
                         Val = self.LONGEST_PATH(B, i, j)
+                        #print "min",i,j,Val
                         if Val!=[None,None,None]:
                             if Val[2] != 0:
                                 x = (self.Loc_X[i] + Val[2])
                                 Min_val[key].append(x)
+
                         else:
                             continue
 
@@ -5865,6 +6133,7 @@ class constraintGraph:
                         key = i
                         Max_val.setdefault(key, [])
                         Val = self.LONGEST_PATH(B, i, j)
+                        #print"max", i,j, Val
                         if Val != [None,None,None]:
                             if Val[2] != 0:
                                 x = (self.Loc_X[j] - Val[2])
@@ -5872,10 +6141,21 @@ class constraintGraph:
                         else:
                             continue
             i = UnFixed.pop(0)
-            v_low = max(Min_val[i])
-            v_h2 = min(Max_val[i])
+            if i in Min_val and len(Min_val[i])>0:
+                v_low = max(Min_val[i])
+            else:
+                v_low=None
+            if i in Max_val and len(Max_val[i])>0:
+                v_h2 = min(Max_val[i])
+            else:
+                v_h2=None
+
+
             v1 = v_low
             v2 = v_h2
+            if v1==None and v2==None:
+                print "ERROR: Constraint violation"
+                exit()
 
             location = None
             if ID in self.top_down_eval_edges_h.keys():
@@ -5884,33 +6164,55 @@ class constraintGraph:
                 for k, v in td_eval_edges.items():
                     for (src, dest), weight in v.items():
                         if i == src and dest in self.Loc_X:
-                            # print v1,v2
-                            location = min(v1, v2)
-                            flag = True
+                            if v1!=None and v2!=None:
+                                location=min(v1, v2)
+                            else:
+                                if v1==None:
+                                    location=v2
+                                if v2==None:
+                                    location=v1
+                            flag=True
                             break
 
                 if flag == False:
                     location = None
 
-                    if v1 < v2:
-                        random.seed(sid)
-                        # print "SEED",sid
-                        self.Loc_X[i] = randrange(v1, v2)
-                    else:
+                    if v1 != None and v2 != None:
+                        if v1 < v2:
+                            random.seed(sid)
+                            # print "SEED",sid
+                            # print i, v1, v2
+                            self.Loc_X[i] = randrange(v1, v2)
+                        else:
+                            # print"max", i, v1, v2
 
-                        self.Loc_X[i] = max(v1, v2)
+                            self.Loc_X[i] = max(v1, v2)
+                    else:
+                        if v1 == None:
+                            self.Loc_X[i] = v2
+                        if v2 == None:
+                            self.Loc_X[i] = v1
+
 
 
             else:
                 location = None
 
-                if v1 < v2:
-                    random.seed(sid)
-                    # print "SEED",sid
-                    self.Loc_X[i] = randrange(v1, v2)
-                else:
+                if v1 != None and v2 != None:
+                    if v1 < v2:
+                        random.seed(sid)
+                        # print "SEED",sid
+                        # print i, v1, v2
+                        self.Loc_X[i] = randrange(v1, v2)
+                    else:
+                        # print"max", i, v1, v2
 
-                    self.Loc_X[i] = max(v1, v2)
+                        self.Loc_X[i] = max(v1, v2)
+                else:
+                    if v1 == None:
+                        self.Loc_X[i] = v2
+                    if v2 == None:
+                        self.Loc_X[i] = v1
 
             '''
             # finds randomized location for each non-fixed node between minimum and maximum possible location
@@ -5934,11 +6236,12 @@ class constraintGraph:
                             SOURCE.append(node)
                             TARGET.append(node)
             '''
+
             if ID in self.top_down_eval_edges_h.keys():
                 td_eval_edges = self.top_down_eval_edges_h[ID]
                 for k, v in td_eval_edges.items():
                     for (src, dest), weight in v.items():
-                        #print "SD",src,dest
+                        #print "SD",src,dest,weight
                         if src in self.Loc_X:
 
                             val1 = self.Loc_X[src] + weight
@@ -5954,12 +6257,15 @@ class constraintGraph:
                             if dest in self.Loc_X:
                                 val3=self.Loc_X[dest]
                             else:
-                                val3=0
+                                val3=None
 
 
                             #if val3!=None:
                             #if dest not in self.Loc_X:
-                            if dest not in Fixed:
+                            if dest not in Fixed and val3!=None:
+                                #if ID==24 and dest==14:
+                                    #print self.Loc_X
+                                    #print val1,val2,val3
                                 self.Loc_X[dest] = max(val1,val2, val3)
                                 if dest in UnFixed:
                                     UnFixed.remove(dest)
@@ -5984,6 +6290,7 @@ class constraintGraph:
                             #print "val",i,src,dest,val1,val2
                             self.Loc_X[i]=min(val1,val2)
 
+
             if ID in self.removable_nodes_h.keys():
                 removable_nodes = self.removable_nodes_h[ID]
                 for node in removable_nodes:
@@ -5998,7 +6305,9 @@ class constraintGraph:
                             SOURCE.append(node)
                             TARGET.append(node)
 
-            #print "THERE", self.Loc_X, node
+            #if ID==24:
+                #print "HERE", self.Loc_X, node
+            #print self.Loc_X
             SOURCE.append(i) # when a non-fixed vertex location is determined it becomes a fixed vertex and may treat as source to others
             TARGET.append(i) # when a non-fixed vertex location is determined it becomes a fixed vertex and may treat as target to others
             Fixed=self.Loc_X.keys()
@@ -6083,7 +6392,6 @@ class constraintGraph:
             for j in Fixed_Node:
                 if G.has_edge(i, j):
                     B[i][j]=0
-
                     G.remove_edge(i, j)
 
         nodes = list(G.nodes())
@@ -6100,6 +6408,8 @@ class constraintGraph:
 
         #nodes.sort()
         #print Node_List
+        #if ID==13:
+            #print B
 
         for i in range(len(B)):
             for j in range(len(B)):
@@ -6125,6 +6435,7 @@ class constraintGraph:
             node_list.sort()
             Connected_List.append(node_list)
         # raw_input()
+        #print self.Loc_Y
         #print "CON", Connected_List
 
 
@@ -6132,8 +6443,24 @@ class constraintGraph:
             for i in range(len(Connected_List)):
                 PATH = Connected_List[i]
 
+
                 start = PATH[0]
                 end = PATH[-1]
+
+                path_exist = self.LONGEST_PATH_V(B, start, end)
+                if path_exist==[None,None,None]:
+                    j = end - 1
+                    while path_exist == [None,None,None] and j>start:
+
+
+                        path_exist = self.LONGEST_PATH_V(B, start, j)
+                        #i=start
+                        j=end-1
+                    end=j
+
+                for i in PATH:
+                    if i>end:
+                        PATH.remove(i)
                 SOURCE = []
                 for i in range(len(PATH) - 1):
                     if PATH[i] in self.Loc_Y.keys():
@@ -6147,6 +6474,7 @@ class constraintGraph:
                 # print Weights
                 #print B
                 self.Location_finding_V(B, start, end,Random, SOURCE, TARGET,ID, flag=True,sid=sid)
+
                 '''
                 if ID in self.removable_nodes_v.keys():
                     removable_nodes=self.removable_nodes_v[ID]
@@ -6389,7 +6717,7 @@ class constraintGraph:
         #print self.Loc_Y
 
 
-
+        '''
         known_locations=self.Loc_Y.keys()
         for i in range(source,target+1):
             for node in range(len(known_locations)):
@@ -6397,6 +6725,7 @@ class constraintGraph:
                 if i>source and j<=target and i in self.Loc_Y and j>i:
                     if B[i][j]==0:
                         B[i][j] = self.Loc_Y[j] - self.Loc_Y[i]
+        '''
 
         '''
         for i in range(source, target):
@@ -6626,12 +6955,21 @@ class constraintGraph:
             #print "i",i
 
 
+            if i in Min_val and len(Min_val[i])>0:
+                v_low = max(Min_val[i])
+            else:
+                v_low=None
+            if i in Max_val and len(Max_val[i])>0:
+                v_h2 = min(Max_val[i])
+            else:
+                v_h2=None
 
-            v_low = max(Min_val[i])
-            v_h2 = min(Max_val[i])
             v1 = v_low
             v2 = v_h2
             #print "loc",i
+            if v1==None and v2==None:
+                print "ERROR: Constraint violation"
+                exit()
             location=None
             if ID in self.top_down_eval_edges_v.keys():
                 flag=False
@@ -6640,34 +6978,55 @@ class constraintGraph:
                     for (src, dest), weight in v.items():
                         if i==src and dest in self.Loc_Y:
                             #print v1,v2
-                            location=min(v1, v2)
+                            if v1!=None and v2!=None:
+                                location=min(v1, v2)
+                            else:
+                                if v1==None:
+                                    location=v2
+                                if v2==None:
+                                    location=v1
                             flag=True
                             break
 
                 if flag==False:
                     location = None
+                    if v1 != None and v2 != None:
+                        if v1 < v2:
+                            random.seed(sid)
+                            # print "SEED",sid
+                            # print i, v1, v2
+                            self.Loc_Y[i] = randrange(v1, v2)
+                        else:
+                            # print"max", i, v1, v2
 
-                    if v1 < v2:
-                        random.seed(sid)
-                        # print "SEED",sid
-                        #print i, v1, v2
-                        self.Loc_Y[i] = randrange(v1, v2)
+                            self.Loc_Y[i] = max(v1, v2)
                     else:
-                        #print"max", i, v1, v2
+                        if v1 == None:
+                            self.Loc_Y[i] = v2
+                        if v2 == None:
+                            self.Loc_Y[i] = v1
 
-                        self.Loc_Y[i] = max(v1, v2)
+
 
 
             else:
                 location=None
 
-                if v1 < v2:
-                    random.seed(sid)
-                    #print i,v1,v2
-                    self.Loc_Y[i] = randrange(v1, v2)
-                else:
+                if v1 != None and v2 != None:
+                    if v1 < v2:
+                        random.seed(sid)
+                        # print "SEED",sid
+                        # print i, v1, v2
+                        self.Loc_Y[i] = randrange(v1, v2)
+                    else:
+                        # print"max", i, v1, v2
 
-                    self.Loc_Y[i] = max(v1, v2)
+                        self.Loc_Y[i] = max(v1, v2)
+                else:
+                    if v1 == None:
+                        self.Loc_Y[i] = v2
+                    if v2 == None:
+                        self.Loc_Y[i] = v1
             #print "THERE", ID,self.Loc_Y
             '''
             if ID in self.removable_nodes_v.keys():
@@ -6702,10 +7061,10 @@ class constraintGraph:
                             if dest in self.Loc_Y:
                                 val3=self.Loc_Y[dest]
                             else:
-                                val3=0
+                                val3=None
                             #if val3 != None:
                             #if dest not in self.Loc_Y:
-                            if dest not in Fixed:
+                            if dest not in Fixed and val3!=None:
 
                                 self.Loc_Y[dest] = max(val1,val2, val3)
                                 #print "MID",self.Loc_Y
@@ -6759,6 +7118,7 @@ class constraintGraph:
            :param flag: to check whether it has bypassing fixed vertex in the path (mode-3 case)
            :return: Updated location table
         """
+
         PATH, Value, Sum = self.LONGEST_PATH_V(B, start, end)
 
         if PATH!=None:
@@ -6779,7 +7139,12 @@ class constraintGraph:
                         loc[PATH[i]] = self.Loc_Y[PATH[i - 1]] + variable[i - 1]
                         self.Loc_Y[PATH[i]] = self.Loc_Y[PATH[i - 1]] + variable[i - 1]
             return
+
+
         else:
+
+
+
             print"ERROR: NO LONGEST PATH FROM",start , "TO", end, "IN VCG of Node",ID
             exit()
 
