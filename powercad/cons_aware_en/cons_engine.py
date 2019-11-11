@@ -1529,34 +1529,11 @@ class New_layout_engine():
 
                         # internal neighbors for bondwire points
                         new_points=[]
-                        '''
-                        for h_element in island.elements:
-                            h_x,h_y,h_w,h_h=h_element[1:5]
-                            # is the bw x location within the range of the h_element
-                            if x>h_x and x<h_x+h_w:
-                                # append the vertical cut points
-                                point_top = [x, h_y + h_h]
-                                bw_points.append(point_top)
-                                point_bottom = [x, h_y]
-                                bw_points.append(point_bottom)
-                        '''
+
                         for y_cut in ys:
                             new_point = (x,y_cut)
                             new_points.append(new_point)
 
-
-
-                        '''
-                        for v_element in island.elements_v:
-                            v_x, v_y, v_w, v_h = v_element[1:5]
-                            # is the bw x location within the range of the h_element
-                            if y > v_y and y < v_y + v_h:
-                                # append the vertical cut points
-                                point_left = [v_x,y]
-                                bw_points.append(point_left)
-                                point_right = [v_x+v_w, y]
-                                bw_points.append(point_right)
-                        '''
                         for x_cut in xs:
                             new_point = (x_cut,y)
                             new_points.append(new_point)
@@ -1567,6 +1544,23 @@ class New_layout_engine():
                                 h_x, h_y, h_w, h_h = h_element[1:5]
                                 if h_x <= new_x and h_y <= new_y and h_x + h_w >= new_x and h_y + h_h >= new_y:
                                     selected_pt.append(new_pt)
+                                    if h_x==new_x:
+                                        W.append(new_pt) # adding W boundary point
+                                    if h_x + h_w == new_x:
+                                        E.append(new_pt) # adding E boundary point
+
+                        # adding N, S boundary points for new points due to bond wire
+                        for new_pt in new_points:
+                            new_x ,new_y = new_pt
+                            for v_element in island.elements_v:
+                                v_x, v_y, v_w, v_h = v_element[1:5]
+                                #if h_x <= new_x and h_y <= new_y and h_x + h_w >= new_x and h_y + h_h >= new_y:
+                                if new_pt in selected_pt:
+                                    if v_y==new_y:
+                                        S.append(new_pt)
+                                    if v_y + v_h== new_y:
+                                        N.append(new_pt)
+
 
                         bw_points +=selected_pt
                         #print bw_points

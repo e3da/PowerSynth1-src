@@ -24,6 +24,7 @@ class Cmd_Handler:
         self.i_v_constraint=0 # reliability constraint flag
         self.new_mode=1 # 1: constraint table setup required, 0: constraint file will be reloaded
         self.flexible=False # bondwire connection is flexible or strictly horizontal and vertical
+        self.plot=False # flag for plotting solution layouts
         # Data storage
         self.db_file = None  # A file to store layout database
 
@@ -101,6 +102,13 @@ class Cmd_Handler:
                     self.i_v_constraint = int(info[1])  # 0: no reliability constraints, 1: worst case, 2: average case
                 if info[0] =="New:":
                     self.new_mode = int(info[1])
+
+                if info[0]=="Plot_Solution:":
+                    if int(info[1])==1:
+                        self.plot=True
+                    else:
+                        self.plot = False
+
                 if info[0]=="Flexible_Wire:":
                     if int(info[1])==1:
                         self.flexible=True
@@ -198,7 +206,7 @@ class Cmd_Handler:
 
             if run_option == 0:
                 self.solutions=generate_optimize_layout(layout_engine=self.engine, mode=layout_mode,rel_cons=self.i_v_constraint,
-                                         optimization=False, db_file=self.db_file,fig_dir=self.fig_dir,sol_dir=self.db_dir, num_layouts=num_layouts, seed=seed,
+                                         optimization=False, db_file=self.db_file,fig_dir=self.fig_dir,sol_dir=self.db_dir,plot=self.plot, num_layouts=num_layouts, seed=seed,
                                          floor_plan=floor_plan)
             elif run_option == 1:
                 self.measures=[]
@@ -264,6 +272,10 @@ class Cmd_Handler:
                         if isl.name==island.name:
                             island.mesh_nodes= copy.deepcopy(isl.mesh_nodes)
 
+                #for island in init_data_islands:
+                    #island.print_island(True,size=[60000,60000])
+
+
                 md_data = ModuleDataCornerStitch()
                 md_data.islands[0] = init_data_islands
                 md_data.footprint = [fp_width * s1, fp_height * s1]
@@ -289,7 +301,7 @@ class Cmd_Handler:
 
 
                 self.solutions=generate_optimize_layout(layout_engine=self.engine, mode=layout_mode,rel_cons=self.i_v_constraint,
-                                         optimization=True, db_file=self.db_file,fig_dir=self.fig_dir,sol_dir=self.db_dir,
+                                         optimization=True, db_file=self.db_file,fig_dir=self.fig_dir,sol_dir=self.db_dir,plot=self.plot,
                                          apis={'E': self.e_api, 'T': self.t_api}, num_layouts=num_layouts, seed=seed,
                                          algorithm=algorithm, floor_plan=floor_plan,num_gen=num_gen,measures=self.measures)
 

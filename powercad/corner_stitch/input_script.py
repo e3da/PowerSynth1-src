@@ -466,6 +466,11 @@ class ScriptInputMethod():
                             if element.name not in all_component_type_names :
                                 if element.rotate_angle==0:
                                     all_component_type_names.append(element.name)
+                                else:
+                                    name,angle=element.name.split('_')
+                                    if name not in all_component_type_names:
+                                        all_component_type_names.append(name)
+
 
         for j in range(1, len(layout_info)):
             for k, v in self.all_route_info.items():
@@ -491,6 +496,10 @@ class ScriptInputMethod():
             for comp in v:
                 if comp.rotate_angle==0:
                     comp.cs_type = self.component_to_cs_type[comp.name]
+
+
+
+
 
         # extracting hierarchical level information from input
         hier_input_info={}
@@ -572,15 +581,17 @@ class ScriptInputMethod():
             #print rect
         #---------------------------------------------------------------------------
         return self.size,self.cs_info,self.component_to_cs_type,self.all_components
-    def plot_init_layout(self):
+    def plot_init_layout(self,fig_dir=None):
         rectlist=[]
         colors = ['green', 'red', 'blue', 'yellow', 'purple', 'pink', 'magenta', 'orange', 'violet']
         type = ['Type_1', 'Type_2', 'Type_3', 'Type_4', 'Type_5', 'Type_6', 'Type_7', 'Type_8', 'Type_9']
         for rect in self.cs_info:
             #print rect
-
-            color_ind=type.index(rect[0])
-            color=colors[color_ind]
+            try:
+                color_ind=type.index(rect[0])
+                color=colors[color_ind]
+            except:
+                color='black'
             r=[rect[1],rect[2],rect[3],rect[4],color,rect[-2]]# x,y,w,h,cs_type,zorder
             rectlist.append(r)
 
@@ -602,11 +613,16 @@ class ScriptInputMethod():
         for p in Patches:
             ax.add_patch(p)
 
-        ax.set_xlim(0, 120)
-        ax.set_ylim(0, 120)
+        ax.set_xlim(0, self.size[0])
+        ax.set_ylim(0, self.size[1])
         ax.set_aspect('equal')
+        if fig_dir!=None:
+            plt.savefig(fig_dir+'/initial_layout.png')
+        else:
+            plt.show()
 
-        plt.show()
+
+        #plt.show()
 
 
     # generate initial constraint table based on the types in the input script and saves information in the given csv file as constraint
