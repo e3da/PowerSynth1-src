@@ -2683,7 +2683,8 @@ class CS_to_CG():
         if self.level==1:
             CG = constraintGraph( W=None, H=None,XLocation=None, YLocation=None)
             CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList,bondwires,self.level,cs_islands, N,seed,individual,Types=Types,flexible=flexible,rel_cons=rel_cons)
-        elif self.level==2 or self.level==3:
+        elif self.level==2 or self.level==3 :#or self.level==1
+            #if self.level!=1:
             if W==None or H ==None:
                 print"Please enter Width and Height of the floorplan"
             if N==None:
@@ -2691,99 +2692,17 @@ class CS_to_CG():
             else:
                 CG = constraintGraph(W, H, XLoc, YLoc)
                 CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList,bondwires, self.level,cs_islands,N,seed,individual,Types=Types,flexible=flexible,rel_cons=rel_cons)
+            #else:
+                #CG = constraintGraph(W, H, XLoc, YLoc)
+                #CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList, bondwires, self.level, cs_islands, N, seed,
+                                  #individual, Types=Types, flexible=flexible, rel_cons=rel_cons)
         else:
 
             CG = constraintGraph( W=None, H=None,XLocation=None, YLocation=None)
             CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList,bondwires, self.level,cs_islands,Types=Types,flexible=flexible,rel_cons=rel_cons)
         MIN_X, MIN_Y = CG.minValueCalculation(Htree.hNodeList, Vtree.vNodeList, self.level)
         return MIN_X, MIN_Y
-        '''
-        if self.level == 0:
 
-            R = self.UPDATE_min(MIN_X, MIN_Y, Htree, Vtree)
-            Results = []
-            for i in R:
-                Rectangles = {}
-                for k, v in i.items():
-                    # print"Size", k, len(v)
-                    key = k
-                    Rectangles.setdefault(key, [])
-                    val = []
-                    value = {}
-                    for rect in v:
-                        # print "N",rect.name
-
-                        value[rect.name] = [rect.top, rect.bottom, rect.left, rect.right]
-                        # val.append(value)
-
-                        # rect.print_rect()
-                    Rectangles[key].append(value)
-                Results.append(Rectangles)
-
-        else:
-
-
-            DIM_H = {}
-
-            keys = MIN_X[0].keys()
-            # print keys
-            for i in range(len(keys)):
-                key = keys[i]
-                for k in range(len(Htree.hNodeList)):
-                    if Htree.hNodeList[k].id == key:
-
-                        coord = []
-                        for j in Htree.hNodeList[k].stitchList:
-                            x_y = [j.cell.x, j.cell.y, j.EAST.cell.x, j.NORTH.cell.y, j.name, j.cell.type,j.nodeId]
-                            coord.append(x_y)
-
-                DIM_H[key] = coord
-            # print"DIM", DIM_H
-            DIM_V = {}
-            keysv = MIN_Y[0].keys()
-            # print keys
-            for i in range(len(keysv)):
-                key = keysv[i]
-                for k in range(len(Vtree.vNodeList)):
-                    if Vtree.vNodeList[k].id == key:
-                        coord = []
-                        for j in Vtree.vNodeList[k].stitchList:
-                            x_y = [j.cell.x, j.cell.y, j.EAST.cell.x, j.NORTH.cell.y, j.name, j.cell.type,j.nodeId]
-                            coord.append(x_y)
-                DIM_V[key] = coord
-            # print"DIM", DIM_V
-
-            floorplan_results = []
-            for i in range(len(MIN_X)):
-                # print MIN_X[i],MIN_Y[i]
-
-                MINX = collections.OrderedDict(sorted(MIN_X[i].items()))
-                MINY = collections.OrderedDict(sorted(MIN_Y[i].items()))
-
-                HCS, VCS, HCS1, VCS1 = self.UPDATED_Location(MINX, MINY, DIM_H, DIM_V)
-
-            Results = []
-
-            for i in HCS:  # need to double check
-                Rectangles = {}
-                for k, v in i.items():
-                    # print"Size", k, len(v)
-                    key = k
-                    Rectangles.setdefault(key, [])
-                    val = []
-                    value = {}
-                    for rect in v:
-                        # print "N",rect.name
-
-                        value[rect.name] = [rect.top, rect.bottom, rect.left, rect.right]
-                        # val.append(value)
-
-                        # rect.print_rect()
-                    Rectangles[key].append(value)
-                Results.append(Rectangles)
-
-        return Results
-        '''
 
 
     def update_min_hv(self,minx,miny,Htree,Vtree,sym_to_cs,s=1000.0):

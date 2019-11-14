@@ -72,6 +72,7 @@ class Cmd_Handler:
         algorithm = None
         t_name =None
         e_name = None
+        num_gen=None
         dev_conn ={}
         with open(file, 'rb') as inputfile:
             self.thermal_mode = None

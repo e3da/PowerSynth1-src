@@ -651,7 +651,7 @@ class ScriptInputMethod():
         r2 = ['Min Width']
         r2_c=[0 for i in range(len(Types))]
         for i in range(len(Types)):
-            if Types[i]=='EMPTY':
+            if Types[i]=='EMPTY' or Types[i]=='Type_3':
                 r2_c[i]=1.0
             else:
                 for k,v in self.component_to_cs_type.items():
@@ -661,6 +661,7 @@ class ScriptInputMethod():
                                 if r2_c[i]==0:
                                     r2_c[i]=comp.footprint[0]
                                     break
+
         for i in range(len(r2_c)):
             if r2_c[i]==0:
                 r2_c[i]=2.0
@@ -670,7 +671,7 @@ class ScriptInputMethod():
         r3 = ['Min Height']
         r3_c = [0 for i in range(len(Types))]
         for i in range(len(Types)):
-            if Types[i]=='EMPTY':
+            if Types[i]=='EMPTY' or Types[i]=='Type_3':
                 r3_c[i]=1.0
             else:
                 for k, v in self.component_to_cs_type.items():
@@ -690,7 +691,7 @@ class ScriptInputMethod():
         r4 = ['Min Extension']
         r4_c = [0 for i in range(len(Types))]
         for i in range(len(Types)):
-            if Types[i]=='EMPTY':
+            if Types[i]=='EMPTY' or Types[i]=='Type_3':
                 r4_c[i]=1.0
             else:
                 for k, v in self.component_to_cs_type.items():
@@ -723,7 +724,10 @@ class ScriptInputMethod():
 
                     row=[k]
                     for j in range(len(Types)):
-                        row.append(2.0)
+                        if v=='Type_3' and Types[j]=='Type_3':
+                            row.append(2)
+                        else:
+                            row.append(0.5)
                     space_rows.append(row)
                     all_rows.append(row)
 

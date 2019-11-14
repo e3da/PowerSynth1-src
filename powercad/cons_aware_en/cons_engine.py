@@ -624,10 +624,77 @@ class New_layout_engine():
                 cs_islands_up = self.update_islands(CS_SYM_Updated1, Evaluated_X[i], Evaluated_Y[i], cs_islands)
                 updated_cs_islands.append(cs_islands_up)
                 Layout_Rects.append(Layout_Rects1)
+            
+
+            Evaluated_X0, Evaluated_Y0 = self.mode_zero()  # mode-0 evaluation is required to check the validity of given floorplan size
+            # print Evaluated_X0, Evaluated_Y0
+
+            ZDL_H = {}
+            ZDL_V = {}
+            for k, v in Evaluated_X0[1].items():
+                ZDL_H[k] = v
+            for k, v in Evaluated_Y0[1].items():
+                ZDL_V[k] = v
+            MIN_X = {}
+            MIN_Y = {}
+            for k, v in ZDL_H.items():
+                MIN_X[ZDL_H.keys().index(k)] = v
+            for k, v in ZDL_V.items():
+                MIN_Y[ZDL_V.keys().index(k)] = v
+
+            min_width = max(MIN_X.values())  # finding minimum width of the floorplan
+            min_height = max(MIN_Y.values())  # finding minimum height of the floorplan
+            XLoc = MIN_X.keys()
+            YLoc = MIN_Y.keys()
+
+            XLoc.sort()
+            YLoc.sort()
+
+
+
+
+            widths = [min_width]
+            heights=[min_height]
+            if num_layouts <= 1000:
+
+                for i in range(1,num_layouts):
+                    widths.append(widths[i-1] + 40000 / float(num_layouts))
+                    heights.append(heights[i-1] + 40000 / float(num_layouts))
+            else:
+                for i in range(num_layouts):
+                    widths.append(widths[i - 1] + 60000 / float(num_layouts))
+                    heights.append(heights[i - 1] + 60000 / float(num_layouts))
+
+            Min_X_Locs=[]
+            Min_Y_Locs=[]
+            for i in range(num_layouts):
+                Min_X_Loc={}
+                Min_Y_Loc={}
+
+                Min_X_Loc[0] = 0
+                Min_X_Loc[1] = self.ledge_width * scaler
+                Min_X_Loc[len(XLoc) - 2] = widths[i] - self.ledge_width * scaler
+                Min_X_Loc[len(XLoc) - 1] = widths[i]
+                Min_X_Locs.append(Min_X_Loc)
+
+                Min_Y_Loc[0] = 0
+                Min_Y_Loc[1] = self.ledge_height * scaler
+                Min_Y_Loc[len(YLoc) - 2] = heights[i] - self.ledge_height * scaler
+                Min_Y_Loc[len(YLoc) - 1] = heights[i]
+                Min_Y_Locs.append(Min_Y_Loc)
+            #print Min_X_Locs
+            #print Min_Y_Locs
+            Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, bondwires=self.bondwires,
+                                                      N=num_layouts, cs_islands=cs_islands, W=W, H=H,
+                                                      XLoc=Min_X_Locs, YLoc=Min_Y_Locs, seed=seed, individual=individual,
+                                                      Types=self.Types, rel_cons=self.reliability_constraints,
+                                                      flexible=self.flexible)
+
             '''
             Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree,bondwires=self.bondwires, N=num_layouts,cs_islands=cs_islands, W=None, H=None,
                                                       XLoc=None, YLoc=None, seed=seed, individual=individual,
                                                       Types=self.Types,rel_cons=self.reliability_constraints,flexible=self.flexible)
+
             # CS_SYM_Updated, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree, sym_to_cs,scaler)
             CS_SYM_Updated = []
             Layout_Rects = []

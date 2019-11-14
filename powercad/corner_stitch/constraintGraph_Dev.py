@@ -3231,6 +3231,7 @@ class constraintGraph:
         :param N: number of layouts to be generated
         :return: evaluated HCG for N layouts
         """
+        #"""
         if level == 1:
             #TBeval is Top_Bottom evaluation class object, where all constraint graphs with propagated room from child are stored
             for element in reversed(self.Tbeval):
@@ -3662,8 +3663,8 @@ class constraintGraph:
                             xloc.append(loc)
                         self.LocationH[element.ID] = xloc
                         #print "N",self.LocationH
-
-        elif level == 2 or level == 3:
+        #"""
+        if level == 2 or level == 3 :#or level==1
             for element in reversed(self.Tbeval):
                 if element.parentID == None:
 
@@ -3684,58 +3685,96 @@ class constraintGraph:
                                         td_eval_edges[(source, destination)] = value
 
 
-                    for m in range(N):  ### No. of outputs
 
-                        d3 = defaultdict(list)
-                        W = defaultdict(list)
-                        for i in element.labels:
-                            k, v = list(i.items())[0]
-                            # print v[0]
-                            d3[k].append(v[0])
-                            W[k].append(v[3])
-                            '''
-                            if v[3]==None:
-                                W[k].append(1)
-                            else:
+
+                    if level!=1:
+                        for m in range(N):  ### No. of outputs
+
+                            d3 = defaultdict(list)
+                            W = defaultdict(list)
+                            for i in element.labels:
+                                k, v = list(i.items())[0]
+                                # print v[0]
+                                d3[k].append(v[0])
                                 W[k].append(v[3])
-                            '''
-                        # print "D3", d3,W
-                        X = {}
-                        H = []
-                        Weights = {}
-                        for i, j in d3.items():
-                            X[i] = max(j)
-                        for i, j in W.items():
-                            Weights[i] = max(j)
-                        # print"X",Weights
-                        for k, v in X.items():
-                            H.append((k[0], k[1], v))
-                        # print "H", H
-                        G = nx.MultiDiGraph()
-                        n = list(element.graph.nodes())
-                        G.add_nodes_from(n)
-                        # G.add_weighted_edges_from([(0,1,2),(1,2,3),(2,3,4),(3,4,4),(4,5,3),(5,6,2),(1,4,15),(2,5,16),(1,5,20)])
-                        G.add_weighted_edges_from(H)
-                        if level == 2:
+                                '''
+                                if v[3]==None:
+                                    W[k].append(1)
+                                else:
+                                    W[k].append(v[3])
+                                '''
+                            # print "D3", d3,W
+                            X = {}
+                            H = []
+                            Weights = {}
+                            for i, j in d3.items():
+                                X[i] = max(j)
+                            for i, j in W.items():
+                                Weights[i] = max(j)
+                            # print"X",Weights
+                            for k, v in X.items():
+                                H.append((k[0], k[1], v))
+                            # print "H", H
+                            G = nx.MultiDiGraph()
+                            n = list(element.graph.nodes())
+                            G.add_nodes_from(n)
+                            # G.add_weighted_edges_from([(0,1,2),(1,2,3),(2,3,4),(3,4,4),(4,5,3),(5,6,2),(1,4,15),(2,5,16),(1,5,20)])
+                            G.add_weighted_edges_from(H)
+                            if level == 2:
+                                self.Loc_X = {}
+                                for k, v in self.XLoc.items():
+                                    if k in n:
+                                        self.Loc_X[k] = v
+                            elif level == 3:
+                                self.Loc_X = {}
+
+                                for i, j in self.XLoc.items():
+                                    # print j
+                                    if i == 1:
+                                        for k, v in j.items():
+                                            self.Loc_X[k] = v
+
+                                            # print v
+                            #print"XLoc_before", self.Loc_X
+
+                            self.FUNCTION(G, element.ID,Random,sid=self.seed_h[m])
+                            #print"FINX_after",self.Loc_X
+                            loct.append(self.Loc_X)
+                    else:
+
+                        loct=[]
+                        for id in range(len(self.XLoc)):
+                            d3 = defaultdict(list)
+                            W = defaultdict(list)
+                            for i in element.labels:
+                                k, v = list(i.items())[0]
+                                # print v[0]
+                                d3[k].append(v[0])
+                                W[k].append(v[3])
+                            X = {}
+                            H = []
+                            Weights = {}
+                            for i, j in d3.items():
+                                X[i] = max(j)
+                            for i, j in W.items():
+                                Weights[i] = max(j)
+                            # print"X",Weights
+                            for k, v in X.items():
+                                H.append((k[0], k[1], v))
+                            # print "H", H
+                            G = nx.MultiDiGraph()
+                            n = list(element.graph.nodes())
+                            G.add_nodes_from(n)
+                            # G.add_weighted_edges_from([(0,1,2),(1,2,3),(2,3,4),(3,4,4),(4,5,3),(5,6,2),(1,4,15),(2,5,16),(1,5,20)])
+                            G.add_weighted_edges_from(H)
                             self.Loc_X = {}
-                            for k, v in self.XLoc.items():
+                            for k, v in self.XLoc[id].items():
                                 if k in n:
                                     self.Loc_X[k] = v
-                        elif level == 3:
-                            self.Loc_X = {}
-
-                            for i, j in self.XLoc.items():
-                                # print j
-                                if i == 1:
-                                    for k, v in j.items():
-                                        self.Loc_X[k] = v
-
-                                        # print v
-                        #print"XLoc_before", self.Loc_X
-
-                        self.FUNCTION(G, element.ID,Random,sid=self.seed_h[m])
-                        #print"FINX_after",self.Loc_X
-                        loct.append(self.Loc_X)
+                            #print self.Loc_X
+                            self.FUNCTION(G, element.ID, Random, sid=self.seed_h[id])
+                            #print self.Loc_X
+                            loct.append(self.Loc_X)
 
                     self.NEWXLOCATION = loct
 
@@ -4418,6 +4457,7 @@ class constraintGraph:
     def VcgEval(self, level,Random,seed, N):
 
         # for i in reversed(Tbelement):
+        #"""
         if level == 1:
             for element in reversed(self.TbevalV):
 
@@ -4849,8 +4889,8 @@ class constraintGraph:
                             yloc.append(loc)
                         self.LocationV[element.ID] = yloc
                     #print "VLOC",self.LocationV
-
-        elif level == 2 or level == 3:
+        #"""
+        if level == 2 or level == 3 :#or level==1
             for element in reversed(self.TbevalV):
                 # print element.ID,element.parentID
 
@@ -4878,58 +4918,98 @@ class constraintGraph:
                     '''
 
                     #print"TD", td_eval_edges
-                    for i in range(N):
+                    if level!=1:
+                        for i in range(N):
 
-                        d3 = defaultdict(list)
-                        d4 = defaultdict(list)
-                        WV = defaultdict(list)
-                        for label in element.labels:
-                            k, v = list(label.items())[0]
-                            # print v[0]
-                            d3[k].append(v[0])
-                            WV[k].append(v[3])
-                            '''
-                            if v[3] == None:
-                                W[k].append(1)
-                            else:
-                                W[k].append(v[3])
-                            '''
-                        # print "D3", d3, W
-                        Y = {}
-                        V = []
-                        Weights_V = {}
-                        for k1, v1 in d3.items():
-                            Y[k1] = max(v1)
-                        #print"X", Y
-                        for k2, v2 in WV.items():
-                            Weights_V[k2] = max(v2)
-                        # print Y,Weights
-                        for k, v in Y.items():
-                            V.append((k[0], k[1], v))
-                        # print "H", Fix
-                        GV = nx.MultiDiGraph()
-                        nV = list(element.graph.nodes())
-                        GV.add_nodes_from(nV)
-                        # G.add_weighted_edges_from([(0,1,2),(1,2,3),(2,3,4),(3,4,4),(4,5,3),(5,6,2),(1,4,15),(2,5,16),(1,5,20)])
-                        GV.add_weighted_edges_from(V)
-                        if level == 2:
+                            d3 = defaultdict(list)
+                            d4 = defaultdict(list)
+                            WV = defaultdict(list)
+                            for label in element.labels:
+                                k, v = list(label.items())[0]
+                                # print v[0]
+                                d3[k].append(v[0])
+                                WV[k].append(v[3])
+                                '''
+                                if v[3] == None:
+                                    W[k].append(1)
+                                else:
+                                    W[k].append(v[3])
+                                '''
+                            # print "D3", d3, W
+                            Y = {}
+                            V = []
+                            Weights_V = {}
+                            for k1, v1 in d3.items():
+                                Y[k1] = max(v1)
+                            #print"X", Y
+                            for k2, v2 in WV.items():
+                                Weights_V[k2] = max(v2)
+                            # print Y,Weights
+                            for k, v in Y.items():
+                                V.append((k[0], k[1], v))
+                            # print "H", Fix
+                            GV = nx.MultiDiGraph()
+                            nV = list(element.graph.nodes())
+                            GV.add_nodes_from(nV)
+                            # G.add_weighted_edges_from([(0,1,2),(1,2,3),(2,3,4),(3,4,4),(4,5,3),(5,6,2),(1,4,15),(2,5,16),(1,5,20)])
+                            GV.add_weighted_edges_from(V)
+                            if level == 2:
+                                self.Loc_Y = {}
+                                for k, v in self.YLoc.items():
+                                    if k in nV:
+                                        self.Loc_Y[k] = v
+                                # print "Y",self.Loc_Y
+                            elif level == 3:
+                                self.Loc_Y = {}
+
+                                for k3, v3 in self.YLoc.items():
+                                    # print j
+                                    if k3 == 1:
+                                        for k, v in v3.items():
+                                            self.Loc_Y[k] = v
+                            #print self.Loc_Y
+                            self.FUNCTION_V(GV, element.ID, Random,sid=self.seed_v[i])
+                            #print"FINX",self.Loc_Y
+                            loct.append(self.Loc_Y)
+                    else:
+
+                        loct=[]
+                        for id in range(N):
+                            d3 = defaultdict(list)
+                            d4 = defaultdict(list)
+                            WV = defaultdict(list)
+                            for label in element.labels:
+                                k, v = list(label.items())[0]
+                                # print v[0]
+                                d3[k].append(v[0])
+                                WV[k].append(v[3])
+
+                            Y = {}
+                            V = []
+                            Weights_V = {}
+                            for k1, v1 in d3.items():
+                                Y[k1] = max(v1)
+                            # print"X", Y
+                            for k2, v2 in WV.items():
+                                Weights_V[k2] = max(v2)
+                            # print Y,Weights
+                            for k, v in Y.items():
+                                V.append((k[0], k[1], v))
+                            # print "H", Fix
+                            GV = nx.MultiDiGraph()
+                            nV = list(element.graph.nodes())
+                            GV.add_nodes_from(nV)
+                            # G.add_weighted_edges_from([(0,1,2),(1,2,3),(2,3,4),(3,4,4),(4,5,3),(5,6,2),(1,4,15),(2,5,16),(1,5,20)])
+                            GV.add_weighted_edges_from(V)
                             self.Loc_Y = {}
-                            for k, v in self.YLoc.items():
+                            for k, v in self.YLoc[id].items():
                                 if k in nV:
                                     self.Loc_Y[k] = v
-                            # print "Y",self.Loc_Y
-                        elif level == 3:
-                            self.Loc_Y = {}
 
-                            for k3, v3 in self.YLoc.items():
-                                # print j
-                                if k3 == 1:
-                                    for k, v in v3.items():
-                                        self.Loc_Y[k] = v
-                        #print self.Loc_Y
-                        self.FUNCTION_V(GV, element.ID, Random,sid=self.seed_v[i])
-                        #print"FINX",self.Loc_Y
-                        loct.append(self.Loc_Y)
+                            self.FUNCTION_V(GV, element.ID, Random, sid=self.seed_v[id])
+                            # print"FINX",self.Loc_Y
+                            loct.append(self.Loc_Y)
+
 
                     self.NEWYLOCATION = loct
 
