@@ -9,6 +9,8 @@ from matplotlib.patches import Circle, Rectangle
 import psidialogs
 from powercad.sym_layout.symbolic_layout import ThermalMeasure, ElectricalMeasure,SymLine
 from powercad.project_builder.proj_dialogs import Device_states_dialog
+
+
 class PerformanceItem(object):
     def __init__(self, PerfUI, measure, row_item):
         self.PerfUI = PerfUI
@@ -39,9 +41,11 @@ class PerformanceItem(object):
         self.table.removeRow(self.row_index())
         self.PerfUI.perf_items.remove(self)
         self.PerfUI.refresh_window()
+
     def row_index(self):
         return self.table.row(self.row_item)
-        
+
+
 class PerformanceListUI(object):
     
     def __init__(self, parent):
@@ -105,6 +109,7 @@ class PerformanceListUI(object):
                         if device.name in all_names:
                             self.parent.patch_dict.get_patch(device, 3).set_facecolor('#00FF00')
         self.parent.symb_canvas[3].draw()
+
     def open_device_state_dialog(self):
         device_state=Device_states_dialog(self.parent,self)
         device_state.exec_()
@@ -335,7 +340,8 @@ class PerformanceListUI(object):
                 model = 'ParaPowerThermal'
                 import powercad.interfaces.ParaPowerAPI.MDConverter as mdc
                 try:
-                    from powercad.general.settings import MATLAB_PATH
+                    from powercad.general.settings.settings import MATLAB_PATH
+                # TODO: Fix exception for ParaPower directory location
                 except:
                     MATLAB_PATH = 'C:/Users/tmevans/Documents/MATLAB/ParaPower/ARL_ParaPower/ARL_ParaPower'
                 matlab_engine = mdc.init_matlab(MATLAB_PATH)

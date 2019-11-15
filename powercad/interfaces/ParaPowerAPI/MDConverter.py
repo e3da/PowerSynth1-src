@@ -43,7 +43,7 @@ class Feature(object):
     a :class:`~PowerSynthStructures.ModuleDesign` object as it pertains to forming a ParaPower model.
 
 
-    :param entity: The type of entity to be converted. This can be one of either baseplate, substrate_attach, substrate,traces, or devices.
+    :param entity: The type of entity to be converted. This can be one of either baseplate, substrate_attach, substrate, traces, or devices.
     :type entity: str
     :param ref_loc: Reference location for the geometry.
     :type ref_loc: list of reference coordinates
@@ -470,7 +470,7 @@ class ParaPowerInterface(object):
 
         :return: None
         """
-        fname = self.path + 'PowerSynth_MD_JSON.json'
+        fname = self.path + '/0_PowerSynth_MD_JSON.json'
         with open(fname, 'w') as outfile:
             json.dump(self.to_dict(), outfile)
 
@@ -481,6 +481,8 @@ def init_matlab(path):
     return eng
 
 # The following classes and methods are currently only used for visualization testing in Python
+
+
 class Coordinates(object):
     def __init__(self, lower_left_coordinate=[0., 0., 0.], width_length_height=[1., 1., 1.]):
         self.location = lower_left_coordinate
