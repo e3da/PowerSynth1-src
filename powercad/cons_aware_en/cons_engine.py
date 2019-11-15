@@ -302,6 +302,7 @@ class New_layout_engine():
         #--------------------------------------------------------------------------
         # populate voltage and current information for Htree and Vtree tiles
         if voltage_info!=None or current_info!=None:
+
             self.apply_IV_loading(cs_islands,voltage_info,current_info)
 
         #--------------------------------------------for debugging----------------------
@@ -972,9 +973,12 @@ class New_layout_engine():
 
         voltage={}
         current={}
+
         if voltage_info!=None:
             for island in cs_islands:
+
                 for name in island.element_names:
+
                     if name in voltage_info:
                         voltage[island.name]=voltage_info[name]
 
@@ -983,6 +987,7 @@ class New_layout_engine():
                 for name in island.element_names:
                     if name in current_info:
                         current[island.name]=current_info[name]
+
 
         for island in cs_islands:
             if island.name in voltage:
@@ -1677,6 +1682,7 @@ class New_layout_engine():
             cs_island = Island()
             cs_island.name = island.name
             elements = island.elements
+            cs_island.element_names=island.element_names
 
             child = island.child
             cs_elements = []

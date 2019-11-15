@@ -472,10 +472,10 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True,rel_c
             export_solutions(solutions=Solutions, directory=sol_dir, pareto_data=pareto_data) # exporting solution info to csv file
             if plot:
                 sol_path = fig_dir + '/Mode_2_pareto'
-                if len(Solutions)<50:
-                    sol_path_all = fig_dir + '/Mode_2_solutions'
-                    if not os.path.exists(sol_path_all):
-                        os.makedirs(sol_path_all)
+                #if len(Solutions)<50:
+                sol_path_all = fig_dir + '/Mode_2_solutions'
+                if not os.path.exists(sol_path_all):
+                    os.makedirs(sol_path_all)
                 if not os.path.exists(sol_path):
                     os.makedirs(sol_path)
                 pareto_data = pareto_solutions(Solutions)

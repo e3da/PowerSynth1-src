@@ -1752,6 +1752,7 @@ class constraintGraph:
 
                     # Applying I-V constraints
                     value1 = constraint.constraint.getConstraintVal(c, source=t1, dest=t2,Types=Types)
+                    #print "here",rect.NORTH.voltage
 
                     if rect.NORTH.voltage!=None and rect.SOUTH.voltage!=None:
                         #voltage_diff1=abs(rect.NORTH.voltage[0]-rect.SOUTH.voltage[1])
@@ -1760,6 +1761,7 @@ class constraintGraph:
 
 
                         voltage_diff=self.find_voltage_difference(rect.NORTH.voltage,rect.SOUTH.voltage,rel_cons)
+                        #print "V_DIFF",voltage_diff
 
                         # tolerance is considered 10%
 
@@ -1903,6 +1905,7 @@ class constraintGraph:
         
         '''
         for rect in cornerStitch_h.stitchList:
+
             Extend_v = 0
             if rect.nodeId != ID or (rect.EAST.cell.type=='EMPTY' and rect.NORTH.cell.type=='EMPTY' and rect.WEST.cell.type=='EMPTY' and rect.SOUTH.cell.type=='EMPTY' and rect.nodeId==ID):
                 origin = self.ZDL_V[ID].index(rect.cell.y)
