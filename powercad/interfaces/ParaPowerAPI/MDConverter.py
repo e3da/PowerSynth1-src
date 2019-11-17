@@ -9,6 +9,7 @@ import matplotlib.cm as cm
 # from matplotlib.pylab import *
 import seaborn as sns
 
+from powercad.general.settings.settings import MATLAB_PATH
 
 class Params(object):
     """The :class:`Params` object contains attributes that are used in the solver setting of ParaPower.
@@ -406,7 +407,7 @@ class ParaPowerInterface(object):
 
     """
     def __init__(self, external_conditions=None, parameters=None, features=None,
-                 matlab_path='C:/Users/tmevans/Documents/MATLAB/ParaPower/ARL_ParaPower/ARL_ParaPower'):
+                 matlab_path=MATLAB_PATH):
         self.ExternalConditions = external_conditions
         self.Params = parameters
         self.Features = features
