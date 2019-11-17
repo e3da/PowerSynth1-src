@@ -250,12 +250,14 @@ class ParaPowerWrapper(object):
     """
 
     def __init__(self, module_design):
+        self.c2k = 273.5
         self.module_design = module_design
         self.device_id = self.module_design.dv_id
         self.ref_locs = self.get_ref_locs()
-        self.t_amb = self.module_design.sym_layout.module.ambient_temp
+        self.t_amb = self.module_design.sym_layout.module.ambient_temp - self.c2k
         self.external_conditions = ExternalConditions(Ta=self.t_amb)
         self.parameters = Params()
+        self.parameters.Tinit = self.t_amb
         self.features_list = self.get_features()
         self.features = [feature.to_dict() for feature in self.features_list]
 
@@ -462,7 +464,7 @@ class ParaPowerInterface(object):
         # self.eng.save('test_md_file.mat', 'test_md')
         # return temperature + 273.5
         self.save_parapower()
-        return temperature
+        return temperature + 273.5
 
     def save_parapower(self):
         """Saves the current JSON text stream so that it can be analyzed later. This is only used for debugging right
