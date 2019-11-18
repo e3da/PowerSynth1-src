@@ -3331,16 +3331,20 @@ class constraintGraph:
                                     random.seed(seed + count * 1000)
                                     #val = int(min(1000 * v[0], max(v[0], random.gauss(v[0], SD))))
                                     #print (k),v
-                                    if N>5:
-                                        val=random.randrange(v[0],(N/5.0)*v[0])
+                                    if N>5 and N<100:
+                                        val=random.randrange(v[0],int((N/5.0)*v[0]))
+                                    elif N>=100:
+                                        val = random.randrange(v[0], int((N / 300.0) * v[0]))
                                     else:
                                         val = random.randrange(v[0], N * v[0])
                                 elif v[0]>3000 :
                                     random.seed(seed + count * 1000)
                                     # val = int(min(1000 * v[0], max(v[0], random.gauss(v[0], SD))))
                                     #print (k), v
-                                    if N>10.0:
-                                        val = random.randrange(v[0], (N/10.0)* v[0])
+                                    if N>10.0 and N<100:
+                                        val = random.randrange(v[0], int((N/10.0)* v[0]))
+                                    elif N>=100:
+                                        val = random.randrange(v[0], int((N /300.0) * v[0]))
                                     else:
                                         val = random.randrange(v[0], N * v[0])
                                 else:
@@ -4563,16 +4567,20 @@ class constraintGraph:
                                     random.seed(seed + count * 1000)
                                     # val = int(min(1000 * v[0], max(v[0], random.gauss(v[0], SD))))
                                     # print (k),v
-                                    if N>5:
-                                        val=random.randrange(v[0],(N/5.0)*v[0])
+                                    if N>5 and N<100:
+                                        val=random.randrange(v[0],int((N/5.0)*v[0]))
+                                    elif N>=100:
+                                        val = random.randrange(v[0], int((N / 300.0) * v[0]))
                                     else:
                                         val = random.randrange(v[0], N * v[0])
                                 elif v[0] > 3000:
                                     random.seed(seed + count * 1000)
                                     # val = int(min(1000 * v[0], max(v[0], random.gauss(v[0], SD))))
                                     # print (k), v
-                                    if N>10:
-                                        val=random.randrange(v[0],(N/10.0)*v[0])
+                                    if N>10 and N<100:
+                                        val=random.randrange(v[0],int((N/10.0)*v[0]))
+                                    elif N>=100:
+                                        val = random.randrange(v[0], int((N / 300.0) * v[0]))
                                     else:
                                         val = random.randrange(v[0], N * v[0])
                                 else:
