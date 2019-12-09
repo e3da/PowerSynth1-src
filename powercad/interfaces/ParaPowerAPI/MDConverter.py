@@ -11,6 +11,7 @@ import seaborn as sns
 
 from powercad.general.settings.settings import MATLAB_PATH
 
+
 class Params(object):
     """The :class:`Params` object contains attributes that are used in the solver setting of ParaPower.
 
@@ -251,7 +252,7 @@ class ParaPowerWrapper(object):
     """
 
     def __init__(self, module_design):
-        self.c2k = 273.5
+        self.c2k = 273.15
         self.module_design = module_design
         self.device_id = self.module_design.dv_id
         self.ref_locs = self.get_ref_locs()
@@ -318,7 +319,7 @@ class ParaPowerWrapper(object):
         :rtype features: list of :class:`Feature` objects
         """
 
-        features = []
+        features_substrate = []
         features_1 = []
         features_2 = []
         features_3 = []
@@ -343,7 +344,7 @@ class ParaPowerWrapper(object):
         # Substrate
         substrate_f = Feature(entity=substrate, ref_loc=self.ref_locs['substrate'])
         substrate_f.name = 'Substrate_Isolation'
-        features_2.append(substrate_f)
+        features_substrate.append(substrate_f)
         if substrate_f.child_features:
             for child in substrate_f.child_features:
                 child.name = 'Substrate_Backside_Metal'
@@ -376,7 +377,9 @@ class ParaPowerWrapper(object):
         features_2.extend(features_3)
         features_1.extend(features_2)
         features_1.reverse()
-        return features_1
+        # TODO: Check and see if this puts the substrate isolation layer at the top of the Features list
+        features_substrate.extend(features_1)
+        return features_substrate
 
     def write_md_output(self):
         filename = 'PPExportTestMD.p'

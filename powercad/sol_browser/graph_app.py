@@ -38,6 +38,7 @@ import csv
 from powercad.spice_handler.spice_export.thermal_netlist_graph import Module_Full_Thermal_Netlist_Graph
 from powercad.export.py_csv import py_csv
 
+
 class GrapheneWindow(QtGui.QMainWindow):
     def __init__(self, parent):
         # set up main window
