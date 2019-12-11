@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import pandas as pd
 
-from powercad.spice_handler.spice_import.NetlistImport import Netlist, Netlis_export_ADS
+from powercad.spice_handler.spice_import.NetlistImport import Netlist, Netlist_export_ADS
 from powercad.design.module_data import gen_test_module_data_BL_te
 from powercad.design.module_design import ModuleDesign
 from powercad.general.settings import settings
@@ -258,7 +258,7 @@ def make_test_setup2(f,directory):
     #netlist.form_assignment_list_fh()
     #external=netlist.get_external_list_fh()
     #output_fh_script(sym_layout,"C:\Users\qmle\Desktop\Balancing\Mutual_test\layout cases//BL_layout_pos_TE",external=external)
-    ads_net = Netlis_export_ADS(df=this_circuit.df_circuit_info, pm=this_circuit.portmap)
+    ads_net = Netlist_export_ADS(df=this_circuit.df_circuit_info, pm=this_circuit.portmap)
     ads_net.export_ads2('RC_BL_4sw_TE'+'_'+str(f)+'kHz'+'.net')
     empro_script = EMProScript(ModuleDesign(sym_layout), 'RC_BL_4sw_TE' + '_' + str(f) + 'kHz'+'.py')
     empro_script.generate()
@@ -269,7 +269,7 @@ def make_netlist():
     netlist.form_assignment_list_fh()
     net_data = read_result("C:\Users\qmle\Desktop\Balancing\Mutual_test\layout cases//fh_results//BL_layout_pos1_200.inp.M.txt")
     df, pm = netlist.get_assign_df()
-    ads_net = Netlis_export_ADS(df=df, pm=pm)
+    ads_net = Netlist_export_ADS(df=df, pm=pm)
     ads_net.import_net_data(net_data)
     ads_net.export_ads('RC_BL_4sw_pos1_200.net')
 

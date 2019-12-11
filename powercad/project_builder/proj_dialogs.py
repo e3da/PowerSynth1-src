@@ -64,12 +64,13 @@ class GenericDeviceDialog(QtGui.QDialog):
     # Author: quang le
     # Date: 9-27-2016
     def __init__(self, parent, device_dir):
-        '''Constructor for Generic Device Dialog'''
-        '''Description: This is the constructor generic device dialog in PowerSynth. Libraries -> Generic Model ->triggered'''
-        '''This dialog will load existed data_sheet information of a device (MosFet or Diode) or letting user modify such information'''
-        '''Using the Electrothermal_toolbox in PowerSynth, curve fitting methods are used to find best fit parameters for each required datasheet curve '''
-        '''Inputs: DataSheet Information Qrr, Ciss, Vpl, Vth vs Tj curve, Rds vs Tj curve, Crss vs Vds curve'''
-        '''Outputs: Under tech_lib->Layout_selection->Device->Device_PModel-> *.pmdl files '''
+        '''Constructor for Generic Device Dialog
+        Description: This is the constructor generic device dialog in PowerSynth. Libraries -> Generic Model ->triggered
+        This dialog will load existed data_sheet information of a device (MosFet or Diode) or letting user modify such information
+        Using the Electrothermal_toolbox in PowerSynth, curve fitting methods are used to find best fit parameters for each required datasheet curve
+        Inputs: DataSheet Information Qrr, Ciss, Vpl, Vth vs Tj curve, Rds vs Tj curve, Crss vs Vds curve
+        Outputs: Under tech_lib->Layout_selection->Device->Device_PModel-> *.pmdl files
+        '''
         # Basic Constructor of any dialog connected a a Mianwindow
         QtGui.QDialog.__init__(self, None)
         self.ui = Ui_generic_device_builder()
@@ -3056,8 +3057,6 @@ class New_layout_engine_dialog(QtGui.QDialog):
             #print layout_symb_dict[layout]
         return layout_symb_dict
 
-
-
     def _sym_eval_perf(self, sym_info=None):
         sym_layout = self.engine.sym_layout
         perf_plot = [self.perf1, self.perf2]
@@ -3542,10 +3541,10 @@ class ET_standalone_Dialog(QtGui.QDialog):
                         measure_type = 2
                     if eval_type == "Resistance":
                         measure_type = 1
-                    measure = ElectricalMeasure(pt1=pt1, pt2=pt2, name=perf_name, mdl=mdl,
-                                                src_sink_type=[src_type, sink_type],
-                                                device_state=self.dev_df, measure=measure_type)
-                print "add to perf", measure.pt1,measure.pt2
+                    measure = ElectricalMeasure(pt1=pt1, pt2=pt2, name=perf_name ,mdl=mdl,
+                                                src_sink_type=[src_type,sink_type], device_state=self.dev_df,
+                                                measure=measure_type)
+                    print "add to perf", measure.pt1,measure.pt2
                 self.perf_dict[perf_name] = {'type': type, 'measure': measure, 'Eval': eval_type}
                 row_id = self.ui.tbl_perf_list.rowCount()
 

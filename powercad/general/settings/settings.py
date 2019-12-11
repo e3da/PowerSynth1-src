@@ -25,15 +25,16 @@ else:   # For debugging and running PowerSynth from Eclipse
     DEFAULT_TECH_LIB_DIR = os.path.abspath("../../../tech_lib")
     LAST_ENTRIES_PATH = os.path.abspath("../../../export_data/app_data/last_entries.p")
     TEMP_DIR = os.path.abspath(r"../../../export_data/temp")
-    #TRMP_DIR="D:\PS\export_data\temp"
     CACHED_CHAR_PATH = os.path.abspath("../../../export_data/cached_thermal") # sxm063
     MATERIAL_LIB_PATH='../../../tech_lib/Material/Materials.csv'
     EXPORT_DATA_PATH=os.path.abspath("../../../export_data/")
-    GMSH_BIN_PATH = "C:\PowerSynth\gmsh-2.7.0-Windows"
-    ELMER_BIN_PATH = os.path.abspath("C:\PowerSynth\Elmer 8.2-Release\\bin")  # Emler on Imam's PC
+    GMSH_BIN_PATH = 'C:\PowerSynth\gmsh-2.7.0-Windows'
+    ELMER_BIN_PATH = 'C:\PowerSynth\Elmer 8.2-Release/bin'
     ANSYS_IPY64 = os.path.abspath('C:\Program Files\AnsysEM\AnsysEM18.2\Win64\common\IronPython')
-    FASTHENRY_FOLDER = 'C:\PowerSynth_git\Master_for_danfoss\PowerCAD-full\FastHenry'
+    #FASTHENRY_FOLDER = 'C:\PowerSynth_git\Master_for_danfoss\PowerCAD-full\FastHenry'
+    FASTHENRY_FOLDER = 'C:\PowerSynth\FastHenry'
     MANUAL = "C:\Users\qmle\Desktop\Build_danfoss\PowerSynth User Tutorial.html"
+    MATLAB_PATH = 'C:/Users/tmevans/Documents/MATLAB/ParaPower/ARL_ParaPower/ARL_ParaPower'
 
 if __name__ == '__main__':  # Module test
     print DEFAULT_TECH_LIB_DIR

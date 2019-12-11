@@ -29,7 +29,7 @@ from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 
 from powercad.project_builder.symmetry_list import SymmetryListUI
 from powercad.project_builder.performance_list import PerformanceListUI
-from powercad.project_builder.UI_py.mainWindow_newlayoutengine_ui import Ui_MainWindow
+from powercad.project_builder.windows.mainWindow_newlayoutengine_parapower import Ui_MainWindow
 from powercad.project_builder.sol_window import SolutionWindow
 from powercad.project_builder.proj_dialogs import NewProjectDialog, OpenProjectDialog, EditTechLibPathDialog, \
     GenericDeviceDialog,LayoutEditorDialog, ResponseSurfaceDialog,ModelSelectionDialog,EnvironmentSetupDialog,SetupDeviceDialogs\
@@ -103,7 +103,7 @@ class ProjectBuilder(QtGui.QMainWindow):
         self.ui.cmb_elec_model.currentIndexChanged.connect(self.model_selection)
         self.ui.btn_previous.pressed.connect(self.previous)
         self.ui.btn_next.pressed.connect(self.next)
-        self.ui.btn_clr_all.pressed.connect(self.clear_projet_solutions)
+        # self.ui.btn_clr_all.pressed.connect(self.clear_projet_solutions)
         self.ui.tbl_projDevices.cellPressed.connect(self.component_pressed)
         self.ui.btn_modify.pressed.connect(self.modify_component)
         self.ui.btn_removeDevice.pressed.connect(self.remove_component)
