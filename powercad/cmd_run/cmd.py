@@ -43,7 +43,7 @@ class Cmd_Handler:
         self.soluions = None
 
         self.macro =None
-
+        self.layout_ori_file = None
     def setup_file(self,file):
         self.macro=os.path.abspath(file)
         if not(os.path.isfile(self.macro)):
@@ -82,6 +82,8 @@ class Cmd_Handler:
                     continue
                 if line[0] == '#':  # Comments
                     continue
+                if info[0] == "Trace_Ori:":
+                    self.layout_ori_file = os.path.abspath(info[1])
                 if info[0] == "Layout_script:":
                     self.layout_script = os.path.abspath(info[1])
                 if info[0] == "Bondwire_setup:":
@@ -183,6 +185,10 @@ class Cmd_Handler:
                 cont =False
 
         if cont:
+            if self.layout_ori_file!=None:
+                print "Trace orientation is included, mesh acceleration for electrical evaluation is activated"
+            else:
+                print "Normal meshing algorithm is used"
 
             print "run the optimization"
             self.init_cs_objects()
@@ -466,6 +472,8 @@ class Cmd_Handler:
 
 
     # --------------- API --------------------------------
+
+
     def setup_electrical(self,mode='command',dev_conn={},frequency=None,meas_data={}):
         print "init api"
         layer_to_z = {'T': [0, 0.2], 'D': [0.2, 0], 'B': [0.2, 0],
@@ -479,11 +487,14 @@ class Cmd_Handler:
             self.measures += self.e_api.measurement_setup()
         elif mode == 'macro':
             print "macro mode"
-
+            
             self.e_api.form_connection_table(mode='macro',dev_conn=dev_conn)
             self.e_api.get_frequency(frequency)
             self.measures += self.e_api.measurement_setup(meas_data)
-
+        if self.layout_ori_file != None:
+            print "this is a test now"
+            self.e_api.process_trace_orientation(self.layout_ori_file)
+            
 
     def setup_thermal(self,mode = 'command',meas_data ={},setup_data={},model_type=2):
         '''

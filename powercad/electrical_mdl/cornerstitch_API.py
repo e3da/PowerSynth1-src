@@ -57,6 +57,30 @@ class CornerStitch_Emodel_API:
         self.circuit = RL_circuit()
         self.module_data =None# ModuleDataCOrnerStitch object for layout and footprint info
         self.hier = None
+        self.trace_ori ={}
+
+    def process_trace_orientation(self,trace_ori_file=None):
+        print "implement me"
+        with open(trace_ori_file, 'rb') as file_data:
+            for line in file_data.readlines():
+                if line[0]=="#":
+                    continue
+                if line[0] in ["H","P","V"]: # if trace type is Horizontal , Vertical or Planar
+                    line = line.strip("\r\n")
+                    line = line.strip(" ")
+                    info = line.split(":")
+                    print info
+                    trace_data = info[1]
+                    trace_data = trace_data.split(",")
+                    for t in trace_data:
+                        self.trace_ori[t] = info[0] # sort out the Horizontal , Vertical and Planar type
+                    print "stop"
+
+
+
+
+
+
     def form_connection_table(self, mode=None, dev_conn=None):
         '''
         Form a connection table only once, which can be reused for multiple evaluation
@@ -212,7 +236,8 @@ class CornerStitch_Emodel_API:
         plt.show()
         '''
         self.emesh = EMesh_CS(islands=islands,hier_E=self.hier, freq=self.freq, mdl=self.rs_model)
-        self.emesh.mesh_update()
+        self.emesh.trace_ori =self.trace_ori # Update the trace orientation if given
+        self.emesh.mesh_update(mode = 1)
         '''
         fig = plt.figure(1)
         ax = Axes3D(fig)
