@@ -67,7 +67,7 @@ def set_up_pins_connections(parts=[]):
 
 
 class Part:
-    def __init__(self, name=None, type=None, info_file=None, layout_component_id=None, datasheet_link=None):
+    def __init__(self, name=None, type=None, info_file=None, layout_component_id=None, datasheet_link=None,layer_id=None):
         """
 
         :param name: part name : signal_lead, power_lead, MOS, IGBT, Diode
@@ -75,6 +75,7 @@ class Part:
         :param info_file: technology file for each part
         :param layout_component_id: 1,2,3.... id in the layout information
         :param datasheet_link: link to online datasheet or pdf files on PC
+        "param: layer_id: id from layer stack and matched with input script
         """
         # general info
         self.name = name  # this is used in layout engine for name_id
@@ -82,6 +83,7 @@ class Part:
         self.type = type
         self.info_file = os.path.abspath(info_file).replace(" ", "\\ ")
         self.layout_component_id = layout_component_id
+        self.layer_id=layer_id # layer id from input script
         self.datasheet_link = datasheet_link  # link for datasheet
         self.footprint = [0, 0]  # W,H of the components
         self.pin_name = []  # list of pins name

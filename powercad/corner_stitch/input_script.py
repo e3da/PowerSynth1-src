@@ -195,6 +195,7 @@ class ScriptInputMethod():
             print len(i),i
         # --------for debugging------------------
         '''
+
         return self.Definition,self.layout_info
 
 
@@ -242,16 +243,16 @@ class ScriptInputMethod():
             for k in range(len(layout_info[j])):
                 # updates routing path components
                 if layout_info[j][k][0]=='T' and layout_info[j][k+1]=='power':
-                    element = RoutingPath(name='trace', type=0, layout_component_id=layout_info[j][k])
+                    element = RoutingPath(name='trace', type=0, layout_component_id=layout_info[j][k],layer_id=int(layout_info[j][-2]))
                     self.all_route_info['trace'].append(element)
                 elif layout_info[j][k][0]=='T' and layout_info[j][k+1]=='signal':
-                    element = RoutingPath(name='trace', type=1, layout_component_id=layout_info[j][k])
+                    element = RoutingPath(name='trace', type=1, layout_component_id=layout_info[j][k],layer_id=int(layout_info[j][-2]))
                     self.all_route_info['trace'].append(element)
                 elif layout_info[j][k][0]=='B' and layout_info[j][k+1]=='signal':
-                    element = RoutingPath(name='bonding wire pad', type=1, layout_component_id=layout_info[j][k])
+                    element = RoutingPath(name='bonding wire pad', type=1, layout_component_id=layout_info[j][k],layer_id=int(layout_info[j][-2]))
                     self.all_route_info['bonding wire pad'].append(element)
                 elif layout_info[j][k][0]=='B' and layout_info[j][k+1]=='power':
-                    element = RoutingPath(name='bonding wire pad', type=0, layout_component_id=layout_info[j][k])
+                    element = RoutingPath(name='bonding wire pad', type=0, layout_component_id=layout_info[j][k],layer_id=int(layout_info[j][-2]))
                     self.all_route_info['bonding wire pad'].append(element)
 
                 #parts info gathering
@@ -264,13 +265,13 @@ class ScriptInputMethod():
                             angle=layout_info[j][m].strip('R')
                             break
                     if rotate==False:
-                        element = Part(name=layout_info[j][k+1], info_file=self.info_files[layout_info[j][k+1]],layout_component_id=layout_info[j][k])
+                        element = Part(name=layout_info[j][k+1], info_file=self.info_files[layout_info[j][k+1]],layout_component_id=layout_info[j][k],layer_id=int(layout_info[j][-2]))
                         element.load_part()
                         #print"Foot",element.footprint
                         self.all_parts_info[layout_info[j][k+1]].append(element)
 
                     else:
-                        element = Part(info_file=self.info_files[layout_info[j][k + 1]],layout_component_id=layout_info[j][k])
+                        element = Part(info_file=self.info_files[layout_info[j][k + 1]],layout_component_id=layout_info[j][k],layer_id=int(layout_info[j][-2]))
                         element.load_part()
                         # print element.footprint
                         if angle == '90':
@@ -304,12 +305,12 @@ class ScriptInputMethod():
                             break
 
                     if rotate==False:
-                        element = Part(name=layout_info[j][k + 1], info_file=self.info_files[layout_info[j][k + 1]],layout_component_id=layout_info[j][k])
+                        element = Part(name=layout_info[j][k + 1], info_file=self.info_files[layout_info[j][k + 1]],layout_component_id=layout_info[j][k],layer_id=int(layout_info[j][-2]))
                         element.load_part()
                         self.all_parts_info[layout_info[j][k + 1]].append(element)
 
                     else:
-                        element = Part(info_file=self.info_files[layout_info[j][k + 1]],layout_component_id=layout_info[j][k])
+                        element = Part(info_file=self.info_files[layout_info[j][k + 1]],layout_component_id=layout_info[j][k],layer_id=int(layout_info[j][-2]))
                         element.load_part()
                         # print element.footprint
                         if angle == '90':
