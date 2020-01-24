@@ -354,19 +354,21 @@ class EModule:
             layer_stack: A layer stack for material properties and thickness information
         '''
         self.sheet = sheet  # list Sheet objects
+        self.sh_nets = [sh.net for sh in self.sheet]
         self.plate = plate  # list of 3D plates
         self.layer_stack = layer_stack  # Will be used later to store layer info
         self.group = OrderedDict()  # trace islands in any layer
         self.components = components
-        if self.components != []:
+        if self.components != []: # If the components have extra pins, which are not touching the traces
             self.unpack_comp()
 
     def unpack_comp(self):
         for comp in self.components:
             for sh in comp.sheet:
-                if comp.type == "active":
-                    sh.net_type = "external"
-                self.sheet.append(sh)
+                if not(sh.net in self.sh_nets): # prevent adding a sheet twice
+                    if comp.type == "active":
+                        sh.net_type = "external"
+                    self.sheet.append(sh)
 
     def form_group_split_rect(self):
         '''

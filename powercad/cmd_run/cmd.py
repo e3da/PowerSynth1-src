@@ -476,9 +476,8 @@ class Cmd_Handler:
 
     def setup_electrical(self,mode='command',dev_conn={},frequency=None,meas_data={}):
         print "init api"
-        layer_to_z = {'T': [0, 0.2], 'D': [0.2, 0], 'B': [0.2, 0],
-                      'L': [0.2, 0]}
-        self.e_api = CornerStitch_Emodel_API(comp_dict=self.comp_dict, layer_to_z=layer_to_z, wire_conn=self.wire_table)
+
+        self.e_api = CornerStitch_Emodel_API(comp_dict=self.comp_dict, wire_conn=self.wire_table)
         self.e_api.load_rs_model(self.rs_model_file)
         #print mode
         if mode == 'command':
@@ -490,6 +489,7 @@ class Cmd_Handler:
             
             self.e_api.form_connection_table(mode='macro',dev_conn=dev_conn)
             self.e_api.get_frequency(frequency)
+            self.e_api.get_layer_stack(self.layer_stack)
             self.measures += self.e_api.measurement_setup(meas_data)
         if self.layout_ori_file != None:
             print "this is a test now"

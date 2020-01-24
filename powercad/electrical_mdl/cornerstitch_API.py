@@ -5,7 +5,6 @@ from powercad.electrical_mdl.e_mesh_corner_stitch import *
 from powercad.corner_stitch.input_script import *
 from powercad.parasitics.mdl_compare import load_mdl
 from datetime import datetime
-import psutil
 from powercad.electrical_mdl.e_netlist import ENetlist
 import networkx
 import cProfile
@@ -35,16 +34,14 @@ class ElectricalMeasure(object):
 
 class CornerStitch_Emodel_API:
     # This is an API with NewLayout Engine
-    def __init__(self, comp_dict={}, layer_to_z={}, wire_conn={}):
+    def __init__(self, comp_dict={}, wire_conn={}):
         '''
 
         :param comp_dict: list of all components and routing objects
-        :param layer_to_z: a simple layerstack info for thickness and elevation of each layer
         :param wire_conn: a simple table for bondwires setup
         '''
         self.pins = None
         self.comp_dict = comp_dict
-        self.layer_to_z = layer_to_z
         self.conn_dict = {}  # key: comp name, Val: list of connecition based on the connection table input
         self.wire_dict = wire_conn  # key: wire name, Val list of data such as wire radius,
         # wire distance, number of wires, start and stop position
@@ -75,11 +72,6 @@ class CornerStitch_Emodel_API:
                     for t in trace_data:
                         self.trace_ori[t] = info[0] # sort out the Horizontal , Vertical and Planar type
                     print "stop"
-
-
-
-
-
 
     def form_connection_table(self, mode=None, dev_conn=None):
         '''
@@ -115,6 +107,42 @@ class CornerStitch_Emodel_API:
         else:
             self.freq = frequency
 
+    def get_layer_stack(self, layer_stack=None):
+        if layer_stack == None:
+            print "No layer_stack input, the tool will use single layer for extraction"
+        else:
+            self.layer_stack = layer_stack
+
+
+
+    def get_z_loc(self,layer_id):
+        '''
+        For each island given a layer_id information, get the z location
+        Args:
+            layer_id: an integer for the layout z location
+
+        Returns: z location for the layer
+
+        '''
+        all_layer_info = self.layer_stack.all_layers_info
+        layer = all_layer_info[layer_id]
+        return layer.z_level
+
+    def get_thick(self,layer_id):
+        all_layer_info = self.layer_stack.all_layers_info
+        layer = all_layer_info[layer_id]
+        return layer.thick
+
+
+
+    def get_device_layer_id(self):
+        all_layer_info = self.layer_stack.all_layers_info
+        for layer_id in all_layer_info:
+            layer = all_layer_info[layer_id]
+            if layer.e_type == "D":
+                return layer_id
+        return None
+
     def load_rs_model(self, mdl_file):
         self.rs_model = load_mdl(file=mdl_file)
 
@@ -142,10 +170,11 @@ class CornerStitch_Emodel_API:
 
         for isl in islands:
             for trace in isl.elements: # get all trace in isl
+                z_id = 10
                 x,y,w,h = trace[1:5]
                 new_rect = Rect(top=(y + h) / 1000.0
                                 , bottom=y/1000.0, left=x/1000.0, right=(x + w)/1000.0)
-                p = E_plate(rect=new_rect, z=self.layer_to_z['T'][0], dz=self.layer_to_z['T'][1])
+                p = E_plate(rect=new_rect, z=self.get_z_loc(z_id), dz=self.get_thick(z_id))
                 p.group_id=isl.name
                 p.name=trace[5]
                 self.e_plates.append(p)
@@ -222,7 +251,7 @@ class CornerStitch_Emodel_API:
         if self.hier == None:
             self.hier = EHier(module=self.module)
             self.hier.form_hierachy()
-        else:  # just update, no new objects
+        else:  # just update, no need to recreate the hierachy -- prevent mem leak
             #self.hier = EHier(module=self.module)
             self.hier.update_module(self.module)
             self.hier.update_hierarchy()
@@ -456,10 +485,7 @@ class CornerStitch_Emodel_API:
         '''
         pt1 = self.emesh.comp_net_id[src]
         pt2 = self.emesh.comp_net_id[sink]
-        #print src, sink
-        #print pt1,pt2
-        #pt1=36
-        #pt2=97
+
         self.circuit = RL_circuit()
         self.circuit._graph_read(self.emesh.graph)
         # CHECK IF A PATH EXIST
@@ -488,7 +514,7 @@ class CornerStitch_Emodel_API:
         #del self.hier
         #del self.module
         #gc.collect()
-        #print R, L
+        print R, L
         #process = psutil.Process(os.getpid())
         #now = datetime.now()
         #dt_string = now.strftime("%d-%m-%Y-%H-%M-%S")
