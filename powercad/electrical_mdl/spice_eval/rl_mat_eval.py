@@ -121,6 +121,7 @@ class RL_circuit():
         self.pnode[name] = pnode
         self.nnode[name] = nnode
         self.value[name] = val
+        # name,pnode,nnode,val
 
     def _graph_add_M(self,name,L1_name,L2_name,val):
         self.element.append(name)
@@ -142,7 +143,7 @@ class RL_circuit():
         self.value[name] = float(val)
 
 
-    def _add_termial(self, node, ground=0,val=1e-6):
+    def _add_termial(self, node, ground=0,val=1e-4 + 1e-10j):
         #newport = self.node_dict[node]
         Equiv_name = 'Bt_' + str(node)
         self._graph_add_comp(Equiv_name, node, ground, val)
@@ -229,9 +230,6 @@ class RL_circuit():
             branch_val = 1j*Lval+Rval
             self._graph_add_comp("B{0}".format(RLname), p_node, n_node, branch_val)
 
-
-
-
     def m_graph_read(self,m_graph,debug =False):
         '''
 
@@ -246,7 +244,6 @@ class RL_circuit():
             for edge in m_graph.edges(data=True):
                 M_val = edge[2]['attr']['Mval']
                 #if not M_val in all_vals:
-
                 all_vals.append(M_val)
             all_vals.sort()
             plt.bar(np.arange(len(all_vals)),all_vals,align='center', alpha=0.5)
@@ -530,7 +527,7 @@ class RL_circuit():
             A = self.D
 
         t = time.time()
-        #self.debug_singular_mat_issue(A)
+        self.debug_singular_mat_issue(A)
 
         method=1
 
@@ -545,7 +542,7 @@ class RL_circuit():
         elif method ==5: # direct inverse method.
             self.results = np.linalg.inv(A)*Z
             self.results=np.squeeze(np.asarray(self.results))
-        #print "solve", time.time() - t, "s"
+        print "solve", time.time() - t, "s"
 
         #print np.shape(self.A)
         #print "RESULTS",self.results
@@ -584,16 +581,17 @@ class RL_circuit():
         :return: a debug sequence. Use pycharm debugger for better view
         '''
         if not (np.linalg.cond(mat_A) < 1 / sys.float_info.epsilon):
-            print "A is singular, check it"
+            print "machine epsilon", sys.float_info.epsilon
+            print "A is singular, check it", np.linalg.cond(mat_A), "1/eps", 1 / sys.float_info.epsilon
             N = mat_A.shape[0]
             V=np.zeros((N,N)) # Make a matrix V for view, to see if a row or a collumn is all 0
             for r in range(N):
                 for c in range(N):
                     if int(mat_A[r,c]) != 0:
                         V[r,c] =1
-            #print V
+            print V
             print np.where(~V.any(axis=1))[0]
-            #raw_input()
+
 
 def test_RL_circuit1():
     print "new method"

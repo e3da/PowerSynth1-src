@@ -16,12 +16,76 @@ from powercad.parasitics.mutual_inductance.mutual_inductance import *
 from powercad.parasitics.mutual_inductance.mutual_inductance_saved import *
 import time
 from mpl_toolkits.mplot3d import Axes3D
+import matplotlib.pyplot as plt
+
+
+class TraceCell(Rect):
+    def __init__(self, **kwargs):
+        if 'rect' in kwargs:  # init by keyword rect
+            rect = kwargs['rect']
+            Rect.__init__(self, left=rect.left, right=rect.right, top=rect.top, bottom=rect.bottom)
+        else:  # Init by left,right,top,bottom
+            left = kwargs['left']
+            right = kwargs['right']
+            bottom = kwargs['bottom']
+            top = kwargs['top']
+            Rect.__init__(self, left=left,right=right,top=top,bottom=bottom)
+
+        self.type = 0  # 0 : horizontal, 1: vertical, 2: corner, 3: super
+        # For corner piece only
+        self.has_bot = False
+        self.has_top = False
+        self.has_left = False
+        self.has_right = False
+        self.comp_locs = []
+
+    def find_corner_type(self):
+        # Define corner type based on the neighbour
+        print "type of corner"
+
+    def get_hash(self):
+        '''
+        Get hash id based on coordinates
+        :return:
+        '''
+        return hash((self.left, self.right, self.bottom, self.top))
+
+    def handle_component(self, loc):
+        '''
+        Given a component location, add this to the self.comp list
+        Special cases will be handle in this function in the future
+        Args:
+            loc: x,y location for component
+        '''
+        self.comp_locs.append(loc)
+
+    def split_trace_cells(self, cuts):
+        '''
+        Similar to split_rect from Rect
+        Returns: list of trace cells
+        '''
+        rects = self.split_rect(cuts=cuts, dir=self.type)
+        splitted_trace_cells = [TraceCell(rect=r) for r in rects]
+        return splitted_trace_cells
+
+    def get_locs(self):
+        '''
+        Returns: [left,right,bottom,top]
+        '''
+        return [self.left,self.right,self.bottom,self.top]
+
+    def preview_nodes(self, pts):
+        xs = []
+        ys = []
+        for pt in pts:
+            xs.append(pt[0])
+            ys.append(pt[1])
+        plt.scatter(xs, ys)
+        plt.show()
 
 
 class MeshNode:
-
-
-    def __init__(self,pos=[],type='', node_id=0, group_id=None,mode=1):
+    def __init__(self, pos=[], type='', node_id=0, group_id=None, mode=1):
         '''
 
         Args:
@@ -33,32 +97,31 @@ class MeshNode:
                   0 --> noremal, use float data
         '''
 
-        self.node_id =node_id
-        self.group_id= group_id # Use to define if nodes  are on same trace_group
-        self.type=type  # Node type
-        self.b_type=[] # if type is boundary this will tell if it is N,S,E,W
-        self.pos=pos # Node Position x , y ,z
+        self.node_id = node_id
+        self.group_id = group_id  # Use to define if nodes  are on same trace_group
+        self.type = type  # Node type
+        self.b_type = []  # if type is boundary this will tell if it is N,S,E,W
+        self.pos = pos  # Node Position x , y ,z
         self.C = 1
 
         # For neighbours nodes of each point
-        self.West=None
-        self.East=None
-        self.North=None
-        self.South=None
+        self.West = None
+        self.East = None
+        self.North = None
+        self.South = None
         # For evaluation
         self.V = 0  # Updated node voltage later
 
         # Neighbour Edges on same layer:
-        self.N_edge=None
-        self.S_edge=None
-        self.W_edge=None
-        self.E_edge=None
+        self.N_edge = None
+        self.S_edge = None
+        self.W_edge = None
+        self.E_edge = None
 
 
 class MeshEdge:
-
-
-    def __init__(self,m_type=None,nodeA=None,nodeB=None,data={},width=1, length=1,z=0,thick=0.2,ori=None ,side =None):
+    def __init__(self, m_type=None, nodeA=None, nodeB=None, data={}, width=1, length=1, z=0, thick=0.2, ori=None,
+                 side=None,eval = True):
         '''
 
         Args:
@@ -72,34 +135,36 @@ class MeshEdge:
             thick: trace thickness
             ori: trace orientation in 2D
             side: only use in hierarchial mode, this determines the orientation of the edge
+            eval: True or False, decision is made whether this piece is evaluated or not. If False, a small value of R,L will be used,
+                  Also, for such a case, mutual inductance evaluation would be ignored
         '''
-        self.type= m_type  # Edge type, internal, boundary
+        self.type = m_type  # Edge type, internal, boundary
         # Edge parasitics (R, L for now). Handling C will be different
-        self.R=1e-6
-        self.L=1e-12
-        self.len=length
-        self.width=width
-        self.z=z # if None this is an hier edge
+        self.R = 1e-6
+        self.L = 1e-12
+        self.len = length
+        self.width = width
+        self.z = z  # if None this is an hier edge
         self.thick = thick
         # Evaluated width and length for edge
         self.data = data
         self.name = data['name']
         # Updated Edge Current
-        self.I=0
-        self.J=0
+        self.I = 0
+        self.J = 0
         self.E = 0
 
         # Edges neighbour nodes
-        self.nodeA=nodeA
-        self.nodeB=nodeB
+        self.nodeA = nodeA
+        self.nodeB = nodeB
         # Always == None if this is hierarchy type 1
         self.ori = ori
-        self.side = side # 0:NE , 1:NW , 2:SW , 3:SE
+        self.side = side  # 0:NE , 1:NW , 2:SW , 3:SE
 
 
 class EMesh():
     # Electrical Meshing for one selected layer
-    def __init__(self,hier_E=None,freq=1000,mdl=None):
+    def __init__(self, hier_E=None, freq=1000, mdl=None):
         '''
 
         Args:
@@ -107,70 +172,81 @@ class EMesh():
             freq: Operating frequency for RLC evaluation and loop calculation
             mdl: RS-model if None, default to microtrip equations
         '''
-        self.hier_E=hier_E
-        self.graph=nx.Graph()#nx.MultiGraph()
-        self.m_graph=nx.Graph() # A graph represent Mutual
-        self.cap_dict={} # Each node and its capacitive cell
-        self.node_count=1
+        self.hier_E = hier_E
+        self.graph = nx.Graph()  # nx.MultiGraph()
+        self.m_graph = nx.Graph()  # A graph represent Mutual
+        self.cap_dict = {}  # Each node and its capacitive cell
+        self.node_count = 1
         self.node_dict = {}
-        self.c_map =cm.jet
+        self.c_map = cm.jet
         self.f = freq
         self.mdl = mdl
         self.all_nodes = []
         # list object used in RS model
-        self.all_W=[]
+        self.all_W = []
         self.all_L = []
         self.all_n1 = []
         self.all_n2 = []
-        self.rm_edges=[]
-        self.div=2 # by default, special case for gp (ratio between outer and inner edges)
-        self.hier_edge_data = {} # edge name : parent edge data
-        self.comp_net_id ={} # a dictionary for relationship between graph index and components net-names
+        self.rm_edges = []
+        self.div = 2  # by default, special case for gp (ratio between outer and inner edges)
+        self.hier_edge_data = {}  # edge name : parent edge data
+        self.comp_net_id = {}  # a dictionary for relationship between graph index and components net-names
 
-    def plot_3d(self,fig,ax, show_labels=False,highlight_nodes=None):
-        network_plot_3D(G=self.graph,ax=ax, show_labels=show_labels,highlight_nodes=highlight_nodes)
+    def plot_3d(self, fig, ax, show_labels=False, highlight_nodes=None):
+        network_plot_3D(G=self.graph, ax=ax, show_labels=show_labels, highlight_nodes=highlight_nodes)
 
     def plot_lumped_graph(self):
         pos = {}
-        label={}
+        label = {}
         for n in self.graph.nodes():
             node = self.graph.node[n]['node']
-            pos[n] = (node.pos[0],node.pos[1])
-            label[n]=node.node_id
-        nx.draw(self.graph, pos=pos, node_size=100, with_labels=False,alpha=0.5)
-        nx.draw_networkx_labels(self.graph, pos,label)
+            pos[n] = (node.pos[0], node.pos[1])
+            label[n] = node.node_id
+        nx.draw(self.graph, pos=pos, node_size=100, with_labels=False, alpha=0.5)
+        nx.draw_networkx_labels(self.graph, pos, label)
 
-    def add_node(self,node,type=None):
+    def add_node(self, node, type=None):
         self.all_nodes.append(node)
-        node_name =str(node.pos[0])+'_'+str(node.pos[1])
-        self.node_dict[node_name]=node # Store for quick access of node
-        self.graph.add_node(self.node_count,node=node,type=type,cap=1e-16)
-        self.node_count+=1
+        node_name = str(node.pos[0]) + '_' + str(node.pos[1])
+        self.node_dict[node_name] = node  # Store for quick access of node
+        self.graph.add_node(self.node_count, node=node, type=type, cap=1e-16)
+        self.node_count += 1
 
-    def store_edge_info(self,n1 ,n2, edge_data):
-        if edge_data.data['type']=='trace':
+    def store_edge_info(self, n1, n2, edge_data, eval_R = True, eval_L = True):
+        '''
+        Store edge info in the graph and connect an edge between 2 nodes.
+        Args:
+            n1: first node obj
+            n2: seconde node obj
+            edge_data: edge infomation
+            eval_R: boolean for R evaluation on this edge
+            eval_L: boolean for L evaluation on this edge
+        '''
+        if edge_data.data['type'] == 'trace':
             edge_data.ori = edge_data.data['ori']
             data = edge_data.data
-            l=data['l']
-            w= data['w']
+            l = data['l']
+            w = data['w']
 
         res = 1e-5
         ind = 1e-11
-        self.graph.add_edge(n1, n2, data= edge_data,ind=ind,res=res,name=edge_data.data['name'])
-        # when update edge, update node in M graph as edge data to store M values later
-        edge_name = edge_data.data['name']
-        if w == 0:
-            print edge_name,w,l
-            raw_input()
-        self.all_W.append(w)
-        self.all_L.append(l)
-        self.all_n1.append(n1)
-        self.all_n2.append(n2)
-        self.m_graph.add_node(edge_name) # edge name by 2 nodes
+        if not self.graph.has_edge(n1,n2):
+            self.graph.add_edge(n1, n2, data=edge_data, ind=ind, res=res, name=edge_data.data['name'])
+            # when update edge, update node in M graph as edge data to store M values later
+            edge_name = edge_data.data['name']
+            if w == 0:
+                print edge_name, w, l
+                raw_input()
+            print w , l , "divide here"
+            self.all_W.append(w / 1000.0)
+            self.all_L.append(l / 1000.0)
+            self.all_n1.append(n1)
+            self.all_n2.append(n2)
+            if eval_L:
+                self.m_graph.add_node(edge_name)  # edge name by 2 nodes
 
-
-    def update_C_val(self, t=0.035, h=1.5,mode=1):
-        n_cap_dict=self.update_C_dict()
+    def update_C_val(self, t=0.035, h=1.5, mode=1):
+        n_cap_dict = self.update_C_dict()
         C_tot = 0
         num_nodes = len(self.graph.nodes())
         cap_eval = trace_capacitance
@@ -182,97 +258,97 @@ class EMesh():
                         rect2 = n_cap_dict[n2]
                         int_rect = rect1.intersection(rect2)
 
-                        if int_rect!=None and not((n1,n2) in self.cap_dict) and not ((n2, n1) in self.cap_dict):
-                            cap_val = cap_eval(int_rect.width,int_rect.height,t,h,4.6,True)*1e-12*1.5
-                            #cap_val= 48*1e-12/num_nodes/2
-                            C_tot+=cap_val
-                            self.cap_dict[(n1, n2)]=cap_val
-            elif mode==2:
+                        if int_rect != None and not ((n1, n2) in self.cap_dict) and not ((n2, n1) in self.cap_dict):
+                            cap_val = cap_eval(int_rect.width, int_rect.height, t, h, 4.6, True) * 1e-12 * 1.5
+                            # cap_val= 48*1e-12/num_nodes/2
+                            C_tot += cap_val
+                            self.cap_dict[(n1, n2)] = cap_val
+            elif mode == 2:
                 rect1 = n_cap_dict[n1]
                 cap_val = cap_eval(rect1.width(), rect1.height(), t, h, 4.6, True) * 1e-12
                 C_tot += cap_val
                 self.cap_dict[(n1, 0)] = cap_val
-        #print self.cap_dict
+        # print self.cap_dict
         print "total cap", C_tot
-
 
     def update_C_dict(self):
         # For each node, create a node - rectangle for cap cell
-        n_capt_dict={}
+        n_capt_dict = {}
         for n in self.graph.nodes():
             node = self.graph.node[n]['node']
             # Find Width,Height value
             left = node.pos[0]
-            right =node.pos[0]
+            right = node.pos[0]
             top = node.pos[1]
-            bottom =node.pos[1]
+            bottom = node.pos[1]
             if node.W_edge != None:
-                left-=node.W_edge.len / 2
+                left -= node.W_edge.len / 2
             if node.E_edge != None:
-                right+= node.E_edge.len / 2
+                right += node.E_edge.len / 2
             if node.N_edge != None:
                 top += node.N_edge.len / 2
             if node.S_edge != None:
                 bottom -= node.S_edge.len / 2
-            n_capt_dict[n]=Rect(top=top,bottom=bottom,left=left,right=right)
+            n_capt_dict[n] = Rect(top=top, bottom=bottom, left=left, right=right)
 
         return n_capt_dict
 
-    def update_trace_RL_val(self, p=1.68e-8,t=0.035,h=1.5,mode='RS'):
-        if self.f != 0: # AC mode
-            if mode =='RS':
+    def update_trace_RL_val(self, p=1.68e-8, t=0.035, h=1.5, mode='RS'):
+        if self.f != 0:  # AC mode
+            if mode == 'RS':
+
                 all_r = trace_res_krige(self.f, self.all_W, self.all_L, t=0, p=0, mdl=self.mdl['R']).tolist()
-                all_r = [trace_resistance(self.f,w,l,t,h) for w, l in zip(self.all_W, self.all_L)]
+                all_r = [trace_resistance(self.f, w, l, t, h) for w, l in zip(self.all_W, self.all_L)]
                 all_l = trace_ind_krige(self.f, self.all_W, self.all_L, mdl=self.mdl['L']).tolist()
-                #all_l = [trace_inductance(w, l, t, h) for w, l in zip(self.all_W, self.all_L)]
-                #print self.all_W
-                #print self.all_L
-                #print all_r
-                #print all_l
-                #all_c = self.compute_all_cap()
+                # all_l = [trace_inductance(w, l, t, h) for w, l in zip(self.all_W, self.all_L)]
+                # print self.all_W
+                # print self.all_L
+                # print all_r
+                # print all_l
+                # all_c = self.compute_all_cap()
                 check_neg = True
                 debug = False
 
                 for i in range(len(self.all_W)):
                     n1 = self.all_n1[i]
                     n2 = self.all_n2[i]
-                    #print 'bf',self.graph[n1][n2].values()[0]
-                    if not ([n1,n2] in self.rm_edges):
-                        if all_r[i] >0 and all_l[i]>0:
-                            #self.graph[n1][n2].values()[0]['cap'] = all_c[i] * 1e-12
+                    # print 'bf',self.graph[n1][n2].values()[0]
+                    if not ([n1, n2] in self.rm_edges):
+                        if all_r[i] > 0 and all_l[i] > 0:
+                            # self.graph[n1][n2].values()[0]['cap'] = all_c[i] * 1e-12
                             edge_data = self.graph[n1][n2].values()[0]['data']
-                            #print 'w', 'l', self.all_W[i], self.all_L[i]
+                            # print 'w', 'l', self.all_W[i], self.all_L[i]
                             self.graph[n1][n2].values()[0]['res'] = all_r[i] * 1e-3
                             self.graph[n1][n2].values()[0]['ind'] = all_l[i] * 1e-9
-                            edge_data.R = all_r[i]*1e-3
-                            edge_data.L = all_l[i]*1e-9
+                            edge_data.R = all_r[i] * 1e-3
+                            edge_data.L = all_l[i] * 1e-9
 
-                            #edge_data.C = all_c[i]*1e-12
+                            # edge_data.C = all_c[i]*1e-12
 
                         else:
-                            check_neg =True
+                            check_neg = True
                             if debug:
                                 print all_r[i]
                                 print all_l[i]
-                                print 'w','l',self.all_W[i], self.all_L[i]
+                                print 'w', 'l', self.all_W[i], self.all_L[i]
                             # RECOMPUTE USING MICROSTRIP FOR CASES THE RS MODEL IS NOT STABLE
                             temp_L = trace_inductance(self.all_W[i], self.all_L[i], t, h)
-                            temp_R = trace_resistance(self.f,self.all_W[i],self.all_L[i],t,h)
+                            temp_R = trace_resistance(self.f, self.all_W[i], self.all_L[i], t, h)
                             self.graph[n1][n2].values()[0]['res'] = temp_R * 1e-3
                             self.graph[n1][n2].values()[0]['ind'] = temp_L * 1e-9
                             edge_data.R = temp_R * 1e-3
                             edge_data.L = temp_L * 1e-9
                     # Debug
-                    if debug: # This is to detect very small inductance/resistance values that might lead to singular matrix
-                        list_of_nodes = [140, 146, 160, 161, 165, 170,193]
+                    if debug:  # This is to detect very small inductance/resistance values that might lead to singular matrix
+                        list_of_nodes = [140, 146, 160, 161, 165, 170, 193]
                         print n1
                         print type(n1)
                         if n1 in list_of_nodes or n2 in list_of_nodes:
-                            print "edge between: ",n1,n2
+                            print "edge between: ", n1, n2
                             print edge_data.R
                             print edge_data.L
                             raw_input()
-        else: # DC mode
+        else:  # DC mode
             all_r = p * np.array(self.all_L) / (np.array(self.all_W) * t) * 1e-3
             for i in range(len(self.all_W)):
                 n1 = self.all_n1[i]
@@ -285,14 +361,14 @@ class EMesh():
 
     def update_hier_edge_RL(self):
         for e in self.hier_edge_data:
-            #print self.hier_edge_data[e]
+            # print self.hier_edge_data[e]
             # Case 1 hierarchial edge for device connection to trace nodes
-            #print "H_E",self.hier_edge_data[e]
-            if isinstance(self.hier_edge_data[e],list):
+            # print "H_E",self.hier_edge_data[e]
+            if isinstance(self.hier_edge_data[e], list):
                 parent_data = self.hier_edge_data[e][1]
                 if len(parent_data) == 1:
                     # HANDLE NEW BONDWIRE, no need hier computation
-                    R = 1e-6
+                    R = 1e-4
                     L = 1e-10
                 else:
                     # HANDLE OLD BONDWIRE
@@ -304,7 +380,7 @@ class EMesh():
                     NE = parent_data['NE']
                     x_h = hier_node.pos[0]
                     y_h = hier_node.pos[1]
-                    if nb_node==SW.node_id:
+                    if nb_node == SW.node_id:
                         d_x = abs(SW.pos[0] - x_h)
                         d_y = abs(SW.pos[1] - y_h)
                         Rx = SW.E_edge.R * d_x / SW.E_edge.len
@@ -312,7 +388,7 @@ class EMesh():
                         Ry = SW.N_edge.R * d_y / SW.N_edge.len
                         Ly = SW.N_edge.L * d_y / SW.N_edge.len
 
-                    elif nb_node ==NW.node_id:
+                    elif nb_node == NW.node_id:
                         d_x = abs(NW.pos[0] - x_h)
                         d_y = abs(NW.pos[1] - y_h)
                         Rx = NW.E_edge.R * d_x / NW.E_edge.len
@@ -336,24 +412,24 @@ class EMesh():
                         Ry = SE.N_edge.R * d_y / SE.N_edge.len
                         Ly = SE.N_edge.L * d_y / SE.N_edge.len
 
-                    R = (Rx + Ry)/2
-                    L = (Lx + Ly)/2
-                    #print "Rcomp", R,Rx,Ry
-                    #print "Lcomp", L, Lx, Ly
+                    R = (Rx + Ry) / 2
+                    L = (Lx + Ly) / 2
+                    # print "Rcomp", R,Rx,Ry
+                    # print "Lcomp", L, Lx, Ly
 
-                    #R = 1e-6 #if R == 0 else R
-                    #L = 1e-10 #if L == 0 else L
-                    #L = 1e-10
-            else: # Case 2, we dont need to compute the hierarchical edge, this is provided from the components objects
+                    # R = 1e-6 #if R == 0 else R
+                    # L = 1e-10 #if L == 0 else L
+                    # L = 1e-10
+            else:  # Case 2, we dont need to compute the hierarchical edge, this is provided from the components objects
                 parent_data = self.hier_edge_data[e]
                 R = parent_data['R']
                 L = parent_data['L']
-                #print "comp_edge",R,L
+                # print "comp_edge",R,L
 
             self.graph[e[0]][e[1]][0]['res'] = R
             self.graph[e[0]][e[1]][0]['ind'] = L
 
-    def _save_hier_node_data(self,hier_nodes=None,parent_data=None):
+    def _save_hier_node_data(self, hier_nodes=None, parent_data=None):
         '''
 
         Args:
@@ -364,7 +440,7 @@ class EMesh():
         Returns:
 
         '''
-        if len(parent_data)==1:
+        if len(parent_data) == 1:
             # NEW BONDWIRE HANDLER
             hier_node = hier_nodes[0]
             key = parent_data.keys()[0]
@@ -381,8 +457,8 @@ class EMesh():
             hier_node = hier_nodes[0]
             edge_data = [hier_node, parent_data]
 
-            if not (hier_node.pos[0] == NE.pos[0] or hier_node.pos[1] == NW.pos[1]): # Case hier node is in parent cell
-                self.add_hier_edge(n1=hier_node.node_id, n2=SW.node_id,edge_data=edge_data)
+            if not (hier_node.pos[0] == NE.pos[0] or hier_node.pos[1] == NW.pos[1]):  # Case hier node is in parent cell
+                self.add_hier_edge(n1=hier_node.node_id, n2=SW.node_id, edge_data=edge_data)
                 self.add_hier_edge(n1=hier_node.node_id, n2=NW.node_id, edge_data=edge_data)
                 self.add_hier_edge(n1=hier_node.node_id, n2=NE.node_id, edge_data=edge_data)
                 self.add_hier_edge(n1=hier_node.node_id, n2=SE.node_id, edge_data=edge_data)
@@ -394,33 +470,31 @@ class EMesh():
                     self.add_hier_edge(n1=hier_node.node_id, n2=NW.node_id, edge_data=edge_data)
                     self.add_hier_edge(n1=hier_node.node_id, n2=NE.node_id, edge_data=edge_data)
 
+                    # TODO: IMPLEMENT THIS CASE FOR ADAPTIVE MESHING
+                    # else: # Method to handle multiple hier node in same cell.
+                    #    # First ranking the node location based on the orientation of parent cell.
+                    #    print "implement me !"
 
-        # TODO: IMPLEMENT THIS CASE FOR ADAPTIVE MESHING
-        #else: # Method to handle multiple hier node in same cell.
-        #    # First ranking the node location based on the orientation of parent cell.
-        #    print "implement me !"
-
-
-
-    def add_hier_edge(self, n1, n2,edge_data=None):
+    def add_hier_edge(self, n1, n2, edge_data=None):
         # default values as place holder, will be updated later
         res = 1e-6
         ind = 1e-9
         cap = 1 * 1e-13
 
-        parent_data= edge_data # info of neighbouring nodes.
-        edge_data=MeshEdge(m_type='hier', nodeA=n1, nodeB=n2, data={'type': 'hier', 'name': str(n1) + '_' + str(n2)})
-        self.hier_edge_data[(n1,n2)] = parent_data
-        self.graph.add_edge(n1, n2, data=edge_data, ind=ind, res=res, cap=cap)
+        parent_data = edge_data  # info of neighbouring nodes.
+        edge_data = MeshEdge(m_type='hier', nodeA=n1, nodeB=n2, data={'type': 'hier', 'name': str(n1) + '_' + str(n2)})
+        self.hier_edge_data[(n1, n2)] = parent_data
+        if not self.graph.has_edge(n1,n2):
+            self.graph.add_edge(n1, n2, data=edge_data, ind=ind, res=res, cap=cap)
 
-    def remove_edge(self,edge):
+    def remove_edge(self, edge):
         try:
             self.rm_edges.append([edge.nodeA.node_id, edge.nodeB.node_id])
-            self.graph.remove_edge(edge.nodeA.node_id,edge.nodeB.node_id)
+            self.graph.remove_edge(edge.nodeA.node_id, edge.nodeB.node_id)
         except:
-            print "cant find edge" , edge.nodeA.node_id, edge.nodeB.node_id
+            print "cant find edge", edge.nodeA.node_id, edge.nodeB.node_id
 
-    def mutual_data_pre_process(self,mode=0,h_lim=0,v_lim=0):
+    def mutual_data_pre_process(self, mode=0, h_lim=0, v_lim=0):
         get_node = self.graph.node
         all_edges = self.graph.edges(data=True)
         has_edge = self.m_graph.has_edge
@@ -431,25 +505,27 @@ class EMesh():
         # Create 2 dictionaries of horizontal and vertical traces by group
         h_traces = {}
         v_traces = {}
-        for edge in all_edges: # O(N) process here, sort data in groups for better data handler later
+        for edge in all_edges:  # O(N) process here, sort data in groups for better data handler later
             data = edge[2]['data']
-            #data = {'type': 'trace', 'w': width, 'l': length, 'name': name,'rect':rect, 'ori': 'h'}
-            if data['type']=='trace':
+            # data = {'type': 'trace', 'w': width, 'l': length, 'name': name,'rect':rect, 'ori': 'h'}
+            if data['type'] == 'trace':
                 group_name = edge[2]['nodeA'].group_id
                 if not group_name in h_traces:
-                    h_traces[group_name] = [] # if the list of traces for the group is not there, create a list to store
+                    h_traces[
+                        group_name] = []  # if the list of traces for the group is not there, create a list to store
                 if not group_name in v_traces:
-                    v_traces[group_name] = []  # if the list of traces for the group is not there, create a list to store
+                    v_traces[
+                        group_name] = []  # if the list of traces for the group is not there, create a list to store
                 rect_data = edge.data['rect']
                 rect_name = edge.data['name']
                 if data['ori'] == 'h':  # if the trace is horizontal
-                    h_traces[group_name].append([rect_name,rect_data])
+                    h_traces[group_name].append([rect_name, rect_data])
                 if data['ori'] == 'v':  # if the trace is vertical
                     v_traces[group_name].append([rect_name, rect_data])
-            else: # This is a hierachical or internal connection
+            else:  # This is a hierachical or internal connection
                 continue
 
-    def mutual_collect_data(self,horizontal=True,rect1_data=[],rect2_data=[],mode=0,dis=0):
+    def mutual_collect_data(self, horizontal=True, rect1_data=[], rect2_data=[], mode=0, dis=0):
         '''
 
         Args:
@@ -513,25 +589,26 @@ class EMesh():
 
                 e_append([e1_name, e2_name])
 
-    def mutual_data_prepare(self,mode=0):
+    def mutual_data_prepare(self, mode=0):
         '''
 
         :param mode: 0 for bar, 1 for plane
         :return:
         '''
-        #print "start data collection"
+        # print "start data collection"
         start = time.time()
         dis = 4
         get_node = self.graph.node
         all_edges = self.graph.edges(data=True)
         has_edge = self.m_graph.has_edge
         self.mutual_matrix = []
-        m_m_append=self.mutual_matrix.append
+        m_m_append = self.mutual_matrix.append
         self.edges = []
         e_append = self.edges.append
         ''' Prepare M params'''
         for e1 in all_edges:
             data1 = e1
+            print data1
             n1_1 = get_node[data1[0]]['node']  # node 1 on edge 1
             n1_2 = get_node[data1[1]]['node']  # node 2 on edge 1
             p1_1 = n1_1.pos
@@ -540,13 +617,14 @@ class EMesh():
             ori1 = edge1.ori
 
             if edge1.type != 'hier':
-                w1 = edge1.data['w']
+                w1 = edge1.data['w']/1000.0
                 diff1 = 0
-                l1 = edge1.data['l']
+                l1 = edge1.data['l']/1000.0
                 t1 = edge1.thick
                 z1 = edge1.z
                 rect1 = edge1.data['rect']
                 rect1_data = [w1, l1, t1, z1]
+                print 'rect1', rect1_data
             else:
                 continue
 
@@ -569,9 +647,9 @@ class EMesh():
                         ori2 = edge2.ori
 
                         if edge2.type != 'hier':
-                            w2 = edge2.data['w']
+                            w2 = edge2.data['w']/1000.0
                             diff2 = 0
-                            l2 = edge2.data['l']
+                            l2 = edge2.data['l']/1000.0
                             t2 = edge2.thick
                             z2 = edge2.z
                             rect2 = edge2.data['rect']
@@ -582,9 +660,9 @@ class EMesh():
                         cond2 = ori1 == 'v' and ori2 == 'v' and not (p2_2[0] == p1_2[0])
 
                         if cond1:  # 2 horizontal parallel pieces
-                            x1_s = [p1_1[0], p1_2[0]]  # get all x from trace 1
-                            x2_s = [p2_1[0], p2_2[0]]  # get all x from trace 2
-                            x1_s.sort(), x2_s.sort()
+                            #x1_s = [p1_1[0], p1_2[0]]  # get all x from trace 1
+                            #x2_s = [p2_1[0], p2_2[0]]  # get all x from trace 2
+                            #x1_s.sort(), x2_s.sort()
                             if rect1.left >= rect2.left:
                                 r2 = rect1
                                 r1 = rect2
@@ -596,11 +674,11 @@ class EMesh():
                                 w1, l1, t1, z1 = rect1_data
                                 w2, l2, t2, z2 = rect2_data
                             p = z2 - z1
-                            E = abs(r2.bottom - r1.bottom + diff1 + diff2)
-                            l3 = abs(r2.left - r1.left)
+                            E = abs(r2.bottom/1000.0 - r1.bottom / 1000.0 + diff1 + diff2)
+                            l3 = abs(r2.left / 1000.0 - r1.left / 1000.0)
 
                             if mode == 0:
-                                #print [w1, l1, t1, w2, l2, t2, l3, p, E]
+                                # print [w1, l1, t1, w2, l2, t2, l3, p, E]
                                 m_m_append([w1, l1, t1, w2, l2, t2, l3, p, E])  # collect data for bar equation
                             elif mode == 1:
                                 m_m_append([w1, l1, w2, l2, l3, p, E])  # collect data for plane equation
@@ -608,9 +686,9 @@ class EMesh():
 
                         elif cond2:  # 2 vertical parallel pieces
 
-                            y1_s = [p1_1[1], p1_2[1]]  # get all y from trace 1
-                            y2_s = [p2_1[1], p2_2[1]]  # get all y from trace 2
-                            y1_s.sort(), y2_s.sort()
+                            #y1_s = [p1_1[1], p1_2[1]]  # get all y from trace 1
+                            #2_s = [p2_1[1], p2_2[1]]  # get all y from trace 2
+                            #y1_s.sort(), y2_s.sort()
                             if rect1.top <= rect2.top:
                                 r2 = rect1
                                 r1 = rect2
@@ -622,20 +700,20 @@ class EMesh():
                                 w1, l1, t1, z1 = rect1_data
                                 w2, l2, t2, z2 = rect2_data
                             p = abs(z1 - z2)
-                            E = abs(r2.left - r1.left + diff1 + diff2)
-                            l3 = abs(r1.top - r2.top)
+                            E = abs(r2.left / 1000.0 - r1.left / 1000.0 + diff1 + diff2)
+                            l3 = abs(r1.top / 1000.0 - r2.top / 1000.0)
 
-                            if mode==0:
-                                #print [w1, l1, t1, w2, l2, t2, l3, p, E]
-                                m_m_append([w1, l1, t1, w2, l2, t2, l3, p, E]) # collect data for bar equation
-                            elif mode ==1:
-                                m_m_append([w1, l1, w2, l2, l3, p, E]) # collect data for plane equation
+                            if mode == 0:
+                                # print [w1, l1, t1, w2, l2, t2, l3, p, E]
+                                m_m_append([w1, l1, t1, w2, l2, t2, l3, p, E])  # collect data for bar equation
+                            elif mode == 1:
+                                m_m_append([w1, l1, w2, l2, l3, p, E])  # collect data for plane equation
 
                             e_append([e1_name, e2_name])
 
-        #print "data collection finished",time.time()-start
+                            # print "data collection finished",time.time()-start
 
-    def update_mutual(self,mode=0,lang ="Cython"):
+    def update_mutual(self, mode=0, lang="Cython"):
         '''
 
         Args:
@@ -647,61 +725,73 @@ class EMesh():
         add_M_edge = self.m_graph.add_edge
 
         ''' Evaluation in Cython '''
-        mutual_matrix=np.array(self.mutual_matrix)
-        #print "start mutual eval"
-        result=[]
+        mutual_matrix = np.array(self.mutual_matrix)
+        print "start mutual eval"
+        result = []
         start = time.time()
-        if lang=="Cython": # evaluation with parallel programming
-            result =np.asarray(mutual_mat_eval(mutual_matrix,12,mode)).tolist()
-        elif lang == "Python": # normally use to double-check the evaluation
+        if lang == "Cython":  # evaluation with parallel programming
+            result = np.asarray(mutual_mat_eval(mutual_matrix, 12, mode)).tolist()
+        elif lang == "Python":  # normally use to double-check the evaluation
             for para in self.mutual_matrix:
                 result.append(mutual_between_bars(*para))
-        #print "finished mutual eval", time.time()-start
-
+        print "finished mutual eval", time.time()-start
+        # We first eval all parallel pieces with bar equation, then, we
         for n in range(len(self.edges)):
             edge = self.edges[n]
-            if result[n]>0:
-                add_M_edge(edge[0],edge[1],attr={'Mval':result[n]*1e-9})
-    def find_E(self,ax=None):
-        bound_graph= nx.Graph()
-        bound_nodes=[]
-        min_R=1.5
+            if result[n] > 0 and not(math.isinf(result[n])):
+                add_M_edge(edge[0], edge[1], attr={'Mval': result[n] * 1e-9})
+            else:
+                print "error", result[n]
+                if result[n]<0:
+                    print "neg case", edge[0], edge[1]
+                    print mutual_matrix[n]
+                elif math.isinf(result[n]):
+                    print "inf case", edge[0],edge[1]
+                    print mutual_matrix[n]
+                else:
+                    print "nan case", edge[0], edge[1]
+                    print mutual_matrix[n]
+    def find_E(self, ax=None):
+        bound_graph = nx.Graph()
+        bound_nodes = []
+        min_R = 1.5
         for e in self.graph.edges(data=True):
             edge = e[2]['data']
-            if edge.type =='boundary':
+            if edge.type == 'boundary':
                 pos1 = edge.nodeA.pos
                 pos2 = edge.nodeB.pos
-                ax.plot([pos1[0], pos2[0]], [pos1[1], pos2[1]],color='black',linewidth=3)
+                ax.plot([pos1[0], pos2[0]], [pos1[1], pos2[1]], color='black', linewidth=3)
         for node in self.all_nodes:
             if node.type == 'boundary':
                 bound_nodes.append(node)
-                bound_graph.add_node(node.node_id,node=node,type=node.type)
+                bound_graph.add_node(node.node_id, node=node, type=node.type)
         for n1 in bound_nodes:
             min_dis = min_R
-            nb=[]
+            nb = []
             for n2 in bound_nodes:
-                if n1!=n2 and n1.group_id != n2.group_id:
-                    dis = [(n1.pos[i]-n2.pos[i])**2 for i in range(2)]
+                if n1 != n2 and n1.group_id != n2.group_id:
+                    dis = [(n1.pos[i] - n2.pos[i]) ** 2 for i in range(2)]
                     dis = sum(dis)
                     if dis <= min_dis:
-                        min_dis=dis
+                        min_dis = dis
                         nb.append(n2)
-            if nb!=[]:
+            if nb != []:
                 for n in nb:
-                    name = 'dielec_'+str(n1.node_id)+'_'+str(n.node_id)
-                    edge=MeshEdge(m_type='dielec', nodeA=n1, nodeB=n, data={'type': 'dielec', 'name':name}, length=min_dis)
+                    name = 'dielec_' + str(n1.node_id) + '_' + str(n.node_id)
+                    edge = MeshEdge(m_type='dielec', nodeA=n1, nodeB=n, data={'type': 'dielec', 'name': name},
+                                    length=min_dis)
                     if n1.V >= n.V:
-                        bound_graph.add_edge(n1.node_id,n.node_id,data=edge)
+                        bound_graph.add_edge(n1.node_id, n.node_id, data=edge)
                     else:
                         bound_graph.add_edge(n.node_id, n1.node_id, data=edge)
 
-        plot_E_map_test(G=bound_graph,ax=ax,cmap=self.c_map)
+        plot_E_map_test(G=bound_graph, ax=ax, cmap=self.c_map)
 
-        #plt.show()
+        # plt.show()
 
-    def check_bound_type(self,rect,point):
-        b_type =[]
-        if point[0]==rect.left:
+    def check_bound_type(self, rect, point):
+        b_type = []
+        if point[0] == rect.left:
             b_type.append('W')
         if point[0] == rect.right:
             b_type.append('E')
@@ -711,8 +801,7 @@ class EMesh():
             b_type.append('S')
         return b_type
 
-
-    def update_E_comp_parasitics(self,net,comp_dict):
+    def update_E_comp_parasitics(self, net, comp_dict):
         '''
         Adding internal parasitic values to the loop
         Args:
@@ -726,13 +815,11 @@ class EMesh():
             for e in c.net_graph.edges(data=True):
                 self.add_hier_edge(net[e[0]], net[e[1]], edge_data=e[2]['edge_data'])
 
+    def mesh_grid_hier(self, Nx=3, Ny=3, corner_stitch=False):
 
-
-    def mesh_grid_hier(self,Nx=3,Ny=3,corner_stitch=False):
-
-        self.comp_dict  = {} # Use to remember the component that has its graph built (so we dont do it again)
+        self.comp_dict = {}  # Use to remember the component that has its graph built (so we dont do it again)
         # all comp points
-        self.comp_nodes  = {}
+        self.comp_nodes = {}
         self.comp_net_id = {}
         self.graph = nx.MultiGraph()
         self.node_count = 1
@@ -740,30 +827,30 @@ class EMesh():
         self._handle_pins_connections()
         # Handle geometrical connections and update the mesh for each trace island
         # These are applied for each different groups on each layer.
-        for g in self.hier_E.isl_group: # trace island id in T_Node
+        for g in self.hier_E.isl_group:  # trace island id in T_Node
 
             # First forming all nodes and edges for a trace piece
-            if self.hier_E.isl_group_data!={}:
+            if self.hier_E.isl_group_data != {}:
                 thick = self.hier_E.isl_group_data[g]['thick']
             else:
-                thick = 0.035 # Hard coded for test case without MDK input
+                thick = 0.035  # Hard coded for test case without MDK input
 
             self.corners_trace_dict = {}  # Dictionary to store all corners of each rectangular piece
             self.lines_corners_dict = {}  # Dictionary to store all lines connected to corners
-            self.corners = []             # All bound corners
-            self.node_dict = {}           # Use to store hashed data positions
-            lines = []               # All rect bound lines
-            points=[]                # All mesh points
+            self.corners = []  # All bound corners
+            self.node_dict = {}  # Use to store hashed data positions
+            lines = []  # All rect bound lines
+            points = []  # All mesh points
             P_app = points.append
-            for k in g.nodes.keys(): # Search for all traces in trace island
+            for k in g.nodes.keys():  # Search for all traces in trace island
                 # take the traces of this group ( by definition, each group have a different z level)
-                trace=g.nodes[k]
-                tr = trace.data.rect # rectangle object
+                trace = g.nodes[k]
+                tr = trace.data.rect  # rectangle object
                 z = trace.data.z  # layer level for this node
                 self.corners += tr.get_all_corners()
                 # Form relationship between corner and trace
                 for c in self.corners:
-                    cr = (c[0],c[1],z)
+                    cr = (c[0], c[1], z)
                     if tr.encloses(c[0], c[1]):
                         if not (cr in self.corners_trace_dict.keys()):
                             self.corners_trace_dict[cr] = [tr]
@@ -792,29 +879,29 @@ class EMesh():
                 #xs = np.linspace(tr.left, tr.right, num_x)
                 #ys = np.linspace(tr.bottom, tr.top, num_y)
                 '''
-                if not(corner_stitch): # no uniform mesh needed, using Corner Stitch coordinates as mesh
-                    if tr.width>tr.height:
+                if not (corner_stitch):  # no uniform mesh needed, using Corner Stitch coordinates as mesh
+                    if tr.width > tr.height:
                         xs = np.linspace(tr.left, tr.right, num_y)
                         ys = np.linspace(tr.bottom, tr.top, num_x)
                     elif tr.width < tr.height:
                         xs = np.linspace(tr.left, tr.right, num_x)
                         ys = np.linspace(tr.bottom, tr.top, num_y)
-                    elif tr.width == tr.height: # Case corner piece
-                        num_c = max([num_x,num_y])
+                    elif tr.width == tr.height:  # Case corner piece
+                        num_c = max([num_x, num_y])
                         xs = np.linspace(tr.left, tr.right, num_c)
                         ys = np.linspace(tr.bottom, tr.top, num_c)
 
-                    X, Y = np.meshgrid(xs, ys) # XY on each layer
+                    X, Y = np.meshgrid(xs, ys)  # XY on each layer
 
                     mesh = zip(X.flatten(), Y.flatten())
                     for p in mesh:
-                        p=list(p)
-                        name = str(p[0])+str(p[1])+str(z)
+                        p = list(p)
+                        name = str(p[0]) + str(p[1]) + str(z)
                         # check dict/hash table for new point
-                        if not(name in self.node_dict):
-                            p.append(z)#+ trace.data.dz)
-                            self.node_dict[name]=p
-                            P_app(p) # sort form of points.append
+                        if not (name in self.node_dict):
+                            p.append(z)  # + trace.data.dz)
+                            self.node_dict[name] = p
+                            P_app(p)  # sort form of points.append
                 else:
                     all_points = tr.get_all_corners()
                     for p in all_points:
@@ -822,10 +909,9 @@ class EMesh():
                         name = str(p[0]) + str(p[1]) + str(z)
                         # check dict/hash table for new point
                         if not (name in self.node_dict):
-                            p=(p[0],p[1],z)
+                            p = (p[0], p[1], z)
                             self.node_dict[name] = p
                             P_app(p)  # sort form of points.append
-
 
             # Form relationship between lines and points, to split into boundary lines
             for l in lines:
@@ -850,46 +936,46 @@ class EMesh():
                     all_lines.append(l)
                     # remove intersecting lines
 
-            bound_lines=[]
+            bound_lines = []
             for l1 in all_lines:
                 add = True
                 for l2 in all_lines:
                     if l1 != l2:
                         if l1.equal(l2):
-                            add=False
+                            add = False
                 if add:
-                    bound_lines+=[l1]
+                    bound_lines += [l1]
 
-            #plt.figure(10)
-            #for l in bound_lines:
+            # plt.figure(10)
+            # for l in bound_lines:
             #    plt.plot([l.pt1[0], l.pt2[0]], [l.pt1[1], l.pt2[1]], color='red', linewidth=3)
-            #for p in points:
+            # for p in points:
             #   plt.scatter([p[0]],[p[1]],color='black')
-            #plt.show()
-
+            # plt.show()
 
             # Finding mesh nodes for group
-            self.mesh_nodes(points=points,corners_trace_dict=self.corners_trace_dict,boundary_line=bound_lines,group=g)
+            self.mesh_nodes(points=points, corners_trace_dict=self.corners_trace_dict, boundary_line=bound_lines,
+                            group=g)
             # Finding mesh edges for group
             self.mesh_edges(thick)
-            #self.update_trace_RL_val()
-            #self.mesh_edges2(thick)
-            #fig,ax = plt.subplots()
-            #draw_rect_list(all_rect,ax,'blue',None)
+            # self.update_trace_RL_val()
+            # self.mesh_edges2(thick)
+            # fig,ax = plt.subplots()
+            # draw_rect_list(all_rect,ax,'blue',None)
             # Once we have all the nodes and edges for the trace group, we need to save hier node info
             self.hier_group_dict = {}
-            #fig = plt.figure(1)
-            #ax = Axes3D(fig)
-            #ax.set_xlim3d(0, 60)
-            #ax.set_ylim3d(0, 60)
-            #ax.set_zlim3d(0, 2)
-            #print node_name
-            #self.plot_3d(fig=fig, ax=ax, show_labels=True)
-            #fig.set_size_inches(18.5, 10.5)
-            #plt.show()
+            # fig = plt.figure(1)
+            # ax = Axes3D(fig)
+            # ax.set_xlim3d(0, 60)
+            # ax.set_ylim3d(0, 60)
+            # ax.set_zlim3d(0, 2)
+            # print node_name
+            # self.plot_3d(fig=fig, ax=ax, show_labels=True)
+            # fig.set_size_inches(18.5, 10.5)
+            # plt.show()
             self.handle_hier_node(points, g)
 
-    def handle_hier_node(self,points,key):
+    def handle_hier_node(self, points, key):
         '''
         points: list of mesh points
         key: island name
@@ -902,15 +988,15 @@ class EMesh():
         '''
         if self.comp_nodes != {} and key in self.comp_nodes:  # case there are components
             for cp_node in self.comp_nodes[key]:
-                min_dis = 1000.0
+                min_dis = 1e9
                 SW = None
                 cp = cp_node.pos
                 # Finding the closest point on South West corner
                 special_case = False
                 for p in points:  # all point in group
-                    if cp[0]==p[0] and cp[1]==p[1]:
-                        special_case=True
-                        anchor_node =p
+                    if cp[0] == p[0] and cp[1] == p[1]:
+                        special_case = True
+                        anchor_node = p
                         break
                     del_x = cp[0] - p[0]
                     del_y = cp[1] - p[1]
@@ -922,13 +1008,12 @@ class EMesh():
 
                 if special_case:
                     node_name = str(anchor_node[0]) + '_' + str(anchor_node[1])
-                    anchor_node=self.node_dict[node_name]
+                    anchor_node = self.node_dict[node_name]
                     # special case to handle new bondwire
                     self.hier_data = {"BW_anchor": anchor_node}
                     self.hier_group_dict[anchor_node.node_id] = {'node_group': [cp_node],
-                                                        'parent_data': self.hier_data}
+                                                                 'parent_data': self.hier_data}
                 else:
-
 
                     if SW == None:
                         print "ERROR"
@@ -938,7 +1023,6 @@ class EMesh():
                     # 4 points on parent trace
 
                     SW = self.node_dict[node_name]  # SW - anchor node
-
 
                     NW = SW.North
                     NE = NW.East
@@ -964,7 +1048,7 @@ class EMesh():
                 self.comp_nodes[group] = []
 
             comp = sh.data.component  # Get the component of a sheet.
-            #print "C_DICT",len(self.comp_dict),self.comp_dict
+            # print "C_DICT",len(self.comp_dict),self.comp_dict
             if comp != None and not (comp in self.comp_dict):
                 comp.build_graph()
                 sheet_data = sh.data
@@ -986,10 +1070,10 @@ class EMesh():
                         x, y = sheet_data.rect.center()
                         z = sheet_data.z
                         cp = [x, y, z]
-                        #print "CP",cp
+                        # print "CP",cp
                         if not (sheet_data.net in self.comp_net_id):
                             cp_node = MeshNode(pos=cp, type=conn_type, node_id=self.node_count, group_id=None)
-                            #print self.node_count
+                            # print self.node_count
                             self.comp_net_id[sheet_data.net] = self.node_count
                             self.add_node(cp_node)
                             self.comp_dict[comp] = 1
@@ -1201,22 +1285,22 @@ class EMesh():
                         store_edge(n, East.node_id, edge_data)
             except:
                 print "-------"
-                print node.node_id, node.b_type,node.pos
+                print node.node_id, node.b_type, node.pos
                 print "N", node.North
                 print "S", node.South
                 print "E", node.East
                 print "W", node.West
                 print "-------"
 
-    def mesh_nodes(self,points=[],group=None,corners_trace_dict=None,boundary_line=None):
+    def mesh_nodes(self, points=[], group=None, corners_trace_dict=None, boundary_line=None):
         # Use for hierachy mode
         # Define points type, 2 types: boundary and internal
         # For each point, define the boundary type it has to that it will reduce the computation time for edge formation
         # Find all internal and boundary points ---> This part is O(N)---> pretty fast
         add_node = self.add_node
-        xs = [] # all x locations
-        ys = [] # all y locations
-        locs_to_node = {} # for each (x,y) tuple, map them to their node id
+        xs = []  # all x locations
+        ys = []  # all y locations
+        locs_to_node = {}  # for each (x,y) tuple, map them to their node id
         # these ids will be re-ordered based on the sorted xs and ys
         for p in points:
             # First take into account special cases
@@ -1229,7 +1313,7 @@ class EMesh():
                     b_type = self.check_bound_type(r, p)
                     new_node = MeshNode(p, type, node_id=self.node_count, group_id=group.name)
                     new_node.b_type = b_type
-                    locs_to_node[(p[0],p[1])] = new_node
+                    locs_to_node[(p[0], p[1])] = new_node
                     add_node(new_node)
 
                     continue
@@ -1308,8 +1392,9 @@ class EMesh():
         ys = list(set(ys))
         xs.sort()
         ys.sort()
-        self.set_nodes_neigbours(points=points, locs_map=locs_to_node,xs=xs,ys=ys)
-    def set_nodes_neigbours(self,points =[], locs_map ={},xs=[],ys=[]):
+        self.set_nodes_neigbours(points=points, locs_map=locs_to_node, xs=xs, ys=ys)
+
+    def set_nodes_neigbours_planar(self, points=[], locs_map={}, xs=[], ys=[]):
         '''
         Args:
             points: list of node locations
@@ -1327,23 +1412,23 @@ class EMesh():
         max_x_id = len(xs) - 1
         max_y_id = len(ys) - 1
         for p in points:
-            node1 = locs_map[(p[0],p[1])]
+            node1 = locs_map[(p[0], p[1])]
             # get positions
             x1 = node1.pos[0]
             y1 = node1.pos[1]
             x1_id = xs_id[x1]
             y1_id = ys_id[y1]
-            North,South,East,West = [None,None,None,None]
+            North, South, East, West = [None, None, None, None]
             # Once we get the ids, lets get the corresponding node in each direction
             yN_id = y1_id
-            while (not yN_id == max_y_id): # not on the top bound
-                xN= xs[x1_id]
-                yN = ys[yN_id+1]
+            while (not yN_id == max_y_id):  # not on the top bound
+                xN = xs[x1_id]
+                yN = ys[yN_id + 1]
                 if (xN, yN) in locs_map:
-                    North = locs_map[(xN,yN)]
+                    North = locs_map[(xN, yN)]
                     break
                 else:
-                    yN_id+=1
+                    yN_id += 1
             yS_id = y1_id
             while not yS_id == min_loc:
                 xS = xs[x1_id]
@@ -1352,17 +1437,17 @@ class EMesh():
                     South = locs_map[(xS, yS)]
                     break
                 else:
-                    yS_id-=1
+                    yS_id -= 1
 
             xE_id = x1_id
             while not xE_id == max_x_id:
-                xE = xs[xE_id+1]
+                xE = xs[xE_id + 1]
                 yE = ys[y1_id]
                 if (xE, yE) in locs_map:
-                    East = locs_map[(xE,yE)]
+                    East = locs_map[(xE, yE)]
                     break
                 else:
-                    xE_id+=1
+                    xE_id += 1
             xW_id = x1_id
             while not xW_id == min_loc:
                 xW = xs[xW_id - 1]
@@ -1371,7 +1456,7 @@ class EMesh():
                     West = locs_map[(xW, yW)]
                     break
                 else:
-                    xW_id-=1
+                    xW_id -= 1
             # Although the ids can go negative here, the boundary check loop already handle the speacial case
             if node1.type == 'boundary':
                 if 'E' in node1.b_type:
@@ -1400,14 +1485,13 @@ class EMesh():
             if West != None:
                 West.East = node1
 
-
     def find_node(self, pt):
         min = 1000
         for n in self.graph.nodes():
             node = self.graph.node[n]['node']
             pos = node.pos
             new_dis = sqrt(abs(pt[0] - pos[0]) ** 2 + abs(pt[1] - pos[1]) ** 2)
-            if new_dis < min and pos[2]==pt[2]:
+            if new_dis < min and pos[2] == pt[2]:
                 select = n
                 min = new_dis
         return select

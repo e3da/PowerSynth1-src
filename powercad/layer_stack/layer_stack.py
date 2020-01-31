@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from collections import OrderedDict
 from powercad.design.library_structures import *
+from mpl_toolkits.mplot3d import Axes3D
 from powercad.general.material.material import *
 import powercad.general.settings.settings
 import csv
@@ -13,7 +14,7 @@ class Layer:
     Layer object
     '''
 
-    def __init__(self, width=0, length=0, thick=0, id=0, type='p', material=None, layer_z=0, name=""):
+    def __init__(self, width=0, length=0, thick=0, id=0, type='p', material=None, layer_z=0, name="", e_type =""):
         """
 
         Args:
@@ -25,6 +26,7 @@ class Layer:
             material: material properties object
             layer_z: z level of a layer
             heat_conv: Heat convection of top or bottom layer W/(m^2*K).
+            e_type: G :ground, S:signal, D: dielectric,F: float (ignored)
             name: a name for this layer in string
         """
         # main
@@ -36,6 +38,7 @@ class Layer:
         self.type = type
         self.material = material
         self.name = name
+        self.e_type = e_type
         # Device type info
         self.parts = {}
         # Extra:
@@ -81,7 +84,7 @@ class LayerStack:
         self.material_lib.load_csv(material_path) # load the mat_lib from the default directory
         self.foot_print = [0,0]
 
-    def add_new_layer(self, width=0, length=0, thick=0, type='p', color='blue'):
+    def add_new_layer(self, width=0, length=0, thick=0, type='p',etype = 'f', color='blue'):
         # add a layer
         '''
         Set up a stack with width, height and thickness and type only, material will be updated later
@@ -90,6 +93,7 @@ class LayerStack:
             height:in mm
             thick: in mm
             type:  'p' for passivve and 'a' for active
+            etype: electrical type, float,ground,signal
 
         Returns: Update self.all_layers_info
 
@@ -112,12 +116,14 @@ class LayerStack:
         with open(filename) as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
+                print row
                 layer_id = int(row['ID'])
                 layer_name = row['Name']
                 layer_width = float(row['Width'])
                 layer_length = float(row['Length'])
                 layer_thickness = float(row['Thickness'])
                 layer_material_key = row['Material']
+                layer_electrical_type = row['Electrical']
                 layer_type = row['Type']
                 max_width = layer_width if layer_width>=max_width else max_width
                 max_length = layer_length if layer_length >= max_length else max_length
@@ -131,7 +137,7 @@ class LayerStack:
                 else:
                     layer_material = None # no material for this layer
                 layer=Layer(width=layer_width,length=layer_length,thick=layer_thickness,id=layer_id,type=layer_type
-                            ,material=layer_material,name=layer_name,layer_z=self.max_z)
+                            ,material=layer_material,name=layer_name,layer_z=self.max_z, e_type=layer_electrical_type)
                 self.all_layers_info[layer_id] = layer
                 self.current_id=layer_id
                 self.max_z += layer_thickness
@@ -151,6 +157,22 @@ class LayerStack:
         '''
         layer = self.all_layers_info[id]
         layer.material = material
+
+
+    def plot_layer_3d(self,view = 90): # in progress....
+        fig, ax = plt.subplots()
+
+        for key in self.all_layers_info:
+            layer = self.all_layers_info[key]
+            if view == 0:
+                patch = patches.Rectangle((-layer.width / 2, layer.z_level), layer.width, layer.thick, fill=True,
+                                          edgecolor='black', facecolor=layer.color, linewidth=1, alpha=1)
+                plt.text(0, layer.z_level + layer.thick / 2.0, layer.name)
+            ax.add_patch(patch)
+        if view == 0:
+            plt.xlim(-self.foot_print[0] / 2 - 1, self.foot_print[0] / 2 + 1)
+            plt.ylim(0, self.max_z + 1)
+        plt.show()
 
     def plot_layer_2d(self, view=0):
         '''
