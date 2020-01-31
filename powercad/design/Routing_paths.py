@@ -8,10 +8,12 @@ class RoutingPath():
         :param name: routing path name: trace,bonding wire pads,vias etc.
         :param type: power:0, signal:1
         :param layout_component_id: 1,2,3.... id in the layout information
+        :param layer_id: id from layer stack # layer id from input script
         '''
         self.name = name
         self.type = type
         self.layout_component_id = layout_component_id
+        self.layer_id=layer_id # layer id from input script
         self.parent_component_id=None #parent component layout id
 
     def printRoutingPath(self):

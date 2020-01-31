@@ -23,6 +23,8 @@ class Cmd_Handler:
         self.constraint_file=None # Default csv file to save constraint table
         self.i_v_constraint=0 # reliability constraint flag
         self.new_mode=1 # 1: constraint table setup required, 0: constraint file will be reloaded
+        self.flexible=False # bondwire connection is flexible or strictly horizontal and vertical
+        self.plot=False # flag for plotting solution layouts
         # Data storage
         self.db_file = None  # A file to store layout database
 
@@ -70,6 +72,7 @@ class Cmd_Handler:
         algorithm = None
         t_name =None
         e_name = None
+        num_gen=None
         dev_conn ={}
         with open(file, 'rb') as inputfile:
             self.thermal_mode = None
@@ -102,6 +105,19 @@ class Cmd_Handler:
                     self.i_v_constraint = int(info[1])  # 0: no reliability constraints, 1: worst case, 2: average case
                 if info[0] =="New:":
                     self.new_mode = int(info[1])
+
+                if info[0]=="Plot_Solution:":
+                    if int(info[1])==1:
+                        self.plot=True
+                    else:
+                        self.plot = False
+
+                if info[0]=="Flexible_Wire:":
+                    if int(info[1])==1:
+                        self.flexible=True
+                    else:
+                        self.flexible = False
+
                 if info[0] == "Option:":  # engine option
                     run_option = int(info[1])
                 if info[0] == "Num_of_layouts:":  # engine option
@@ -172,6 +188,7 @@ class Cmd_Handler:
                and check_file(self.constraint_file)
         # make dir if they are not existed
         print "self.new_mode",self.new_mode
+        print "self.flex",self.flexible
         if not (check_dir(self.fig_dir)) or not(check_dir(self.db_dir)):
             try:
                 os.mkdir(self.fig_dir)
@@ -196,10 +213,15 @@ class Cmd_Handler:
 
             if run_option == 0:
                 self.solutions=generate_optimize_layout(layout_engine=self.engine, mode=layout_mode,rel_cons=self.i_v_constraint,
-                                         optimization=False, db_file=self.db_file,fig_dir=self.fig_dir,sol_dir=self.db_dir, num_layouts=num_layouts, seed=seed,
+                                         optimization=False, db_file=self.db_file,fig_dir=self.fig_dir,sol_dir=self.db_dir,plot=self.plot, num_layouts=num_layouts, seed=seed,
                                          floor_plan=floor_plan)
             elif run_option == 1:
                 self.measures=[]
+                if self.electrical_mode != None:
+                    e_measure_data = {'name': e_name, 'type': type, 'source': source, 'sink': sink}
+                    self.setup_electrical(mode='macro', dev_conn=dev_conn, frequency=frequency,
+                                          meas_data=e_measure_data)
+
                 if self.thermal_mode!=None:
                     t_setup_data={'Power': power,'heat_conv':h_conv,'t_amb':t_amb}
                     t_measure_data={'name':t_name,'devices':devices}
@@ -284,9 +306,11 @@ class Cmd_Handler:
 
 
                 self.solutions=generate_optimize_layout(layout_engine=self.engine, mode=layout_mode,rel_cons=self.i_v_constraint,
-                                         optimization=True, db_file=self.db_file,fig_dir=self.fig_dir,sol_dir=self.db_dir,
+                                         optimization=True, db_file=self.db_file,fig_dir=self.fig_dir,sol_dir=self.db_dir,plot=self.plot,
                                          apis={'E': self.e_api, 'T': self.t_api}, num_layouts=num_layouts, seed=seed,
                                          algorithm=algorithm, floor_plan=floor_plan,num_gen=num_gen,measures=self.measures)
+
+                self.export_solution_params(self.fig_dir,self.db_dir,self.solutions,layout_mode)
         else:
             # First check all file path
             if not (check_file(self.layout_script)):
@@ -429,7 +453,7 @@ class Cmd_Handler:
     # -------------------INITIAL SETUP--------------------------------------
     def set_up_db(self):
         database = os.path.join(self.db_dir, 'layouts_db')
-        filelist = glob(os.path.join(database + '/*'))
+        filelist = glob.glob(os.path.join(database + '/*'))
         # print filelist
         for f in filelist:
             try:
@@ -463,7 +487,7 @@ class Cmd_Handler:
         '''
         self.layer_stack.import_layer_stack_from_csv(self.layer_stack_file)
         self.engine, self.wire_table = script_translator(
-            input_script=self.layout_script, bond_wire_info=self.bondwire_setup, fig_dir=self.fig_dir, constraint_file=self.constraint_file,rel_cons=self.i_v_constraint,mode=self.new_mode)
+            input_script=self.layout_script, bond_wire_info=self.bondwire_setup, fig_dir=self.fig_dir, constraint_file=self.constraint_file,rel_cons=self.i_v_constraint,flexible=self.flexible,mode=self.new_mode)
         for comp in self.engine.all_components:
             self.comp_dict[comp.layout_component_id] = comp
 
@@ -648,12 +672,135 @@ class Cmd_Handler:
                                                              measures=self.measures)
 
 
+                    self.export_solution_params(self.fig_dir,self.db_dir, self.solutions,layout_mode)
 
             elif opt == 'quit':
                 cont = False
 
+    def find_pareto_dataset(self,sol_dir=None,opt=None,fig_dir=None):
+        #print "so",sol_dir
+
+        folder_name = sol_dir+'\\'+'Layout_Solutions'
+        all_data = []
+        i = 0
+        for filename in glob.glob(os.path.join(folder_name, '*.csv')):
+            with open(filename) as csvfile:
+                base_name = os.path.basename(filename)
+                readCSV = csv.reader(csvfile, delimiter=',')
+                for row in readCSV:
+                    if row[0] == 'Size':
+                        continue
+                    else:
+                        if row[0][0] == '[':
+                            data = [base_name, float(row[1]), float(row[2])]
+                            all_data.append(data)
+
+                        else:
+                            continue
+                i += 1
+        # for data in all_data:
+        # print data
+        file_name = sol_dir+'\\all_data.csv'
+        with open(file_name, 'wb') as my_csv:
+            csv_writer = csv.writer(my_csv, delimiter=',')
+            csv_writer.writerow(['Layout_ID', 'Temperature', 'Inductance'])
+            for data in all_data:
+                #if data[2] > 20: # special case to handle invalid electrical evaluations
+
+                data = [data[0].rsplit('.csv')[0], data[1], data[2]]
+                csv_writer.writerow(data)
+            my_csv.close()
+        # '''
+        sol_data = {}
+        file = file_name
+        with open(file) as csvfile:
+            readCSV = csv.reader(csvfile, delimiter=',')
+            for row in readCSV:
+                if row[0] == 'Layout_ID':
+                    #sol_data[row[0]]=[row[2],row[1]]
+                    continue
+                else:
+                    sol_data[row[0]] = ([float(row[2]), float(row[1])])
+        # sol_data = np.array(sol_data)
+        #print sol_data
+        pareto_data = pareto_frontiter2D(sol_data)
+        #print len(pareto_data)
+        file_name = sol_dir+'\\final_pareto.csv'
+        with open(file_name, 'wb') as my_csv:
+            csv_writer = csv.writer(my_csv, delimiter=',')
+            csv_writer.writerow(['Layout_ID', 'Temperature', 'Inductance'])
+            for k, v in pareto_data.items():
+                data = [k, v[0], v[1]]
+                csv_writer.writerow(data)
+        my_csv.close()
+
+        data_x = []
+        data_y = []
+        for id, value in pareto_data.items():
+            print id,value
+            data_x.append(value[0])
+            data_y.append(value[1])
+
+        #print data_x
+        #print data_y
+        plt.cla()
+
+        plt.scatter(data_x, data_y)
+
+        x_label = 'Inductance'
+        y_label = 'Max_Temperature'
+
+        plt.xlim(min(data_x) - 2, max(data_x) + 2)
+        plt.ylim(min(data_y) - 0.5, max(data_y) + 0.5)
+        # naming the x axis
+        plt.xlabel(x_label)
+        # naming the y axis
+        plt.ylabel(y_label)
+
+        # giving a title to my graph
+        plt.title('Pareto-front Solutions')
+
+        # function to show the plot
+        # plt.show()
+        plt.savefig(fig_dir + '/' + 'pareto_plot_mode-' + str(opt) + '.png')
+
+    def export_solution_params(self,fig_dir=None,sol_dir=None,solutions=None,opt=None):
+
+        self.find_pareto_dataset(sol_dir,opt,fig_dir)
+
+        data_x=[]
+        data_y=[]
+        for sol in solutions:
+            #if sol.params['Inductance']>50:
+                #continue
+            data_x.append(sol.params['Inductance'])
+            data_y.append(sol.params['Max_Temperature'])
+
+        plt.cla()
+
+
+        plt.scatter(data_x, data_y)
+
+        x_label = 'Inductance'
+        y_label = 'Max_Temperature'
+
+        plt.xlim(min(data_x)-2, max(data_x)+2)
+        plt.ylim(min(data_y)-0.5, max(data_y)+0.5)
+        # naming the x axis
+        plt.xlabel(x_label)
+        # naming the y axis
+        plt.ylabel(y_label)
+
+        # giving a title to my graph
+        plt.title('Solution Space')
+
+        # function to show the plot
+        #plt.show()
+        plt.savefig(fig_dir+'/'+'plot_mode-'+str(opt)+'.png')
+
 
 if __name__ == "__main__":
+    print "----------------------PowerSynth Version 1.4: Command line version------------------"
     cmd = Cmd_Handler(debug=True)
     cmd.cmd_handler_flow()
     objgraph.show_most_common_types()

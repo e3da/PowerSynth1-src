@@ -90,19 +90,22 @@ class ScriptInputMethod():
 
                 if j.name==table_info[i][1]:
                     pads_s=table_info[i][2].split('_')
-                    if len(pads_s)>1:
+
+                    if len(pads_s)>2:
                         source_pad=pads_s[-1]
                         source = table_info[i][2].strip('_'+source_pad)
                     else:
-                        source_pad=pads_s[0]
+                        #source_pad=pads_s[0]
+                        source_pad =table_info[i][2]
                         source=source_pad
 
                     pads_d = table_info[i][3].split('_')
-                    if len(pads_d) > 1:
+                    if len(pads_d) > 2:
                         dest_pad = pads_d[-1]
                         destination =table_info[i][3].strip('_'+dest_pad)
                     else:
-                        dest_pad=pads_d[0]
+                        #dest_pad=pads_d[0]
+                        dest_pad=table_info[i][3]
                         destination=dest_pad
 
                     #print source,source_pad,destination,dest_pad
@@ -463,6 +466,11 @@ class ScriptInputMethod():
                             if element.name not in all_component_type_names :
                                 if element.rotate_angle==0:
                                     all_component_type_names.append(element.name)
+                                else:
+                                    name,angle=element.name.split('_')
+                                    if name not in all_component_type_names:
+                                        all_component_type_names.append(name)
+
 
         for j in range(1, len(layout_info)):
             for k, v in self.all_route_info.items():
@@ -545,6 +553,7 @@ class ScriptInputMethod():
                             width = float(layout_data[j][5])
                             height = float(layout_data[j][6])
                             name = layout_data[j][1]
+                            #print name
                             Schar = layout_data[j][0]
                             Echar = layout_data[j][-1]
                             rect_info = [type, x, y, width, height, name, Schar, Echar,k1,0] #k1=hierarchy level # 0 is for rotate angle (default=0 as r)
@@ -568,14 +577,17 @@ class ScriptInputMethod():
             #print rect
         #---------------------------------------------------------------------------
         return self.size,self.cs_info,self.component_to_cs_type,self.all_components
-    def plot_init_layout(self):
+    def plot_init_layout(self,fig_dir=None):
         rectlist=[]
         colors = ['green', 'red', 'blue', 'yellow', 'purple', 'pink', 'magenta', 'orange', 'violet']
         type = ['Type_1', 'Type_2', 'Type_3', 'Type_4', 'Type_5', 'Type_6', 'Type_7', 'Type_8', 'Type_9']
         for rect in self.cs_info:
-
-            color_ind=type.index(rect[0])
-            color=colors[color_ind]
+            #print rect
+            try:
+                color_ind=type.index(rect[0])
+                color=colors[color_ind]
+            except:
+                color='black'
             r=[rect[1],rect[2],rect[3],rect[4],color,rect[-2]]# x,y,w,h,cs_type,zorder
             rectlist.append(r)
 
@@ -597,11 +609,16 @@ class ScriptInputMethod():
         for p in Patches:
             ax.add_patch(p)
 
-        ax.set_xlim(0, 120)
-        ax.set_ylim(0, 120)
+        ax.set_xlim(0, self.size[0])
+        ax.set_ylim(0, self.size[1])
         ax.set_aspect('equal')
+        if fig_dir!=None:
+            plt.savefig(fig_dir+'/initial_layout.png')
+        else:
+            plt.show()
 
-        plt.show()
+
+        #plt.show()
 
 
     # generate initial constraint table based on the types in the input script and saves information in the given csv file as constraint
@@ -630,7 +647,7 @@ class ScriptInputMethod():
         r2 = ['Min Width']
         r2_c=[0 for i in range(len(Types))]
         for i in range(len(Types)):
-            if Types[i]=='EMPTY':
+            if Types[i]=='EMPTY' or Types[i]=='Type_3':
                 r2_c[i]=1.0
             else:
                 for k,v in self.component_to_cs_type.items():
@@ -649,7 +666,7 @@ class ScriptInputMethod():
         r3 = ['Min Height']
         r3_c = [0 for i in range(len(Types))]
         for i in range(len(Types)):
-            if Types[i]=='EMPTY':
+            if Types[i]=='EMPTY' or Types[i]=='Type_3':
                 r3_c[i]=1.0
             else:
                 for k, v in self.component_to_cs_type.items():
@@ -669,7 +686,7 @@ class ScriptInputMethod():
         r4 = ['Min Extension']
         r4_c = [0 for i in range(len(Types))]
         for i in range(len(Types)):
-            if Types[i]=='EMPTY':
+            if Types[i]=='EMPTY' or Types[i]=='Type_3':
                 r4_c[i]=1.0
             else:
                 for k, v in self.component_to_cs_type.items():
@@ -702,7 +719,10 @@ class ScriptInputMethod():
 
                     row=[k]
                     for j in range(len(Types)):
-                        row.append(2.0)
+                        if v=='Type_3' and Types[j]=='Type_3':
+                            row.append(2)
+                        else:
+                            row.append(0.5)
                     space_rows.append(row)
                     all_rows.append(row)
 
@@ -765,14 +785,14 @@ class ScriptInputMethod():
         return self.df,self.Types
 
     # converts cs_info list into list of rectangles to pass into corner stitch input function
-    def convert_rectangle(self):
+    def convert_rectangle(self,flexible):
         '''
         :return: list of rectangles with rectangle objects having all properties to pass it into corner stitch data structure
         '''
         input_rects = []
         bondwire_landing_info={} # stores bonding wire landing pad location information
-        for rect in self.cs_info:
-            if rect[5][0]!='B':
+        if flexible==True:
+            for rect in self.cs_info:
                 type = rect[0]
                 x = rect[1]
                 y = rect[2]
@@ -781,10 +801,23 @@ class ScriptInputMethod():
                 name = rect[5]
                 Schar = rect[6]
                 Echar = rect[7]
-                hier_level=rect[8]
-                input_rects.append(Rectangle(type, x, y, width, height, name, Schar=Schar, Echar=Echar,hier_level=hier_level,rotate_angle=rect[9]))
-            else:
-                bondwire_landing_info[rect[5]]=[rect[1],rect[2],rect[0],rect[-2]] #{B1:[x,y,type,hier_level],.....}
+                hier_level = rect[8]
+                input_rects.append(Rectangle(type, x, y, width, height, name, Schar=Schar, Echar=Echar, hier_level=hier_level,rotate_angle=rect[9]))
+        else:
+            for rect in self.cs_info:
+                if rect[5][0]!='B':
+                    type = rect[0]
+                    x = rect[1]
+                    y = rect[2]
+                    width = rect[3]
+                    height = rect[4]
+                    name = rect[5]
+                    Schar = rect[6]
+                    Echar = rect[7]
+                    hier_level=rect[8]
+                    input_rects.append(Rectangle(type, x, y, width, height, name, Schar=Schar, Echar=Echar,hier_level=hier_level,rotate_angle=rect[9]))
+                else:
+                    bondwire_landing_info[rect[5]]=[rect[1],rect[2],rect[0],rect[-2]] #{B1:[x,y,type,hier_level],.....}
         #--------------------for debugging-----------------------------
         #for rectangle in input_rects:
             #print rectangle.print_rectangle()
