@@ -50,6 +50,9 @@ class New_layout_engine():
         self.sym_layout = None
         self.layout_sols = {}
 
+        # Quang added, for mapping with APIs
+
+
     def open_new_layout_engine(self, window):
         self.window = window
         patches = self.init_data[0]
