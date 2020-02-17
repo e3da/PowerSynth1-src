@@ -152,7 +152,7 @@ class LayoutBuilder():  # Creates symbolic layout from netlist data by creating 
         # Check if voltage sources are connected to ground
         for vsource in self.vsource_comp_list:
             if '0' not in vsource.connections:
-                print 'Warning: Voltage source not connected to ground!'
+                print('Warning: Voltage source not connected to ground!')
         
         # Check for valid output node
         if self.output_node == '':
@@ -178,13 +178,13 @@ class LayoutBuilder():  # Creates symbolic layout from netlist data by creating 
         # Check for potential naming conflicts with shadow nodes used in layout template
         for node in self.graph.nodes():
             if node[:2] == 'SP' or node[:2] == 'SN':
-                print 'Warning: Possible conflict between node name "' + node + '" and layout template nodes!'
+                print('Warning: Possible conflict between node name "' + node + '" and layout template nodes!')
         
         # Check if output node is seminal node (developer purposes - indicates symmetry of the design and NetworkX graph)
         # Initially the seminal node was assumed by the developer to be the output node
         # Now the user must specify the output node in the New Project Dialog GUI
         centrality = nx.betweenness_centrality(self.graph)
-        centrality_list = centrality.items()
+        centrality_list = list(centrality.items())
         centrality_list.sort(key=lambda x: x[1],reverse=True)
         i=0
         seminal_node = centrality_list[0][0]
@@ -197,7 +197,7 @@ class LayoutBuilder():  # Creates symbolic layout from netlist data by creating 
             seminal_node = centrality_list[i+1][0]      
             i+=1
         if seminal_node != self.output_node:
-            print 'Warning: Output node is not seminal node!'
+            print('Warning: Output node is not seminal node!')
         
         
     def analyze_prepare_graph(self):    # Analyzes graph for paths and groupings. Cleans up graph to prepare for drawing setup

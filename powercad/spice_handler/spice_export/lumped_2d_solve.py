@@ -71,9 +71,9 @@ class Circuit():
         self.df_circuit_info.loc[rowid, 'Lname2'] = L2_name
         self.df_circuit_info.loc[rowid, 'value'] = float(val)
     def form_report(self):
-        print "Dataframe for circuit info:"
+        print("Dataframe for circuit info:")
         display(self.df_circuit_info)
-        print "Dataframe for Current branches info:"
+        print("Dataframe for Current branches info:")
         display(self.df_uk_current)
     def _graph_read(self, lumped_graph, ports_mea=False, port_impedance=50e3):
         '''
@@ -121,7 +121,7 @@ class Circuit():
         for edge in lumped_graph.edges(data=True):
             node1 = edge[0]
             RLCname = edge[2]['data'].name
-            if node1 not in self.node_dict.keys():
+            if node1 not in list(self.node_dict.keys()):
                 net1 = net_id
                 self.node_dict[node1]=net1
 
@@ -137,7 +137,7 @@ class Circuit():
             self._graph_add_comp(rowid, Rname.format(RLCname), net1, int_net, val)
             rowid += 1
             node2 = edge[1]
-            if node2 not in self.node_dict.keys():
+            if node2 not in list(self.node_dict.keys()):
                 net2 = net_id
                 self.node_dict[node2]=net2
                 net_id += 1
@@ -249,7 +249,7 @@ class Circuit():
         v_source=self.results[source_v]
         v_sink = self.results[sink_v]
         I =self.find_port_current(I_node)
-        print (v_source - v_sink), I
+        print((v_source - v_sink), I)
         imp =(v_source-v_sink)/I
         return np.real(imp),np.imag(imp)/abs(self.s) # R vs L
     def G_mat(self):
@@ -372,7 +372,7 @@ class Circuit():
 
         # check source count
         if sn != i_unk:
-            print('source number, sn={:d} not equal to i_unk={:d} in matrix B'.format(sn, i_unk))
+            print(('source number, sn={:d} not equal to i_unk={:d} in matrix B'.format(sn, i_unk)))
             # print self.B
             # find the the column position in the C and D matrix for controlled sources
             # needs to return the node numbers and branch number of controlling branch
@@ -472,7 +472,7 @@ class Circuit():
 
         # check source count
         if sn != i_unk:
-            print('source number, sn={:d} not equal to i_unk={:d} in matrix C'.format(sn, i_unk))
+            print(('source number, sn={:d} not equal to i_unk={:d} in matrix C'.format(sn, i_unk)))
             # print self.C
 
     def D_mat(self, i_unk):
@@ -643,7 +643,7 @@ class Circuit():
         self.V = zeros(num_nodes, 1)
         self.I = np.zeros((num_nodes, 1), dtype=np.complex_)
         self.G = np.zeros((num_nodes, num_nodes), dtype=np.complex_)  # also called Yr, the reduced nodal matrix
-        print num_nodes
+        print(num_nodes)
         # count the number of element types that affect the size of the B, C, D, E and J arrays
         # these are element types that have unknown currents
         i_unk = self.df_uk_current.shape[0]
@@ -683,8 +683,8 @@ class Circuit():
 
         Z = self.Z
         A = self.A
-        print "matrices"
-        print A,Z
+        print("matrices")
+        print(A,Z)
         '''
         col = [str(i + 1) for i in range(A.shape[0])]
         matA = pd.DataFrame(columns=col)
@@ -706,11 +706,11 @@ class Circuit():
             # A=np.array(self.A.tolist())
             # Z=np.array(Z.tolist())
             t = time.time()
-            print "solving ..."
+            print("solving ...")
 
             self.results= scipy.sparse.linalg.spsolve(A,Z)
             #self.results= gmres(A,Z)
-            print "solve", time.time() - t, "s"
+            print("solve", time.time() - t, "s")
 
 
         #print self.results

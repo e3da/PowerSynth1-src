@@ -100,16 +100,16 @@ def single_layer_top_surface_pt(baseplate, devices, x, y):
         A0 = (Q/(a*b))*(t1/k1 + 1.0/h)
     
         Am_comp = 0.0
-        for m in xrange(1, res):
+        for m in range(1, res):
             Am_comp += A1(m, Xc, c, Q)*cos(lam(m)*x)
             
         An_comp = 0.0
-        for n in xrange(1, res):
+        for n in range(1, res):
             An_comp += A2(n, Yc, d, Q)*cos(delta(n)*y)
             
         Amn_comp = 0.0
-        for m in xrange(1, res):
-            for n in xrange(1, res):
+        for m in range(1, res):
+            for n in range(1, res):
                 Amn_comp += A3(m, n, Xc, Yc, c, d, Q)*cos(lam(m)*x)*cos(delta(n)*y)
                 
         return A0 + Am_comp + An_comp + Amn_comp
@@ -169,18 +169,18 @@ def single_layer_top_surface_avg(baseplate, devices, dev_index):
         A0 = (Q/(a*b))*(t1/k1 + 1.0/h)
     
         Am_comp = 0.0
-        for m in xrange(1, res):
+        for m in range(1, res):
             Am_comp += A1(m, Xc, c, Q)*cos(lam(m)*Xcj)*sin(0.5*lam(m)*cj)/(lam(m)*cj)
         Am_comp *= 2.0
             
         An_comp = 0.0
-        for n in xrange(1, res):
+        for n in range(1, res):
             An_comp += A2(n, Yc, d, Q)*cos(delta(n)*Ycj)*sin(0.5*delta(n)*dj)/(delta(n)*dj)
         An_comp *= 2.0
             
         Amn_comp = 0.0
-        for m in xrange(1, res):
-            for n in xrange(1, res):
+        for m in range(1, res):
+            for n in range(1, res):
                 top = cos(delta(n)*Ycj)*sin(0.5*delta(n)*dj)*cos(lam(m)*Xcj)*sin(0.5*lam(m)*cj)
                 bot = lam(m)*cj*delta(n)*dj
                 Amn_comp += A3(m, n, Xc, Yc, c, d, Q)*top/bot
@@ -250,18 +250,18 @@ def compound_top_surface_avg(baseplate, layer, devices, dev_index, resolution=20
         A0 = (Q/(a*b))*(t1/k1 + t2/k2 + 1.0/h)
     
         Am_comp = 0.0
-        for m in xrange(1, res):
+        for m in range(1, res):
             Am_comp += A1(m, Xc, c, Q)*cos(lam(m)*Xcj)*sin(0.5*lam(m)*cj)/(lam(m)*cj)
         Am_comp *= 2.0
             
         An_comp = 0.0
-        for n in xrange(1, res):
+        for n in range(1, res):
             An_comp += A2(n, Yc, d, Q)*cos(delta(n)*Ycj)*sin(0.5*delta(n)*dj)/(delta(n)*dj)
         An_comp *= 2.0
             
         Amn_comp = 0.0
-        for m in xrange(1, res):
-            for n in xrange(1, res):
+        for m in range(1, res):
+            for n in range(1, res):
                 top = cos(delta(n)*Ycj)*sin(0.5*delta(n)*dj)*cos(lam(m)*Xcj)*sin(0.5*lam(m)*cj)
                 bot = lam(m)*cj*delta(n)*dj
                 Amn_comp += A3(m, n, Xc, Yc, c, d, Q)*top/bot
@@ -296,8 +296,8 @@ if __name__ == '__main__':
     met = (0.41, 200.0)
     iso = (0.64, 160.0)
     thickness, thermal_cond = layer_average([met, iso, met])
-    print 'thickness', thickness
-    print 'thermal_cond', thermal_cond
+    print('thickness', thickness)
+    print('thermal_cond', thermal_cond)
     layer = ExtaLayer(thickness*1e-3, thermal_cond)
     
     dev1 = Device(width = 10.0e-3,
@@ -310,9 +310,9 @@ if __name__ == '__main__':
                  center = (30.0e-3, 30.0e-3),
                  Q = 10.0)
     starttime=time.time()
-    print single_layer_top_surface_pt(bp, [dev1, dev2], 15.0e-3, 10.0e-3)
-    print single_layer_top_surface_avg(bp, [dev1, dev2], 1)
-    print compound_top_surface_avg(bp, layer, [dev1, dev2], 0)
+    print(single_layer_top_surface_pt(bp, [dev1, dev2], 15.0e-3, 10.0e-3))
+    print(single_layer_top_surface_avg(bp, [dev1, dev2], 1))
+    print(compound_top_surface_avg(bp, layer, [dev1, dev2], 0))
     tot_time=time.time()-starttime
-    print tot_time
+    print(tot_time)
     

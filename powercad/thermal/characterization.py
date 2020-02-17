@@ -68,7 +68,7 @@ def load_data(filename, flip_values=False):
         return xs, zs, values
 
 def interp_temp_field(xs, zs, values, ambient):
-    points = zip(xs, zs)
+    points = list(zip(xs, zs))
     x_min = np.min(xs); x_max = np.max(xs)
     z_min = np.min(zs); z_max = np.max(zs)
     #print x_max+x_min, z_max+z_min
@@ -120,7 +120,7 @@ def temp_difference_test():
 def characterize_dist(xs, zs, values, ambient, dev_dim, flux, contours=20, integ_samples=600):
     
     temps = values
-    points = zip(xs, zs)
+    points = list(zip(xs, zs))
     
     if flux: ambient = 0.0
     # Reference to ambient
@@ -201,8 +201,8 @@ def characterize_dist(xs, zs, values, ambient, dev_dim, flux, contours=20, integ
         match_locs.append(match_axis[index])
         match_vals.append(match_temp[index])
         
-    if x_longer: locs = zip(match_locs, S)
-    else: locs = zip(S, match_locs)
+    if x_longer: locs = list(zip(match_locs, S))
+    else: locs = list(zip(S, match_locs))
         
     # Integration of contours
     contours = []
@@ -216,7 +216,7 @@ def characterize_dist(xs, zs, values, ambient, dev_dim, flux, contours=20, integ
         
         out = (cur_val*cur_area - prev_val*prev_area)/(cur_area-prev_area)
         if flux: eff_power = cur_val*cur_area*1.0e-6
-        print loc,out
+        print(loc,out)
         prev_area = cur_area
         prev_val = cur_val
         
@@ -282,8 +282,8 @@ def pickle_die_characterization(temp_csv, flux_csv, module_data, proj_device, ch
     xs, zs, fluxes = load_data(flux_csv, True)
     flux_contours, power, _ = characterize_dist(xs, zs, fluxes, 0.0, dev_dim[:2], True)
     
-    print 'Eff. Power:', power
-    print 'Avg Temp:', avg_temp
+    print('Eff. Power:', power)
+    print('Avg Temp:', avg_temp)
     
     tf = DieThermalFeatures()
     tf.iso_top_fluxes = flux_contours
@@ -297,7 +297,7 @@ def pickle_die_characterization(temp_csv, flux_csv, module_data, proj_device, ch
     tf.die_res = rdie + rattach # includes attach
     tf.find_self_temp(dev_dim)
     
-    print '---Characterization Pickle Complete---'
+    print('---Characterization Pickle Complete---')
     f = open(filename, 'w')
     pickle.dump(tf, f)
     f.close()

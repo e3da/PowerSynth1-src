@@ -105,11 +105,11 @@ def back_side_copper_impact_study(result=None):
 
     Y = np.loadtxt(result, float)
     Si = sobol.analyze(problem, Y)
-    print Si['S1']
+    print(Si['S1'])
 
 
-    print Si['S2']
-    print Si['ST']
+    print(Si['S2'])
+    print(Si['ST'])
 
 def trace_center_study(result=None):
     problem = {
@@ -121,24 +121,24 @@ def trace_center_study(result=None):
     }
     Y = np.loadtxt(result, float)
     Si = sobol.analyze(problem, Y)
-    print Si['S1']
-    print Si['S2']
-    print Si['ST']
+    print(Si['S1'])
+    print(Si['S2'])
+    print(Si['ST'])
 def Study1():
     #data_gen_back_side_copper_impact('C:\Users\qmle\Desktop\Documents\Conferences\IWIPP\sensitive analysis\Study1')
     # Resistance impact:
-    result = 'C:\Users\qmle\Desktop\Documents\Conferences\IWIPP\sensitive analysis\Study1\Resistance.txt'
+    result = 'C:\\Users\qmle\Desktop\Documents\Conferences\IWIPP\sensitive analysis\Study1\Resistance.txt'
     back_side_copper_impact_study(result)
     # Inductance impact:
-    result = 'C:\Users\qmle\Desktop\Documents\Conferences\IWIPP\sensitive analysis\Study1\Inductance.txt'
+    result = 'C:\\Users\qmle\Desktop\Documents\Conferences\IWIPP\sensitive analysis\Study1\Inductance.txt'
     back_side_copper_impact_study(result)
 def Study2():
     #data_gen_trace_center('C:\Users\qmle\Desktop\Documents\Conferences\IWIPP\sensitive analysis\Study2')
     # Resistance impact:
-    result = 'C:\Users\qmle\Desktop\Documents\Conferences\IWIPP\sensitive analysis\Study2\Resistance.txt'
+    result = 'C:\\Users\qmle\Desktop\Documents\Conferences\IWIPP\sensitive analysis\Study2\Resistance.txt'
     trace_center_study(result)
     # Inductance impact:
-    result = 'C:\Users\qmle\Desktop\Documents\Conferences\IWIPP\sensitive analysis\Study2\Inductance.txt'
+    result = 'C:\\Users\qmle\Desktop\Documents\Conferences\IWIPP\sensitive analysis\Study2\Inductance.txt'
     trace_center_study(result)
 if __name__ == "__main__":
     Study1()

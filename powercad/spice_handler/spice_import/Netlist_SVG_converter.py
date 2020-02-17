@@ -62,7 +62,7 @@ class Converter():
         Layout.generate_symbolic_layout()
         
         # Set new file name for symbolic layout SVG
-        final_sym_layout_name = (unicode(str(sym_layout_name)+'.svg'), u'SVG and Netlist Files (*.svg *.net *.txt)')
+        final_sym_layout_name = (str(str(sym_layout_name)+'.svg'), 'SVG and Netlist Files (*.svg *.net *.txt)')
         return final_sym_layout_name
     
 
@@ -77,4 +77,4 @@ if __name__ == '__main__':
         test = Converter(filename,name)
         return test.convert('V1', 'V2', 'V0')
     
-    print test_converter(test_file, test_name)
+    print(test_converter(test_file, test_name))

@@ -24,7 +24,7 @@ LOWEST_ASPECT_IND = 1.0
 c = 3.0e8                       # speed of light
 u_0 = 4.0 * math.pi * 1e-7  # permeability of vaccum;
 e_0 = 8.85e-12                  # permittivity of vaccum;
-save_path = 'C:\Users\qmle\Desktop\SingleFEM'
+save_path = 'C:\\Users\qmle\Desktop\SingleFEM'
 #es_mdl=pickle.load(open(os.path.join(save_path,'res_0.64_0.4_[5,50].mdl'),'rb'))
 
 #--------------------------------------------------------------------------
@@ -306,7 +306,7 @@ def unit_test_ind_res():
        For 72 data points, the simulations will take approximately 12 hours to complete...
     2. Please read through all comments... understand how it works'''
     
-    DataPath='C:\Users\qmle\Desktop\Testing\Surrogate Model\Surrogate_Data_Parasitic'  # data export path where this analysis will be perform ... Data will also be exported into this directory
+    DataPath='C:\\Users\qmle\Desktop\Testing\Surrogate Model\Surrogate_Data_Parasitic'  # data export path where this analysis will be perform ... Data will also be exported into this directory
     ipy64='ipy64'                                                                        # name of the exe will be called in cmd... I added it to path variable 
     ipy64 = 'C:\Program Files\AnsysEM\AnsysEM16.2\Win64\common\IronPython\ipy64.exe'     # In the case that you dont know how to change path variable use this method
     '''--------------------------------------------------------------------------------------------------------------------------------------------------------------------'''    
@@ -417,7 +417,7 @@ def harvest_data_boundary_linear_approximation(height, thickness, width, length,
     os.makedirs(data_out_path)
     dims_file_dir = data_out_path + '\dimension.txt'         # dimension file directory
     width_step = float(width[1]-width[0])/(num_of_samples)   # compute the step
-    print width_step
+    print(width_step)
     text_file = open(dims_file_dir, 'w')                     # open a text_file
     # prepare a textfile so we can read it later to extract the csv data
     dims = []
@@ -431,7 +431,7 @@ def harvest_data_boundary_linear_approximation(height, thickness, width, length,
         [width, length] = row
         proj_name = 'W' + str(width) + '_L' + str(length) + '_H' + str(height) + '_T' + str(
             thickness)  # encoding new project name from specs
-        print proj_name
+        print(proj_name)
         iso_z=3.81+thickness
         trace_z = height + iso_z  # z dim of trace--- follow zihao 's setup in thesis
         FilePath = os.path.join(data_out_path, proj_name + '.py')  # create file name
@@ -453,10 +453,10 @@ if __name__ == '__main__':
     angle=(h1+h2)/l1
     angle=math.atan(angle)
     length=l1/math.cos(angle)+float(D)/8+h1
-    print length
-    print wire_resistance(f, D, r)
+    print(length)
+    print((wire_resistance(f, D, r)))
 
-    print wire_inductance(D,r)
+    print((wire_inductance(D,r)))
 
     # Test mutual inductance model:
     wires=4
@@ -465,11 +465,11 @@ if __name__ == '__main__':
     for w in range(wires):
         for i in range(w,wires,1):
             if w!=i:
-                print 'w,i: ',w,i
+                print(('w,i: ',w,i))
                 d=abs(w-i)*dmin
                 M=wire_partial_mutual_ind(length,r,d)
                 Mtot+=M
-    print Mtot*2
+    print((Mtot*2))
 
 
 

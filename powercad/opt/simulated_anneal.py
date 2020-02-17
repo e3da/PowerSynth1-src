@@ -1,7 +1,7 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
+
+
+
+
 import abc
 import copy
 import datetime
@@ -26,14 +26,12 @@ def time_string(seconds):
     return '%4i:%02i:%02i' % (h, m, s)
 
 
-class Annealer(object):
+class Annealer(object, metaclass=abc.ABCMeta):
 
     """Performs simulated annealing by calling functions to calculate
     energy and make moves on a state.  The temperature schedule for
     annealing may be provided manually or estimated automatically.
     """
-
-    __metaclass__ = abc.ABCMeta
 
     # defaults
     Tmax = 250.0

@@ -228,7 +228,7 @@ class Device(object):
         power_wires = []
         signal_wires = []
         bond_wires = []
-        for pad, wires in self.bondwires_dict.iteritems():
+        for pad, wires in self.bondwires_dict.items():
             for wire in wires:
                 self.update_wire(wire)
                 bond_wires.append(wire)
@@ -307,7 +307,7 @@ class Components(object):
         pads = []
         bondwires = []
         bondwire_defs = []
-        for device_name, device in self.device_dict.iteritems():
+        for device_name, device in self.device_dict.items():
             for pad in device.pads:
                 pads.append(pad)
             for wire in device.wires:
@@ -540,7 +540,7 @@ class EMProScript(object):
         self.components = Components(self.md, self.baseplate, self.substrate)
         #  Gather all the wires and leads from the module design object
         self.wires = self.md.bondwires
-        print self.wires
+        print(self.wires)
 
         self.leads = self.md.leads
 
@@ -600,7 +600,7 @@ class EMProScript(object):
         :return: None
         """
         traces = self.md.traces
-        for index in xrange(len(traces)):
+        for index in range(len(traces)):
             trace = Trace(traces[index], self.substrate)
             trace_name = "Trace" + str(index)
             self.output.append(self.gd.create_rectangle.format(trace.x, trace.y, trace.z, trace.width, trace.length,
@@ -614,7 +614,7 @@ class EMProScript(object):
         """
         pads = sorted(self.components.pads)
 
-        for index in xrange(len(pads)):
+        for index in range(len(pads)):
             name = pads[index][0]
             vertices = pads[index][1]
 
@@ -693,7 +693,7 @@ class EMProScript(object):
         Generate lead geometries and write to the output script
         :return: None
         """
-        for leads in xrange(len(self.leads)):
+        for leads in range(len(self.leads)):
             lead = Lead(leads, self.md, self.baseplate, self.substrate)
             self.output.append(self.gd.create_port.format(lead.tail, lead.head, lead.end, lead.name))
 

@@ -16,9 +16,9 @@ def test_file(input_script=None, bond_wire_info=None):
     ScriptMethod.read_input_script()  # reads input script and make two sections
     ScriptMethod.gather_part_route_info()  # gathers part and route info
     ScriptMethod.gather_layout_info()  # gathers layout info
-    print ScriptMethod.size
-    print len(ScriptMethod.cs_info), ScriptMethod.cs_info
-    print ScriptMethod.component_to_cs_type
+    print(ScriptMethod.size)
+    print(len(ScriptMethod.cs_info), ScriptMethod.cs_info)
+    print(ScriptMethod.component_to_cs_type)
     ScriptMethod.update_constraint_table()  # updates constraint table
 
     input_rects = ScriptMethod.convert_rectangle()  # converts layout info to cs rectangle info
@@ -81,14 +81,14 @@ def test_case(layout_script, bond_wire_script):
 
     layer_to_z = {'T': [0, 0.2], 'D': [0.2, 0], 'B': [0.2, 0],
                   'L': [0.2, 0]}  # key is info for layout type, value --[z,dz]
-    print bondwires
+    print(bondwires)
     # Prepare new data input format to make it easy to search
     comp_dict = {}
     for comp in component_list:
         comp_dict[comp.layout_component_id] = comp
 
     flow_api = CornerStitch_Emodel_API(comp_dict=comp_dict, layer_to_z=layer_to_z, wire_conn=bondwires)
-    mdl_dir = "C:\Users\qmle\Desktop\New_Layout_Engine\New_design_flow"
+    mdl_dir = "C:\\Users\qmle\Desktop\New_Layout_Engine\New_design_flow"
     mdl_name = 'ARL_module.rsmdl'
     flow_api.load_rs_model(os.path.join(mdl_dir,mdl_name))
     flow_api.form_connection_table()
@@ -102,8 +102,8 @@ if __name__ == '__main__':
     import getpass
     user_name = getpass.getuser()
     if user_name=='qmle':
-        layout_script = "C:\Users\qmle\Desktop\New_Layout_Engine\New_design_flow\Halfbridge1.txt"
-        bondwire_setup = "C:\Users\qmle\Desktop\New_Layout_Engine\New_design_flow\\bond_wires.txt"
+        layout_script = "C:\\Users\qmle\Desktop\New_Layout_Engine\New_design_flow\Halfbridge1.txt"
+        bondwire_setup = "C:\\Users\qmle\Desktop\New_Layout_Engine\New_design_flow\\bond_wires.txt"
     else:
         layout_script = "C:\New_Layout_Engine\New_design_flow\Halfbridge1.txt"
         bondwire_setup = 'C:\New_Layout_Engine\New_design_flow\\bond_wires.txt'

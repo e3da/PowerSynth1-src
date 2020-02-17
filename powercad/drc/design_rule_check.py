@@ -28,23 +28,23 @@ class DesignRuleCheck():
         '''
         Jonathan: Returns False if any DRC errors are found; only returns True if no DRC errors found
         '''
-        print "----- Running exhaustive DRC -----"
-        print "Using design rules: "
-        print "Min trace trace width = " + str(self.symb_layout.design_rules.min_trace_trace_width)
-        print "Min trace width = " + str(self.symb_layout.design_rules.min_trace_width)
-        print "Min die die dist = " + str(self.symb_layout.design_rules.min_die_die_dist)
-        print "Min die trace dist = " + str(self.symb_layout.design_rules.min_die_trace_dist)
-        print "Power bondwire to trace dist = " + str(self.symb_layout.design_rules.power_wire_trace_dist)
-        print "Signal bondwire to trace dist = " + str(self.symb_layout.design_rules.signal_wire_trace_dist)
-        print "Power bondwire to comp dist = " + str(self.symb_layout.design_rules.power_wire_component_dist)
-        print "Power bondwire to comp dist = " + str(self.symb_layout.design_rules.signal_wire_component_dist)
+        print("----- Running exhaustive DRC -----")
+        print("Using design rules: ")
+        print("Min trace trace width = " + str(self.symb_layout.design_rules.min_trace_trace_width))
+        print("Min trace width = " + str(self.symb_layout.design_rules.min_trace_width))
+        print("Min die die dist = " + str(self.symb_layout.design_rules.min_die_die_dist))
+        print("Min die trace dist = " + str(self.symb_layout.design_rules.min_die_trace_dist))
+        print("Power bondwire to trace dist = " + str(self.symb_layout.design_rules.power_wire_trace_dist))
+        print("Signal bondwire to trace dist = " + str(self.symb_layout.design_rules.signal_wire_trace_dist))
+        print("Power bondwire to comp dist = " + str(self.symb_layout.design_rules.power_wire_component_dist))
+        print("Power bondwire to comp dist = " + str(self.symb_layout.design_rules.signal_wire_component_dist))
         self.err_count = self.count_drc_errors(self)
         if self.err_count > 0.0:
-            print str(self.err_count) + " DRC errors found."
-            print "ERROR REPORT: " + str(self.err_report)
+            print(str(self.err_count) + " DRC errors found.")
+            print("ERROR REPORT: " + str(self.err_report))
             return False
         else:
-            print "No DRC errors found."
+            print("No DRC errors found.")
             return True
         
 
@@ -83,7 +83,7 @@ class DesignRuleCheck():
         Return: 0 or 1 so that this value can be added in the err_counter
         '''
         if var_name > 0.0:
-            if debug: print var_description, var_name
+            if debug: print(var_description, var_name)
             self.drc_err_dict_update(var_description)
             return var_name
         else:

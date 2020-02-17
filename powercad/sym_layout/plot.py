@@ -110,7 +110,7 @@ def plot_layout(sym_layout, flag=0,filletFlag=False, ax = plt.subplot('111', adj
             ax.add_patch(patch)
             ax.text(rect.left, rect.bottom,die_label,fontweight='bold',fontsize=6)
     for wire in sym_layout.bondwires:
-        for pt_index in xrange(len(wire.start_pts)):
+        for pt_index in range(len(wire.start_pts)):
             pt1 = wire.start_pts[pt_index]
             pt2 = wire.end_pts[pt_index]
             verts = [(pt1), (pt2)]
@@ -593,7 +593,7 @@ def make_test_setup():
     # from powercad.export.Q3D import output_q3d_vbscript
     temp_dir = os.path.abspath(settings.TEMP_DIR)
     # test_file = os.path.abspath('../../../sym_layouts/rd100.svg')
-    test_file = os.path.abspath('C:\Users\sxm063\Documents\Tests and Temp\Aug 08 Resp Surf\\t4\layout.psc')
+    test_file = os.path.abspath('C:\\Users\sxm063\Documents\Tests and Temp\Aug 08 Resp Surf\\t4\layout.psc')
 
     sym_layout = SymbolicLayout()
     sym_layout.load_layout(test_file, 'script')

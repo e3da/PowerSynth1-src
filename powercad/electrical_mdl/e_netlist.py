@@ -60,9 +60,9 @@ class ENetlist():
             for e in edge:
                 try:
                     self.net_graph.remove_edge(*e)
-                    print "found one edge between", e[0], e[1]
+                    print(("found one edge between", e[0], e[1]))
                 except:
-                    print "no edge between", e[0], e[1], "continue"
+                    print(("no edge between", e[0], e[1], "continue"))
                     continue
 
     def find_all_lumped_connections(self, id_to_net):
@@ -82,7 +82,7 @@ class ENetlist():
                     pair[(k2, k1)] = 1
 
                     if nx.has_path(self.net_graph,k1,k2):
-                        print "there is a path:",path_id,id_to_net[k1], id_to_net[k2]
+                        print(("there is a path:",path_id,id_to_net[k1], id_to_net[k2]))
                         path_id+=1
 
     def export_netlist_to_ads(self, file_name="test.net"):
@@ -92,10 +92,10 @@ class ENetlist():
         # self.net_graph = copy.deepcopy(self.mesh.graph)
 
         # invert the dictionary relationship for net_graph
-        keys = self.mesh.comp_net_id.values()
-        values = self.mesh.comp_net_id.keys()
-        id_to_net = dict(zip(keys, values))
-        print id_to_net
+        keys = list(self.mesh.comp_net_id.values())
+        values = list(self.mesh.comp_net_id.keys())
+        id_to_net = dict(list(zip(keys, values)))
+        print(id_to_net)
         self.find_all_lumped_connections(id_to_net=id_to_net)
         # refresh netlist prepare to write
         self.netlist = ""
@@ -168,8 +168,8 @@ class ENetlist():
         debug = False
 
         if debug:
-            print self.netlist
-            print M_text
+            print((self.netlist))
+            print(M_text)
     def export_netlist_to_spice(self,file_name = "test.net"):
 
         text_file = open(file_name, 'w')
@@ -177,10 +177,10 @@ class ENetlist():
         #self.net_graph = copy.deepcopy(self.mesh.graph)
 
         # invert the dictionary relationship for net_graph
-        keys = self.mesh.comp_net_id.values()
-        values = self.mesh.comp_net_id.keys()
-        id_to_net = dict(zip(keys, values))
-        print id_to_net
+        keys = list(self.mesh.comp_net_id.values())
+        values = list(self.mesh.comp_net_id.keys())
+        id_to_net = dict(list(zip(keys, values)))
+        print(id_to_net)
         self.find_all_lumped_connections(id_to_net=id_to_net)
         # refresh netlist prepare to write
         self.netlist = ""
@@ -254,8 +254,8 @@ class ENetlist():
         debug = False
 
         if debug:
-            print self.netlist
-            print M_text
+            print((self.netlist))
+            print(M_text)
 
 
 

@@ -335,7 +335,7 @@ def form_trace_model_optimetric(layer_stack, Width=[1.2, 40], Length=[1.2, 40], 
     "AC INDUCTANCE"
     LAC_model = []
     for i in range(len(frange)):
-        print "f",frange[i],'kHz'
+        print("f",frange[i],'kHz')
         LAC_input = RS_model()
         LAC_input = deepcopy(model_input)
         LAC_input.set_unit('n', 'H')
@@ -546,7 +546,7 @@ def form_corner_correction_model(layer_stack, Width=[1.2, 40], freq=[10, 100, 10
     sim_commands.make()
     sim_commands.build(env)
     # Ind_correction value
-    print "Computing Error ....."
+    print("Computing Error .....")
 
     for [w1, w2] in model_input.DOE.tolist():
         fname = model_input.mdl_name + '_W1_' + str(w1) + '_w2_' + str(w2) + '.csv'
@@ -575,7 +575,7 @@ def form_corner_correction_model(layer_stack, Width=[1.2, 40], freq=[10, 100, 10
         R_pre = R_unit.detect_unit(R_key)
         L_ratio = L_unit.convert(L_pre)
         R_ratio = R_unit.convert(R_pre)
-        print 'ratios', L_ratio, R_ratio
+        print('ratios', L_ratio, R_ratio)
         L = []
         R = []
         frange = np.arange(freq[0], freq[1] + freq[2], freq[2])
@@ -668,13 +668,13 @@ def form_fasthenry_trace_response_surface(layer_stack, Width=[1.2, 40], Length=[
         fmax = fmax
         fstep = fstep
     elif mode == 'log':
-        print 'freq',freq
+        print('freq',freq)
         frange = np.logspace(freq[0],freq[1],freq[2])
-        print 'range',frange
+        print('range',frange)
         fmin = frange[0]
         fmax = frange[-1]
         num = freq[2]
-        print 'here', fmin,fmax
+        print('here', fmin,fmax)
 
     '''Layer Stack info for PowerSynth'''
     # BASEPLATE
@@ -729,14 +729,14 @@ def form_fasthenry_trace_response_surface(layer_stack, Width=[1.2, 40], Length=[
     for [w, l] in model_input.DOE.tolist():
         start=time.time()
         name = model_input.mdl_name + '_W_' + str(w) + '_L_' + str(l)
-        print "RUNNING",name
+        print("RUNNING",name)
         fname = os.path.join(wdir, name + ".inp")
         nwinc = math.ceil((math.log(w * 1e-3 / sd_met / 3) / math.log(2) * 2 + 3)/3)
         if nwinc % 2 == 0:
             nwinc += 1
         if nwinc<0:
             nwinc=1
-        print "mesh", nwinc,nhinc_met
+        print("mesh", nwinc,nhinc_met)
         nwinc=str(nwinc).replace('.0','')
         half_dim = [bp_W / 2, bp_L / 2, met_W / 2, met_L / 2]
         for i in range(len(half_dim)):
@@ -748,7 +748,7 @@ def form_fasthenry_trace_response_surface(layer_stack, Width=[1.2, 40], Length=[
         #print script
         write_to_file(script=script, file_des=fname)
         ''' Run FastHenry'''
-        print fname
+        print(fname)
         #if not(os.path.isfile(fname)):
         args = [fasthenry_env, fasthenry_option, fname]
         p = subprocess.Popen(args, shell=False, stdout=subprocess.PIPE)
@@ -757,8 +757,8 @@ def form_fasthenry_trace_response_surface(layer_stack, Width=[1.2, 40], Length=[
         #print stdout,stderr
         ''' Output Path'''
         outname=os.path.join(os.getcwd(), 'Zc.mat')
-        print "mesh", nwinc,nhinc_met
-        print "run_time",time.time()-start
+        print("mesh", nwinc,nhinc_met)
+        print("run_time",time.time()-start)
 
         ''' Convert Zc.mat to readable format'''
         f_list=[]
@@ -797,7 +797,7 @@ def form_fasthenry_trace_response_surface(layer_stack, Width=[1.2, 40], Length=[
             frange=np.arange(fmin,(fmax+fstep),fstep)
         elif mode == 'log':
             frange=np.logspace(freq[0],freq[1],num)/1000
-        print mode
+        print(mode)
         for f in frange:
             l_list1.append(l_f(f))
             r_list1.append(r_f(f))
@@ -812,7 +812,7 @@ def form_fasthenry_trace_response_surface(layer_stack, Width=[1.2, 40], Length=[
             writer.writeheader()
             for i in range(len(frange)):
                 writer.writerow({F_key: frange[i], R_key: r_list1[i], L_key: l_list1[i]})
-    print model_input.generic_fnames
+    print(model_input.generic_fnames)
     LAC_model = []
     cur = 0
     tot = len(frange)*2
@@ -824,7 +824,7 @@ def form_fasthenry_trace_response_surface(layer_stack, Width=[1.2, 40], Length=[
         LAC_input.read_file(file_ext='csv', mode='single', row=i, units=('Hz', 'H'), wdir=wdir)
         LAC_input.build_RS_mdl('OrKrigg')
         LAC_model.append({'f': frange[i], 'mdl': LAC_input})
-        print "percent done", float(cur)/tot*100
+        print("percent done", float(cur)/tot*100)
         cur+=1
     RAC_model = []
     for i in range(len(frange)):
@@ -835,7 +835,7 @@ def form_fasthenry_trace_response_surface(layer_stack, Width=[1.2, 40], Length=[
         RAC_input.read_file(file_ext='csv', mode='single', row=i, units=('Hz', 'Ohm'), wdir=wdir)
         RAC_input.build_RS_mdl('OrKrigg')
         RAC_model.append({'f': frange[i], 'mdl': RAC_input})
-        print "percent done", float(cur) / tot * 100
+        print("percent done", float(cur) / tot * 100)
         cur += 1
     package = {'L': LAC_model, 'R': RAC_model, 'C': None ,'opt_points': frange}
 
@@ -893,17 +893,17 @@ def form_fasthenry_corner_correction(layer_stack, Width=[1.2, 40], freq=[10, 100
     nhinc_met = math.ceil(math.log(metal_thick * 1e-3 / sd_met / 3) / math.log(2) * 2 + 1)
     trace_z = met_z + metal_thick + iso_thick
     '''Ensure these are odd number'''
-    print nhinc_met, nhinc_bp
+    print(nhinc_met, nhinc_bp)
     if nhinc_bp % 2 == 0:
         nhinc_bp -= 1
     if nhinc_met % 2 == 0:
         nhinc_met += 1
-    print "mesh", nhinc_bp, nhinc_met
+    print("mesh", nhinc_bp, nhinc_met)
 
     ''' FastHenry reports errors for cases of intergers that have .0 at the end '''
     nhinc_bp = str(nhinc_bp).replace('.0', '')
     nhinc_met = str(nhinc_met).replace('.0', '')
-    print nhinc_bp, nhinc_met
+    print(nhinc_bp, nhinc_met)
     nhinc_bp = 6
     dx=ls.substrate.ledge_width
     seg_min=minW
@@ -911,7 +911,7 @@ def form_fasthenry_corner_correction(layer_stack, Width=[1.2, 40], freq=[10, 100
     for [w1, w2] in model_input.DOE.tolist():
         start = time.time()
         name = model_input.mdl_name + '_W1_' + str(w1) + '_W2_' + str(w2)
-        print "RUNNING", name
+        print("RUNNING", name)
         fname = os.path.join(wdir, name + ".inp")
         nwinc1 = math.floor(math.log(w1 * 1e-3 / sd_met / 3) / math.log(2) * 2 + 1)
         nwinc2 = math.floor(math.log(w2 * 1e-3 / sd_met / 3) / math.log(2) * 2 + 1)
@@ -924,7 +924,7 @@ def form_fasthenry_corner_correction(layer_stack, Width=[1.2, 40], freq=[10, 100
         L = (half_dim[2] + half_dim[3]) / 2- max(w1, w2)
         L1 = (half_dim[2] + half_dim[3])/2 - w2
         L2 = (half_dim[2] + half_dim[3])/2 - w1
-        print "L1,L2",L1,L2
+        print("L1,L2",L1,L2)
         x1 = -half_dim[2] + dx
         for i in range(len(half_dim)):
             h = str(half_dim[i])
@@ -954,7 +954,7 @@ def form_fasthenry_corner_correction(layer_stack, Width=[1.2, 40], freq=[10, 100
         mesh2=np.linspace(y1t1,y1,10)
         seg1= seg_min + int(seg_max/w1)
         seg2= seg_min + int(seg_max/w2)
-        print "seg1,seg2",seg1,seg2
+        print("seg1,seg2",seg1,seg2)
         script = Square_corner.format(half_dim[0], half_dim[1], bp_t, bp_cond, nhinc_bp, half_dim[2],
                                       half_dim[3], met_z, metal_thick, metal_cond, nhinc_met, x1, y1,y1t1,x1t2, trace_z,
                                       metal_thick, metal_cond, nhinc_met, x1t1, y2t1, w1, w2, y1t2, x2t2,nwinc1,nwinc2,
@@ -969,7 +969,7 @@ def form_fasthenry_corner_correction(layer_stack, Width=[1.2, 40], freq=[10, 100
         #print stdout, stderr
         ''' Output Path'''
         outname = os.path.join(os.getcwd(), 'Zc.mat')
-        print "run_time", time.time() - start
+        print("run_time", time.time() - start)
         ''' Convert Zc.mat to readable format'''
         f_list = []
         r_list = []
@@ -1005,7 +1005,7 @@ def form_fasthenry_corner_correction(layer_stack, Width=[1.2, 40], freq=[10, 100
         l_list1 = []
         r_list1 = []
 
-        frange = range(fmin, fmax, fstep)
+        frange = list(range(fmin, fmax, fstep))
         for f in range(fmin, fmax, fstep):
             l_ps = trace_ind_krige(f, w1, L1, lac_mdl) + trace_ind_krige(f, w1, w2 / 2, lac_mdl) + trace_ind_krige(
                 f, w2, L2 + w1 / 2, lac_mdl)
@@ -1021,9 +1021,9 @@ def form_fasthenry_corner_correction(layer_stack, Width=[1.2, 40], freq=[10, 100
                                                                                                          L + w1 / 2,
                                                                                                        0, 0,rac_mdl)
             '''
-            print l_ps,'nH'
-            print "correction Ind",l_ps-l_f(f),'nH'
-            print l_f(f),'nH'
+            print(l_ps,'nH')
+            print("correction Ind",l_ps-l_f(f),'nH')
+            print(l_f(f),'nH')
             l_list1.append(l_ps-l_f(f))
             r_list1.append(r_ps-r_f(f))
         # plt.plot(frange,r_list1)
@@ -1035,7 +1035,7 @@ def form_fasthenry_corner_correction(layer_stack, Width=[1.2, 40], freq=[10, 100
             for i in range(len(frange)):
                 writer.writerow({F_key: frange[i], R_key: r_list1[i], L_key: l_list1[i]})
 
-    print model_input.generic_fnames
+    print(model_input.generic_fnames)
     LAC_model = []
     for i in range(len(frange)):
         LAC_input = RS_model()
@@ -1067,7 +1067,7 @@ def form_fasthenry_corner_correction(layer_stack, Width=[1.2, 40], freq=[10, 100
 def form_bondwire_group_model_JDEC(l_range,radi,num_wires,distance,height,freq,cond,env,mdl_name,wdir,savedir,view=True):
 
 
-    print "characterizing Bondwire group"
+    print("characterizing Bondwire group")
     length=np.linspace(l_range[0],l_range[1],100)
     fasthenry_env = env[0]
     fasthenry_option = "-sludecomp"
@@ -1120,14 +1120,14 @@ def form_bondwire_group_model_JDEC(l_range,radi,num_wires,distance,height,freq,c
         #print r_list,'mOhm',l_list,'nH'
         R.append(r_list[0])
         L.append(l_list[0])
-        print "length:", l, "R and L", r_list[-1], l_list[-1]
+        print("length:", l, "R and L", r_list[-1], l_list[-1])
 
     inter_R=interp1d(length, R, kind='linear')
     inter_L=interp1d(length, L, kind='linear')
 
     if view:
         for i in range(len(length)):
-            print length[i],R[i],L[i]
+            print(length[i],R[i],L[i])
     mdl={'R':R,'L':L,'length':length}
     save_file(mdl, os.path.join(savedir, mdl_name))
 
@@ -1142,7 +1142,7 @@ def test_build_bw_group_model_fh(f=100,num_wire=2,bw_pad_width=None,radius=0.276
     d=2*radius
     if bw_pad_width!=None:
         distance = (bw_pad_width-d*num_wire)/num_wire
-        print "optimal distance", distance
+        print("optimal distance", distance)
     else:
         distance=bw_distance
 
@@ -1153,18 +1153,18 @@ def test_build_bw_group_model_fh(f=100,num_wire=2,bw_pad_width=None,radius=0.276
         form_bondwire_group_model_JDEC(l_range=l_range,radi=d/2,num_wires=num_wire,distance=distance,height=height,freq=freq
                                    ,cond=sigma,mdl_name=name,env=env,wdir=w_dir,savedir=w_dir,view=view_mode)
     else:
-        print "fail to add more wires"
-    print "total characterization time", time.time()-start
+        print("fail to add more wires")
+    print("total characterization time", time.time()-start)
 def test_build_trace_model_fh():
     fh_env_dir = "C://Users//qmle//Desktop//Testing//FastHenry//Fasthenry3_test_gp//WorkSpace//fasthenry.exe"
     read_output_dir = "C://Users//qmle//Desktop//Testing//FastHenry//Fasthenry3_test_gp//ReadOutput.exe"
     env = [fh_env_dir, read_output_dir]
-    mdk_dir ="C:\Users\qmle\Desktop\Documents\Conferences\IWIPP\Model//S_params_test_pcb.csv"
+    mdk_dir ="C:\\Users\qmle\Desktop\Documents\Conferences\IWIPP\Model//S_params_test_pcb.csv"
     #mdk_dir = "G:\My Drive\MSCAD PowerSynth Archives\Internal\MDK\Layer Stack Quang//MDK_Validation.csv"
-    w_dir = "C:\Users\qmle\Desktop\Documents\Conferences\IWIPP\Model\workspace"
-    mdk_dir = "C:\Users\qmle\Desktop\Documents\Conferences\IWIPP\Model\\S_params_test_pcb.csv"
-    w_dir = "C:\Users\qmle\Desktop\New_Layout_Engine\Quang_Journal\Mutual_IND_Case\workspace"
-    mdk_dir = "C:\Users\qmle\Desktop\New_Layout_Engine\Quang_Journal\Mutual_IND_Case\\mutual_test.csv"
+    w_dir = "C:\\Users\qmle\Desktop\Documents\Conferences\IWIPP\Model\workspace"
+    mdk_dir = "C:\\Users\qmle\Desktop\Documents\Conferences\IWIPP\Model\\S_params_test_pcb.csv"
+    w_dir = "C:\\Users\qmle\Desktop\New_Layout_Engine\Quang_Journal\Mutual_IND_Case\workspace"
+    mdk_dir = "C:\\Users\qmle\Desktop\New_Layout_Engine\Quang_Journal\Mutual_IND_Case\\mutual_test.csv"
     #w_dir = "C:\Users\qmle\Desktop\Documents\Conferences\ECCE\Imam_Quang\Model\workspace"
     dir = os.path.abspath(mdk_dir)
     ls = LayerStackHandler(dir)
@@ -1186,8 +1186,8 @@ def test_build_trace_model_fh1():
     fh_env_dir = "C:\PowerSynth\FastHenry//fasthenry.exe"
     read_output_dir = "C:\PowerSynth\FastHenry//ReadOutput.exe"
     env = [fh_env_dir, read_output_dir]
-    mdk_dir = "C:\Users\qmle\Desktop\RS_EMI\MDK_Balancing.csv"
-    w_dir = "C:\Users\qmle\Desktop\RS_EMI\Workspace"
+    mdk_dir = "C:\\Users\qmle\Desktop\RS_EMI\MDK_Balancing.csv"
+    w_dir = "C:\\Users\qmle\Desktop\RS_EMI\Workspace"
     dir = os.path.abspath(mdk_dir)
     ls = LayerStackImport(dir)
     ls.import_csv()
@@ -1200,8 +1200,8 @@ def test_build_trace_model_fh1():
                                           , mdl_name='high_f_bl', env=env, doe_mode=2)
 def test_build_trace_mdl_q3d():
     q3d_env="C:\Program Files\AnsysEM\AnsysEM18.2\Win64\common\IronPython//ipy64.exe"
-    mdk_dir = "C:\Users\qmle\Desktop\Documents\Conferences\IWIPP\Model\MDK_2D.csv"
-    w_dir = "C:\Users\qmle\Desktop\Documents\Conferences\IWIPP\Model\workspace"
+    mdk_dir = "C:\\Users\qmle\Desktop\Documents\Conferences\IWIPP\Model\MDK_2D.csv"
+    w_dir = "C:\\Users\qmle\Desktop\Documents\Conferences\IWIPP\Model\workspace"
     ls = LayerStackImport(mdk_dir)
     ls.import_csv()
     Width = [0.5, 2.5]
@@ -1241,7 +1241,7 @@ def test_build_corner_correction():
     options = ['Q3D', 'mesh', False]
     rs_mdl = load_mdl(dir='C://PowerSynth_git//Response_Surface//PowerCAD-full//tech_lib//Model//Trace',
                       mdl_name='t1.rsmdl')
-    w_dir = "C:\Users\qmle\Desktop\POETS\Corner_Cases\Test_RS"
+    w_dir = "C:\\Users\qmle\Desktop\POETS\Corner_Cases\Test_RS"
     form_corner_correction_model(layer_stack=ls, Width=Width, freq=freq, wdir=w_dir, savedir=w_dir,
                                  mdl_name='corner_test_final_3'
                                  , env=env_dir, options=options, trace_model=rs_mdl)
@@ -1251,29 +1251,29 @@ def test_bw_group(l):
     mdl=load_mdl('C://Users//qmle//Desktop//Testing//FastHenry//Fasthenry3_test_gp//WorkSpace_bw',mdl_name='bw.mdl')
     t1=time.time()
     R,L=wire_group(mdl,l)
-    print time.time()-t1,'s'
-    print "RL results"
-    print R,L
+    print(time.time()-t1,'s')
+    print("RL results")
+    print(R,L)
     return L
 def test_corner_ind_correction(f, w1, w2):
     rs_mdl = load_mdl(dir='C://Users//qmle//Desktop//POETS//Corner_Cases//Test_RS//model',
                       mdl_name='corner_test_final_3.rsmdl')
     mdl = rs_mdl['L']
     t1=time.time()
-    print trace_90_corner_ind(f, w1, w2, mdl)
-    print "corner run", time.time()-t1, 'secs'
+    print(trace_90_corner_ind(f, w1, w2, mdl))
+    print("corner run", time.time()-t1, 'secs')
 
 def test_corner_ind_correction_fh(f, w1, w2):
     rs_mdl = load_mdl(dir='C://Users//qmle//Desktop//Testing//FastHenry//Fasthenry3_test_gp//WorkSpace1',
                       mdl_name='corner_test_adapt.rsmdl')
     mdl = rs_mdl['L']
-    print trace_90_corner_ind(f, w1, w2, mdl)
+    print(trace_90_corner_ind(f, w1, w2, mdl))
 
 def test_continuous(w, l1, l2, f):
     rs_mdl = load_mdl(dir='C://PowerSynth_git//Response_Surface//PowerCAD-full//tech_lib//Model//Trace',
                       mdl_name='Opt_f1.rsmdl')
     mdl = rs_mdl['L']
-    print trace_ind_krige(f, w, l1 + l2, mdl) - trace_ind_krige(f, w, l2, mdl) - trace_ind_krige(f, w, l1, mdl)
+    print(trace_ind_krige(f, w, l1 + l2, mdl) - trace_ind_krige(f, w, l2, mdl) - trace_ind_krige(f, w, l1, mdl))
 
 
 if __name__ == "__main__":

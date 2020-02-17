@@ -28,7 +28,7 @@ import time
 import numpy as np
 import os
 import csv
-import repr
+import reprlib
 import scipy
 import math
 import itertools
@@ -122,7 +122,7 @@ def fCRSS_fit(volt, cap):
     CRSS_raw = cap
     popt, pcov = curve_fit(fCRSS, CRSS_volts, CRSS_raw)
     [a1, b1, c1, a2, b2, c2] = popt  # using fCoss
-    print 'Crss Fitting Error: '
+    print('Crss Fitting Error: ')
     return [a1, b1, c1, a2, b2, c2]
 
 
@@ -146,8 +146,8 @@ def curve_fitting_all(filedes, rds_fn, crss_fn, vth_fn):
     [alpha, Ro] = rdson_fit_transistor(list2float(rds_data[0]), list2float(rds_data[1]))
     tuple = ['Vds', 'Cap']
     crss_data = csv_load(filedes, crss_fn, tuple)
-    print crss_data[0]
-    print crss_data[1]
+    print(crss_data[0])
+    print(crss_data[1])
     [a1, b1, c1, a2, b2, c2] = fCRSS_fit(list2float(crss_data[0]), list2float(crss_data[1]))
     tuple = ['Tj', 'Vth']
     Vth_dat = csv_load(filedes, vth_fn, tuple)
@@ -233,13 +233,13 @@ def ptot_compute_single(T, parameters):
     Psw = self.Psw_eval(Eon, Eoff, self.f_sw)
     Pave = (Pcond * (1 / (2 * self.f_sw) - tri - tfv - trv - tfi)) / (1 / (self.f_sw * 2)) + (Eon + Eoff) * self.f_sw
     if T == 27:
-        print 'Temp: ' + str(T) + ' Conduction loss: ' + str(Pcond) + ' Switching loss: ' + str(Psw)
+        print('Temp: ' + str(T) + ' Conduction loss: ' + str(Pcond) + ' Switching loss: ' + str(Psw))
     if T > 126 and T < 127:
-        print 'Temp: ' + str(T) + ' Conduction loss: ' + str(Pcond) + ' Switching loss: ' + str(Psw)
+        print('Temp: ' + str(T) + ' Conduction loss: ' + str(Pcond) + ' Switching loss: ' + str(Psw))
     if T > 225 and T < 226:
-        print 'Temp: ' + str(T) + ' Conduction loss: ' + str(Pcond) + ' Switching loss: ' + str(Psw)
+        print('Temp: ' + str(T) + ' Conduction loss: ' + str(Pcond) + ' Switching loss: ' + str(Psw))
         # print 'total loss: ' + str(Ptot)
-    print Pave
+    print(Pave)
     return Pave
 
 
@@ -328,9 +328,9 @@ class ET_analysis():
         Po=self.ptot_all(To[0:num_dies], parameters)
         self.sucessive_approximation(Po, parameters)
         t_power=time.time()-s_power
-        print 'power computation time '+str(t_power)
-        print 'initial power dissipation'   
-        print Po
+        print('power computation time '+str(t_power))
+        print('initial power dissipation')   
+        print(Po)
         die1=[]
         die2=[]
         die3=[]
@@ -383,8 +383,8 @@ class ET_analysis():
                 #print 'Next Power dissipation'
                 #print P_next
         simtime=time.time()-starttime
-        print 'simulation time:'
-        print simtime
+        print('simulation time:')
+        print(simtime)
         die1=list(itertools.chain.from_iterable(die1))
         die2=list(itertools.chain.from_iterable(die2))
         die3=list(itertools.chain.from_iterable(die3))
@@ -402,12 +402,12 @@ class ET_analysis():
         max_P=max(P_next)  
         Time_list=np.arange(0,len(die9),1)*1/(4*self.f_sw)
         Time_power= np.arange(0,len(P_list),1)*1/(self.f_sw)
-        print len(Time_list)
+        print(len(Time_list))
         #print len(Temp_list)
         fig=plt.figure()
         ET= fig.add_subplot(1,1,1)
         c=[]
-        for color in colors.cnames.keys():
+        for color in list(colors.cnames.keys()):
             c.append(color)
         ET.set_xlabel('Time (s)')
         ET.set_ylabel('Temperature (C)')
@@ -439,11 +439,11 @@ class ET_analysis():
         PowervsTime.set_ylabel('Power (W)')
         PowervsTime.plot(Time_power,P_list,color=c[0],lw=3)
         plt.show() 
-        print 'Min Power: '+str(max(Po))
-        print 'Max Power: '+str(max_P) 
-        print 'Mean Power:'+str(np.mean(P_list))
-        print 'Max Temp:' +str(max_temp)
-        print 'Time: '+ str(Time)
+        print('Min Power: '+str(max(Po)))
+        print('Max Power: '+str(max_P)) 
+        print('Mean Power:'+str(np.mean(P_list)))
+        print('Max Temp:' +str(max_temp))
+        print('Time: '+ str(Time))
                 
     def form_inputs(self,powerlist,samples):
         num_dies=max(self.r_id)
@@ -482,7 +482,7 @@ class ET_analysis():
         [U,T]=self.form_switching_sample(u,300000,aver=False)
         Tout, yout, xout = ct.forced_response(model, T, U,xo)
         stop=time.time()-start
-        print 'total time: ' +str(stop)
+        print('total time: ' +str(stop))
         ydraw= yout.tolist()
         ydraw=ydraw[:,199999]
         
@@ -493,7 +493,7 @@ class ET_analysis():
         f_sw=self.f_sw
         T=np.arange(0,cycle/f_sw,1/f_sw)
         T=np.asarray(T) 
-        print T.shape
+        print(T.shape)
         side=max(self.r_id)+1
         U=np.zeros((side,cycle),dtype=np.float64)
         if aver==False:
@@ -708,7 +708,7 @@ class ET_analysis():
         CRSS_raw=cap
         popt, pcov = curve_fit(self.fCRSS, CRSS_volts, CRSS_raw)
         [a1,b1,c1,a2,b2,c2]=popt # using fCoss  
-        print 'Crss Fitting Error: '
+        print('Crss Fitting Error: ')
         return [a1,b1,c1,a2,b2,c2]
 
     def Vth(self,T,a,b):
@@ -728,8 +728,8 @@ class ET_analysis():
         [alpha,Ro]=self.rdson_fit_transistor(list2float(rds_data[0]),list2float(rds_data[1]))
         tuple=['Vds','Cap']
         crss_data=self.csv_load(filedes, crss_fn, tuple)
-        print crss_data[0]
-        print crss_data[1]
+        print(crss_data[0])
+        print(crss_data[1])
         [a1,b1,c1,a2,b2,c2]=self.fCRSS_fit(list2float(crss_data[0]), list2float(crss_data[1]))
         tuple=['Tj','Vth']
         Vth_dat=self.csv_load(filedes,vth_fn,tuple)
@@ -817,13 +817,13 @@ class ET_analysis():
         Psw=self.Psw_eval(Eon, Eoff, self.f_sw)
         Pave=(Pcond*(1/(2*self.f_sw)-tri-tfv-trv-tfi))/(1/(self.f_sw*2))+(Eon+Eoff)*self.f_sw
         if T == 27:
-            print 'Temp: ' +str(T) +' Conduction loss: '+ str(Pcond) +' Switching loss: '+str(Psw)
+            print('Temp: ' +str(T) +' Conduction loss: '+ str(Pcond) +' Switching loss: '+str(Psw))
         if T>126 and T<127:
-            print 'Temp: ' +str(T) +' Conduction loss: '+ str(Pcond) +' Switching loss: '+str(Psw)   
+            print('Temp: ' +str(T) +' Conduction loss: '+ str(Pcond) +' Switching loss: '+str(Psw))   
         if T>225 and T<226:
-            print 'Temp: ' +str(T) +' Conduction loss: '+ str(Pcond) +' Switching loss: '+str(Psw)        
+            print('Temp: ' +str(T) +' Conduction loss: '+ str(Pcond) +' Switching loss: '+str(Psw))        
         #print 'total loss: ' + str(Ptot)
-        print Pave
+        print(Pave)
         return Pave
 
     def Pcond_eval(self,Id_list,Vds_list,Ton,list=True):
@@ -847,8 +847,8 @@ class ET_analysis():
         lists = [[] for i in range(len(tuple))]
         temp=open(os.path.join(filedes,filename),'rb')
         tempdata=csv.DictReader(temp)
-        print tempdata
-        print len(tuple)
+        print(tempdata)
+        print(len(tuple))
         for row in tempdata:
             for i in range(len(row)):
                 lists[i].append(row[tuple[i]])
@@ -881,7 +881,7 @@ class ET_analysis():
     def sucessive_approximation(self,Po,parameters):
         '''This is just a proof of concept for now. It will be added inside the optimization loop as an evaluate fucntion'''
         Plow=[x/2 for x in Po]
-        print Plow
+        print(Plow)
         Tsso=self.s_s_analysis(Plow) # First use power dissipation at ambient temperature
         converged=False
         count=0
@@ -897,9 +897,9 @@ class ET_analysis():
                 dt=[x-y for x,y in zip(T_new,Tsso)]
                 if max(dt)<1:
                     converged=True
-                print count
-                print [T - 273 for T in T_new]
-                print Pave 
+                print(count)
+                print([T - 273 for T in T_new])
+                print(Pave) 
             else:
                 T_old=T_new
                 Plow=Phigh
@@ -912,12 +912,12 @@ class ET_analysis():
                 dt=[x-y for x,y in zip(T_new,T_old)]   
                 if max(dt)<1:
                     converged=True
-                print count
-                print [T - 273 for T in T_new]
-                print Pave
+                print(count)
+                print([T - 273 for T in T_new])
+                print(Pave)
 if __name__ == '__main__':
     '''
-    filedes='C:\Users\qmle\Desktop\cpmf_1200_s160b\cpmf_1200_s160b'
+    filedes='C:\\Users\qmle\Desktop\cpmf_1200_s160b\cpmf_1200_s160b'
     filename='Rdson.csv'
     tuple=['Tj','Rds']
     data= csv_load(filedes, filename, tuple)

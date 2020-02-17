@@ -133,8 +133,8 @@ def plot_rect3D(rect2ds=None, ax=None):
             z1 = z0 + h
             xs = [x0, x0, x1, x1]
             zs = [z0, z1, z1, z0]
-            verts = [zip(xs, ys, zs)]
-            verts1 = [zip(xs, ys1, zs)]
+            verts = [list(zip(xs, ys, zs))]
+            verts1 = [list(zip(xs, ys1, zs))]
         elif obj.n == (0, 0, 1): #or obj.n == (0, 0, -1):
             zs = [z0, z0, z0, z0]
             z1 = obj.z + obj.dz  # For traces only
@@ -143,8 +143,8 @@ def plot_rect3D(rect2ds=None, ax=None):
             y1 = y0 + h
             xs = [x0, x0, x1, x1]
             ys = [y0, y1, y1, y0]
-            verts = [zip(xs, ys, zs)]
-            verts1 = [zip(xs, ys, zs1)]
+            verts = [list(zip(xs, ys, zs))]
+            verts1 = [list(zip(xs, ys, zs1))]
         elif obj.n == (1, 0, 0) or obj.n == (-1, 0, 0):
             xs = [x0, x0, x0, x0]
             x1 = obj.x + obj.dz  # For traces only
@@ -153,8 +153,8 @@ def plot_rect3D(rect2ds=None, ax=None):
             z1 = z0 + h
             ys = [y0, y0, y1, y1]
             zs = [z0, z1, z1, z0]
-            verts = [zip(xs, ys, zs)]
-            verts1 = [zip(xs, ys, zs1)]
+            verts = [list(zip(xs, ys, zs))]
+            verts1 = [list(zip(xs, ys, zs1))]
         poly0 = Poly3DCollection(verts=verts)
         poly1 = Poly3DCollection(verts=verts1)
         poly0.set_edgecolor('black')

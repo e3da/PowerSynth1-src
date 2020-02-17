@@ -225,13 +225,13 @@ def create_box_stack_mesh(directory, geo_fn, mesh_fn, ws, ls, ts, lcs):
     lengths = gen_str_list(ls)
     thicks = gen_str_list(ts)
     ele_lengths = gen_str_list(lcs)
-    print widths
-    print lengths
-    print thicks
-    print ele_lengths
+    print(widths)
+    print(lengths)
+    print(thicks)
+    print(ele_lengths)
     dims = box_stack.format(ws=widths, ls=lengths, 
                             ts=thicks, lcs=ele_lengths)
-    print dims
+    print(dims)
     geo_string = gmsh_script_top + dims + gmsh_script_bottom
     geo_path = os.path.join(directory, geo_fn)
     f = open(geo_path, 'w')
@@ -248,7 +248,7 @@ def create_box_stack_mesh(directory, geo_fn, mesh_fn, ws, ls, ts, lcs):
     #print args
     p = subprocess.Popen(args, shell=True, stdout=subprocess.PIPE)
     stdout, stderr = p.communicate()
-    print 'GMSH RUN'
+    print('GMSH RUN')
     #print stdout, stderr
     
 def gen_str_list(ws):
@@ -260,7 +260,7 @@ def gen_str_list(ws):
 if __name__ == "__main__":
     geo_file = 'thermal_char.geo'
     mesh_file = 'thermal_char.msh'
-    direct = "C:\Users\qmle\Desktop\New_Layout_Engine\GMSH_test\Test1"
+    direct = "C:\\Users\qmle\Desktop\\New_Layout_Engine\GMSH_test\Test1"
     
     ws = [0.05,0.038,0.04,0.038,0.003]
     ls = [0.06,0.048,0.05,0.048,0.003]

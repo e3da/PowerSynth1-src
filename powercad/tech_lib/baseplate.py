@@ -97,7 +97,7 @@ class BaseplatePage(object):
             save_file(base,os.path.join(self.sub_dir, base.properties.name+".p"))
             self.load_page()
         else:
-            print "Error Creating Baseplate"
+            print("Error Creating Baseplate")
             
     def load(self):
         if self.ui.BaseplateList.currentIndex() > 0:

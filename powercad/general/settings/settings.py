@@ -33,12 +33,12 @@ else:   # For debugging and running PowerSynth from Eclipse
     ELMER_BIN_PATH = os.path.abspath("C:\PowerSynth\Elmer 8.2-Release\\bin")  # Emler on Imam's PC
     ANSYS_IPY64 = os.path.abspath('C:\Program Files\AnsysEM\AnsysEM18.2\Win64\common\IronPython')
     FASTHENRY_FOLDER = 'C:\PowerSynth_git\Master_for_danfoss\PowerCAD-full\FastHenry'
-    MANUAL = "C:\Users\qmle\Desktop\Build_danfoss\PowerSynth User Tutorial.html"
+    MANUAL = "C:\\Users\qmle\Desktop\Build_danfoss\PowerSynth User Tutorial.html"
 
 if __name__ == '__main__':  # Module test
-    print DEFAULT_TECH_LIB_DIR
-    print LAST_ENTRIES_PATH
-    print ELMER_BIN_PATH
-    print GMSH_BIN_PATH
-    print TEMP_DIR
-    print CACHED_CHAR_PATH
+    print(DEFAULT_TECH_LIB_DIR)
+    print(LAST_ENTRIES_PATH)
+    print(ELMER_BIN_PATH)
+    print(GMSH_BIN_PATH)
+    print(TEMP_DIR)
+    print(CACHED_CHAR_PATH)

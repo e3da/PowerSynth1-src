@@ -44,4 +44,4 @@ class Project:
         self.sym_info[name]=sym_info
 
 if __name__ == '__main__':
-    print 'unit testing the project'
+    print('unit testing the project')

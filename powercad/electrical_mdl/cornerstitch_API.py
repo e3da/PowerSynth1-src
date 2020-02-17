@@ -1,18 +1,27 @@
 # Collecting layout information from CornerStitch, ask user to setup the connection and show the loop
-from powercad.electrical_mdl.spice_eval.rl_mat_eval import *
-from powercad.electrical_mdl.e_mesh_direct import *
-from powercad.electrical_mdl.e_mesh_corner_stitch import *
-from powercad.corner_stitch.input_script import *
-from powercad.parasitics.mdl_compare import load_mdl
-from datetime import datetime
+from powercad.electrical_mdl.spice_eval.rl_mat_eval import RL_circuit
+from powercad.electrical_mdl.e_mesh_direct import EMesh
+from powercad.electrical_mdl.e_mesh_corner_stitch import EMesh_CS
+#from corner_stitch.input_script import *
+from powercad.electrical_mdl.e_module import E_plate,Sheet,EWires,EModule,EComp
+from powercad.electrical_mdl.e_hierarchy import EHier
+from powercad.design.parts import Part
+from powercad.general.data_struct.util import Rect
 from powercad.electrical_mdl.e_netlist import ENetlist
+from powercad.design.Routing_paths import RoutingPath
+from powercad.parasitics.mdl_compare import load_mdl
+
+
+from datetime import datetime
+import psutil
 import networkx
 import cProfile
 import pstats
 from mpl_toolkits.mplot3d import Axes3D
 from collections import deque
 import gc
-import objgraph
+import numpy as np
+#import objgraph
 
 
 class ElectricalMeasure(object):
@@ -57,8 +66,7 @@ class CornerStitch_Emodel_API:
         self.trace_ori ={}
 
     def process_trace_orientation(self,trace_ori_file=None):
-        print "implement me"
-        with open(trace_ori_file, 'rb') as file_data:
+        with open(trace_ori_file, 'r') as file_data:
             for line in file_data.readlines():
                 if line[0]=="#":
                     continue
@@ -66,12 +74,12 @@ class CornerStitch_Emodel_API:
                     line = line.strip("\r\n")
                     line = line.strip(" ")
                     info = line.split(":")
-                    print info
+                    print (info)
                     trace_data = info[1]
                     trace_data = trace_data.split(",")
                     for t in trace_data:
                         self.trace_ori[t] = info[0] # sort out the Horizontal , Vertical and Planar type
-                    print "stop"
+                    print ("stop")
 
     def form_connection_table(self, mode=None, dev_conn=None):
         '''
@@ -97,19 +105,19 @@ class CornerStitch_Emodel_API:
                         name = comp.layout_component_id
 
                         for conns in comp.conn_dict:
-                            states[conns] = dev_conn[name][comp.conn_dict.keys().index(conns)]
+                            states[conns] = dev_conn[name][list(comp.conn_dict.keys()).index(conns)]
                         self.conn_dict[name] = states
         #print self.conn_dict
     def get_frequency(self, frequency=None):
         if frequency == None:
-            freq = raw_input("Frequency for the extraction in kHz:")
+            freq = eval(input("Frequency for the extraction in kHz:"))
             self.freq = float(freq)
         else:
             self.freq = frequency
 
     def get_layer_stack(self, layer_stack=None):
         if layer_stack == None:
-            print "No layer_stack input, the tool will use single layer for extraction"
+            print ("No layer_stack input, the tool will use single layer for extraction")
         else:
             self.layer_stack = layer_stack
 
@@ -170,8 +178,8 @@ class CornerStitch_Emodel_API:
 
         for isl in islands:
             for trace in isl.elements: # get all trace in isl
-                name = trace[6]
-                z_id = int(name.spit(".")[1])
+                name = trace[5]
+                z_id = int(name.split(".")[1])
                 x,y,w,h = trace[1:5]
                 new_rect = Rect(top=(y + h) / 1000.0
                                 , bottom=y/1000.0, left=x/1000.0, right=(x + w)/1000.0)
@@ -186,7 +194,7 @@ class CornerStitch_Emodel_API:
 
                 obj = self.comp_dict[name] # Get object type based on the name
                 type = name[0]
-                z_id = int(name.spit(".")[1])
+                z_id = obj.layer_id
                 if isinstance(obj, RoutingPath):  # If this is a routing object Trace or Bondwire "Pad"
                     # reuse the rect info and create a sheet
 
@@ -286,6 +294,27 @@ class CornerStitch_Emodel_API:
         self.emesh.mutual_data_prepare(mode=0)
         self.emesh.update_mutual(mode=0)
 
+
+
+
+    def export_netlist(self,dir= "",mode = 0):
+        netlist = ENetlist(self.module, self.emesh)
+        if mode ==0:
+            print ("handle lumped netlist")
+            netlist.export_netlist_to_ads(file_name=dir)
+        elif mode ==1:
+            print ("handle full RL circuit")
+            netlist.export_netlist_to_ads(file_name=dir)
+        elif mode ==2:
+            all_layer_info = self.layer_stack.all_layers_info
+            cap_layer_id =[]
+            for layer_id in all_layer_info:
+                layer = all_layer_info[layer_id]
+                if layer.e_type == 'S' or layer.e_type == 'G':
+                    cap_layer_id.append(layer_id)
+
+            self.eval_cap_mesh()
+            netlist.export_netlist_to_ads(file_name=dir)
     def init_layout(self, layout_data=None):
         '''
         Read part info and link them with part info, from an updaed layout, update the electrical network
@@ -294,8 +323,8 @@ class CornerStitch_Emodel_API:
         # UPDATE ALL PLATES and SHEET FOR THE LAYOUT
         # print "data"
         # print layout_data
-        self.layout_data = layout_data.values()[0]
-        self.width, self.height = layout_data.keys()[0]
+        self.layout_data = list(layout_data.values())[0]
+        self.width, self.height = list(layout_data.keys())[0]
         # self.width = round(self.width/1000.0, sig)
         # self.height = round(self.height/1000.0, sig)
         self.e_plates = []  # list of electrical components
@@ -449,20 +478,20 @@ class CornerStitch_Emodel_API:
     def measurement_setup(self, meas_data=None):
         if meas_data == None:
             # Print source sink table:
-            print "List of Pins:"
+            print ("List of Pins:")
             for c in self.comp_dict:
                 comp = self.comp_dict[c]
                 if isinstance(comp, Part):
                     if comp.type == 0:
-                        print ("Connector:", comp.layout_component_id)
+                        print(("Connector:", comp.layout_component_id))
                     elif comp.type == 1:
                         for p in comp.pin_name:
-                            print("Device pins:", comp.layout_component_id + '_' + p)
+                            print(("Device pins:", comp.layout_component_id + '_' + p))
             # Only support single loop extraction for now.
-            name = raw_input("Loop name:")
-            type = int(raw_input("Measurement type (0 for Resistance, 1 for Inductance):"))
-            source = raw_input("Source name:")
-            sink = raw_input("Sink name:")
+            name = eval(input("Loop name:"))
+            type = int(eval(input("Measurement type (0 for Resistance, 1 for Inductance):")))
+            source = eval(input("Source name:"))
+            sink = eval(input("Sink name:"))
             self.measure.append(ElectricalMeasure(measure=type, name=name, source=source, sink=sink))
             return self.measure
         else:
@@ -474,7 +503,7 @@ class CornerStitch_Emodel_API:
             return self.measure
 
     def extract_RL_1(self,src=None,sink =None):
-        print "TEST HIERARCHY LEAK"
+        print("TEST HIERARCHY LEAK")
         del self.emesh
         del self.circuit
         del self.module
@@ -489,12 +518,15 @@ class CornerStitch_Emodel_API:
         '''
         pt1 = self.emesh.comp_net_id[src]
         pt2 = self.emesh.comp_net_id[sink]
-
+        #print src, sink
+        #print pt1,pt2
+        #pt1=36
+        #pt2=97
         self.circuit = RL_circuit()
         self.circuit._graph_read(self.emesh.graph)
         # CHECK IF A PATH EXIST
         if not(networkx.has_path(self.emesh.graph,pt1,pt2)):
-           raw_input("NO CONNECTION BETWEEN SOURCE AND SINK")
+           eval(input("NO CONNECTION BETWEEN SOURCE AND SINK"))
         else:
             pass
             #print "PATH EXISTS"
@@ -506,6 +538,7 @@ class CornerStitch_Emodel_API:
         self.circuit.build_current_info()
         self.circuit.solve_iv()
         vname = 'v' + str(pt1)
+        #vname = vname.encode() # for python3 
         imp = self.circuit.results[vname]
         R = abs(np.real(imp) * 1e3)
         L = abs(np.imag(imp)) * 1e9 / (2 * np.pi * self.circuit.freq)
@@ -518,7 +551,7 @@ class CornerStitch_Emodel_API:
         #del self.hier
         #del self.module
         #gc.collect()
-        print R, L
+        #print R, L
         #process = psutil.Process(os.getpid())
         #now = datetime.now()
         #dt_string = now.strftime("%d-%m-%Y-%H-%M-%S")
@@ -557,8 +590,8 @@ class CornerStitch_Emodel_API:
         all_V = []
         all_I = []
         freq = self.circuit.freq
-        print result
-        print self.emesh.graph.edges(data=True)
+        print(result)
+        print((self.emesh.graph.edges(data=True)))
         for e in self.emesh.graph.edges(data=True):
             edge = e[2]['data']
             edge_name = edge.name

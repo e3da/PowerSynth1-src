@@ -119,7 +119,7 @@ class SubstratePage(object):
             save_file(sub,os.path.join(self.sub_dir, sub.name+".p"))
             self.load_page()
         else:
-            print "Error Creating Substrate"
+            print("Error Creating Substrate")
         
     def load(self):
         if self.ui.SubstrateList.currentIndex() > 0:

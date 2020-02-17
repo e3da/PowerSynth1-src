@@ -174,7 +174,7 @@ def solve_TFSM(thermal_geometry, power_scale):
     die_temps = np.array(die_temps)+t_amb
     # addding 
 #    print die_temps
-    print "die pos", die_locations
+    print("die pos", die_locations)
 
     #test_plot_layout(thermal_geometry.all_traces, all_dies, (83.82, 54.61))
     return die_temps
@@ -422,7 +422,7 @@ def rd100_example():
     sub_features = SublayerThermalFeatures(Rsub, 300.0, 120.0, 0.41)
     geometry = ThermalGeometry(all_dies, all_traces, trace_islands, sub_features)
     
-    for i in xrange(len(all_dies)):
+    for i in range(len(all_dies)):
         die = all_dies[i]
         #print i, ':', die.position[0]-1.2,',', die.position[1]+0.8
     
@@ -433,7 +433,7 @@ def rd100_example():
     temps = solve_TFSM(geometry, 0.3)
     
     
-    print np.max(temps)
+    print(np.max(temps))
     
 
 if __name__ == '__main__':

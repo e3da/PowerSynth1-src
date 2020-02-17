@@ -18,29 +18,29 @@ class Connection_Table:
         for conns in self.connections:
             self.states[conns]=0
             conns_to_select[conns]=conns[0]+' to '+conns[1]
-        res = eg.choicebox('Select connections', '', choices=conns_to_select.values())
+        res = eg.choicebox('Select connections', '', choices=list(conns_to_select.values()))
         if not (isinstance(res,list)):
             res = [res]
         for r in res:
             for s in self.states:
-                print s,r
+                print(s,r)
                 if conns_to_select[s]==r:
                     self.states[s]=1
-        print self.states
+        print(self.states)
 
     def set_up_table_cmd(self):
-        print "Input a sequence of 0 or 1 separate by commas e.g: 0,1,1 for each of the connection following this order"
+        print("Input a sequence of 0 or 1 separate by commas e.g: 0,1,1 for each of the connection following this order")
         for conns in self.connections:
 
-            mode = self.connections.keys().index(conns)
-            print 'column', mode, ":", conns[0] + ' to ' + conns[1]
+            mode = list(self.connections.keys()).index(conns)
+            print('column', mode, ":", conns[0] + ' to ' + conns[1])
             self.states[conns] = 0
-        input = raw_input("Input sequence here:")
+        input = input("Input sequence here:")
         states = tuple(map(int, input.split(',')))
-        keys = self.connections.keys()
+        keys = list(self.connections.keys())
         for k in self.connections:
             self.states[k] = states[keys.index(k)]
-        print self.states
+        print(self.states)
 
 
 
@@ -50,7 +50,7 @@ def set_up_pins_connections(parts=[]):
     :param parts: list of parts
     :return: conn_dict, a table represent selected connections in the layout
     """
-    print "Please select the connection of each component"
+    print("Please select the connection of each component")
     conn_dict = {}
     for p in parts:
 
@@ -99,13 +99,13 @@ class Part:
         # Update part info from file
         all_parasitic =[]
         all_conn =[]
-        with open(self.info_file, 'rb') as inputfile:
+        with open(self.info_file, 'r') as inputfile:
             pin_read = False
             para_read = False
             for line in inputfile.readlines():
                 line = line.strip("\r\n")
                 info = line.split(" ")
-                print info
+                print(info)
                 if info[0] == "Material":
                     self.material_id = info[1]
                 if info[0] == "Name":
@@ -191,23 +191,23 @@ class Part:
         self.rotate_90()
 
     def show_info(self):
-        print "raw_name", self.raw_name
-        print "footprint", self.footprint
-        print "pins name", self.pin_name
-        print "pins locations", self.pin_locs
+        print("raw_name", self.raw_name)
+        print("footprint", self.footprint)
+        print("pins name", self.pin_name)
+        print("pins locations", self.pin_locs)
 
-        print "connection dictionary"
+        print("connection dictionary")
         for k in self.conn_dict:
-            print k, self.conn_dict[k]
+            print(k, self.conn_dict[k])
 
     def show_2D(self):
         #Top down view of the part with left and bottom and origin (0,0)
 
 
 
-        print "type: [-ori]: for original foot print, [-r90][-r180][-r270] for rotation by 90,180 270 degrees accordingly"
-        print "[-quit] to exit"
-        option = raw_input("Enter option here:")
+        print("type: [-ori]: for original foot print, [-r90][-r180][-r270] for rotation by 90,180 270 degrees accordingly")
+        print("[-quit] to exit")
+        option = input("Enter option here:")
 
         while option!="-quit" and (option in ["-ori", "-r90", "-r180", "-r270", "-quit"]):
             fig,ax =plt.subplots()
@@ -240,18 +240,18 @@ class Part:
             plt.ylim(-1, self.footprint[1] + 1)
             plt.gca().set_aspect('equal', adjustable='box')
             plt.show()
-            option = raw_input("Enter option here:")
+            option = input("Enter option here:")
 
 
 def test_load():
-    dir = "C:\Users\qmle\Desktop\New Layout Engine\Component"
+    dir = "C:\\Users\qmle\Desktop\\New Layout Engine\Component"
     for file in os.listdir(dir):
         if file.endswith(".part"):
             file_dir = os.path.join(dir, file)
             P = Part(info_file=file_dir)
             P.load_part()
 def test_setup():
-    dir = "C:\Users\qmle\Desktop\New_Layout_Engine\Component"
+    dir = "C:\\Users\qmle\Desktop\\New_Layout_Engine\Component"
     Parts = []
 
     for file in os.listdir(dir):
@@ -270,12 +270,12 @@ def test_setup():
     set_up_pins_connections(NewParts)
 
 def test_rotate():
-    dir = "C:\Users\ialrazi\Desktop\REU_Data_collection_input"
-    print "type a file name from a list below to select a device:"
+    dir = "C:\\Users\ialrazi\Desktop\REU_Data_collection_input"
+    print("type a file name from a list below to select a device:")
     for file in os.listdir(dir):
         if file.endswith(".part"):
-            print file
-    file =raw_input("Enter file name:")
+            print(file)
+    file =input("Enter file name:")
     file_dir = os.path.join(dir, file)
 
     P = Part(info_file=file_dir)

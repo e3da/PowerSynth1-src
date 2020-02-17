@@ -4,11 +4,15 @@ from powercad.cons_aware_en.database import create_connection, insert_record
 from powercad.corner_stitch.cs_solution import CornerStitchSolution
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-from powercad.corner_stitch.input_script import *
+from powercad.corner_stitch.input_script import ScriptInputMethod
+from powercad.cons_aware_en.cons_engine import New_layout_engine
+import copy
 from powercad.sol_browser.cs_solution_handler import pareto_solutions,export_solutions
 import time
 from powercad.electrical_mdl.cornerstitch_API import ElectricalMeasure
 from powercad.thermal.cornerstitch_API import ThermalMeasure
+from PyQt5 import QtCore, QtGui, QtWidgets
+import pandas as pd
 # --------------Plot function---------------------
 def plot_layout(fig_data=None, rects=None, size=None, fig_dir=None):
     if rects != None:
@@ -35,9 +39,9 @@ def plot_layout(fig_data=None, rects=None, size=None, fig_dir=None):
 
     fig, ax = plt.subplots()
 
-    Names = fig_data.keys()
+    Names = list(fig_data.keys())
     Names.sort()
-    for k, p in fig_data.items():
+    for k, p in list(fig_data.items()):
 
         if k[0] == 'T':
             x = p.get_x()
@@ -61,14 +65,14 @@ def plot_layout(fig_data=None, rects=None, size=None, fig_dir=None):
 def opt_choices(algorithm=None):
     if algorithm==None:
         choices = ["NG-RANDOM", "NSGAII", "WS", "SA"]
-        print "Enter a mode below to choose an optimization algorithm"
-        print "List of choices:"
+        print("Enter a mode below to choose an optimization algorithm")
+        print("List of choices:")
         for mode_id in range(len(choices)):
-            print "+mode id:", mode_id, "--> algorithm:", choices[mode_id]
+            print("+mode id:", mode_id, "--> algorithm:", choices[mode_id])
         cont = True
         while cont:
             try:
-                id = int(raw_input("Enter selected id here:"))
+                id = int(input("Enter selected id here:"))
             except:
                 cont = True
             if id in range(4):
@@ -82,7 +86,7 @@ def save_solution(rects, id, db):
 
     data = []
 
-    for k, v in rects.items():
+    for k, v in list(rects.items()):
         for R_in in v:
             data.append(R_in)
 
@@ -112,11 +116,11 @@ def eval_single_layout(layout_engine=None, layout_data=None, apis={}, measures=[
     Solutions=[]
     name='initial_input_layout'
     solution = CornerStitchSolution(name=name, index=0)
-    solution.params = dict(zip(measure_names, results))  # A dictionary formed by result and measurement name
+    solution.params = dict(list(zip(measure_names, results)))  # A dictionary formed by result and measurement name
     solution.layout_info = layout_data
     solution.abstract_info = solution.form_abs_obj_rect_dict()
     Solutions.append(solution)
-    print "Performance_results",results
+    print("Performance_results",results)
     return Solutions
 
 
@@ -143,8 +147,8 @@ def update_solution_data(layout_dictionary=None,module_info=None, opt_problem=No
 
         solution = CornerStitchSolution(name=name,index=i)
 
-        solution.params = dict(zip(measure_names, results))  # A dictionary formed by result and measurement name
-        print "Added", name,"Perf_values: ", solution.params
+        solution.params = dict(list(zip(measure_names, results)))  # A dictionary formed by result and measurement name
+        print("Added", name,"Perf_values: ", solution.params)
         solution.layout_info = layout_dictionary[i]
         solution.abstract_info = solution.form_abs_obj_rect_dict()
         Solutions.append(solution)
@@ -155,56 +159,56 @@ def update_solution_data(layout_dictionary=None,module_info=None, opt_problem=No
 def get_seed(seed=None):
     if seed == None:
         #print "Enter information for Variable-sized layout generation"
-        seed = raw_input("Enter randomization seed:")
+        seed = input("Enter randomization seed:")
         try:
             seed = int(seed)
         except:
-            print "Please enter an integer"
+            print("Please enter an integer")
     return seed
 
 def get_params(num_layouts=None,num_disc =None,temp_init = None, alg=None):
     params = []
     if num_layouts == None:
         if alg == 'NG-RANDOM' or alg == 'LAYOUT_GEN':
-            print "Enter desired number of solutions:"
+            print("Enter desired number of solutions:")
         elif alg=="WS":
-            print "Enter number of maximum iterations:"
+            print("Enter number of maximum iterations:")
         elif alg == 'SA':
-            print "Enter number of steps: "
+            print("Enter number of steps: ")
         elif alg == 'NSGAII':
-            print "Enter desired number of generations:"
-        num_layouts = raw_input()
+            print("Enter desired number of generations:")
+        num_layouts = input()
         try:
             num_layouts = int(num_layouts)
         except:
-            print "Please enter an integer"
+            print("Please enter an integer")
     params.append(num_layouts)
 
     if alg == 'WS' and num_disc == None:
-        print "Enter number of interval for weights to the objectives:"
-        num_disc = raw_input()
+        print("Enter number of interval for weights to the objectives:")
+        num_disc = input()
         try:
             num_disc = int(num_disc)
         except:
-            print "Please enter an integer"
+            print("Please enter an integer")
     params.append(num_disc)
     if alg == "SA" and temp_init==None:
-        print "Enter initial temperature (High):"
-        temp_init = raw_input()
+        print("Enter initial temperature (High):")
+        temp_init = input()
         try:
             temp_init = float(temp_init)
         except:
-            print "Please enter a valid Temperature"
+            print("Please enter a valid Temperature")
     params.append(temp_init)
     return params
 def get_dims(floor_plan = None):
     if floor_plan==None:
-        print "Enter information for Fixed-sized layout generation"
-        print "Floorplan Width:"
-        width = raw_input()
+        print("Enter information for Fixed-sized layout generation")
+        print("Floorplan Width:")
+        width = input()
         width = float(width) * 1000
-        print "Floorplan Height:"
-        height = raw_input()
+        print("Floorplan Height:")
+        height = input()
         height = float(height) * 1000
         return [width,height]
     else:
@@ -275,7 +279,7 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True,rel_c
                 name = 'Layout_' + str(i)
                 solution = CornerStitchSolution(name=name,index=i)
                 results = [None, None]
-                solution.params = dict(zip(measure_names, results))
+                solution.params = dict(list(zip(measure_names, results)))
                 solution.layout_info = cs_sym_info[i]
                 solution.abstract_info = solution.form_abs_obj_rect_dict()
                 Solutions.append(solution)
@@ -285,9 +289,9 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True,rel_c
             if not os.path.exists(sol_path):
                 os.makedirs(sol_path)
             for solution in Solutions:
-                size=solution.layout_info.keys()[0]
+                size=list(solution.layout_info.keys())[0]
                 size=list(size)
-                print "Min-size", size[0]/1000,size[1]/1000
+                print("Min-size", size[0]/1000,size[1]/1000)
                 solution.layout_plot(layout_ind=solution.index, db=db_file, fig_dir=sol_path)
 
 
@@ -368,7 +372,7 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True,rel_c
                         os.makedirs(sol_path_all)
                 pareto_data = pareto_solutions(Solutions)
                 for solution in Solutions:
-                    if solution.index in pareto_data.keys():
+                    if solution.index in list(pareto_data.keys()):
                         solution.layout_plot(layout_ind=solution.index, db=db_file, fig_dir=sol_path)
                     solution.layout_plot(layout_ind=solution.index, db=db_file, fig_dir=sol_path_all)
 
@@ -389,7 +393,7 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True,rel_c
                 name = 'Layout_' + str(i)
                 solution = CornerStitchSolution(name=name)
                 results = [None, None]
-                solution.params = dict(zip(measure_names, results))
+                solution.params = dict(list(zip(measure_names, results)))
                 solution.layout_info = cs_sym_info[i]
                 solution.abstract_info = solution.form_abs_obj_rect_dict()
                 Solutions.append(solution)
@@ -480,7 +484,7 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True,rel_c
                     os.makedirs(sol_path)
                 pareto_data = pareto_solutions(Solutions)
                 for solution in Solutions:
-                    if solution.index in pareto_data.keys():
+                    if solution.index in list(pareto_data.keys()):
                         solution.layout_plot(layout_ind=solution.index, db=db_file, fig_dir=sol_path)
                     solution.layout_plot(layout_ind=solution.index, db=db_file, fig_dir=sol_path_all)
 
@@ -500,7 +504,7 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True,rel_c
                 name = 'Layout_' + str(i)
                 solution = CornerStitchSolution(name=name)
                 results=[None,None]
-                solution.params = dict(zip(measure_names, results))
+                solution.params = dict(list(zip(measure_names, results)))
                 solution.layout_info = cs_sym_info[i]
                 solution.abstract_info = solution.form_abs_obj_rect_dict()
                 Solutions.append(solution)
@@ -635,13 +639,13 @@ def script_translator(input_script=None, bond_wire_info=None, fig_dir=None, cons
     #destination_coordinate = {}
     bondwire_objects=[]
     if len(bondwire_landing_info)>0:
-        for k,v in bondwire_landing_info.items():
+        for k,v in list(bondwire_landing_info.items()):
             #print "BL",k,v
             cs_type=v[2] # cs_type for constraint handling
     else:
         index=constraint.constraint.all_component_types.index('bonding wire pad')
         cs_type=constraint.constraint.Type[index]
-    for k,v in bondwires.items():
+    for k,v in list(bondwires.items()):
         wire=copy.deepcopy(v['BW_object'])
         #print k,v
         if '_' in v['Source']:
@@ -677,7 +681,7 @@ def script_translator(input_script=None, bond_wire_info=None, fig_dir=None, cons
         app = QtGui.QApplication(sys.argv)
     except:
         pass
-    window = QMainWindow()
+    window = QtWidgets.QMainWindow()
     
 
 
@@ -689,7 +693,7 @@ def script_translator(input_script=None, bond_wire_info=None, fig_dir=None, cons
 
     else:
         save_constraint_table(cons_df=ScriptMethod.df, file=constraint_file)
-        flag = raw_input("Please edit the constraint table from constraint directory: Enter 1 on completion: ")
+        flag = input("Please edit the constraint table from constraint directory: Enter 1 on completion: ")
         if flag == '1':
             cons_df = pd.read_csv(constraint_file)
 

@@ -39,7 +39,7 @@ def InitGL(Width, Height):
     glEnable(GL_LINE_SMOOTH)
     
     if hasGLExtension("MULTISAMPLE_ARB"):
-        print "True"
+        print("True")
     
     glEnable(GL_BLEND)
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
@@ -111,8 +111,8 @@ def render_grid():
     
     glBegin(GL_LINES)
     
-    for xi in xrange(len(xv)):
-        for yi in xrange(len(yv)):
+    for xi in range(len(xv)):
+        for yi in range(len(yv)):
             x1 = xv[xi]
             y1 = yv[yi]
             # Draw Y lines
@@ -200,5 +200,5 @@ def main():
     glutMainLoop()
 
 if __name__ == '__main__':
-    print "Hit ESC key to quit."
+    print("Hit ESC key to quit.")
     main()

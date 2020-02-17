@@ -115,7 +115,7 @@ class LeadPage(object):
             save_file(lead,os.path.join(self.sub_dir, lead.name+".p"))
             self.load_page()
         else:
-            print "Error Creating Lead"
+            print("Error Creating Lead")
     
     def load(self):
         if self.ui.LeadList.currentIndex() >0:

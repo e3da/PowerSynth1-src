@@ -11,7 +11,7 @@ def pareto_solutions(solutions):
     pareto_data={}
     solutions.sort(key=lambda x: x.index, reverse=False)
     for solution in solutions:
-        keys=solution.params.keys()
+        keys=list(solution.params.keys())
 
     for key in keys:
         pareto_data.setdefault(key,[])
@@ -19,7 +19,7 @@ def pareto_solutions(solutions):
     for solution in solutions:
         ret=[]
         key=solution.index
-        for k,v in solution.params.items():
+        for k,v in list(solution.params.items()):
             ret.append(v)
         all_data[key]=ret
     pareto_front=pareto_frontiter2D(data_in=all_data)
@@ -35,7 +35,7 @@ def pareto_frontiter2D(data_in=None, MinX=True, MinY=True):
         '''
         # Display only the pareto front solution
         # ID=data[:, 0].tolist()
-        data_1 = data_in.values()
+        data_1 = list(data_in.values())
         data=np.array(data_1)
         X = data[:, 0].tolist()
         Y = data[:, 1].tolist()
@@ -62,7 +62,7 @@ def pareto_frontiter2D(data_in=None, MinX=True, MinY=True):
             plt.scatter(pareto_data[:, 0], pareto_data[:, 1])
             plt.show()
         p_data = {}
-        for k,v in data_in.items():
+        for k,v in list(data_in.items()):
 
             if v in p_front:
                 p_data[k]=v
@@ -75,22 +75,22 @@ def export_to_eagle(solutions=None, sol_path = None):
         item = solutions[i].name
         file_name = sol_path + '/' + item + '.txt'
         with open(file_name, 'wb') as my_file:
-            for k, v in solutions[i].abstract_info[item]['rect_info'].items():
+            for k, v in list(solutions[i].abstract_info[item]['rect_info'].items()):
                 if k[0] == 'T':
                     x1 = v.x / 1000.0
                     x2 = (v.x + v.width) / 1000.0
                     y1 = v.y / 1000.0
                     y2 = (v.y + v.height) / 1000.0
-                    print >> my_file, '<rectangle x1="{}" y1="{}" x2="{}" y2="{}" layer="1"/>'.format(str(x1), str(y1),
-                                                                                                      str(x2), str(y2))
-            for k, v in solutions[i].abstract_info[item]['rect_info'].items():
+                    print('<rectangle x1="{}" y1="{}" x2="{}" y2="{}" layer="1"/>'.format(str(x1), str(y1),
+                                                                                                      str(x2), str(y2)), file=my_file)
+            for k, v in list(solutions[i].abstract_info[item]['rect_info'].items()):
                 if k == 'Substrate':
                     x1 = v.x / 1000.0
                     x2 = (v.x + v.width) / 1000.0
                     y1 = v.y / 1000.0
                     y2 = (v.y + v.height) / 1000.0
-                    print >> my_file, '<rectangle x1="{}" y1="{}" x2="{}" y2="{}" layer="16"/>'.format(str(x1), str(y1),
-                                                                                                       str(x2), str(y2))
+                    print('<rectangle x1="{}" y1="{}" x2="{}" y2="{}" layer="16"/>'.format(str(x1), str(y1),
+                                                                                                       str(x2), str(y2)), file=my_file)
                     break
 
         my_file.close()
@@ -102,27 +102,27 @@ def export_solutions(solutions=None,directory=None,pareto_data=None,export = Fal
         os.makedirs(sol_path)
 
     if len(solutions) > 1000:
-        print "Thousands of csv files are going to be generated"
+        print("Thousands of csv files are going to be generated")
 
     # export to eagle format
     for i in range(len(solutions)):
         item = solutions[i].name
         file_name = sol_path + '/' + item + '.txt'
         with open(file_name, 'wb') as my_file:
-            for k, v in solutions[i].abstract_info[item]['rect_info'].items():
+            for k, v in list(solutions[i].abstract_info[item]['rect_info'].items()):
                 if k[0]=='T' :
                     x1=v.x/1000.0
                     x2=(v.x+v.width)/1000.0
                     y1=v.y/1000.0
                     y2=(v.y+v.height)/1000.0
-                    print >> my_file, '<rectangle x1="{}" y1="{}" x2="{}" y2="{}" layer="1"/>'.format(str(x1),str(y1),str(x2),str(y2))
-            for k, v in solutions[i].abstract_info[item]['rect_info'].items():
+                    print('<rectangle x1="{}" y1="{}" x2="{}" y2="{}" layer="1"/>'.format(str(x1),str(y1),str(x2),str(y2)), file=my_file)
+            for k, v in list(solutions[i].abstract_info[item]['rect_info'].items()):
                 if k=='Substrate':
                     x1 = v.x / 1000.0
                     x2 = (v.x + v.width) / 1000.0
                     y1 = v.y / 1000.0
                     y2 = (v.y + v.height) / 1000.0
-                    print >> my_file, '<rectangle x1="{}" y1="{}" x2="{}" y2="{}" layer="16"/>'.format(str(x1), str(y1),str(x2), str(y2))
+                    print('<rectangle x1="{}" y1="{}" x2="{}" y2="{}" layer="16"/>'.format(str(x1), str(y1),str(x2), str(y2)), file=my_file)
                     break
 
 
@@ -132,7 +132,7 @@ def export_solutions(solutions=None,directory=None,pareto_data=None,export = Fal
     if export:
         export_to_eagle(solutions=solutions,sol_path=sol_path)
     params=solutions[0].params
-    performance_names=params.keys()
+    performance_names=list(params.keys())
     for i in range(len(solutions)):
         item = solutions[i].name
         file_name = sol_path + '/' + item + '.csv'
@@ -146,7 +146,7 @@ def export_solutions(solutions=None,directory=None,pareto_data=None,export = Fal
             data = [Size, Perf_1, Perf_2]
             csv_writer.writerow(data)
             csv_writer.writerow(["Component_Name", "x_coordinate", "y_coordinate", "width", "length"])
-            for k, v in solutions[i].abstract_info[item]['rect_info'].items():
+            for k, v in list(solutions[i].abstract_info[item]['rect_info'].items()):
                 layout_data = [k, v.x, v.y, v.width, v.height]
                 csv_writer.writerow(layout_data)
         my_csv.close()
@@ -156,7 +156,7 @@ def export_solutions(solutions=None,directory=None,pareto_data=None,export = Fal
             # print "path doesn't exist. trying to make"
             os.makedirs(pareto_path)
         for i in range(len(solutions)):
-            if solutions[i].index in pareto_data.keys():
+            if solutions[i].index in list(pareto_data.keys()):
                 item = solutions[i].name
                 file_name = pareto_path + '/' + item + '.csv'
                 with open(file_name, 'wb') as my_csv:
@@ -169,7 +169,7 @@ def export_solutions(solutions=None,directory=None,pareto_data=None,export = Fal
                     data = [Size, Perf_1, Perf_2]
                     csv_writer.writerow(data)
                     csv_writer.writerow(["Component_Name", "x_coordinate", "y_coordinate", "width", "length"])
-                    for k, v in solutions[i].abstract_info[item]['rect_info'].items():
+                    for k, v in list(solutions[i].abstract_info[item]['rect_info'].items()):
                         layout_data = [k, v.x, v.y, v.width, v.height]
                         csv_writer.writerow(layout_data)
                 my_csv.close()
@@ -192,7 +192,7 @@ def plot_solutions(file_location=None):
             readCSV = csv.reader(csvfile, delimiter=',')
             for row in readCSV:
                 if row[0]=='Size':
-                    print row
+                    print(row)
                     key1=row[1]
                     key2=row[2]
                     key3=row[0]
@@ -206,12 +206,12 @@ def plot_solutions(file_location=None):
                     data[key2]=(float(row[2])) # Temperature (K)
                     data[key3]=(row[0]) # size [w,h]
             all_data[name]=data
-    print all_data
+    print(all_data)
     file_name = head + '/' + 'plot_data' + '.csv'
     with open(file_name, 'wb') as my_csv:
         csv_writer = csv.writer(my_csv, delimiter=',')
-        for k, v in all_data.items():
-            keys = v.keys()
+        for k, v in list(all_data.items()):
+            keys = list(v.keys())
             csv_writer.writerow(["Layout_ID", keys[0],keys[1],keys[2]])
             break
     my_csv.close()
@@ -219,9 +219,9 @@ def plot_solutions(file_location=None):
     with open(file_name, 'a') as my_csv:
         csv_writer = csv.writer(my_csv, lineterminator='\n')
         #csv_writer = csv.writer(my_csv, delimiter=',')
-        for k, v in all_data.items():
-            keys = v.keys()
-            val=v.values()
+        for k, v in list(all_data.items()):
+            keys = list(v.keys())
+            val=list(v.values())
             data=[k,val[0],val[1],val[2]]
 
             csv_writer.writerow(data)
@@ -277,7 +277,7 @@ def plot_solution(rectlist,name):
     ax2.set_ylim(0, size[1])
     ax2.set_aspect('equal')
     #plt.show()
-    plt.savefig('D:\Demo\New_Flow_w_Hierarchy\Journal_Case\Final_Version\Figs\\40X50'+'/'+name+'.png')
+    plt.savefig('D:\Demo\\New_Flow_w_Hierarchy\Journal_Case\Final_Version\Figs\\40X50'+'/'+name+'.png')
 
 
 
@@ -313,7 +313,7 @@ if __name__ == '__main__':
         csv_writer.writerow(['Layout_ID','Temperature','Inductance'])
         for data in all_data:
             if data[2]>20:
-                print data
+                print(data)
                 data=[data[0].rsplit('.csv')[0],data[1],data[2]]
                 csv_writer.writerow(data)
         my_csv.close()
@@ -330,11 +330,11 @@ if __name__ == '__main__':
     #sol_data = np.array(sol_data)
     #print sol_data
     pareto_data = pareto_frontiter2D(sol_data)
-    print len(pareto_data)
+    print(len(pareto_data))
     file_name='D:\Demo\POETS_ANNUAL_MEETING_2019\\testcases_setup\Test\Test_Cases\Half_Bridge_Journal_Tristan\Solution_New\\final_pareto.csv'
     with open(file_name, 'wb') as my_csv:
         csv_writer = csv.writer(my_csv, delimiter=',')
-        for k,v in pareto_data.items():
+        for k,v in list(pareto_data.items()):
             data=[k,v[0],v[1]]
             csv_writer.writerow(data)
     my_csv.close()
@@ -383,7 +383,7 @@ if __name__ == '__main__':
     #for name in names:
     rectlist=[]
     name='Layout_1568'
-    file = 'D:\Demo\New_Flow_w_Hierarchy\Journal_Case\Final_Version\Solution\\40X50\Layout_Solutions\\'+name+'.csv'
+    file = 'D:\Demo\\New_Flow_w_Hierarchy\Journal_Case\Final_Version\Solution\\40X50\Layout_Solutions\\'+name+'.csv'
     start=0
     with open(file) as csvfile:
         c=0

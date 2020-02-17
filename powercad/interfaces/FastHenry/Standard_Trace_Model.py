@@ -270,4 +270,4 @@ E{0} N{0}s N{0}e w={5} h=0.2 sigma=58000.0
 if __name__ =="__main__":
     corner_test=Square_corner.format(30,30,6,58000,5,19,24,6.1,0.2,58000,3,-17,22,18,-13,6.94,0.2,58000,3
     ,-15,8,4,4,20,-3,5,5,10,100,3)
-    print corner_test
+    print(corner_test)

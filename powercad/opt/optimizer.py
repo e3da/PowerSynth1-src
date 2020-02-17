@@ -86,7 +86,7 @@ class NSGAII_Optimizer(object):
         nprandom.seed(self.seed)
 
         min_weights = []
-        for i in xrange(self.num_measures):
+        for i in range(self.num_measures):
             min_weights.append(-1.0)
         min_weights = tuple(min_weights)
         
@@ -114,7 +114,7 @@ class NSGAII_Optimizer(object):
     
     def _init_individual(self, Individual):
         ind = []
-        print "initialization"
+        print("initialization")
         for dv in self.design_vars:
             random.seed(self.seed)
             init0=dv.init_values[0]
@@ -134,7 +134,7 @@ class NSGAII_Optimizer(object):
             def wrap_check_bounds(*args, **kargs):
                 offsprings = func(*args, **kargs)
                 for child in offsprings:
-                    for i in xrange(len(self.design_vars)):
+                    for i in range(len(self.design_vars)):
                         consts = self.design_vars[i].constraints
                         # Min Check
                         if child[i] < consts[0]:
@@ -243,7 +243,7 @@ class Matlab_FMC_OLD():
             fval = self.eval_fn(individual=X.result()[0][i], opt_mode=False)
             sol = Solution(X.result()[0][i], fval)  # DANNY EDIT
             self.solutions.append(sol)
-        print self.solutions
+        print(self.solutions)
 
     def _init_individual(self):
 
@@ -306,7 +306,7 @@ class Matlab_epsilon_constraint():
             fval = self.eval_fn(individual=X.result()[0][i], opt_mode=False)
             sol = Solution(X.result()[0][i], fval)  # DANNY EDIT
             self.solutions.append(sol)
-        print self.solutions
+        print(self.solutions)
 
     def _init_individual(self):
 
@@ -375,7 +375,7 @@ class Matlab_hybrid_method():
             fval = self.eval_fn(individual=X.result()[0][i], opt_mode=False)
             sol = Solution(X.result()[0][i], fval)  # DANNY EDIT
             self.solutions.append(sol)
-        print self.solutions
+        print(self.solutions)
 
     def _init_individual(self):
 
@@ -646,7 +646,7 @@ if __name__=='__main__':
         count+=1
         f1.append(sol.fitness.values[0])
         f2.append(sol.fitness.values[1])
-    print count    
+    print(count)    
     plot(f1, f2, 'o')
     show()
         

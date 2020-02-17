@@ -38,7 +38,7 @@ class Unit(object):
         '''
         Read a string and detect the unit in there
         '''     
-        all_keys=self.all_prefix.keys()
+        all_keys=list(self.all_prefix.keys())
         if self.suffix in str:
             for prefix in all_keys:
                 unit=prefix +self.suffix
@@ -47,7 +47,7 @@ class Unit(object):
                     return prefix
             return ''
         else:
-            print 'keyword ['+self.suffix+'] is not found in this string'
+            print('keyword ['+self.suffix+'] is not found in this string')
             
     def to_string(self):
         return self.base+self.suffix        
@@ -56,5 +56,5 @@ class Unit(object):
 if __name__=="__main__":
     u1=Unit('m','Hz')
     u1.convert('G')
-    print u1.detect_unit('Freq')
+    print(u1.detect_unit('Freq'))
             

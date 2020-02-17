@@ -26,8 +26,8 @@ from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT  as Navigati
 
 from mpl_toolkits.mplot3d import Axes3D
 
-from graphing_form import Ui_GrapheneWindow
-from objective_widget import ObjectiveWidget
+from .graphing_form import Ui_GrapheneWindow
+from .objective_widget import ObjectiveWidget
 from powercad.sol_browser.solution import Solution
 from powercad.sol_browser.solution_lib import SolutionLibrary
 
@@ -152,7 +152,7 @@ class GrapheneWindow(QtGui.QMainWindow):
     # NOTE: THIS METHOD IS NEVER CALLED IN GRAPH_APP.PY; It is called from objective_widget.py
     def set_graph_axis(self, objective, axis):
         #print axis, objective.name_units[0]
-        print "graph axis (previous state): ", "x", self.graph_axis['x'].name_units[0] if self.graph_axis['x'] is not None else "none", "y", self.graph_axis['y'].name_units[0] if self.graph_axis['y'] is not None else "none", "z", self.graph_axis['z'].name_units[0] if self.graph_axis['z'] is not None else "none"
+        print("graph axis (previous state): ", "x", self.graph_axis['x'].name_units[0] if self.graph_axis['x'] is not None else "none", "y", self.graph_axis['y'].name_units[0] if self.graph_axis['y'] is not None else "none", "z", self.graph_axis['z'].name_units[0] if self.graph_axis['z'] is not None else "none")
         # if the check box got checked
         if objective.chkbox_dict[axis].isChecked() is True:            
             # if there is already another objective on this axis
@@ -186,7 +186,7 @@ class GrapheneWindow(QtGui.QMainWindow):
         # if less than 2 axes have been assigned
         if n<2:
             # clear graph
-            print "clearing graph..."
+            print("clearing graph...")
             self.figure.clear()
             # add empty subplot
             self.figure.add_subplot(111)
@@ -195,15 +195,15 @@ class GrapheneWindow(QtGui.QMainWindow):
             #self.figure.suptitle("Select at least two performance parameters.") # ADDS TEXT ABOVE THE GRAPH (CENTERED)
             # draw canvas as specified above (blank plot with text)
             self.canvas.draw() 
-            print "graph cleared."
+            print("graph cleared.")
         else:
             # redraw the graph
             self.draw_graph()
-            print "new graph drawn."
-        print "graph axis (new state): ", "x", self.graph_axis['x'].name_units[0] if self.graph_axis['x'] is not None else "none", "y", self.graph_axis['y'].name_units[0] if self.graph_axis['y'] is not None else "none", "z", self.graph_axis['z'].name_units[0] if self.graph_axis['z'] is not None else "none"
+            print("new graph drawn.")
+        print("graph axis (new state): ", "x", self.graph_axis['x'].name_units[0] if self.graph_axis['x'] is not None else "none", "y", self.graph_axis['y'].name_units[0] if self.graph_axis['y'] is not None else "none", "z", self.graph_axis['z'].name_units[0] if self.graph_axis['z'] is not None else "none")
             
     def save_2D_paretofront_solutions(self):
-        print 'here'    
+        print('here')    
     def draw_graph(self):
         #clear figure
         self.figure.clear()
@@ -308,7 +308,7 @@ class GrapheneWindow(QtGui.QMainWindow):
         
         electrothermal=ET_analysis(thermal_netlist_graph)
         thermal_mdl=electrothermal.ET_formation_1(20e3)
-        filedes='C:\Users\qmle\Desktop\Transistors_data\cpmf_1200_0080B'
+        filedes='C:\\Users\qmle\Desktop\Transistors_data\cpmf_1200_0080B'
         rds_fn='Rdson.csv'
         crss_fn='Crss.csv'
         vth_fn='Vth.csv'
@@ -321,7 +321,7 @@ class GrapheneWindow(QtGui.QMainWindow):
             objective.displayable_data = []
             self.disp_data_indx_map = []
             # filter data inside objective
-            objective.bool_data = map(objective.filter_point,objective.data)
+            objective.bool_data = list(map(objective.filter_point,objective.data))
             
     def filter_graph2(self):
         for data_point in range(0,self.obj_widg[0].data_size):

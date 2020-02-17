@@ -1,16 +1,23 @@
 # This is the layout generation and optimization flow using command line only
-from powercad.electrical_mdl.cornerstitch_API import *
-from powercad.thermal.cornerstitch_API import *
+import sys, os
+# Set relative location
+cur_path =sys.path[0] # get current path (meaning this file location)
+cur_path = cur_path[0:-16] #exclude "power/cmd_run"
+sys.path.append(cur_path)
+from powercad.electrical_mdl.cornerstitch_API import CornerStitch_Emodel_API
+from powercad.thermal.cornerstitch_API import CornerStitch_Tmodel_API
 #from glob import glob
 from powercad.cmd_run.cmd_layout_handler import generate_optimize_layout, script_translator, eval_single_layout
+from powercad.cons_aware_en.database import create_connection, insert_record, create_table
 from powercad.sol_browser.cs_solution_handler import pareto_frontiter2D
-import objgraph
+from powercad.design.layout_module_data import ModuleDataCornerStitch
+#import objgraph
 from pympler import muppy,summary
 from powercad.layer_stack.layer_stack import LayerStack
 import types
 import os
-import sys
 import glob
+import copy
 
 class Cmd_Handler:
     def __init__(self,debug=False):
@@ -48,17 +55,21 @@ class Cmd_Handler:
 
         self.macro =None
         self.layout_ori_file = None
+        # Macro mode
+        self.output_option= False
+        self.thermal_mode = None
+        self.electrical_mode = None
     def setup_file(self,file):
         self.macro=os.path.abspath(file)
         if not(os.path.isfile(self.macro)):
-            print "file path is wrong, please give another input"
+            print ("file path is wrong, please give another input")
             sys.exit()
 
     def run_parse(self):
         if self.macro!=None:
             self.load_macro_file(self.macro)
         else:
-            print "Error, please check your test case"
+            print ("Error, please check your test case")
             sys.exit()
 
     def load_macro_file(self, file):
@@ -76,9 +87,8 @@ class Cmd_Handler:
         e_name = None
         num_gen=None
         dev_conn ={}
-        with open(file, 'rb') as inputfile:
-            self.thermal_mode = None
-            self.electrical_mode =None
+        with open(file, 'r') as inputfile:
+
             dev_conn_mode=False
             for line in inputfile.readlines():
                 line = line.strip("\r\n")
@@ -142,9 +152,18 @@ class Cmd_Handler:
                     self.thermal_mode = False
                 if info[0] == 'Electrical_Setup:':
                     self.electrical_mode = True
-                if info[0] == 'End_Electrical_Setup..':
+                if info[0] == 'End_Electrical_Setup.':
                     self.electrical_mode = False
-                if self.thermal_mode:
+                if info[0] == 'Output_Script':
+                    self.output_option = True
+                if info[0] == 'End_Output_Script.':
+                    self.output_option = False
+                if self.output_option !=None:
+                    if info[0] == 'Netlist_Dir':
+                        self.netlist_dir = info[1]
+                    if info[0] == 'Netlist_Mode':
+                        self.netlist_mode = int(info[1])
+                if self.thermal_mode !=None:
                     if info[0] == 'Model_Select:':
                         thermal_model = int(info[1])
                     if info[0] == 'Measure_Name:' and t_name==None:
@@ -158,7 +177,7 @@ class Cmd_Handler:
                         h_conv = float(info[1])
                     if info[0] == 'Ambient_Temperature:':
                         t_amb = float(info[1])
-                if self.electrical_mode:
+                if self.electrical_mode != None:
                     if info[0] == 'Measure_Name:' and e_name==None:
                         e_name = info[1]
                     if info[0] == 'Measure_Type:':
@@ -189,27 +208,27 @@ class Cmd_Handler:
                and check_file(self.rs_model_file) \
                and check_file(self.constraint_file)
         # make dir if they are not existed
-        print "self.new_mode",self.new_mode
-        print "self.flex",self.flexible
+        print(("self.new_mode",self.new_mode))
+        print(("self.flex",self.flexible))
         if not (check_dir(self.fig_dir)) or not(check_dir(self.db_dir)):
             try:
                 os.mkdir(self.fig_dir)
             except:
-                print "cant make directory for figures"
+                print ("cant make directory for figures")
                 cont =False
             try:
                 os.mkdir(self.db_dir)
             except:
-                print "cant make directory for database"
+                print ("cant make directory for database")
                 cont =False
 
         if cont:
             if self.layout_ori_file!=None:
-                print "Trace orientation is included, mesh acceleration for electrical evaluation is activated"
+                print ("Trace orientation is included, mesh acceleration for electrical evaluation is activated")
             else:
-                print "Normal meshing algorithm is used"
+                print ("Normal meshing algorithm is used")
 
-            print "run the optimization"
+            print ("run the optimization")
             self.init_cs_objects()
             self.set_up_db()
 
@@ -237,12 +256,12 @@ class Cmd_Handler:
                 init_cs_islands=self.engine.init_data[2]
                 fp_width, fp_height = self.engine.init_size
                 fig_dict = {(fp_width, fp_height): []}
-                for k, v in patch_dict.items():
+                for k, v in list(patch_dict.items()):
                     fig_dict[(fp_width, fp_height)].append(v)
                 init_rects = {}
                 #print self.engine.init_data
                 #print "here"
-                for k, v in self.engine.init_data[1].items(): # sym_to_cs={'T1':[[x1,y1,x2,y2],[nodeid],type,hierarchy_level]
+                for k, v in list(self.engine.init_data[1].items()): # sym_to_cs={'T1':[[x1,y1,x2,y2],[nodeid],type,hierarchy_level]
 
                     rect=v[0]
                     x,y,width,height= [rect[0],rect[1],rect[2]-rect[0],rect[3]-rect[1]]
@@ -318,111 +337,111 @@ class Cmd_Handler:
         else:
             # First check all file path
             if not (check_file(self.layout_script)):
-                print self.layout_script, "is not a valid file path"
+                print((self.layout_script, "is not a valid file path"))
             elif not(check_file(self.bondwire_setup)):
-                print self.bondwire_setup, "is not a valid file path"
+                print((self.bondwire_setup, "is not a valid file path"))
             elif not (check_file(self.layer_stack_file)):
-                print self.layer_stack_file, "is not a valid file path"
+                print((self.layer_stack_file, "is not a valid file path"))
             elif not (check_file(self.rs_model_file)):
-                print self.rs_model_file, "is not a valid file path"
+                print((self.rs_model_file, "is not a valid file path"))
             elif not (check_dir(self.fig_dir)):
-                print self.fig_dir, "is not a valid directory"
+                print((self.fig_dir, "is not a valid directory"))
             elif not (check_dir(self.db_dir)):
-                print self.db_dir, "is not a valid directory"
+                print((self.db_dir, "is not a valid directory"))
             elif not(check_file(self.constraint_file)):
-                print self.constraint_file, "is not a valid file path"
-            print "Check your input again ! "
+                print((self.constraint_file, "is not a valid file path"))
+            print ("Check your input again ! ")
 
             return cont
 
     # ------------------ File Resquest -------------------------------------------------
     def database_dir_request(self):
-        print "Please enter a directory to save layout database"
+        print ("Please enter a directory to save layout database")
         correct = True
         while (correct):
-            db_dir = raw_input("Database dir:")
+            db_dir = (eval(input("Database dir:")))
             if os.path.isdir(db_dir):
                 self.db_dir = db_dir
                 correct = False
             else:
-                print "wrong input"
+                print ("wrong input")
 
     def fig_dir_request(self):
-        print "Please enter a directory to save figures"
+        print("Please enter a directory to save figures")
         correct = True
         while (correct):
-            fig_dir = raw_input("Fig dir:")
+            fig_dir = eval(input("Fig dir:"))
             if os.path.isdir(fig_dir):
                 self.fig_dir = fig_dir
                 correct = False
             else:
-                print "wrong input"
+                print("wrong input")
 
     def layout_script_request(self):
-        print "Please enter a layout file directory"
+        print("Please enter a layout file directory")
         correct = True
         while (correct):
-            file = raw_input("Layout Script File:")
+            file = eval(input("Layout Script File:"))
             if os.path.isfile(file):
                 self.layout_script = file
                 correct = False
             else:
-                print "wrong input"
+                print("wrong input")
 
     def bondwire_file_request(self):
-        print "Please enter a bondwire setup file directory"
+        print("Please enter a bondwire setup file directory")
         correct = True
         while (correct):
-            file = raw_input("Bondwire Setup File:")
+            file = eval(input("Bondwire Setup File:"))
             if os.path.isfile(file):
                 self.bondwire_setup = file
                 correct = False
             else:
-                print "wrong input"
+                print("wrong input")
 
     def layer_stack_request(self):
-        print "Please enter a layer stack file directory"
+        print("Please enter a layer stack file directory")
         correct = True
         while (correct):
-            file = raw_input("Layer Stack File:")
+            file = eval(input("Layer Stack File:"))
             if os.path.isfile(file):
                 self.layer_stack_file = file
                 correct = False
             else:
-                print "wrong input"
+                print("wrong input")
 
     def res_model_request(self):
-        print "Please enter a model file directory"
+        print("Please enter a model file directory")
         correct = True
         while (correct):
-            file = raw_input("Model File:")
+            file = eval(input("Model File:"))
             if os.path.isfile(file):
                 self.rs_model_file = file
                 correct = False
             else:
-                print "wrong input"
+                print("wrong input")
 
     def cons_dir_request(self):
-        print "Please enter a constraint file directory"
+        print("Please enter a constraint file directory")
         correct = True
         while (correct):
-            file = raw_input("Constraint File:")
+            file = eval(input("Constraint File:"))
             if os.path.isfile(file):
                 self.constraint_file = file
                 correct = False
             else:
-                print "wrong input"
+                print("wrong input")
     def rel_cons_request(self):
-        self.i_v_constraint=int(raw_input("Please eneter: 1 if you want to apply reliability constraints for worst case, 2 if you want to evaluate average case, 0 if there is no reliability constraints"))
+        self.i_v_constraint=int(eval(input("Please eneter: 1 if you want to apply reliability constraints for worst case, 2 if you want to evaluate average case, 0 if there is no reliability constraints")))
     def cons_file_edit_request(self):
-        self.new_mode=int(raw_input( "If you want to edit the constraint file, enter 1. Else enter 0: "))
+        self.new_mode=int(eval(input( "If you want to edit the constraint file, enter 1. Else enter 0: ")))
 
     def option_request(self):
-        print "Please enter an option:"
-        print "0: layout generation, 1:single layout evaluation, 2:layout optimization, quit:to quit,help:to get help"
+        print("Please enter an option:")
+        print("0: layout generation, 1:single layout evaluation, 2:layout optimization, quit:to quit,help:to get help")
         correct = True
         while (correct):
-            opt = raw_input("Option:")
+            opt = eval(input("Option:"))
             if opt in ['0', '1', '2']:
                 return True, int(opt)
             elif opt == 'quit':
@@ -430,21 +449,21 @@ class Cmd_Handler:
             elif opt == 'help':
                 self.help()
             else:
-                print "wrong input"
+                print("wrong input")
 
     def help(self):
-        print "Layout Generation Mode: generate layout only without evaluation"
-        print "Layout Evaluation Mode: single layout evaluation"
-        print "Layout Optimization Mode: optimize layout based on initial input"
+        print("Layout Generation Mode: generate layout only without evaluation")
+        print("Layout Evaluation Mode: single layout evaluation")
+        print("Layout Optimization Mode: optimize layout based on initial input")
 
     def option_layout_gen(self):
-        print "Please enter an option:"
-        print "0: minimum size, 1:variable size, 2:fixed size, 3:fixed size with fixed locations, quit:to quit"
-        print "back: return to the previous stage"
+        print("Please enter an option:")
+        print("0: minimum size, 1:variable size, 2:fixed size, 3:fixed size with fixed locations, quit:to quit")
+        print("back: return to the previous stage")
 
         correct = True
         while (correct):
-            opt = raw_input("Option:")
+            opt = eval(input("Option:"))
             if opt in ['0', '1', '2', '3']:
                 return True, int(opt)
             elif opt == 'quit':
@@ -452,7 +471,7 @@ class Cmd_Handler:
             elif opt == 'back':
                 return True, opt
             else:
-                print "wrong input"
+                print("wrong input")
 
     # -------------------INITIAL SETUP--------------------------------------
     def set_up_db(self):
@@ -463,7 +482,7 @@ class Cmd_Handler:
             try:
                 os.remove(f)
             except:
-                print "can't remove file"
+                print("can't remove file")
 
         if not os.path.exists(database):
             os.makedirs(database)
@@ -506,7 +525,7 @@ class Cmd_Handler:
 
 
     def setup_electrical(self,mode='command',dev_conn={},frequency=None,meas_data={}):
-        print "init api"
+        print("init api")
 
         self.e_api = CornerStitch_Emodel_API(comp_dict=self.comp_dict, wire_conn=self.wire_table)
         self.e_api.load_rs_model(self.rs_model_file)
@@ -516,16 +535,17 @@ class Cmd_Handler:
             self.e_api.get_frequency()
             self.measures += self.e_api.measurement_setup()
         elif mode == 'macro':
-            print "macro mode"
+            print("macro mode")
             
             self.e_api.form_connection_table(mode='macro',dev_conn=dev_conn)
             self.e_api.get_frequency(frequency)
             self.e_api.get_layer_stack(self.layer_stack)
             self.measures += self.e_api.measurement_setup(meas_data)
         if self.layout_ori_file != None:
-            print "this is a test now"
+            print("this is a test now")
             self.e_api.process_trace_orientation(self.layout_ori_file)
-            
+        #if self.output_option:
+        #    self.e_api.export_netlist(dir = self.netlist_dir, mode = self.netlist_mode)
 
     def setup_thermal(self,mode = 'command',meas_data ={},setup_data={},model_type=2):
         '''
@@ -544,7 +564,7 @@ class Cmd_Handler:
         if mode == 'command':
             self.measures += self.t_api.measurement_setup()
             self.t_api.set_up_device_power()
-            self.t_api.model = raw_input("Input 0=TFSM or 1=Rect_flux: ")
+            self.t_api.model = eval(input("Input 0=TFSM or 1=Rect_flux: "))
 
         elif mode == 'macro':
             self.measures += self.t_api.measurement_setup(data=meas_data)
@@ -561,14 +581,14 @@ class Cmd_Handler:
         self.setup_electrical()
 
     def cmd_handler_flow(self):
-        print "This is the command line mode for PowerSynth layout optimization"
-        print "Type -m [macro file] to run a macro file"
-        print "Type -f to go through a step by step setup"
-        print "Type -quit to quit"
+        print("This is the command line mode for PowerSynth layout optimization")
+        print("Type -m [macro file] to run a macro file")
+        print("Type -f to go through a step by step setup")
+        print("Type -quit to quit")
 
         cont = True
         while (cont):
-            mode = raw_input("Enter command here")
+            mode = input("Enter command here")
             if mode == '-f':
                 self.input_request()
                 self.init_cs_objects()
@@ -578,25 +598,26 @@ class Cmd_Handler:
             elif mode == '-quit':
                 cont = False
             elif mode[0:2] == '-m':
-                print "Loading macro file"
-                m, file = mode.split(" ")
-                if os.path.isfile(file):
+                print("Loading macro file")
+                m, filep = mode.split(" ")
+                print (filep)
+                if os.path.isfile(filep):
                     # macro file exists
-                    filename = os.path.basename(file)
+                    filename = os.path.basename(filep)
                     # change current directory to workspace
-                    work_dir = file.replace(filename,'')
+                    work_dir = filep.replace(filename,'')
                     os.chdir(work_dir)
-                    print "Jump to current working dir"
-                    print work_dir
-                    checked = self.load_macro_file(file)
+                    print("Jump to current working dir")
+                    print(work_dir)
+                    checked = self.load_macro_file(filep)
                     if not (checked):
                         continue
                 else:
-                    print "wrong macro file format or wrong directory, please try again !"
+                    print("wrong macro file format or wrong directory, please try again !")
 
 
             else:
-                print "Wrong Input, please double check and try again !"
+                print("Wrong Input, please double check and try again !")
 
     def cmd_loop(self):
         cont = True
@@ -622,12 +643,12 @@ class Cmd_Handler:
                 #print init_data_islands
                 fp_width, fp_height = self.engine.init_size
                 fig_dict = {(fp_width, fp_height): []}
-                for k, v in patch_dict.items():
+                for k, v in list(patch_dict.items()):
                     fig_dict[(fp_width, fp_height)].append(v)
                 init_rects = {}
                 # print self.engine.init_data
                 # print "here"
-                for k, v in self.engine.init_data[1].items():  # sym_to_cs={'T1':[[x1,y1,x2,y2],[nodeid],type,hierarchy_level]
+                for k, v in list(self.engine.init_data[1].items()):  # sym_to_cs={'T1':[[x1,y1,x2,y2],[nodeid],type,hierarchy_level]
 
                     rect = v[0]
                     x, y, width, height = [rect[0], rect[1], rect[2] - rect[0], rect[3] - rect[1]]
@@ -737,15 +758,15 @@ class Cmd_Handler:
         with open(file_name, 'wb') as my_csv:
             csv_writer = csv.writer(my_csv, delimiter=',')
             csv_writer.writerow(['Layout_ID', 'Temperature', 'Inductance'])
-            for k, v in pareto_data.items():
+            for k, v in list(pareto_data.items()):
                 data = [k, v[0], v[1]]
                 csv_writer.writerow(data)
         my_csv.close()
 
         data_x = []
         data_y = []
-        for id, value in pareto_data.items():
-            print id,value
+        for id, value in list(pareto_data.items()):
+            #print id,value
             data_x.append(value[0])
             data_y.append(value[1])
 
@@ -808,11 +829,10 @@ class Cmd_Handler:
 
 
 if __name__ == "__main__":
-    print "----------------------PowerSynth Version 1.4: Command line version------------------"
+    print("----------------------PowerSynth Version 1.4: Command line version------------------")
     cmd = Cmd_Handler(debug=True)
     cmd.cmd_handler_flow()
-    objgraph.show_most_common_types()
     all_objects = muppy.get_objects()
-    my_types = muppy.filter(all_objects, Type=types.DictType)
+    my_types = muppy.filter(all_objects, Type=dict)
     sum1 = summary.summarize(my_types)
     summary.print_(sum1)

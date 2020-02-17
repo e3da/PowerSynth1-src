@@ -290,10 +290,10 @@ if __name__ == '__main__':
     c3 = trace_capacitance(2, 20, 0.035, 0.2, 4.4, True)
     #c4 = trace_capacitance(0.035, 20, 1, 1, 1, False)
 
-    print c1+c2,c3
+    print((c1+c2,c3))
     '''
     mdl_dir='D:\Testing\Py_Q3D_test\All rs models'
-    mdl_dir='C:\Users\qmle\Desktop\Testing\Py_Q3D_test\All rs models'
+    mdl_dir='C:\\Users\qmle\Desktop\Testing\Py_Q3D_test\All rs models'
     mdl1=load_mdl(mdl_dir,'RAC[4x4].rsmdl')
     DOE=mdl1.DOE
     Q3D_R=mdl1.input[0]
@@ -347,7 +347,7 @@ if __name__ == '__main__':
     surf1 = ax.plot_surface(X, Y, Z)
     #ax.scatter(X,Y,Z,c='b',s=10)
     Z2 = []
-    with open('C:\Users\qmle\Desktop\Testing\Comparison\Weekly_3_28\Corner.csv','rb') as csvfile:
+    with open('C:\\Users\qmle\Desktop\Testing\Comparison\Weekly_3_28\Corner.csv','rb') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
             Z2.append(float(row['ACR'])*1000)
@@ -364,7 +364,7 @@ if __name__ == '__main__':
     ax.set_ylabel('W2 (mm)')
     ax.set_zlabel('Inductance (nH)')
     plt.show()
-    with open('C:\Users\qmle\Desktop\Testing\Comparison\RAC_BEST CASE\PowerSynth.csv', 'wb') as csvfile:
+    with open('C:\\Users\qmle\Desktop\Testing\Comparison\RAC_BEST CASE\PowerSynth.csv', 'wb') as csvfile:
         fieldnames = ['W1', 'W2','Resistance']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()

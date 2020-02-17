@@ -229,35 +229,35 @@ def elmer_solve(directory, sif_fn, mesh_fn):
     f.close()
     #print "ELMERSOLVER_STARTINFO file written"    
     # Run ElmerGrid on msh file
-    print 'Run ElmerGrid'
+    print('Run ElmerGrid')
     exec_path = os.path.join(ELMER_BIN_PATH, "ElmerGrid").replace("/","\\")
 
-    print "exec_path= ", exec_path
+    print("exec_path= ", exec_path)
     args = [exec_path, "14", "2", mesh_fn] 
-    print "Popen", args, subprocess.PIPE, directory
+    print("Popen", args, subprocess.PIPE, directory)
     
     p = subprocess.Popen(args, stdout=subprocess.PIPE, cwd=directory)
-    print "subprocess.Popen() completed"
+    print("subprocess.Popen() completed")
     stdout, stderr = p.communicate()
-    print stdout, stderr
+    print(stdout, stderr)
     if stdout.count("The opening of the mesh file thermal_char.msh failed!") > 0:
         raise Exception("The opening of the mesh file failed! (Check permissions on temp data directory)")
     #print stdout
     # Run ElmerSolver
     
-    print 'Run ElmerSolver'
-    print ELMER_BIN_PATH
+    print('Run ElmerSolver')
+    print(ELMER_BIN_PATH)
     exec_path = os.path.join(ELMER_BIN_PATH, "ElmerSolver").replace("/","\\")
     args = [exec_path]
-    print args
+    print(args)
     p = subprocess.Popen(args, shell=False, stdout=subprocess.PIPE, cwd=directory)
     stdout, stderr = p.communicate()
-    print stdout,stderr
+    print(stdout,stderr)
     if stdout.count("Failed convergence tolerances.") > 0:
-        print "Thermal characterization FEM model failed to converge!"
+        print("Thermal characterization FEM model failed to converge!")
         return False
     elif stdout.count("Failed") > 0:
-        print "Thermal characterization failed!"
+        print("Thermal characterization failed!")
         return False
     return True
     
@@ -271,7 +271,7 @@ def get_nodes_near_z_value(data_path, z_value, tol):
     nodes = []
     # Read in nodes
     num = 0
-    for i in xrange(0,total_nodes):
+    for i in range(0,total_nodes):
         line_split = f.readline().split()
         x = float(line_split[0])
         y = float(line_split[1])
@@ -293,7 +293,7 @@ def get_nodes_near_z_value(data_path, z_value, tol):
     t_x_flux = []
     t_y_flux = []
     t_z_flux = []
-    for i in xrange(0,total_nodes):
+    for i in range(0,total_nodes):
         line_split = f.readline().split()
         temp = float(line_split[0])
         t_temp.append(temp)
@@ -338,5 +338,5 @@ if __name__ == '__main__':
     # Do a little checking
     import numpy
     xs = numpy.array(xs)
-    print numpy.max(xs)
+    print(numpy.max(xs))
     

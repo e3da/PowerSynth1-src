@@ -2,10 +2,10 @@ import networkx as nx
 import random
 import matplotlib.pyplot as plt
 from math import sqrt
-from matplotlib.colors import *
+from matplotlib.colors import Colormap
 from matplotlib.patches import Rectangle
 import pandas as pd
-
+import numpy as np
 #import pygame
 #from pygame.locals import *
 
@@ -69,17 +69,18 @@ def network_plot_3D(G, ax, cmap_node={}, cmap_edge={},show_labels = False,highli
     type = {}
     for n in G.nodes():
         try:
-            node = G.node[n]['node']
+            node = G.nodes[n]['node']
+            print(node)
             pos[n] = node.pos
             type[n]=node.type
             labels[n] = node.node_id
         except:
-            print G.node[n]
+            print((G.nodes[n]))
 
     # 3D network plot
     with plt.style.context(('ggplot')):
         # Loop on the pos dictionary to extract the x,y,z coordinates of each node
-        for lbl, key in zip(labels.values(), pos):
+        for lbl, key in zip(list(labels.values()), pos):
             pos_val = pos[key]
             xi = pos_val[0]
             yi = pos_val[1]
@@ -105,7 +106,7 @@ def network_plot_3D(G, ax, cmap_node={}, cmap_edge={},show_labels = False,highli
                 if highlight_nodes==None: # All Labels
                     ax.text(xi, yi, zi, lbl,fontsize=12)
                 elif lbl in highlight_nodes: # Highlight this node only
-                    print "node type",type[key]
+                    print(("node type",type[key]))
                     ax.text(xi, yi, zi, lbl,fontsize=12)
 
         # Loop on the list of edges to get the x,y,z, coordinates of the connected nodes
@@ -136,7 +137,7 @@ def network_plot_3D(G, ax, cmap_node={}, cmap_edge={},show_labels = False,highli
     ax.set_xlabel('X (mm)')
     ax.set_ylabel('Y (mm)')
     ax.set_zlabel('Z (mm)')
-    plt.axis('equal')
+    #plt.axis('equal')
     return
 
 
@@ -271,7 +272,7 @@ def plot_combined_I_quiver_map_layer(norm=None, ax=None, cmap='jet', G=None, sel
         xx = np.linspace(W[0], W[1], numvecs+1)
         yy = np.linspace(H[0], H[1], numvecs+1)
         xx,yy=np.meshgrid(xx,yy)
-        xy =zip(xx.flatten(),yy.flatten())
+        xy =list(zip(xx.flatten(),yy.flatten()))
         rowid =0
     elif mesh =='nodes':
         xs =[]
@@ -291,7 +292,7 @@ def plot_combined_I_quiver_map_layer(norm=None, ax=None, cmap='jet', G=None, sel
             xs.append(pos[0]+dx)
             ys.append(pos[1]+dy)
         xx, yy = np.meshgrid(xs, ys)
-        xy = zip(xx.flatten(), yy.flatten())
+        xy = list(zip(xx.flatten(), yy.flatten()))
         rowid = 0
     sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
     sm._A = []

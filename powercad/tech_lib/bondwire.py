@@ -115,7 +115,7 @@ class BondwirePage(object):
             save_file(wire, os.path.join(self.sub_dir, wire.name+".p"))
             self.load_page()
         else:
-            print "Error Creating Bond Wire"
+            print("Error Creating Bond Wire")
         
     def load(self):
         if self.ui.BondwireList.currentIndex()>0:

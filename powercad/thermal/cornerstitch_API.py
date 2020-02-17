@@ -1,8 +1,9 @@
 # for corner stitch need to use analytical model since the layout size can be changed
-from PySide.QtGui import QFileDialog
+#from PySide.QtGui import QFileDialog
+import sys
 from powercad.layer_stack.layer_stack_import import LayerStackHandler
-from PySide import QtCore, QtGui
-from powercad.design.module_data import *
+#from PySide import QtCore, QtGui
+from powercad.design.module_data import ModuleData
 from powercad.thermal.rect_flux_channel_model import Baseplate, ExtaLayer, Device, layer_average, \
     compound_top_surface_avg
 from powercad.design.parts import Part
@@ -37,7 +38,7 @@ class ThermalMeasure(object):
         self.name = name
 
 
-class Thermal_data_collect_main(QtGui.QMainWindow):
+class Thermal_data_collect_main():
     def __init__(self):
         QtGui.QMainWindow.__init__(self, None)
 
@@ -138,7 +139,7 @@ class CornerStitch_Tmodel_API:
             tg.trace_islands = islands
             tg.sublayer_features = self.sub_thermal_feature
             res = solve_TFSM(tg,1.0)
-            self.temp_res = dict(zip(names, list(res)))
+            self.temp_res = dict(list(zip(names, list(res))))
             #print self.temp_res
 
         elif self.model == 1:
@@ -154,7 +155,7 @@ class CornerStitch_Tmodel_API:
                 res = t1 / (A * device_mat.thermal_cond)
                 dev_delta = res * self.dev_powerload_table[k]
 
-                temp = compound_top_surface_avg(t_bp, layer, devices, self.devices.keys().index(k))
+                temp = compound_top_surface_avg(t_bp, layer, devices, list(self.devices.keys()).index(k))
                 temp += self.t_amb + dev_delta
                 self.temp_res[k] = temp
             #print "here"
@@ -164,7 +165,7 @@ class CornerStitch_Tmodel_API:
         # First setup the characterization based on device dimensions and layerstack
 
         temp_dir =settings.TEMP_DIR # get the temporary directory to store mesh and elmer sif file
-        print 'Starting Characterization'
+        print('Starting Characterization')
         mesh_name = 'thermal_char'
         data_name = 'data'
         sif_name = 'thermal_char.sif'
@@ -189,14 +190,14 @@ class CornerStitch_Tmodel_API:
                 shutil.rmtree(dir_name)
                 os.makedirs(dir_name)
             # write the meshing macro and mesh the structure. Use device size as smallest step in the mesh
-            print "Checking for existing cached file"
+            print("Checking for existing cached file")
             ws, ls, ts = self.layer_stack.get_all_dims(device_part_obj)
             thermal_conds = self.layer_stack.get_all_thermal_conductivity(device_part_obj)
             # Generate hash id before ws, ls, and ts get scaled to mm
             hash_id = gen_cache_hash(ws, ls, ts, thermal_conds, self.bp_conv, heat_flow)
             cache_file = check_for_cached_char(settings.CACHED_CHAR_PATH, hash_id)
             if cache_file is not None:
-                print 'found a cached version!'
+                print('found a cached version!')
                 # load the cached copy
                 cached_obj = pickle.load(open(cache_file, 'r'))
                 dev_dict[device] = cached_obj.thermal_features
@@ -210,26 +211,26 @@ class CornerStitch_Tmodel_API:
                 converged = False
                 split = 1 # number of division based on the device min dimension
                 while not(converged):
-                    print "current mesh division for device:",split
+                    print(("current mesh division for device:",split))
                     gmsh_setup_layer_stack(layer_stack=self.layer_stack, device=device_part_obj, directory=dir_name,
                                            geo_file=geo_file
                                            , msh_file=mesh_file,divide=split)
-                    print "Finished Meshing"
-                    print "Generate Elmer Simulation File"
-                    print 'Solving Model...'
+                    print("Finished Meshing")
+                    print("Generate Elmer Simulation File")
+                    print('Solving Model...')
                     # write the simulation macro
                     write_module_elmer_sif_layer_stack(directory=dir_name, sif_file=sif_name, data_name=data_name,
                                                        mesh_name=mesh_name, layer_stack=self.layer_stack,
                                                        device=device_part_obj,tamb=self.t_amb,heat_conv=self.bp_conv
                                                        ,conv_tol=1e-2,heat_load=heat_flow)
 
-                    print "write_module_elmer_sif() completed; next: elmer_solve()"
+                    print("write_module_elmer_sif() completed; next: elmer_solve()")
                     converged=elmer_solve(dir_name, sif_name, mesh_name)  # solving the sif file
                     split*=2
-                print 'Model Solved.'
+                print('Model Solved.')
                 #raw_input()
 
-                print 'Characterizing data...'
+                print('Characterizing data...')
                 data_path = os.path.join(dir_name, mesh_name, data_name + '.ep') # data path for the simulation results
 
                 metal_layer = self.layer_stack.all_layers_info[active_layer_id - 1]
@@ -239,9 +240,9 @@ class CornerStitch_Tmodel_API:
                 xs, ys, temp, z_flux = get_nodes_near_z_value(data_path, z_pos, 1e-7)
                 z_flux *= -1  # Flip direction of flux (downward is positive)
                 iso_temp = average(temp)
-                print 'iso_temp:', iso_temp
-                print 'min iso_temp:', min(temp)
-                print 'max iso temp:', max(temp)
+                print(('iso_temp:', iso_temp))
+                print(('min iso_temp:', min(temp)))
+                print(('max iso temp:', max(temp)))
                 #Analyze and save the characterized data
                 xs = 1000.0 * xs;
                 ys = 1000.0 * ys  # Convert back to mm
@@ -288,18 +289,18 @@ class CornerStitch_Tmodel_API:
         self.sub_thermal_feature=sub_tf
     def set_up_device_power(self, data=None):
         if data == None:
-            print "load a table to collect power load"
-            print self.comp_dict
+            print("load a table to collect power load")
+            print((self.comp_dict))
             for k in self.comp_dict:
                 comp = self.comp_dict[k]
                 if isinstance(comp, Part):
                     if comp.type == 1:  # if this is a component
                         self.devices[comp.layout_component_id] = comp
-                        value = raw_input("enter a power for " + comp.layout_component_id + ": ")
+                        value = eval(input("enter a power for " + comp.layout_component_id + ": "))
                         self.dev_powerload_table[comp.layout_component_id] = float(value)
-            value = raw_input("enter a value for heat convection coefficient of the baseplate:")
+            value = eval(input("enter a value for heat convection coefficient of the baseplate:"))
             self.bp_conv = float(value)
-            value = raw_input("enter a value for ambient temperature:")
+            value = eval(input("enter a value for ambient temperature:"))
             self.t_amb = float(value)
         else:
             power_list = deque(data['Power'])  # pop from left to right
@@ -315,15 +316,15 @@ class CornerStitch_Tmodel_API:
 
     def measurement_setup(self, data=None):
         if data == None:
-            print "List of Devices:"
+            print("List of Devices:")
             for device in self.devices:
-                print device
-            num_measure = int(raw_input("Input number of thermal measurements:"))
+                print(device)
+            num_measure = int(eval(input("Input number of thermal measurements:")))
 
             for i in range(num_measure):
-                name = raw_input("Enter a name for this thermal measurement")
-                print "Type in a list of devices above separated by commas"
-                input = raw_input("Input sequence here:")
+                name = eval(input("Enter a name for this thermal measurement"))
+                print("Type in a list of devices above separated by commas")
+                input = eval(input("Input sequence here:"))
                 devices = tuple(input.split(','))
                 self.measure.append(ThermalMeasure(devices=devices, name=name))
             return self.measure

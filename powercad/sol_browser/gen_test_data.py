@@ -7,7 +7,7 @@ Created on Jun 8, 2012
 import math
 from random import uniform, seed, randint
 
-from solution_lib import SolutionLibrary
+from .solution_lib import SolutionLibrary
 
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
@@ -16,10 +16,10 @@ def get_objective_data(num_objectives = 3, num_sol_pts = 800):
     seed(1337)
     obj_data = []
     
-    for x in xrange(num_objectives):
+    for x in range(num_objectives):
         obj = []
         range = random_range()
-        for y in xrange(num_sol_pts):
+        for y in range(num_sol_pts):
             if x < num_objectives-1:
                 obj.append(uniform(range[0], range[1]))
             else:
@@ -52,7 +52,7 @@ def make_solution_library(num_objectives = 3, num_sols = 800):
 
 if __name__ == '__main__':
     data = get_objective_data(3, 800)
-    print len(data[0])
+    print(len(data[0]))
     plot_sols(data)
     
 #    sol_lib = make_solution_library()

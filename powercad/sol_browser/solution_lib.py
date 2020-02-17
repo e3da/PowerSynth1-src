@@ -11,10 +11,10 @@ class SolutionLibrary:
         self.individuals = []
     
         # correctly size measure_data
-        for i in xrange(len(sym_layout.perf_measures)):
+        for i in range(len(sym_layout.perf_measures)):
             self.measure_names_units.append((sym_layout.perf_measures[i].name, sym_layout.perf_measures[i].units))
             self.measure_data.append([])
-            for j in xrange(len(sym_layout.solutions)):
+            for j in range(len(sym_layout.solutions)):
                 self.measure_data[i].append(float(sym_layout.solutions[j].fitness.values[i]))
                 
         for sol in sym_layout.solutions:

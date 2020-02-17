@@ -3,10 +3,15 @@ author: Quang Le
 Getting mesh directly from CornerStitch points and islands data
 '''
 
-from powercad.electrical_mdl.e_mesh_direct import *
+from powercad.electrical_mdl.e_mesh_direct import EMesh,MeshEdge,MeshNode,TraceCell
 from powercad.general.data_struct.util import Rect, draw_rect_list
 import matplotlib.patches as patches
-from e_exceptions import *
+from .e_exceptions import *
+import numpy as np
+import networkx as nx
+import matplotlib.pyplot as plt
+import math
+from mpl_toolkits.mplot3d import Axes3D
 SINGLE_TRACE = 0
 L_SHAPE = 1
 T_SHAPE = 2
@@ -79,7 +84,7 @@ class EMesh_CS(EMesh):
         :param Nw: number of mesh points on the width of traces
         :return:
         '''
-        print "accelerate the mesh generation"
+        print("accelerate the mesh generation")
         isl_dict = {isl.name: isl for isl in self.islands}
         fig, ax = plt.subplots()
         self.hier_group_dict = {}
@@ -231,7 +236,7 @@ class EMesh_CS(EMesh):
                 del mesh_nodes[rm]
             except:
                 if debug:
-                    print ("key:", rm, "not found")
+                    print(("key:", rm, "not found"))
         for m in mesh_nodes:
             node = mesh_nodes[m][0]
             node.node_id = self.node_count  # update node_id
@@ -239,7 +244,7 @@ class EMesh_CS(EMesh):
             add_node(node=node, type=ntype)
         if debug:
             self.plot_trace_cells(trace_cells=trace_cells, ax=ax)
-            self.plot_points(ax=ax, points=mesh_nodes.keys())
+            self.plot_points(ax=ax, points=list(mesh_nodes.keys()))
 
         # Take unique values only
         tbl_xs = list(set(tbl_xs))
@@ -278,13 +283,13 @@ class EMesh_CS(EMesh):
                 hier_data = {"BW_anchor": anchor_node}
                 self.hier_group_dict[anchor_node.node_id] = {'node_group': [cp_node],
                                                          'parent_data': hier_data}
-            for k in self.hier_group_dict.keys():  # Based on group to form hier node
+            for k in list(self.hier_group_dict.keys()):  # Based on group to form hier node
                 node_group = self.hier_group_dict[k]['node_group']
                 parent_data = self.hier_group_dict[k]['parent_data']
                 self._save_hier_node_data(hier_nodes=node_group, parent_data=parent_data)
 
     def handle_pins_connect_trace_cells(self, trace_cells=None, island_name=None):
-        print "len", len(trace_cells)
+        print(("len", len(trace_cells)))
         for sh in self.hier_E.sheets:
             group = sh.parent.parent  # Define the trace island (containing a sheet)
             sheet_data = sh.data
@@ -359,6 +364,9 @@ class EMesh_CS(EMesh):
             el = elements[0]
             l, r, b, t = self.get_elements_coord(el)
             tc = TraceCell(left=l, right=r, bottom=b, top=t)
+            print (type(el_names[0]))
+            print (el_names[0])
+
             tc.type = 0 if self.trace_ori[el_names[0]] == 'H' else 1
             return [tc]
         else:  # Here we collect all corner pieces and adding adding cut lines for the elements
@@ -391,7 +399,7 @@ class EMesh_CS(EMesh):
                         l2, r2, b2, t2 = tc2.get_locs()
                         c_type = self.check_trace_to_trace_type(el1, el2)  # get types and check whether 2 pieces touch
                         if c_type == T_SHAPE:
-                            print "handle T_SHAPE cut"
+                            print("handle T_SHAPE cut")
                         elif c_type == L_SHAPE:
                             s = 0  # check the cases if not correct then switch el1 and el2 to handle all possible case
                             while (s == 0):
@@ -474,7 +482,7 @@ class EMesh_CS(EMesh):
                     if not (hash_id in trace_cells):
                         trace_cells[hash_id] = sp_tc
 
-        return trace_cells.values()
+        return list(trace_cells.values())
 
     def get_elements_coord(self, el):
         '''

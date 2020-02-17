@@ -27,7 +27,7 @@ class Design2D:
         self.velocity = list()
         
         # init particle positions and velocities
-        for i in xrange(config.num_dimensions):
+        for i in range(config.num_dimensions):
             self.position.append(util.rand(config.pos_init[i]))
             self.velocity.append(util.rand(config.vel_init))
     

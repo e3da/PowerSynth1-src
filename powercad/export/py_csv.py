@@ -87,9 +87,9 @@ def write_matrix_to_csv(data, tgt_file_name):
     csv_file.close() # Always remember to close the file
     
     # for developer (may be commented):
-    print "File closed?", csv_file.closed 
-    print "Location: ", os.path.abspath(tgt_file_name) 
-    print "Export completed" 
+    print("File closed?", csv_file.closed) 
+    print("Location: ", os.path.abspath(tgt_file_name)) 
+    print("Export completed") 
 
     
 #if __name__ == "__main__":

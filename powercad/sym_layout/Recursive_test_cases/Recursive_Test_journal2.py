@@ -50,7 +50,7 @@ def make_test_devices(symbols, dev=None,dev_dict=None):
                 obj.tech = dev
     else:
         for obj in symbols:
-            if obj.name in dev_dict.keys():
+            if obj.name in list(dev_dict.keys()):
                 obj.tech = dev_dict[obj.name]
 
 
@@ -80,8 +80,8 @@ def make_test_bonds(df,bw_sig,bw_power):
     for row in range(8):
         for col in range(5):
             df.loc[row,col]=bw_data[row][col]
-    print df
-    print df.iloc[0,0]
+    print(df)
+    print(df.iloc[0,0])
     return df
 
 def make_test_design_values(sym_layout, dimlist, default):
@@ -146,7 +146,7 @@ def add_test_measures(sym_layout,dev_states):
     m3 = ThermalMeasure(ThermalMeasure.FIND_MAX, devices, "Max Temp.", 'TFSM_MODEL')
     sym_layout.perf_measures.append(m3)
 
-    print "perf", sym_layout.perf_measures
+    print("perf", sym_layout.perf_measures)
 
 
 def setup_model(symlayout):
@@ -225,7 +225,7 @@ def make_tbl_dev_states():
     data = [['M1', 1, 1, 1], ['M2', 1, 1, 1], ['M3', 1, 1, 1], ['M4', 1, 1, 1]]
     ''' DEV_ID , Drain_Source, Gate_Source, Gate_Drain'''
     df = pd.DataFrame(data)
-    print df
+    print(df)
     return df
 
 def make_test_setup2(f,directory):
@@ -239,7 +239,7 @@ def make_test_setup2(f,directory):
     powers = [[1, 1, 1, 1]]
     h_val =[102.331, 105.986, 110.236, 115.238, 117.656]
     for p, h in zip(powers, h_val):
-        print "Test Case", p, h
+        print("Test Case", p, h)
         sym_layout = SymbolicLayout()  # initiate a symbolic layout object
         sym_layout.load_layout(test_file, 'script')  # load the script
         dev1 = DeviceInstance(0.1, p[0], get_device(),get_dieattach())  # Create a device instance with 10 W power dissipation. Highlight + "Crtl+Shift+I" to see the definition of this object
@@ -278,9 +278,9 @@ def make_test_setup2(f,directory):
         plot_layout(sym_layout)
         # plt.show()
         results.append(thermal_measure(sym_layout))
-        print results
+        print(results)
     for r in results:
-        print r
+        print(r)
     ax = plt.subplot('111', adjustable='box', aspect=1.0)
     plot_layout(sym_layout,filletFlag=False,ax=ax)
     return md.ModuleDesign(sym_layout)
@@ -341,7 +341,7 @@ def make_test_setup3():
     ''' This will run optimization '''
     sym_layout.optimize()
     ''' List of layout solutions here:'''
-    print sym_layout.solutions
+    print(sym_layout.solutions)
     ''' Single Individual Evaluation'''
     ''' During optimization you can print individual in opt_eval function to see the individual list. Change this manually
     first to test your model. Then you can design your new EMI eval function in opt_eval and run optimization'''
@@ -351,7 +351,7 @@ def make_test_setup3():
     ''' This code will perform the measurements ( based on ones you had in measurement setup '''
     ''' This will return a list with n values for n is number of measurements'''
     results = sym_layout._opt_eval(individual)
-    print results
+    print(results)
     ''' This code below do 1 single thermal measurement only ( I commented it out)'''
     #add_thermal_measure(sym_layout)
     ''' Plot the layout'''

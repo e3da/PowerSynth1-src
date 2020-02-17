@@ -53,14 +53,14 @@ class Layer:
             self.parts[part.name] = part
             # Update the layer thickness
             thickness=0
-            for p in self.parts.values():
+            for p in list(self.parts.values()):
                 if p.thickness >=thickness:
                     thickness=p.thickness # Max device thickness
 
             # update active layer thickness
             self.thick=thickness
         else:
-            print "cannot add devices on passive layer"
+            print("cannot add devices on passive layer")
 
 class LayerStack:
     def __init__(self,debug=False):
@@ -72,9 +72,12 @@ class LayerStack:
 
         if getpass.getuser() in ["ialrazi","erago","qmle"] : # For developer use only. Add your name if you run into this
             if self.debug==True:
-                material_path = MATERIAL_LIB_PATH
+                if getpass.getuser() == "qmle":
+                    material_path = "C:\PowerSynth_git\Electrical_Dev\PowerCAD-full\\tech_lib\Material\Materials.csv" # hard coded need to have a new way for this
+                else:    
+                    material_path = MATERIAL_LIB_PATH
             else:
-                material_path = raw_input("Put your hardcoded path here:")
+                material_path = input("Put your hardcoded path here:")
                 material_path = os.path.abspath(material_path)
 
         else: # Normal assumption for Mat Lib
@@ -116,7 +119,7 @@ class LayerStack:
         with open(filename) as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
-                print row
+                print(row)
                 layer_id = int(row['ID'])
                 layer_name = row['Name']
                 layer_width = float(row['Width'])
@@ -132,8 +135,8 @@ class LayerStack:
                     try:
                         layer_material = self.material_lib.get_mat(layer_material_key)
                     except:
-                        print "material key: " + layer_material_key + " on layer " + str(
-                            layer_id) + " is not defined in the material library"
+                        print("material key: " + layer_material_key + " on layer " + str(
+                            layer_id) + " is not defined in the material library")
                 else:
                     layer_material = None # no material for this layer
                 layer=Layer(width=layer_width,length=layer_length,thick=layer_thickness,id=layer_id,type=layer_type
@@ -211,7 +214,7 @@ class LayerStack:
         ts = []  # thickness of each layer
         for k in self.all_layers_info:  # layer are added from bottom to top. (OrderedDictionary type)
             layer = self.all_layers_info[k]
-            print layer.type
+            print(layer.type)
             if layer.type == 'p':
                 ws.append(layer.width)
                 ls.append(layer.length)
@@ -238,7 +241,7 @@ class LayerStack:
                 t_conds.append(layer.material.thermal_cond)
             elif layer.type == 'a':
                 mat_id =device.material_id
-                print"mat_id",mat_id
+                print("mat_id",mat_id)
                 dev_mat = self.material_lib.get_mat(mat_id)
                 t_conds.append(dev_mat.thermal_cond)
         return t_conds
@@ -273,7 +276,7 @@ def test_load_layer_stack_from_csv():
     5,I1,40,50,0.2,copper,p
     6,C1,40,50,0.2,None,a
     """
-    new_layer_stack_file = "C:\Users\qmle\Desktop\New_Layout_Engine\Quang_Journal\layer_stack_new.csv"
+    new_layer_stack_file = "C:\\Users\qmle\Desktop\\New_Layout_Engine\Quang_Journal\layer_stack_new.csv"
     layer_stack = LayerStack()
     layer_stack.import_layer_stack_from_csv(filename=new_layer_stack_file)
 

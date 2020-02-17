@@ -136,7 +136,7 @@ class Circuit():
             self._graph_add_comp(rowid, Lname.format(RLCname), int_net, net2, val)
             rowid += 1
             # add a capacitor between net2 and ground net # TODO: for multilayers this will be wrong...
-            if 'cap' in edge[2].keys():  # IF this branch has a capacitance
+            if 'cap' in list(edge[2].keys()):  # IF this branch has a capacitance
                 val = 1 / edge[2]['cap'] * 1e-12
                 if val>=1e-12:
 
@@ -175,7 +175,7 @@ class Circuit():
             row = self.df_circuit_info.index[self.df_circuit_info['element'].values == "R_in{0}".format(i)]
             row=row.tolist()[0]
             self.df_circuit_info.loc[row,"n node"]= V_id
-            print V_id,row
+            print(V_id,row)
             #print self.df_circuit_info
 
             self._graph_add_comp(row_id,V_name,V_id,0,1)
@@ -185,14 +185,14 @@ class Circuit():
             start=time.time()
             #self.solve_eq(mode="graph")
             env=os.path.abspath('C:\Program Files\LTC\LTspiceXVII\XVIIx64.exe')
-            self.solver=LTSPICE(env=env,file='C:\Users\qmle\Desktop\TestPy\Electrical\Solver\MNA//test.net')
+            self.solver=LTSPICE(env=env,file='C:\\Users\qmle\Desktop\TestPy\Electrical\Solver\MNA//test.net')
             self.solver.write(self.df_circuit_info,frange)
             self.solver.run()
             self.data=SimData('test.raw')
             dictionary = self.data.get_data_dict()
             inp_node=list(str(i).zfill(4))
             inp_node[0]='n'; inp_node=''.join(inp_node)
-            print inp_node
+            print(inp_node)
             v_inp='V({0})'.format(inp_node)
             for j in ports:
 
@@ -218,13 +218,13 @@ class Circuit():
 
 
 
-            print time.time()-start, 's'
+            print(time.time()-start, 's')
             # after the computation is done:
             ckt_df.loc[row, "n node"] = 0
         #s_dataframe.to_csv("Spara.csv")
         write_touchstone_v1(comments=['4-11-2017'],s_df=s_dataframe,file='test.s17p',N=17)
 
-        print "total time", time.time()-start_all,'s'
+        print("total time", time.time()-start_all,'s')
     def _graph_add_comp(self,rowid,name,pnode,nnode,val):
         self.df_circuit_info.loc[rowid, 'element'] = name
         self.df_circuit_info.loc[rowid, 'p node'] = pnode
@@ -266,61 +266,61 @@ class Circuit():
 
             if (x == 'R') or (x == 'L') or (x == 'C'):
                 if tk_cnt != 4:
-                    print("branch {:d} not formatted correctly, {:s}".format(i, self.net_data[i]))
-                    print("had {:d} items and should only be 4".format(tk_cnt))
+                    print(("branch {:d} not formatted correctly, {:s}".format(i, self.net_data[i])))
+                    print(("had {:d} items and should only be 4".format(tk_cnt)))
                 self.num_rlc += 1
                 self.branch_cnt += 1
                 if x == 'L':
                     self.num_ind += 1
             elif x == 'V':
                 if tk_cnt != 4:
-                    print("branch {:d} not formatted correctly, {:s}".format(i, self.net_data[i]))
-                    print("had {:d} items and should only be 4".format(tk_cnt))
+                    print(("branch {:d} not formatted correctly, {:s}".format(i, self.net_data[i])))
+                    print(("had {:d} items and should only be 4".format(tk_cnt)))
                 self.num_V += 1
                 self.branch_cnt += 1
             elif x == 'I':
                 if tk_cnt != 4:
-                    print("branch {:d} not formatted correctly, {:s}".format(i, self.net_data[i]))
-                    print("had {:d} items and should only be 4".format(tk_cnt))
+                    print(("branch {:d} not formatted correctly, {:s}".format(i, self.net_data[i])))
+                    print(("had {:d} items and should only be 4".format(tk_cnt)))
                 self.num_I += 1
                 self.branch_cnt += 1
             elif x == 'O':
                 if tk_cnt != 4:
-                    print("branch {:d} not formatted correctly, {:s}".format(i, self.net_data[i]))
-                    print("had {:d} items and should only be 4".format(tk_cnt))
+                    print(("branch {:d} not formatted correctly, {:s}".format(i, self.net_data[i])))
+                    print(("had {:d} items and should only be 4".format(tk_cnt)))
                 self.num_opamps += 1
             elif x == 'E':
                 if (tk_cnt != 6):
-                    print("branch {:d} not formatted correctly, {:s}".format(i, self.net_data[i]))
-                    print("had {:d} items and should only be 6".format(tk_cnt))
+                    print(("branch {:d} not formatted correctly, {:s}".format(i, self.net_data[i])))
+                    print(("had {:d} items and should only be 6".format(tk_cnt)))
                 self.num_vcvs += 1
                 self.branch_cnt += 1
             elif x == 'G':
                 if (tk_cnt != 6):
-                    print("branch {:d} not formatted correctly, {:s}".format(i, self.net_data[i]))
-                    print("had {:d} items and should only be 6".format(tk_cnt))
+                    print(("branch {:d} not formatted correctly, {:s}".format(i, self.net_data[i])))
+                    print(("had {:d} items and should only be 6".format(tk_cnt)))
                 self.num_vccs += 1
                 self.branch_cnt += 1
             elif x == 'F':
                 if (tk_cnt != 5):
-                    print("branch {:d} not formatted correctly, {:s}".format(i, self.net_data[i]))
-                    print("had {:d} items and should only be 5".format(tk_cnt))
+                    print(("branch {:d} not formatted correctly, {:s}".format(i, self.net_data[i])))
+                    print(("had {:d} items and should only be 5".format(tk_cnt)))
                 self.num_cccs += 1
                 self.branch_cnt += 1
             elif x == 'H':
                 if (tk_cnt != 5):
-                    print("branch {:d} not formatted correctly, {:s}".format(i, self.net_data[i]))
-                    print("had {:d} items and should only be 5".format(tk_cnt))
+                    print(("branch {:d} not formatted correctly, {:s}".format(i, self.net_data[i])))
+                    print(("had {:d} items and should only be 5".format(tk_cnt)))
                 self.num_ccvs += 1
                 self.branch_cnt += 1
             elif x == 'K':
                 if (tk_cnt != 4):
-                    print("branch {:d} not formatted correctly, {:s}".format(i, self.net_data[i]))
-                    print("had {:d} items and should only be 4".format(tk_cnt))
+                    print(("branch {:d} not formatted correctly, {:s}".format(i, self.net_data[i])))
+                    print(("had {:d} items and should only be 4".format(tk_cnt)))
                 self.num_cpld_ind += 1
             else:
-                print("unknown element type in branch {:d}, {:s}".format(i, self.net_data[i]))
-        print "import success with no errors"
+                print(("unknown element type in branch {:d}, {:s}".format(i, self.net_data[i])))
+        print("import success with no errors")
 
     # The following functions are for generating the data structure:
 
@@ -420,7 +420,7 @@ class Circuit():
         # check for unfilled elements, skip node 0
         for i in range(1, largest):
             if p[i] == 0:
-                print('nodes not in continuous order, node {:.0f} is missing'.format(p[i - 1] + 1))
+                print(('nodes not in continuous order, node {:.0f} is missing'.format(p[i - 1] + 1)))
 
         return largest
     def build_current_info(self):
@@ -467,33 +467,33 @@ class Circuit():
             elif x == 'K':
                 self.cpld_ind_sub_network(i)
             else:
-                print("unknown element type in branch {:d}, {:s}".format(i, content[i]))
+                print(("unknown element type in branch {:d}, {:s}".format(i, content[i])))
         self.build_current_info()
 
         # count number of nodes
         num_nodes = self.count_nodes()
         # print a report
         print('Net list report')
-        print('number of lines in netlist: {:d}'.format(line_cnt))
-        print('number of branches: {:d}'.format(self.branch_cnt))
-        print('number of nodes: {:d}'.format(num_nodes))
+        print(('number of lines in netlist: {:d}'.format(line_cnt)))
+        print(('number of branches: {:d}'.format(self.branch_cnt)))
+        print(('number of nodes: {:d}'.format(num_nodes)))
         # count the number of element types that affect the size of the B, C, D, E and J arrays
         # these are current unknows
         i_unk = self.num_V + self.num_opamps + self.num_vcvs + self.num_ccvs + self.num_cccs + self.num_ind
-        print('number of unknown currents: {:d}'.format(i_unk))
-        print('number of RLC (passive components): {:d}'.format(self.num_rlc))
-        print('number of inductors: {:d}'.format(self.num_ind))
-        print('number of independent voltage sources: {:d}'.format(self.num_V))
-        print('number of independent current sources: {:d}'.format(self.num_I))
-        print('number of op amps: {:d}'.format(self.num_opamps))
-        print('number of E - VCVS: {:d}'.format(self.num_vcvs))
-        print('number of G - VCCS: {:d}'.format(self.num_vccs))
-        print('number of F - CCCS: {:d}'.format(self.num_cccs))
-        print('number of H - CCVS: {:d}'.format(self.num_ccvs))
-        print('number of K - Coupled inductors: {:d}'.format(self.num_cpld_ind))
-        print "Dataframe for circuit info:"
+        print(('number of unknown currents: {:d}'.format(i_unk)))
+        print(('number of RLC (passive components): {:d}'.format(self.num_rlc)))
+        print(('number of inductors: {:d}'.format(self.num_ind)))
+        print(('number of independent voltage sources: {:d}'.format(self.num_V)))
+        print(('number of independent current sources: {:d}'.format(self.num_I)))
+        print(('number of op amps: {:d}'.format(self.num_opamps)))
+        print(('number of E - VCVS: {:d}'.format(self.num_vcvs)))
+        print(('number of G - VCCS: {:d}'.format(self.num_vccs)))
+        print(('number of F - CCCS: {:d}'.format(self.num_cccs)))
+        print(('number of H - CCVS: {:d}'.format(self.num_ccvs)))
+        print(('number of K - Coupled inductors: {:d}'.format(self.num_cpld_ind)))
+        print("Dataframe for circuit info:")
         display(self.df_circuit_info)
-        print "Dataframe for Current branches info:"
+        print("Dataframe for Current branches info:")
         display(self.df_uk_current)
     '''
     def find_vname(self,name):
@@ -628,7 +628,7 @@ class Circuit():
 
         # check source count
         if sn != i_unk:
-            print('source number, sn={:d} not equal to i_unk={:d} in matrix B'.format(sn, i_unk))
+            print(('source number, sn={:d} not equal to i_unk={:d} in matrix B'.format(sn, i_unk)))
             # print self.B
             # find the the column position in the C and D matrix for controlled sources
             # needs to return the node numbers and branch number of controlling branch
@@ -728,7 +728,7 @@ class Circuit():
 
         # check source count
         if sn != i_unk:
-            print('source number, sn={:d} not equal to i_unk={:d} in matrix C'.format(sn, i_unk))
+            print(('source number, sn={:d} not equal to i_unk={:d} in matrix C'.format(sn, i_unk)))
         #print self.C
     def D_mat(self,i_unk):
         # generate the D Matrix
@@ -830,7 +830,7 @@ class Circuit():
                     g = sympify(self.df_circuit_info.loc[i, 'element'])
                 elif self.comp_mode=='val':
                     g = float(self.df_circuit_info.loc[i, 'value'])
-                    print "g",g
+                    print("g",g)
                 # sum the current into each node
                 if n1 != 0:
                     self.I[n1 - 1] -= g
@@ -927,14 +927,14 @@ class Circuit():
         self.A_mat(num_nodes,i_unk)
         eq_temp = 0  # temporary equation used to build up the equation
         self.equ = zeros(m + n, 1)  # initialize the array to hold the equations
-        print "solving ..."
+        print("solving ...")
         Z=Matrix(self.Z)
         #print 'X',self.X
         #print 'A',self.A
         t = time.time()
         A=self.subtitude_s(expr=self.A)
-        print 'A', A
-        print "subs", time.time() - t, "s"
+        print('A', A)
+        print("subs", time.time() - t, "s")
         #print 'Z', Z
         col=[str(i+1) for i in range(A.shape[0])]
         matA=pd.DataFrame(columns=col)
@@ -952,7 +952,7 @@ class Circuit():
         M = expr
         #print sub
         code = "M=M.subs({0})".format(sub)
-        exec code
+        exec(code)
         return M
     def subtitute(self,expr,params=None,mode="numerical",sval=1):
         sub={}
@@ -980,9 +980,9 @@ class Circuit():
                     exec (code)
                     sub[var_name] = value
         M = expr
-        print sub
+        print(sub)
         code ="M=M.subs({0})".format(sub)
-        exec code
+        exec(code)
 
         return M
     # these are not features yet, just for a case specific test now (2ports only)
@@ -1030,11 +1030,11 @@ class Circuit():
         #zin =autowrap(Vn_expr, backend="cython",args=[s])/autowrap(In_expr, backend="cython",args=[s])
         #print zin
         Snn_expr=(zin-Z0)/(zin+Z0)
-        print Snn_expr
+        print(Snn_expr)
 
         #Snn_expr = autowrap(Snn_expr, backend="cython",args=[s])
         Snn_expr=lambdify(s,Snn_expr,'numpy')
-        print "vn", V_port
+        print("vn", V_port)
         return Snn_expr
 
     def Spn(self,portp=2):
@@ -1046,10 +1046,10 @@ class Circuit():
         s = Symbol('s')
         Spn_expr = lambdify(s, 2*Vn_expr, 'numpy')
         #Spn_expr = autowrap(2 * Vn_expr, backend="cython",args=[s])
-        print "vp", V_port
+        print("vp", V_port)
         return Spn_expr
 def test_read():
-    file = "C:\Users\qmle\Desktop\Balancing\Mutual_test\SCAM\scam\circuit2.cir"# filename
+    file = "C:\\Users\qmle\Desktop\Balancing\Mutual_test\SCAM\scam\circuit2.cir"# filename
     ckt=Circuit()
     ckt.read_net(file)
     ckt.show_read_status()
@@ -1059,14 +1059,14 @@ def test_read():
     f_list=np.linspace(10,30e6,10000)
     for f in f_list:
         single_res=ckt.execute_equations(f=f)
-        print "f", f , "results",single_res
+        print("f", f , "results",single_res)
         res.append(single_res)
 
 
 def test_s_para_2ports():
     f_list = np.linspace(150000, 3e7, 100)
-    file1 = "C:\Users\qmle\Desktop\Balancing\Mutual_test\SCAM\scam\circuit.cir"  # filename
-    file2 = "C:\Users\qmle\Desktop\Balancing\Mutual_test\SCAM\scam\circuit2.cir"  # filename
+    file1 = "C:\\Users\qmle\Desktop\Balancing\Mutual_test\SCAM\scam\circuit.cir"  # filename
+    file2 = "C:\\Users\qmle\Desktop\Balancing\Mutual_test\SCAM\scam\circuit2.cir"  # filename
     ckt1=Circuit() ; ckt1.read_net(file1) ;ckt1.show_read_status();ckt1.form_report();
     ckt1.solve_eq()
     Z11 = []
@@ -1158,14 +1158,14 @@ def test_s_para_nports():
     for line in nodedata:
         code = "node =" + line.strip('\n')
         exec (code)
-        if 'type' in node[1].keys():
+        if 'type' in list(node[1].keys()):
             lumped_graph.node[str(node[0])]['type']=node[1]['type']
             lumped_graph.node[str(node[0])]['point'] = node[1]['point']
         else:
             lumped_graph.node[str(node[0])]['type']=None
             lumped_graph.node[str(node[0])]['point'] = node[1]['point']
-    print (lumped_graph.edges(data=True))
-    print (lumped_graph.nodes(data=True))
+    print((lumped_graph.edges(data=True)))
+    print((lumped_graph.nodes(data=True)))
     num_node=len(lumped_graph.nodes())
     num_net = 2*num_node # each branch contains all RLC so there will be one extra node between R and L
     ports=ckt._graph_read(lumped_graph)

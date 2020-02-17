@@ -7,7 +7,7 @@ import weakref
 
 
 def mesh(name=None):
-    print "performed mesh on", name
+    print(("performed mesh on", name))
 
 
 class dummy_trace():
@@ -78,8 +78,8 @@ class Tree():
         #print "cant find node",node_name
 
     def remove(self, start_node=None, node_name=None):
-        for n in start_node.nodes.keys():
-            if node_name in start_node.nodes.keys():
+        for n in list(start_node.nodes.keys()):
+            if node_name in list(start_node.nodes.keys()):
                 del start_node.nodes[node_name]
                 return
             else:
@@ -91,19 +91,19 @@ class Tree():
         if x == None:
             x = self.root
         if x.nodes != {}:
-            for n in x.nodes.keys():
+            for n in list(x.nodes.keys()):
                 node = x.nodes[n]
                 b = ''
                 for n in range(node.depth - 1):
                     b += '+....+'
-                print b, node.name
+                print((b, node.name))
                 self.print_tree(node)
         else:
             return
 
     def apply_func(self, func=None, start_node=None):
         if start_node != None:
-            for n in start_node.nodes.keys():
+            for n in list(start_node.nodes.keys()):
                 node = start_node.nodes[n]
                 if node.data != None:
                     func(node.name)
@@ -114,7 +114,7 @@ class Tree():
         for n in self.nodes:
             self.graph.add_node(n.name, rank=n.rank)
         for n in self.nodes:
-            for c in n.nodes.keys():
+            for c in list(n.nodes.keys()):
                 self.graph.add_edge(n.name, c)
 
     def update_pos(self):
@@ -190,7 +190,7 @@ if __name__ == "__main__":
 
     T1.print_tree()
     node = T1.search_tree(T1.root, 'T1')
-    print "FOUND IT", node.name
+    print(("FOUND IT", node.name))
     node2.remove_all_children()
     T1.print_tree()
     T1.apply_func(func=mesh, start_node=T1.root)

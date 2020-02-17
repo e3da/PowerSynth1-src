@@ -49,7 +49,7 @@ def make_test_devices(symbols, dev=None, dev_dict=None):
                 obj.tech = dev
     else:
         for obj in symbols:
-            if obj.name in dev_dict.keys():
+            if obj.name in list(dev_dict.keys()):
                 obj.tech = dev_dict[obj.name]
 
 
@@ -78,8 +78,8 @@ def make_test_bonds(df, bw_sig, bw_power):
     for row in range(8):
         for col in range(5):
             df.loc[row, col] = bw_data[row][col]
-    print df
-    print df.iloc[0, 0]
+    print(df)
+    print(df.iloc[0, 0])
     return df
 
 
@@ -136,7 +136,7 @@ def add_test_measures(sym_layout):
 
     m3 = ThermalMeasure(ThermalMeasure.FIND_MAX, devices, "Max Temp.", 'TFSM_MODEL')
     sym_layout.perf_measures.append(m3)
-    print "perf", sym_layout.perf_measures
+    print("perf", sym_layout.perf_measures)
 
 
 def setup_model(symlayout):
@@ -292,7 +292,7 @@ def make_test_setup2(f, directory):
     hier = EHier(module=new_module)
     hier.form_hierachy()
     freqs=[10,20,50,100,500,1000]
-    mdl_dir = "C:\Users\qmle\Desktop\Documents\Conferences\IWIPP\Model\workspace"
+    mdl_dir = "C:\\Users\qmle\Desktop\Documents\Conferences\IWIPP\Model\workspace"
     mdl_name = '2d_high_freq_journal.rsmdl'
     rsmdl = load_mdl(mdl_dir, mdl_name)
     for freq in freqs:
@@ -328,8 +328,8 @@ def make_test_setup2(f, directory):
 
         circuit.build_current_info()
         circuit.solve_iv()
-        print time.time()-start,'s'
-        print 'f',freq,'kHz'
+        print(time.time()-start,'s')
+        print('f',freq,'kHz')
         pr.disable()
         pr.create_stats()
         file = open('mystats.txt', 'w')

@@ -391,8 +391,8 @@ def output_fh_script(layout,filename,freq=[10,1000],external=None):
         Combination of trace object and plane object near bondwires and 90 degree corners ToDO: Use plane for supertraces too. Need to detect these objects later
     '''
     total=0.0
-    print ".... Started Extracting FastHenry Macro...."
-    print "... Preparing All Data For Extraction"
+    print(".... Started Extracting FastHenry Macro....")
+    print("... Preparing All Data For Extraction")
     start = time.time()
     # Collect all Spine Node and Edges from lumped graph
     all_edges = layout.lumped_graph.edges(data=True)
@@ -446,9 +446,9 @@ def output_fh_script(layout,filename,freq=[10,1000],external=None):
     equiv_list=[]
     external_list=[]
     total+=time.time()-start
-    print ".... Complete Data Collection", time.time()-start,"seconds"
+    print(".... Complete Data Collection", time.time()-start,"seconds")
     start = time.time()
-    print ".... Collecting Edges and Nodes for Traces and Bws data ...."
+    print(".... Collecting Edges and Nodes for Traces and Bws data ....")
     dx = 0.1
     dy = 0.1
     for edge in all_edges:
@@ -491,7 +491,7 @@ def output_fh_script(layout,filename,freq=[10,1000],external=None):
             wire = data['obj'] # get the wire object:
             cond = 3.6e4  # aluminum # need to get the material for bondwire. dont know why it was not included here
             dev = wire.device
-            print data['type']
+            print(data['type'])
             if data['type'] == 'bw signal':
                 type = '_Gate'
             elif data['type'] == 'bw power':
@@ -504,7 +504,7 @@ def output_fh_script(layout,filename,freq=[10,1000],external=None):
             device_term_name_list.append(conn_name)
             if (wire.device is not None) and (wire.land_pt is not None):
                 id=0
-                for pt_index in xrange(len(wire.start_pts)):
+                for pt_index in range(len(wire.start_pts)):
                     id+=1
                     pt1 = list(translate_pt(wire.start_pts[pt_index], sub_origin_x, sub_origin_y))
                     pt2 = list(translate_pt(wire.end_pts[pt_index], sub_origin_x, sub_origin_y))
@@ -561,13 +561,13 @@ def output_fh_script(layout,filename,freq=[10,1000],external=None):
                                               , nwinc, nhinc)
 
     total += time.time() - start
-    print ".... Finished Edges and Nodes Scripts ....", time.time() - start, "seconds"
+    print(".... Finished Edges and Nodes Scripts ....", time.time() - start, "seconds")
     # Lead list for measuremen
     lead_list = []
     script += '\n* LEADS :'
-    print "... LEADS connection ..."
+    print("... LEADS connection ...")
     LeadZPos = TraceZPos + TraceZSize
-    for index in xrange(len(md.leads)):
+    for index in range(len(md.leads)):
         lead = md.leads[index]
         lead_id=md.lead_id[index]
         name = "N"+str(lead_id)
@@ -581,8 +581,8 @@ def output_fh_script(layout,filename,freq=[10,1000],external=None):
         script += FH_point.format(name, lead_center[0], lead_center[1], LeadZPos)
 
     script += '\n* Device Terminals:\n'
-    print "... Device connection ... "
-    for id in xrange(len(layout.devices)):
+    print("... Device connection ... ")
+    for id in range(len(layout.devices)):
         dev=layout.devices[id]
         conn_name = 'N' + str(dev.name) + '_Drain'
         dev_pt = dev.center_position
@@ -605,7 +605,7 @@ def output_fh_script(layout,filename,freq=[10,1000],external=None):
     script += "\n* Connecting segmented wires"
 
     start = time.time()
-    print "... Connecting Trace to Trace ... "
+    print("... Connecting Trace to Trace ... ")
     pt_used={}
     for pt in trace_pts:
         pt_used[pt]=[]
@@ -621,10 +621,10 @@ def output_fh_script(layout,filename,freq=[10,1000],external=None):
 
                     script += equiv.format(pt1.name, pt2.name)
     total += time.time() - start
-    print ".... Finished Trace to Trace Connection ....", time.time() - start, "seconds"
+    print(".... Finished Trace to Trace Connection ....", time.time() - start, "seconds")
 
     start = time.time()
-    print "... Connecting Bondwires to Traces ..."
+    print("... Connecting Bondwires to Traces ...")
 
     # 2 Connect trace to pts using the min distance  # This is not very general
     script += '\n* Equivalent bondwire to trace'
@@ -637,10 +637,10 @@ def output_fh_script(layout,filename,freq=[10,1000],external=None):
                 conn_pt = pt2
         script += equiv.format(pt1.name, conn_pt.name)
     total += time.time() - start
-    print ".... Finished Bondwires to Trace Connection ....", time.time() - start, "seconds"
+    print(".... Finished Bondwires to Trace Connection ....", time.time() - start, "seconds")
 
     start = time.time()
-    print "... Connecting Leads to Traces ..."
+    print("... Connecting Leads to Traces ...")
     # 3 Connect lead to trace_pts
     script += '\n* Equivalent lead to trace'
     for pt1 in lead_list:
@@ -656,7 +656,7 @@ def output_fh_script(layout,filename,freq=[10,1000],external=None):
     for eq in equiv_list:
         script+=equiv.format(eq[0],eq[1])
 
-    print ".... Finished Leads to Trace Connection ....", time.time() - start, "seconds"
+    print(".... Finished Leads to Trace Connection ....", time.time() - start, "seconds")
 
     MP = Plane('MP', 1, [sub_origin_x, sub_origin_y, MetalZPos], [sub_origin_x + MetalXSize, sub_origin_y, MetalZPos],
                [sub_origin_x + MetalXSize, sub_origin_y + MetalYSize, MetalZPos], MetalZSize, mp_cond)
@@ -673,7 +673,7 @@ def output_fh_script(layout,filename,freq=[10,1000],external=None):
     script += ".end"
     text_file.write(script)
     text_file.close()
-    print ''' Finsihed Macro Extraction, Total Time is:''', total,"seconds"
+    print(''' Finsihed Macro Extraction, Total Time is:''', total,"seconds")
 
 def read_result(filename,sel_freq=None):
     # Read result and export a matrix for all parasitic
@@ -692,14 +692,14 @@ def read_result(filename,sel_freq=None):
             for rl in data[2:-1]:
                 complex_rl.append(np.complex(rl))
             out_data[freq].append(complex_rl)
-    for k in out_data.keys():
+    for k in list(out_data.keys()):
         list_data=out_data[k]
         out_data[k]=np.array(list_data)
     if sel_freq!=None:
         return out_data[sel_freq]
     else:
-        print out_data.keys()
-        max_f = np.max(out_data.keys())
+        print(list(out_data.keys()))
+        max_f = np.max(list(out_data.keys()))
         return out_data[max_f]
 
 
@@ -741,13 +741,13 @@ def output_fh_script_mesh(md, filename):
     script+=metal_text
     # Metal Layers
     trace_list=[]
-    for index in xrange(len(md.traces)):
+    for index in range(len(md.traces)):
         trace = md.traces[index]
         trace.translate(0, 0)
         trace_list.append(trace)
     line_list=form_conn_line(trace_list, 5)
     pt_list=[]
-    for index in xrange(len(trace_list)):
+    for index in range(len(trace_list)):
         trace=trace_list[index]
         name = "trace" + str(index + 1)
 
@@ -771,7 +771,7 @@ def output_fh_script_mesh(md, filename):
 
     # BW Layers
     pt_bw_list=[]
-    for index in xrange(len(md.bondwires)):
+    for index in range(len(md.bondwires)):
         bw = md.bondwires[index]
         BwXPos, BwYPos = bw.positions[0]
         BwXPos += sub_origin_x
@@ -799,7 +799,7 @@ def output_fh_script_mesh(md, filename):
     # Introduce flat leads (just use it position for now)
     lead_list = []
     LeadZPos = TraceZPos + TraceZSize
-    for index in xrange(len(md.leads)):
+    for index in range(len(md.leads)):
         lead = md.leads[index]
         name = "NLead" + str(index)
         lead_center = lead.position

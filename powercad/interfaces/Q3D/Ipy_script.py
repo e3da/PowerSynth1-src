@@ -272,7 +272,7 @@ if __name__ == '__main__':
 
     '''
     # Test setup 1
-    script1=Q3D_ipy_script('16.2','C:\Users\qmle\Desktop\Testing\Py_Q3D_test','test2','C:\Users\qmle\Desktop\Testing\Py_Q3D_test')
+    script1=Q3D_ipy_script('16.2','C:\\Users\qmle\Desktop\Testing\Py_Q3D_test','test2','C:\\Users\qmle\Desktop\Testing\Py_Q3D_test')
     Box1=Q3d_N_Gon_Box(20,20,0,8,1,20,'Box1')
     Box2=Q3d_N_Gon_Box(20,20,1,5,1,15,'Box2')
     Box2.set_color('24 89 219')
@@ -280,7 +280,7 @@ if __name__ == '__main__':
     script1.add_script(Box1.get_script())
     script1.add_script(Box2.get_script())
     script1.make()
-    script1.build('C:\Users\qmle\workspace\Python_Q3d_model\IronPython\ipy64.exe')
+    script1.build('C:\\Users\qmle\workspace\Python_Q3d_model\IronPython\ipy64.exe')
     '''
     '''
     # Test setup 2
@@ -315,4 +315,4 @@ if __name__ == '__main__':
     script1.set_up_optimetric(variable_list=['w1','w2'],variable_bounds=[[1,10,1],[2,5,1]])
     param_family=[{'name':'w1','value':'10mm'},{'name':'w2','value':'10mm'}]
     script1.create_report(net_id='test1',source_id='Source1',option='optim',param_family=param_family)
-    print script1.script
+    print(script1.script)

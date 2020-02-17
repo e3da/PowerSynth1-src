@@ -20,7 +20,7 @@ from scipy.optimize import curve_fit
 from sklearn.kernel_ridge import KernelRidge
 from sklearn.svm import SVR
 
-from RS_build_function import *
+from .RS_build_function import *
 from powercad.general.data_struct.Abstract_Data import *
 from powercad.general.data_struct.BasicsFunction import *
 from powercad.general.data_struct.Unit import Unit
@@ -72,7 +72,7 @@ class RS_model:
         '''
 
         if len(self.params)!=len(bounds):
-            print InputError("MISMATCH in bounds, number of parameter's names are different from boundary inputs")
+            print(InputError("MISMATCH in bounds, number of parameter's names are different from boundary inputs"))
         else:
             self.data_bound=bounds
     
@@ -214,12 +214,12 @@ class RS_model:
         self.samples=data_num  # number of samples to be collected
         if type == 0: # latin-hypercube -- Normally just width length and thickness
             self.DOE=lhs(cols,samples=self.samples) # create tuples of percentages values (ranging from 0. to 1.)
-            for i in xrange(cols):          # Sweep through all data parameters
+            for i in range(cols):          # Sweep through all data parameters
                 self.DOE[:, i] = self.DOE[:, i] * (max(self.data_bound[i]) - min(self.data_bound[i])) + min(self.data_bound[i])  # scaling the percentage value to real value
         elif type ==1 and cols>=3: # Box-Behnken design -- For quick response surface structure, number of factors have to be greater than 3
             self.DOE=bbdesign(cols, center) 
-            for i in xrange(len(self.DOE)):
-                for j in xrange(cols):
+            for i in range(len(self.DOE)):
+                for j in range(cols):
                     chk=self.DOE[i,j]
                     if chk==-1:
                         self.DOE[i,j]=min(self.data_bound[j])
@@ -229,8 +229,8 @@ class RS_model:
                         self.DOE[i,j]=(min(self.data_bound[j]) +  max(self.data_bound[j]))/2 
         elif type==2:
             self.DOE=ccdesign(cols, center=(0,0),face='ccf')
-            for i in xrange(len(self.DOE)):
-                for j in xrange(cols):
+            for i in range(len(self.DOE)):
+                for j in range(cols):
                     midpoint=(min(self.data_bound[j]) +  max(self.data_bound[j]))/2
                     min_i=min(self.data_bound[j])
                     max_i=max(self.data_bound[j])
@@ -282,7 +282,7 @@ class RS_model:
         col_chk=col_size-1  # id to check all column 
         not_ready=True     
         next=False
-        for row in xrange(row_size):   # for all row   
+        for row in range(row_size):   # for all row   
             doe_row=[]
             while not_ready:
                 if  stack.pop() < num_data[col_chk]-1:
@@ -404,10 +404,10 @@ class RS_model:
                             best_variogram[i]=v
                             best_score[i]=score
 
-                    print best_variogram[i]
+                    print(best_variogram[i])
                     OK=ok(data[:, 0], data[:, 1], self.input[i], variogram_model=best_variogram[i],
                          verbose=False, enable_plotting=False)
-                    print 'score: ', best_score[i], 'best_v: ', best_variogram[i]
+                    print('score: ', best_score[i], 'best_v: ', best_variogram[i])
 
                 else:
                     best_variogram[i]=func
@@ -581,7 +581,7 @@ if __name__=="__main__":
     mdl1=RS_model(['width','length'],const=['height','thickness'])
     mdl1.set_data_bound([[1.2,20],[1.2,20]])
     mdl1.create_DOE(2, None)
-    print mdl1.DOE
+    print(mdl1.DOE)
     
     
     

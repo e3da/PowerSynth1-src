@@ -10,15 +10,15 @@ from powercad.electrical_mdl.e_netlist import ENetlist
 from powercad.general.data_struct.util import draw_rect_list
 
 def Module_for_journal_paper():
-    print "design this"
+    print("design this")
 
 
 
 
 def ARL_module():
-    mdl_dir = "C:\Users\qmle\Desktop\ARL\Model"
+    mdl_dir = "C:\\Users\qmle\Desktop\ARL\Model"
     mdl_name = 'ARL_module.rsmdl'
-    layout_data = "C:\Users\qmle\Desktop\ARL\Amol_layout.csv"
+    layout_data = "C:\\Users\qmle\Desktop\ARL\Amol_layout.csv"
     rsmdl = load_mdl(mdl_dir, mdl_name)
     ls = []
     rs = []
@@ -92,7 +92,7 @@ def ARL_module():
     start = time.time()
     emesh.mutual_data_prepare()
     emesh.update_mutual()
-    print 'mutual',time.time() - start, 's'
+    print('mutual',time.time() - start, 's')
 
     netlist = ENetlist(new_module, emesh)
     netlist.export_netlist_to_ads(file_name='ARL_half_bridge.net')
@@ -104,7 +104,7 @@ def ARL_module():
 
     src1 = emesh.find_node(pt2)
     sink1 = emesh.find_node(pt1)
-    print src1,sink1
+    print(src1,sink1)
     circuit = RL_circuit()
 
     circuit.comp_mode = 'val'
@@ -119,14 +119,14 @@ def ARL_module():
     circuit.build_current_info()
     start = time.time()
     circuit.solve_iv()
-    print time.time()-start,'s'
+    print(time.time()-start,'s')
     result = circuit.results
-    print circuit.results
+    print(circuit.results)
     # print "all", res2
     imp = result[vname]
-    print "Freq", circuit.freq, circuit.s
-    print 'Res', np.real(imp) * 1e3
-    print 'Ind', np.imag(imp) * 1e9 / (2 * np.pi * circuit.freq)
+    print("Freq", circuit.freq, circuit.s)
+    print('Res', np.real(imp) * 1e3)
+    print('Ind', np.imag(imp) * 1e9 / (2 * np.pi * circuit.freq))
     if plot:
         fig = plt.figure(1)
         ax = a3d.Axes3D(fig)
@@ -152,7 +152,7 @@ def ARL_module():
 
 
 def test_simple_4sw_hb():
-    mdl_dir = "C:\Users\qmle\Desktop\Documents\Conferences\IWIPP\Model\workspace"
+    mdl_dir = "C:\\Users\qmle\Desktop\Documents\Conferences\IWIPP\Model\workspace"
     mdl_name = '4sw_hb_trace.rsmdl'
     rsmdl = load_mdl(mdl_dir, mdl_name)
     # SOME VALUES FOR QUICK ACCESS
@@ -346,7 +346,7 @@ def test_simple_4sw_hb():
     pt2 = (3.2, 0.6, 0.2)
     src1 = emesh.find_node(pt2)
     sink1 = emesh.find_node(pt1)
-    print src1, sink1
+    print(src1, sink1)
 
     circuit.comp_mode = 'val'
     circuit._graph_read(emesh.graph)
@@ -361,17 +361,17 @@ def test_simple_4sw_hb():
     circuit.solve_iv()
 
     result = circuit.results
-    print circuit.results
-    raw_input()
+    print(circuit.results)
+    input()
 
     # print "all", res2
     imp = result[vname]
-    print "Freq", circuit.freq, circuit.s
-    print 'Res', np.real(imp) * 1e3
-    print 'Ind', np.imag(imp) * 1e9 / (2 * np.pi * circuit.freq)
+    print("Freq", circuit.freq, circuit.s)
+    print('Res', np.real(imp) * 1e3)
+    print('Ind', np.imag(imp) * 1e9 / (2 * np.pi * circuit.freq))
 def test_hier2():
     freqs = [10, 21.544, 46.415, 100, 215.443, 464.159, 1000]
-    mdl_dir = "C:\Users\qmle\Desktop\Documents\Conferences\IWIPP\Model\workspace"
+    mdl_dir = "C:\\Users\qmle\Desktop\Documents\Conferences\IWIPP\Model\workspace"
     mdl_name = '1trace.rsmdl'
     rsmdl = load_mdl(mdl_dir, mdl_name)
     for freq in freqs:
@@ -452,7 +452,7 @@ def test_hier2():
         pt2 = (6.5, 12, 0.2)
         src1 = emesh.find_node(pt2)
         sink1 = emesh.find_node(pt1)
-        print src1, sink1
+        print(src1, sink1)
         circuit.comp_mode = 'val'
         circuit._graph_read(emesh.graph)
         vname = 'v' + str(src1)
@@ -473,14 +473,14 @@ def test_hier2():
         stats.print_stats()
 
         result = circuit.results
-        print circuit.results
-        raw_input()
+        print(circuit.results)
+        input()
 
         # print "all", res2
         imp = result[vname]
-        print "Freq", circuit.freq, circuit.s
-        print 'Res', np.real(imp) * 1e3
-        print 'Ind', np.imag(imp) * 1e9 / (2 * np.pi * circuit.freq)
+        print("Freq", circuit.freq, circuit.s)
+        print('Res', np.real(imp) * 1e3)
+        print('Ind', np.imag(imp) * 1e9 / (2 * np.pi * circuit.freq))
         plot = False
         netlist = ENetlist(new_module, emesh)
         netlist.export_netlist_to_ads()
@@ -588,7 +588,7 @@ def test_hier2():
 
 def test_Ushape():
     freqs = [10, 21.544, 46.415, 100, 215.443, 464.159, 1000]
-    mdl_dir = "C:\Users\qmle\Desktop\Documents\Conferences\IWIPP\Model\workspace"
+    mdl_dir = "C:\\Users\qmle\Desktop\Documents\Conferences\IWIPP\Model\workspace"
     mdl_name = '1trace.rsmdl'
     rsmdl = load_mdl(mdl_dir, mdl_name)
 
@@ -624,7 +624,7 @@ def test_Ushape():
         pr.enable()
         emesh.update_mutual()
         # Test new RL matrix
-        print "NEW"
+        print("NEW")
         time_RL = timer()
         C1 = RL_circuit()
         C1.comp_mode = 'val'
@@ -644,17 +644,17 @@ def test_Ushape():
         C1._add_termial(sink1)
         C1.build_current_info()
         C1.solve_iv()
-        print "new", timer() - time_RL
+        print("new", timer() - time_RL)
         imp = C1.results[vname]
         # print freq, 'kHz'
-        print 'RL1', np.real(imp), abs(np.imag(imp) / C1.s)
+        print('RL1', np.real(imp), abs(np.imag(imp) / C1.s))
         pr.disable()
         pr.create_stats()
         file = open('mystats.txt', 'w')
         stats = pstats.Stats(pr, stream=file)
         stats.sort_stats('cumulative')
         stats.print_stats()
-        print "OLD"
+        print("OLD")
         # Test old matrix solver
         time_PEEC = timer()
         C2 = Circuit()
@@ -682,9 +682,9 @@ def test_Ushape():
 
         # print "all", res2
         imp = peec_result[vname] / peec_result['I_Vs']
-        print 'Res', np.real(imp)
-        print 'Ind', np.imag(imp) / C2.s
-        print "old", timer() - time_PEEC
+        print('Res', np.real(imp))
+        print('Ind', np.imag(imp) / C2.s)
+        print("old", timer() - time_PEEC)
 
         ''' Compare between 2 solvers'''
         pos = {}
@@ -698,8 +698,8 @@ def test_Ushape():
                 net2 = C2.node_dict[node.node_id]
                 V1_name = 'v' + str(net1)
                 V2_name = 'v' + str(net2)
-                print "--Node--", n, 'V1_name', V1_name, 'V2_name', V2_name
-                print "V-New", abs(C1.results[V1_name]), "V-peec", abs(peec_result[V2_name])
+                print("--Node--", n, 'V1_name', V1_name, 'V2_name', V2_name)
+                print("V-New", abs(C1.results[V1_name]), "V-peec", abs(peec_result[V2_name]))
 
         # print freq, 'kHz'
         # print 'RL2', np.real(imp), abs(np.imag(imp) / C2.s)
@@ -808,7 +808,7 @@ def test_Ushape():
 
 def test_single_trace_mesh():
     freqs = np.linspace(10, 1000, 100).tolist()
-    mdl_dir = "C:\Users\qmle\Desktop\Documents\Conferences\IWIPP\Model\workspace"
+    mdl_dir = "C:\\Users\qmle\Desktop\Documents\Conferences\IWIPP\Model\workspace"
     mdl_name = 'ushape.rsmdl'
     rsmdl = load_mdl(mdl_dir, mdl_name)
     # freqs = [1000]
@@ -842,9 +842,9 @@ def test_single_trace_mesh():
         sink1 = emesh.find_node(pt2)
         # sink2 = emesh.find_node(pt3)
 
-        print 'src', src1, 'sink', sink1
+        print('src', src1, 'sink', sink1)
         src_name = 'v' + str(src1)
-        print src_name
+        print(src_name)
         C1.assign_freq(freq * 1000)
         # C1.indep_current_source(src1,0,1)
         C1.indep_voltage_source(src1, 0, 1)
@@ -868,7 +868,7 @@ def test_single_trace_mesh():
         src1 = C2.node_dict[src1]
         sink1 = C2.node_dict[sink1]
 
-        print 'net2', src1, sink1
+        print('net2', src1, sink1)
         C2.assign_freq(freq * 1000)
         C2.indep_voltage_source(src1, 0, 1)
         # C2.indep_current_source(src1,0,1)
@@ -896,17 +896,17 @@ def test_single_trace_mesh():
                 net2 = C2.node_dict[node.node_id]
                 V1_name = 'v' + str(net1)
                 V2_name = 'v' + str(net2)
-                print "--Node--", n, 'V1_name', V1_name, 'V2_name', V2_name
-                print "V-New", abs(C1.results[V1_name]), "V-Ltspice", abs(C2.results[V2_name]), "V-peec", abs(
-                    peec_result[V2_name])
+                print("--Node--", n, 'V1_name', V1_name, 'V2_name', V2_name)
+                print("V-New", abs(C1.results[V1_name]), "V-Ltspice", abs(C2.results[V2_name]), "V-peec", abs(
+                    peec_result[V2_name]))
 
         imp = 1 / C1.results['I_Vs']
-        print freq, 'kHz'
-        print 'RL1', np.real(imp), abs(np.imag(imp) / C1.s)
+        print(freq, 'kHz')
+        print('RL1', np.real(imp), abs(np.imag(imp) / C1.s))
         imp = 1 / peec_result['I_Vs']
-        print freq, 'kHz'
-        print 'RL2', np.real(imp), abs(np.imag(imp) / C2.s)
-        raw_input()
+        print(freq, 'kHz')
+        print('RL2', np.real(imp), abs(np.imag(imp) / C2.s))
+        input()
 
         # raw_input()
         # matplotlib.use('Agg')
@@ -1081,12 +1081,12 @@ def test_mutual():
         # circuit.solve_iv_hspice(filename='testM.sp',
         # env=os.path.abspath('C:\synopsys\Hspice_O-2018.09\WIN64\hspice.exe'))
         # circuit.results=circuit.hspice_result
-        print 'freq', f
+        print('freq', f)
         circuit._compute_mutual([src1, src2], [sink1, sink2], vname='Vs1')
 
 
 def test_layer_stack_mutual():
-    es = EStack(file="C:\Users\qmle\Desktop\Documents\Conferences\IWIPP\ELayerStack//3_layers.csv")
+    es = EStack(file="C:\\Users\qmle\Desktop\Documents\Conferences\IWIPP\ELayerStack//3_layers.csv")
     es.load_layer_stack()
     R1 = Rect(5, -5, -3.5, -0.5)
     R2 = Rect(5, -5, 0.5, 3.5)
@@ -1164,7 +1164,7 @@ def test_layer_stack_mutual():
     #       #circuit._add_ports(sink3)
 
     circuit.assign_freq(f * 1000)
-    print 'freq', f
+    print('freq', f)
     # circuit._compute_mutual([src1, src2], [sink1, sink2], vname='Vs1')
     circuit._compute_matrix([src1, src2, src3, src4], [sink1, sink2, sink3, sink4])
     all_I = []
@@ -1239,14 +1239,14 @@ def S_para_IWIPP_HSPICE_no_ground():
 
 def S_para_IWIPP_HSPICE_PCB():
     # USE HSPICE to extract s-parameter
-    mdl_dir = "C:\Users\qmle\Desktop\Documents\Conferences\IWIPP\Model\workspace"
+    mdl_dir = "C:\\Users\qmle\Desktop\Documents\Conferences\IWIPP\Model\workspace"
     mdl_name = 's_params_test_noground_validate.rsmdl'
     #mdl_name = 's_params_test2.rsmdl'
     rsmdl = load_mdl(mdl_dir, mdl_name)
     franges = [1000000]
     for i in range(len(franges)):
         f = franges[i]
-        print f
+        print(f)
         R1 = Rect(27.94, 22.86, 2.54, 78.74)
         R2 = Rect(22.86, 2.54, 2.54, 15.24)
         R3 = Rect(33.02, 30.48, 2.54, 78.74)
@@ -1275,7 +1275,7 @@ def S_para_IWIPP_HSPICE_PCB():
         emesh = EMesh(hier_E=hier, mdl=rsmdl)
         start = time.time()
         emesh.mesh_grid_hier(Nx=5, Ny=5)
-        print "meshing time", time.time() - start
+        print("meshing time", time.time() - start)
 
         pt1 = (8.89, 2.54, 1.535)
         pt2 = (78.74, 25.4, 1.535)
@@ -1289,7 +1289,7 @@ def S_para_IWIPP_HSPICE_PCB():
         P2 = emesh.find_node(pt2)
         P3 = emesh.find_node(pt3)
         P4 = emesh.find_node(pt4)
-        print P1,P2,P3,P4
+        print(P1,P2,P3,P4)
         '''
         fig = plt.figure(1)
         ax = a3d.Axes3D(fig)
@@ -1309,7 +1309,7 @@ def S_para_IWIPP_HSPICE_PCB():
 
         start = time.time()
         emesh.update_C_val(h=1.5)
-        print 'C update', time.time() - start
+        print('C update', time.time() - start)
         # add ac mesh
         # emesh_ac = copy.deepcopy(emesh)
         # emesh_ac.f = 100000 # kHz
@@ -1331,7 +1331,7 @@ def S_para_IWIPP_HSPICE_PCB():
         circuit.build_current_info()
         circuit.solve_iv()
         result = circuit.results
-        print result
+        print(result)
         # PLOTTING CURRENT/CURRENT DENSITY VECTORS
         all_I = []
         for e in emesh.graph.edges(data=True):
@@ -1343,7 +1343,7 @@ def S_para_IWIPP_HSPICE_PCB():
             I_name = 'I_L' + edge_name
             edge.I = np.abs(result[I_name])
             edge.J = edge.I / A *1e6 # / 5.96e7
-            print "J",edge.J,'A/m^2'
+            print("J",edge.J,'A/m^2')
             all_I.append(abs(edge.J))
         I_min = 1000
         I_max = 332000
@@ -1394,7 +1394,7 @@ def S_para_IWIPP_HSPICE_wground():
     franges = np.logspace(0, 9, 5)
     for i in range(len(franges)):
         f = franges[i]
-        print f
+        print(f)
         # USE HSPICE to extract s-parameter
         R1 = Rect(8, 0, 0, 5)
         R2 = Rect(8, 5, 5, 20)
@@ -1469,7 +1469,7 @@ def S_para_IWIPP_HSPICE_wground():
         circuit._add_termial(G3, True)
         circuit._add_termial(G4, True)
         file = os.path.abspath(
-            'C:\Users\qmle\Desktop\Documents\Conferences\IWIPP\S_PARA COMPARE') + '\s_para_not_scaled_' + str(i) + '.p'
+            'C:\\Users\qmle\Desktop\Documents\Conferences\IWIPP\S_PARA COMPARE') + '\s_para_not_scaled_' + str(i) + '.p'
 
         P, N = circuit._find_all_s_ports(P_pos=[P1, P2, P3, P4], P_neg=[G1, G2, G3, G4])
         H_SPICE = HSPICE(env=os.path.abspath('C:\synopsys\Hspice_O-2018.09\WIN64\hspice.exe'), file=file)
@@ -1529,10 +1529,10 @@ def S_para_IWIPP():
 
     # G5 = emesh.find_node(g5)
 
-    print P1, G1
-    print P2, G2
-    print P3, G3
-    print P4, G4
+    print(P1, G1)
+    print(P2, G2)
+    print(P3, G3)
+    print(P4, G4)
 
     S_dict = {'freq': []}
     for i in range(4):
@@ -1579,11 +1579,11 @@ def S_para_IWIPP():
 
     with open('spara4.csv', 'wb') as data:
         w = csv.writer(data)
-        w.writerow(S_dict.keys())
+        w.writerow(list(S_dict.keys()))
         for i in range(len(freqs)):
             row = []
-            for k in S_dict.keys():
-                print S_dict[k]
+            for k in list(S_dict.keys()):
+                print(S_dict[k])
                 row.append(S_dict[k][i])
             w.writerow(row)
 
@@ -1613,7 +1613,7 @@ def ECCE_layout():
     sheets = [Sheet(rect=sh, net_name=nets[rects_sh.index(sh)], type='point', n=(0, 0, 1), z=0.4) for sh in rects_sh]
     for i in range(len(sheets)):
         if i % 2 == 0:
-            print i, range(len(sheets))
+            print(i, list(range(len(sheets))))
             sh1 = sheets[i]
             sh2 = sheets[i + 1]
             comp.append(EWires(wire_radius=0.2, num_wires=4, wire_dis=0.2, start=sh1, stop=sh2, circuit=Circuit()))
@@ -1665,7 +1665,7 @@ def ECCE_layout():
     circuit.build_current_info()
     circuit.solve_iv()
     R, L = circuit._compute_imp2(T1, T2)
-    print R, L
+    print(R, L)
 
     if plot_3D_mesh:
         fig = plt.figure(2)
@@ -1683,7 +1683,7 @@ def ECCE_layout():
 def test_layer_stack_ushape():
     freqs = [10, 21.544, 46.415, 100, 215.443, 464.159, 1000]
     for freq in freqs:
-        es = EStack(file="C:\Users\qmle\Desktop\Documents\Conferences\IWIPP\ELayerStack//3_layers.csv")
+        es = EStack(file="C:\\Users\qmle\Desktop\Documents\Conferences\IWIPP\ELayerStack//3_layers.csv")
         es.load_layer_stack()
         pr = cProfile.Profile()
         pr.enable()
@@ -1741,7 +1741,7 @@ def test_layer_stack_ushape():
         # circuit._add_ports(sink2)
 
         # circuit.build_current_info()
-        print freq, 'kHz'
+        print(freq, 'kHz')
         # circuit.solve_iv()
         # print circuit._compute_imp(src1, sink1, sink1)
         # circuit._compute_matrix([src1], [sink1])
@@ -1827,10 +1827,10 @@ def test_plot_current(emesh=None, result=None, thick=0.2e-3, freq=1000):
 
 
 def test_read_srcipt():
-    mdl_dir = "C:\Users\qmle\Desktop\Documents\Conferences\IWIPP\Model\workspace"
+    mdl_dir = "C:\\Users\qmle\Desktop\Documents\Conferences\IWIPP\Model\workspace"
     mdl_name = 'ushape.rsmdl'
     rsmdl = load_mdl(mdl_dir, mdl_name)
-    dir = "C:\Users\qmle\Desktop\Documents\Conferences\IWIPP\\template.txt"
+    dir = "C:\\Users\qmle\Desktop\Documents\Conferences\IWIPP\\template.txt"
     src = Escript(dir)
     src.make_module()
     new_module =src.module

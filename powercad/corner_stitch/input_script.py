@@ -1,20 +1,25 @@
 # intermediate input conversion file. Author @ Imam Al Razi (5-29-2019)
 
-
-from PySide.QtGui import QFileDialog,QMainWindow
-
+#from PySide.QtGui import QFileDialog,QMainWindow
+from pathlib import Path
 import re
-from powercad.cons_aware_en.cons_engine import *
-import pandas as pd
-import constraint
-from CornerStitch import *
-from PySide import QtCore, QtGui
 import sys
+sys.path.append('..')
+#from cons_aware_en.cons_engine import *
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+import pandas as pd
+
+
+from powercad.corner_stitch.constraint import constraint
+from powercad.corner_stitch.CornerStitch import Rectangle
+#from pyqt import QtCore, QtGui
+
 #from powercad.project_builder.proj_dialogs import ConsDialog
-from powercad.design.parts import *
-from powercad.design.Routing_paths import *
-from powercad.cons_aware_en.cons_engine import New_layout_engine
-import getpass
+from powercad.design.parts import Part
+from powercad.design.Routing_paths import RoutingPath, BondingWires
+#from cons_aware_en.cons_engine import New_layout_engine
+#import getpass
 from powercad.design.group import Island
 
 '''
@@ -54,11 +59,11 @@ class ScriptInputMethod():
             for i in range(1, len(lines)):
                 line = lines[i]
                 if len(line) != 2:
-                    L = line.strip('\r\n')
-                    d_out = re.sub("\t", ". ", L)
-                    d_out = re.sub("\s", ",", d_out)
-                    line = d_out.rstrip(',')
-                    line = line.split(',')
+                    L = line.strip(b'\r\n')
+                    d_out = re.sub(b"\t", b". ", L)
+                    d_out = re.sub(b"\s", b",", d_out)
+                    line = d_out.rstrip(b',')
+                    line = line.split(b',')
                     Definition.append(line)
                 else:
                     part2 = i
@@ -66,20 +71,22 @@ class ScriptInputMethod():
 
             for i in range(part2 + 2, len(lines)):
                 line = lines[i]
-                L = line.strip('\r\n')
-                d_out = re.sub("\t", ". ", L)
-                d_out = re.sub("\s", ",", d_out)
-                line = d_out.rstrip(',')
-                line = line.split(',')
+                L = line.strip(b'\r\n')
+                d_out = re.sub(b"\t", b". ", L)
+                d_out = re.sub(b"\s", b",", d_out)
+                line = d_out.rstrip(b',')
+                line = line.split(b',')
+                line=[i.decode("utf-8") for i in line]
                 table_info.append(line)
 
 
         bond_wire_objects=[]
 
         for i in range(len(Definition)):
-            name=Definition[i][0]
+            name=Definition[i][0].decode("utf-8")
+            
             wire=BondingWires(name=name)
-            wire.info_file=Definition[i][1]
+            wire.info_file=Definition[i][1].decode("utf-8")
             wire.load_wire()
             bond_wire_objects.append(wire)
 
@@ -114,8 +121,8 @@ class ScriptInputMethod():
         '''
         # ------------------- for debugging --------------------------------------
         for i in bond_wire_objects:
-            print i.printWire()
-        print wires
+            print (i.printWire())
+        print (wires)
         # ------------------- for debugging --------------------------------------
         '''
         #raw_input()
@@ -125,20 +132,20 @@ class ScriptInputMethod():
 
 
     # reads the input layout script and seperates two parts : definition of components and layout geometry information
-    """
-    Sample:
+    #"""
+    #Sample:
     # Definition
-    power_lead D:\Demo\New_Flow_w_Hierarchy\Journal_Case\Components\PL.part
-    signal_lead D:\Demo\New_Flow_w_Hierarchy\Journal_Case\Components\SL.part
-    MOS D:\Demo\New_Flow_w_Hierarchy\Journal_Case\Components\CPM2-1200-0040B.part
+    #power_lead D:\Demo\New_Flow_w_Hierarchy\Journal_Case\Components\PL.part
+    #signal_lead D:\Demo\New_Flow_w_Hierarchy\Journal_Case\Components\SL.part
+    #MOS D:\Demo\New_Flow_w_Hierarchy\Journal_Case\Components\CPM2-1200-0040B.part
 
     # Layout Information
-    57 51 --->floorplan size
-    + T1 power 3 3 51 9
-          + L1 power_lead 6 5
-          + B6 power 36 10 1 1
-          + B8 power 45 10 1 1
-    """
+    #57 51 --->floorplan size
+    #+ T1 power 3 3 51 9 10 ---> x y width height level
+          #+ L1 power_lead 6 5 11
+          #+ B6 power 36 10 1 1 11
+          #+ B8 power 45 10 1 1 11
+    #"""
     def read_input_script(self):
         '''
         :return: Two lists: Definition part and layout geometry info part
@@ -150,12 +157,17 @@ class ScriptInputMethod():
         self.layout_info=[] # saves lines corresponding to layout_info in the input script
         for i in range(1,len(lines)):
             line=lines[i]
+            #print(line,len(line))
             if len(line)!=2:
-                L = line.strip('\r\n')
-                d_out = re.sub("\t", ". ", L)
-                d_out = re.sub("\s", ",", d_out)
-                line = d_out.rstrip(',')
-                line = line.split(',')
+                #print (line)
+                L = line.strip(b'\r\n')
+                #L = line.rstrip()
+                d_out = re.sub(b'\t', b'.' , L)
+                d_out = re.sub(b'\s', b',', d_out)
+                line = d_out.rstrip(b',')
+                line = line.split(b",")
+                line=[i.decode("utf-8") for i in line] #converts byte to string
+                #print ('line',line)
                 self.Definition.append(line)
             else:
                 part2=i
@@ -164,13 +176,14 @@ class ScriptInputMethod():
         Input=[]
         for i in range(part2+2,len(lines)):
             line=lines[i]
-            L = line.strip('\r\n')
-            d_out = re.sub("\t", ". ", L)
-            d_out = re.sub("\s", ",", d_out)
-            line = d_out.rstrip(',')
-            line = line.split(',')
+            L = line.strip(b'\r\n')
+            d_out = re.sub(b'\t', b'. ', L)
+            d_out = re.sub(b'\s', b',', d_out)
+            line = d_out.rstrip(b',')
+            line = line.split(b',')
+            line=[i.decode("utf-8") for i in line]
             Input.append(line)
-
+        #print (Input)
         self.layout_info.append(Input[0])
         bondwires = []
         for i in range(1,len(Input)):
@@ -192,10 +205,9 @@ class ScriptInputMethod():
         '''
         #--------for debugging------------------
         for i in self.layout_info:
-            print len(i),i
+            print (len(i),i)
         # --------for debugging------------------
         '''
-
         return self.Definition,self.layout_info
 
 
@@ -219,10 +231,10 @@ class ScriptInputMethod():
 
         # updates type list according to definition input
         for i in self.Definition:
-            if i[0] not in constraint.constraint.all_component_types:
-                c=constraint.constraint()
-                constraint.constraint.add_component_type(c,i[0])
-        self.all_components_list =  constraint.constraint.all_component_types  # set of all components considered so far
+            if i[0] not in constraint.all_component_types:
+                c=constraint()
+                constraint.add_component_type(c,i[0])
+        self.all_components_list =  constraint.all_component_types  # set of all components considered so far
 
         # populating routing path objects and creating a dictionary with keys: 'trace', 'bonding wire pad', 'via'
         self.all_route_info = {}
@@ -243,16 +255,20 @@ class ScriptInputMethod():
             for k in range(len(layout_info[j])):
                 # updates routing path components
                 if layout_info[j][k][0]=='T' and layout_info[j][k+1]=='power':
-                    element = RoutingPath(name='trace', type=0, layout_component_id=layout_info[j][k],layer_id=int(layout_info[j][-2]))
+                    layout_component_id=layout_info[j][k]+'.'+layout_info[j][-2] # 'T1.10' : layout component id.layer id
+                    element = RoutingPath(name='trace', type=0, layout_component_id=layout_component_id,layer_id=int(layout_info[j][-2]))
                     self.all_route_info['trace'].append(element)
                 elif layout_info[j][k][0]=='T' and layout_info[j][k+1]=='signal':
-                    element = RoutingPath(name='trace', type=1, layout_component_id=layout_info[j][k],layer_id=int(layout_info[j][-2]))
+                    layout_component_id = layout_info[j][k] + '.' + layout_info[j][-2]
+                    element = RoutingPath(name='trace', type=1, layout_component_id=layout_component_id,layer_id=int(layout_info[j][-2]))
                     self.all_route_info['trace'].append(element)
                 elif layout_info[j][k][0]=='B' and layout_info[j][k+1]=='signal':
-                    element = RoutingPath(name='bonding wire pad', type=1, layout_component_id=layout_info[j][k],layer_id=int(layout_info[j][-2]))
+                    layout_component_id = layout_info[j][k] #+ '.' + layout_info[j][-2]
+                    element = RoutingPath(name='bonding wire pad', type=1, layout_component_id=layout_component_id,layer_id=int(layout_info[j][-2]))
                     self.all_route_info['bonding wire pad'].append(element)
                 elif layout_info[j][k][0]=='B' and layout_info[j][k+1]=='power':
-                    element = RoutingPath(name='bonding wire pad', type=0, layout_component_id=layout_info[j][k],layer_id=int(layout_info[j][-2]))
+                    layout_component_id = layout_info[j][k] #+ '.' + layout_info[j][-2]
+                    element = RoutingPath(name='bonding wire pad', type=0, layout_component_id=layout_component_id,layer_id=int(layout_info[j][-2]))
                     self.all_route_info['bonding wire pad'].append(element)
 
                 #parts info gathering
@@ -265,13 +281,16 @@ class ScriptInputMethod():
                             angle=layout_info[j][m].strip('R')
                             break
                     if rotate==False:
-                        element = Part(name=layout_info[j][k+1], info_file=self.info_files[layout_info[j][k+1]],layout_component_id=layout_info[j][k],layer_id=int(layout_info[j][-2]))
+                        layout_component_id = layout_info[j][k] #+ '.' + layout_info[j][-2]
+                        element = Part(name=layout_info[j][k+1], info_file=self.info_files[layout_info[j][k+1]],layout_component_id=layout_component_id,layer_id=int(layout_info[j][-2]))
                         element.load_part()
                         #print"Foot",element.footprint
                         self.all_parts_info[layout_info[j][k+1]].append(element)
 
                     else:
-                        element = Part(info_file=self.info_files[layout_info[j][k + 1]],layout_component_id=layout_info[j][k],layer_id=int(layout_info[j][-2]))
+                        layout_component_id = layout_info[j][k] #+ '.' + layout_info[j][-2]
+                        print(layout_info[j])
+                        element = Part(info_file=self.info_files[layout_info[j][k + 1]],layout_component_id=layout_component_id,layer_id=int(layout_info[j][-2]))
                         element.load_part()
                         # print element.footprint
                         if angle == '90':
@@ -305,12 +324,14 @@ class ScriptInputMethod():
                             break
 
                     if rotate==False:
-                        element = Part(name=layout_info[j][k + 1], info_file=self.info_files[layout_info[j][k + 1]],layout_component_id=layout_info[j][k],layer_id=int(layout_info[j][-2]))
+                        layout_component_id = layout_info[j][k] #+ '.' + layout_info[j][-2]
+                        element = Part(name=layout_info[j][k + 1], info_file=self.info_files[layout_info[j][k + 1]],layout_component_id=layout_component_id,layer_id=int(layout_info[j][-2]))
                         element.load_part()
                         self.all_parts_info[layout_info[j][k + 1]].append(element)
 
                     else:
-                        element = Part(info_file=self.info_files[layout_info[j][k + 1]],layout_component_id=layout_info[j][k],layer_id=int(layout_info[j][-2]))
+                        layout_component_id = layout_info[j][k] #+ '.' + layout_info[j][-2]
+                        element = Part(info_file=self.info_files[layout_info[j][k + 1]],layout_component_id=layout_component_id,layer_id=int(layout_info[j][-2]))
                         element.load_part()
                         # print element.footprint
                         if angle == '90':
@@ -424,8 +445,8 @@ class ScriptInputMethod():
 
             else:
                 name=layout_info[j][1][0]+'_'+layout_info[j][2]
-                c=constraint.constraint()
-                constraint.constraint.add_component_type(c,name)
+                c=constraint()
+                constraint.add_component_type(c,name)
                 element=  RoutingPath(name=name, type=1, layout_component_id=layout_info[j][1])
                 key=name
                 self.all_route_info.setdefault(key,[])
@@ -433,7 +454,7 @@ class ScriptInputMethod():
 
             '''
 
-        self.all_components_type_mapped_dict = constraint.constraint.component_to_component_type
+        self.all_components_type_mapped_dict = constraint.component_to_component_type
         #-------------------------------------for debugging------------------------------
         #print self.all_parts_info
         #print self.info_files
@@ -454,14 +475,15 @@ class ScriptInputMethod():
         self.size = [float(i) for i in layout_info[0]]  # extracts layout size (1st line of the layout_info)
         self.cs_info = []  # list of rectanges to be used as cornerstitch input information
         self.component_to_cs_type = {}
-        self.all_components_list= self.all_components_type_mapped_dict.keys()
+        self.all_components_list= list(self.all_components_type_mapped_dict.keys())
         all_component_type_names = ["EMPTY"]
         self.all_components = []
         for j in range(1, len(layout_info)):
-            for k, v in self.all_parts_info.items():
+            for k, v in list(self.all_parts_info.items()):
                 for element in v:
                     for m in range(len(layout_info[j])):
-                        if element.layout_component_id == layout_info[j][m]:
+                        if element.layout_component_id.split('.')[0] == layout_info[j][m]:
+                        #if  layout_info[j][m] in element.layout_component_id :
                             if element not in self.all_components:
                                 self.all_components.append(element)
                             if element.name not in all_component_type_names :
@@ -474,10 +496,10 @@ class ScriptInputMethod():
 
 
         for j in range(1, len(layout_info)):
-            for k, v in self.all_route_info.items():
+            for k, v in list(self.all_route_info.items()):
                 for element in v:
                     for m in range(len(layout_info[j])):
-                        if element.layout_component_id == layout_info[j][m]:
+                        if element.layout_component_id.split('.')[0] == layout_info[j][m]:
                             if element not in self.all_components:
                                 self.all_components.append(element)
                             if element.type == 0 and element.name == 'trace':
@@ -493,7 +515,7 @@ class ScriptInputMethod():
              self.component_to_cs_type[all_component_type_names[i]] = self.all_components_type_mapped_dict[all_component_type_names[i]]
 
         # for each component populating corner stitch type information
-        for k, v in self.all_parts_info.items():
+        for k, v in list(self.all_parts_info.items()):
             for comp in v:
                 if comp.rotate_angle==0:
                     comp.cs_type = self.component_to_cs_type[comp.name]
@@ -523,12 +545,12 @@ class ScriptInputMethod():
 
         # converting list from object properties
         rects_info=[]
-        for k1,layout_data in hier_input_info.items():
+        for k1,layout_data in list(hier_input_info.items()):
             for j in range(len(layout_data)):
-                for k, v in self.all_parts_info.items():
+                for k, v in list(self.all_parts_info.items()):
                     for element in v:
-                        if element.layout_component_id in layout_data[j]:
-                            index=layout_data[j].index(element.layout_component_id)
+                        if element.layout_component_id.split('.')[0] in layout_data[j]:
+                            index=layout_data[j].index(element.layout_component_id.split('.')[0])
                             type_index=index+1
                             type_name=layout_data[j][type_index]
                             type = self.component_to_cs_type[type_name]
@@ -536,16 +558,17 @@ class ScriptInputMethod():
                             y = float(layout_data[j][4])
                             width = round(element.footprint[0])
                             height = round(element.footprint[1])
-                            name = layout_data[j][1]
+                            #name = layout_data[j][1]
+                            name = element.layout_component_id
                             Schar = layout_data[j][0]
                             Echar = layout_data[j][-1]
                             rotate_angle=element.rotate_angle
                             rect_info = [type, x, y, width, height, name, Schar, Echar,k1,rotate_angle] #k1=hierarchy level,# added rotate_angle to reduce type in constraint table
                             rects_info.append(rect_info)
 
-                for k, v in self.all_route_info.items():
+                for k, v in list(self.all_route_info.items()):
                     for element in v:
-                        if element.layout_component_id in layout_data[j]:
+                        if element.layout_component_id.split('.')[0] in layout_data[j]:
                             if element.type == 0 and element.name == 'trace':
                                 type_name = 'power_trace'
                             elif element.type == 1 and element.name == 'trace':
@@ -557,7 +580,8 @@ class ScriptInputMethod():
                             y = float(layout_data[j][4])
                             width = float(layout_data[j][5])
                             height = float(layout_data[j][6])
-                            name = layout_data[j][1]
+                            #name = layout_data[j][1]
+                            name=element.layout_component_id
                             #print name
                             Schar = layout_data[j][0]
                             Echar = layout_data[j][-1]
@@ -574,7 +598,8 @@ class ScriptInputMethod():
         layout_info=layout_info[1:]
         for i in range(len(layout_info)):
             for j in range(len(rects_info)):
-                if rects_info[j][5] in layout_info[i]:
+                #print rects_info[j][5].split('.')[0],layout_info[i]
+                if rects_info[j][5].split('.')[0] in layout_info[i]:
                     self.cs_info[i]=rects_info[j]
         #---------------------------------for debugging---------------------------
         #print "cs_info",len(self.cs_info)
@@ -593,6 +618,7 @@ class ScriptInputMethod():
                 color=colors[color_ind]
             except:
                 color='black'
+
             r=[rect[1],rect[2],rect[3],rect[4],color,rect[-2]]# x,y,w,h,cs_type,zorder
             rectlist.append(r)
 
@@ -629,7 +655,7 @@ class ScriptInputMethod():
     # generate initial constraint table based on the types in the input script and saves information in the given csv file as constraint
     def update_constraint_table(self,rel_cons=0,islands=None):
 
-        Types_init=self.component_to_cs_type.values() # already three types are there: 'power_trace','signal_trace','bonding_wire_pad'
+        Types_init=list(self.component_to_cs_type.values()) # already three types are there: 'power_trace','signal_trace','bonding_wire_pad'
         Types = [0 for i in range(len(Types_init))]
         for i in Types_init:
             if i=='EMPTY':
@@ -643,7 +669,7 @@ class ScriptInputMethod():
         r1 = ['Min Dimensions']
         r1_c=[]
         for i in range(len(Types)):
-            for k,v in self.component_to_cs_type.items():
+            for k,v in list(self.component_to_cs_type.items()):
                 if v==Types[i]:
                     r1_c.append(k)
         r1+=r1_c
@@ -655,7 +681,7 @@ class ScriptInputMethod():
             if Types[i]=='EMPTY' or Types[i]=='Type_3':
                 r2_c[i]=1.0
             else:
-                for k,v in self.component_to_cs_type.items():
+                for k,v in list(self.component_to_cs_type.items()):
                     if v==Types[i]:
                         for comp in self.all_components:
                             if k==comp.name and isinstance(comp,Part):
@@ -675,7 +701,7 @@ class ScriptInputMethod():
             if Types[i]=='EMPTY' or Types[i]=='Type_3':
                 r3_c[i]=1.0
             else:
-                for k, v in self.component_to_cs_type.items():
+                for k, v in list(self.component_to_cs_type.items()):
                     if v == Types[i]:
                         for comp in self.all_components:
                             if k == comp.name and isinstance(comp,Part):
@@ -695,7 +721,7 @@ class ScriptInputMethod():
             if Types[i]=='EMPTY' or Types[i]=='Type_3':
                 r4_c[i]=1.0
             else:
-                for k, v in self.component_to_cs_type.items():
+                for k, v in list(self.component_to_cs_type.items()):
                     if v == Types[i]:
                         for comp in self.all_components:
                             if k == comp.name and isinstance(comp,Part):
@@ -712,14 +738,14 @@ class ScriptInputMethod():
         r5 = ['Min Spacing']
         r5_c = []
         for i in range(len(Types)):
-            for k, v in self.component_to_cs_type.items():
+            for k, v in list(self.component_to_cs_type.items()):
                 if v == Types[i]:
                     r5_c.append(k)
         r5 += r5_c
         all_rows.append(r5)
         space_rows=[]
         for i in range(len(Types)):
-            for k,v in self.component_to_cs_type.items():
+            for k,v in list(self.component_to_cs_type.items()):
 
                 if v==Types[i]:
 
@@ -735,14 +761,14 @@ class ScriptInputMethod():
         r6 = ['Min Enclosure']
         r6_c = []
         for i in range(len(Types)):
-            for k, v in self.component_to_cs_type.items():
+            for k, v in list(self.component_to_cs_type.items()):
                 if v == Types[i]:
                     r6_c.append(k)
         r6 += r6_c
         all_rows.append(r6)
         enclosure_rows=[]
         for i in range(len(Types)):
-            for k,v in self.component_to_cs_type.items():
+            for k,v in list(self.component_to_cs_type.items()):
                 if v==Types[i]:
                     row=[k]
                     for j in range(len(Types)):
@@ -795,6 +821,7 @@ class ScriptInputMethod():
         '''
         :return: list of rectangles with rectangle objects having all properties to pass it into corner stitch data structure
         '''
+        #print self.cs_info
         input_rects = []
         bondwire_landing_info={} # stores bonding wire landing pad location information
         if flexible==True:
@@ -887,7 +914,7 @@ class ScriptInputMethod():
                         else:
                             continue
                 if len(rectangles) != len(island.elements):
-                    print "Check input script !! : Group of traces are not defined in proper way."
+                    print("Check input script !! : Group of traces are not defined in proper way.")
                 elements = island.elements
                 ordered_rectangle_names = [rect.name for rect in rectangles]
                 ordered_elements = []
@@ -958,7 +985,7 @@ class ScriptInputMethod():
                 connected_rectangles[rect.Netid].append(rect)
 
         #print connected_rectangles
-        for k,v in connected_rectangles.items():
+        for k,v in list(connected_rectangles.items()):
             island = Island()
             name = 'island'
             for rectangle in v:
@@ -999,7 +1026,7 @@ class ScriptInputMethod():
                                 else:
                                     continue
                         if len(rectangles) != len(island.elements):
-                            print "Check input script !! : Group of traces are not defined in proper way."
+                            print("Check input script !! : Group of traces are not defined in proper way.")
                         elements = island.elements
                         ordered_rectangle_names = [rect.name for rect in rectangles]
                         ordered_elements = []
@@ -1102,92 +1129,20 @@ def save_constraint_table(cons_df=None,file=None):
             cons_df.to_csv(file, sep=',', header=None, index=None)
 
 
-# ---------------------------------------These functions are not used---------------------------------------
-'''
-def show_constraint_table(parent,cons_df=None):
 
-
-    dialog = ConsDialog(parent=parent, cons_df=cons_df)
-    dialog.show()
-    dialog.exec_()
-    return parent.cons_df
-
-
-    #print "parent consdf",main_window.cons_df
-
-
-
-
-def plot_layout(fig=None,size=None):
-    if isinstance(fig,list):
-        rects=fig
-        colors = ['green', 'red', 'blue', 'yellow', 'purple', 'pink', 'magenta', 'orange', 'violet']
-        type = ['Type_1', 'Type_2', 'Type_3', 'Type_4', 'Type_5', 'Type_6', 'Type_7', 'Type_8', 'Type_9']
-        # zorders = [1,2,3,4,5]
-        Patches = {}
-
-        for r in rects:
-            i = type.index(r[0])
-            # print i,r.name
-            P = matplotlib.patches.Rectangle(
-                (r[1], r[2]),  # (x,y)
-                r[3],  # width
-                r[4],  # height
-                facecolor=colors[i],
-                alpha=0.5,
-                # zorder=zorders[i],
-                edgecolor='black',
-                linewidth=1,
-            )
-            Patches[r[5]] = P
-        fig=Patches
-
-    fig2, ax2 = plt.subplots()
-
-
-    Names = fig.keys()
-    Names.sort()
-    for k, p in fig.items():
-
-        if k[0] == 'T':
-            x = p.get_x()
-            y = p.get_y()
-            ax2.text(x + 0.1, y + 0.1, k)
-            ax2.add_patch(p)
-
-    for k, p in fig.items():
-
-        if k[0] != 'T':
-            x = p.get_x()
-            y = p.get_y()
-            ax2.text(x + 0.1, y + 0.1, k, weight='bold')
-            ax2.add_patch(p)
-    ax2.set_xlim(0, size[0])
-    ax2.set_ylim(0, size[1])
-    ax2.set_aspect('equal')
-
-    user_name = getpass.getuser()
-    if user_name == 'qmle':
-        fig_dir = "C:\Users\qmle\Desktop\New_Layout_Engine\New_design_flow\\"
-    elif user_name=='ialrazi':
-        fig_dir = 'C:/Users/ialrazi/Desktop/REU_Data_collection_input/Figs/'
-    plt.savefig( fig_dir+ '_init_layout' + '.png')
-
-
-'''
 
 
 
 
 if __name__ == '__main__':
 
-    method = ScriptInputMethod(input_script='C:\Users\ialrazi\Desktop\REU_Data_collection_input\Quang_Journal\\test.txt')
+    method = ScriptInputMethod(input_script='C:\\Users\ialrazi\Desktop\REU_Data_collection_input\Quang_Journal\\test.txt')
     method.read_input_script()  # returns Definition, layout_info
     layout_info_from_input_script = method.layout_info
     initial_islands = method.create_initial_island()
     for island in initial_islands:
         island.print_island()
-        print island.element_names
+        print(island.element_names)
 
 
 

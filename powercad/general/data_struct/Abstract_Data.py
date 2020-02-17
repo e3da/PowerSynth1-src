@@ -39,7 +39,7 @@ class Stack():
 
 if __name__ == '__main__':
     s1 = Stack()
-    print s1.isEmpty()
+    print(s1.isEmpty())
     s1.push(1)
     s1.push(2)
-    print s1.peek()
+    print(s1.peek())

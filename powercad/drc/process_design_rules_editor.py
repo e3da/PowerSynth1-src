@@ -48,7 +48,7 @@ class ProcessDesignRulesEditor(QtGui.QDialog):
             # create some default design rules
             self.parent.project.module_data.design_rules = ProcessDesignRules(1.2, 1.2, 0.2, 0.1, 1.0, 0.2, 0.2, 0.2)
             
-        for key, value in self.field_dict.iteritems():
+        for key, value in self.field_dict.items():
             rule_val = getattr(self.parent.project.module_data.design_rules, value)
             key.setText(str(rule_val))
             
@@ -61,7 +61,7 @@ class ProcessDesignRulesEditor(QtGui.QDialog):
         csv_infile.close()
         
         # Fill UI fields
-        for key, value in self.field_dict.iteritems():
+        for key, value in self.field_dict.items():
             for rule in design_rules_list:
                 rule_name = rule[0]
                 rule_val = rule[1]
@@ -86,7 +86,7 @@ class ProcessDesignRulesEditor(QtGui.QDialog):
         fields_pass, field_input = self.check_fields()
         if fields_pass:
             # set data into the process design rules object
-            for i in xrange(len(self.fields)):
+            for i in range(len(self.fields)):
                 field_obj = self.fields[i]
                 field_val = field_input[i]
                 field_name = self.field_dict[field_obj]

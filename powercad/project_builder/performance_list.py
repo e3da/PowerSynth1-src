@@ -116,7 +116,7 @@ class PerformanceListUI(object):
             if (Matlab_dialog.exec_()):
 
 
-                print "successfully open new dialog"
+                print("successfully open new dialog")
 
     def thermal_model_options(self):
         if self.ui.cmb_thermal_model.currentText()=='Matlab':
@@ -124,7 +124,7 @@ class PerformanceListUI(object):
             Matlab_dialog.set_matlab_script(Thermal_Module.format(""))
             Matlab_dialog.open_instruction("Instruction for Thermal Model goes here")
             if (Matlab_dialog.exec_()):
-                print "successfully open new dialog"
+                print("successfully open new dialog")
 
     def populate_cmb_elec_therm(self):
         self.refresh_window()
@@ -304,16 +304,16 @@ class PerformanceListUI(object):
             elif self.ui.cmb_perform_type.currentText() == "Inductance":
                 measure = ElectricalMeasure.MEASURE_IND
             else: 
-                print "Error"
+                print("Error")
                 return 1
             # get frequency
             try:
                 freq = float(self.ui.txt_switchFreq.text())*1e3 # Convert to kHz
             except (ValueError):
-                print "Error: No switching frequency"
+                print("Error: No switching frequency")
                 return 1
             if freq == 0:  
-                print "Error: Switching frequency must be greater than zero"
+                print("Error: Switching frequency must be greater than zero")
                 return 1
             # create performace measure
             if measure == ElectricalMeasure.MEASURE_CAP:
@@ -335,7 +335,7 @@ class PerformanceListUI(object):
             elif self.ui.cmb_perform_type.currentText() == "Std. Dev.":
                 stat_fn = ThermalMeasure.FIND_STD_DEV
             else: 
-                print "Error"
+                print("Error")
                 return 1
             # create performace measure
             performance_measure = ThermalMeasure(stat_fn,self.perform_devices,self.ui.txt_perform_name.text(),model)
@@ -398,4 +398,4 @@ class PerformanceListUI(object):
             self.perf_items.append(perf_item)
 
     def show_selected(self):
-        print self.ui.tbl_performance
+        print(self.ui.tbl_performance)

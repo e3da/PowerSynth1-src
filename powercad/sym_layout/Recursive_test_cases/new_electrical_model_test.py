@@ -49,7 +49,7 @@ def make_test_devices(symbols, dev=None, dev_dict=None):
                 obj.tech = dev
     else:
         for obj in symbols:
-            if obj.name in dev_dict.keys():
+            if obj.name in list(dev_dict.keys()):
                 obj.tech = dev_dict[obj.name]
 
 
@@ -239,8 +239,8 @@ def layout_plot(layout, ax):
     # print"Len", len(layout)
     for i in range(len(layout)):
         figures = layout[i]
-        size = figures.keys()[0]
-        patches = figures.values()[0]
+        size = list(figures.keys())[0]
+        patches = list(figures.values())[0]
         for p in patches:
             ax.add_patch(p)
         ax.set_xlim(0, size[0])
@@ -254,8 +254,8 @@ def plot_selected_solutions(individual, ax, W, H, engine):
 
     for i in range(len(figure)):
         figures = figure[i]
-        size = figures.keys()[0]
-        patches = figures.values()[0]
+        size = list(figures.keys())[0]
+        patches = list(figures.values())[0]
         for p in patches:
             ax.add_patch(p)
         ax.set_xlim(0, size[0])
@@ -276,11 +276,11 @@ def form_sym_obj_rect_dict(layout_data, div=1000):
         symb_rect_dict = {}
 
         # print "p_data",p_data
-        W, H = p_data.keys()[0]
+        W, H = list(p_data.keys())[0]
         W = float(W) / div
         H = float(H) / div
-        rect_dict = p_data.values()[0]
-        for r_id in rect_dict.keys():
+        rect_dict = list(p_data.values())[0]
+        for r_id in list(rect_dict.keys()):
             # print 'rect id',r_id
             left = 1e32
             bottom = 1e32
@@ -336,7 +336,7 @@ class new_engine_opt:
             figure = i
             fig9 = matplotlib.pyplot.figure()
             ax1 = fig9.add_subplot(111, aspect='equal')
-            for k, v in figure.items():
+            for k, v in list(figure.items()):
                 for i in v:
                     ax1.add_patch(i)
                 plt.xlim(-2000, 22000)
@@ -549,7 +549,7 @@ def random_layout(directory):
 
     data=opt_problem.optimize() # list of solutions: [{'T2': x: 2.123, y: 1.638, w: 17.877, h: 7.439, 'T3': x: 0.0, y: 9.077, w: 20.0, h: 10.923, 'T1': x: 0.0, y: 0.0, w: 20.0, h: 1.638},....,{.....}]
 
-    print data
+    print(data)
 
 
 
