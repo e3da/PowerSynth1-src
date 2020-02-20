@@ -108,7 +108,7 @@ def export_solutions(solutions=None,directory=None,pareto_data=None,export = Fal
     for i in range(len(solutions)):
         item = solutions[i].name
         file_name = sol_path + '/' + item + '.txt'
-        with open(file_name, 'wb') as my_file:
+        with open(file_name, 'w') as my_file:
             for k, v in list(solutions[i].abstract_info[item]['rect_info'].items()):
                 if k[0]=='T' :
                     x1=v.x/1000.0
@@ -136,7 +136,7 @@ def export_solutions(solutions=None,directory=None,pareto_data=None,export = Fal
     for i in range(len(solutions)):
         item = solutions[i].name
         file_name = sol_path + '/' + item + '.csv'
-        with open(file_name, 'wb') as my_csv:
+        with open(file_name, 'w') as my_csv:
             csv_writer = csv.writer(my_csv, delimiter=',')
             csv_writer.writerow(["Size", performance_names[0], performance_names[1]])
             # for k, v in _fetch_currencies.iteritems():
