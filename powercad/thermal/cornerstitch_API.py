@@ -38,9 +38,9 @@ class ThermalMeasure(object):
         self.name = name
 
 
-class Thermal_data_collect_main():
-    def __init__(self):
-        QtGui.QMainWindow.__init__(self, None)
+#class Thermal_data_collect_main():
+    #def __init__(self):
+        #QtGui.QMainWindow.__init__(self, None)
 
 
 class CornerStitch_Tmodel_API:
@@ -50,7 +50,7 @@ class CornerStitch_Tmodel_API:
         self.layer_stack = None  # a layer stack object
         self.comp_dict = comp_dict
         self.model = 'analytical'  # or 'characterized'
-        self.thermal_main = Thermal_data_collect_main()  # a fake main window to link with some dialogs
+        #self.thermal_main = Thermal_data_collect_main()  # a fake main window to link with some dialogs
         self.devices = {}
         self.dev_powerload_table = {}
         self.mat_lib = '..//..//..//tech_lib//Material//Materials.csv'
