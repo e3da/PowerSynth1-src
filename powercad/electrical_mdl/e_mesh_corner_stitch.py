@@ -17,6 +17,22 @@ L_SHAPE = 1
 T_SHAPE = 2
 
 
+def form_skindepth_distribution(start=0,stop=1,freq=1e5, cond=5.96e7, N = 5):
+    '''
+    Gotta make sure that N is always an odd number such as 1 3 5 7 ...
+    '''
+    u = 4 * math.pi * 1e-7
+    skind_depth = math.sqrt(1 / (math.pi * freq * u * cond * 1e6)) * 1e6# first calculate the skindepth value in um
+    #print (skind_depth,"um")
+    split_list = np.zeros((1,N+1)) # 1 row and N collumn
+    split_list[0,0] = start
+    split_list[0,N] = stop 
+    for i in range(N//2): # get the half (integer) of the number of split
+        split_list[0,i+1] = start + int(skind_depth*(i+1)*1000)
+        split_list[0,N-i-1] =  stop - int(skind_depth*(i+1)*1000)
+    #print (split_list[0])
+    #print (np.linspace(start,stop,N))
+    return split_list[0]
 class Mesh_Node_Tbl():
     def __init__(self, node_dict={}, xs=[], ys=[], z_pos = 0):
         '''
@@ -78,7 +94,7 @@ class EMesh_CS(EMesh):
         if mode == 0:
             self._handle_pins_connections()
 
-    def mesh_update_optimized(self, Nw=5):
+    def mesh_update_optimized(self, Nw=3):
         '''
         If trace orientations are included, this will be used
         :param Nw: number of mesh points on the width of traces
@@ -102,7 +118,7 @@ class EMesh_CS(EMesh):
             self.handle_hier_node_opt(mesh_pts_tbl,g)
         self.update_E_comp_parasitics(net=self.comp_net_id, comp_dict=self.comp_dict)
 
-        self.plot_isl_mesh(True)
+        #self.plot_isl_mesh(True,mode = "plotly")
 
     def mesh_nodes_trace_cells(self, trace_cells=None, Nw=3, method="uniform", ax=None, z_pos = 0):
         '''
@@ -113,7 +129,7 @@ class EMesh_CS(EMesh):
             trace_cells: List of trace cells object
             Nw: Number of splits on the opposed direction of trace cells
             method: uniform : split the trace uniformly
-                    frequency: split the trace based on the global frequency var. Similar to how FastHenry handles the mesh
+                    skin_depth: split the trace based on the global frequency var. Similar to how FastHenry handles the mesh
             z_pos: z position of the island from MDK
         Returns:
             List of list: [[x1,y1,dir], ...]
@@ -137,12 +153,14 @@ class EMesh_CS(EMesh):
                 xs = [tc.left, tc.right]
                 for loc in tc.comp_locs:
                     xs.append(loc[0])
-                if method == "uniform":
-                    if Nw != 1:
+                if Nw!=1:
+                    if method == "uniform":
                         ys = np.linspace(tc.bottom, tc.top, Nw)
-                    else:
-                        tc.height_eval()
-                        ys = np.asarray([tc.bottom + tc.height / 2])
+                    if method == "skin_depth":
+                        ys = form_skindepth_distribution(start = tc.bottom,stop = tc.top, N=Nw)
+                else:
+                    tc.height_eval()
+                    ys = np.asarray([tc.bottom + tc.height / 2])
                 X, Y = np.meshgrid(xs, ys)  # XY on each layer
 
                 mesh = list(zip(X.flatten(), Y.flatten()))
@@ -160,12 +178,15 @@ class EMesh_CS(EMesh):
                 # Gather all y-cut
                 for loc in tc.comp_locs:
                     ys.append(loc[1])
-                if method == "uniform":
-                    if Nw != 1:
+                if Nw!=1:
+                    if method == "uniform":
                         xs = np.linspace(tc.left, tc.right, Nw)
-                    else:
-                        tc.width_eval()
-                        xs = np.asarray([tc.left + tc.width / 2])
+                    elif method == "skin_depth":
+                        xs = form_skindepth_distribution(start = tc.left,stop = tc.right, N=Nw)
+                else:
+                    tc.width_eval()
+                    xs = np.asarray([tc.left + tc.width / 2])
+
                 X, Y = np.meshgrid(xs, ys)  # XY on each layer
                 mesh = list(zip(X.flatten(), Y.flatten()))
                 tbl_xs += list(xs)
@@ -186,8 +207,13 @@ class EMesh_CS(EMesh):
             corner_dir = np.array([c_tc.has_left, c_tc.has_right, c_tc.has_bot, c_tc.has_top])
             corner_dir = list(corner_dir.astype(int))
             # create the grid on the corner piece
-            xs = np.linspace(c_tc.left, c_tc.right, Nw)
-            ys = np.linspace(c_tc.bottom, c_tc.top, Nw)
+            if method == "uniform":
+                xs = np.linspace(c_tc.left, c_tc.right, Nw)
+                ys = np.linspace(c_tc.bottom, c_tc.top, Nw)
+            elif method == "skin_depth":
+                xs = form_skindepth_distribution(start = c_tc.left,stop = c_tc.right, N=Nw)
+                ys = form_skindepth_distribution(start = c_tc.bottom,stop = c_tc.top, N=Nw)
+
             if corner_dir == [0, 1, 0, 1]:  # bottom left corner
                 for id in range(Nw):
                     if id != 0 and id != Nw - 1:
@@ -289,7 +315,7 @@ class EMesh_CS(EMesh):
                 self._save_hier_node_data(hier_nodes=node_group, parent_data=parent_data)
 
     def handle_pins_connect_trace_cells(self, trace_cells=None, island_name=None):
-        print(("len", len(trace_cells)))
+        #print(("len", len(trace_cells)))
         for sh in self.hier_E.sheets:
             group = sh.parent.parent  # Define the trace island (containing a sheet)
             sheet_data = sh.data
@@ -364,8 +390,8 @@ class EMesh_CS(EMesh):
             el = elements[0]
             l, r, b, t = self.get_elements_coord(el)
             tc = TraceCell(left=l, right=r, bottom=b, top=t)
-            print (type(el_names[0]))
-            print (el_names[0])
+            #print (type(el_names[0]))
+            #print (el_names[0])
 
             tc.type = 0 if self.trace_ori[el_names[0]] == 'H' else 1
             return [tc]
@@ -525,9 +551,9 @@ class EMesh_CS(EMesh):
             isl = isl_dict[g.name]
             points = self.mesh_nodes_planar(isl=isl)
             self.hier_group_dict = {}
-            self.mesh_edges(thick=0.2)  # the thickness is fixed right now but need to be updated by MDK later
-            self.plot_isl_mesh(plot=True)
             self.handle_hier_node(points, g)
+            self.mesh_edges(thick=0.2)  # the thickness is fixed right now but need to be updated by MDK later
+            self.plot_isl_mesh(plot=True, mode ='plotly')
 
     def mesh_nodes_planar(self, isl=None):
         '''
@@ -546,15 +572,15 @@ class EMesh_CS(EMesh):
         # for each island set the
         # print "num nodes",len(mesh_nodes)
         for node in mesh_nodes:
-            node.pos[0] = node.pos[0] / 1000.0
-            node.pos[1] = node.pos[1] / 1000.0
+            node.pos[0] = node.pos[0] 
+            node.pos[1] = node.pos[1] 
             node.type = 'internal' if node.b_type == [] else 'boundary'  # set boundary type, b_type is set from CS
             node.node_id = self.node_count  # update node_id
             node.group_id = isl.name
             xs.append(node.pos[0])  # get x locs
             ys.append(node.pos[1])  # get y locs
             name = str(node.pos[0]) + str(node.pos[1]) + str(z)
-            node.pos.append(z)
+            node.pos.append(z*1000)
             if not (name in self.node_dict):
                 p = (node.pos[0], node.pos[1], z)
                 self.node_dict[name] = p
@@ -573,7 +599,7 @@ class EMesh_CS(EMesh):
 
         return points
 
-    def mesh_edges_optimized(self, mesh_tbl=None, trace_num=None, Nw=3, mesh_type="uniform", thick=0.2):
+    def mesh_edges_optimized(self, mesh_tbl=None, trace_num=None, Nw=5, mesh_type="uniform", thick=0.2):
         '''
 
         Args:
@@ -652,6 +678,8 @@ class EMesh_CS(EMesh):
 
                 elif tc.type == 1:  # Vertical type
                     width = tc.width #/ 1000.0
+                    trace_type = "internal"
+
                     if North != None:
                         y_n = North.pos[1]
                         name = str(node.node_id) + '_' + str(North.node_id)
@@ -1032,17 +1060,16 @@ class EMesh_CS(EMesh):
             ax.add_patch(p)
         plt.show()
 
-    def plot_isl_mesh(self, plot=False):
+    def plot_isl_mesh(self, plot=False, mode = 'matplotlib'):
         if plot:
             fig = plt.figure(1)
             ax = Axes3D(fig)
             ax.set_xlim3d(0, 100000)
             ax.set_ylim3d(0, 100000)
             ax.set_zlim3d(0, 2)
-            self.plot_3d(fig=fig, ax=ax, show_labels=True, highlight_nodes=None)
-            plt.show()
-
-
+            self.plot_3d(fig=fig, ax=ax, show_labels=True, highlight_nodes=None,mode = mode)
+            if plot and mode =='matplotlib':
+                plt.show()
     def test_plot_neightbors(self, mesh_tbl):
         node_map = mesh_tbl.nodes
         xs = [loc[0] for loc in node_map]

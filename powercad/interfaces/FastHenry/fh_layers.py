@@ -3,7 +3,7 @@
 """
 
 import numpy as np
-import sobol as sb
+#import sobol as sb
 import time
 import operator
 import itertools
@@ -889,7 +889,8 @@ def output_fh_script_mesh(md, filename):
     text_file.close()
 
 if __name__ == "__main__":
-    sobol_array = np.array(sb.sobol_seq.i4_sobol_generate(2,3,0))
+    #sobol_array = np.array(sb.sobol_seq.i4_sobol_generate(2,3,0))
+    sobol_array = []
     length = sobol_array[0,:] * 59 + 1
     width =  sobol_array[1,:]  * 14 + 1
     #print length

@@ -534,6 +534,7 @@ class RL_circuit():
         if method ==1:
             self.results= scipy.sparse.linalg.spsolve(A,Z)
         elif method ==2:
+            print(A)
             self.results= np.linalg.solve(A,Z)
         elif method ==3:
             self.results = scipy.linalg.solve(A, Z)
@@ -542,7 +543,7 @@ class RL_circuit():
         elif method ==5: # direct inverse method.
             self.results = np.linalg.inv(A)*Z
             self.results=np.squeeze(np.asarray(self.results))
-        print(("solve", time.time() - t, "s"))
+        #print(("solve", time.time() - t, "s"))
 
         #print np.shape(self.A)
         #print "RESULTS",self.results
@@ -589,17 +590,17 @@ class RL_circuit():
                 for c in range(N):
                     if int(mat_A[r,c]) != 0:
                         V[r,c] =1
-            print(V)
-            print((np.where(~V.any(axis=1))[0]))
+            #print(V)
+            #print((np.where(~V.any(axis=1))[0]))
 
 
 def test_RL_circuit1():
     print("new method")
     circuit = RL_circuit()
     circuit._graph_add_comp('B1', 1, 2, 1 + 1e-9j)
-    circuit._graph_add_comp('B2', 1, 2, 1 + 1e-9j)
-    circuit._graph_add_comp('B3', 2, 0, 1 + 1e-9j)
-    circuit._graph_add_M('M12', 'B1', 'B2', 0.5e-9)
+    circuit._graph_add_comp('B2', 3, 4, 1 + 1e-9j)
+    #circuit._graph_add_comp('B3', 2, 0, 1 + 1e-9j)
+    circuit._graph_add_M('M12', 'B1', 'B2', 0.2e-9)
 
     circuit.indep_current_source(1,0,1)
     #circuit.indep_voltage_source(1, 0, 1)

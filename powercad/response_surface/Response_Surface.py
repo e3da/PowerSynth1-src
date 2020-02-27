@@ -152,7 +152,7 @@ class RS_model:
         if file_ext=='csv':
             for name in self.generic_fnames:
                 filepath=os.path.join(wdir,name+'.'+file_ext)
-                f=open(filepath,'rb')    # open filepath
+                f=open(filepath,'r')    # open filepath
                 reader= csv.DictReader(f) 
                 all_rows=[]
                 all_sweep=[] 

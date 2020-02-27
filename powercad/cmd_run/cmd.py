@@ -18,6 +18,7 @@ import types
 import os
 import glob
 import copy
+import csv
 
 class Cmd_Handler:
     def __init__(self,debug=False):
@@ -230,7 +231,7 @@ class Cmd_Handler:
 
             print ("run the optimization")
             self.init_cs_objects()
-            self.set_up_db()
+            self.set_up_db() # temp commented out
 
             if run_option == 0:
                 self.solutions=generate_optimize_layout(layout_engine=self.engine, mode=layout_mode,rel_cons=self.i_v_constraint,
@@ -486,7 +487,9 @@ class Cmd_Handler:
 
         if not os.path.exists(database):
             os.makedirs(database)
-        self.db_file = database + '/' + 'layout.db'
+        self.db_file = database + '\\' + 'layout.db'
+        self.db_file = os.path.abspath(self.db_file)
+        print (self.db_file)
         conn = create_connection(self.db_file)
         with conn:
             create_table(conn)

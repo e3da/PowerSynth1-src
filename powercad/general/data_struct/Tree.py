@@ -63,13 +63,14 @@ class Tree():
         self.root = T_Node(None, 'ROOT', 'ROOT', tree=self)
         self.graph = nx.Graph()
         self.max_rank = 0
-
-    def __del__(self):
-        del self.nodes
-        del self.root
-        self.graph.clear()
-        del self.graph
-
+    
+    #def __del__(self):
+        
+        #del self.nodes
+        #del self.root
+        #self.graph.clear()
+        #del self.graph
+    
     def get_node_by_name(self,node_name):
         for n in self.nodes:
             # This wouldnt work in REU branch.

@@ -769,6 +769,8 @@ class New_layout_engine():
             # print Layout_Rects
             # CS_SYM_Updated = CS_SYM_Updated['H']
             # self.cur_fig_data = plot_layout(Layout_Rects, level,self.min_dimensions)
+            
+            #''' Data base issue
             if count == None:
                 # for i in range(len(Layout_Rects)):
                 for i in range(len(Layout_Rects)):
@@ -777,7 +779,7 @@ class New_layout_engine():
             else:
                 # for i in range(len(Layout_Rects)):
                 self.save_layouts(Layout_Rects[0], count=count, db=db)
-
+            #'''
 
 
             #mode-3

@@ -195,8 +195,8 @@ class EMesh():
         self.hier_edge_data = {}  # edge name : parent edge data
         self.comp_net_id = {}  # a dictionary for relationship between graph index and components net-names
 
-    def plot_3d(self, fig, ax, show_labels=False, highlight_nodes=None):
-        network_plot_3D(G=self.graph, ax=ax, show_labels=show_labels, highlight_nodes=highlight_nodes)
+    def plot_3d(self, fig, ax, show_labels=False, highlight_nodes=None, mode = 'matplotlib'):
+        network_plot_3D(G=self.graph, ax=ax, show_labels=show_labels, highlight_nodes=highlight_nodes,engine =mode)
 
     def plot_lumped_graph(self):
         pos = {}
@@ -237,14 +237,17 @@ class EMesh():
             self.graph.add_edge(n1, n2, data=edge_data, ind=ind, res=res, name=edge_data.data['name'])
             # when update edge, update node in M graph as edge data to store M values later
             edge_name = edge_data.data['name']
+            '''
             if w == 0:
                 print((edge_name, w, l))
                 eval(input())
             print((w , l , "divide here"))
+            '''
             self.all_W.append(w / 1000.0)
             self.all_L.append(l / 1000.0)
             self.all_n1.append(n1)
             self.all_n2.append(n2)
+        
             if eval_L:
                 self.m_graph.add_node(edge_name)  # edge name by 2 nodes
 
@@ -309,7 +312,9 @@ class EMesh():
                 # print all_r
                 # print all_l
                 # all_c = self.compute_all_cap()
-                check_neg = True
+                check_neg_R = False
+                check_neg_L = False
+
                 debug = False
 
                 for i in range(len(self.all_W)):
@@ -317,40 +322,30 @@ class EMesh():
                     n2 = self.all_n2[i]
                     # print 'bf',self.graph[n1][n2].values()[0]
                     if not ([n1, n2] in self.rm_edges):
-                        if all_r[i] > 0 and all_l[i] > 0:
+                        edge_data = list(self.graph[n1][n2].values())[0]['data']
+                        if all_r[i] > 0:
                             # self.graph[n1][n2].values()[0]['cap'] = all_c[i] * 1e-12
-                            edge_data = list(self.graph[n1][n2].values())[0]['data']
                             # print 'w', 'l', self.all_W[i], self.all_L[i]
                             list(self.graph[n1][n2].values())[0]['res'] = all_r[i] * 1e-3
-                            list(self.graph[n1][n2].values())[0]['ind'] = all_l[i] * 1e-9
                             edge_data.R = all_r[i] * 1e-3
+                        else:
+                            check_neg_R = True
+                            temp_R = trace_resistance(self.f, self.all_W[i], self.all_L[i], t, h)
+                            list(self.graph[n1][n2].values())[0]['res'] = temp_R * 1e-3
+                            edge_data.R = temp_R * 1e-3
+
+                        if all_l[i] > 0 :
+                            edge_data = list(self.graph[n1][n2].values())[0]['data']
+                            list(self.graph[n1][n2].values())[0]['ind'] = all_l[i] * 1e-9
                             edge_data.L = all_l[i] * 1e-9
 
                             # edge_data.C = all_c[i]*1e-12
-
                         else:
-                            check_neg = True
-                            if debug:
-                                print((all_r[i]))
-                                print((all_l[i]))
-                                print(('w', 'l', self.all_W[i], self.all_L[i]))
-                            # RECOMPUTE USING MICROSTRIP FOR CASES THE RS MODEL IS NOT STABLE
+                            check_neg_L = True
                             temp_L = trace_inductance(self.all_W[i], self.all_L[i], t, h)
-                            temp_R = trace_resistance(self.f, self.all_W[i], self.all_L[i], t, h)
-                            list(self.graph[n1][n2].values())[0]['res'] = temp_R * 1e-3
                             list(self.graph[n1][n2].values())[0]['ind'] = temp_L * 1e-9
-                            edge_data.R = temp_R * 1e-3
                             edge_data.L = temp_L * 1e-9
-                    # Debug
-                    if debug:  # This is to detect very small inductance/resistance values that might lead to singular matrix
-                        list_of_nodes = [140, 146, 160, 161, 165, 170, 193]
-                        print(n1)
-                        print((type(n1)))
-                        if n1 in list_of_nodes or n2 in list_of_nodes:
-                            print(("edge between: ", n1, n2))
-                            print((edge_data.R))
-                            print((edge_data.L))
-                            eval(input())
+                    
         else:  # DC mode
             all_r = p * np.array(self.all_L) / (np.array(self.all_W) * t) * 1e-3
             for i in range(len(self.all_W)):
@@ -359,8 +354,10 @@ class EMesh():
                 list(self.graph[n1][n2].values())[0]['res'] = all_r[i]
                 edge_data = list(self.graph[n1][n2].values())[0]['data']
                 edge_data.R = all_r[i]
-        if check_neg:
-            print("Found some negative values during RS model evaluation, please re-characterize the model. Switch to microstrip for evaluation")
+        if check_neg_R:
+            print("Found some negative values during RS model evaluation for resistnace, please re-characterize the model. Switch to microstrip for evaluation")
+        if check_neg_L:
+            print("Found some negative values during RS model evaluation for inductance, please re-characterize the model. Switch to microstrip for evaluation")
 
     def update_hier_edge_RL(self):
         for e in self.hier_edge_data:
@@ -611,7 +608,6 @@ class EMesh():
         ''' Prepare M params'''
         for e1 in all_edges:
             data1 = e1
-            print(data1)
             n1_1 = get_node[data1[0]]['node']  # node 1 on edge 1
             n1_2 = get_node[data1[1]]['node']  # node 2 on edge 1
             p1_1 = n1_1.pos
@@ -627,7 +623,6 @@ class EMesh():
                 z1 = edge1.z
                 rect1 = edge1.data['rect']
                 rect1_data = [w1, l1, t1, z1]
-                print(('rect1', rect1_data))
             else:
                 continue
 
@@ -1059,6 +1054,10 @@ class EMesh():
                 # Get x,y,z positions
                 x, y = sheet_data.rect.center()
                 z = sheet_data.z
+
+                x = int(x*1000)
+                y = int(y*1000)
+                z = int(z*1000)
                 cp = [x, y, z]
                 if not (sheet_data.net in self.comp_net_id):
                     cp_node = MeshNode(pos=cp, type=conn_type, node_id=self.node_count, group_id=None)
@@ -1071,7 +1070,11 @@ class EMesh():
 
                     if sheet_data.node == None:  # floating net
                         x, y = sheet_data.rect.center()
+                        x
                         z = sheet_data.z
+                        x = int(x*1000)
+                        y = int(y*1000)
+                        z = int(z*1000)
                         cp = [x, y, z]
                         # print "CP",cp
                         if not (sheet_data.net in self.comp_net_id):
@@ -1087,7 +1090,11 @@ class EMesh():
                 # Get x,y,z positions
                 x, y = sheet_data.rect.center()
                 z = sheet_data.z
+                x = int(x*1000)
+                y = int(y*1000)
+                z = int(z*1000)
                 cp = [x, y, z]
+
                 if not (sheet_data.net in self.comp_net_id):
                     cp_node = MeshNode(pos=cp, type=type, node_id=self.node_count, group_id=None)
                     self.comp_net_id[sheet_data.net] = self.node_count
@@ -1107,7 +1114,8 @@ class EMesh():
         store_edge = self.store_edge_info
 
         for n in self.graph.nodes():
-            node = self.graph.node[n]['node']
+
+            node = self.graph.nodes[n]['node']
             # Handle vertical edges
             North = node.North
             South = node.South

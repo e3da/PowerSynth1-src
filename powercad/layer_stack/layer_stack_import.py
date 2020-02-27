@@ -18,6 +18,7 @@ from powercad.design.project_structures import BaseplateInstance, SubstrateAttac
 from powercad.design.library_structures import *
 from powercad.general.material.material import *
 from powercad.general.settings.settings import MATERIAL_LIB_PATH
+import getpass
 
 class LayerStackHandler:
     
@@ -27,7 +28,11 @@ class LayerStackHandler:
         # Load Material Lib
         self.material_lib=Material_lib()
         if mat_lib==None:
-            self.material_lib.load_csv(MATERIAL_LIB_PATH)
+            if getpass.getuser() == "qmle":
+                    material_path = "C:\PowerSynth_git\Electrical_Dev\PowerCAD-full\\tech_lib\Material\Materials.csv"
+            else:
+                material_path = MATERIAL_LIB_PATH
+            self.material_lib.load_csv(material_path)
             print((os.path.abspath(MATERIAL_LIB_PATH)))
         else:
             self.material_lib.load_csv(mat_lib)

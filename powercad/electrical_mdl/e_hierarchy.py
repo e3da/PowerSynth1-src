@@ -24,7 +24,7 @@ class EHier():
         for isl_node in self.isl_group:
             isl_node.__del__()
         del self.isl_group
-        self.tree.__del__()
+        #self.tree.__del__()
 
     def update_module(self,new_module):
         #form new hierarchy.

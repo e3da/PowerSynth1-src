@@ -74,12 +74,12 @@ class CornerStitch_Emodel_API:
                     line = line.strip("\r\n")
                     line = line.strip(" ")
                     info = line.split(":")
-                    print (info)
+                    #print (info)
                     trace_data = info[1]
                     trace_data = trace_data.split(",")
                     for t in trace_data:
                         self.trace_ori[t] = info[0] # sort out the Horizontal , Vertical and Planar type
-                    print ("stop")
+                    #print ("stop")
 
     def form_connection_table(self, mode=None, dev_conn=None):
         '''
@@ -276,7 +276,11 @@ class CornerStitch_Emodel_API:
         '''
         self.emesh = EMesh_CS(islands=islands,hier_E=self.hier, freq=self.freq, mdl=self.rs_model)
         self.emesh.trace_ori =self.trace_ori # Update the trace orientation if given
-        self.emesh.mesh_update(mode = 1)
+        if self.trace_ori == {}:
+            self.emesh.mesh_update(mode = 0)
+        else:
+            self.emesh.mesh_update(mode = 1)
+
         '''
         fig = plt.figure(1)
         ax = Axes3D(fig)
@@ -292,7 +296,7 @@ class CornerStitch_Emodel_API:
         self.emesh.update_trace_RL_val()
         self.emesh.update_hier_edge_RL()
         self.emesh.mutual_data_prepare(mode=0)
-        self.emesh.update_mutual(mode=0)
+        #self.emesh.update_mutual(mode=0)
 
 
 
@@ -558,6 +562,7 @@ class CornerStitch_Emodel_API:
         #print "Mem use at:", dt_string
         #print(process.memory_info().rss), 'bytes'  # in bytes
         #return R[0], L[0]
+        print ("R,L",R,L)
         return R, L
 
         '''
@@ -590,8 +595,8 @@ class CornerStitch_Emodel_API:
         all_V = []
         all_I = []
         freq = self.circuit.freq
-        print(result)
-        print((self.emesh.graph.edges(data=True)))
+        #print(result)
+        #print((self.emesh.graph.edges(data=True)))
         for e in self.emesh.graph.edges(data=True):
             edge = e[2]['data']
             edge_name = edge.name

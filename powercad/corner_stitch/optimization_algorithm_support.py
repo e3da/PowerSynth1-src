@@ -89,12 +89,12 @@ class new_engine_opt:
 
         converted_data['H']=converted_data_h
         converted_data['V']=converted_data_v
-        print(converted_data)
+        #print(converted_data)
         return converted_data
 
     def convert_layout_data(self,layout_data=None):
 
-        print(layout_data)
+        #print(layout_data)
         for k,v in list(layout_data.items()):
             print(k)
             print(len(v))
@@ -107,7 +107,7 @@ class new_engine_opt:
             key=k
             for i in range(len(v)):
                 for k1,v1 in list(v[i].items()):
-                    print(k1,v1[0],v1[1])
+                    #print(k1,v1[0],v1[1])
                     if v1[1]==None:
                         continue
                     else:
@@ -208,7 +208,7 @@ class new_engine_opt:
         # self.solutions[(ret[0], ret[1])] = figure
         # if ret not in self.solution_data:
         #self.fig_data.append(fig_data)
-        print("added layout",self.count, result)
+        #print("added layout",self.count, result)
         self.layout_data.append(cs_sym_info)
         self.module_info.append(module_data)
         self.perf_results.append(result)

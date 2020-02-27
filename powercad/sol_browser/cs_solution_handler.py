@@ -36,10 +36,18 @@ def pareto_frontiter2D(data_in=None, MinX=True, MinY=True):
         # Display only the pareto front solution
         # ID=data[:, 0].tolist()
         data_1 = list(data_in.values())
-        data=np.array(data_1)
-        X = data[:, 0].tolist()
-        Y = data[:, 1].tolist()
 
+        
+        data=np.array(data_1)
+        try:
+            X = data[:, 0].tolist()
+        except:
+            X = range(len(data_in))
+            
+        try:
+            Y = data[:, 1].tolist()
+        except:
+            Y = range(len(data_in))
         raw_list = [[X[i], Y[i]] for i in range(len(X))]
         data_list = sorted(raw_list, reverse=not (MinX))
         p_front = [data_list[0]]
@@ -74,7 +82,7 @@ def export_to_eagle(solutions=None, sol_path = None):
     for i in range(len(solutions)):
         item = solutions[i].name
         file_name = sol_path + '/' + item + '.txt'
-        with open(file_name, 'wb') as my_file:
+        with open(file_name, 'w',newline='') as my_file:
             for k, v in list(solutions[i].abstract_info[item]['rect_info'].items()):
                 if k[0] == 'T':
                     x1 = v.x / 1000.0
@@ -108,7 +116,7 @@ def export_solutions(solutions=None,directory=None,pareto_data=None,export = Fal
     for i in range(len(solutions)):
         item = solutions[i].name
         file_name = sol_path + '/' + item + '.txt'
-        with open(file_name, 'wb') as my_file:
+        with open(file_name, 'w',newline='') as my_file:
             for k, v in list(solutions[i].abstract_info[item]['rect_info'].items()):
                 if k[0]=='T' :
                     x1=v.x/1000.0
@@ -136,14 +144,21 @@ def export_solutions(solutions=None,directory=None,pareto_data=None,export = Fal
     for i in range(len(solutions)):
         item = solutions[i].name
         file_name = sol_path + '/' + item + '.csv'
-        with open(file_name, 'wb') as my_csv:
+        with open(file_name, 'w', newline='') as my_csv:
             csv_writer = csv.writer(my_csv, delimiter=',')
-            csv_writer.writerow(["Size", performance_names[0], performance_names[1]])
-            # for k, v in _fetch_currencies.iteritems():
-            Size = solutions[i].abstract_info[item]['Dims']
-            Perf_1 = solutions[i].params[performance_names[0]]
-            Perf_2 =  solutions[i].params[performance_names[1]]
-            data = [Size, Perf_1, Perf_2]
+            if len (performance_names) >=2: # Multi (2) objectives optimization
+                csv_writer.writerow(["Size", performance_names[0], performance_names[1]])
+                # for k, v in _fetch_currencies.iteritems():
+                Size = solutions[i].abstract_info[item]['Dims']
+                Perf_1 = solutions[i].params[performance_names[0]]
+                Perf_2 =  solutions[i].params[performance_names[1]]
+                data = [Size, Perf_1, Perf_2]
+            else: # Single objective eval
+                csv_writer.writerow(["Size", performance_names[0]])
+                Size = solutions[i].abstract_info[item]['Dims']
+                Perf_1 = solutions[i].params[performance_names[0]]
+                data = [Size, Perf_1]
+
             csv_writer.writerow(data)
             csv_writer.writerow(["Component_Name", "x_coordinate", "y_coordinate", "width", "length"])
             for k, v in list(solutions[i].abstract_info[item]['rect_info'].items()):

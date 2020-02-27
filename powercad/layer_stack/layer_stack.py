@@ -63,7 +63,7 @@ class Layer:
             print("cannot add devices on passive layer")
 
 class LayerStack:
-    def __init__(self,debug=False):
+    def __init__(self,debug=True):
         self.debug=debug
         self.all_layers_info = OrderedDict()  # a table of layer with layer index
         self.current_id = 0  # to check the current layer id

@@ -289,7 +289,7 @@ class ScriptInputMethod():
 
                     else:
                         layout_component_id = layout_info[j][k] #+ '.' + layout_info[j][-2]
-                        print(layout_info[j])
+                        #print(layout_info[j])
                         element = Part(info_file=self.info_files[layout_info[j][k + 1]],layout_component_id=layout_component_id,layer_id=int(layout_info[j][-2]))
                         element.load_part()
                         # print element.footprint

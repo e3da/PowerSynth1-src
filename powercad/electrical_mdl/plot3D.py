@@ -6,6 +6,10 @@ from matplotlib.colors import Colormap
 from matplotlib.patches import Rectangle
 import pandas as pd
 import numpy as np
+#import plotly.plotly as py
+import plotly.graph_objs as go
+import plotly.express as px
+import pandas as pd
 #import pygame
 #from pygame.locals import *
 
@@ -63,54 +67,96 @@ def plot_E_map_test(G=None,ax=None,cmap=None):
         pos = node.pos
         color = cmap(normV(node.V))
         ax.scatter(pos[0],pos[1],color=color,s= 20, alpha=0.5)
-def network_plot_3D(G, ax, cmap_node={}, cmap_edge={},show_labels = False,highlight_nodes=None):
+def network_plot_3D(G, ax, cmap_node={}, cmap_edge={},show_labels = False,highlight_nodes=None, engine = "matplotlib"):
+    
     pos = {}
     labels = {}
     type = {}
+    x=[]
+    y=[]
+    z=[]
+    names =[]
     for n in G.nodes():
         try:
             node = G.nodes[n]['node']
-            print(node)
+            #print(node)
             pos[n] = node.pos
+            x.append(node.pos[0])
+            y.append(node.pos[1])
+            z.append(node.pos[2])
+            names.append(node.node_id)
             type[n]=node.type
             labels[n] = node.node_id
         except:
             print((G.nodes[n]))
 
-    # 3D network plot
-    with plt.style.context(('ggplot')):
-        # Loop on the pos dictionary to extract the x,y,z coordinates of each node
-        for lbl, key in zip(list(labels.values()), pos):
-            pos_val = pos[key]
-            xi = pos_val[0]
-            yi = pos_val[1]
-            zi = pos_val[2]
+    if engine == "matplotlib":
+        # 3D network plot
+        with plt.style.context(('ggplot')):
+            # Loop on the pos dictionary to extract the x,y,z coordinates of each node
+            for lbl, key in zip(list(labels.values()), pos):
+                pos_val = pos[key]
+                xi = pos_val[0]
+                yi = pos_val[1]
+                zi = pos_val[2]
 
-            # Scatter plot
-            if cmap_node == {}:
-                if highlight_nodes==None:
-                    size = 10
-                elif lbl in highlight_nodes:
-                    size = 25
+                # Scatter plot
+                if cmap_node == {}:
+                    if highlight_nodes==None:
+                        size = 10
+                    elif lbl in highlight_nodes:
+                        size = 25
+                    else:
+                        size =10
+                    if type[key]=='internal':
+                        ax.scatter(xi, yi, zi, c='blue', s=size, edgecolors='k', alpha=1)
+                    else:
+                        ax.scatter(xi, yi, zi, c='red', s=size, edgecolors='k', alpha=1)
                 else:
-                    size =10
-                if type[key]=='internal':
-                    ax.scatter(xi, yi, zi, c='blue', s=size, edgecolors='k', alpha=1)
-                else:
-                    ax.scatter(xi, yi, zi, c='red', s=size, edgecolors='k', alpha=1)
-            else:
-                name = str(xi) + str(yi) + str(zi)
-                color = cmap_node[name]
-                ax.scatter(xi, yi, zi, c=color, s=10, edgecolors='k', alpha=0.5)
-            if show_labels:
-                if highlight_nodes==None: # All Labels
-                    ax.text(xi, yi, zi, lbl,fontsize=12)
-                elif lbl in highlight_nodes: # Highlight this node only
-                    print(("node type",type[key]))
-                    ax.text(xi, yi, zi, lbl,fontsize=12)
+                    name = str(xi) + str(yi) + str(zi)
+                    color = cmap_node[name]
+                    ax.scatter(xi, yi, zi, c=color, s=10, edgecolors='k', alpha=0.5)
+                if show_labels:
+                    if highlight_nodes==None: # All Labels
+                        ax.text(xi, yi, zi, lbl,fontsize=12)
+                    elif lbl in highlight_nodes: # Highlight this node only
+                        print(("node type",type[key]))
+                        ax.text(xi, yi, zi, lbl,fontsize=12)
 
-        # Loop on the list of edges to get the x,y,z, coordinates of the connected nodes
-        # Those two points are the extrema of the line to be plotted
+            # Loop on the list of edges to get the x,y,z, coordinates of the connected nodes
+            # Those two points are the extrema of the line to be plotted
+            for e in G.edges(data=True):
+                j= [e[0],e[1]]
+                type = e[2]['data'].type
+                name = e[2]['data'].name
+                x = np.array((pos[j[0]][0], pos[j[1]][0]))
+                y = np.array((pos[j[0]][1], pos[j[1]][1]))
+                z = np.array((pos[j[0]][2], pos[j[1]][2]))
+                
+                # Plot the connecting lines
+                if cmap_edge == {}:
+                    if type == 'internal':
+                        ax.plot(x, y, z, c='gray', alpha=0.5, linewidth=2.5)
+                    elif type == 'boundary':
+                        ax.plot(x, y, z, c='black', alpha=1, linewidth=2.5)
+                    else:
+                        ax.plot(x, y, z, dashes=[6, 2],c='blue', alpha=0.5, linewidth=2.5)
+
+                else:
+                    color = cmap_edge[name]
+                    ax.plot(x, y, z, c=color, alpha=1, linewidth=10)
+
+        # Set the initial view
+        ax.view_init(90, 90)
+        ax.set_xlabel('X (mm)')
+        ax.set_ylabel('Y (mm)')
+        ax.set_zlabel('Z (mm)')
+        #plt.axis('equal')
+    elif engine == "plotly":
+        lines=[]
+        # Creating the plot
+        lines = []
+        line_marker = dict(color='#0066FF', width=5)
         for e in G.edges(data=True):
             j= [e[0],e[1]]
             type = e[2]['data'].type
@@ -118,27 +164,49 @@ def network_plot_3D(G, ax, cmap_node={}, cmap_edge={},show_labels = False,highli
             x = np.array((pos[j[0]][0], pos[j[1]][0]))
             y = np.array((pos[j[0]][1], pos[j[1]][1]))
             z = np.array((pos[j[0]][2], pos[j[1]][2]))
+            #df1 = pd.DataFrame(list(zip(x,y,z),clumns=['x','y','z']))
+            #fig.add_trace(go.scatter_3d(df1,x='x',y='y',z='z',hover_data =['ID'],size_max=5,mode='lines+markers'))
+            lines.append(go.Scatter3d(x=x, y=y, z=z, mode='lines+markers', line=line_marker, marker=dict(
+        size=20,
+        opacity=0.8
+        )))
+        layout = go.Layout(
+        width= 5000,
+        height=5000,
+        title='Electrical Mesh Plot',
+        scene=dict(
+            xaxis=dict(
+                gridcolor='rgb(255, 255, 255)',
+                zerolinecolor='rgb(255, 255, 255)',
+                showbackground=True,
+                backgroundcolor='rgb(230, 230,230)'
+            ),
+            yaxis=dict(
+                gridcolor='rgb(255, 255, 255)',
+                zerolinecolor='rgb(255, 255, 255)',
+                showbackground=True,
+                backgroundcolor='rgb(230, 230,230)'
+            ),
+            zaxis=dict(
+                gridcolor='rgb(255, 255, 255)',
+                zerolinecolor='rgb(255, 255, 255)',
+                showbackground=True,
+                backgroundcolor='rgb(230, 230,230)'
+            )
+        ),
+        showlegend=False,
+        hoverlabel=dict(font=dict(family='sans-serif', size=25)),
+        )
+        fig = go.Figure(data=lines, layout=layout)
+        fig.update_layout(
+            font=dict(
+                family="Courier New, monospace",
+                size=30,
+                color="#7f7f7f"
+            )
+        )
 
-            # Plot the connecting lines
-            if cmap_edge == {}:
-                if type == 'internal':
-                    ax.plot(x, y, z, c='gray', alpha=0.5, linewidth=2.5)
-                elif type == 'boundary':
-                    ax.plot(x, y, z, c='black', alpha=1, linewidth=2.5)
-                else:
-                    ax.plot(x, y, z, dashes=[6, 2],c='blue', alpha=0.5, linewidth=2.5)
-
-            else:
-                color = cmap_edge[name]
-                ax.plot(x, y, z, c=color, alpha=1, linewidth=10)
-
-    # Set the initial view
-    ax.view_init(90, 90)
-    ax.set_xlabel('X (mm)')
-    ax.set_ylabel('Y (mm)')
-    ax.set_zlabel('Z (mm)')
-    #plt.axis('equal')
-    return
+        fig.show()
 
 
 def plot_v_map_3D(norm=None, cmap='jet', G=None,ax =None):

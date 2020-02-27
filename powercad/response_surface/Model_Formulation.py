@@ -6,11 +6,16 @@ from copy import *
 
 from scipy.interpolate import InterpolatedUnivariateSpline
 from scipy.interpolate import interp1d
-
+# Set relative location
+import sys
+cur_path =sys.path[0] # get current path (meaning this file location)
+cur_path = cur_path[0:-25] #exclude "powercad/response_surface"
+print(cur_path)
+sys.path.append(cur_path)
 from powercad.general.data_struct.Unit import Unit
 from powercad.general.settings.Error_messages import InputError, Notifier
 from powercad.general.settings.save_and_load import save_file
-from powercad.interfaces.FastHenry.Standard_Trace_Model import *
+from powercad.interfaces.FastHenry.Standard_Trace_Model import Uniform_Trace,Uniform_Trace_2, Velement, write_to_file
 from powercad.interfaces.FastHenry.fh_layers import *
 from powercad.interfaces.Q3D.Electrical import rect_q3d_box
 from powercad.interfaces.Q3D.Ipy_script import Q3D_ipy_script
@@ -764,7 +769,7 @@ def form_fasthenry_trace_response_surface(layer_stack, Width=[1.2, 40], Length=[
         f_list=[]
         r_list=[]
         l_list=[]
-        with open(outname,'rb') as f:
+        with open(outname,'r') as f:
             for row in f:
                 row= row.strip(' ').split(' ')
                 row=[i for i in row if i!='']
@@ -806,7 +811,7 @@ def form_fasthenry_trace_response_surface(layer_stack, Width=[1.2, 40], Length=[
         #plt.autoscale(True,'y')
         #plt.title(str(w)+'_'+str(l))
         #plt.show()
-        with open(datafile, 'wb') as csvfile:  # open filepath
+        with open(datafile, 'w',newline='') as csvfile:  # open filepath
             fieldnames = [F_key, R_key, L_key]
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             writer.writeheader()
@@ -1159,12 +1164,9 @@ def test_build_trace_model_fh():
     fh_env_dir = "C://Users//qmle//Desktop//Testing//FastHenry//Fasthenry3_test_gp//WorkSpace//fasthenry.exe"
     read_output_dir = "C://Users//qmle//Desktop//Testing//FastHenry//Fasthenry3_test_gp//ReadOutput.exe"
     env = [fh_env_dir, read_output_dir]
-    mdk_dir ="C:\\Users\qmle\Desktop\Documents\Conferences\IWIPP\Model//S_params_test_pcb.csv"
-    #mdk_dir = "G:\My Drive\MSCAD PowerSynth Archives\Internal\MDK\Layer Stack Quang//MDK_Validation.csv"
-    w_dir = "C:\\Users\qmle\Desktop\Documents\Conferences\IWIPP\Model\workspace"
-    mdk_dir = "C:\\Users\qmle\Desktop\Documents\Conferences\IWIPP\Model\\S_params_test_pcb.csv"
-    w_dir = "C:\\Users\qmle\Desktop\New_Layout_Engine\Quang_Journal\Mutual_IND_Case\workspace"
-    mdk_dir = "C:\\Users\qmle\Desktop\New_Layout_Engine\Quang_Journal\Mutual_IND_Case\\mutual_test.csv"
+    mdk_dir = "C:\\Users\qmle\Desktop\\New_Layout_Engine\Quang_Journal\DBC_CARD\Quang\\Test_Cases_for_POETS_Annual_Meeting_2019\\Test_Cases_for_POETS_Annual_Meeting_2019\Model\journal.csv"
+    w_dir = "C:\\Users\qmle\Desktop\\New_Layout_Engine\Quang_Journal\DBC_CARD\Quang\\Test_Cases_for_POETS_Annual_Meeting_2019\\Test_Cases_for_POETS_Annual_Meeting_2019\Model"
+    #mdk_dir = "C:\\Users\qmle\Desktop\\New_Layout_Engine\Quang_Journal\Mutual_IND_Case\\mutual_test.csv"
     #w_dir = "C:\Users\qmle\Desktop\Documents\Conferences\ECCE\Imam_Quang\Model\workspace"
     dir = os.path.abspath(mdk_dir)
     ls = LayerStackHandler(dir)
@@ -1173,7 +1175,7 @@ def test_build_trace_model_fh():
     metal_cond = 5.96*1e7
     sd_met = math.sqrt(1 / (math.pi * 1e6 * u * metal_cond * 1e6))
 
-    Width = [0.5,10]
+    Width = [0.5,5]
     Length = [0.5,15]
     #freq = [0.01, 100000, 100] # in kHz
     freq = [3,6,100]
