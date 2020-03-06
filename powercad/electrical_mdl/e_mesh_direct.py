@@ -302,6 +302,11 @@ class EMesh():
     def update_trace_RL_val(self, p=1.68e-8, t=0.035, h=1.5, mode='RS'):
         if self.f != 0:  # AC mode
             if mode == 'RS':
+                #print ("min width", min(self.all_W))
+                #print ("max width", max(self.all_W))
+
+                #print ("min length", min(self.all_L))
+                #print ("max length", max(self.all_L))
 
                 all_r = trace_res_krige(self.f, self.all_W, self.all_L, t=0, p=0, mdl=self.mdl['R']).tolist()
                 all_r = [trace_resistance(self.f, w, l, t, h) for w, l in zip(self.all_W, self.all_L)]
@@ -654,9 +659,10 @@ class EMesh():
                             rect2_data = [w2, l2, t2, z2]
                         else:
                             continue
-                        cond1 = ori1 == 'h' and ori2 == 'h' and not (p2_2[1] == p1_2[1])
-                        cond2 = ori1 == 'v' and ori2 == 'v' and not (p2_2[0] == p1_2[0])
-
+                        cond1 = ori1 == 'h' and ori2 == ori1 and  (int(p2_2[1]) != int(p1_2[1]))
+                        cond2 = ori1 == 'v' and ori2 == ori1 and  (int(p2_2[0]) != int(p1_2[0]))
+                        
+                    
                         if cond1:  # 2 horizontal parallel pieces
                             #x1_s = [p1_1[0], p1_2[0]]  # get all x from trace 1
                             #x2_s = [p2_1[0], p2_2[0]]  # get all x from trace 2
@@ -734,12 +740,13 @@ class EMesh():
                 result.append(mutual_between_bars(*para))
         print(("finished mutual eval", time.time()-start))
         # We first eval all parallel pieces with bar equation, then, we
+        debug = False
         for n in range(len(self.edges)):
             edge = self.edges[n]
             if result[n] > 0 and not(math.isinf(result[n])):
                 add_M_edge(edge[0], edge[1], attr={'Mval': result[n] * 1e-9})
-            else:
-                print(("error", result[n]))
+            elif debug:
+                #print(("error", result[n]))
                 if result[n]<0:
                     print(("neg case", edge[0], edge[1]))
                     print((mutual_matrix[n]))
