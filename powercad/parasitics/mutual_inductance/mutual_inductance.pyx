@@ -1,4 +1,4 @@
-from libc.math cimport sqrt,atan,log,pow,fabs
+from libc.math cimport sqrt,atan,log,pow,fabs,M_PI
 import numpy as np
 from cython.parallel cimport parallel
 from libc.stdio cimport printf
@@ -27,7 +27,8 @@ cpdef double[:] mutual_mat_eval(double[:,:] m_mat,int nt,int mode):
     openmp.omp_set_dynamic(36)
     with nogil, parallel():
         openmp.omp_set_num_threads(nt)
-        num_t = openmp.omp_get_num_threads()
+        num_t = 8 #openmp.omp_get_num_threads()
+        #printf("number of threads: %f\n",num_t)
         chunksize = rows/num_t
         for i in prange(rows, schedule='static',chunksize=chunksize):
             if mode == 0: # use bar equation
@@ -204,6 +205,4 @@ cdef double outer_addition_plane(double q1, double q2, double q3, double q4,doub
             #printf("inside %i%i%i%f\n", i,j,k,sign*inter_val)
             res = res + sign * inter_val
     #printf("outer add %f\n", res)
-
-    return res
 

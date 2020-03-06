@@ -700,7 +700,7 @@ def form_fasthenry_trace_response_surface(layer_stack, Width=[1.2, 40], Length=[
     model_input.set_dir(savedir)
     model_input.set_data_bound([[minW, maxW], [minL, maxL]])
     model_input.set_name(mdl_name)
-    mesh_size=5
+    mesh_size=10
     model_input.create_uniform_DOE([mesh_size, mesh_size], True)
     #model_input.create_DOE(3, mesh_size**2)
     model_input.generate_fname()
@@ -1175,10 +1175,10 @@ def test_build_trace_model_fh():
     metal_cond = 5.96*1e7
     sd_met = math.sqrt(1 / (math.pi * 1e6 * u * metal_cond * 1e6))
 
-    Width = [0.5,5]
-    Length = [0.5,15]
+    Width = [sd_met,15]
+    Length = [sd_met,20]
     #freq = [0.01, 100000, 100] # in kHz
-    freq = [3,6,100]
+    freq = [3,7,100]
     form_fasthenry_trace_response_surface(layer_stack=ls, Width=Width, Length=Length, freq=freq, wdir=w_dir,
                                           savedir=w_dir
                                           , mdl_name='mutual_impact', env=env, doe_mode=2,mode='log')
