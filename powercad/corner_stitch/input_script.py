@@ -32,7 +32,8 @@ class ConstraintWindow(QtGui.QMainWindow):
 '''
 
 
-
+global reverse
+reverse=False
 
 class ScriptInputMethod():
     def __init__(self,input_script=None):
@@ -188,7 +189,7 @@ class ScriptInputMethod():
         bondwires = []
         for i in range(1,len(Input)):
             inp = Input[i]
-            #print inp
+            print (inp)
             if inp[0][0] == 'C':
                 bondwires.append(inp)
             else:
@@ -556,8 +557,12 @@ class ScriptInputMethod():
                             type = self.component_to_cs_type[type_name]
                             x = float(layout_data[j][3])
                             y = float(layout_data[j][4])
-                            width = round(element.footprint[0])
-                            height = round(element.footprint[1])
+                            if reverse==True:
+                                width = round(element.footprint[0])*1000
+                                height = round(element.footprint[1])*1000
+                            else:
+                                width = round(element.footprint[0])
+                                height = round(element.footprint[1])
                             #name = layout_data[j][1]
                             name = element.layout_component_id
                             Schar = layout_data[j][0]
