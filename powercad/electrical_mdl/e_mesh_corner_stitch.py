@@ -17,7 +17,7 @@ L_SHAPE = 1
 T_SHAPE = 2
 
 
-def form_skindepth_distribution(start=0,stop=1,freq=1e5, cond=5.96e7, N = 5):
+def form_skindepth_distribution(start=0,stop=1,freq=1e6, cond=5.96e7, N = 5):
     '''
     Gotta make sure that N is always an odd number such as 1 3 5 7 ...
     '''
@@ -79,6 +79,7 @@ class EMesh_CS(EMesh):
         if mode == 0:
             self.mesh_update_planar()
         elif mode == 1:
+            print ("select mode 1")
             self.mesh_update_optimized()
 
     def mesh_init(self, mode=0):
@@ -94,7 +95,7 @@ class EMesh_CS(EMesh):
         if mode == 0:
             self._handle_pins_connections()
 
-    def mesh_update_optimized(self, Nw=3):
+    def mesh_update_optimized(self, Nw=5):
         '''
         If trace orientations are included, this will be used
         :param Nw: number of mesh points on the width of traces
@@ -110,17 +111,17 @@ class EMesh_CS(EMesh):
             trace_cells = self.handle_pins_connect_trace_cells(trace_cells=trace_cells, island_name=g.name)
             if len(isl.elements) == 1:  # Handle cases where the trace cell width is small enough to apply macro model (RS)
                 # need a better way to mark the special case for RS usage, maybe distinguish between power and signal types
-                mesh_pts_tbl = self.mesh_nodes_trace_cells(trace_cells=trace_cells, Nw=1, ax=ax)
+                mesh_pts_tbl = self.mesh_nodes_trace_cells(trace_cells=trace_cells, Nw=1, ax=ax, method ="skin_depth")
             else:
-                mesh_pts_tbl = self.mesh_nodes_trace_cells(trace_cells=trace_cells, Nw=Nw, ax=ax)
+                mesh_pts_tbl = self.mesh_nodes_trace_cells(trace_cells=trace_cells, Nw=Nw, ax=ax,method = "skin_depth")
             self.set_nodes_neigbours_optimized(mesh_tbl=mesh_pts_tbl)
-            self.mesh_edges_optimized(mesh_tbl=mesh_pts_tbl, trace_num=len(trace_cells), Nw=Nw, mesh_type="uniform")
+            self.mesh_edges_optimized(mesh_tbl=mesh_pts_tbl, trace_num=len(trace_cells), Nw=Nw, mesh_type="skin_depth", macro_mode=False)
             self.handle_hier_node_opt(mesh_pts_tbl,g)
         self.update_E_comp_parasitics(net=self.comp_net_id, comp_dict=self.comp_dict)
 
-        #self.plot_isl_mesh(True,mode = "plotly")
+        #self.plot_isl_mesh(True,mode = "matplotlib")
 
-    def mesh_nodes_trace_cells(self, trace_cells=None, Nw=3, method="uniform", ax=None, z_pos = 0):
+    def mesh_nodes_trace_cells(self, trace_cells=None, Nw=3, method="skin_depth", ax=None, z_pos = 0):
         '''
         Given a list of splitted trace cells, this function will form a list of mesh nodes based of the trace cell orientations,
         hierachial cuts. The function returns a list of points object [x,y,dir] where dir is a list of directions the mesh edge
@@ -553,7 +554,11 @@ class EMesh_CS(EMesh):
             self.hier_group_dict = {}
             self.handle_hier_node(points, g)
             self.mesh_edges(thick=0.2)  # the thickness is fixed right now but need to be updated by MDK later
+<<<<<<< HEAD
             #self.plot_isl_mesh(plot=True, mode ='plotly')
+=======
+        self.plot_isl_mesh(plot=True, mode ='matplotlib')
+>>>>>>> b26b40e75781b1f73b06f3d320e08aaa5819cbf5
 
     def mesh_nodes_planar(self, isl=None):
         '''
@@ -599,7 +604,7 @@ class EMesh_CS(EMesh):
 
         return points
 
-    def mesh_edges_optimized(self, mesh_tbl=None, trace_num=None, Nw=5, mesh_type="uniform", thick=0.2):
+    def mesh_edges_optimized(self, mesh_tbl=None, trace_num=None, Nw=5, mesh_type="uniform", thick=0.2,macro_mode = False):
         '''
 
         Args:
@@ -649,7 +654,7 @@ class EMesh_CS(EMesh):
                         length = (x_e - loc[0]) #/ 1000.0
                         # storing rectangle information
                         rect = tc  # tc is an inherited Rect type, so it works here
-                        data = {'type': 'trace', 'w': width, 'l': length, 'name': name, 'rect': rect, 'ori': 'v'}
+                        data = {'type': 'trace', 'w': width, 'l': length, 'name': name, 'rect': rect, 'ori': 'h'}
                         edge_data = MeshEdge(m_type=trace_type, nodeA=node, nodeB=East, data=data, length=length,
                                              z=z_loc,
                                              thick=thick)
@@ -667,7 +672,7 @@ class EMesh_CS(EMesh):
                         # storing rectangle information
                         rect = tc  # tc is an inherited Rect type, so it works here
                         # combine all data together
-                        data = {'type': 'trace', 'w': width, 'l': length, 'name': name, 'rect': rect, 'ori': 'v'}
+                        data = {'type': 'trace', 'w': width, 'l': length, 'name': name, 'rect': rect, 'ori': 'h'}
                         edge_data = MeshEdge(m_type=trace_type, nodeA=node, nodeB=West, data=data, length=length,
                                              z=z_loc,
                                              thick=thick)
@@ -731,9 +736,19 @@ class EMesh_CS(EMesh):
 
                 if North != None and node.N_edge == None:
                     name = str(node.node_id) + '_' + str(North.node_id)
+                    
                     if not self.graph.has_edge(node.node_id, North.node_id):
                         length = North.pos[1] - node.pos[1]
-                        width = tc.width / Nw * err_mag
+                        if mesh_type == 'uniform':
+                            width = tc.width / Nw * err_mag
+                        elif mesh_type == 'skin_depth':
+                            if East == None:
+                                width = node.pos[0] - West.pos[0]
+                            elif West == None:
+                                width = East.pos[0] - node.pos[0]
+                            else:
+                                width = East.pos[0] - West.pos[0]
+                            width/=2
                         if node_type == 'internal' or North.type == 'internal':
                             xy = (node.pos[0] - width/ 2, node.pos[1])
                             trace_type = 'internal'
@@ -759,9 +774,19 @@ class EMesh_CS(EMesh):
                         isl_edge_list.append(edge_data)
                 if South != None and node.S_edge == None:
                     name = str(node.node_id) + '_' + str(South.node_id)
+                    
                     if not self.graph.has_edge(node.node_id, South.node_id):
                         length = node.pos[1] - South.pos[1]
-                        width = tc.width / Nw * err_mag
+                        if mesh_type == 'uniform':
+                            width = tc.width / Nw * err_mag
+                        elif mesh_type == 'skin_depth':
+                            if East == None:
+                                width = node.pos[0] - West.pos[0]
+                            elif West == None:
+                                width = East.pos[0] - node.pos[0]
+                            else:
+                                width = East.pos[0] - West.pos[0]
+                            width/=2
                         if node_type == 'internal' or South.type == 'internal':
                             xy = (node.pos[0] - width / 2, South.pos[1])
                             trace_type = 'internal'
@@ -776,7 +801,7 @@ class EMesh_CS(EMesh):
                         rect = Rect(top=xy[1] + length, bottom=xy[1], left=xy[0], right=xy[0] + width)
                         data = {'type': 'trace', 'w': width, 'l': length, 'name': name, 'rect': rect, 'ori': 'v'}
 
-                        edge_data = MeshEdge(m_type=trace_type, nodeA=node, nodeB=North, data=data, length=length,
+                        edge_data = MeshEdge(m_type=trace_type, nodeA=node, nodeB=South, data=data, length=length,
                                              z=z_loc,
                                              thick=thick)
                         # Update node's neighbour edges
@@ -787,10 +812,20 @@ class EMesh_CS(EMesh):
                         isl_edge_list.append(edge_data)
 
                 if East != None and node.E_edge == None:
+                    
                     name = str(node.node_id) + '_' + str(East.node_id)
                     if not self.graph.has_edge(node.node_id, East.node_id):
                         length = East.pos[0] - node.pos[0]
-                        width = tc.height / Nw * err_mag
+                        if mesh_type == 'uniform':
+                            width = tc.height / Nw * err_mag
+                        elif mesh_type == 'skin_depth':
+                            if North == None:
+                                width = node.pos[1] - South.pos[1]
+                            elif South == None:
+                                width = North.pos[1] - node.pos[1]
+                            else:
+                                width = North.pos[1] - South.pos[1]
+                            width/=2
                         if node_type == 'internal' or East.type == 'internal':
                             xy = (node.pos[0] , node.pos[1] - width /2)
                             trace_type = 'internal'
@@ -803,9 +838,9 @@ class EMesh_CS(EMesh):
                             trace_type = 'boundary'
                         length *= err_mag
                         rect = Rect(top=xy[1] + length, bottom=xy[1], left=xy[0], right=xy[0] + width)
-                        data = {'type': 'trace', 'w': width, 'l': length, 'name': name, 'rect': rect, 'ori': 'v'}
+                        data = {'type': 'trace', 'w': width, 'l': length, 'name': name, 'rect': rect, 'ori': 'h'}
 
-                        edge_data = MeshEdge(m_type=trace_type, nodeA=node, nodeB=North, data=data, length=length,
+                        edge_data = MeshEdge(m_type=trace_type, nodeA=node, nodeB=East, data=data, length=length,
                                              z=z_loc,
                                              thick=thick)
                         # Update node's neighbour edges
@@ -816,10 +851,20 @@ class EMesh_CS(EMesh):
                         isl_edge_list.append(edge_data)
 
                 if West != None and node.W_edge == None:
+                    
                     name = str(node.node_id) + '_' + str(West.node_id)
                     if not self.graph.has_edge(node.node_id, West.node_id):
                         length = node.pos[0] - West.pos[0]
-                        width = tc.height / Nw * err_mag
+                        if mesh_type == 'uniform':
+                            width = tc.height / Nw * err_mag
+                        elif mesh_type == 'skin_depth':
+                            if North == None:
+                                width = node.pos[1] - South.pos[1]
+                            elif South == None:
+                                width = North.pos[1] - node.pos[1]
+                            else:
+                                width = North.pos[1] - South.pos[1]
+                            width/=2
                         if node_type == 'internal' or West.type == 'internal':
                             xy = (West.pos[0], node.pos[1] - width / 2)
                             trace_type = 'internal'
@@ -832,9 +877,9 @@ class EMesh_CS(EMesh):
                             trace_type = 'boundary'
                         length *= err_mag
                         rect = Rect(top=xy[1] + length, bottom=xy[1], left=xy[0], right=xy[0] + width)
-                        data = {'type': 'trace', 'w': width, 'l': length, 'name': name, 'rect': rect, 'ori': 'v'}
+                        data = {'type': 'trace', 'w': width, 'l': length, 'name': name, 'rect': rect, 'ori': 'h'}
 
-                        edge_data = MeshEdge(m_type=trace_type, nodeA=node, nodeB=North, data=data, length=length,
+                        edge_data = MeshEdge(m_type=trace_type, nodeA=node, nodeB=West, data=data, length=length,
                                              z=z_loc,
                                              thick=thick)
                         # Update node's neighbour edges

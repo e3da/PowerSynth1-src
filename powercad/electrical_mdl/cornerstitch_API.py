@@ -184,6 +184,8 @@ class CornerStitch_Emodel_API:
                 new_rect = Rect(top=(y + h) / 1000.0
                                 , bottom=y/1000.0, left=x/1000.0, right=(x + w)/1000.0)
                 p = E_plate(rect=new_rect, z=self.get_z_loc(z_id), dz=self.get_thick(z_id))
+                #print ("trace height", p.z)
+                #print ("trace thickness", p.dz)
                 p.group_id=isl.name
                 p.name=trace[5]
                 self.e_plates.append(p)
@@ -276,8 +278,9 @@ class CornerStitch_Emodel_API:
         '''
         self.emesh = EMesh_CS(islands=islands,hier_E=self.hier, freq=self.freq, mdl=self.rs_model)
         self.emesh.trace_ori =self.trace_ori # Update the trace orientation if given
+        print (self.trace_ori)
         if self.trace_ori == {}:
-            self.emesh.mesh_update(mode = 0)
+            self.emesh.mesh_update(mode =0)
         else:
             self.emesh.mesh_update(mode = 1)
 
@@ -296,7 +299,7 @@ class CornerStitch_Emodel_API:
         self.emesh.update_trace_RL_val()
         self.emesh.update_hier_edge_RL()
         self.emesh.mutual_data_prepare(mode=0)
-        #self.emesh.update_mutual(mode=0)
+        self.emesh.update_mutual(mode=0)
 
 
 
