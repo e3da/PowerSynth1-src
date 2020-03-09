@@ -2,7 +2,10 @@ import os
 import copy
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-import easygui as eg
+import platform
+if platform.system() == 'Windows': # Easygui doesnt work on linux, this must be fixed later
+    import easygui as eg
+
 from collections import OrderedDict
 class Connection_Table:
     def __init__(self,name="",cons={},mode='macro',width=400,height=200):
