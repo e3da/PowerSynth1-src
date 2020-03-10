@@ -213,12 +213,13 @@ class Cmd_Handler:
         # make dir if they are not existed
         print(("self.new_mode",self.new_mode))
         print(("self.flex",self.flexible))
-        if not (check_dir(self.fig_dir)) or not(check_dir(self.db_dir)):
+        if not (check_dir(self.fig_dir)):
             try:
                 os.mkdir(self.fig_dir)
             except:
                 print ("cant make directory for figures")
                 cont =False
+        if not(check_dir(self.db_dir)):
             try:
                 os.mkdir(self.db_dir)
             except:
@@ -582,45 +583,86 @@ class Cmd_Handler:
         self.setup_thermal()
         self.setup_electrical()
 
-    def cmd_handler_flow(self):
-        print("This is the command line mode for PowerSynth layout optimization")
-        print("Type -m [macro file] to run a macro file")
-        print("Type -f to go through a step by step setup")
-        print("Type -quit to quit")
+    def cmd_handler_flow(self, arguments =[]):
+        if len(arguments) <= 1: # Turn on simple user interface mode
+            print("This is the command line mode for PowerSynth layout optimization")
+            print("Type -m [macro file] to run a macro file")
+            print("Type -f to go through a step by step setup")
+            print("Type -quit to quit")
 
-        cont = True
-        while (cont):
-            mode = input("Enter command here")
-            if mode == '-f':
-                self.input_request()
-                self.init_cs_objects()
-                self.set_up_db()
-                self.cmd_loop()
-                cont = False
-            elif mode == '-quit':
-                cont = False
-            elif mode[0:2] == '-m':
-                print("Loading macro file")
-                m, filep = mode.split(" ")
-                print (filep)
-                if os.path.isfile(filep):
-                    # macro file exists
-                    filename = os.path.basename(filep)
-                    # change current directory to workspace
-                    work_dir = filep.replace(filename,'')
-                    os.chdir(work_dir)
-                    print("Jump to current working dir")
-                    print(work_dir)
-                    checked = self.load_macro_file(filep)
-                    if not (checked):
-                        continue
+            cont = True
+            while (cont):
+                mode = input("Enter command here")
+                if mode == '-f':
+                    self.input_request()
+                    self.init_cs_objects()
+                    self.set_up_db()
+                    self.cmd_loop()
+                    cont = False
+                elif mode == '-quit':
+                    cont = False
+                elif mode[0:2] == '-m':
+                    print("Loading macro file")
+                    m, filep = mode.split(" ")
+                    filep = os.path.abspath(filep)
+                    print (filep)
+                    if os.path.isfile(filep):
+                        # macro file exists
+                        filename = os.path.basename(filep)
+                        # change current directory to workspace
+                        work_dir = filep.replace(filename,'')
+                        os.chdir(work_dir)
+                        print("Jump to current working dir")
+                        print(work_dir)
+                        checked = self.load_macro_file(filep)
+                        if not (checked):
+                            continue
+                    else:
+                        print("wrong macro file format or wrong directory, please try again !")
+
+
                 else:
-                    print("wrong macro file format or wrong directory, please try again !")
-
-
-            else:
-                print("Wrong Input, please double check and try again !")
-
+                    print("Wrong Input, please double check and try again !")
+        else: # Real CMD mode
+            arg_dict = {}
+            i = 0
+            print (arguments)
+            while i < len(arguments): # Read through a list of arguments and build a table 
+                print(i,arguments[i])    
+                if i == 0: # cmd.py 
+                    i+=1
+                    continue
+                else:
+                    if "-" in arguments[i]:
+                        cur_flag = arguments[i]
+                        arg_dict[cur_flag] = []
+                    else: # keep adding the arg_val until next flag 
+                        arg_dict[cur_flag].append(arguments[i]) 
+                i+=1
+            # Process args
+            for k in arg_dict.keys():
+                if k == "-m": # - m: macro flag
+                    filep = arg_dict[k][0]
+                    print("Loading macro file")
+                    filep = os.path.abspath(filep)
+                    print (filep)
+                    if os.path.isfile(filep):
+                        # macro file exists
+                        filename = os.path.basename(filep)
+                        # change current directory to workspace
+                        work_dir = filep.replace(filename,'')
+                        os.chdir(work_dir)
+                        print("Jump to current working dir")
+                        print(work_dir)
+                        checked = self.load_macro_file(filep)
+                        if not (checked):
+                            continue
+                    else:
+                        print("wrong macro file format or wrong directory, please try again !")
+                elif k == '-help':
+                    print("This is PowerSynth cmd mode, more flags will be added in the future")
+                elif k == '-settings':
+                    print("This will change the default settings file location")
     def cmd_loop(self):
         cont = True
         while (cont):
@@ -833,8 +875,5 @@ class Cmd_Handler:
 if __name__ == "__main__":
     print("----------------------PowerSynth Version 1.4: Command line version------------------")
     cmd = Cmd_Handler(debug=False)
-    cmd.cmd_handler_flow()
-    all_objects = muppy.get_objects()
-    my_types = muppy.filter(all_objects, Type=dict)
-    sum1 = summary.summarize(my_types)
-    summary.print_(sum1)
+    print (str(sys.argv))
+    cmd.cmd_handler_flow(arguments=sys.argv)
