@@ -4,7 +4,7 @@ from powercad.cons_aware_en.database import create_connection, insert_record
 from powercad.corner_stitch.cs_solution import CornerStitchSolution
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-from powercad.corner_stitch.input_script import ScriptInputMethod
+from powercad.corner_stitch.input_script import ScriptInputMethod,save_constraint_table
 from powercad.cons_aware_en.cons_engine import New_layout_engine
 import copy
 from powercad.sol_browser.cs_solution_handler import pareto_solutions,export_solutions

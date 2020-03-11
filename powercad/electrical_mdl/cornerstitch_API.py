@@ -165,8 +165,8 @@ class CornerStitch_Emodel_API:
         '''
         self.module_data = module_data
         self.width, self.height = self.module_data.footprint
-        self.width/=1000.0
-        self.height/=1000.0
+        #self.width/=1000.0
+        #self.height/=1000.0
         self.e_plates = []  # list of electrical components
         self.e_sheets = []  # list of sheets for connector presentaion
         self.e_comps = []  # list of all components
@@ -180,10 +180,12 @@ class CornerStitch_Emodel_API:
             for trace in isl.elements: # get all trace in isl
                 name = trace[5]
                 z_id = int(name.split(".")[1])
+                z = int(self.get_z_loc(z_id)*1000)
+                dz = int(self.get_thick(z_id)*1000)
                 x,y,w,h = trace[1:5]
-                new_rect = Rect(top=(y + h) / 1000.0
-                                , bottom=y/1000.0, left=x/1000.0, right=(x + w)/1000.0)
-                p = E_plate(rect=new_rect, z=self.get_z_loc(z_id), dz=self.get_thick(z_id))
+                new_rect = Rect(top=(y + h) 
+                                , bottom=y, left=x, right=(x + w))
+                p = E_plate(rect=new_rect, z=z, dz=dz)
                 #print ("trace height", p.z)
                 #print ("trace thickness", p.dz)
                 p.group_id=isl.name
@@ -197,6 +199,7 @@ class CornerStitch_Emodel_API:
                 obj = self.comp_dict[name] # Get object type based on the name
                 type = name[0]
                 z_id = obj.layer_id
+                z=int(self.get_z_loc(z_id)*1000)
                 if isinstance(obj, RoutingPath):  # If this is a routing object Trace or Bondwire "Pad"
                     # reuse the rect info and create a sheet
 
@@ -206,11 +209,11 @@ class CornerStitch_Emodel_API:
                         #new_rect = Rect(top=y / 1000 + h, bottom=y / 1000, left=x / 1000, right=x / 1000 + w) # Expected
                         # This is a temp before CS can send correct bw info
                         # Try to move the center point to exact same bondwire landing location, assuming all w,h =1
-                        new_rect = Rect(top=y / 1000.0 + 0.5, bottom=y / 1000.0-0.5, left=x / 1000.0-0.5, right=x / 1000.0 + 0.5)
+                        new_rect = Rect(top=y + 500, bottom=y - 500, left=x -500, right=x +500)
                         #ToDO: After POETS, fix the info sent to electrical model
                     elif type == 'T': # Traces
-                        new_rect = Rect(top=(y+h) / 1000.0 , bottom=y / 1000.0, left=x / 1000.0, right=(x +w) / 1000.0)
-                    pin = Sheet(rect=new_rect, net_name=name, net_type='internal', n=(0, 0, 1), z=self.get_z_loc(z_id))
+                        new_rect = Rect(top=(y+h) , bottom=y, left=x, right=(x +w))
+                    pin = Sheet(rect=new_rect, net_name=name, net_type='internal', n=(0, 0, 1), z=z)
 
                     self.e_sheets.append(pin)
                     # need to have a more generic way in the future
@@ -218,9 +221,8 @@ class CornerStitch_Emodel_API:
                     self.net_to_sheet[name] = pin
                 elif isinstance(obj, Part):
                     if obj.type == 0:  # If this is lead type:
-                        new_rect = Rect(top=(y + h) / 1000.0, bottom=y / 1000.0, left=x / 1000.0, right=(x + w) / 1000.0)
-                        pin = Sheet(rect=new_rect, net_name=name, net_type='external', n=(0, 0, 1), z=self.get_z_loc(
-                            z_id))
+                        new_rect = Rect(top=(y + h), bottom=y, left=x, right=(x + w))
+                        pin = Sheet(rect=new_rect, net_name=name, net_type='external', n=(0, 0, 1), z=z)
                         self.net_to_sheet[name] = pin
                         self.e_sheets.append(pin)
                     elif obj.type == 1:  # If this is a component
@@ -233,13 +235,13 @@ class CornerStitch_Emodel_API:
                             locs = obj.pin_locs[pin_name]
                             px, py, pwidth, pheight, side = locs
                             if side == 'B':  # if the pin on the bottom side of the device
-                                z = self.get_z_loc(z_id)
+                                z = self.get_z_loc(z_id)*1000
                             elif side == 'T':  # if the pin on the top side of the device
-                                z = self.get_z_loc(z_id) + obj.thickness
-                            top = y / 1000.0 + (py + pheight)
-                            bot = y / 1000.0 + py
-                            left = x / 1000.0 + px
-                            right = x / 1000.0 + (px + pwidth)
+                                z = int((self.get_z_loc(z_id) + obj.thickness)*1000)
+                            top = y + int(py + pheight) * 1000
+                            bot = y + int(py) *1000
+                            left = x + int(px) *1000
+                            right = x + int(px + pwidth)*1000
                             rect = Rect(top=top, bottom=bot, left=left, right=right)
                             pin = Sheet(rect=rect, net_name=net_name, z=z)
                             self.net_to_sheet[net_name] = pin
