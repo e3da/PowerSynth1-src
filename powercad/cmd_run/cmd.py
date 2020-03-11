@@ -724,7 +724,8 @@ class Cmd_Handler:
                         if row[0] == 'Size':
                             continue
                         else:
-                            if row[0][0] == '[' and len(row)>=2:
+                            #print (row)
+                            if row[0][0] == '[' and len(row)>2:
                                 data = [base_name, float(row[1]), float(row[2])]
                                 all_data.append(data)
 
@@ -756,46 +757,47 @@ class Cmd_Handler:
                         sol_data[row[0]] = ([float(row[2]), float(row[1])])
             # sol_data = np.array(sol_data)
             print (sol_data)
-            pareto_data = pareto_frontiter2D(sol_data)
-            #print len(pareto_data)
-            file_name = sol_dir+'\\final_pareto.csv'
-            with open(file_name, 'w', newline='') as my_csv:
-                csv_writer = csv.writer(my_csv, delimiter=',')
-                csv_writer.writerow(['Layout_ID', 'Temperature', 'Inductance'])
-                for k, v in list(pareto_data.items()):
-                    data = [k, v[0], v[1]]
-                    csv_writer.writerow(data)
-            my_csv.close()
+            if len(sol_data)>0:
+                pareto_data = pareto_frontiter2D(sol_data)
+                #print len(pareto_data)
+                file_name = sol_dir+'\\final_pareto.csv'
+                with open(file_name, 'w', newline='') as my_csv:
+                    csv_writer = csv.writer(my_csv, delimiter=',')
+                    csv_writer.writerow(['Layout_ID', 'Temperature', 'Inductance'])
+                    for k, v in list(pareto_data.items()):
+                        data = [k, v[0], v[1]]
+                        csv_writer.writerow(data)
+                my_csv.close()
 
-            data_x = []
-            data_y = []
-            for id, value in list(pareto_data.items()):
-                #print id,value
-                data_x.append(value[0])
-                data_y.append(value[1])
+                data_x = []
+                data_y = []
+                for id, value in list(pareto_data.items()):
+                    #print id,value
+                    data_x.append(value[0])
+                    data_y.append(value[1])
 
-            #print data_x
-            #print data_y
-            plt.cla()
+                #print data_x
+                #print data_y
+                plt.cla()
 
-            plt.scatter(data_x, data_y)
+                plt.scatter(data_x, data_y)
 
-            x_label = 'Inductance'
-            y_label = 'Max_Temperature'
+                x_label = 'Inductance'
+                y_label = 'Max_Temperature'
 
-            plt.xlim(min(data_x) - 2, max(data_x) + 2)
-            plt.ylim(min(data_y) - 0.5, max(data_y) + 0.5)
-            # naming the x axis
-            plt.xlabel(x_label)
-            # naming the y axis
-            plt.ylabel(y_label)
+                plt.xlim(min(data_x) - 2, max(data_x) + 2)
+                plt.ylim(min(data_y) - 0.5, max(data_y) + 0.5)
+                # naming the x axis
+                plt.xlabel(x_label)
+                # naming the y axis
+                plt.ylabel(y_label)
 
-            # giving a title to my graph
-            plt.title('Pareto-front Solutions')
+                # giving a title to my graph
+                plt.title('Pareto-front Solutions')
 
-            # function to show the plot
-            # plt.show()
-            plt.savefig(fig_dir + '/' + 'pareto_plot_mode-' + str(opt) + '.png')
+                # function to show the plot
+                # plt.show()
+                plt.savefig(fig_dir + '/' + 'pareto_plot_mode-' + str(opt) + '.png')
 
     def export_solution_params(self,fig_dir=None,sol_dir=None,solutions=None,opt=None):
 
@@ -810,17 +812,28 @@ class Cmd_Handler:
             if (len(sol.params)>=2):
                 data_y.append(sol.params['Max_Temperature'])
             else:
-                 data_y.append(sol.index)
+                data_y.append(sol.index)
 
         plt.cla()
-
+        
         #print (data_x,data_y)
         plt.scatter(data_x, data_y)
-        labels=list(solution[0].params.keys())
-        #if labels[0]=='Inductance':
-        x_label = labels[0]
-        #if labels[1]=='Max_Temperature':
-        y_label = labels[1]
+        for solution in solutions:
+            labels=list(solution.params.keys())
+            break
+        #if len(labels)==2:
+        if len(labels)<2:
+            for i in range(2-len(labels)):
+                labels.append('index')
+        if labels[0]=='Inductance':
+            x_label = labels[0]
+        else:
+            x_label='index'
+        if labels[1]=='Max_Temperature':
+            y_label = labels[1]
+        else:
+            y_label='index'
+        
 
         plt.xlim(min(data_x)-2, max(data_x)+2)
         plt.ylim(min(data_y)-0.5, max(data_y)+0.5)

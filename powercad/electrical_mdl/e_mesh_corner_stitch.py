@@ -554,11 +554,7 @@ class EMesh_CS(EMesh):
             self.hier_group_dict = {}
             self.handle_hier_node(points, g)
             self.mesh_edges(thick=0.2)  # the thickness is fixed right now but need to be updated by MDK later
-<<<<<<< HEAD
-            #self.plot_isl_mesh(plot=True, mode ='plotly')
-=======
-        self.plot_isl_mesh(plot=True, mode ='matplotlib')
->>>>>>> b26b40e75781b1f73b06f3d320e08aaa5819cbf5
+        #self.plot_isl_mesh(plot=True, mode ='matplotlib')
 
     def mesh_nodes_planar(self, isl=None):
         '''
