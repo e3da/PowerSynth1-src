@@ -13,6 +13,7 @@ from powercad.cmd_run.cmd_layout_handler import generate_optimize_layout, script
 from powercad.cons_aware_en.database import create_connection, insert_record, create_table
 from powercad.sol_browser.cs_solution_handler import pareto_frontiter2D
 from powercad.design.layout_module_data import ModuleDataCornerStitch
+
 #import objgraph
 from pympler import muppy,summary
 from powercad.layer_stack.layer_stack import LayerStack
@@ -22,7 +23,48 @@ import os
 import glob
 import copy
 import csv
+from powercad.general.settings import settings
 
+
+
+def read_settings_file(filepath):
+    
+    if os.path.isfile(filepath): 
+        filename = os.path.basename(filepath)
+        work_dir = filepath.replace(filename,'')
+        os.chdir(work_dir)
+        with open(filename, 'r') as inputfile:
+            for line in inputfile.readlines():
+                line = line.strip("\r\n")
+                info = line.split(" ")
+                if line == '':
+                    continue
+                if line[0] == "#":
+                    continue
+                if info[0] == "DEFAULT_TECH_LIB_DIR:":
+                    settings.DEFAULT_TECH_LIB_DIR = os.path.abspath(info[1])
+                if info[0] == "LAST_ENTRIES_PATH:":
+                    settings.LAST_ENTRIES_PATH = os.path.abspath(info[1])
+                if info[0] == "TEMP_DIR:":
+                    settings.TEMP_DIR = os.path.abspath(info[1])
+                if info[0] == "CACHED_CHAR_PATH:":
+                    settings.CACHED_CHAR_PATH = os.path.abspath(info[1])
+                if info[0] == "MATERIAL_LIB_PATH:":
+                    settings.MATERIAL_LIB_PATH = os.path.abspath(info[1])
+                    print (settings.MATERIAL_LIB_PATH)
+                if info[0] == "EXPORT_DATA_PATH:":
+                    settings.EXPORT_DATA_PATH = os.path.abspath(info[1])
+                if info[0] == "GMSH_BIN_PATH:":
+                    settings.GMSH_BIN_PATH = os.path.abspath(info[1])
+                if info[0] == "ELMER_BIN_PATH:":
+                    settings.ELMER_BIN_PATH = os.path.abspath(info[1])
+                if info[0] == "ANSYS_IPY64:":
+                    settings.ANSYS_IPY64 = os.path.abspath(info[1])
+                if info[0] == "FASTHENRY_FOLDER:":
+                    settings.FASTHENRY_FOLDER = os.path.abspath(info[1])
+                if info[0] == "MANUAL:":
+                    settings.MANUAL = os.path.abspath(info[1])
+        print ("Settings loaded.")
 class Cmd_Handler:
     def __init__(self,debug=False):
         # Input files
@@ -49,7 +91,7 @@ class Cmd_Handler:
         self.raw_layout_info = {}
         self.min_size_rect_patches = {}
         # Struture
-        self.layer_stack = LayerStack(debug=debug)
+        self.layer_stack = None
         # APIs
         self.measures = []
         self.e_api = None
@@ -622,8 +664,6 @@ class Cmd_Handler:
                             continue
                     else:
                         print("wrong macro file format or wrong directory, please try again !")
-
-
                 else:
                     print("Wrong Input, please double check and try again !")
         else: # Real CMD mode
@@ -644,31 +684,32 @@ class Cmd_Handler:
                         arg_dict[cur_flag].append(arguments[i]) 
                 i+=1
             # Process args
-            for k in arg_dict.keys():
-                if k == "-attach": # for debuggin only
-                    input("waiting to get PID !")
-                if k == "-m": # - m: macro flag
-                    filep = arg_dict[k][0]
-                    print("Loading macro file")
-                    filep = os.path.abspath(filep)
-                    print (filep)
-                    if os.path.isfile(filep):
-                        # macro file exists
-                        filename = os.path.basename(filep)
-                        # change current directory to workspace
-                        work_dir = filep.replace(filename,'')
-                        os.chdir(work_dir)
-                        print("Jump to current working dir")
-                        print(work_dir)
-                        checked = self.load_macro_file(filep)
-                        if not (checked):
-                            continue
-                    else:
-                        print("wrong macro file format or wrong directory, please try again !")
-                elif k == '-help':
-                    print("This is PowerSynth cmd mode, more flags will be added in the future")
-                elif k == '-settings':
-                    print("This will change the default settings file location")
+            if "-settings" in arg_dict.keys(): # Special case
+                setting_file = arg_dict['-settings'][0]
+                print("Loading settings file")
+                read_settings_file(setting_file)
+                self.layer_stack = LayerStack()
+                print("This will change the default settings file location")
+            if "-m" in arg_dict.keys(): # - m: macro flag
+                filep = arg_dict['-m'][0]
+                print("Loading macro file")
+                filep = os.path.abspath(filep)
+                print (filep)
+                if os.path.isfile(filep):
+                    # macro file exists
+                    filename = os.path.basename(filep)
+                    # change current directory to workspace
+                    work_dir = filep.replace(filename,'')
+                    os.chdir(work_dir)
+                    print("Jump to current working dir")
+                    print(work_dir)
+                    checked = self.load_macro_file(filep)
+                else:
+                    print("wrong macro file format or wrong directory, please try again !")
+                    quit()
+            if '-help' in arg_dict.keys():
+                print("This is PowerSynth cmd mode, more flags will be added in the future")
+                
 
     def cmd_loop(self):
         cont = True
@@ -904,7 +945,7 @@ if __name__ == "__main__":
     print (str(sys.argv))
     debug = True
     if debug: # you can mannualy add the argument in the list as shown here
-        args = ['python','/nethome/qmle/PowerSynth_V1_git/PowerCAD-full/src/powercad/cmd_run/cmd.py','-m','/nethome/qmle/testcases/Mutual_IND_Case/two_dev_macro.txt']
+        args = ['python','/nethome/qmle/PowerSynth_V1_git/PowerCAD-full/src/powercad/cmd_run/cmd.py','-m','/nethome/qmle/testcases/Mutual_IND_Case/two_dev_macro.txt','-settings',"/nethome/qmle/testcases/settings.info"]
         cmd.cmd_handler_flow(arguments= args)
     else:
         cmd.cmd_handler_flow(arguments=sys.argv) # Default

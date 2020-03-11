@@ -4,7 +4,7 @@ from collections import OrderedDict
 from powercad.design.library_structures import *
 from mpl_toolkits.mplot3d import Axes3D
 from powercad.general.material.material import *
-import powercad.general.settings.settings
+from powercad.general.settings import settings
 import csv
 import getpass
 
@@ -71,8 +71,7 @@ class LayerStack:
         self.material_lib = Material_lib()
         
         if self.debug==True:
-            print (os.getcwd())
-            material_path = os.path.abspath(MATERIAL_LIB_PATH)
+            material_path = os.path.abspath(settings.MATERIAL_LIB_PATH)
         else:
             material_path = input("Put your hardcoded path to Material.csv file here:")
             material_path = os.path.abspath(material_path)
