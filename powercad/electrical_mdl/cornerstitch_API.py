@@ -525,8 +525,8 @@ class CornerStitch_Emodel_API:
         '''
         pt1 = self.emesh.comp_net_id[src]
         pt2 = self.emesh.comp_net_id[sink]
-        #print src, sink
-        #print pt1,pt2
+        #print (src, sink)
+        #print (pt1,pt2)
         #pt1=36
         #pt2=97
         self.circuit = RL_circuit()

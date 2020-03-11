@@ -16,6 +16,7 @@ from powercad.design.layout_module_data import ModuleDataCornerStitch
 #import objgraph
 from pympler import muppy,summary
 from powercad.layer_stack.layer_stack import LayerStack
+import matplotlib.pyplot as plt
 import types
 import os
 import glob
@@ -213,12 +214,13 @@ class Cmd_Handler:
         # make dir if they are not existed
         print(("self.new_mode",self.new_mode))
         print(("self.flex",self.flexible))
-        if not (check_dir(self.fig_dir)) or not(check_dir(self.db_dir)):
+        if not (check_dir(self.fig_dir)):
             try:
                 os.mkdir(self.fig_dir)
             except:
                 print ("cant make directory for figures")
                 cont =False
+        if not(check_dir(self.db_dir)):
             try:
                 os.mkdir(self.db_dir)
             except:
@@ -336,6 +338,8 @@ class Cmd_Handler:
                                          apis={'E': self.e_api, 'T': self.t_api}, num_layouts=num_layouts, seed=seed,
                                          algorithm=algorithm, floor_plan=floor_plan,num_gen=num_gen,measures=self.measures)
 
+                
+                
                 self.export_solution_params(self.fig_dir,self.db_dir,self.solutions,layout_mode)
         else:
             # First check all file path
@@ -582,45 +586,86 @@ class Cmd_Handler:
         self.setup_thermal()
         self.setup_electrical()
 
-    def cmd_handler_flow(self):
-        print("This is the command line mode for PowerSynth layout optimization")
-        print("Type -m [macro file] to run a macro file")
-        print("Type -f to go through a step by step setup")
-        print("Type -quit to quit")
+    def cmd_handler_flow(self, arguments =[]):
+        if len(arguments) <= 1: # Turn on simple user interface mode
+            print("This is the command line mode for PowerSynth layout optimization")
+            print("Type -m [macro file] to run a macro file")
+            print("Type -f to go through a step by step setup")
+            print("Type -quit to quit")
 
-        cont = True
-        while (cont):
-            mode = input("Enter command here")
-            if mode == '-f':
-                self.input_request()
-                self.init_cs_objects()
-                self.set_up_db()
-                self.cmd_loop()
-                cont = False
-            elif mode == '-quit':
-                cont = False
-            elif mode[0:2] == '-m':
-                print("Loading macro file")
-                m, filep = mode.split(" ")
-                print (filep)
-                if os.path.isfile(filep):
-                    # macro file exists
-                    filename = os.path.basename(filep)
-                    # change current directory to workspace
-                    work_dir = filep.replace(filename,'')
-                    os.chdir(work_dir)
-                    print("Jump to current working dir")
-                    print(work_dir)
-                    checked = self.load_macro_file(filep)
-                    if not (checked):
-                        continue
+            cont = True
+            while (cont):
+                mode = input("Enter command here")
+                if mode == '-f':
+                    self.input_request()
+                    self.init_cs_objects()
+                    self.set_up_db()
+                    self.cmd_loop()
+                    cont = False
+                elif mode == '-quit':
+                    cont = False
+                elif mode[0:2] == '-m':
+                    print("Loading macro file")
+                    m, filep = mode.split(" ")
+                    filep = os.path.abspath(filep)
+                    print (filep)
+                    if os.path.isfile(filep):
+                        # macro file exists
+                        filename = os.path.basename(filep)
+                        # change current directory to workspace
+                        work_dir = filep.replace(filename,'')
+                        os.chdir(work_dir)
+                        print("Jump to current working dir")
+                        print(work_dir)
+                        checked = self.load_macro_file(filep)
+                        if not (checked):
+                            continue
+                    else:
+                        print("wrong macro file format or wrong directory, please try again !")
+
+
                 else:
-                    print("wrong macro file format or wrong directory, please try again !")
-
-
-            else:
-                print("Wrong Input, please double check and try again !")
-
+                    print("Wrong Input, please double check and try again !")
+        else: # Real CMD mode
+            arg_dict = {}
+            i = 0
+            print (arguments)
+            while i < len(arguments): # Read through a list of arguments and build a table 
+                print(i,arguments[i])    
+                if i == 0: # cmd.py 
+                    i+=1
+                    continue
+                else:
+                    if "-" in arguments[i]:
+                        cur_flag = arguments[i]
+                        arg_dict[cur_flag] = []
+                    else: # keep adding the arg_val until next flag 
+                        arg_dict[cur_flag].append(arguments[i]) 
+                i+=1
+            # Process args
+            for k in arg_dict.keys():
+                if k == "-m": # - m: macro flag
+                    filep = arg_dict[k][0]
+                    print("Loading macro file")
+                    filep = os.path.abspath(filep)
+                    print (filep)
+                    if os.path.isfile(filep):
+                        # macro file exists
+                        filename = os.path.basename(filep)
+                        # change current directory to workspace
+                        work_dir = filep.replace(filename,'')
+                        os.chdir(work_dir)
+                        print("Jump to current working dir")
+                        print(work_dir)
+                        checked = self.load_macro_file(filep)
+                        if not (checked):
+                            continue
+                    else:
+                        print("wrong macro file format or wrong directory, please try again !")
+                elif k == '-help':
+                    print("This is PowerSynth cmd mode, more flags will be added in the future")
+                elif k == '-settings':
+                    print("This will change the default settings file location")
     def cmd_loop(self):
         cont = True
         while (cont):
@@ -710,90 +755,93 @@ class Cmd_Handler:
 
     def find_pareto_dataset(self,sol_dir=None,opt=None,fig_dir=None):
         #print "so",sol_dir
-
+        
         folder_name = sol_dir+'\\'+'Layout_Solutions'
-        all_data = []
-        i = 0
-        for filename in glob.glob(os.path.join(folder_name, '*.csv')):
-            with open(filename) as csvfile:
-                base_name = os.path.basename(filename)
+        if (os.path.exists(folder_name)):
+            all_data = []
+            i = 0
+            for filename in glob.glob(os.path.join(folder_name, '*.csv')):
+                with open(filename) as csvfile:
+                    base_name = os.path.basename(filename)
+                    readCSV = csv.reader(csvfile, delimiter=',')
+                    for row in readCSV:
+                        if row[0] == 'Size':
+                            continue
+                        else:
+                            #print (row)
+                            if row[0][0] == '[' and len(row)>2:
+                                data = [base_name, float(row[1]), float(row[2])]
+                                all_data.append(data)
+
+                            else:
+                                continue
+                    i += 1
+            # for data in all_data:
+            # print data
+            file_name = sol_dir+'\\all_data.csv'
+            with open(file_name, 'w',newline='') as my_csv:
+                csv_writer = csv.writer(my_csv, delimiter=',')
+                csv_writer.writerow(['Layout_ID', 'Temperature', 'Inductance'])
+                for data in all_data:
+                    #if data[2] > 20: # special case to handle invalid electrical evaluations
+
+                    data = [data[0].rsplit('.csv')[0], data[1], data[2]]
+                    csv_writer.writerow(data)
+                my_csv.close()
+            # '''
+            sol_data = {}
+            file = file_name
+            with open(file) as csvfile:
                 readCSV = csv.reader(csvfile, delimiter=',')
                 for row in readCSV:
-                    if row[0] == 'Size':
+                    if row[0] == 'Layout_ID':
+                        #sol_data[row[0]]=[row[2],row[1]]
                         continue
                     else:
-                        if row[0][0] == '[':
-                            data = [base_name, float(row[1]), float(row[2])]
-                            all_data.append(data)
+                        sol_data[row[0]] = ([float(row[2]), float(row[1])])
+            # sol_data = np.array(sol_data)
+            print (sol_data)
+            if len(sol_data)>0:
+                pareto_data = pareto_frontiter2D(sol_data)
+                #print len(pareto_data)
+                file_name = sol_dir+'\\final_pareto.csv'
+                with open(file_name, 'w', newline='') as my_csv:
+                    csv_writer = csv.writer(my_csv, delimiter=',')
+                    csv_writer.writerow(['Layout_ID', 'Temperature', 'Inductance'])
+                    for k, v in list(pareto_data.items()):
+                        data = [k, v[0], v[1]]
+                        csv_writer.writerow(data)
+                my_csv.close()
 
-                        else:
-                            continue
-                i += 1
-        # for data in all_data:
-        # print data
-        file_name = sol_dir+'\\all_data.csv'
-        with open(file_name, 'wb') as my_csv:
-            csv_writer = csv.writer(my_csv, delimiter=',')
-            csv_writer.writerow(['Layout_ID', 'Temperature', 'Inductance'])
-            for data in all_data:
-                #if data[2] > 20: # special case to handle invalid electrical evaluations
+                data_x = []
+                data_y = []
+                for id, value in list(pareto_data.items()):
+                    #print id,value
+                    data_x.append(value[0])
+                    data_y.append(value[1])
 
-                data = [data[0].rsplit('.csv')[0], data[1], data[2]]
-                csv_writer.writerow(data)
-            my_csv.close()
-        # '''
-        sol_data = {}
-        file = file_name
-        with open(file) as csvfile:
-            readCSV = csv.reader(csvfile, delimiter=',')
-            for row in readCSV:
-                if row[0] == 'Layout_ID':
-                    #sol_data[row[0]]=[row[2],row[1]]
-                    continue
-                else:
-                    sol_data[row[0]] = ([float(row[2]), float(row[1])])
-        # sol_data = np.array(sol_data)
-        #print sol_data
-        pareto_data = pareto_frontiter2D(sol_data)
-        #print len(pareto_data)
-        file_name = sol_dir+'\\final_pareto.csv'
-        with open(file_name, 'wb') as my_csv:
-            csv_writer = csv.writer(my_csv, delimiter=',')
-            csv_writer.writerow(['Layout_ID', 'Temperature', 'Inductance'])
-            for k, v in list(pareto_data.items()):
-                data = [k, v[0], v[1]]
-                csv_writer.writerow(data)
-        my_csv.close()
+                #print data_x
+                #print data_y
+                plt.cla()
 
-        data_x = []
-        data_y = []
-        for id, value in list(pareto_data.items()):
-            #print id,value
-            data_x.append(value[0])
-            data_y.append(value[1])
+                plt.scatter(data_x, data_y)
 
-        #print data_x
-        #print data_y
-        plt.cla()
+                x_label = 'Inductance'
+                y_label = 'Max_Temperature'
 
-        plt.scatter(data_x, data_y)
+                plt.xlim(min(data_x) - 2, max(data_x) + 2)
+                plt.ylim(min(data_y) - 0.5, max(data_y) + 0.5)
+                # naming the x axis
+                plt.xlabel(x_label)
+                # naming the y axis
+                plt.ylabel(y_label)
 
-        x_label = 'Inductance'
-        y_label = 'Max_Temperature'
+                # giving a title to my graph
+                plt.title('Pareto-front Solutions')
 
-        plt.xlim(min(data_x) - 2, max(data_x) + 2)
-        plt.ylim(min(data_y) - 0.5, max(data_y) + 0.5)
-        # naming the x axis
-        plt.xlabel(x_label)
-        # naming the y axis
-        plt.ylabel(y_label)
-
-        # giving a title to my graph
-        plt.title('Pareto-front Solutions')
-
-        # function to show the plot
-        # plt.show()
-        plt.savefig(fig_dir + '/' + 'pareto_plot_mode-' + str(opt) + '.png')
+                # function to show the plot
+                # plt.show()
+                plt.savefig(fig_dir + '/' + 'pareto_plot_mode-' + str(opt) + '.png')
 
     def export_solution_params(self,fig_dir=None,sol_dir=None,solutions=None,opt=None):
 
@@ -805,15 +853,31 @@ class Cmd_Handler:
             #if sol.params['Inductance']>50:
                 #continue
             data_x.append(sol.params['Inductance'])
-            data_y.append(sol.params['Max_Temperature'])
+            if (len(sol.params)>=2):
+                data_y.append(sol.params['Max_Temperature'])
+            else:
+                data_y.append(sol.index)
 
         plt.cla()
-
-
+        
+        #print (data_x,data_y)
         plt.scatter(data_x, data_y)
-
-        x_label = 'Inductance'
-        y_label = 'Max_Temperature'
+        for solution in solutions:
+            labels=list(solution.params.keys())
+            break
+        #if len(labels)==2:
+        if len(labels)<2:
+            for i in range(2-len(labels)):
+                labels.append('index')
+        if labels[0]=='Inductance':
+            x_label = labels[0]
+        else:
+            x_label='index'
+        if labels[1]=='Max_Temperature':
+            y_label = labels[1]
+        else:
+            y_label='index'
+        
 
         plt.xlim(min(data_x)-2, max(data_x)+2)
         plt.ylim(min(data_y)-0.5, max(data_y)+0.5)
@@ -833,8 +897,5 @@ class Cmd_Handler:
 if __name__ == "__main__":
     print("----------------------PowerSynth Version 1.4: Command line version------------------")
     cmd = Cmd_Handler(debug=False)
-    cmd.cmd_handler_flow()
-    all_objects = muppy.get_objects()
-    my_types = muppy.filter(all_objects, Type=dict)
-    sum1 = summary.summarize(my_types)
-    summary.print_(sum1)
+    print (str(sys.argv))
+    cmd.cmd_handler_flow(arguments=sys.argv)

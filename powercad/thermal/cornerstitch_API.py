@@ -21,6 +21,7 @@ from powercad.thermal.fast_thermal import DieThermalFeatures, SublayerThermalFea
 from powercad.thermal.fast_thermal import ThermalGeometry, TraceIsland, DieThermal, solve_TFSM
 from powercad.general.data_struct.util import Rect
 import numpy as np
+import os
 TFSM_MODEL = 1
 RECT_FLUX_MODEL = 2
 
