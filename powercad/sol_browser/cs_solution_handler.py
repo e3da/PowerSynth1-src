@@ -116,11 +116,7 @@ def export_solutions(solutions=None,directory=None,pareto_data=None,export = Fal
     for i in range(len(solutions)):
         item = solutions[i].name
         file_name = sol_path + '/' + item + '.txt'
-<<<<<<< HEAD
         with open(file_name, 'w',newline='') as my_file:
-=======
-        with open(file_name, 'w') as my_file:
->>>>>>> 942cd70bd1f802e59720d20b3339baaee4973c56
             for k, v in list(solutions[i].abstract_info[item]['rect_info'].items()):
                 if k[0]=='T' :
                     x1=v.x/1000.0
@@ -148,11 +144,7 @@ def export_solutions(solutions=None,directory=None,pareto_data=None,export = Fal
     for i in range(len(solutions)):
         item = solutions[i].name
         file_name = sol_path + '/' + item + '.csv'
-<<<<<<< HEAD
         with open(file_name, 'w', newline='') as my_csv:
-=======
-        with open(file_name, 'w') as my_csv:
->>>>>>> 942cd70bd1f802e59720d20b3339baaee4973c56
             csv_writer = csv.writer(my_csv, delimiter=',')
             if len (performance_names) >=2: # Multi (2) objectives optimization
                 csv_writer.writerow(["Size", performance_names[0], performance_names[1]])
