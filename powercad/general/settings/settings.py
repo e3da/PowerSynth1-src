@@ -4,11 +4,62 @@ Created on Feb 24, 2014
 @author: anizam
 changes made by sxm063: os.path.abspath(); added CACHED_CHAR_PATH since it changes between release/non-release modes  - Nov 23, 2015
 Updated Jmain changelog - Aug 10, 2016; 
+Updated: Shilpi Mar 10, 2020 - have file paths set up from text files.
 '''
 import os
-POWERSYNTH_RELEASE = False
 
-if POWERSYNTH_RELEASE:  # For packaged versions
+def read_settings_file(filepath):
+    DEFAULT_TECH_LIB_DIR = ''
+    LAST_ENTRIES_PATH = ''
+    TEMP_DIR = ''
+    CACHED_CHAR_PATH = ''
+    MATERIAL_LIB_PATH = ''
+    EXPORT_DATA_PATH = ''
+    GMSH_BIN_PATH = ''
+    ELMER_BIN_PATH = ''
+    ANSYS_IPY64 = ''
+    FASTHENRY_FOLDER = ''
+    MANUAL = ''
+    if os.path.isfile(filepath): 
+        filename = os.path.basename(filepath)
+        work_dir = filepath.replace(filename,'')
+        os.chdir(work_dir)
+        with open(filename, 'r') as inputfile:
+            for line in inputfile.readlines():
+                line = line.strip("\r\n")
+                info = line.split(" ")
+                if line == '':
+                    continue
+                if line[0] == "#":
+                    continue
+                if info[0] == "DEFAULT_TECH_LIB_DIR:":
+                    DEFAULT_TECH_LIB_DIR = os.path.abspath(info[1])
+                if info[0] == "LAST_ENTRIES_PATH:":
+                    LAST_ENTRIES_PATH = os.path.abspath(info[1])
+                if info[0] == "TEMP_DIR:":
+                    TEMP_DIR = os.path.abspath(info[1])
+                if info[0] == "CACHED_CHAR_PATH:":
+                    CACHED_CHAR_PATH = os.path.abspath(info[1])
+                if info[0] == "MATERIAL_LIB_PATH:":
+                    MATERIAL_LIB_PATH = os.path.abspath(info[1])
+                if info[0] == "EXPORT_DATA_PATH:":
+                    EXPORT_DATA_PATH = os.path.abspath(info[1])
+                if info[0] == "GMSH_BIN_PATH:":
+                    GMSH_BIN_PATH = os.path.abspath(info[1])
+                if info[0] == "ELMER_BIN_PATH:":
+                    ELMER_BIN_PATH = os.path.abspath(info[1])
+                if info[0] == "ANSYS_IPY64:":
+                    ANSYS_IPY64 = os.path.abspath(info[1])
+                if info[0] == "FASTHENRY_FOLDER:":
+                    FASTHENRY_FOLDER = os.path.abspath(info[1])
+                if info[0] == "MANUAL:":
+                    MANUAL = os.path.abspath(info[1])
+        print ("Settings loaded.")
+
+	
+# POWERSYNTH_RELEASE = False
+
+""" if POWERSYNTH_RELEASE:  # For packaged versions
     DEFAULT_TECH_LIB_DIR = os.path.abspath("tech_lib")
     LAST_ENTRIES_PATH = os.path.abspath("export_data/app_data/last_entries.p")
     ELMER_BIN_PATH = "ELmer 8.2-Release/bin"
@@ -33,13 +84,9 @@ else:   # For debugging and running PowerSynth from Eclipse
     ELMER_BIN_PATH = os.path.abspath("C:\PowerSynth\Elmer 8.2-Release\\bin")  # Emler on Imam's PC
     ANSYS_IPY64 = os.path.abspath('C:\Program Files\AnsysEM\AnsysEM18.2\Win64\common\IronPython')
     FASTHENRY_FOLDER = 'C:\PowerSynth_git\Master_for_danfoss\PowerCAD-full\FastHenry'
-    MANUAL = "C:\\Users\qmle\Desktop\Build_danfoss\PowerSynth User Tutorial.html"
+    MANUAL = "C:\\Users\qmle\Desktop\Build_danfoss\PowerSynth User Tutorial.html" """
 
 if __name__ == '__main__':  # Module test
-    print(DEFAULT_TECH_LIB_DIR)
-    print(LAST_ENTRIES_PATH)
-    print(ELMER_BIN_PATH)
-    print(GMSH_BIN_PATH)
-    print(TEMP_DIR)
-    print(CACHED_CHAR_PATH)
-    print(MATERIAL_LIB_PATH)
+    # filepath = input("Enter settings filepath without quotes: ")
+    filepath = "/nethome/sxm063/downloads/Mutual_IND_Case/settings.info" # hardcoded
+    read_settings_file(filepath)
