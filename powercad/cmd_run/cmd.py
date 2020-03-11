@@ -627,16 +627,17 @@ class Cmd_Handler:
                 else:
                     print("Wrong Input, please double check and try again !")
         else: # Real CMD mode
-            arg_dict = {}
+            arg_dict = {"temp":[]}
             i = 0
             print (arguments)
+            cur_flag = "temp"
             while i < len(arguments): # Read through a list of arguments and build a table 
                 print(i,arguments[i])    
                 if i == 0: # cmd.py 
                     i+=1
                     continue
                 else:
-                    if "-" in arguments[i]:
+                    if arguments[i][0] == '-':
                         cur_flag = arguments[i]
                         arg_dict[cur_flag] = []
                     else: # keep adding the arg_val until next flag 
@@ -644,6 +645,8 @@ class Cmd_Handler:
                 i+=1
             # Process args
             for k in arg_dict.keys():
+                if k == "-attach": # for debuggin only
+                    input("waiting to get PID !")
                 if k == "-m": # - m: macro flag
                     filep = arg_dict[k][0]
                     print("Loading macro file")
@@ -666,6 +669,7 @@ class Cmd_Handler:
                     print("This is PowerSynth cmd mode, more flags will be added in the future")
                 elif k == '-settings':
                     print("This will change the default settings file location")
+
     def cmd_loop(self):
         cont = True
         while (cont):
@@ -898,4 +902,9 @@ if __name__ == "__main__":
     print("----------------------PowerSynth Version 1.4: Command line version------------------")
     cmd = Cmd_Handler(debug=False)
     print (str(sys.argv))
-    cmd.cmd_handler_flow(arguments=sys.argv)
+    debug = True
+    if debug: # you can mannualy add the argument in the list as shown here
+        args = ['python','/nethome/qmle/PowerSynth_V1_git/PowerCAD-full/src/powercad/cmd_run/cmd.py','-m','/nethome/qmle/testcases/Mutual_IND_Case/two_dev_macro.txt']
+        cmd.cmd_handler_flow(arguments= args)
+    else:
+        cmd.cmd_handler_flow(arguments=sys.argv) # Default

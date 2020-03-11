@@ -111,17 +111,17 @@ class EMesh_CS(EMesh):
             trace_cells = self.handle_pins_connect_trace_cells(trace_cells=trace_cells, island_name=g.name)
             if len(isl.elements) == 1:  # Handle cases where the trace cell width is small enough to apply macro model (RS)
                 # need a better way to mark the special case for RS usage, maybe distinguish between power and signal types
-                mesh_pts_tbl = self.mesh_nodes_trace_cells(trace_cells=trace_cells, Nw=1, ax=ax, method ="skin_depth")
+                mesh_pts_tbl = self.mesh_nodes_trace_cells(trace_cells=trace_cells, Nw=1, ax=ax, method ="uniform")
             else:
-                mesh_pts_tbl = self.mesh_nodes_trace_cells(trace_cells=trace_cells, Nw=Nw, ax=ax,method = "skin_depth")
+                mesh_pts_tbl = self.mesh_nodes_trace_cells(trace_cells=trace_cells, Nw=Nw, ax=ax,method = "uniform")
             self.set_nodes_neigbours_optimized(mesh_tbl=mesh_pts_tbl)
-            self.mesh_edges_optimized(mesh_tbl=mesh_pts_tbl, trace_num=len(trace_cells), Nw=Nw, mesh_type="skin_depth", macro_mode=False)
+            self.mesh_edges_optimized(mesh_tbl=mesh_pts_tbl, trace_num=len(trace_cells), Nw=Nw, mesh_type="uniform", macro_mode=False)
             self.handle_hier_node_opt(mesh_pts_tbl,g)
         self.update_E_comp_parasitics(net=self.comp_net_id, comp_dict=self.comp_dict)
 
         #self.plot_isl_mesh(True,mode = "matplotlib")
 
-    def mesh_nodes_trace_cells(self, trace_cells=None, Nw=3, method="skin_depth", ax=None, z_pos = 0):
+    def mesh_nodes_trace_cells(self, trace_cells=None, Nw=3, method="uniform", ax=None, z_pos = 0):
         '''
         Given a list of splitted trace cells, this function will form a list of mesh nodes based of the trace cell orientations,
         hierachial cuts. The function returns a list of points object [x,y,dir] where dir is a list of directions the mesh edge
@@ -334,10 +334,10 @@ class EMesh_CS(EMesh):
                         # Get x,y,z positions
                         x, y = sheet_data.rect.center()
                         z = sheet_data.z
-                        cp = [x * 1000, y * 1000, z * 1000]
+                        cp = [x , y , z ]
                         for tc in trace_cells:  # find which trace cell includes this component
-                            if tc.encloses(x * 1000, y * 1000):
-                                tc.handle_component(loc=(x * 1000, y * 1000))
+                            if tc.encloses(x , y ):
+                                tc.handle_component(loc=(x , y ))
                         cp_node = MeshNode(pos=cp, type=conn_type, node_id=self.node_count, group_id=None)
                         self.comp_net_id[sheet_data.net] = self.node_count
                         self.add_node(cp_node)
@@ -348,7 +348,7 @@ class EMesh_CS(EMesh):
                         if sheet_data.node == None:  # floating net
                             x, y = sheet_data.rect.center()
                             z = sheet_data.z
-                            cp = [x * 1000, y * 1000, z * 1000]
+                            cp = [x , y , z ]
                             # print "CP",cp
                             if not (sheet_data.net in self.comp_net_id):
                                 cp_node = MeshNode(pos=cp, type=conn_type, node_id=self.node_count, group_id=None)
@@ -365,10 +365,10 @@ class EMesh_CS(EMesh):
                         # Get x,y,z positions
                         x, y = sheet_data.rect.center()
                         z = sheet_data.z
-                        cp = [x * 1000, y * 1000, z * 1000]
+                        cp = [x , y , z ]
                         for tc in trace_cells:  # find which trace cell includes this component
-                            if tc.encloses(x * 1000, y * 1000):
-                                tc.handle_component(loc=(x * 1000, y * 1000))
+                            if tc.encloses(x , y ):
+                                tc.handle_component(loc=(x, y ))
                         cp_node = MeshNode(pos=cp, type=type, node_id=self.node_count, group_id=None)
                         self.comp_net_id[sheet_data.net] = self.node_count
                         self.add_node(cp_node)
@@ -581,7 +581,7 @@ class EMesh_CS(EMesh):
             xs.append(node.pos[0])  # get x locs
             ys.append(node.pos[1])  # get y locs
             name = str(node.pos[0]) + str(node.pos[1]) + str(z)
-            node.pos.append(z*1000)
+            node.pos.append(z)
             if not (name in self.node_dict):
                 p = (node.pos[0], node.pos[1], z)
                 self.node_dict[name] = p
@@ -1105,9 +1105,9 @@ class EMesh_CS(EMesh):
         if plot:
             fig = plt.figure(1)
             ax = Axes3D(fig)
-            ax.set_xlim3d(0, 100000)
-            ax.set_ylim3d(0, 100000)
-            ax.set_zlim3d(0, 2)
+            ax.set_xlim3d(0, 50000)
+            ax.set_ylim3d(0, 50000)
+            ax.set_zlim3d(0, 2000)
             self.plot_3d(fig=fig, ax=ax, show_labels=True, highlight_nodes=None,mode = mode)
             if plot and mode =='matplotlib':
                 plt.show()
