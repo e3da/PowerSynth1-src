@@ -1,7 +1,9 @@
 #import math
 #from scipy import optimize
-from powercad.opt.optimizer import NSGAII_Optimizer, DesignVar, Matlab_weighted_sum_fmincon, Matlab_hybrid_method, \
-    Matlab_gamultiobj, SimulatedAnnealing
+from powercad.opt.optimizer import NSGAII_Optimizer, DesignVar
+import platform
+if platform.system() == 'Windows': # Matlab doesnt work on the server yet, this must be fixed later 
+    from powecar.opt.optizer import Matlab_weighted_sum_fmincon, Matlab_hybrid_method, Matlab_gamultiobj, SimulatedAnnealing
 #from opt.simulated_anneal import Annealer
 import collections
 import numpy as np

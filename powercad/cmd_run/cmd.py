@@ -1,9 +1,11 @@
 # This is the layout generation and optimization flow using command line only
 import sys, os
+
 # Set relative location
 cur_path =sys.path[0] # get current path (meaning this file location)
 cur_path = cur_path[0:-16] #exclude "power/cmd_run"
 sys.path.append(cur_path)
+
 from powercad.electrical_mdl.cornerstitch_API import CornerStitch_Emodel_API
 from powercad.thermal.cornerstitch_API import CornerStitch_Tmodel_API
 #from glob import glob
@@ -852,7 +854,7 @@ class Cmd_Handler:
 
 if __name__ == "__main__":
     print("----------------------PowerSynth Version 1.4: Command line version------------------")
-    cmd = Cmd_Handler(debug=True)
+    cmd = Cmd_Handler(debug=False)
     cmd.cmd_handler_flow()
     all_objects = muppy.get_objects()
     my_types = muppy.filter(all_objects, Type=dict)

@@ -69,19 +69,14 @@ class LayerStack:
         self.current_id = 0  # to check the current layer id
         self.max_z = 0  # the z level of the highest layer
         self.material_lib = Material_lib()
+        
+        if self.debug==True:
+            print (os.getcwd())
+            material_path = os.path.abspath(MATERIAL_LIB_PATH)
+        else:
+            material_path = input("Put your hardcoded path to Material.csv file here:")
+            material_path = os.path.abspath(material_path)
 
-        if getpass.getuser() in ["ialrazi","erago","qmle"] : # For developer use only. Add your name if you run into this
-            if self.debug==True:
-                if getpass.getuser() == "qmle":
-                    material_path = "C:\PowerSynth_git\Electrical_Dev\PowerCAD-full\\tech_lib\Material\Materials.csv" # hard coded need to have a new way for this
-                else:    
-                    material_path = MATERIAL_LIB_PATH
-            else:
-                material_path = input("Put your hardcoded path here:")
-                material_path = os.path.abspath(material_path)
-
-        else: # Normal assumption for Mat Lib
-            material_path = MATERIAL_LIB_PATH
 
         #material_path = MATERIAL_LIB_PATH
         self.material_lib.load_csv(material_path) # load the mat_lib from the default directory
