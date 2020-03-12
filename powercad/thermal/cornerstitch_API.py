@@ -315,7 +315,7 @@ class CornerStitch_Tmodel_API:
             for k in self.comp_dict:
                 comp = self.comp_dict[k]
                 if isinstance(comp, Part):
-                    if comp.type == 1:  # if this is a component
+                    if comp.type == 1 and comp.layout_component_id[0]=='D':  # if this is a component
                         self.devices[comp.layout_component_id] = comp
                         value = power_list.popleft()
                         self.dev_powerload_table[comp.layout_component_id] = float(value)

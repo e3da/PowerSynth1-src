@@ -95,6 +95,7 @@ class constraint():
         constraint.type.append(str(t))
         constraint.component_to_component_type[component_name_type] = t_in
         constraint.comp_type['Device'].append(str(t))
+        
 
     def update_2D_constraints(self):
         constraint.minSpacing = np.zeros(shape=(len(self.Type) - 1, len(self.Type) - 1))  # minimum spacing is a 2-D matrix

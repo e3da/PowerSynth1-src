@@ -156,17 +156,17 @@ class constraintGraph:
                     k = j.cell.x, j.cell.y, j.cell.type, j.nodeId
                 print "B", i.id, k
         
-        print "Vertical NodeList"
+        print ("Vertical NodeList")
         for i in self.VerticalNodeList:
-            print i.id, i, len(i.stitchList)
+            print (i.id, i, len(i.stitchList))
             for j in i.stitchList:
                 k = j.cell.x, j.cell.y, j.getWidth(), j.getHeight(), j.cell.id, j.cell.type, j.nodeId,j.voltage, j.bw, j.name
-                print k
+                print (k)
 
             if i.parent == None:
-                print 0
+                print (0)
             else:
-                print i.parent.id, i.id
+                print (i.parent.id, i.id)
             for j in i.boundaries:
                 if j.cell.type != None:
                     k = j.cell.x, j.cell.y, j.getWidth(), j.getHeight(), j.cell.id, j.cell.type, j.nodeId, j.bw, j.name
@@ -197,7 +197,7 @@ class constraintGraph:
         self.ZDL_V = collections.OrderedDict(sorted(ZDL_V.items()))
 
         #print "B",self.ZDL_H
-        #print self.ZDL_V
+        #print (self.ZDL_V)
 
 
 
@@ -299,7 +299,7 @@ class constraintGraph:
                     vertex_list_v.append(v)
                 self.vertex_list_v[ID] = vertex_list_v
         #print"BH", self.ZDL_H
-        #print"BV", self.ZDL_V
+        #print("BV", self.ZDL_V)
         # setting up edges for constraint graph from corner stitch tiles using minimum constraint values
         for i in range(len(self.HorizontalNodeList)):
             self.setEdgesFromLayer(self.HorizontalNodeList[i], self.VerticalNodeList[i],Types,rel_cons)
@@ -321,8 +321,8 @@ class constraintGraph:
         raw_input()
         '''
         #print "rem_h",self.removable_nodes_h
-        #print "ref_h",self.reference_nodes_h
-        #print "rem_v", self.removable_nodes_v
+        #print ("ref_h",self.reference_nodes_h)
+        #print ("rem_v", self.removable_nodes_v)
         #print "top_down_eval_h",self.top_down_eval_edges_v
         #raw_input()
 
@@ -1400,7 +1400,7 @@ class constraintGraph:
                     for coordinate in y_coordinates[ID]:
                         if coordinate == vertex.init_coord:
                             if self.bw_type not in vertex.associated_type:
-                                print("here",ID,vertex.init_coord)
+                                #print("here",ID,vertex.init_coord)
                                 vertex.associated_type.append(self.bw_type)  # bondingwire pad is type3
                                 vertex.hier_type.append(1) # foreground type
 
@@ -1415,6 +1415,7 @@ class constraintGraph:
 
     ## creating edges from corner stitched tiles
     def setEdgesFromLayer(self, cornerStitch_h, cornerStitch_v,Types,rel_cons):
+        
 
         #print "Voltage",constraint.voltage_constraints
         #print "Current",constraint.current_constraints
@@ -1439,7 +1440,7 @@ class constraintGraph:
         """
         for rect in cornerStitch_v.stitchList:
             Extend_h = 0 # to find if horizontal extension is there
-            if rect.nodeId != ID:
+            if rect.nodeId != ID or ((rect.EAST.cell.type=='EMPTY'and rect.WEST.cell.type=='EMPTY') or (rect.NORTH.cell.type=='EMPTY'  and rect.SOUTH.cell.type=='EMPTY') and rect.nodeId==ID):
                 origin = self.ZDL_H[ID].index(rect.cell.x) # if horizontal extension needs to set up node in horizontal constraint graph
                 vertex_found=False
                 for vertex in vertex_list_h:
@@ -1644,6 +1645,7 @@ class constraintGraph:
                         break
                     else:
                         comp_type = None
+                #print("EEV",origin,dest,value,comp_type,ID)
                 e = Edge(origin1, dest1, value, index, str(Types.index(rect.cell.type)), id,
                          Weight, comp_type, East,
                          West, northWest, southEast)
@@ -1885,7 +1887,7 @@ class constraintGraph:
                             break
                         else:
                             comp_type = None
-                    #print"EEV",origin,dest,value,comp_type
+                    #print("EEV",origin,dest,value,comp_type)
                     e = Edge(origin, dest, value, index, str(Types.index(rect.cell.type)), id,Weight,comp_type,
                              North, South, westNorth, eastSouth)
                     edgesv.append(
@@ -1907,7 +1909,8 @@ class constraintGraph:
         for rect in cornerStitch_h.stitchList:
 
             Extend_v = 0
-            if rect.nodeId != ID or (rect.EAST.cell.type=='EMPTY' and rect.NORTH.cell.type=='EMPTY' and rect.WEST.cell.type=='EMPTY' and rect.SOUTH.cell.type=='EMPTY' and rect.nodeId==ID):
+            
+            if rect.nodeId != ID or ((rect.EAST.cell.type=='EMPTY'and rect.WEST.cell.type=='EMPTY') or (rect.NORTH.cell.type=='EMPTY'  and rect.SOUTH.cell.type=='EMPTY') and rect.nodeId==ID):
                 origin = self.ZDL_V[ID].index(rect.cell.y)
                 vertex_found = False
                 for vertex in vertex_list_v:
@@ -2112,6 +2115,9 @@ class constraintGraph:
                         break
                     else:
                         comp_type = None
+                
+
+                #print("EEH",origin,dest,value,comp_type,ID)
 
                 e = Edge(origin1, dest1, value, index, str(Types.index(rect.cell.type)), id,
                          Weight, comp_type, North, South, westNorth, eastSouth)
@@ -2351,6 +2357,7 @@ class constraintGraph:
                         else:
                             comp_type = None
 
+                    
                     e = Edge(origin, dest, value, index, str(Types.index(rect.cell.type)), id,
                              Weight, comp_type,
                              East, West, northWest, southEast)
@@ -4045,7 +4052,8 @@ class constraintGraph:
             weight = []
             for internal_edge in edge_labels1[branch]:
                 #print lst_branch[0], lst_branch[1]
-                #print internal_edge
+                #if ID==1:
+                    #print (internal_edge)
                 # if (lst_branch[0], lst_branch[1], internal_edge) not in data:
                 data.append((lst_branch[0], lst_branch[1], internal_edge))
                 label.append({(lst_branch[0], lst_branch[1]): internal_edge})  #####{(source,dest):[weight,type,id,East cell id,West cell id]}
@@ -5300,7 +5308,8 @@ class constraintGraph:
 
             for internal_edge in edge_labels1[branch]:
                 # print lst_branch[0], lst_branch[1]
-                # print internal_edge
+                #if ID==1:
+                    #print (internal_edge)
                 # if (lst_branch[0], lst_branch[1], internal_edge) not in data:
                 data.append((lst_branch[0], lst_branch[1], internal_edge))
                 label.append({(lst_branch[0], lst_branch[1]): internal_edge})  #####{(source,dest):[weight,type,id,East cell id,West cell id]}

@@ -499,7 +499,7 @@ class ScriptInputMethod():
         #print self.all_parts_info
         #print self.info_files
         #print self.all_route_info
-        #print "map",self.all_components_type_mapped_dict
+        #print ("map",self.all_components_type_mapped_dict)
         #----------------------------------------------------------------------------------
         return self.all_parts_info,self.info_files,self.all_route_info,self.all_components_type_mapped_dict
 

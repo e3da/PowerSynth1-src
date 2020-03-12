@@ -1874,7 +1874,7 @@ class New_layout_engine():
                         if i[4] == t:
                             type_ind = type.index(t)
                             colour = colors[type_ind]
-                            if type[type_ind] in self.min_dimensions:
+                            if type[type_ind] in self.min_dimensions :
                                 if i[-1]==1 or i[-1]==3:  # rotation_index
                                     h = self.min_dimensions[t][0][0]
                                     w = self.min_dimensions[t][0][1]
@@ -1885,10 +1885,14 @@ class New_layout_engine():
                                 parent_type=self.min_dimensions[t][1]
                                 p_type_ind = type.index(parent_type)
                                 p_colour = colors[p_type_ind]
+                                if i[-2]-1>=0:
+                                    p_z_order=i[-2]-1
+                                else:
+                                    p_z_order=1
                             else:
                                 w = None
                                 h = None
-                    if w == None and h == None:
+                    if (w == None and h == None) :
                         R_in = [i[0], i[1], i[2], i[3], colour, i[4],i[-2], 'None', 'None'] # i[-2]=zorder
                     else:
 
@@ -1896,7 +1900,7 @@ class New_layout_engine():
                         center_y = (i[1] + i[1] + i[3]) / float(2)
                         x = center_x - w / float(2)
                         y = center_y - h / float(2)
-                        R_in = [i[0], i[1], i[2], i[3], p_colour,i[4], 1, '--', 'black']
+                        R_in = [i[0], i[1], i[2], i[3], p_colour,i[4], p_z_order, '--', 'black']
                         R_in1 = [x, y, w, h, colour,i[4], i[-2], 'None', 'None']
                         data.append(R_in1)
                     data.append(R_in)
@@ -2032,14 +2036,15 @@ def plot_layout(Layout_Rects,level,min_dimensions=None,Min_X_Loc=None,Min_Y_Loc=
                             type_ind = type.index(t)
                             colour = colors[type_ind]
 
-                            if type[type_ind] in min_dimensions:
+                            if type[type_ind] in min_dimensions and min_dimensions[t][0]!=i[2] and min_dimensions[t][1]!=i[3] :
 
                                 w=min_dimensions[t][0]
                                 h=min_dimensions[t][1]
                             else:
+                                
                                 w=None
                                 h=None
-                    if w==None and h==None:
+                    if (w==None and h==None ) or (w==i[2] and h==i[3]):
 
                         R= matplotlib.patches.Rectangle(
                                 (i[0], i[1]),  # (x,y)
