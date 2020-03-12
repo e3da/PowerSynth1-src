@@ -189,19 +189,15 @@ class ScriptInputMethod():
         bondwires = []
         for i in range(1,len(Input)):
             inp = Input[i]
-            print (inp)
-            if inp[0][0] == 'C':
-                bondwires.append(inp)
-            else:
-                if i < len(Input) - 1:
-                    inp2 = Input[i + 1]
+            if i < len(Input) - 1:
+                inp2 = Input[i + 1]
 
-                    for c in inp2:
-                        if c == '+' or c == '-':
-                            inp.append(c)
-                else:
-                    inp.append('+')
-                self.layout_info.append(inp)
+                for c in inp2:
+                    if c == '+' or c == '-':
+                        inp.append(c)
+            else:
+                inp.append('+')
+            self.layout_info.append(inp)
 
         '''
         #--------for debugging------------------
@@ -332,6 +328,49 @@ class ScriptInputMethod():
 
                     else:
                         layout_component_id = layout_info[j][k] #+ '.' + layout_info[j][-2]
+                        element = Part(info_file=self.info_files[layout_info[j][k + 1]],layout_component_id=layout_component_id,layer_id=int(layout_info[j][-2]))
+                        element.load_part()
+                        # print element.footprint
+                        if angle == '90':
+                            name = layout_info[j][k + 1] + '_' + '90'
+                            #name = layout_info[j][k + 1]
+                            element.name = name
+                            element.rotate_angle = 1
+                            element.rotate_90()
+                        elif angle == '180':
+                            name = layout_info[j][k + 1] + '_' + '180'
+                            #name = layout_info[j][k + 1]
+                            element.name = name
+                            element.rotate_angle = 2
+                            element.rotate_180()
+                        elif angle == '270':
+                            name = layout_info[j][k + 1] + '_' + '270'
+                            #name = layout_info[j][k + 1]
+                            element.name = name
+                            element.rotate_angle = 3
+                            element.rotate_270()
+                        # print element.footprint
+                        self.all_parts_info[layout_info[j][k + 1]].append(element)
+                
+                #capacitor
+                elif layout_info[j][k][0] == 'C' and layout_info[j][k+1] in self.all_components_list:
+                    rotate=False
+                    angle=None
+                    for m in range(len(layout_info[j])):
+                        if layout_info[j][m][0]=='R':
+                            rotate=True
+                            angle=layout_info[j][m].strip('R')
+                            break
+                    if rotate==False:
+                        layout_component_id = layout_info[j][k] #+ '.' + layout_info[j][-2]
+                        element = Part(name=layout_info[j][k+1], info_file=self.info_files[layout_info[j][k+1]],layout_component_id=layout_component_id,layer_id=int(layout_info[j][-2]))
+                        element.load_part()
+                        #print"Foot",element.footprint
+                        self.all_parts_info[layout_info[j][k+1]].append(element)
+
+                    else:
+                        layout_component_id = layout_info[j][k] #+ '.' + layout_info[j][-2]
+                        #print(layout_info[j])
                         element = Part(info_file=self.info_files[layout_info[j][k + 1]],layout_component_id=layout_component_id,layer_id=int(layout_info[j][-2]))
                         element.load_part()
                         # print element.footprint

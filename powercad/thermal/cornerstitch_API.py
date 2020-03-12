@@ -22,6 +22,8 @@ from powercad.thermal.fast_thermal import ThermalGeometry, TraceIsland, DieTherm
 from powercad.general.data_struct.util import Rect
 import numpy as np
 import os
+import cloudpickle as pickle
+#import pickle
 TFSM_MODEL = 1
 RECT_FLUX_MODEL = 2
 
@@ -155,6 +157,7 @@ class CornerStitch_Tmodel_API:
 
                 res = t1 / (A * device_mat.thermal_cond)
                 dev_delta = res * self.dev_powerload_table[k]
+                
 
                 temp = compound_top_surface_avg(t_bp, layer, devices, list(self.devices.keys()).index(k))
                 temp += self.t_amb + dev_delta
@@ -195,13 +198,17 @@ class CornerStitch_Tmodel_API:
             ws, ls, ts = self.layer_stack.get_all_dims(device_part_obj)
             thermal_conds = self.layer_stack.get_all_thermal_conductivity(device_part_obj)
             # Generate hash id before ws, ls, and ts get scaled to mm
-            hash_id = gen_cache_hash(ws, ls, ts, thermal_conds, self.bp_conv, heat_flow)
+            hash_id = gen_cache_hash(ws, ls, ts, thermal_conds, self.bp_conv, heat_flow) 
+            #print ("H",hash_id)
             cache_file = check_for_cached_char(settings.CACHED_CHAR_PATH, hash_id)
+            #print (cache_file)
+            #cache_file=None
             if cache_file is not None:
                 print('found a cached version!')
                 # load the cached copy
-                cached_obj = pickle.load(open(cache_file, 'r'))
+                cached_obj = pickle.load(open(cache_file, 'rb')) # python 3 issue changed 'r' to 'rb'
                 dev_dict[device] = cached_obj.thermal_features
+                #print ("Dev_",dev_dict)
                 # get the sublayer features also
                 if sub_tf is None:
                     sub_tf = cached_obj.sublayer_tf
@@ -339,7 +346,7 @@ class CornerStitch_Tmodel_API:
 
         module_data.layer_stack = self.layer_stack
         self.dev_result_table_eval(module_data)
-        #print self.temp_res
+        print ("RES",self.temp_res)
         return max(self.temp_res.values())
 
 

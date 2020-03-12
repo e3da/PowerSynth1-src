@@ -130,7 +130,7 @@ def solve_TFSM(thermal_geometry, power_scale):
     t_amb = thermal_geometry.sublayer_features.t_amb
     Rsub = thermal_geometry.sublayer_features.sub_res
     thermal_net = nx.Graph()
-    thermal_net.add_edge(0, 1, {'G':1.0/Rsub})
+    thermal_net.add_edge(0, 1, attr_dict = {'G':1.0/Rsub})
     total_iso_temp = 0.0
     for die in all_dies:
         # Check that each die has a self_temp
@@ -146,11 +146,11 @@ def solve_TFSM(thermal_geometry, power_scale):
         Rm,Rsp2, dies,island_area,die_pos = eval_island(island, all_dies, total_iso_temp, metal_thickness, metal_cond)
         #print die_pos
         Rsp=Rsp2+Rm
-        thermal_net.add_edge(1, Res_Node, {'G':1.0/Rsp})
+        thermal_net.add_edge(1, Res_Node, attr_dict = {'G':1.0/Rsp})
         island_node = Res_Node
         Res_Node +=1
         for die in dies:
-            thermal_net.add_edge(island_node, Res_Node, {'G':1.0/die[0]})
+            thermal_net.add_edge(island_node, Res_Node, attr_dict = {'G':1.0/die[0]})
             #print die[1]
             src_nodes.append((Res_Node, die[1]*power_scale))
             #print src_nodes
@@ -166,6 +166,7 @@ def solve_TFSM(thermal_geometry, power_scale):
     L = L.todense()
     Linv = np.linalg.pinv(L)
     V = np.dot(Linv, X_st)
+    #print (V)
     # Get node voltages (die temperatures)
     die_temps = []
 
@@ -173,8 +174,9 @@ def solve_TFSM(thermal_geometry, power_scale):
         die_temps.append(V[:,src[0]]-V[:,0])    
     die_temps = np.array(die_temps)+t_amb
     # addding 
-#    print die_temps
-    print("die pos", die_locations)
+    
+    print(("die pos", die_locations))
+    print (die_temps)
 
     #test_plot_layout(thermal_geometry.all_traces, all_dies, (83.82, 54.61))
     return die_temps
@@ -433,7 +435,7 @@ def rd100_example():
     temps = solve_TFSM(geometry, 0.3)
     
     
-    print(np.max(temps))
+    print((np.max(temps)))
     
 
 if __name__ == '__main__':

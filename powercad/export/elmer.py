@@ -240,7 +240,7 @@ def elmer_solve(directory, sif_fn, mesh_fn):
     print("subprocess.Popen() completed")
     stdout, stderr = p.communicate()
     print(stdout, stderr)
-    if stdout.count("The opening of the mesh file thermal_char.msh failed!") > 0:
+    if stdout.count(b"The opening of the mesh file thermal_char.msh failed!") > 0:
         raise Exception("The opening of the mesh file failed! (Check permissions on temp data directory)")
     #print stdout
     # Run ElmerSolver
@@ -253,10 +253,10 @@ def elmer_solve(directory, sif_fn, mesh_fn):
     p = subprocess.Popen(args, shell=False, stdout=subprocess.PIPE, cwd=directory)
     stdout, stderr = p.communicate()
     print(stdout,stderr)
-    if stdout.count("Failed convergence tolerances.") > 0:
+    if stdout.count(b"Failed convergence tolerances.") > 0:
         print("Thermal characterization FEM model failed to converge!")
         return False
-    elif stdout.count("Failed") > 0:
+    elif stdout.count(b"Failed") > 0:
         print("Thermal characterization failed!")
         return False
     return True

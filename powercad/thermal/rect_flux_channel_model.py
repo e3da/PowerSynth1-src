@@ -296,8 +296,8 @@ if __name__ == '__main__':
     met = (0.41, 200.0)
     iso = (0.64, 160.0)
     thickness, thermal_cond = layer_average([met, iso, met])
-    print('thickness', thickness)
-    print('thermal_cond', thermal_cond)
+    print(('thickness', thickness))
+    print(('thermal_cond', thermal_cond))
     layer = ExtaLayer(thickness*1e-3, thermal_cond)
     
     dev1 = Device(width = 10.0e-3,
@@ -310,9 +310,9 @@ if __name__ == '__main__':
                  center = (30.0e-3, 30.0e-3),
                  Q = 10.0)
     starttime=time.time()
-    print(single_layer_top_surface_pt(bp, [dev1, dev2], 15.0e-3, 10.0e-3))
-    print(single_layer_top_surface_avg(bp, [dev1, dev2], 1))
-    print(compound_top_surface_avg(bp, layer, [dev1, dev2], 0))
+    print((single_layer_top_surface_pt(bp, [dev1, dev2], 15.0e-3, 10.0e-3)))
+    print((single_layer_top_surface_avg(bp, [dev1, dev2], 1)))
+    print((compound_top_surface_avg(bp, layer, [dev1, dev2], 0)))
     tot_time=time.time()-starttime
     print(tot_time)
     
