@@ -182,7 +182,7 @@ class EWires(EComp):
         '''
         c_s = self.sheet[0].get_center()
         c_e = self.sheet[1].get_center()
-        length = math.sqrt((c_s[0] - c_e[0]) ** 2 + (c_s[1] - c_e[1]) ** 2)
+        length = math.sqrt((c_s[0] - c_e[0]) ** 2 + (c_s[1] - c_e[1]) ** 2) /1000.0 # using integer input
         start = 1
         end = 0
         if self.mode == 'analytical':
