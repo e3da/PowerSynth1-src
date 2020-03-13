@@ -139,6 +139,8 @@ def network_plot_3D(G, ax, cmap_node={}, cmap_edge={},show_labels = False,highli
                         ax.plot(x, y, z, c='gray', alpha=0.5, linewidth=2.5)
                     elif type == 'boundary':
                         ax.plot(x, y, z, c='black', alpha=1, linewidth=2.5)
+                    elif type == 'hier':
+                        ax.plot(x, y, z, c='red', alpha=1, linewidth=2.5)
                     else:
                         ax.plot(x, y, z, dashes=[6, 2],c='blue', alpha=0.5, linewidth=2.5)
 

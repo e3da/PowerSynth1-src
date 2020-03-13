@@ -235,13 +235,13 @@ class CornerStitch_Emodel_API:
                             locs = obj.pin_locs[pin_name]
                             px, py, pwidth, pheight, side = locs
                             if side == 'B':  # if the pin on the bottom side of the device
-                                z = self.get_z_loc(z_id)*1000
+                                z = int(self.get_z_loc(z_id)*1000)
                             elif side == 'T':  # if the pin on the top side of the device
                                 z = int((self.get_z_loc(z_id) + obj.thickness)*1000)
-                            top = y + int(py + pheight) * 1000
-                            bot = y + int(py) *1000
-                            left = x + int(px) *1000
-                            right = x + int(px + pwidth)*1000
+                            top = y + int((py + pheight) * 1000)
+                            bot = y + int(py *1000)
+                            left = x + int(px *1000)
+                            right = x + int((px + pwidth)*1000)
                             rect = Rect(top=top, bottom=bot, left=left, right=right)
                             pin = Sheet(rect=rect, net_name=net_name, z=z)
                             self.net_to_sheet[net_name] = pin
@@ -535,7 +535,8 @@ class CornerStitch_Emodel_API:
         self.circuit._graph_read(self.emesh.graph)
         # CHECK IF A PATH EXIST
         if not(networkx.has_path(self.emesh.graph,pt1,pt2)):
-           eval(input("NO CONNECTION BETWEEN SOURCE AND SINK"))
+            print (pt1,pt2)
+            eval(input("NO CONNECTION BETWEEN SOURCE AND SINK"))
         else:
             pass
             #print "PATH EXISTS"

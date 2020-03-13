@@ -1061,10 +1061,6 @@ class EMesh():
                 # Get x,y,z positions
                 x, y = sheet_data.rect.center()
                 z = sheet_data.z
-
-                x = int(x*1000)
-                y = int(y*1000)
-                z = int(z*1000)
                 cp = [x, y, z]
                 if not (sheet_data.net in self.comp_net_id):
                     cp_node = MeshNode(pos=cp, type=conn_type, node_id=self.node_count, group_id=None)
@@ -1077,11 +1073,8 @@ class EMesh():
 
                     if sheet_data.node == None:  # floating net
                         x, y = sheet_data.rect.center()
-                        x
                         z = sheet_data.z
-                        x = int(x*1000)
-                        y = int(y*1000)
-                        z = int(z*1000)
+                        
                         cp = [x, y, z]
                         # print "CP",cp
                         if not (sheet_data.net in self.comp_net_id):
@@ -1097,9 +1090,7 @@ class EMesh():
                 # Get x,y,z positions
                 x, y = sheet_data.rect.center()
                 z = sheet_data.z
-                x = int(x*1000)
-                y = int(y*1000)
-                z = int(z*1000)
+                
                 cp = [x, y, z]
 
                 if not (sheet_data.net in self.comp_net_id):

@@ -535,7 +535,8 @@ class Cmd_Handler:
 
         if not os.path.exists(database):
             os.makedirs(database)
-        self.db_file = database + '\\' + 'layout.db'
+        
+        self.db_file = os.path.join(database,'layout.db')
         self.db_file = os.path.abspath(self.db_file)
         print (self.db_file)
         conn = create_connection(self.db_file)
@@ -945,7 +946,13 @@ if __name__ == "__main__":
     print (str(sys.argv))
     debug = True
     if debug: # you can mannualy add the argument in the list as shown here
-        args = ['python','/nethome/qmle/PowerSynth_V1_git/PowerCAD-full/src/powercad/cmd_run/cmd.py','-m','/nethome/qmle/testcases/Mutual_IND_Case/two_dev_macro.txt','-settings',"/nethome/qmle/testcases/settings.info"]
-        cmd.cmd_handler_flow(arguments= args)
+        sel= int(input("select a test case to run: 1-quang_simple_test 2-Imam_journal"))
+        if sel == 1: 
+            args = ['python','cmd.py','-m','/nethome/qmle/testcases/Mutual_IND_Case/two_dev_macro.txt','-settings',"/nethome/qmle/testcases/settings.info"]
+            cmd.cmd_handler_flow(arguments= args)
+        elif sel ==2:
+            args = ['python','cmd.py','-m','/nethome/qmle/testcases/PSV2_Testing/Cmd_flow_case/Half_bridge_Imam/half_bridge_pm_macro.txt','-settings',"/nethome/qmle/testcases/settings.info"]
+            cmd.cmd_handler_flow(arguments= args)
+
     else:
         cmd.cmd_handler_flow(arguments=sys.argv) # Default

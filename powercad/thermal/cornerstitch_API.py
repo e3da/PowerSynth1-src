@@ -22,8 +22,7 @@ from powercad.thermal.fast_thermal import ThermalGeometry, TraceIsland, DieTherm
 from powercad.general.data_struct.util import Rect
 import numpy as np
 import os
-import cloudpickle as pickle
-#import pickle
+import pickle
 TFSM_MODEL = 1
 RECT_FLUX_MODEL = 2
 

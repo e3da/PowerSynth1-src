@@ -119,7 +119,7 @@ class EMesh_CS(EMesh):
             self.handle_hier_node_opt(mesh_pts_tbl,g)
         self.update_E_comp_parasitics(net=self.comp_net_id, comp_dict=self.comp_dict)
 
-        #self.plot_isl_mesh(True,mode = "matplotlib")
+        self.plot_isl_mesh(True,mode = "matplotlib")
 
     def mesh_nodes_trace_cells(self, trace_cells=None, Nw=3, method="uniform", ax=None, z_pos = 0):
         '''
@@ -373,6 +373,7 @@ class EMesh_CS(EMesh):
                         self.comp_net_id[sheet_data.net] = self.node_count
                         self.add_node(cp_node)
                         self.comp_nodes[group].append(cp_node)
+        self.update_E_comp_parasitics(net=self.comp_net_id, comp_dict=self.comp_dict)
 
         return trace_cells  # trace cells with updated component information
 
