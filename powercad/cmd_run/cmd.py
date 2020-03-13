@@ -814,9 +814,12 @@ class Cmd_Handler:
                         if row[0] == 'Size':
                             continue
                         else:
-                            #print (row)
+                            #print (row, len(row))
                             if row[0][0] == '[' and len(row)>2:
-                                data = [base_name, float(row[1]), float(row[2])]
+                                try:
+                                    data = [base_name, float(row[1]), float(row[2])]
+                                except:
+                                    data = [None, None, None]
                                 all_data.append(data)
 
                             else:
@@ -830,8 +833,10 @@ class Cmd_Handler:
                 csv_writer.writerow(['Layout_ID', 'Temperature', 'Inductance'])
                 for data in all_data:
                     #if data[2] > 20: # special case to handle invalid electrical evaluations
-
-                    data = [data[0].rsplit('.csv')[0], data[1], data[2]]
+                    try:
+                        data = [data[0].rsplit('.csv')[0], data[1], data[2]]
+                    except:
+                        data=[None,None,None]
                     csv_writer.writerow(data)
                 my_csv.close()
             # '''
@@ -890,8 +895,8 @@ class Cmd_Handler:
                 plt.savefig(fig_dir + '/' + 'pareto_plot_mode-' + str(opt) + '.png')
 
     def export_solution_params(self,fig_dir=None,sol_dir=None,solutions=None,opt=None):
-
-        self.find_pareto_dataset(sol_dir,opt,fig_dir)
+        if len(self.measures)==2:
+            self.find_pareto_dataset(sol_dir,opt,fig_dir)
 
         data_x=[]
         data_y=[]
@@ -946,12 +951,15 @@ if __name__ == "__main__":
     print (str(sys.argv))
     debug = True
     if debug: # you can mannualy add the argument in the list as shown here
-        sel= int(input("select a test case to run: 1-quang_simple_test 2-Imam_journal"))
+        sel= int(input("select a test case to run: 1-quang_simple_test_quang_pc 2-Imam_journal_quang_pc 3-Imam_journal_Imam_pc"))
         if sel == 1: 
             args = ['python','cmd.py','-m','/nethome/qmle/testcases/Mutual_IND_Case/two_dev_macro.txt','-settings',"/nethome/qmle/testcases/settings.info"]
             cmd.cmd_handler_flow(arguments= args)
         elif sel ==2:
             args = ['python','cmd.py','-m','/nethome/qmle/testcases/PSV2_Testing/Cmd_flow_case/Half_bridge_Imam/half_bridge_pm_macro.txt','-settings',"/nethome/qmle/testcases/settings.info"]
+            cmd.cmd_handler_flow(arguments= args)
+        elif sel==3:
+            args = ['python','cmd.py','-m','D:/Demo/New_Flow_w_Hierarchy/Journal_Case/Journal_Result_collection/Cmd_flow_case/Half_Bridge_Layout/half_bridge_pm_macro.txt','-settings',"D:/Demo/New_Flow_w_Hierarchy/Journal_Case/settings.info"]
             cmd.cmd_handler_flow(arguments= args)
 
     else:

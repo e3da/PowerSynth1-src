@@ -284,7 +284,7 @@ class CornerStitch_Emodel_API:
         if self.trace_ori == {}:
             self.emesh.mesh_update(mode =0)
         else:
-            self.emesh.mesh_update(mode = 1)
+            self.emesh.mesh_update(mode =1)
 
         '''
         fig = plt.figure(1)

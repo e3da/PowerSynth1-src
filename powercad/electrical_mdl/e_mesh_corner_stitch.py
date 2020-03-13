@@ -119,7 +119,7 @@ class EMesh_CS(EMesh):
             self.handle_hier_node_opt(mesh_pts_tbl,g)
         self.update_E_comp_parasitics(net=self.comp_net_id, comp_dict=self.comp_dict)
 
-        self.plot_isl_mesh(True,mode = "matplotlib")
+        #self.plot_isl_mesh(True,mode = "matplotlib")
 
     def mesh_nodes_trace_cells(self, trace_cells=None, Nw=3, method="uniform", ax=None, z_pos = 0):
         '''
@@ -555,7 +555,7 @@ class EMesh_CS(EMesh):
             self.hier_group_dict = {}
             self.handle_hier_node(points, g)
             self.mesh_edges(thick=0.2)  # the thickness is fixed right now but need to be updated by MDK later
-        #self.plot_isl_mesh(plot=True, mode ='matplotlib')
+        self.plot_isl_mesh(plot=True, mode ='matplotlib')
 
     def mesh_nodes_planar(self, isl=None):
         '''

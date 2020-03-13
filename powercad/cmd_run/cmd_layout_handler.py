@@ -730,6 +730,34 @@ def script_translator(input_script=None, bond_wire_info=None, fig_dir=None, cons
 
     New_engine.cons_df = cons_df
 
+    # filtering out unnecessary bondwire pads from devices
+    bw_items=list(bondwires.values())
+
+
+    removed_child=[]
+    for  wire_id in range(len(bw_items)):
+        wire=bw_items[wire_id]
+        if 'D' in wire['Source'] and 'B' in wire['source_pad']:
+            removed_child.append(wire['source_pad'])
+        if 'D' in wire['Destination'] and 'B' in wire['dest_pad']:
+            removed_child.append(wire['dest_pad'])
+    #print (removed_child)
+    #islands_copy=copy.deepcopy(islands)
+    removed_child_list=[]
+    for island in islands:
+        length=len(island.child)
+        for child_id in range(length):
+            if island.child[child_id][5] in removed_child:
+                
+                removed_child_list.append(island.child[child_id])
+        for child_element in removed_child_list:
+            if child_element in island.child:
+                island.child.remove(child_element)
+                island.child_names.remove(child_element[5])
+        
+
+
+
 
     New_engine.init_layout(input_format=input_info,islands=islands,bondwires=bondwire_objects,flexible=flexible,voltage_info=voltage_info,current_info=current_info) # added bondwires to populate node id information
 

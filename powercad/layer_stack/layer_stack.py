@@ -138,6 +138,7 @@ class LayerStack:
                 self.all_layers_info[layer_id] = layer
                 self.current_id=layer_id
                 self.max_z += layer_thickness
+                self.max_z = round(self.max_z,3) #  Using 3 significant figures
         self.foot_print=[max_width,max_length]
         if debug:
             self.plot_layer_2d(view=0)

@@ -118,7 +118,7 @@ class ScriptInputMethod():
 
                     #print source,source_pad,destination,dest_pad
                     wires[name]={'BW_object':j,'Source':source,'Destination':destination,'num_wires':table_info[i][4],'spacing':table_info[i][5],'source_pad':source_pad,'destination_pad':dest_pad}
-
+                    
         '''
         # ------------------- for debugging --------------------------------------
         for i in bond_wire_objects:
