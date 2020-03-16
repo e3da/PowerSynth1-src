@@ -951,14 +951,17 @@ if __name__ == "__main__":
     print (str(sys.argv))
     debug = True
     if debug: # you can mannualy add the argument in the list as shown here
-        sel= int(input("select a test case to run: 1-quang_simple_test_quang_pc 2-Imam_journal_quang_pc 3-Imam_journal_Imam_pc"))
+        sel= int(input("select a test case to run: 1-quang_simple_test_quang_pc 2-Imam_journal_quang_pc 3-quang_journal_quang_pc 4-Imam_journal_Imam_pc"))
         if sel == 1: 
             args = ['python','cmd.py','-m','/nethome/qmle/testcases/Mutual_IND_Case/two_dev_macro.txt','-settings',"/nethome/qmle/testcases/settings.info"]
             cmd.cmd_handler_flow(arguments= args)
         elif sel ==2:
             args = ['python','cmd.py','-m','/nethome/qmle/testcases/PSV2_Testing/Cmd_flow_case/Half_bridge_Imam/half_bridge_pm_macro.txt','-settings',"/nethome/qmle/testcases/settings.info"]
             cmd.cmd_handler_flow(arguments= args)
-        elif sel==3:
+        elif sel ==3:
+            args = ['python','cmd.py','-m','/nethome/qmle/testcases/Case1_S-param/Layout1_macro.txt','-settings',"/nethome/qmle/testcases/settings.info"]
+            cmd.cmd_handler_flow(arguments= args)
+        elif sel==4:
             args = ['python','cmd.py','-m','D:/Demo/New_Flow_w_Hierarchy/Journal_Case/Journal_Result_collection/Cmd_flow_case/Half_Bridge_Layout/half_bridge_pm_macro.txt','-settings',"D:/Demo/New_Flow_w_Hierarchy/Journal_Case/settings.info"]
             #D:/Demo/New_Flow_w_Hierarchy/Journal_Case/Journal_Result_collection/Cmd_flow_case/Half_Bridge_Layout/half_bridge_pm_macro.txt
             #D:/Demo/New_Flow_w_Hierarchy/Journal_Case/Testing_Journal_case_w_Py_3/Cmd_flow_case/Half_Bridge_Layout/half_bridge_pm_macro.txt

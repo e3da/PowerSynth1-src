@@ -133,7 +133,7 @@ class EComp:
         # else: this is a dict of {'R','L','C'}
         self.type = type
         self.update_nodes()
-
+        self.class_type ='comp'
     def update_nodes(self):
         for sh in self.sheet:
             self.net_graph.add_node(sh.net, node=sh)
@@ -169,6 +169,7 @@ class EWires(EComp):
         self.p = p
         self.d = wire_dis
         self.circuit = circuit
+        self.class_type ='wire'
 
         if wire_model == None:
             self.mode = 'analytical'
