@@ -21,7 +21,7 @@ from powercad.parasitics.mdl_compare import trace_ind_krige, trace_res_krige, tr
     trace_inductance
 from powercad.parasitics.mutual_inductance.mutual_inductance import mutual_mat_eval
 from powercad.parasitics.mutual_inductance.mutual_inductance_saved import mutual_between_bars
-
+from powercad.electrical_mdl.e_module import EComp
 class TraceCell(Rect):
     def __init__(self, **kwargs):
         if 'rect' in kwargs:  # init by keyword rect
@@ -194,7 +194,7 @@ class EMesh():
         self.div = 2  # by default, special case for gp (ratio between outer and inner edges)
         self.hier_edge_data = {}  # edge name : parent edge data
         self.comp_net_id = {}  # a dictionary for relationship between graph index and components net-names
-
+        self.comp_edge =[] # list of components internal edges to be removed prior to netlist extraction 
     def plot_3d(self, fig, ax, show_labels=False, highlight_nodes=None, mode = 'matplotlib'):
         network_plot_3D(G=self.graph, ax=ax, show_labels=show_labels, highlight_nodes=highlight_nodes,engine =mode)
 
@@ -818,6 +818,8 @@ class EMesh():
         '''
         for c in list(comp_dict.keys()):
             for e in c.net_graph.edges(data=True):
+                if c.class_type =='comp':    
+                    self.comp_edge.append([net[e[0]],net[e[1]]])
                 self.add_hier_edge(net[e[0]], net[e[1]], edge_data=e[2]['edge_data'])
 
     def mesh_grid_hier(self, Nx=3, Ny=3, corner_stitch=False):

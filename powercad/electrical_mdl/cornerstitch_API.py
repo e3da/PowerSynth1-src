@@ -10,7 +10,7 @@ from powercad.general.data_struct.util import Rect
 from powercad.electrical_mdl.e_netlist import ENetlist
 from powercad.design.Routing_paths import RoutingPath
 from powercad.parasitics.mdl_compare import load_mdl
-
+import networkx as nx
 
 from datetime import datetime
 import psutil
@@ -21,6 +21,7 @@ from mpl_toolkits.mplot3d import Axes3D
 from collections import deque
 import gc
 import numpy as np
+import copy
 #import objgraph
 
 
@@ -303,8 +304,41 @@ class CornerStitch_Emodel_API:
         self.emesh.mutual_data_prepare(mode=0)
         self.emesh.update_mutual(mode=0)
 
-
-
+        export_netlist_test = True
+        if export_netlist_test:
+            netlist={}
+            print ("search for net to net")
+            print ("sort the terminals and devices")
+            extern_terminals=[]
+            devices_pins=[]
+            comp_net = self.emesh.comp_net_id
+            net_graph = copy.deepcopy(self.emesh.graph)
+            for e in self.emesh.comp_edge:
+                print ("remove internal edges formed for devices")
+                net_graph.remove_edge(e[0],e[1])
+            for net_name in comp_net:
+                if net_name[0] == 'L':
+                    extern_terminals.append(net_name)
+                elif net_name[0] =='D':
+                    devices_pins.append(net_name)
+            print(devices_pins)
+            print(extern_terminals)
+            if devices_pins!=[]: # Case there are devices
+                for term_name in extern_terminals:
+                    term_id = comp_net[term_name]
+                    print(term_name)
+                    for dev_pin_name in devices_pins:
+                        dev_id =comp_net[dev_pin_name]
+                        if nx.has_path(net_graph,term_id,dev_id): # check if there is a path between these 2 terminals
+                            print ("the path is found between", term_name, dev_pin_name)
+                            path =nx.shortest_path(G=net_graph,source=term_id,target=dev_id)
+                            print (path)
+                            branch_name = (term_name , dev_pin_name)
+                            R,L= self.extract_RL(src = term_name,sink=dev_pin_name)
+                            netlist[branch_name] = [R,L]
+            print ("extracted netlist")
+            for branch_name in netlist:
+                print (branch_name,netlist[branch_name])
 
     def export_netlist(self,dir= "",mode = 0):
         netlist = ENetlist(self.module, self.emesh)
