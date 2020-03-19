@@ -299,7 +299,7 @@ class EMesh():
 
         return n_capt_dict
 
-    def update_trace_RL_val(self, p=1.68e-8, t=0.035, h=1.5, mode='RS'):
+    def update_trace_RL_val(self, p=1.68e-8, t=0.2, h=0.68, mode='RS'):
         if self.f != 0:  # AC mode
             if mode == 'RS':
                 #print ("min width", min(self.all_W))
@@ -309,13 +309,13 @@ class EMesh():
                 #print ("max length", max(self.all_L))
 
                 all_r = trace_res_krige(self.f, self.all_W, self.all_L, t=0, p=0, mdl=self.mdl['R']).tolist()
-                all_r = [trace_resistance(self.f, w, l, t, h) for w, l in zip(self.all_W, self.all_L)]
+                #all_r = [trace_resistance(self.f, w, l, t, h) for w, l in zip(self.all_W, self.all_L)]
                 all_l = trace_ind_krige(self.f, self.all_W, self.all_L, mdl=self.mdl['L']).tolist()
                 # all_l = [trace_inductance(w, l, t, h) for w, l in zip(self.all_W, self.all_L)]
-                # print self.all_W
-                # print self.all_L
-                # print all_r
-                # print all_l
+                #print (self.all_W)
+                #print (self.all_L)
+                #print (all_r)
+                #print (all_l)
                 # all_c = self.compute_all_cap()
                 check_neg_R = False
                 check_neg_L = False

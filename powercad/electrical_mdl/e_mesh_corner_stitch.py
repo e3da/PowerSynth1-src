@@ -101,6 +101,8 @@ class EMesh_CS(EMesh):
         :param Nw: number of mesh points on the width of traces
         :return:
         '''
+        method = "skin_depth"
+        #method = "uniform"
         print("accelerate the mesh generation")
         isl_dict = {isl.name: isl for isl in self.islands}
         fig, ax = plt.subplots()
@@ -111,11 +113,11 @@ class EMesh_CS(EMesh):
             trace_cells = self.handle_pins_connect_trace_cells(trace_cells=trace_cells, island_name=g.name)
             if len(isl.elements) == 1:  # Handle cases where the trace cell width is small enough to apply macro model (RS)
                 # need a better way to mark the special case for RS usage, maybe distinguish between power and signal types
-                mesh_pts_tbl = self.mesh_nodes_trace_cells(trace_cells=trace_cells, Nw=1, ax=ax, method ="uniform")
+                mesh_pts_tbl = self.mesh_nodes_trace_cells(trace_cells=trace_cells, Nw=Nw, ax=ax, method =method)
             else:
-                mesh_pts_tbl = self.mesh_nodes_trace_cells(trace_cells=trace_cells, Nw=Nw, ax=ax,method = "uniform")
+                mesh_pts_tbl = self.mesh_nodes_trace_cells(trace_cells=trace_cells, Nw=Nw, ax=ax,method = method)
             self.set_nodes_neigbours_optimized(mesh_tbl=mesh_pts_tbl)
-            self.mesh_edges_optimized(mesh_tbl=mesh_pts_tbl, trace_num=len(trace_cells), Nw=Nw, mesh_type="uniform", macro_mode=False)
+            self.mesh_edges_optimized(mesh_tbl=mesh_pts_tbl, trace_num=len(trace_cells), Nw=Nw, mesh_type=method, macro_mode=False)
             self.handle_hier_node_opt(mesh_pts_tbl,g)
         self.update_E_comp_parasitics(net=self.comp_net_id, comp_dict=self.comp_dict)
         #self.update_E_comp_parasitics(net=self.comp_net_id, comp_dict=self.comp_dict)
@@ -159,7 +161,7 @@ class EMesh_CS(EMesh):
                     if method == "uniform":
                         ys = np.linspace(tc.bottom, tc.top, Nw)
                     if method == "skin_depth":
-                        ys = form_skindepth_distribution(start = tc.bottom,stop = tc.top, N=Nw)
+                        ys = form_skindepth_distribution(start = tc.bottom,stop = tc.top, N=Nw,freq = self.f*1e3)
                 else:
                     tc.height_eval()
                     ys = np.asarray([tc.bottom + tc.height / 2])
@@ -184,7 +186,7 @@ class EMesh_CS(EMesh):
                     if method == "uniform":
                         xs = np.linspace(tc.left, tc.right, Nw)
                     elif method == "skin_depth":
-                        xs = form_skindepth_distribution(start = tc.left,stop = tc.right, N=Nw)
+                        xs = form_skindepth_distribution(start = tc.left,stop = tc.right, N=Nw,freq = self.f*1e3)
                 else:
                     tc.width_eval()
                     xs = np.asarray([tc.left + tc.width / 2])
@@ -213,8 +215,8 @@ class EMesh_CS(EMesh):
                 xs = np.linspace(c_tc.left, c_tc.right, Nw)
                 ys = np.linspace(c_tc.bottom, c_tc.top, Nw)
             elif method == "skin_depth":
-                xs = form_skindepth_distribution(start = c_tc.left,stop = c_tc.right, N=Nw)
-                ys = form_skindepth_distribution(start = c_tc.bottom,stop = c_tc.top, N=Nw)
+                xs = form_skindepth_distribution(start = c_tc.left,stop = c_tc.right, N=Nw,freq = self.f*1e3)
+                ys = form_skindepth_distribution(start = c_tc.bottom,stop = c_tc.top, N=Nw,freq = self.f*1e3)
 
             if corner_dir == [0, 1, 0, 1]:  # bottom left corner
                 for id in range(Nw):
@@ -620,7 +622,7 @@ class EMesh_CS(EMesh):
         nodes = mesh_tbl.nodes
         z_loc = mesh_tbl.z_pos
         macro_mode = False
-        if trace_num == 1:
+        if trace_num == 1 and Nw==1:
             macro_mode = True
         isl_edge_list = [] # store all list on an island to plot them
         for loc in nodes:
@@ -724,13 +726,14 @@ class EMesh_CS(EMesh):
                 node_type = node.type
                 evalL_H = True
                 evalL_V = True
+                
                 if tc.type == 2:  # 90 degree corner case
                     continue
                 elif tc.type ==0:
                     evalL_V = False
                 elif tc.type == 1:
                     evalL_H = False
-
+                
                 if North != None and node.N_edge == None:
                     name = str(node.node_id) + '_' + str(North.node_id)
                     
@@ -939,10 +942,13 @@ class EMesh_CS(EMesh):
 
 
             # get positions
-            x1 = node1.pos[0]
-            y1 = node1.pos[1]
-            x1_id = xs_id[x1]
-            y1_id = ys_id[y1]
+            try:
+                x1 = node1.pos[0]
+                y1 = node1.pos[1]
+                x1_id = xs_id[x1]
+                y1_id = ys_id[y1]
+            except:
+                print(x1,y1)
             North, South, East, West = [node1.North, node1.South, node1.East, node1.West]
             # Once we get the ids, lets get the corresponding node in each direction
             if not(rs_mode_h):

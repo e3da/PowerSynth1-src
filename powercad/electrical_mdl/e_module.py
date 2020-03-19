@@ -222,7 +222,8 @@ class EWires(EComp):
                         print(("connections", self.conn))
                     R=R_val/self.num_wires
                     L=L_val/self.num_wires
-                #print "wire R,L", R, L
+                print("length",length)
+                print("wire R,L", R, L)
                 self.net_graph.add_edge(self.sheet[0].net, self.sheet[1].net, edge_data={'R': R, 'L': L, 'C': None})
             else : # No mutual eval needed, fast evaluation
                 self.net_graph.add_edge(self.sheet[0].net, self.sheet[1].net, edge_data={'R': R_val, 'L': L_val, 'C': None})

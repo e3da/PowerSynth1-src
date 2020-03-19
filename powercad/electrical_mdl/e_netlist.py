@@ -8,18 +8,30 @@ class ENetlist():
     This module convert the mesh structure with parasitics info and its original hierarchy structure into a SPICE netlist
     '''
 
-    def __init__(self, emodule=EModule(), emesh=EMesh()):
+    def __init__(self, *args, **kwargs):
         '''
         Args:
             emodule: the original structure
             emesh: the mesh with evaluated parasitic
         '''
-        self.module = emodule
-        self.mesh = emesh
+        self.module = EModule()
+        self.mesh = EMesh()
+        self.net_graph = nx.Graph()  # This will be a deep copy of the mesh.graph. Later, we need to modify this to disconnect
+
+        for key in kwargs:
+            if key == 'emodule':
+                self.module = kwargs[key]
+            elif key == 'emesh':
+                self.mesh = kwargs[key]
+            elif key =='egraph':
+                self.net_graph = kwargs[key]
+            else:
+                print("the param",key,"is not available for this class")
+            
+        
         self.terminals = []  # a list of terminals name
         self.comp_net = []  # a list of list for all net (node id on the graph) for component pins
         self.mutual_mode = "K"  # if M then we need to rewrite the netlist accordingly
-        self.net_graph = None  # This will be a deep copy of the mesh.graph. Later, we need to modify this to disconnect
         # component internal nets used in loop calculation
         self.netlist = ""  # This is the exported netlist
 
@@ -85,8 +97,13 @@ class ENetlist():
                         print(("there is a path:",path_id,id_to_net[k1], id_to_net[k2]))
                         path_id+=1
 
-    def export_netlist_to_ads(self, file_name="test.net"):
+    
 
+
+    def export_netlist_to_ads(self, file_name="test.net"):
+        '''
+        This only work for the full netlist extraction
+        '''
         text_file = open(file_name, 'w')
         self.prepare_graph_for_export()
         # self.net_graph = copy.deepcopy(self.mesh.graph)

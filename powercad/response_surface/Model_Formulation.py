@@ -24,7 +24,8 @@ from powercad.parasitics.mdl_compare import trace_ind_krige, trace_res_krige, lo
 from powercad.response_surface.Layer_Stack import Layer_Stack
 from powercad.response_surface.RS_build_function import *
 from powercad.response_surface.Response_Surface import RS_model
-
+from powercad.general.settings import settings
+import platform
 
 def form_trace_model(layer_stack, Width=[1.2, 40], Length=[1.2, 40], freq=[10, 100, 10], wdir=None, savedir=None,
                      mdl_name=None
@@ -1161,16 +1162,31 @@ def test_build_bw_group_model_fh(f=100,num_wire=2,bw_pad_width=None,radius=0.276
         print("fail to add more wires")
     print("total characterization time", time.time()-start)
 def test_build_trace_model_fh():
-    fh_env_dir = "C://Users//qmle//Desktop//Testing//FastHenry//Fasthenry3_test_gp//WorkSpace//fasthenry.exe"
-    read_output_dir = "C://Users//qmle//Desktop//Testing//FastHenry//Fasthenry3_test_gp//ReadOutput.exe"
+    # Hardcoded path to fasthenry executable.
+    if platform.system=='windows':
+        fh_env_dir = "C://Users//qmle//Desktop//Testing//FastHenry//Fasthenry3_test_gp//WorkSpace//fasthenry.exe"
+        read_output_dir = "C://Users//qmle//Desktop//Testing//FastHenry//Fasthenry3_test_gp//ReadOutput.exe"
+        mdk_dir = "C:\\Users\qmle\Desktop\\New_Layout_Engine\Quang_Journal\DBC_CARD\Quang\\Test_Cases_for_POETS_Annual_Meeting_2019\\Test_Cases_for_POETS_Annual_Meeting_2019\Model\journal.csv"
+        w_dir = "C:\\Users\qmle\Desktop\\New_Layout_Engine\Quang_Journal\DBC_CARD\Quang\\Test_Cases_for_POETS_Annual_Meeting_2019\\Test_Cases_for_POETS_Annual_Meeting_2019\Model"
+        dir = os.path.abspath(mdk_dir)
+        ls = LayerStackHandler(dir)
+        ls.import_csv()
+    else:
+        fh_env_dir = "/nethome/qmle/PowerSynth_V1_git/PowerCAD-full/FastHenry"
+        read_output_dir = "/nethome/qmle/PowerSynth_V1_git/PowerCAD-full/ReadOutput"
+        mdk_dir = "/nethome/qmle/RS_Build/layer_stacks/layer_stack_new.csv"
+        w_dir = "/nethome/qmle/RS_Build/layer_stacks/WS"
+        mdl_dir = "/nethome/qmle/RS_Build/layer_stacks/Model"
+        dir = os.path.abspath(mdk_dir)
+        mat_lib="/nethome/qmle/PowerSynth_V1_git/PowerCAD-full/tech_lib/Material/Materials.csv"
+        ls = LayerStackHandler(csv_file=dir,mat_lib=mat_lib)
+        ls.import_csv()
+  
     env = [fh_env_dir, read_output_dir]
-    mdk_dir = "C:\\Users\qmle\Desktop\\New_Layout_Engine\Quang_Journal\DBC_CARD\Quang\\Test_Cases_for_POETS_Annual_Meeting_2019\\Test_Cases_for_POETS_Annual_Meeting_2019\Model\journal.csv"
-    w_dir = "C:\\Users\qmle\Desktop\\New_Layout_Engine\Quang_Journal\DBC_CARD\Quang\\Test_Cases_for_POETS_Annual_Meeting_2019\\Test_Cases_for_POETS_Annual_Meeting_2019\Model"
+    
     #mdk_dir = "C:\\Users\qmle\Desktop\\New_Layout_Engine\Quang_Journal\Mutual_IND_Case\\mutual_test.csv"
     #w_dir = "C:\Users\qmle\Desktop\Documents\Conferences\ECCE\Imam_Quang\Model\workspace"
-    dir = os.path.abspath(mdk_dir)
-    ls = LayerStackHandler(dir)
-    ls.import_csv()
+    
     u = 4 * math.pi * 1e-7
     metal_cond = 5.96*1e7
     sd_met = math.sqrt(1 / (math.pi * 1e6 * u * metal_cond * 1e6))
@@ -1181,7 +1197,7 @@ def test_build_trace_model_fh():
     freq = [3,7,100]
     form_fasthenry_trace_response_surface(layer_stack=ls, Width=Width, Length=Length, freq=freq, wdir=w_dir,
                                           savedir=w_dir
-                                          , mdl_name='mutual_impact', env=env, doe_mode=2,mode='log')
+                                          , mdl_name='jounal_test', env=env, doe_mode=2,mode='log')
 
 
 def test_build_trace_model_fh1():

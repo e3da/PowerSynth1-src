@@ -304,8 +304,13 @@ class CornerStitch_Emodel_API:
         self.emesh.mutual_data_prepare(mode=0)
         self.emesh.update_mutual(mode=0)
 
-        export_netlist_test = True
-        if export_netlist_test:
+        #self.export_netlist(dir = "mynet.net",mode =0)
+
+
+    def export_netlist(self,dir= "",mode = 0):
+        netlist = ENetlist(self.module, self.emesh)
+        if mode ==0:
+            print ("handle full RL circuit")
             netlist={}
             print ("search for net to net")
             print ("sort the terminals and devices")
@@ -321,30 +326,26 @@ class CornerStitch_Emodel_API:
                     extern_terminals.append(net_name)
                 elif net_name[0] =='D':
                     devices_pins.append(net_name)
-            print(devices_pins)
-            print(extern_terminals)
+            #print(devices_pins)
+            #print(extern_terminals)
             if devices_pins!=[]: # Case there are devices
                 for term_name in extern_terminals:
                     term_id = comp_net[term_name]
-                    print(term_name)
+                    #print(term_name)
                     for dev_pin_name in devices_pins:
                         dev_id =comp_net[dev_pin_name]
                         if nx.has_path(net_graph,term_id,dev_id): # check if there is a path between these 2 terminals
-                            print ("the path is found between", term_name, dev_pin_name)
-                            path =nx.shortest_path(G=net_graph,source=term_id,target=dev_id)
-                            print (path)
+                            #print ("the path is found between", term_name, dev_pin_name)
+                            #path =nx.shortest_path(G=net_graph,source=term_id,target=dev_id)
+                            #print (path)
                             branch_name = (term_name , dev_pin_name)
                             R,L= self.extract_RL(src = term_name,sink=dev_pin_name)
                             netlist[branch_name] = [R,L]
             print ("extracted netlist")
             for branch_name in netlist:
                 print (branch_name,netlist[branch_name])
-
-    def export_netlist(self,dir= "",mode = 0):
-        netlist = ENetlist(self.module, self.emesh)
-        if mode ==0:
             print ("handle lumped netlist")
-            netlist.export_netlist_to_ads(file_name=dir)
+            #netlist.export_netlist_to_ads(file_name=dir)
         elif mode ==1:
             print ("handle full RL circuit")
             netlist.export_netlist_to_ads(file_name=dir)
@@ -552,6 +553,52 @@ class CornerStitch_Emodel_API:
         del self.module
         return 1,1
 
+    def extract_RLM(self,src1=None,sink1=None,src2=None,sink2=None):
+        pt1 = self.emesh.comp_net_id[src1]
+        pt2 = self.emesh.comp_net_id[sink1]
+        pt3 = self.emesh.comp_net_id[src2]
+        pt4 = self.emesh.comp_net_id[sink2]
+        self.circuit = RL_circuit()
+        self.circuit._graph_read(self.emesh.graph)
+        if not(networkx.has_path(self.emesh.graph,pt1,pt2)) or not(networkx.has_path(self.emesh.graph,pt3,pt4)) :
+            print (pt1,pt2)
+            print (pt3,pt4)
+            eval(input("NO CONNECTION BETWEEN SOURCE AND SINK"))
+        else:
+            pass
+        self.circuit.m_graph_read(self.emesh.m_graph)
+        self.circuit.assign_freq(self.freq)
+        # first we compute R1 L1
+        self.circuit.indep_current_source(pt1, 0, 1)
+        #self.circuit.indep_current_source(pt3, 0, 1)
+        # print "src",pt1,"sink",pt2
+        self.circuit._add_termial(pt2)
+        self.circuit.build_current_info()
+        self.circuit.solve_iv()
+        vname = 'v' + str(pt1)
+        #vname = vname.encode() # for python3 
+        imp1 = self.circuit.results[vname]
+        R1 = abs(np.real(imp1) * 1e3)
+        L1 = abs(np.imag(imp1)) * 1e9 / (2 * np.pi * self.circuit.freq)
+        # once we have R1,L1 we can calculate for R2,L2 and R12,M12
+        self.circuit = RL_circuit()
+        self.circuit._graph_read(self.emesh.graph)
+        self.circuit.indep_current_source(pt1, 0, 1)
+        self.circuit.indep_current_source(pt3, 0, 1)
+        self.circuit._add_termial(pt2)
+        self.circuit._add_termial(pt4)
+        self.circuit.build_current_info()
+        self.circuit.solve_iv()
+        vname = 'v' + str(pt1)
+        imp2 = self.circuit.results[vname]
+        R12 = abs(np.real(imp2-imp1) * 1e3)
+        L12 = abs(np.imag(imp2-imp1)) * 1e9 / (2 * np.pi * self.circuit.freq)
+        vname = 'v' + str(pt3)
+        imp3 = self.circuit.results[vname]
+        R2 = abs(np.real(imp3) * 1e3) + R12
+        L2 = abs(np.imag(imp3)) * 1e9 / (2 * np.pi * self.circuit.freq) + L12
+        return R1,L1,R2,L2,R12,L12
+
     def extract_RL(self, src=None, sink=None):
         '''
         Input src and sink name, then extract the inductance/resistance between them
@@ -561,13 +608,12 @@ class CornerStitch_Emodel_API:
         '''
         pt1 = self.emesh.comp_net_id[src]
         pt2 = self.emesh.comp_net_id[sink]
-        #print (src, sink)
-        #print (pt1,pt2)
-        #pt1=36
-        #pt2=97
+        
         self.circuit = RL_circuit()
         self.circuit._graph_read(self.emesh.graph)
         # CHECK IF A PATH EXIST
+        print (pt1,pt2)
+
         if not(networkx.has_path(self.emesh.graph,pt1,pt2)):
             print (pt1,pt2)
             eval(input("NO CONNECTION BETWEEN SOURCE AND SINK"))
