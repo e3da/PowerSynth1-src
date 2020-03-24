@@ -118,7 +118,8 @@ def characterize_devices(sym_layout, temp_dir=settings.TEMP_DIR, conv_tol=1e-3):
         if cache_file is not None:
             print('found a cached version!')
             # load the cached copy
-            cached_obj = pickle.load(open(cache_file, 'r'))
+            #cached_obj = pickle.load(open(cache_file, 'r'))
+            cached_obj = load_file(cache_file) #python3 implementation
             dev_dict[dev] = cached_obj.thermal_features
             # get the sublayer features also
             if sub_tf is None:
@@ -215,8 +216,14 @@ def characterize_devices(sym_layout, temp_dir=settings.TEMP_DIR, conv_tol=1e-3):
             #print os.path.join(settings.CACHED_CHAR_PATH,hash_id+'.p')
             if not os.path.exists(settings.CACHED_CHAR_PATH):
                 os.makedirs(settings.CACHED_CHAR_PATH)
+            '''
+            old implementation
             f = open(os.path.join(settings.CACHED_CHAR_PATH,hash_id+'.p'), 'w')
             pickle.dump(cached_char, f)
+            '''
+            #new implementation (python3)
+            file_name=os.path.join(settings.CACHED_CHAR_PATH, hash_id + '.p')
+            save_file(cached_char,file_name)
             f.close()
         i += 1 # Next, device
         

@@ -9,7 +9,9 @@ import subprocess
 
 import numpy as np
 import math
-from powercad.general.settings.settings import ELMER_BIN_PATH
+#from powercad.general.settings.settings import ELMER_BIN_PATH
+from powercad.general.settings import settings
+
 
 elmer_sif = """
 CHECK KEYWORDS Warn
@@ -229,8 +231,8 @@ def elmer_solve(directory, sif_fn, mesh_fn):
     f.close()
     #print "ELMERSOLVER_STARTINFO file written"    
     # Run ElmerGrid on msh file
-    print('Run ElmerGrid')
-    exec_path = os.path.join(ELMER_BIN_PATH, "ElmerGrid").replace("/","\\")
+    print('Run ElmerGrid',directory)
+    exec_path = os.path.join(settings.ELMER_BIN_PATH, "ElmerGrid").replace("/","\\")
 
     print("exec_path= ", exec_path)
     args = [exec_path, "14", "2", mesh_fn] 
@@ -246,8 +248,8 @@ def elmer_solve(directory, sif_fn, mesh_fn):
     # Run ElmerSolver
     
     print('Run ElmerSolver')
-    print(ELMER_BIN_PATH)
-    exec_path = os.path.join(ELMER_BIN_PATH, "ElmerSolver").replace("/","\\")
+    #print(ELMER_BIN_PATH)
+    exec_path = os.path.join(settings.ELMER_BIN_PATH, "ElmerSolver").replace("/","\\")
     args = [exec_path]
     print(args)
     p = subprocess.Popen(args, shell=False, stdout=subprocess.PIPE, cwd=directory)
