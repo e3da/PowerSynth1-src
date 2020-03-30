@@ -336,9 +336,9 @@ class CornerStitch_Emodel_API:
                             branch_name = (term_name , dev_pin_name)
                             R,L= self.extract_RL(src = term_name,sink=dev_pin_name)
                             netlist[branch_name] = [R,L]
-            print ("extracted netlist")
-            for branch_name in netlist:
-                print (branch_name,netlist[branch_name])
+            #print ("extracted netlist")
+            #for branch_name in netlist:
+                #print (branch_name,netlist[branch_name])
 
     def export_netlist(self,dir= "",mode = 0):
         netlist = ENetlist(self.module, self.emesh)
