@@ -12,6 +12,7 @@ from scipy.interpolate import griddata
 
 from powercad.general.data_struct.util import Rect
 from powercad.thermal.fast_thermal import ContourRect, DieThermalFeatures
+from powercad.general.settings.save_and_load import load_file, save_file
 
 
 def load_data(filename, flip_values=False):
@@ -298,14 +299,25 @@ def pickle_die_characterization(temp_csv, flux_csv, module_data, proj_device, ch
     tf.find_self_temp(dev_dim)
     
     print('---Characterization Pickle Complete---')
+    '''
+    old implementation
     f = open(filename, 'w')
     pickle.dump(tf, f)
     f.close()
+    '''
+    #new implementation (python3)
+    save_file(tf,filename)
+    #f.close()
     
 def load_pickle_characterization(filename):
+    '''
+    old implementation
     f = open(filename, 'r')
     dev_char = pickle.load(f)
-    f.close()
+    '''
+    #new implementation(python3)
+    load_file(filename)
+    #f.close()
     return dev_char
 
 if __name__ == '__main__':

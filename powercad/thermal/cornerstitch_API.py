@@ -20,6 +20,7 @@ from powercad.thermal.elmer_characterize import gen_cache_hash,check_for_cached_
 from powercad.thermal.fast_thermal import DieThermalFeatures, SublayerThermalFeatures
 from powercad.thermal.fast_thermal import ThermalGeometry, TraceIsland, DieThermal, solve_TFSM
 from powercad.general.data_struct.util import Rect
+from powercad.general.settings.save_and_load import load_file, save_file
 import numpy as np
 import os
 import pickle
@@ -141,6 +142,7 @@ class CornerStitch_Tmodel_API:
             tg.trace_islands = islands
             tg.sublayer_features = self.sub_thermal_feature
             res = solve_TFSM(tg,1.0)
+            #print ("Thermal",res)
             self.temp_res = dict(list(zip(names, list(res))))
             #print self.temp_res
 
@@ -205,7 +207,8 @@ class CornerStitch_Tmodel_API:
             if cache_file is not None:
                 print('found a cached version!')
                 # load the cached copy
-                cached_obj = pickle.load(open(cache_file, 'rb')) # python 3 issue changed 'r' to 'rb'
+                #cached_obj = pickle.load(open(cache_file, 'rb')) # python 3 issue changed 'r' to 'rb'
+                cached_obj = load_file(cache_file) #python3 implementation
                 dev_dict[device] = cached_obj.thermal_features
                 #print ("Dev_",dev_dict)
                 # get the sublayer features also
@@ -219,6 +222,7 @@ class CornerStitch_Tmodel_API:
                 split = 1 # number of division based on the device min dimension
                 while not(converged):
                     print(("current mesh division for device:",split))
+                    #print("GMSH_DIR", dir_name)
                     gmsh_setup_layer_stack(layer_stack=self.layer_stack, device=device_part_obj, directory=dir_name,
                                            geo_file=geo_file
                                            , msh_file=mesh_file,divide=split)
@@ -285,11 +289,19 @@ class CornerStitch_Tmodel_API:
                 dims = [ws, ls, ts]
                 cached_char = CachedCharacterization(sub_tf, tf, dims, thermal_conds, self.bp_conv)
                 # print os.path.join(settings.CACHED_CHAR_PATH,hash_id+'.p')
+                #print("CACH",settings.CACHED_CHAR_PATH)
                 if not os.path.exists(settings.CACHED_CHAR_PATH):
                     os.makedirs(settings.CACHED_CHAR_PATH)
+                '''
+                old implementation
                 f = open(os.path.join(settings.CACHED_CHAR_PATH, hash_id + '.p'), 'w')
                 pickle.dump(cached_char, f)
                 f.close()
+                '''
+                #new implementation (python3)
+                file_name=os.path.join(settings.CACHED_CHAR_PATH, hash_id + '.p')
+                save_file(cached_char,file_name)
+                
         # update thermal features objects
 
         self.dev_thermal_feature_dict=dev_dict
@@ -346,7 +358,7 @@ class CornerStitch_Tmodel_API:
         module_data.layer_stack = self.layer_stack
         self.dev_result_table_eval(module_data)
         print ("RES",self.temp_res)
-        return max(self.temp_res.values())
+        return max(list(self.temp_res.values()))
 
 
 

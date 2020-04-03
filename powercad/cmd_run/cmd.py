@@ -30,6 +30,7 @@ from powercad.general.settings import settings
 def read_settings_file(filepath):
     
     if os.path.isfile(filepath): 
+        
         filename = os.path.basename(filepath)
         work_dir = filepath.replace(filename,'')
         os.chdir(work_dir)
@@ -65,6 +66,7 @@ def read_settings_file(filepath):
                 if info[0] == "MANUAL:":
                     settings.MANUAL = os.path.abspath(info[1])
         print ("Settings loaded.")
+        print ("settings.GMSH",settings.GMSH_BIN_PATH)
 class Cmd_Handler:
     def __init__(self,debug=False):
         # Input files
@@ -827,72 +829,74 @@ class Cmd_Handler:
                     i += 1
             # for data in all_data:
             # print data
-            file_name = sol_dir+'\\all_data.csv'
-            with open(file_name, 'w',newline='') as my_csv:
-                csv_writer = csv.writer(my_csv, delimiter=',')
-                csv_writer.writerow(['Layout_ID', 'Temperature', 'Inductance'])
-                for data in all_data:
-                    #if data[2] > 20: # special case to handle invalid electrical evaluations
-                    try:
-                        data = [data[0].rsplit('.csv')[0], data[1], data[2]]
-                    except:
-                        data=[None,None,None]
-                    csv_writer.writerow(data)
-                my_csv.close()
-            # '''
-            sol_data = {}
-            file = file_name
-            with open(file) as csvfile:
-                readCSV = csv.reader(csvfile, delimiter=',')
-                for row in readCSV:
-                    if row[0] == 'Layout_ID':
-                        #sol_data[row[0]]=[row[2],row[1]]
-                        continue
-                    else:
-                        sol_data[row[0]] = ([float(row[2]), float(row[1])])
-            # sol_data = np.array(sol_data)
-            print (sol_data)
-            if len(sol_data)>0:
-                pareto_data = pareto_frontiter2D(sol_data)
-                #print len(pareto_data)
-                file_name = sol_dir+'\\final_pareto.csv'
-                with open(file_name, 'w', newline='') as my_csv:
+            if opt>0:
+                file_name = sol_dir+'\\all_data.csv'
+                with open(file_name, 'w',newline='') as my_csv:
                     csv_writer = csv.writer(my_csv, delimiter=',')
                     csv_writer.writerow(['Layout_ID', 'Temperature', 'Inductance'])
-                    for k, v in list(pareto_data.items()):
-                        data = [k, v[0], v[1]]
+                    for data in all_data:
+                        #if data[2] > 20: # special case to handle invalid electrical evaluations
+                        try:
+                            data = [data[0].rsplit('.csv')[0], data[1], data[2]]
+                        except:
+                            data=[None,None,None]
                         csv_writer.writerow(data)
-                my_csv.close()
+                    my_csv.close()
+            # '''
+                sol_data = {}
+                file = file_name
+                with open(file) as csvfile:
+                    readCSV = csv.reader(csvfile, delimiter=',')
+                    for row in readCSV:
+                        if row[0] == 'Layout_ID':
+                            #sol_data[row[0]]=[row[2],row[1]]
+                            continue
+                        else:
+                            #print("here",row[0],row[1],row[2])
+                            sol_data[row[0]] = ([float(row[2]), float(row[1])])
+                # sol_data = np.array(sol_data)
+                #print (sol_data)
+                if len(sol_data)>0:
+                    pareto_data = pareto_frontiter2D(sol_data)
+                    #print len(pareto_data)
+                    file_name = sol_dir+'\\final_pareto.csv'
+                    with open(file_name, 'w', newline='') as my_csv:
+                        csv_writer = csv.writer(my_csv, delimiter=',')
+                        csv_writer.writerow(['Layout_ID', 'Temperature', 'Inductance'])
+                        for k, v in list(pareto_data.items()):
+                            data = [k, v[0], v[1]]
+                            csv_writer.writerow(data)
+                    my_csv.close()
 
-                data_x = []
-                data_y = []
-                for id, value in list(pareto_data.items()):
-                    #print id,value
-                    data_x.append(value[0])
-                    data_y.append(value[1])
+                    data_x = []
+                    data_y = []
+                    for id, value in list(pareto_data.items()):
+                        #print id,value
+                        data_x.append(value[0])
+                        data_y.append(value[1])
 
-                #print data_x
-                #print data_y
-                plt.cla()
+                    #print data_x
+                    #print data_y
+                    plt.cla()
 
-                plt.scatter(data_x, data_y)
+                    plt.scatter(data_x, data_y)
 
-                x_label = 'Inductance'
-                y_label = 'Max_Temperature'
+                    x_label = 'Inductance'
+                    y_label = 'Max_Temperature'
 
-                plt.xlim(min(data_x) - 2, max(data_x) + 2)
-                plt.ylim(min(data_y) - 0.5, max(data_y) + 0.5)
-                # naming the x axis
-                plt.xlabel(x_label)
-                # naming the y axis
-                plt.ylabel(y_label)
+                    plt.xlim(min(data_x) - 2, max(data_x) + 2)
+                    plt.ylim(min(data_y) - 0.5, max(data_y) + 0.5)
+                    # naming the x axis
+                    plt.xlabel(x_label)
+                    # naming the y axis
+                    plt.ylabel(y_label)
 
-                # giving a title to my graph
-                plt.title('Pareto-front Solutions')
+                    # giving a title to my graph
+                    plt.title('Pareto-front Solutions')
 
-                # function to show the plot
-                # plt.show()
-                plt.savefig(fig_dir + '/' + 'pareto_plot_mode-' + str(opt) + '.png')
+                    # function to show the plot
+                    # plt.show()
+                    plt.savefig(fig_dir + '/' + 'pareto_plot_mode-' + str(opt) + '.png')
 
     def export_solution_params(self,fig_dir=None,sol_dir=None,solutions=None,opt=None):
         if len(self.measures)==2:
@@ -962,7 +966,10 @@ if __name__ == "__main__":
             args = ['python','cmd.py','-m','/nethome/qmle/testcases/Case1_S-param/Layout1_macro.txt','-settings',"/nethome/qmle/testcases/settings.info"]
             cmd.cmd_handler_flow(arguments= args)
         elif sel==4:
-            args = ['python','cmd.py','-m','D:/Demo/New_Flow_w_Hierarchy/Journal_Case/Journal_Result_collection/Cmd_flow_case/Half_Bridge_Layout/half_bridge_pm_macro.txt','-settings',"D:/Demo/New_Flow_w_Hierarchy/Journal_Case/settings.info"]
+            args = ['python','cmd.py','-m','D:/Demo/New_Flow_w_Hierarchy/Journal_Case/Journal_Result_collection/Cmd_flow_case/Half_Bridge_Layout/half_bridge_pm_macro_data_collection_final.txt','-settings',"D:/Demo/New_Flow_w_Hierarchy/Journal_Case/settings.info"]
+            #D:/Demo/New_Flow_w_Hierarchy/Journal_Case/Journal_Result_collection/Cmd_flow_case/Half_Bridge_Layout/half_bridge_pm_macro.txt
+            #D:\Demo\New_Flow_w_Hierarchy/Imam_journal/Cmd_flow_case/Imam_journal/half_bridge_pm_macro.txt
+            #D:/Demo/New_Flow_w_Hierarchy/Journal_Case/Testing_Journal_case_w_Py_3/Cmd_flow_case/Half_Bridge_Layout/half_bridge_pm_macro.txt
             cmd.cmd_handler_flow(arguments= args)
 
     else:

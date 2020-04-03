@@ -174,7 +174,7 @@ def export_solutions(solutions=None,directory=None,pareto_data=None,export = Fal
             if solutions[i].index in list(pareto_data.keys()):
                 item = solutions[i].name
                 file_name = pareto_path + '/' + item + '.csv'
-                with open(file_name, 'wb') as my_csv:
+                with open(file_name, 'w') as my_csv:
                     csv_writer = csv.writer(my_csv, delimiter=',')
                     csv_writer.writerow(["Size", performance_names[0], performance_names[1]])
                     # for k, v in _fetch_currencies.iteritems():

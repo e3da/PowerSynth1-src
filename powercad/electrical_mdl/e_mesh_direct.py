@@ -790,7 +790,7 @@ class EMesh():
                     else:
                         bound_graph.add_edge(n.node_id, n1.node_id, data=edge)
 
-        plot_E_map_test(G=bound_graph, ax=ax, cmap=self.c_map)
+        #plot_E_map_test(G=bound_graph, ax=ax, cmap=self.c_map)
 
         # plt.show()
 

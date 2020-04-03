@@ -7,7 +7,8 @@ Created on Apr 9, 2013
 import os
 import subprocess
 
-from powercad.general.settings.settings import GMSH_BIN_PATH, TEMP_DIR
+#from powercad.general.settings.settings import GMSH_BIN_PATH, TEMP_DIR
+from powercad.general.settings import settings
 import numpy as np
 gmsh_script_top = """
 Function BoxSurfaces
@@ -191,6 +192,7 @@ def gmsh_setup_layer_stack(layer_stack=None, device=None, directory="", geo_file
     Returns:
 
     '''
+    
     ws,ls,ts = layer_stack.get_all_dims(device)
     min_split = min(device.footprint) / divide # use a half of minimum side value of device to generate the mesh
     ws = np.array(ws) * 1e-3
@@ -239,8 +241,8 @@ def create_box_stack_mesh(directory, geo_fn, mesh_fn, ws, ls, ts, lcs):
     f.close()
     msh_path = os.path.join(directory, mesh_fn)
     "define Gmsh's file path"
-    #print GMSH_BIN_PATH
-    exec_path = os.path.join(GMSH_BIN_PATH, "gmsh").replace("/","\\")
+    print ("BIN",settings.GMSH_BIN_PATH)
+    exec_path = os.path.join(settings.GMSH_BIN_PATH, "gmsh").replace("/","\\")
     #print 'gmsh bin path:', exec_path
     #print "geo_path=", geo_path
     args = [exec_path, "-3", "-algo", "front3d", "-optimize", geo_path]
