@@ -17,19 +17,24 @@ L_SHAPE = 1
 T_SHAPE = 2
 
 
-def form_skindepth_distribution(start=0,stop=1,freq=1e6, cond=5.96e7, N = 5):
+def form_skindepth_distribution(start=0,stop=1,freq=1e6, cond=5.96*1e7, N = 11):
     '''
     Gotta make sure that N is always an odd number such as 1 3 5 7 ...
     '''
+    w = (stop - start)/1000
     u = 4 * math.pi * 1e-7
-    skind_depth = math.sqrt(1 / (math.pi * freq * u * cond * 1e6)) * 1e6# first calculate the skindepth value in um
+    #skind_depth = math.sqrt(1 / (math.pi * freq * u * cond * 1e6))
+    #print (freq)
+    skind_depth = math.sqrt(1 / (math.pi * freq * u * cond)) * 1e6# first calculate the skindepth value in um
+    #nwinc = int(math.ceil((math.log(w * 1e-3 / skind_depth / 3) / math.log(2) * 2 + 3)/3))
+    nwinc = N
     #print (skind_depth,"um")
-    split_list = np.zeros((1,N+1)) # 1 row and N collumn
+    split_list = np.zeros((1,nwinc+1)) # 1 row and N collumn
     split_list[0,0] = start
-    split_list[0,N] = stop 
-    for i in range(N//2): # get the half (integer) of the number of split
-        split_list[0,i+1] = start + int(skind_depth*(i+1)*1000)
-        split_list[0,N-i-1] =  stop - int(skind_depth*(i+1)*1000)
+    split_list[0,nwinc] = stop 
+    for i in range(nwinc//2): # get the half (integer) of the number of split
+        split_list[0,i+1] = start + int(skind_depth*(i+1))
+        split_list[0,N-i-1] =  stop - int(skind_depth*(i+1))
     #print (split_list[0])
     #print (np.linspace(start,stop,N))
     return split_list[0]
@@ -95,7 +100,7 @@ class EMesh_CS(EMesh):
         if mode == 0:
             self._handle_pins_connections()
 
-    def mesh_update_optimized(self, Nw=5):
+    def mesh_update_optimized(self, Nw=7):
         '''
         If trace orientations are included, this will be used
         :param Nw: number of mesh points on the width of traces
@@ -622,7 +627,7 @@ class EMesh_CS(EMesh):
         nodes = mesh_tbl.nodes
         z_loc = mesh_tbl.z_pos
         macro_mode = False
-        if trace_num == 1 and Nw==1:
+        if trace_num == 1 and Nw ==1:
             macro_mode = True
         isl_edge_list = [] # store all list on an island to plot them
         for loc in nodes:
@@ -726,14 +731,13 @@ class EMesh_CS(EMesh):
                 node_type = node.type
                 evalL_H = True
                 evalL_V = True
-                
                 if tc.type == 2:  # 90 degree corner case
                     continue
                 elif tc.type ==0:
                     evalL_V = False
                 elif tc.type == 1:
                     evalL_H = False
-                
+
                 if North != None and node.N_edge == None:
                     name = str(node.node_id) + '_' + str(North.node_id)
                     

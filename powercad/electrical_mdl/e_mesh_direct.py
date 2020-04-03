@@ -244,6 +244,8 @@ class EMesh():
             print((w , l , "divide here"))
             '''
             self.all_W.append(w / 1000.0)
+            if l<500:
+                l = 500 # minimum filament length 
             self.all_L.append(l / 1000.0)
             self.all_n1.append(n1)
             self.all_n2.append(n2)
@@ -299,7 +301,28 @@ class EMesh():
 
         return n_capt_dict
 
-    def update_trace_RL_val(self, p=1.68e-8, t=0.2, h=0.68, mode='RS'):
+    def plot_trace_RL_val_RS(self,zdata=[],dtype='R'):
+        '''
+        This function is used to debug the RS model to check the negative values
+        '''
+        
+        ax = plt.figure("RS_check"+'type').gca(projection='3d') 
+
+        for i in range(len(self.all_W)):
+            if zdata[i]<0:
+                ax.scatter(self.all_W[i], self.all_L[i], zdata[i], c='r',s=10)
+            else:
+                ax.scatter(self.all_W[i], self.all_L[i], zdata[i], c='green',s=10)
+                    
+        ax.set_xlabel('Width (mm)')
+        ax.set_ylabel('Length (mm)')
+        if dtype == "L":
+            ax.set_zlabel('Inductance (nH)')    
+        elif dtype =="R":
+            ax.set_zlabel('Resistance (mOhm)')
+        plt.show()    
+                              
+    def update_trace_RL_val(self, p=1.68e-8, t=0.2, h=0.64, mode='RS'):
         if self.f != 0:  # AC mode
             if mode == 'RS':
                 #print ("min width", min(self.all_W))
@@ -307,10 +330,15 @@ class EMesh():
 
                 #print ("min length", min(self.all_L))
                 #print ("max length", max(self.all_L))
+                print("Extraction Freq",self.f,"kHz")
+                mode = 'Krigg'
+                all_r = trace_res_krige(self.f, self.all_W, self.all_L, t=0, p=p, mdl=self.mdl['R'],mode=mode).tolist()
+                # Handle small length pieces by linear approximation
+                
+                all_r = [trace_resistance(self.f, w, l, t, h) for w, l in zip(self.all_W, self.all_L)]
+                all_l = trace_ind_krige(self.f, self.all_W, self.all_L, mdl=self.mdl['L'],mode=mode).tolist()
+                #self.plot_trace_RL_val_RS(zdata=all_l,dtype='L')
 
-                all_r = trace_res_krige(self.f, self.all_W, self.all_L, t=0, p=0, mdl=self.mdl['R']).tolist()
-                #all_r = [trace_resistance(self.f, w, l, t, h) for w, l in zip(self.all_W, self.all_L)]
-                all_l = trace_ind_krige(self.f, self.all_W, self.all_L, mdl=self.mdl['L']).tolist()
                 # all_l = [trace_inductance(w, l, t, h) for w, l in zip(self.all_W, self.all_L)]
                 #print (self.all_W)
                 #print (self.all_L)
@@ -334,18 +362,24 @@ class EMesh():
                             list(self.graph[n1][n2].values())[0]['res'] = all_r[i] * 1e-3
                             edge_data.R = all_r[i] * 1e-3
                         else:
+                            print ('-R w l :',self.all_W[i],self.all_L[i],all_r[i])
                             check_neg_R = True
-                            temp_R = trace_resistance(self.f, self.all_W[i], self.all_L[i], t, h)
+                            temp_R = trace_resistance(self.f, self.all_W[i], self.all_L[i], t, h, p = p)
+                            
                             list(self.graph[n1][n2].values())[0]['res'] = temp_R * 1e-3
                             edge_data.R = temp_R * 1e-3
 
                         if all_l[i] > 0 :
+                            #if self.all_W[i] < 0.1:
+                            #    print(self.all_W[i],self.all_L[i],all_l[i])
                             edge_data = list(self.graph[n1][n2].values())[0]['data']
                             list(self.graph[n1][n2].values())[0]['ind'] = all_l[i] * 1e-9
                             edge_data.L = all_l[i] * 1e-9
 
                             # edge_data.C = all_c[i]*1e-12
                         else:
+                            print ('-L w l :',self.all_W[i],self.all_L[i],all_l[i])
+
                             check_neg_L = True
                             temp_L = trace_inductance(self.all_W[i], self.all_L[i], t, h)
                             list(self.graph[n1][n2].values())[0]['ind'] = temp_L * 1e-9
@@ -360,8 +394,11 @@ class EMesh():
                 edge_data = list(self.graph[n1][n2].values())[0]['data']
                 edge_data.R = all_r[i]
         if check_neg_R:
+            self.plot_trace_RL_val_RS(zdata=all_r,dtype='R')
             print("Found some negative values during RS model evaluation for resistnace, please re-characterize the model. Switch to microstrip for evaluation")
         if check_neg_L:
+            self.plot_trace_RL_val_RS(zdata=all_l,dtype='L')
+
             print("Found some negative values during RS model evaluation for inductance, please re-characterize the model. Switch to microstrip for evaluation")
 
     def update_hier_edge_RL(self):
@@ -819,7 +856,7 @@ class EMesh():
         for c in list(comp_dict.keys()):
             for e in c.net_graph.edges(data=True):
                 if c.class_type =='comp':    
-                    self.comp_edge.append([net[e[0]],net[e[1]]])
+                    self.comp_edge.append([e[0],e[1],net[e[0]],net[e[1]]])
                 self.add_hier_edge(net[e[0]], net[e[1]], edge_data=e[2]['edge_data'])
 
     def mesh_grid_hier(self, Nx=3, Ny=3, corner_stitch=False):

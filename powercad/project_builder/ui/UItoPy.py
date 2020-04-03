@@ -17,7 +17,7 @@ def convert_and_move(file):
 
 
 cwd = os.getcwd()  # current directory
-
+print (cwd)
 
 
 print("This code performs UI to Py conversion. Double check with the team for the pyside current version, " \
