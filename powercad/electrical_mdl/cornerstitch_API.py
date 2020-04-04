@@ -710,7 +710,7 @@ class CornerStitch_Emodel_API:
         L2 = abs(np.imag(imp3)) * 1e9 / (2 * np.pi * self.circuit.freq) + L12
         return R1,L1,R2,L2,R12,L12
 
-    def extract_RL(self, src=None, sink=None,export_netlist=True):
+    def extract_RL(self, src=None, sink=None,export_netlist=False):
         '''
         Input src and sink name, then extract the inductance/resistance between them
         :param src:
