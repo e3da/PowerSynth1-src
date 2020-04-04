@@ -190,28 +190,36 @@ def trace_res_krige(f,w,l,t,p,mdl,mode='Krigg'):
     # f in kHz
     # Select a model for the closest frequency point
     frange=[]
+    # linear approximation for length less than 1
+    rat = [ 1 for i in range(len(l))]
+    for i in range(len(l)):
+        if l[i]<1:
+            rat[i] = l[i]
+            l[i] = 1.0
+    rat = np.asarray(rat)
     for m in mdl:
        frange.append(m['f'])
     ferr=[f for i in range(len(frange))]
     ferr=(abs(np.array(frange)-np.array(ferr))).tolist()
     f_index=ferr.index(min(ferr))
     fselect= mdl[f_index]['f']
-    #print 'f',fselect
+    print ('selected f',fselect,"kHz")
     m_sel=mdl[f_index]['mdl']
     model = m_sel.model[0]
     if mode == "Krigg":
         r=model.execute('points',w,l)
         r = np.ma.asarray(r[0])
+        r = r*rat
     else:
         dim = np.ndarray((len(w), 2))
         dim[:,0] = w
         dim[:,1] = l
         r= model.predict(dim)
-
+        
     if isinstance(r,np.ma.masked_array) and isinstance(w,float):
         return r[0]
     else:
-        return r
+        return r*rat
 
 def trace_ind_krige1(f,w,l,mdl):
     # unit is nH

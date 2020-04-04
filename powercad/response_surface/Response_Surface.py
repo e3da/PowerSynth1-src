@@ -26,7 +26,7 @@ from powercad.general.data_struct.BasicsFunction import *
 from powercad.general.data_struct.Unit import Unit
 from powercad.general.settings.Error_messages import InputError, Notifier
 from powercad.parasitics.mdl_compare import trace_inductance
-
+import math
 
 class RS_model:
     '''Surrogate/Response Surface model 
@@ -255,6 +255,36 @@ class RS_model:
         new_DOE.append(data)
         self.DOE=np.asarray(new_DOE)
 
+    def create_freq_dependent_DOE(self,freq_range=[], num1 = 10, num2 = 10, metal_cond=5.96*1e7,Ws=[], Ls=[],):
+        '''
+        Create a frequency dependent DOE that calculate the skindepth
+        This is used to setup the DOE for inductance and resistance modeling.
+        '''
+        sds = [] # blank list for skindepth value
+        fmin = freq_range[0] # in KHz
+        fmax = freq_range[1]
+        print (fmin, fmax)
+        fs = np.logspace(fmin,fmax, num1) # num1 is number of skindepth elements to account for in the frequency range
+        u = 4 * math.pi * 1e-7
+        
+        for f in fs:
+            sd_met = math.sqrt(1 / (math.pi * f *1000 * u * metal_cond)) *1000 # in mm
+            sds.append(sd_met)
+        
+        ls = np.linspace(Ls[0],Ls[1],num2)
+        ws = list(np.linspace(Ws[0],Ws[1],num2)) # num2 is number of uniform w or l values
+        ws = ws + sds
+        ws.sort()
+        ws = np.asarray(ws)
+        allW, allL = np.meshgrid(ws,ls)
+        DOE_val = list(zip(allW.flatten(),allL.flatten()))
+        row_size = len(DOE_val)
+        col_size = 2
+        self.DOE=np.zeros((row_size,col_size)) # create a blank matrix for DOE
+
+        for row in range(len(DOE_val)):
+            self.DOE[row] = DOE_val[row]
+        print (self.DOE)
     def create_uniform_DOE(self,num_data=[],lin_ops=True):
         '''
         Create a uniform linear space design of experiment. (note: this is not a uniform random)
@@ -304,7 +334,7 @@ class RS_model:
             self.DOE[row]=doe_row
             not_ready=True
             
-    def build_RS_mdl(self,mode='OrKrigg',func=None,type=None):
+    def build_RS_mdl(self,mode='UnKrigg',func=None,type=None):
         '''
         type: 'R', 'L', 'C'
         Build all RS_mdl based on user specified inputs and outputs.
@@ -342,7 +372,7 @@ class RS_model:
         '''
 
         if mode=='SVR': # test all possible model and pick the one with highest accuracy
-            kernel=['rbf']
+            kernel=['linear']
             best_score=[0 for i in range(len(self.input))]
             best_kernel=['' for i in range(len(self.input))]
             self.model=[None for i in range(len(self.input))]
@@ -358,33 +388,39 @@ class RS_model:
                     if score>best_score[i]:
                         best_kernel[i]=k
                         best_score[i]=score
-                #print 'score: ', best_score[i], 'best_k: ', best_kernel[i]
                 self.model[i]=SVR(kernel=best_kernel[i], degree=5, gamma='auto', coef0=0.0, tol=0.001, C=1000, epsilon=0.001, shrinking=True,
                                 cache_size=200, verbose=False, max_iter=-1)
                 self.model[i].fit(self.DOE,self.input[i])
             
         elif mode=='kRR':  
             kernel=['rbf','linear','sigmoid']
+            kernel = ['linear']
             best_score=[0 for i in range(len(self.input))]    
             best_kernel=['' for i in range(len(self.input))]  
+            best_alpha = [1 for i in range(len(self.input))]
             self.model=[None for i in range(len(self.input))]
+            alphas = np.linspace(0.1,2,10)
             for i in range(len(self.input)):
                 for k in kernel:
-                    self.model[i] = KernelRidge(alpha=0.001, kernel=k)
-                    try:
-                        self.model[i].fit(self.DOE,self.input[i])
-                    except:
-                        Notifier('Wrong size of input','error')
-                    score= self.model[i].score(self.DOE, self.input[i])
-                    if score>best_score[i]:
-                        best_kernel[i]=k
-                        best_score[i]=score
-                self.model[i] = KernelRidge(alpha=0.001, kernel=best_kernel[i])
+                    for a in alphas:
+                        self.model[i] = KernelRidge(alpha=a, kernel=k)
+                        try:
+                            self.model[i].fit(self.DOE,self.input[i])
+                        except:
+                            Notifier('Wrong size of input','error')
+                        score= self.model[i].score(self.DOE, self.input[i])
+                        if score>best_score[i]:
+                            best_kernel[i]=k
+                            best_score[i]=score
+                            best_alpha[i] = a
+                print (best_score[i],'kernel',best_kernel[i])
+                
+                self.model[i] = KernelRidge(alpha=best_alpha[i], kernel=best_kernel[i])
                 self.model[i].fit(self.DOE,self.input[i])
 
         elif mode=='OrKrigg':
             variogram=['linear','power','gaussian','spherical','exponential']
-            #variogram = ['exponential']
+            #variogram = ['power']
 
             best_score=[1000 for i in range(len(self.input))]
             best_variogram=['' for i in range(len(self.input))]
@@ -406,17 +442,17 @@ class RS_model:
 
                     print(best_variogram[i])
                     OK=ok(data[:, 0], data[:, 1], self.input[i], variogram_model=best_variogram[i],
-                         verbose=False, enable_plotting=False)
+                         verbose=True, enable_plotting=False)
                     print('score: ', best_score[i], 'best_v: ', best_variogram[i])
 
                 else:
                     best_variogram[i]=func
                     OK = ok(data[:, 0], data[:, 1], self.input[i], variogram_model=best_variogram[i],
-                    verbose=False, enable_plotting=False)
+                    verbose=True, enable_plotting=True)
                 self.model[i] = OK
         elif mode == 'UnKrigg':
             variogram = ['linear', 'power', 'gaussian', 'spherical', 'exponential']
-            variogram = ['spherical']
+            #variogram = ['power']
 
             best_score = [1000 for i in range(len(self.input))]
             best_variogram = ['' for i in range(len(self.input))]
@@ -427,7 +463,7 @@ class RS_model:
                     for v in variogram:
 
                         UK = uk(data[:, 0], data[:, 1], self.input[i], variogram_model=v,
-                                verbose=False, enable_plotting=False, drift_terms=['regional_linear'])
+                                verbose=False, enable_plotting=False, drift_terms=['regional_linear'],nlags=10)
                         test = UK.execute('points', data[:, 0], data[:, 1])
                         test = np.ma.asarray(test[0])
                         delta = test - self.input[i]
@@ -438,8 +474,8 @@ class RS_model:
 
                     #print best_variogram[i]
                     UK = uk(data[:, 0], data[:, 1], self.input[i], variogram_model=best_variogram[i],
-                            verbose=False, enable_plotting=False, drift_terms=['regional_linear'])
-                    #print 'score: ', best_score[i], 'best_v: ', best_variogram[i]
+                            verbose=True, enable_plotting=False, drift_terms=['regional_linear'],nlags=10)
+                    print ('score: ', best_score[i], 'best_v: ', best_variogram[i])
 
                 else:
                     best_variogram[i] = func
@@ -493,10 +529,10 @@ class RS_model:
                     ax.scatter(x1, y1,f(x1,y1),c='r',s=10)
             scatter1_proxy = lines.Line2D([0], [0], linestyle='none', c='b', marker='o')
             scatter2_proxy = lines.Line2D([0], [0], linestyle='none', c='r', marker='o')
-            ax.legend([scatter1_proxy, scatter2_proxy], ['Q3D', 'ResposneSurface'], numpoints=1)
+            ax.legend([scatter1_proxy, scatter2_proxy], ['FH', 'ResposneSurface'], numpoints=1)
             ax.set_xlabel('Width (mm)')
             ax.set_ylabel('Length (mm)')
-            ax.set_zlabel('Inductance (nH)')
+            ax.set_zlabel('Resistance/Inductance (nH)')
             self.DOE=temp
         plt.show()
 

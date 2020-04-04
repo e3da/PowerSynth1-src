@@ -960,7 +960,7 @@ if __name__ == "__main__":
             args = ['python','cmd.py','-m','/nethome/qmle/testcases/Mutual_IND_Case/two_dev_macro.txt','-settings',"/nethome/qmle/testcases/settings.info"]
             cmd.cmd_handler_flow(arguments= args)
         elif sel ==2:
-            args = ['python','cmd.py','-m','/nethome/qmle/testcases/PSV2_Testing/Cmd_flow_case/Half_bridge_Imam/half_bridge_pm_macro.txt','-settings',"/nethome/qmle/testcases/settings.info"]
+            args = ['python','cmd.py','-m','/nethome/qmle/testcases/Imam_journal/Cmd_flow_case/Imam_journal/half_bridge_pm_macro.txt','-settings',"/nethome/qmle/testcases/settings.info"]
             cmd.cmd_handler_flow(arguments= args)
         elif sel ==3:
             args = ['python','cmd.py','-m','/nethome/qmle/testcases/Case1_S-param/Layout1_macro.txt','-settings',"/nethome/qmle/testcases/settings.info"]

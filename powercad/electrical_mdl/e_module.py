@@ -184,6 +184,11 @@ class EWires(EComp):
         c_s = self.sheet[0].get_center()
         c_e = self.sheet[1].get_center()
         length = math.sqrt((c_s[0] - c_e[0]) ** 2 + (c_s[1] - c_e[1]) ** 2) /1000.0 # using integer input
+        # length of the bondwires in reality are usually longer due to different bonding techinque, for JEDEC
+        # https://awrcorp.com/download/faq/english/docs/Elements/BWIRES.htm
+        # first divide the wire in 3 section and assume alpha,beta to be 30 degree
+        length = length/3 + 4*length/math.sqrt(3)/3
+         
         start = 1
         end = 0
         if self.mode == 'analytical':
@@ -205,6 +210,8 @@ class EWires(EComp):
                             L2_name = 'B{0}'.format(j)
                             M_name = 'M' + '_' + L1_name + '_' + L2_name
                             M_val = wire_partial_mutual_ind(length, distance) * 1e-9
+                            print (L_val,M_val)
+                            #input()
                             self.circuit._graph_add_M(M_name, L1_name, L2_name, M_val)
                 self.circuit.assign_freq(self.f)
                 self.circuit.indep_current_source(0, 1, val=1)
@@ -222,7 +229,8 @@ class EWires(EComp):
                         print(("connections", self.conn))
                     R=R_val/self.num_wires
                     L=L_val/self.num_wires
-                #print "wire R,L", R, L
+                print("length",length)
+                print("wire R,L", R, L)
                 self.net_graph.add_edge(self.sheet[0].net, self.sheet[1].net, edge_data={'R': R, 'L': L, 'C': None})
             else : # No mutual eval needed, fast evaluation
                 self.net_graph.add_edge(self.sheet[0].net, self.sheet[1].net, edge_data={'R': R_val, 'L': L_val, 'C': None})

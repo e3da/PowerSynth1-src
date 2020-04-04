@@ -17,19 +17,24 @@ L_SHAPE = 1
 T_SHAPE = 2
 
 
-def form_skindepth_distribution(start=0,stop=1,freq=1e6, cond=5.96e7, N = 5):
+def form_skindepth_distribution(start=0,stop=1,freq=1e6, cond=5.96*1e7, N = 11):
     '''
     Gotta make sure that N is always an odd number such as 1 3 5 7 ...
     '''
+    w = (stop - start)/1000
     u = 4 * math.pi * 1e-7
-    skind_depth = math.sqrt(1 / (math.pi * freq * u * cond * 1e6)) * 1e6# first calculate the skindepth value in um
+    #skind_depth = math.sqrt(1 / (math.pi * freq * u * cond * 1e6))
+    #print (freq)
+    skind_depth = math.sqrt(1 / (math.pi * freq * u * cond)) * 1e6# first calculate the skindepth value in um
+    #nwinc = int(math.ceil((math.log(w * 1e-3 / skind_depth / 3) / math.log(2) * 2 + 3)/3))
+    nwinc = N
     #print (skind_depth,"um")
-    split_list = np.zeros((1,N+1)) # 1 row and N collumn
+    split_list = np.zeros((1,nwinc+1)) # 1 row and N collumn
     split_list[0,0] = start
-    split_list[0,N] = stop 
-    for i in range(N//2): # get the half (integer) of the number of split
-        split_list[0,i+1] = start + int(skind_depth*(i+1)*1000)
-        split_list[0,N-i-1] =  stop - int(skind_depth*(i+1)*1000)
+    split_list[0,nwinc] = stop 
+    for i in range(nwinc//2): # get the half (integer) of the number of split
+        split_list[0,i+1] = start + int(skind_depth*(i+1))
+        split_list[0,N-i-1] =  stop - int(skind_depth*(i+1))
     #print (split_list[0])
     #print (np.linspace(start,stop,N))
     return split_list[0]
@@ -95,12 +100,14 @@ class EMesh_CS(EMesh):
         if mode == 0:
             self._handle_pins_connections()
 
-    def mesh_update_optimized(self, Nw=5):
+    def mesh_update_optimized(self, Nw=7):
         '''
         If trace orientations are included, this will be used
         :param Nw: number of mesh points on the width of traces
         :return:
         '''
+        method = "skin_depth"
+        #method = "uniform"
         print("accelerate the mesh generation")
         isl_dict = {isl.name: isl for isl in self.islands}
         fig, ax = plt.subplots()
@@ -111,12 +118,11 @@ class EMesh_CS(EMesh):
             trace_cells = self.handle_pins_connect_trace_cells(trace_cells=trace_cells, island_name=g.name)
             if len(isl.elements) == 1:  # Handle cases where the trace cell width is small enough to apply macro model (RS)
                 # need a better way to mark the special case for RS usage, maybe distinguish between power and signal types
-                mesh_pts_tbl = self.mesh_nodes_trace_cells(trace_cells=trace_cells, Nw=1, ax=ax, method ="uniform")
+                mesh_pts_tbl = self.mesh_nodes_trace_cells(trace_cells=trace_cells, Nw=Nw, ax=ax, method =method)
             else:
-                mesh_pts_tbl = self.mesh_nodes_trace_cells(trace_cells=trace_cells, Nw=Nw, ax=ax,method = "uniform")
+                mesh_pts_tbl = self.mesh_nodes_trace_cells(trace_cells=trace_cells, Nw=Nw, ax=ax,method = method)
             self.set_nodes_neigbours_optimized(mesh_tbl=mesh_pts_tbl)
-            
-            self.mesh_edges_optimized(mesh_tbl=mesh_pts_tbl, trace_num=len(trace_cells), Nw=Nw, mesh_type="uniform", macro_mode=False)
+            self.mesh_edges_optimized(mesh_tbl=mesh_pts_tbl, trace_num=len(trace_cells), Nw=Nw, mesh_type=method, macro_mode=False)
             self.handle_hier_node_opt(mesh_pts_tbl,g)
         self.update_E_comp_parasitics(net=self.comp_net_id, comp_dict=self.comp_dict)
         #self.update_E_comp_parasitics(net=self.comp_net_id, comp_dict=self.comp_dict)
@@ -160,7 +166,7 @@ class EMesh_CS(EMesh):
                     if method == "uniform":
                         ys = np.linspace(tc.bottom, tc.top, Nw)
                     if method == "skin_depth":
-                        ys = form_skindepth_distribution(start = tc.bottom,stop = tc.top, N=Nw)
+                        ys = form_skindepth_distribution(start = tc.bottom,stop = tc.top, N=Nw,freq = self.f*1e3)
                 else:
                     tc.height_eval()
                     ys = np.asarray([tc.bottom + tc.height / 2])
@@ -185,7 +191,7 @@ class EMesh_CS(EMesh):
                     if method == "uniform":
                         xs = np.linspace(tc.left, tc.right, Nw)
                     elif method == "skin_depth":
-                        xs = form_skindepth_distribution(start = tc.left,stop = tc.right, N=Nw)
+                        xs = form_skindepth_distribution(start = tc.left,stop = tc.right, N=Nw,freq = self.f*1e3)
                 else:
                     tc.width_eval()
                     xs = np.asarray([tc.left + tc.width / 2])
@@ -214,8 +220,8 @@ class EMesh_CS(EMesh):
                 xs = np.linspace(c_tc.left, c_tc.right, Nw)
                 ys = np.linspace(c_tc.bottom, c_tc.top, Nw)
             elif method == "skin_depth":
-                xs = form_skindepth_distribution(start = c_tc.left,stop = c_tc.right, N=Nw)
-                ys = form_skindepth_distribution(start = c_tc.bottom,stop = c_tc.top, N=Nw)
+                xs = form_skindepth_distribution(start = c_tc.left,stop = c_tc.right, N=Nw,freq = self.f*1e3)
+                ys = form_skindepth_distribution(start = c_tc.bottom,stop = c_tc.top, N=Nw,freq = self.f*1e3)
 
             if corner_dir == [0, 1, 0, 1]:  # bottom left corner
                 for id in range(Nw):
@@ -621,7 +627,7 @@ class EMesh_CS(EMesh):
         nodes = mesh_tbl.nodes
         z_loc = mesh_tbl.z_pos
         macro_mode = False
-        if trace_num == 1:
+        if trace_num == 1 and Nw ==1:
             macro_mode = True
         isl_edge_list = [] # store all list on an island to plot them
         for loc in nodes:
