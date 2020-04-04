@@ -39,6 +39,7 @@ class RS_model:
         self.mdl_name= 'NameofModel' # model's name
         self.data_bound=None # boundary of collected data [[min,max],[min,max]...] 
         self.DOE=None # np.ndarray structure for an mxn matrix where m is number of params 
+        self.test_data = None
         self.topology=None # depending on 
         self.run_path=None # while saving path can be chosen (see save_model) this is a workspace where simulations files are created 
         self.script=None # This object holds the control script for a specified simulator. 
@@ -280,11 +281,12 @@ class RS_model:
         DOE_val = list(zip(allW.flatten(),allL.flatten()))
         row_size = len(DOE_val)
         col_size = 2
-        self.DOE=np.zeros((row_size,col_size)) # create a blank matrix for DOE
+        self.test_data=np.zeros((row_size,col_size)) # create a blank matrix for DOE
 
         for row in range(len(DOE_val)):
-            self.DOE[row] = DOE_val[row]
-        print (self.DOE)
+            self.test_data[row] = DOE_val[row]
+        print (self.test_data)
+    
     def create_uniform_DOE(self,num_data=[],lin_ops=True):
         '''
         Create a uniform linear space design of experiment. (note: this is not a uniform random)
@@ -308,7 +310,7 @@ class RS_model:
                 lnsp_all.append(a.tolist())
                                 
         row_size=list_mult(num_data) # compute row_size using all number of data for each parameter
-        self.DOE=np.zeros((row_size,col_size)) # create a blank matrix for DOE
+        self.test_data=np.zeros((row_size,col_size)) # create a blank matrix for DOE
         col_chk=col_size-1  # id to check all column 
         not_ready=True     
         next=False
@@ -331,7 +333,7 @@ class RS_model:
                     next=True
                     cur_id[col_chk]=0
                     col_chk-=1                      
-            self.DOE[row]=doe_row
+            self.test_data[row]=doe_row
             not_ready=True
             
     def build_RS_mdl(self,mode='UnKrigg',func=None,type=None):

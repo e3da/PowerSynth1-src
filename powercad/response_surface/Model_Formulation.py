@@ -13,7 +13,7 @@ cur_path = cur_path[0:-25] #exclude "powercad/response_surface"
 print(cur_path)
 sys.path.append(cur_path)
 from powercad.general.data_struct.Unit import Unit
-from powercad.general.settings.Error_messages import InputError, Notifier
+#from powercad.general.settings.Error_messages import InputError, Notifier
 from powercad.general.settings.save_and_load import save_file
 from powercad.interfaces.FastHenry.Standard_Trace_Model import Uniform_Trace,Uniform_Trace_2, Velement, write_to_file,Init,GroundPlane,Element,Run
 from powercad.interfaces.FastHenry.fh_layers import *
@@ -30,6 +30,9 @@ import platform
 import multiprocessing
 import psutil
 from multiprocessing import Pool
+from powercad.opt.optimizer import NSGAII_Optimizer, DesignVar
+from pykrige.ok import OrdinaryKriging as ok
+
 def form_trace_model(layer_stack, Width=[1.2, 40], Length=[1.2, 40], freq=[10, 100, 10], wdir=None, savedir=None,
                      mdl_name=None
                      , env=None, options=['Q3D', 'mesh', False]):
@@ -198,9 +201,10 @@ def form_trace_model(layer_stack, Width=[1.2, 40], Length=[1.2, 40], freq=[10, 1
 
     try:
         save_file(package, os.path.join(savedir, mdl_name + '.rsmdl'))
-        Notifier(msg="Sucessfully Saved Model", msg_name="Success!")
+        #Notifier(msg="Sucessfully Saved Model", msg_name="Success!")
     except:
-        InputError(msg="Model was not saved")
+        print ('error')
+        #InputError(msg="Model was not saved")
 
 
 def form_trace_model_optimetric(layer_stack, Width=[1.2, 40], Length=[1.2, 40], freq=[10, 100, 10], wdir=None,
@@ -395,9 +399,10 @@ def form_trace_model_optimetric(layer_stack, Width=[1.2, 40], Length=[1.2, 40], 
 
     try:
         save_file(package, os.path.join(savedir, mdl_name + '.rsmdl'))
-        Notifier(msg="Sucessfully Saved Model", msg_name="Success!")
+        #Notifier(msg="Sucessfully Saved Model", msg_name="Success!")
     except:
-        InputError(msg="Model was not saved, check cmd prompt for error msgs")
+        print ('error')
+        #InputError(msg="Model was not saved, check cmd prompt for error msgs")
 
 
 model_info = '''
@@ -646,9 +651,10 @@ def form_corner_correction_model(layer_stack, Width=[1.2, 40], freq=[10, 100, 10
 
     try:
         save_file(package, os.path.join(savedir, mdl_name + '.rsmdl'))
-        Notifier(msg="Sucessfully Saved Model", msg_name="Success!")
+        #Notifier(msg="Sucessfully Saved Model", msg_name="Success!")
     except:
-        InputError(msg="Model was not saved, check cmd prompt for error msgs")
+        print ("error")
+        #InputError(msg="Model was not saved, check cmd prompt for error msgs")
 
 
 def form_fasthenry_trace_response_surface(layer_stack, Width=[1.2, 40], Length=[1.2, 40], freq=[10, 100, 10], wdir=None,
@@ -794,6 +800,57 @@ def form_fasthenry_trace_response_surface(layer_stack, Width=[1.2, 40], Length=[
         os.system("rm out*")
         i+=num_cpus
     print(model_input.generic_fnames)
+    
+    package = build_RS_model(frange = frange, wdir = wdir, model_input = model_input)
+    try:
+        save_file(package, os.path.join(savedir, mdl_name + '.rsmdl'))
+        #Notifier(msg="Sucessfully Saved Model", msg_name="Success!")
+    except:
+        print ("error")
+        #InputError(msg="Model was not saved, check cmd prompt for error msgs")
+
+
+class Opt_Problem:
+    def __init__(self, model = None,mode =None):
+        self.model = model # model for testing
+        self.test_mode = mode # depends on the mode setup in RS model e.g 0 for resistance 1 for inductance
+        self.best_score = 1e9
+        self.best_model = None
+        self.dv = DesignVar(0,len(self.model.test_data))
+        
+    
+    def eval_krigg(self,individual=None):
+        DOE_data = self.build_model(individual)
+        rs_model = self.model.model[self.test_mode]
+        test=OK.execute('points', self.model.test_data[:, 0], self.model.test_data[:, 1])
+        test= np.ma.asarray(test[0])
+        for chk in test: # check for negative
+            if chk <0: # if a negative value found
+                return abs(chk) * 1e9
+        delta=test-self.model.input[self.test_mode]
+        score=np.sqrt(np.mean(delta**2))
+        if score < self.best_score:
+            self.best_score = score
+            print ("current best score", score)
+            self.best_model = rs_model
+            self.model.DOE = DOE_data
+        return score
+        
+    def build_model(individual = None):
+        row_size = len(DOE_val)
+        col_size = 2
+        data=np.zeros((row_size,col_size)) # create a blank matrix for DOE
+        input_data = []
+        for i in range(len(individual)):
+            id =int(individual[i])
+            data[i] = self.model.test_data[id]
+            input_data.append(self.model.input[self.test_mode][id])
+        self.model.model[self.test_mode]=ok(data[:, 0], data[:, 1], input_data, variogram_model='exponential',
+                             verbose=False, enable_plotting=False)        
+        return data
+
+
+def build_RS_model(frange = None,model_input = None,wdir =None):
     LAC_model = []
     cur = 0
     tot = len(frange)*2
@@ -804,7 +861,11 @@ def form_fasthenry_trace_response_surface(layer_stack, Width=[1.2, 40], Length=[
         RAC_input.set_unit('m', 'Ohm')
         RAC_input.set_sweep_unit('k', 'Hz')
         RAC_input.read_file(file_ext='csv', mode='single', row=i, units=('Hz', 'Ohm'), wdir=wdir)
-        RAC_input.build_RS_mdl()
+        opt_resistance = Opt_Problem(model = RAC_input, mode = 0)
+        opt = NSGAII_Optimizer(opt_resistance.dv, opt_resistance.eval_krigg, 1, 1, 100)
+        opt.run()
+        RAC_input.model[0] = opt_resistance.best_model
+        #RAC_input.build_RS_mdl()
         RAC_model.append({'f': frange[i], 'mdl': RAC_input})
         print("percent done", float(cur) / tot * 100)
         cur += 1
@@ -820,12 +881,12 @@ def form_fasthenry_trace_response_surface(layer_stack, Width=[1.2, 40], Length=[
         cur+=1
 
     package = {'L': LAC_model, 'R': RAC_model, 'C': None ,'opt_points': frange}
+    return package
+    
 
-    try:
-        save_file(package, os.path.join(savedir, mdl_name + '.rsmdl'))
-        #Notifier(msg="Sucessfully Saved Model", msg_name="Success!")
-    except:
-        InputError(msg="Model was not saved, check cmd prompt for error msgs")
+
+
+
 def build_and_run_trace_sim(**kwags):
     name=kwags['name']
     wdir = kwags['wdir']
@@ -1172,7 +1233,8 @@ def form_fasthenry_corner_correction(layer_stack, Width=[1.2, 40], freq=[10, 100
         save_file(package, os.path.join(savedir, mdl_name + '.rsmdl'))
         #Notifier(msg="Sucessfully Saved Model", msg_name="Success!")
     except:
-        InputError(msg="Model was not saved, check cmd prompt for error msgs")
+        print ("error")
+        #InputError(msg="Model was not saved, check cmd prompt for error msgs")
 
 
 def form_bondwire_group_model_JDEC(l_range,radi,num_wires,distance,height,freq,cond,env,mdl_name,wdir,savedir,view=True):
