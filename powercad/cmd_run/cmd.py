@@ -191,7 +191,7 @@ class Cmd_Handler:
                 if info[0] == "Floor_plan:":
                     floor_plan = info[1]
                     floor_plan = floor_plan.split(",")
-                    floor_plan = [int(i) for i in floor_plan]
+                    floor_plan = [float(i) for i in floor_plan]
                 if info[0] == 'Num_generations:':
                     num_gen = int(info[1])
                 if info[0]== 'Thermal_Setup:':
@@ -972,6 +972,8 @@ if __name__ == "__main__":
             #D:/Demo/New_Flow_w_Hierarchy/Journal_Case/Testing_Journal_case_w_Py_3/Cmd_flow_case/Half_Bridge_Layout/half_bridge_pm_macro.txt
            
             #D:/Demo/New_Flow_w_Hierarchy/Journal_Case/Journal_Result_collection/Cmd_flow_case/Half_Bridge_Layout/half_bridge_pm_macro_data_collection_final.txt
+           
+
             cmd.cmd_handler_flow(arguments= args)
 
     else:

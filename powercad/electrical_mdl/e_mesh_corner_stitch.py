@@ -100,7 +100,7 @@ class EMesh_CS(EMesh):
         if mode == 0:
             self._handle_pins_connections()
 
-    def mesh_update_optimized(self, Nw=7):
+    def mesh_update_optimized(self, Nw=5):
         '''
         If trace orientations are included, this will be used
         :param Nw: number of mesh points on the width of traces
