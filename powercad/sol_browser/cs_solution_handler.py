@@ -301,7 +301,7 @@ def plot_solution(rectlist,name):
 if __name__ == '__main__':
 
     #plot_solutions('D:\Demo\New_Flow_w_Hierarchy\Journal_Case\Final_Version\Solution\\60X60_new\Layout_Solutions')
-    #'''
+    '''
     folder_name='D:\Demo\POETS_ANNUAL_MEETING_2019\\testcases_setup\Test\Test_Cases\Half_Bridge_Journal_Tristan\Solution_New\Layout_Solutions'
     all_data=[]
     i=0
@@ -332,21 +332,21 @@ if __name__ == '__main__':
                 data=[data[0].rsplit('.csv')[0],data[1],data[2]]
                 csv_writer.writerow(data)
         my_csv.close()
-    #'''
+    '''
     sol_data={}
-    file='D:\Demo\POETS_ANNUAL_MEETING_2019\\testcases_setup\Test\Test_Cases\Half_Bridge_Journal_Tristan\Solution_New\\all_data.csv'
+    file='D:\Demo\\New_Flow_w_Hierarchy\Journal_Case\Journal_Result_collection\Cmd_flow_case\Half_Bridge_Layout\Test_solutions_kelvin\Result_Processing\\all_raw_data.csv'
     with open(file) as csvfile:
         readCSV = csv.reader(csvfile, delimiter=',')
         for row in readCSV:
             if row[0]=='Layout_ID':
                 continue
             else:
-                sol_data[row[0]]=([float(row[2]), float(row[1])])
+                sol_data[(row[0],float(row[3]))]=([float(row[1]), float(row[2])])
     #sol_data = np.array(sol_data)
     #print sol_data
     pareto_data = pareto_frontiter2D(sol_data)
     print(len(pareto_data))
-    file_name='D:\Demo\POETS_ANNUAL_MEETING_2019\\testcases_setup\Test\Test_Cases\Half_Bridge_Journal_Tristan\Solution_New\\final_pareto.csv'
+    file_name='D:\Demo\\New_Flow_w_Hierarchy\Journal_Case\Journal_Result_collection\Cmd_flow_case\Half_Bridge_Layout\Test_solutions_kelvin\Result_Processing\\final_pareto.csv'
     with open(file_name, 'wb') as my_csv:
         csv_writer = csv.writer(my_csv, delimiter=',')
         for k,v in list(pareto_data.items()):

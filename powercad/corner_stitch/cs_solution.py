@@ -223,3 +223,15 @@ class CornerStitchSolution:
 
         conn.close()
 
+if __name__ == '__main__':
+
+    db_file='D:\Demo\\New_Flow_w_Hierarchy\Journal_Case\Journal_Result_collection\Cmd_flow_case\Half_Bridge_Layout\\Test_solutions_kelvin\Sols_35X40\layouts_db\layout.db'
+    fig_dir='D:\Demo\\New_Flow_w_Hierarchy\Journal_Case\Journal_Result_collection\Cmd_flow_case\Half_Bridge_Layout\\Test_Figs_kelvin\Figs_35X40\Pareto_solutions'
+    sol=CornerStitchSolution()
+    ids=[165,258,306,352,52,523,765,781,782,925,950]#35X40
+
+    for id in ids:
+        try:
+            sol.layout_plot(layout_ind=id, db=db_file, fig_dir=fig_dir)
+        except:
+            print (id)

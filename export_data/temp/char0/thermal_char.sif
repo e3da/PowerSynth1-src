@@ -1,0 +1,179 @@
+
+CHECK KEYWORDS Warn
+
+Header
+  Mesh DB "." "thermal_char"
+End
+
+Simulation
+  Min Output Level = 0
+  Max Output Level = 31
+  Output Caller = True
+
+  Coordinate System = "Cartesian 3D"
+  Coordinate Mapping(3) = 1 2 3
+
+  Simulation Type = "Steady State"
+  Steady State Max Iterations = 10
+  Steady State Min Iterations = 5
+  Output Intervals = 1
+
+  Output File = "data.dat"
+  Post File = "data.ep"
+End
+
+Constants
+  Gravity(4) = 0 -1 0 9.82
+  Stefan Boltzmann = 5.67e-08
+End
+
+
+Body 1
+  Equation = 1
+  Material = 1
+End
+
+Body 2
+  Equation = 1
+  Material = 2
+End
+
+Body 3
+  Equation = 1
+  Material = 3
+End
+
+Body 4
+  Equation = 1
+  Material = 4
+End
+
+Body 5
+  Equation = 1
+  Material = 5
+End
+
+Body 6
+  Equation = 1
+  Material = 6
+End
+
+Body 7
+  Equation = 1
+  Material = 7
+End
+
+
+Equation 1
+  Name = "Equation1"
+  Heat Equation = True
+  Active Solvers(2) = 1 2
+End
+
+Solver 1
+  Exec Solver = "Always"
+  Equation = "Heat Equation"
+  Variable = "Temperature"
+  Variable Dofs = 1
+  Linear System Solver = "Iterative"
+  Linear System Iterative Method = "TFQMR"
+  Linear System Max Iterations = 5000
+  Linear System Convergence Tolerance = 0.001
+  Linear System Abort Not Converged = True
+  Linear System Preconditioning = "ILU0"
+  Linear System Residual Output = 1
+  Steady State Convergence Tolerance = 0.001
+  Stabilize = True
+  Nonlinear System Convergence Tolerance = 1.0e-05
+  Nonlinear System Max Iterations = 1
+  Nonlinear System Newton After Iterations = 3
+  Nonlinear System Newton After Tolerance = 1.0e-02
+  Nonlinear System Relaxation Factor = 1.0
+End
+
+Solver 2
+  Exec Solver = "Always"
+  Equation = "Flux Compute"
+  Procedure = "FluxSolver" "FluxSolver"
+  Average Within Materials = Logical True
+  Calculate Flux = Logical True
+  Linear System Solver = "Iterative"
+  Linear System Iterative Method = "cg"
+  Linear System Preconditioning = ILU0
+  Linear System Residual Output = 10
+  Linear System Max Iterations = Integer 500
+  Linear System Convergence Tolerance = 1.0e-10
+End
+
+
+Material 1
+  Density = 9700.0
+  Heat Conductivity = 190.0
+End
+
+
+
+
+Material 2
+  Density = 11020.0
+  Heat Conductivity = 35.8
+End
+
+
+
+
+Material 3
+  Density = 8020.0
+  Heat Conductivity = 400.0
+End
+
+
+
+
+Material 4
+  Density = 3250.0
+  Heat Conductivity = 160.0
+End
+
+
+
+
+Material 5
+  Density = 8020.0
+  Heat Conductivity = 400.0
+End
+
+
+
+
+Material 6
+  Density = 11020.0
+  Heat Conductivity = 35.8
+End
+
+
+
+
+Material 7
+  Density = 3200.0
+  Heat Conductivity = 120.0
+End
+
+
+
+
+
+Boundary Condition 1
+  Name = "DeviceLoad"
+  Target Boundaries(1) = 2
+  Heat Flux BC = Logical True
+  Heat Flux = 10405827.2633
+End
+
+Boundary Condition 2
+  Name = "Cooling"
+  Target Boundaries(1) = 1
+  Heat Flux BC = Logical True
+  External Temperature = 300.0
+  Heat Transfer Coefficient = 50000.0
+End
