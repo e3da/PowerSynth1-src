@@ -22,6 +22,7 @@ from collections import deque
 import gc
 import numpy as np
 import copy
+import os
 #import objgraph
 
 
@@ -65,7 +66,7 @@ class CornerStitch_Emodel_API:
         self.module_data =None# ModuleDataCOrnerStitch object for layout and footprint info
         self.hier = None
         self.trace_ori ={}
-
+        self.mdl_type = 0 # 0:rsmdl 1:lmmdl
     def process_trace_orientation(self,trace_ori_file=None):
         with open(trace_ori_file, 'r') as file_data:
             for line in file_data.readlines():
@@ -153,6 +154,12 @@ class CornerStitch_Emodel_API:
         return None
 
     def load_rs_model(self, mdl_file):
+        extension = os.path.splitext(mdl_file)[1]
+        print ("extension",extension)
+        if extension == '.rsmdl':
+            self.mdl_type = 0
+        elif extension == '.lmmdl':
+            self.mdl_type = 1
         self.rs_model = load_mdl(file=mdl_file)
 
     def init_layout_isl(self,module_data=None):
@@ -186,7 +193,7 @@ class CornerStitch_Emodel_API:
                 x,y,w,h = trace[1:5]
                 new_rect = Rect(top=(y + h) 
                                 , bottom=y, left=x, right=(x + w))
-                p = E_plate(rect=new_rect, z=z, dz=dz)
+                p = E_plate(rect=new_rect, z=z, dz=dz,z_id = z_id)
                 #print ("trace height", p.z)
                 #print ("trace thickness", p.dz)
                 p.group_id=isl.name
@@ -279,7 +286,7 @@ class CornerStitch_Emodel_API:
         plot_rect3D(rect2ds=self.module.plate + self.module.sheet, ax=ax)
         plt.show()
         '''
-        self.emesh = EMesh_CS(islands=islands,hier_E=self.hier, freq=self.freq, mdl=self.rs_model)
+        self.emesh = EMesh_CS(islands=islands,hier_E=self.hier, freq=self.freq, mdl=self.rs_model,mdl_type=self.mdl_type)
         self.emesh.trace_ori =self.trace_ori # Update the trace orientation if given
         print (self.trace_ori)
         if self.trace_ori == {}:
@@ -303,10 +310,63 @@ class CornerStitch_Emodel_API:
         self.emesh.update_hier_edge_RL()
         self.emesh.mutual_data_prepare(mode=0)
         self.emesh.update_mutual(mode=0)
+        #self.export_netlist(dir="/nethome/qmle/testcases/Case1_S-param/testnetlist_corect_cap_100MHz.net",mode =2)
         
-
-
-
+    def eval_cap_mesh(self,layer_group = None, mode = '2D'):
+        if mode == '2D': # Assume there is no ground mesh
+            # handle for 2D only assume  the GDS layer rule
+            for l_data in layer_group:
+                if l_data[1]=='D':
+                    h = l_data[2].thick # in mm
+                    mat = l_data[2].material
+                    rel_perf = mat.rel_permit
+                elif l_data[1]=='S':
+                    t = l_data[2].thick
+                
+            print('height',h,'thickness',t,"permitivity",rel_perf)
+            self.emesh.update_C_val(h=h,t=t,mode=2,rel_perv = rel_perf)
+        elif mode == '3D': # Go through layer_group and generate mesh for each ground plane. 
+            # First go through each ground layer and mesh them
+            d_data = {}
+            for l_data in layer_group:
+                layer = l_data[2]
+                if l_data[1] == 'G':
+                    self.emesh.add_ground_uniform_mesh(t =  layer.thick,z = layer.z_level*1000,width =layer.width *1000,length = layer.length *1000, z_id = layer.id)    
+                if l_data[1] == 'D': # dielectric, get the dielectric info and save it for later use 
+                    d_data[layer.id] = (layer.material.rel_permit,layer.thick) # store the dielectric thickness and material perimitivity
+            # Form a pair between every 2 layer id with "G,S" type, get the dielectric info of the layer between them 
+            h_dict = {}
+            mat_dict = {}
+            t_dict = {}
+            for l1 in layer_group:
+                for l2 in layer_group:
+                    if l1 != l2:
+                        layer1 = l1[2]
+                        layer2 = l2[2]
+                        # The rule is layer2 is on top of layer1 so that the dictionary name is unique
+                        if layer2.id - layer1.id == 2 and l1[1] in 'GS' and l2[1] in 'GS': # two continuous metal layers separated by a dielectric layer
+                            dielec_id  = int((layer2.id+layer1.id)/2)
+                            mat_dict[(layer2.id,layer1.id)] = d_data[dielec_id][0] # store the dielectric permitivity in to rel_perf
+                            h_dict[(layer2.id,layer1.id)] = d_data[dielec_id][1] # store the thickness value in to h_dict
+                            if layer2.thick == layer1.thick: # in case the same layer thickness for metal:
+                                t_dict[(layer2.id,layer1.id)] = layer1.thick
+                            else:
+                                t_dict[(layer2.id,layer1.id)] = (layer1.thick + layer2.thick)/2
+                        else:
+                            continue       
+            self.emesh.plot_isl_mesh(plot=True)
+            self.emesh.update_C_val(h=h_dict,t=t_dict,mode=1,rel_perv = mat_dict) # update cap 3D mode
+            
+            # Recompute RLM
+            self.emesh.update_trace_RL_val()
+            self.emesh.mutual_data_prepare(mode=0)
+            self.emesh.update_mutual(mode=0)
+            
+            #print ("to be implemented")
+            #print ("add groundplane mesh to the structure")
+            #print ("extract layer to layer capacitance")
+            #print ("case 1 capacitance to ground")
+            #print ("case 2 trace to trace capacitance")
     def export_netlist(self,dir= "",mode = 0, loop_L = 0,src='',sink=''):
         # Loop_L value is used in mode 1 to approximate partial branches values
         print (loop_L,src,sink)
@@ -453,6 +513,7 @@ class CornerStitch_Emodel_API:
             else:
                 print ("error found in the input netlist, please double check!")
             for line in netlist.output_netlist_format:
+                netlist
                 if not(line['type']=='const'):
                     if line['edited']:
                         print (line['line'])
@@ -460,16 +521,19 @@ class CornerStitch_Emodel_API:
                         print (line['ori_line'])
                 else:
                     print(line['line'])    
-        elif mode ==2:
+        elif mode ==2: # for now only support 2 D structure, will update to 3D soon
             all_layer_info = self.layer_stack.all_layers_info
-            cap_layer_id =[]
+            layer_group =[]
+            get_isolation_info = False
+            get_metal_info = False
+            
             for layer_id in all_layer_info:
                 layer = all_layer_info[layer_id]
-                if layer.e_type == 'S' or layer.e_type == 'G':
-                    cap_layer_id.append(layer_id)
-
-            self.eval_cap_mesh()
-            netlist.export_netlist_to_ads(file_name=dir)
+                if layer.e_type in 'GDS': # if this is dielectric, signal or ground
+                    layer_group.append([layer_id,layer.e_type,layer]) # store to layer group
+            netlist= ENetlist(emodule=self.module, emesh=self.emesh)
+            self.eval_cap_mesh(layer_group = layer_group, mode = '3D')
+            netlist.export_full_netlist_to_ads(file_name=dir)
     def init_layout(self, layout_data=None):
         '''
         Read part info and link them with part info, from an updaed layout, update the electrical network
@@ -710,7 +774,7 @@ class CornerStitch_Emodel_API:
         L2 = abs(np.imag(imp3)) * 1e9 / (2 * np.pi * self.circuit.freq) + L12
         return R1,L1,R2,L2,R12,L12
 
-    def extract_RL(self, src=None, sink=None,export_netlist=True):
+    def extract_RL(self, src=None, sink=None,export_netlist=False):
         '''
         Input src and sink name, then extract the inductance/resistance between them
         :param src:

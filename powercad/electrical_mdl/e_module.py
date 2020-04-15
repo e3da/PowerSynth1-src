@@ -187,7 +187,7 @@ class EWires(EComp):
         # length of the bondwires in reality are usually longer due to different bonding techinque, for JEDEC
         # https://awrcorp.com/download/faq/english/docs/Elements/BWIRES.htm
         # first divide the wire in 3 section and assume alpha,beta to be 30 degree
-        length = length/3 + 4*length/math.sqrt(3)/3
+        #length = length/3 + 4*length/math.sqrt(3)/3
          
         start = 1
         end = 0
@@ -210,7 +210,7 @@ class EWires(EComp):
                             L2_name = 'B{0}'.format(j)
                             M_name = 'M' + '_' + L1_name + '_' + L2_name
                             M_val = wire_partial_mutual_ind(length, distance) * 1e-9
-                            print (L_val,M_val)
+                            #print (L_val,M_val)
                             #input()
                             self.circuit._graph_add_M(M_name, L1_name, L2_name, M_val)
                 self.circuit.assign_freq(self.f)
@@ -229,8 +229,8 @@ class EWires(EComp):
                         print(("connections", self.conn))
                     R=R_val/self.num_wires
                     L=L_val/self.num_wires
-                print("length",length)
-                print("wire R,L", R, L)
+                #print("length",length)
+                #print("wire R,L", R, L)
                 self.net_graph.add_edge(self.sheet[0].net, self.sheet[1].net, edge_data={'R': R, 'L': L, 'C': None})
             else : # No mutual eval needed, fast evaluation
                 self.net_graph.add_edge(self.sheet[0].net, self.sheet[1].net, edge_data={'R': R_val, 'L': L_val, 'C': None})
@@ -322,7 +322,7 @@ class ESolderBalls(EComp):
             R, L = self.circuit._compute_imp2(1, 0)
             self.net_graph.add_edge(self.sheet[0].net, self.sheet[1].net, edge_data={'R': R, 'L': L, 'C': None})
             # print self.net_graph.edges(data=True)
-            print((R, L))
+            #print((R, L))
 
     def build_graph(self):
         self.update_sb_parasitic()
@@ -739,7 +739,7 @@ def test_bondwires_group_with_length():
         rects_sh = [R1, R2]
         sheets = [Sheet(rect=sh, net_name=nets[rects_sh.index(sh)], type='point', n=(0, 0, 1), z=0.4) for sh in
                   rects_sh]
-        print(('length:',l))
+        #print(('length:',l))
         wire_group = EWires(0.15, 5, 0.8, sheets[0], sheets[1], None, 1000e3,circuit=Circuit())
         wire_group.update_wires_parasitic()
 def test_solderball_group():

@@ -9,6 +9,7 @@ from scipy.interpolate import interp1d
 # Set relative location
 import sys
 cur_path =sys.path[0] # get current path (meaning this file location)
+print (cur_path)
 cur_path = cur_path[0:-25] #exclude "powercad/response_surface"
 print(cur_path)
 sys.path.append(cur_path)
@@ -32,6 +33,7 @@ import psutil
 from multiprocessing import Pool
 from powercad.opt.optimizer import NSGAII_Optimizer, DesignVar
 from pykrige.ok import OrdinaryKriging as ok
+import random
 
 def form_trace_model(layer_stack, Width=[1.2, 40], Length=[1.2, 40], freq=[10, 100, 10], wdir=None, savedir=None,
                      mdl_name=None
@@ -751,9 +753,9 @@ def form_fasthenry_trace_response_surface(layer_stack, Width=[1.2, 40], Length=[
     model_input.set_dir(savedir)
     model_input.set_data_bound([[minW, maxW], [minL, maxL]])
     model_input.set_name(mdl_name)
-    mesh_size=10
-    model_input.create_uniform_DOE([mesh_size, mesh_size], True) # uniform  np.meshgrid. 
-    #model_input.create_freq_dependent_DOE(freq_range=[freq[0],freq[1]],num1=10,num2 =40, Ws=Width,Ls=Length)
+    #mesh_size=5
+    #model_input.create_uniform_DOE([mesh_size, mesh_size], True) # uniform  np.meshgrid. 
+    model_input.create_freq_dependent_DOE(freq_range=[freq[0],freq[1]],num1=10,num2=40, Ws=Width,Ls=Length)
     model_input.generate_fname()
     fasthenry_env = env[0]
     read_output_env = env[1]
@@ -772,6 +774,8 @@ def form_fasthenry_trace_response_surface(layer_stack, Width=[1.2, 40], Length=[
     
     data  = model_input.DOE.tolist()
     i=0
+    rerun = True
+    
     # Parallel run fasthenry
     while i < len(data):
         print ("percents finished:" ,float(i/len(data))*100,"%")
@@ -780,7 +784,8 @@ def form_fasthenry_trace_response_surface(layer_stack, Width=[1.2, 40], Length=[
         for cpu in range(num_cpus): 
             [w,l] =data[i+cpu]
             name = model_input.mdl_name + '_W_' + str(w) + '_L_' + str(l)
-            build_and_run_trace_sim(name=name,wdir=wdir,ps_vers=ps_vers,param=param,frange=[fmin,fmax],freq=freq,w=w,l=l,fh_env=fasthenry_env,cpu=cpu,mode=mode)
+            
+            build_and_run_trace_sim(name=name,wdir=wdir,ps_vers=ps_vers,param=param,frange=[fmin,fmax],freq=freq,w=w,l=l,fh_env=fasthenry_env,cpu=cpu,mode=mode, rerun = rerun)
         done=False 
         while not(done): # check if all cpus are done every x seconds
             done = True
@@ -790,39 +795,48 @@ def form_fasthenry_trace_response_surface(layer_stack, Width=[1.2, 40], Length=[
                     print  ('fasthenry is still running')
                     done = False
                     break
-            print("sleep for 10 s, waiting for simulation to finish")
-            time.sleep(10)   
-        for cpu in range(num_cpus): 
-            [w,l] =data[i+cpu]
-            name = model_input.mdl_name + '_W_' + str(w) + '_L_' + str(l)
-            process_output(freq=freq,cpu =cpu ,wdir =wdir ,name= name,mode = mode)
+            print("sleep for 1 s, waiting for simulation to finish")
+            time.sleep(1)   
+        if rerun:
+            for cpu in range(num_cpus): 
+                [w,l] =data[i+cpu]
+                name = model_input.mdl_name + '_W_' + str(w) + '_L_' + str(l)
+                process_output(freq=freq,cpu =cpu ,wdir =wdir ,name= name,mode = mode)
         os.system("rm ./*.mat") 
         os.system("rm out*")
         i+=num_cpus
-    print(model_input.generic_fnames)
-    
-    package = build_RS_model(frange = frange, wdir = wdir, model_input = model_input)
-    try:
-        save_file(package, os.path.join(savedir, mdl_name + '.rsmdl'))
-        #Notifier(msg="Sucessfully Saved Model", msg_name="Success!")
-    except:
-        print ("error")
-        #InputError(msg="Model was not saved, check cmd prompt for error msgs")
-
-
+    #print(model_input.generic_fnames)
+    buildRL = False
+    buildL = True
+    if buildRL:
+        package = build_RS_model(frange = frange, wdir = wdir, model_input = model_input)
+        try:
+            save_file(package, os.path.join(savedir, mdl_name + '.rsmdl'))
+            #Notifier(msg="Sucessfully Saved Model", msg_name="Success!")
+        except:
+            print ("error")
+            #InputError(msg="Model was not saved, check cmd prompt for error msgs")
+    elif buildL: # Only build L model. DC resistance will be used.
+        package = build_L_lm_model(frange = frange, wdir = wdir, model_input = model_input)
+        try:
+            save_file(package, os.path.join(savedir, mdl_name + '.lmmdl'))
+            #Notifier(msg="Sucessfully Saved Model", msg_name="Success!")
+        except:
+            print ("error")
+            #InputError(msg="Model was not saved, check cmd prompt for error msgs")
 class Opt_Problem:
     def __init__(self, model = None,mode =None):
         self.model = model # model for testing
         self.test_mode = mode # depends on the mode setup in RS model e.g 0 for resistance 1 for inductance
         self.best_score = 1e9
         self.best_model = None
-        self.dv = DesignVar(0,len(self.model.test_data))
+        self.dv = [DesignVar((0,len(self.model.test_data)),(0,len(self.model.test_data))) for i in range(int(len(self.model.test_data)/5.0))]
         
     
     def eval_krigg(self,individual=None):
         DOE_data = self.build_model(individual)
         rs_model = self.model.model[self.test_mode]
-        test=OK.execute('points', self.model.test_data[:, 0], self.model.test_data[:, 1])
+        test=rs_model.execute('points', self.model.test_data[:, 0], self.model.test_data[:, 1])
         test= np.ma.asarray(test[0])
         for chk in test: # check for negative
             if chk <0: # if a negative value found
@@ -836,8 +850,8 @@ class Opt_Problem:
             self.model.DOE = DOE_data
         return score
         
-    def build_model(individual = None):
-        row_size = len(DOE_val)
+    def build_model(self,individual = None):
+        row_size = len(individual)
         col_size = 2
         data=np.zeros((row_size,col_size)) # create a blank matrix for DOE
         input_data = []
@@ -845,10 +859,39 @@ class Opt_Problem:
             id =int(individual[i])
             data[i] = self.model.test_data[id]
             input_data.append(self.model.input[self.test_mode][id])
-        self.model.model[self.test_mode]=ok(data[:, 0], data[:, 1], input_data, variogram_model='exponential',
-                             verbose=False, enable_plotting=False)        
+        self.model.model[self.test_mode]=ok(data[:, 0], data[:, 1], input_data, variogram_model='gaussian', verbose=False, enable_plotting=False)        
         return data
 
+    def random_DOE(self, num_gen = 100):
+        N = len(self.model.test_data)
+        self.model.model=[None for i in range(len(self.model.input))]
+        
+        for i in range(num_gen):
+            ind = random.sample(range(0,N ), int(N/10.0))
+            self.build_model(ind)
+            self.eval_krigg(ind)
+def build_L_lm_model(frange = None,model_input = None,wdir =None):
+    LAC_model = []
+    cur = 0
+    tot = len(frange)
+    for i in range(len(frange)):
+        LAC_input = RS_model()
+        LAC_input = deepcopy(model_input)
+        LAC_input.set_unit('n', 'H')
+        LAC_input.set_sweep_unit('k', 'Hz')
+        LAC_input.read_file(file_ext='csv', mode='single', row=i, units=('Hz', 'H'), wdir=wdir)
+        params = LAC_input.build_RS_mdl('LMfit')
+        print (params)
+        LAC_input.export_RAW_data(dir = '/nethome/qmle/RS_Build/RAW/',k=1,freq = str(frange[i]))
+        LAC_input.export_lm_predict_data(dir = '/nethome/qmle/RS_Build/RAW/',params=params ,freq = str(frange[i]) )
+        #input('enter to cont')
+        
+        LAC_model.append({'f': frange[i], 'mdl': params})
+        print("percent done", float(cur)/tot*100)
+        cur+=1
+
+    package = {'L': LAC_model, 'R': None, 'C': None ,'opt_points': frange}
+    return package
 
 def build_RS_model(frange = None,model_input = None,wdir =None):
     LAC_model = []
@@ -861,11 +904,13 @@ def build_RS_model(frange = None,model_input = None,wdir =None):
         RAC_input.set_unit('m', 'Ohm')
         RAC_input.set_sweep_unit('k', 'Hz')
         RAC_input.read_file(file_ext='csv', mode='single', row=i, units=('Hz', 'Ohm'), wdir=wdir)
-        opt_resistance = Opt_Problem(model = RAC_input, mode = 0)
-        opt = NSGAII_Optimizer(opt_resistance.dv, opt_resistance.eval_krigg, 1, 1, 100)
-        opt.run()
-        RAC_input.model[0] = opt_resistance.best_model
-        #RAC_input.build_RS_mdl()
+        #opt_resistance = Opt_Problem(model = RAC_input, mode = 0)
+        #opt = NSGAII_Optimizer(opt_resistance.dv, opt_resistance.eval_krigg, 1, 1, 100)
+        #opt.run()
+        #opt_resistance.random_DOE()
+        #RAC_input.model[0] = opt_resistance.best_model
+        RAC_input.build_RS_mdl()
+        RAC_input.export_RAW_data(dir = '/nethome/qmle/RS_Build/RAW/',k=0,freq = str(frange[i]))
         RAC_model.append({'f': frange[i], 'mdl': RAC_input})
         print("percent done", float(cur) / tot * 100)
         cur += 1
@@ -876,6 +921,8 @@ def build_RS_model(frange = None,model_input = None,wdir =None):
         LAC_input.set_sweep_unit('k', 'Hz')
         LAC_input.read_file(file_ext='csv', mode='single', row=i, units=('Hz', 'H'), wdir=wdir)
         LAC_input.build_RS_mdl()
+        LAC_input.export_RAW_data(dir = '/nethome/qmle/RS_Build/RAW/',k=1,freq = str(frange[i]))
+
         LAC_model.append({'f': frange[i], 'mdl': LAC_input})
         print("percent done", float(cur)/tot*100)
         cur+=1
@@ -898,6 +945,8 @@ def build_and_run_trace_sim(**kwags):
     fasthenry_env = kwags['fh_env']
     cpu = kwags['cpu']
     mode = kwags['mode']
+    
+    rerun = kwags['rerun']
     u = 4 * math.pi * 1e-7
 
     if ps_vers==1:
@@ -906,6 +955,9 @@ def build_and_run_trace_sim(**kwags):
         layer_dict=param[0]
     print("RUNNING",name)
     fname = os.path.join(wdir, name + ".inp")
+    if not(rerun):
+        if os.path.exists(fname):
+            return
     fasthenry_option = "-sludecomp -S "  + str(cpu)
     
     if ps_vers==1: # Fix layerstack
@@ -929,11 +981,12 @@ def build_and_run_trace_sim(**kwags):
             info = layer_dict[i]
             [cond,width,length,thick,z_loc,nhinc,e_type] = info
             if e_type == 'G':
+                #continue # test trace only
                 script +=GroundPlane.format(i,width/2,length/2,z_loc,thick,cond,nhinc)
             elif e_type == 'S':
                 skindepth = math.sqrt(1 / (math.pi * fmax * u * cond * 1e6))
                 nwinc = int(math.ceil((math.log(w * 1e-3 / skindepth / 3) / math.log(2) * 2 + 3)/3))
-                #nwinc =1
+                nwinc =1
                 if nwinc <= 0:
                     nwinc = 1
                 script += Element.format(l / 2,z_loc,w,thick,cond,nwinc,nhinc)
@@ -1359,7 +1412,9 @@ def test_build_trace_model_fh():
     else:
         fh_env_dir = "/nethome/qmle/PowerSynth_V1_git/PowerCAD-full/FastHenry/fasthenry"
         read_output_dir = "/nethome/qmle/PowerSynth_V1_git/PowerCAD-full/FastHenry/ReadOutput"
-        mdk_dir = "/nethome/qmle/RS_Build/layer_stacks/layer_stack_new.csv"
+        #mdk_dir = "/nethome/qmle/RS_Build/layer_stacks/layer_stack_new.csv"
+        mdk_dir = "/nethome/qmle/RS_Build/layer_stacks/layer_stack_no_bp.csv"
+        
         w_dir = "/nethome/qmle/RS_Build/WS"
         mdl_dir = "/nethome/qmle/RS_Build/Model"
         dir = os.path.abspath(mdk_dir)
@@ -1378,13 +1433,13 @@ def test_build_trace_model_fh():
     freq = 1e8
     sd_met = math.sqrt(1 / (math.pi * freq * u * metal_cond )) *1000
 
-    Width = [0.5,15]
-    Length = [0.5,20]
+    Width = [0.5,40]
+    Length = [0.5,40]
     #freq = [0.01, 100000, 100] # in kHz
-    freq = [2,5,100]
+    freq = [1,7,100]
     form_fasthenry_trace_response_surface(layer_stack=ls, Width=Width, Length=Length, freq=freq, wdir=w_dir,
                                           savedir=mdl_dir
-                                          , mdl_name='jounal_test_100MHz_2', env=env, doe_mode=2,mode='log',ps_vers=2)
+                                          , mdl_name='simple_trace_40_50', env=env, doe_mode=2,mode='log',ps_vers=2)
 
 
 def test_build_trace_model_fh1():

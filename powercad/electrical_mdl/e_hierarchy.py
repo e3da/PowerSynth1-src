@@ -12,6 +12,7 @@ class EHier():
         self.sheets = []
         self.traces=[]
         self.isl_group_data = {}
+        self.z_dict = {} # store z_id vs z value
 
     # Form tree based on sheet + plate intersection
     def __del__(self):
@@ -69,7 +70,12 @@ class EHier():
         '''
         self.tree =Tree()
         for isl in self.module.group:
-            isl_node = T_Node(name=str(isl), type='isl', tree=self.tree)
+            # get one trace in isl
+            Ep = self.module.group[isl][0]
+            z_id = Ep.z_id 
+            if not (z_id in self.z_dict):
+                self.z_dict[z_id] = Ep.z
+            isl_node = T_Node(name=str(isl), type='isl', tree=self.tree,z_id = z_id)
             self.tree.root.add_child(isl_node)
             self.isl_group.append(isl_node)
             if self.module.layer_stack != None:

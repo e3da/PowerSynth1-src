@@ -107,7 +107,7 @@ class ENetlist():
                 for sh in comp.sheet:
                     all_net.append(net_graph_id[sh.net])  # create a list of net id for component pins
             self.comp_net.append(all_net)
-        # All edges among pins for each component need to be removed
+        # All edges among internal pins for each component need to be removed
         for pins in self.comp_net:
             edge = {}
             for p1 in pins:
@@ -149,7 +149,7 @@ class ENetlist():
         '''
         text_file = open(file_name, 'w')
         self.prepare_graph_for_export()
-        # self.net_graph = copy.deepcopy(self.mesh.graph)
+        #self.net_graph = copy.deepcopy(self.mesh.graph)
 
         # invert the dictionary relationship for net_graph
         keys = list(self.mesh.comp_net_id.values())

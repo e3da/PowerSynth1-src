@@ -16,11 +16,11 @@ from pyDOE import *
 from pykrige.ok import OrdinaryKriging as ok
 from pykrige.uk import UniversalKriging as uk
 from scipy.interpolate import *
-from scipy.optimize import curve_fit
+from scipy.optimize import curve_fit,least_squares
 from sklearn.kernel_ridge import KernelRidge
 from sklearn.svm import SVR
 
-from .RS_build_function import *
+from powercad.response_surface.RS_build_function import f_ms
 from powercad.general.data_struct.Abstract_Data import *
 from powercad.general.data_struct.BasicsFunction import *
 from powercad.general.data_struct.Unit import Unit
@@ -286,7 +286,8 @@ class RS_model:
         for row in range(len(DOE_val)):
             self.test_data[row] = DOE_val[row]
         print (self.test_data)
-    
+        self.DOE =self.test_data    
+
     def create_uniform_DOE(self,num_data=[],lin_ops=True):
         '''
         Create a uniform linear space design of experiment. (note: this is not a uniform random)
@@ -334,8 +335,9 @@ class RS_model:
                     cur_id[col_chk]=0
                     col_chk-=1                      
             self.test_data[row]=doe_row
-            not_ready=True
             
+            not_ready=True
+        self.DOE =self.test_data    
     def build_RS_mdl(self,mode='UnKrigg',func=None,type=None):
         '''
         type: 'R', 'L', 'C'
@@ -371,6 +373,9 @@ class RS_model:
             user may provide callable function(s) of the spatial coordinates that define the drift(s). The package 
             includes a module that contains functions that should be useful in working with ASCII grid files (*.asc).
 
+        LMfit (scipy):
+            Fit the inductance equation to micro-strip model.
+            the model in this case will be the set of optimized parameters
         '''
 
         if mode=='SVR': # test all possible model and pick the one with highest accuracy
@@ -493,8 +498,40 @@ class RS_model:
                 x,y,z=np.meshgrid(data[:, 0],data[:, 1],self.input[i])
                 f = interpolate.interp2d(x, y, z, kind= best_method)
                 self.model[i] = f
-
-
+        elif mode == 'LMfit': # Assume inductance only
+            data = self.DOE
+            w = data[:,0]
+            l = data[:,1]
+            #print (data)
+            ydata = np.asarray(self.input[0])
+            #print (ydata.transpose())
+            #print (f_ms(x=data))
+            #popt,pcov = curve_fit(f = f_ms,xdata = data,ydata=ydata.transpose(),bounds=([0,0,0,-1,-1,-1], [10., 10., 10.,10., 10., 10.]) ,method ='dogbox',verbose =1    )       
+            try: # Try with LM
+                print ("using lm fit")
+                popt,pcov = curve_fit(f = f_ms,xdata = data,ydata=ydata.transpose(),method ='lm')       
+            except:
+                print ("using trf fit")
+                popt,pcov = curve_fit(f = f_ms,xdata = data,ydata=ydata.transpose(),bounds=([0,0,0,-1,-1], [10., 10., 10.,10., 10.]))       
+                
+            #print ('socre',pcov)
+            return popt
+    def export_lm_predict_data(self,params= [],dir ='',freq= None): # for indcutance only
+        
+        dir2 = os.path.join(dir, freq+'kHz'+'inductance_predict.csv')
+        key = 'inductance (nH)'
+        a,b1,b2,c,d = params
+        with open(dir2, 'w') as csvfile:
+            fieldnames = ['Width', 'Length', key]
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer.writeheader()
+            z=[]
+            zdata = f_ms(x= self.DOE,a=a,b1=b1,b2=b2,c=c,d=d)
+            #print (zdata)
+            for i in range(len(self.DOE)):
+                data={'Width':self.DOE[i,0],'Length':self.DOE[i,1],key:zdata[i]}
+                z.append(data)
+            writer.writerows(z)
     def plot_input(self,mode):
         
         ax = plt.figure(1).gca(projection='3d')
@@ -578,9 +615,10 @@ class RS_model:
         plt.show(3) 
         self.DOE=temp
 
-    def export_RAW_data(self,dir):
+    def export_RAW_data(self,dir,k,freq):
         # Single data only
         # export RAW RS:
+        '''
         dir1=os.path.join(dir,'RS.csv')
         with open(dir1, 'wb') as csvfile:
             fieldnames = ['Width', 'Length', 'Inductance(nH)']
@@ -592,18 +630,25 @@ class RS_model:
                 data = np.ma.asarray(data[0])
                 z.append({'Width':row[0],'Length':row[1],'Inductance(nH)':data[0]})
             writer.writerows(z)
-        # export RAW Q3D
-        dir2 = os.path.join(dir, 'Q3D.csv')
-        with open(dir2, 'wb') as csvfile:
-            fieldnames = ['Width', 'Length', 'Inductance(nH)']
+        '''
+        if k == 0:
+            dir2 = os.path.join(dir, freq+'kHz'+'_resistance.csv')
+            key = 'resistance (mOhm)'
+        else:
+            dir2 = os.path.join(dir, freq+'kHz'+'inductance.csv')
+            key = 'inductance (nH)'
+        
+        with open(dir2, 'w') as csvfile:
+            fieldnames = ['Width', 'Length', key]
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             writer.writeheader()
             z = []
             for i in range(len(self.DOE)):
-                data={'Width':self.DOE[i,0],'Length':self.DOE[i,1],'Inductance(nH)':self.input[0][i]}
+                data={'Width':self.DOE[i,0],'Length':self.DOE[i,1],key:self.input[0][i]}
                 z.append(data)
             writer.writerows(z)
         # export RAW MicroStrip
+        '''
         dir3 = os.path.join(dir, 'MS.csv')
         with open(dir3, 'wb') as csvfile:
             fieldnames = ['Width', 'Length', 'Inductance(nH)']
@@ -614,7 +659,7 @@ class RS_model:
                 data={'Width':row[0],'Length':row[1], 'Inductance(nH)':trace_inductance(row[0],row[1],0.2,0.5)}
                 z.append(data)
             writer.writerows(z)
-
+        '''
 if __name__=="__main__":
     mdl1=RS_model(['width','length'],const=['height','thickness'])
     mdl1.set_data_bound([[1.2,20],[1.2,20]])

@@ -16,7 +16,7 @@ class dummy_trace():
 
 
 class T_Node():
-    def __init__(self, data=None, name=None, type=None, tree=None):
+    def __init__(self, data=None, name=None, type=None, tree=None,z_id = -1):
         self.parent = None  # Parent pointer
         self.depth = 0
         self.name = name
@@ -26,6 +26,7 @@ class T_Node():
         self.rank = 0
         self.tree = tree
         self.tree.nodes.append(self)
+        self.z_id = z_id # store layer id for later use, default to -1 for all nodes. Only z_id of trace type is passed
 
     def update_rank(self):
         self.rank = self.parent.rank + 1
