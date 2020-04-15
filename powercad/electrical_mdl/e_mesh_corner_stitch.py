@@ -58,14 +58,14 @@ class Mesh_Node_Tbl():
 
 
 class EMesh_CS(EMesh):
-    def __init__(self, hier_E=None, islands=[], freq=1000, mdl='', layer_thickness=0.2):
+    def __init__(self, hier_E=None, islands=[], freq=1000, mdl='', layer_thickness=0.2,mdl_type = 0):
         '''
 
         Args:
             islands: A list of CS island object where all of the mesh points/element position can be updated
             layer_thickness: a dictionary to map between layer_id in CS to its thickness in MDK
         '''
-        EMesh.__init__(self, freq=freq, mdl=mdl)
+        EMesh.__init__(self, freq=freq, mdl=mdl,mdl_type=mdl_type)
         self.islands = islands
         self.layer_thickness = layer_thickness
         self.hier_E = hier_E
@@ -113,14 +113,17 @@ class EMesh_CS(EMesh):
         fig, ax = plt.subplots()
         self.hier_group_dict = {}
         for g in self.hier_E.isl_group:
+            
+            z = self.hier_E.z_dict[g.z_id]
+            #print ('z_level',z,'z_id',g.z_id)
             isl = isl_dict[g.name]
             trace_cells = self.handle_trace_trace_connections(island=isl)
             trace_cells = self.handle_pins_connect_trace_cells(trace_cells=trace_cells, island_name=g.name)
             if len(isl.elements) == 1:  # Handle cases where the trace cell width is small enough to apply macro model (RS)
                 # need a better way to mark the special case for RS usage, maybe distinguish between power and signal types
-                mesh_pts_tbl = self.mesh_nodes_trace_cells(trace_cells=trace_cells, Nw=Nw, ax=ax, method =method)
+                mesh_pts_tbl = self.mesh_nodes_trace_cells(trace_cells=trace_cells, Nw=Nw, ax=ax, method =method,isl=g,z_pos =z,z_id =g.z_id)
             else:
-                mesh_pts_tbl = self.mesh_nodes_trace_cells(trace_cells=trace_cells, Nw=Nw, ax=ax,method = method)
+                mesh_pts_tbl = self.mesh_nodes_trace_cells(trace_cells=trace_cells, Nw=Nw, ax=ax,method = method,isl=g,z_pos =z,z_id =g.z_id)
             self.set_nodes_neigbours_optimized(mesh_tbl=mesh_pts_tbl)
             self.mesh_edges_optimized(mesh_tbl=mesh_pts_tbl, trace_num=len(trace_cells), Nw=Nw, mesh_type=method, macro_mode=False)
             self.handle_hier_node_opt(mesh_pts_tbl,g)
@@ -129,7 +132,7 @@ class EMesh_CS(EMesh):
 
         #self.plot_isl_mesh(True,mode = "matplotlib")
 
-    def mesh_nodes_trace_cells(self, trace_cells=None, Nw=3, method="uniform", ax=None, z_pos = 0):
+    def mesh_nodes_trace_cells(self, trace_cells=None, Nw=3, method="uniform", ax=None, z_pos = 0, isl = None, z_id =0):
         '''
         Given a list of splitted trace cells, this function will form a list of mesh nodes based of the trace cell orientations,
         hierachial cuts. The function returns a list of points object [x,y,dir] where dir is a list of directions the mesh edge
@@ -140,6 +143,8 @@ class EMesh_CS(EMesh):
             method: uniform : split the trace uniformly
                     skin_depth: split the trace based on the global frequency var. Similar to how FastHenry handles the mesh
             z_pos: z position of the island from MDK
+            z_id: layer stack parent id of the node
+            isl: to map each node to it parent isl
         Returns:
             List of list: [[x1,y1,dir], ...]
         '''
@@ -150,12 +155,15 @@ class EMesh_CS(EMesh):
         tbl_ys = []
         mesh_nodes = {}
         cor_tc = []  # list of corner trace cells, to be handled later
+        # For capactiane, compute the total capacitance in an island. Then store this value to the mesh node.
+        isl_area = 0
         for tc in trace_cells:
             tc_type = tc.type
             top = tc.top
             bot = tc.bottom
             left = tc.left
             right = tc.right
+            isl_area += tc.area()
 
             # Handle all single direction pieces first
             if tc_type == 0:  # handle horizontal
@@ -275,6 +283,9 @@ class EMesh_CS(EMesh):
         for m in mesh_nodes:
             node = mesh_nodes[m][0]
             node.node_id = self.node_count  # update node_id
+            node.isl_area = isl_area/1e6
+            node.parent_isl = isl
+            node.z_id = z_id
             ntype = node.type
             add_node(node=node, type=ntype)
         if debug:
@@ -287,6 +298,34 @@ class EMesh_CS(EMesh):
         mesh_node_tbl = Mesh_Node_Tbl(node_dict=mesh_nodes, xs=tbl_xs, ys=tbl_ys, z_pos=z_pos)
         return mesh_node_tbl
 
+    def add_ground_uniform_mesh(self,t = 0.2, z = 0, width = 40 , length = 40, N = 10,z_id =0):
+        # Default a 10x10 mesh
+        # create a uniform mesh grid to get points
+        # assume plane's lower left corner to be (0,0)
+        x_array = np.linspace(0, length, N)
+        y_array = np.linspace(0, width, N)
+        X, Y = np.meshgrid(x_array, y_array)  # XY on each layer
+        mesh_points = list(zip(X.flatten(), Y.flatten())) # get all mesh points on this layer
+        mesh_nodes = []
+        print ('z_id ground',z_id)
+        for p in mesh_points:
+            mesh_node = MeshNode(pos=[p[0],p[1],z])
+            mesh_node.type = 'internal' # default to be internal type
+            mesh_node.parent_isl = 'G_'+str(z)
+            if  p[0] == 0:
+                mesh_node.b_type.append('W')
+            if  p[1] == 0:
+                mesh_node.b_type.append('S')
+            if  p[0] == length:
+                mesh_node.b_type.append('E')
+            if  p[1] == width:
+                mesh_node.b_type.append('N')
+            if mesh_node.b_type != []: # this must be a boundary type
+                mesh_node.type = 'boundary'
+            mesh_node.z_id = z_id
+            mesh_nodes.append(mesh_node)
+        self.mesh_nodes_planar(mesh_nodes=mesh_nodes,z=z)
+        self.mesh_edges(thick= t, z_level=z)                
 
     def handle_hier_node_opt(self, mesh_tbl, key):
         '''
@@ -564,7 +603,7 @@ class EMesh_CS(EMesh):
             self.mesh_edges(thick=0.2)  # the thickness is fixed right now but need to be updated by MDK later
         #self.plot_isl_mesh(plot=True, mode ='matplotlib')
 
-    def mesh_nodes_planar(self, isl=None):
+    def mesh_nodes_planar(self, isl=None , mesh_nodes =[], z= 0):
         '''
         Overidding the old method in EMesh, similar but in this case take nodes info directly from island info
         param: isl, the current island to form mesh
@@ -572,12 +611,17 @@ class EMesh_CS(EMesh):
         '''
         add_node = self.add_node  # prevent multiple function searches
 
-        z = 0  # set a default z for now
         xs = []  # a list  to store all x locations
         ys = []  # a list to store all y locations
         locs_to_node = {}  # for each (x,y) tuple, map them to their node id
         points = []
-        mesh_nodes = isl.mesh_nodes  # get all mesh nodes object from the trace island
+        if isl == None:
+            mesh_nodes = mesh_nodes
+            isl_name='G_'+str(z)
+        else:
+            mesh_nodes = isl.mesh_nodes  # get all mesh nodes object from the trace island
+            isl_name = isl.name
+            
         # for each island set the
         # print "num nodes",len(mesh_nodes)
         for node in mesh_nodes:
@@ -585,7 +629,7 @@ class EMesh_CS(EMesh):
             node.pos[1] = node.pos[1] 
             node.type = 'internal' if node.b_type == [] else 'boundary'  # set boundary type, b_type is set from CS
             node.node_id = self.node_count  # update node_id
-            node.group_id = isl.name
+            node.group_id = isl_name
             xs.append(node.pos[0])  # get x locs
             ys.append(node.pos[1])  # get y locs
             name = str(node.pos[0]) + str(node.pos[1]) + str(z)
@@ -1118,7 +1162,7 @@ class EMesh_CS(EMesh):
             ax = Axes3D(fig)
             ax.set_xlim3d(0, 50000)
             ax.set_ylim3d(0, 50000)
-            ax.set_zlim3d(0, 2000)
+            ax.set_zlim3d(200, 2000)
             self.plot_3d(fig=fig, ax=ax, show_labels=True, highlight_nodes=None,mode = mode)
             if plot and mode =='matplotlib':
                 plt.show()

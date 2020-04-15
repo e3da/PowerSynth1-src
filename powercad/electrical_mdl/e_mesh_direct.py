@@ -18,7 +18,7 @@ from powercad.electrical_mdl.e_module import EModule
 from powercad.electrical_mdl.plot3D import network_plot_3D,plot_combined_I_map_layer,plot_v_map_3D,plot_J_map_3D
 from powercad.general.data_struct.util import Rect
 from powercad.parasitics.mdl_compare import trace_ind_krige, trace_res_krige, trace_capacitance, trace_resistance, \
-    trace_inductance
+    trace_inductance,trace_resistance_full,trace_ind_lm
 from powercad.parasitics.mutual_inductance.mutual_inductance import mutual_mat_eval
 from powercad.parasitics.mutual_inductance.mutual_inductance_saved import mutual_between_bars
 from powercad.electrical_mdl.e_module import EComp
@@ -120,8 +120,10 @@ class MeshNode:
         self.S_edge = None
         self.W_edge = None
         self.E_edge = None
-
-
+        # isl area , and parent isl_name where the node is located
+        self.isl_area=0
+        self.parent_isl = None
+        self.z_id = -1 # zid is the id on layer_stack, used to find find the correct dielectric material Note, we use this because the z location is float and can lead to numerical issue
 class MeshEdge:
     def __init__(self, m_type=None, nodeA=None, nodeB=None, data={}, width=1, length=1, z=0, thick=0.2, ori=None,
                  side=None,eval = True):
@@ -167,7 +169,7 @@ class MeshEdge:
 
 class EMesh():
     # Electrical Meshing for one selected layer
-    def __init__(self, hier_E=None, freq=1000, mdl=None):
+    def __init__(self, hier_E=None, freq=1000, mdl=None,mdl_type = 0):
         '''
 
         Args:
@@ -195,6 +197,7 @@ class EMesh():
         self.hier_edge_data = {}  # edge name : parent edge data
         self.comp_net_id = {}  # a dictionary for relationship between graph index and components net-names
         self.comp_edge =[] # list of components internal edges to be removed prior to netlist extraction 
+        self.mdl_type = mdl_type
     def plot_3d(self, fig, ax, show_labels=False, highlight_nodes=None, mode = 'matplotlib'):
         network_plot_3D(G=self.graph, ax=ax, show_labels=show_labels, highlight_nodes=highlight_nodes,engine =mode)
 
@@ -253,37 +256,73 @@ class EMesh():
             if eval_L:
                 self.m_graph.add_node(edge_name)  # edge name by 2 nodes
 
-    def update_C_val(self, t=0.035, h=1.5, mode=1):
+    def update_C_val(self, t=0.2, h=0.64, mode=2, rel_perv =9): 
+        '''
+        in 2D mode:
+            PI model will be used for C extraction
+            t,h,re_perf are float type
+        in 3D mode:
+            A face to face model will be used for estimate for capacitance value
+        '''
+        print (t,h,rel_perv,mode)
+        # rel_perv
         n_cap_dict = self.update_C_dict()
         C_tot = 0
         num_nodes = len(self.graph.nodes())
         cap_eval = trace_capacitance
-        for n1 in self.graph.nodes():
+        if mode == 2:
+            isl_name_to_cap = {}
+            for n in self.graph.nodes:  
+                rect = n_cap_dict[n]
+                meshnode = self.graph.nodes[n]['node']
+                if meshnode.isl_area!=0:
+                    # get node isl_area:
+                    isl_area = meshnode.isl_area
+                    isl_name = meshnode.parent_isl.name
+                    if not(isl_name in isl_name_to_cap): 
+                        cap_val = cap_eval(math.sqrt(isl_area), math.sqrt(isl_area), t, h, rel_perv, True) * 1e-12
+                        isl_name_to_cap[isl_name]=cap_val
+                
+        for n1 in self.graph.nodes():  # 3D full extraction for S-para analysis
             if mode == 1:
                 for n2 in self.graph.nodes():
-                    if n1 != n2:
+                    m_node1 = self.graph.nodes[n1]['node']
+                    m_node2 = self.graph.nodes[n2]['node']
+                    if m_node2.z_id - m_node1.z_id == 2:
                         rect1 = n_cap_dict[n1]
                         rect2 = n_cap_dict[n2]
-                        int_rect = rect1.intersection(rect2)
-
+                        int_rect = rect1.intersection(rect2) # 2 nodes on same layer should not have intersected region
+                        group = (m_node2.z_id,m_node1.z_id)
                         if int_rect != None and not ((n1, n2) in self.cap_dict) and not ((n2, n1) in self.cap_dict):
-                            cap_val = cap_eval(int_rect.width, int_rect.height, t, h, 4.6, True) * 1e-12 * 1.5
+                            thick = t[group]
+                            h_val = h[group]
+                            rel_perv_val = rel_perv[group]
+                            cap_node = cap_eval(int_rect.width /1000, int_rect.height /1000, thick, h_val, rel_perv_val, True) * 1e-12 
                             # cap_val= 48*1e-12/num_nodes/2
-                            C_tot += cap_val
-                            self.cap_dict[(n1, n2)] = cap_val
-            elif mode == 2:
+                            C_tot += cap_node
+                            self.cap_dict[(n1, n2)] = cap_node
+            elif mode == 2:   # 2D for loop analysis only, this assumes a PI model 
                 rect1 = n_cap_dict[n1]
-                cap_val = cap_eval(rect1.width(), rect1.height(), t, h, 4.6, True) * 1e-12
-                C_tot += cap_val
-                self.cap_dict[(n1, 0)] = cap_val
-        # print self.cap_dict
-        print(("total cap", C_tot))
+                meshnode = self.graph.nodes[n1]['node']
+                if meshnode.isl_area!=0:
+                    # get node isl_area:
+                    isl_area = meshnode.isl_area
+                    isl_name = meshnode.parent_isl.name
+                    cap_val = isl_name_to_cap[isl_name]
+                    cap_node = rect1.area()/isl_area*cap_val/1e6
+                    C_tot += cap_node
+                    self.cap_dict[(n1, 0)] = cap_val
+        #print (self.cap_dict)
+        if mode ==2:
+            for isl_name in isl_name_to_cap:
+                print (isl_name, isl_name_to_cap[isl_name]*1e12, 'pF')
+        print(("total cap", C_tot*1e12))
 
     def update_C_dict(self):
         # For each node, create a node - rectangle for cap cell
         n_capt_dict = {}
         for n in self.graph.nodes():
-            node = self.graph.node[n]['node']
+            node = self.graph.nodes[n]['node']
             # Find Width,Height value
             left = node.pos[0]
             right = node.pos[0]
@@ -330,13 +369,17 @@ class EMesh():
 
                 #print ("min length", min(self.all_L))
                 #print ("max length", max(self.all_L))
-                print("Extraction Freq",self.f,"kHz")
+                #print("Extraction Freq",self.f,"kHz")
                 mode = 'Krigg'
-                all_r = trace_res_krige(self.f, self.all_W, self.all_L, t=0, p=p, mdl=self.mdl['R'],mode=mode).tolist()
+                #all_r = trace_res_krige(self.f, self.all_W, self.all_L, t=0, p=p, mdl=self.mdl['R'],mode=mode).tolist()
                 # Handle small length pieces by linear approximation
                 
-                all_r = [trace_resistance(self.f, w, l, t, h) for w, l in zip(self.all_W, self.all_L)]
-                all_l = trace_ind_krige(self.f, self.all_W, self.all_L, mdl=self.mdl['L'],mode=mode).tolist()
+                all_r = [trace_resistance_full(self.f, w, l, t, h) for w, l in zip(self.all_W, self.all_L)]
+                #all_r = [1e-6 for i in range(len(self.all_W))]
+                if self.mdl_type ==0:
+                    all_l = trace_ind_krige(self.f, self.all_W, self.all_L, mdl=self.mdl['L'],mode=mode).tolist()
+                elif self.mdl_type == 1:
+                    all_l = trace_ind_lm(self.f,self.all_W,self.all_L,mdl = self.mdl['L'])
                 #self.plot_trace_RL_val_RS(zdata=all_l,dtype='L')
 
                 # all_l = [trace_inductance(w, l, t, h) for w, l in zip(self.all_W, self.all_L)]
@@ -781,7 +824,8 @@ class EMesh():
         for n in range(len(self.edges)):
             edge = self.edges[n]
             if result[n] > 0 and not(math.isinf(result[n])):
-                add_M_edge(edge[0], edge[1], attr={'Mval': result[n] * 1e-9})
+                if not(self.m_graph.has_edge(edge[0],edge[1])):
+                    add_M_edge(edge[0], edge[1], attr={'Mval': result[n] * 1e-9})
             elif debug:
                 #print(("error", result[n]))
                 if result[n]<0:
@@ -1140,7 +1184,12 @@ class EMesh():
 
         self.update_E_comp_parasitics(net=self.comp_net_id, comp_dict=self.comp_dict)
 
-    def mesh_edges(self, thick=None, cond=5.96e7):
+    def mesh_edges(self, thick=None, cond=5.96e7, z_level = 0):
+        '''
+        thick: thickness of layer
+        z_level : z_level of layer so the mesh will be formed on selected layer only, default 0 for single layer
+        cond: conductivity of material, will be used to compute current densisty later 
+        '''
         u = 4 * math.pi * 1e-7
         err_mag = 0.98  # Ensure no touching in inductance calculation
 
@@ -1158,7 +1207,10 @@ class EMesh():
             South = node.South
             East = node.East
             West = node.West
-            z = node.pos[2]
+            if not (node.pos[2] == z_level):
+                continue
+            else:
+                z = node.pos[2]
             node_type = node.type
             try:
                 if North != None and node.N_edge == None:

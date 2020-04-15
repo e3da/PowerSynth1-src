@@ -9,18 +9,21 @@ from powercad.design.library_structures import Lead
 
 
 class E_plate:
-    def __init__(self, rect=None, z=1, dz=1, n=(0, 0, 1)):
+    def __init__(self, rect=None, z=1, dz=1, n=(0, 0, 1),z_id = 0):
         '''
 
         Args:
                 z: height based on n
                 dz: thickness based on n
                 n: define the normal vector of the plane (only 6 options)
+                z_id: current layer_id in layerstack
+                
         '''
         self.rect = rect
         self.n = n
         self.dz = dz * sum(self.n)
         self.zorder = 1
+        self.z_id = z_id # for Cap calculation later
         # XY plane
         if self.n == (0, 0, 1) or self.n == (0, 0, -1):
             self.x = rect.left

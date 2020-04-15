@@ -19,3 +19,9 @@ def f2 (f=1,a=1,b=1):
 def f3 (f=1,a=1,b=1,c=1):
     ''' this one is used to curve fit AC Resistance v.s frequency'''
     return a*f**2+b*f+c
+
+def f_ms(x=(1,1),a=1,b1=1,b2=1,c=1,d=1):
+    # micro strip equation
+    w= x[:,0]
+    l = x[:,1]
+    return a*l*(np.log(b1*l/(w+b2)) +c + d * ((w+b2)/l) ) 

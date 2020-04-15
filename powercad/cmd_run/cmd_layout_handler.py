@@ -149,6 +149,9 @@ def update_solution_data(layout_dictionary=None,module_info=None, opt_problem=No
 
         solution.params = dict(list(zip(measure_names, results)))  # A dictionary formed by result and measurement name
         print("Added", name,"Perf_values: ", solution.params)
+        # temp code 
+        if solution.params['Inductance'] < 5:
+            input('found error case')
         solution.layout_info = layout_dictionary[i]
         solution.abstract_info = solution.form_abs_obj_rect_dict()
         Solutions.append(solution)

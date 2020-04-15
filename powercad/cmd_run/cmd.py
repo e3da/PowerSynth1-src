@@ -563,7 +563,6 @@ class Cmd_Handler:
         :return:
         '''
         self.layer_stack.import_layer_stack_from_csv(self.layer_stack_file)
-
         self.engine, self.wire_table = script_translator(
             input_script=self.layout_script, bond_wire_info=self.bondwire_setup, fig_dir=self.fig_dir, constraint_file=self.constraint_file,rel_cons=self.i_v_constraint,flexible=self.flexible,mode=self.new_mode)
         for comp in self.engine.all_components:
@@ -955,7 +954,7 @@ if __name__ == "__main__":
     print (str(sys.argv))
     debug = True
     if debug: # you can mannualy add the argument in the list as shown here
-        sel= int(input("select a test case to run: 1-quang_simple_test_quang_pc 2-Imam_journal_quang_pc 3-quang_journal_quang_pc 4-Imam_journal_Imam_pc"))
+        sel= int(input("select a test case to run: 1-quang_simple_test_quang_nethome 2-Imam_journal_quang_nethome 3-quang_journal_quang_nethome 4-Imam_journal_Imam_pc 5-Imam_multi_size_quang_nethome"))
         if sel == 1: 
             args = ['python','cmd.py','-m','/nethome/qmle/testcases/Mutual_IND_Case/two_dev_macro.txt','-settings',"/nethome/qmle/testcases/settings.info"]
             cmd.cmd_handler_flow(arguments= args)
@@ -966,6 +965,7 @@ if __name__ == "__main__":
             args = ['python','cmd.py','-m','/nethome/qmle/testcases/Case1_S-param/Layout1_macro.txt','-settings',"/nethome/qmle/testcases/settings.info"]
             cmd.cmd_handler_flow(arguments= args)
         elif sel==4:
+<<<<<<< HEAD
             args = ['python','cmd.py','-m','D:\Demo\\New_Flow_w_Hierarchy\Imam_journal\Cmd_flow_case\Weird_Case_Test\half_bridge_pm_macro_1.txt','-settings',"D:/Demo/New_Flow_w_Hierarchy/Journal_Case/settings.info"]
             #D:/Demo/New_Flow_w_Hierarchy/Journal_Case/Journal_Result_collection/Cmd_flow_case/Half_Bridge_Layout/half_bridge_pm_macro.txt
             #D:\Demo\New_Flow_w_Hierarchy/Imam_journal/Cmd_flow_case/Imam_journal/half_bridge_pm_macro.txt
@@ -976,5 +976,16 @@ if __name__ == "__main__":
 
             cmd.cmd_handler_flow(arguments= args)
 
+=======
+            args = ['python','cmd.py','-m','D:/Demo/New_Flow_w_Hierarchy/Journal_Case/Journal_Result_collection/Cmd_flow_case/Half_Bridge_Layout/half_bridge_pm_macro_data_collection_final.txt','-settings',"D:/Demo/New_Flow_w_Hierarchy/Journal_Case/settings.info"]
+        elif sel == 5:
+            args = ['python','cmd.py','-m','/nethome/qmle/testcases/Imam_multi_size/Test_case/Weird_Case_Test/half_bridge_pm_macro_1.txt','-settings',"/nethome/qmle/testcases/settings.info"]
+            cmd.cmd_handler_flow(arguments= args)
+
+            
+            #D:/Demo/New_Flow_w_Hierarchy/Journal_Case/Journal_Result_collection/Cmd_flow_case/Half_Bridge_Layout/half_bridge_pm_macro.txt
+            #D:\Demo\New_Flow_w_Hierarchy/Imam_journal/Cmd_flow_case/Imam_journal/half_bridge_pm_macro.txt
+            #D:/Demo/New_Flow_w_Hierarchy/Journal_Case/Testing_Journal_case_w_Py_3/Cmd_flow_case/Half_Bridge_Layout/half_bridge_pm_macro.txt
+>>>>>>> 7eb96a76ce23055976cb2957a4ec44af89b016b3
     else:
         cmd.cmd_handler_flow(arguments=sys.argv) # Default
