@@ -2,6 +2,7 @@ from powercad.corner_stitch.optimization_algorithm_support import new_engine_opt
 import os
 from powercad.cons_aware_en.database import create_connection, insert_record
 from powercad.corner_stitch.cs_solution import CornerStitchSolution
+from powercad.corner_stitch.constraint import constraint
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from powercad.corner_stitch.input_script import ScriptInputMethod,save_constraint_table
@@ -646,8 +647,8 @@ def script_translator(input_script=None, bond_wire_info=None, fig_dir=None, cons
             #print "BL",k,v
             cs_type=v[2] # cs_type for constraint handling
     else:
-        index=constraint.constraint.all_component_types.index('bonding wire pad')
-        cs_type=constraint.constraint.Type[index]
+        index=constraint.all_component_types.index('bonding wire pad')
+        cs_type=constraint.Type[index]
     for k,v in list(bondwires.items()):
         wire=copy.deepcopy(v['BW_object'])
         #print k,v

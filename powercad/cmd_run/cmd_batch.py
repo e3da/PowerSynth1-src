@@ -20,7 +20,7 @@ if __name__ == "__main__":
             file=os.path.join(path,f)
             for line in fileinput.input(file, inplace=True):
                 # for line in file:
-                line = line.replace('Plot_Solution: 1', 'Plot_Solution: 0')
+                line = line.replace('Flexible_Wire: 0', 'Flexible_Wire: 1')
                 sys.stdout.write(line)
             macro_files.append(file) 
     print(macro_files)

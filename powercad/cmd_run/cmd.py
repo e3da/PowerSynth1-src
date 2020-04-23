@@ -965,18 +965,6 @@ if __name__ == "__main__":
             args = ['python','cmd.py','-m','/nethome/qmle/testcases/Case1_S-param/Layout1_macro.txt','-settings',"/nethome/qmle/testcases/settings.info"]
             cmd.cmd_handler_flow(arguments= args)
         elif sel==4:
-<<<<<<< HEAD
-            args = ['python','cmd.py','-m','D:\Demo\\New_Flow_w_Hierarchy\Imam_journal\Cmd_flow_case\Weird_Case_Test\half_bridge_pm_macro_1.txt','-settings',"D:/Demo/New_Flow_w_Hierarchy/Journal_Case/settings.info"]
-            #D:/Demo/New_Flow_w_Hierarchy/Journal_Case/Journal_Result_collection/Cmd_flow_case/Half_Bridge_Layout/half_bridge_pm_macro.txt
-            #D:\Demo\New_Flow_w_Hierarchy/Imam_journal/Cmd_flow_case/Imam_journal/half_bridge_pm_macro.txt
-            #D:/Demo/New_Flow_w_Hierarchy/Journal_Case/Testing_Journal_case_w_Py_3/Cmd_flow_case/Half_Bridge_Layout/half_bridge_pm_macro.txt
-           
-            #D:/Demo/New_Flow_w_Hierarchy/Journal_Case/Journal_Result_collection/Cmd_flow_case/Half_Bridge_Layout/half_bridge_pm_macro_data_collection_final.txt
-           
-
-            cmd.cmd_handler_flow(arguments= args)
-
-=======
             args = ['python','cmd.py','-m','D:/Demo/New_Flow_w_Hierarchy/Journal_Case/Journal_Result_collection/Cmd_flow_case/Half_Bridge_Layout/half_bridge_pm_macro_data_collection_final.txt','-settings',"D:/Demo/New_Flow_w_Hierarchy/Journal_Case/settings.info"]
         elif sel == 5:
             args = ['python','cmd.py','-m','/nethome/qmle/testcases/Imam_multi_size/Test_case/Weird_Case_Test/half_bridge_pm_macro_1.txt','-settings',"/nethome/qmle/testcases/settings.info"]
@@ -986,6 +974,5 @@ if __name__ == "__main__":
             #D:/Demo/New_Flow_w_Hierarchy/Journal_Case/Journal_Result_collection/Cmd_flow_case/Half_Bridge_Layout/half_bridge_pm_macro.txt
             #D:\Demo\New_Flow_w_Hierarchy/Imam_journal/Cmd_flow_case/Imam_journal/half_bridge_pm_macro.txt
             #D:/Demo/New_Flow_w_Hierarchy/Journal_Case/Testing_Journal_case_w_Py_3/Cmd_flow_case/Half_Bridge_Layout/half_bridge_pm_macro.txt
->>>>>>> 7eb96a76ce23055976cb2957a4ec44af89b016b3
     else:
         cmd.cmd_handler_flow(arguments=sys.argv) # Default
