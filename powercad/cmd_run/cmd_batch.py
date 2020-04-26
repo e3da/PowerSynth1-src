@@ -20,6 +20,14 @@ if __name__ == "__main__":
             file=os.path.join(path,f)
             for line in fileinput.input(file, inplace=True):
                 # for line in file:
+                line = line.replace('Layout_script: .\\full_bridge_pm_V6_kelvin.txt', 'Layout_script: .\\full_bridge_pm_V6_flexible.txt')
+                sys.stdout.write(line)
+            for line in fileinput.input(file, inplace=True):
+                # for line in file:
+                line = line.replace('Bondwire_setup: .\half_bridge_pm_bondwire_lead_Kelvin.txt', 'Bondwire_setup: .\half_bridge_pm_bondwire_lead_flexible.txt')
+                sys.stdout.write(line)
+            for line in fileinput.input(file, inplace=True):
+                # for line in file:
                 line = line.replace('Flexible_Wire: 0', 'Flexible_Wire: 1')
                 sys.stdout.write(line)
             macro_files.append(file) 

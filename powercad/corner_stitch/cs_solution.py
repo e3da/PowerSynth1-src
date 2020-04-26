@@ -66,7 +66,7 @@ class CornerStitchSolution:
 
 
 
-    def layout_plot(self, layout_ind=0, db=None, fig_dir=None):
+    def layout_plot(self, layout_ind=0, db=None, fig_dir=None, flexible=None):
         fig1, ax1 = plt.subplots()
 
         choice = 'Layout ' + str(layout_ind)
@@ -154,7 +154,7 @@ class CornerStitchSolution:
                     #print "plot",k1
 
                 else:
-                    if row[5] == " 'Type_3'":
+                    if row[5] == " 'Type_3'" and flexible==None :
 
                         point1 = (float(row[0]), float(row[1]))
                         point2 = (float(row[2]), float(row[3]))

@@ -296,7 +296,7 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True,rel_c
                 size=list(solution.layout_info.keys())[0]
                 size=list(size)
                 print("Min-size", size[0]/1000,size[1]/1000)
-                solution.layout_plot(layout_ind=solution.index, db=db_file, fig_dir=sol_path)
+                solution.layout_plot(layout_ind=solution.index, db=db_file, fig_dir=sol_path, flexible=layout_engine.flexible)
 
 
 
@@ -377,8 +377,8 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True,rel_c
                 pareto_data = pareto_solutions(Solutions)
                 for solution in Solutions:
                     if solution.index in list(pareto_data.keys()):
-                        solution.layout_plot(layout_ind=solution.index, db=db_file, fig_dir=sol_path)
-                    solution.layout_plot(layout_ind=solution.index, db=db_file, fig_dir=sol_path_all)
+                        solution.layout_plot(layout_ind=solution.index, db=db_file, fig_dir=sol_path, flexible=layout_engine.flexible)
+                    solution.layout_plot(layout_ind=solution.index, db=db_file, fig_dir=sol_path_all, flexible=layout_engine.flexible)
 
 
 
@@ -406,7 +406,7 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True,rel_c
                     sol_path = fig_dir + '/Mode_1_gen_only'
                     if not os.path.exists(sol_path):
                         os.makedirs(sol_path)
-                    solution.layout_plot(layout_ind=i, db=db_file, fig_dir=sol_path)
+                    solution.layout_plot(layout_ind=i, db=db_file, fig_dir=sol_path, flexible=layout_engine.flexible)
 
             export_solutions(solutions=Solutions, directory=sol_dir)
 
@@ -489,8 +489,8 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True,rel_c
                 pareto_data = pareto_solutions(Solutions)
                 for solution in Solutions:
                     if solution.index in list(pareto_data.keys()):
-                        solution.layout_plot(layout_ind=solution.index, db=db_file, fig_dir=sol_path)
-                    solution.layout_plot(layout_ind=solution.index, db=db_file, fig_dir=sol_path_all)
+                        solution.layout_plot(layout_ind=solution.index, db=db_file, fig_dir=sol_path, flexible=layout_engine.flexible)
+                    solution.layout_plot(layout_ind=solution.index, db=db_file, fig_dir=sol_path_all, flexible=layout_engine.flexible)
 
 
 
@@ -516,7 +516,7 @@ def generate_optimize_layout(layout_engine=None, mode=0, optimization=True,rel_c
                     sol_path = fig_dir + '/Mode_2_gen_only'
                     if not os.path.exists(sol_path):
                         os.makedirs(sol_path)
-                    solution.layout_plot(layout_ind=i, db=db_file, fig_dir=sol_path)
+                    solution.layout_plot(layout_ind=i, db=db_file, fig_dir=sol_path, flexible=layout_engine.flexible)
 
     '''
     elif mode == 3:
