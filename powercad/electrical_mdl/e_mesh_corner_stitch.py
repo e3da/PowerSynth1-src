@@ -84,7 +84,7 @@ class EMesh_CS(EMesh):
         if mode == 0:
             self.mesh_update_planar()
         elif mode == 1:
-            print ("select mode 1")
+            #print ("select mode 1")
             self.mesh_update_optimized()
 
     def mesh_init(self, mode=0):
@@ -307,7 +307,7 @@ class EMesh_CS(EMesh):
         X, Y = np.meshgrid(x_array, y_array)  # XY on each layer
         mesh_points = list(zip(X.flatten(), Y.flatten())) # get all mesh points on this layer
         mesh_nodes = []
-        print ('z_id ground',z_id)
+        #print ('z_id ground',z_id)
         for p in mesh_points:
             mesh_node = MeshNode(pos=[p[0],p[1],z])
             mesh_node.type = 'internal' # default to be internal type
@@ -996,7 +996,7 @@ class EMesh_CS(EMesh):
                 x1_id = xs_id[x1]
                 y1_id = ys_id[y1]
             except:
-                print(x1,y1)
+                print("node_pos",x1,y1)
             North, South, East, West = [node1.North, node1.South, node1.East, node1.West]
             # Once we get the ids, lets get the corresponding node in each direction
             if not(rs_mode_h):

@@ -357,7 +357,7 @@ class CornerStitch_Tmodel_API:
 
         module_data.layer_stack = self.layer_stack
         self.dev_result_table_eval(module_data)
-        print ("RES",self.temp_res)
+        #print ("RES",self.temp_res)
         return max(list(self.temp_res.values()))
 
 

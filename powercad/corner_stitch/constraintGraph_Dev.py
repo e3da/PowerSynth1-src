@@ -298,7 +298,8 @@ class constraintGraph:
                     v.init_coord = vertexlist[i]
                     vertex_list_v.append(v)
                 self.vertex_list_v[ID] = vertex_list_v
-        #print"BH", self.ZDL_H
+        #print("BH", self.ZDL_H)
+        
         #print("BV", self.ZDL_V)
         # setting up edges for constraint graph from corner stitch tiles using minimum constraint values
         for i in range(len(self.HorizontalNodeList)):
@@ -3485,6 +3486,7 @@ class constraintGraph:
                     #
                 else:
                     # continue
+                    
                     if element.parentID in list(self.LocationH.keys()):
 
                         # if element.parentID==1:
@@ -3510,6 +3512,7 @@ class constraintGraph:
                         #print "P_CORD", ZDL_H
 
                         V = self.LocationH[element.parentID]
+                        
                         #print "V",V
                         loct = []
                         count=0
@@ -3591,7 +3594,12 @@ class constraintGraph:
                                     value = self.reference_nodes_h[element.ID][node][1]
                                     if reference in self.Loc_X:
                                         self.Loc_X[node] = self.Loc_X[reference] + value
-
+                                        
+                                        
+                                        
+                            
+                                
+                                
                             if element.ID in list(self.top_down_eval_edges_h.keys()):
                                 td_eval_edges = self.top_down_eval_edges_h[element.ID]
                                 for k, v in list(td_eval_edges.items()):
@@ -3619,6 +3627,11 @@ class constraintGraph:
                                                         continue
                                 #print self.top_down_eval_edges_h[element.ID]
                             #print "step-1", self.Loc_X
+                            
+                            
+                            
+                            
+                                
 
                             if element.ID in list(self.top_down_eval_edges_h.keys()):
                                 td_eval_edges = self.top_down_eval_edges_h[element.ID]
@@ -3651,7 +3664,10 @@ class constraintGraph:
                                                         if reference in self.Loc_X:
                                                             self.Loc_X[node] = self.Loc_X[reference] + value
 
-                            #print "step-2",self.Loc_X
+                            
+                                
+                                
+                                
                             H = []
                             for i, j in list(d4.items()):
                                 Fix[i] = max(j)
@@ -4139,6 +4155,7 @@ class constraintGraph:
         for i, j in list(d3.items()):
             X[i] = max(j)
         #print "X",ID,X
+       
         for k, v in list(X.items()):
             H.append((k[0], k[1], v))
         G = nx.MultiDiGraph()

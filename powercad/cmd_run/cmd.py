@@ -832,7 +832,7 @@ class Cmd_Handler:
                 file_name = sol_dir+'\\all_data.csv'
                 with open(file_name, 'w',newline='') as my_csv:
                     csv_writer = csv.writer(my_csv, delimiter=',')
-                    csv_writer.writerow(['Layout_ID', 'Temperature', 'Inductance'])
+                    csv_writer.writerow(['Layout_ID','Inductance','Temperature'])
                     for data in all_data:
                         #if data[2] > 20: # special case to handle invalid electrical evaluations
                         try:
@@ -871,8 +871,8 @@ class Cmd_Handler:
                     data_y = []
                     for id, value in list(pareto_data.items()):
                         #print id,value
-                        data_x.append(value[0])
-                        data_y.append(value[1])
+                        data_x.append(value[1])
+                        data_y.append(value[0])
 
                     #print data_x
                     #print data_y
@@ -965,7 +965,7 @@ if __name__ == "__main__":
             args = ['python','cmd.py','-m','/nethome/qmle/testcases/Case1_S-param/Layout1_macro.txt','-settings',"/nethome/qmle/testcases/settings.info"]
             cmd.cmd_handler_flow(arguments= args)
         elif sel==4:
-            args = ['python','cmd.py','-m','D:\Demo\\New_Flow_w_Hierarchy\Imam_journal\Cmd_flow_case\Imam_journal_w_capacitor\half_bridge_pm_macro.txt','-settings',"D:/Demo/New_Flow_w_Hierarchy/Journal_Case/settings.info"]
+            args = ['python','cmd.py','-m','D:\Demo\\New_Flow_w_Hierarchy\Test_Cases_V_1.4\Test\Test_Cases\\Simple_Switch\\Simple_switch_macro.txt','-settings',"D:/Demo/New_Flow_w_Hierarchy/Journal_Case/settings.info"]
         elif sel == 5:
             args = ['python','cmd.py','-m','/nethome/qmle/testcases/Imam_multi_size/Test_case/Weird_Case_Test/half_bridge_pm_macro_1.txt','-settings',"/nethome/qmle/testcases/settings.info"]
         cmd.cmd_handler_flow(arguments= args)

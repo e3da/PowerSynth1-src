@@ -50,7 +50,8 @@ def pareto_frontiter2D(data_in=None, MinX=True, MinY=True):
             Y = range(len(data_in))
         raw_list = [[X[i], Y[i]] for i in range(len(X))]
         data_list = sorted(raw_list, reverse=not (MinX))
-        p_front = [data_list[0]]
+        p_front=[]
+        p_front.append(data_list[0])
         for pair in data_list[1:]:
             if MinY:
                 if pair[1] <= p_front[-1][1]:  # Look for higher values of Y
@@ -114,6 +115,7 @@ def export_solutions(solutions=None,directory=None,pareto_data=None,export = Fal
 
     # export to eagle format
     for i in range(len(solutions)):
+        """
         item = solutions[i].name
         file_name = sol_path + '/' + item + '.txt'
         with open(file_name, 'w',newline='') as my_file:
@@ -136,6 +138,7 @@ def export_solutions(solutions=None,directory=None,pareto_data=None,export = Fal
 
 
         my_file.close()
+        """
 
     if export:
         export_to_eagle(solutions=solutions,sol_path=sol_path)
@@ -162,7 +165,8 @@ def export_solutions(solutions=None,directory=None,pareto_data=None,export = Fal
             csv_writer.writerow(data)
             csv_writer.writerow(["Component_Name", "x_coordinate", "y_coordinate", "width", "length"])
             for k, v in list(solutions[i].abstract_info[item]['rect_info'].items()):
-                layout_data = [k, v.x, v.y, v.width, v.height]
+                name=k.split('.')[0]
+                layout_data = [name, v.x, v.y, v.width, v.height]
                 csv_writer.writerow(layout_data)
         my_csv.close()
 
@@ -185,7 +189,8 @@ def export_solutions(solutions=None,directory=None,pareto_data=None,export = Fal
                     csv_writer.writerow(data)
                     csv_writer.writerow(["Component_Name", "x_coordinate", "y_coordinate", "width", "length"])
                     for k, v in list(solutions[i].abstract_info[item]['rect_info'].items()):
-                        layout_data = [k, v.x, v.y, v.width, v.height]
+                        name=k.split('.')[0]
+                        layout_data = [name, v.x, v.y, v.width, v.height]
                         csv_writer.writerow(layout_data)
                 my_csv.close()
 

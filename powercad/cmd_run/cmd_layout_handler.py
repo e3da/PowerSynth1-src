@@ -151,8 +151,8 @@ def update_solution_data(layout_dictionary=None,module_info=None, opt_problem=No
         solution.params = dict(list(zip(measure_names, results)))  # A dictionary formed by result and measurement name
         print("Added", name,"Perf_values: ", solution.params)
         # temp code 
-        if solution.params['Inductance'] < 5:
-            input('found error case')
+        #if solution.params['Inductance'] < 5:
+            #input('found error case')
         solution.layout_info = layout_dictionary[i]
         solution.abstract_info = solution.form_abs_obj_rect_dict()
         Solutions.append(solution)
@@ -741,12 +741,14 @@ def script_translator(input_script=None, bond_wire_info=None, fig_dir=None, cons
     removed_child=[]
     for  wire_id in range(len(bw_items)):
         wire=bw_items[wire_id]
+        
         if 'D' in wire['Source'] and 'B' in wire['source_pad']:
             removed_child.append(wire['source_pad'])
-        if 'D' in wire['Destination'] and 'B' in wire['dest_pad']:
-            removed_child.append(wire['dest_pad'])
+        if 'D' in wire['Destination'] and 'B' in wire['destination_pad']:
+            removed_child.append(wire['destination_pad'])
     #print (removed_child)
     #islands_copy=copy.deepcopy(islands)
+    
     removed_child_list=[]
     for island in islands:
         length=len(island.child)

@@ -146,7 +146,7 @@ class CornerStitchSolution:
 
             colours=[" 'white'"," 'green'"," 'red'"," 'blue'"," 'yellow'"," 'purple'"," 'pink'"," 'magenta'"," 'orange'"," 'violet'"," 'black'"]
 
-
+            
             for row in all_lines:
                 #print("R", row)
                 if len(row) < 4:
@@ -154,7 +154,7 @@ class CornerStitchSolution:
                     #print "plot",k1
 
                 else:
-                    if row[5] == " 'Type_3'" and flexible==None :
+                    if row[5] == " 'Type_3'" and (flexible==False or flexible==None):
 
                         point1 = (float(row[0]), float(row[1]))
                         point2 = (float(row[2]), float(row[3]))
@@ -216,7 +216,7 @@ class CornerStitchSolution:
             ax1.set_ylim(0, k1[1])
             ax1.set_aspect('equal')
             plt.savefig(fig_dir+'/layout_'+str(layout_ind)+'.png')
-            plt.savefig((fig_dir + '/layout_' + str(layout_ind) + '.svg'),dpi=1200, bbox_inches = 'tight',pad_inches = 0)
+            #plt.savefig((fig_dir + '/layout_' + str(layout_ind) + '.svg'),dpi=1200, bbox_inches = 'tight',pad_inches = 0)
             # Try to release memory
             fig1.clf()
             plt.close()
