@@ -950,9 +950,9 @@ class Cmd_Handler:
 
 if __name__ == "__main__":
     print("----------------------PowerSynth Version 1.4: Command line version------------------")
-    cmd = Cmd_Handler(debug=False)
+    cmd = Cmd_Handler(debug=True)
     print (str(sys.argv))
-    debug = True
+    debug = False
     if debug: # you can mannualy add the argument in the list as shown here
         sel= int(input("select a test case to run: 1-quang_simple_test_quang_nethome 2-Imam_journal_quang_nethome 3-quang_journal_quang_nethome 4-Imam_journal_Imam_pc 5-Imam_multi_size_quang_nethome"))
         if sel == 1: 
@@ -965,7 +965,7 @@ if __name__ == "__main__":
             args = ['python','cmd.py','-m','/nethome/qmle/testcases/Case1_S-param/Layout1_macro.txt','-settings',"/nethome/qmle/testcases/settings.info"]
             cmd.cmd_handler_flow(arguments= args)
         elif sel==4:
-            args = ['python','cmd.py','-m','D:\Demo\\New_Flow_w_Hierarchy\Test_Cases_V_1.4\Test\Test_Cases\\Simple_Switch\\Simple_switch_macro.txt','-settings',"D:/Demo/New_Flow_w_Hierarchy/Journal_Case/settings.info"]
+            args = ['python','cmd.py','-m','D:\Demo\\New_Flow_w_Hierarchy\Test_Cases_V_1.4\Test\Test_Cases\\Phase_Leg_Yuxian_V2\\test_macro.txt','-settings',"D:/Demo/New_Flow_w_Hierarchy/Journal_Case/settings.info"]
         elif sel == 5:
             args = ['python','cmd.py','-m','/nethome/qmle/testcases/Imam_multi_size/Test_case/Weird_Case_Test/half_bridge_pm_macro_1.txt','-settings',"/nethome/qmle/testcases/settings.info"]
         cmd.cmd_handler_flow(arguments= args)
@@ -975,4 +975,7 @@ if __name__ == "__main__":
             #D:\Demo\New_Flow_w_Hierarchy/Imam_journal/Cmd_flow_case/Imam_journal/half_bridge_pm_macro.txt
             #D:/Demo/New_Flow_w_Hierarchy/Journal_Case/Testing_Journal_case_w_Py_3/Cmd_flow_case/Half_Bridge_Layout/half_bridge_pm_macro.txt
     else:
-        cmd.cmd_handler_flow(arguments=sys.argv) # Default
+        settings_file=input("Please enter the file path for settings.info file: ")
+        macro_script=input("Please enter the file path for the macro.txt script: ")
+        args= ['python','cmd.py','-m',macro_script,'-settings',settings_file]
+        cmd.cmd_handler_flow(arguments=args) # Default

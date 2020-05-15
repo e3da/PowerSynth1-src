@@ -20,9 +20,9 @@ ANSYS_IPY64 = ''
 FASTHENRY_FOLDER = ''
 MANUAL = ''
 
-# POWERSYNTH_RELEASE = False
+POWERSYNTH_RELEASE = False
 
-""" if POWERSYNTH_RELEASE:  # For packaged versions
+if POWERSYNTH_RELEASE:  # For packaged versions
     DEFAULT_TECH_LIB_DIR = os.path.abspath("tech_lib")
     LAST_ENTRIES_PATH = os.path.abspath("export_data/app_data/last_entries.p")
     ELMER_BIN_PATH = "ELmer 8.2-Release/bin"
@@ -47,7 +47,7 @@ else:   # For debugging and running PowerSynth from Eclipse
     ELMER_BIN_PATH = os.path.abspath("C:\PowerSynth\Elmer 8.2-Release\\bin")  # Emler on Imam's PC
     ANSYS_IPY64 = os.path.abspath('C:\Program Files\AnsysEM\AnsysEM18.2\Win64\common\IronPython')
     FASTHENRY_FOLDER = 'C:\PowerSynth_git\Master_for_danfoss\PowerCAD-full\FastHenry'
-    MANUAL = "C:\\Users\qmle\Desktop\Build_danfoss\PowerSynth User Tutorial.html" """
+    MANUAL = "C:\\Users\qmle\Desktop\Build_danfoss\PowerSynth User Tutorial.html" 
 
 if __name__ == '__main__':  # Module test
     # filepath = input("Enter settings filepath without quotes: ")
