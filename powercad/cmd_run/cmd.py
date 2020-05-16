@@ -256,8 +256,8 @@ class Cmd_Handler:
                and check_file(self.rs_model_file) \
                and check_file(self.constraint_file)
         # make dir if they are not existed
-        print(("self.new_mode",self.new_mode))
-        print(("self.flex",self.flexible))
+        #print(("self.new_mode",self.new_mode))
+        #print(("self.flex",self.flexible))
         if not (check_dir(self.fig_dir)):
             try:
                 os.mkdir(self.fig_dir)
@@ -282,6 +282,7 @@ class Cmd_Handler:
             self.set_up_db() # temp commented out
 
             if run_option == 0:
+                
                 self.solutions=generate_optimize_layout(layout_engine=self.engine, mode=layout_mode,rel_cons=self.i_v_constraint,
                                          optimization=False, db_file=self.db_file,fig_dir=self.fig_dir,sol_dir=self.db_dir,plot=self.plot, num_layouts=num_layouts, seed=seed,
                                          floor_plan=floor_plan)
@@ -563,6 +564,7 @@ class Cmd_Handler:
         :return:
         '''
         self.layer_stack.import_layer_stack_from_csv(self.layer_stack_file)
+        
         self.engine, self.wire_table = script_translator(
             input_script=self.layout_script, bond_wire_info=self.bondwire_setup, fig_dir=self.fig_dir, constraint_file=self.constraint_file,rel_cons=self.i_v_constraint,flexible=self.flexible,mode=self.new_mode)
         for comp in self.engine.all_components:

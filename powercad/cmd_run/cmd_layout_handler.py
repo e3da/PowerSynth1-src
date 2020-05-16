@@ -729,7 +729,7 @@ def script_translator(input_script=None, bond_wire_info=None, fig_dir=None, cons
         voltage_info=None
         current_info=None
 
-    #print "V", voltage_info
+    #print ("V", voltage_info)
     #print"C", current_info
 
     New_engine.cons_df = cons_df

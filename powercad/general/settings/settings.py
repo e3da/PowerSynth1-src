@@ -28,7 +28,7 @@ if POWERSYNTH_RELEASE:  # For packaged versions
     ELMER_BIN_PATH = "ELmer 8.2-Release/bin"
     GMSH_BIN_PATH = "gmsh-2.7.0-Windows"
     TEMP_DIR = os.path.abspath("export_data/temp")
-    CACHED_CHAR_PATH = os.path.abspath("export_data/cached_thermal") # sxm063
+    CACHED_CHAR_PATH = os.path.abspath("export_data/cached_thermal") 
     MATERIAL_LIB_PATH = 'tech_lib//Material//Materials.csv'
     EXPORT_DATA_PATH = os.path.abspath("export_data")
     ANSYS_IPY64 = "C://Program Files//AnsysEM//AnsysEM18.0//Win64//common//IronPython"

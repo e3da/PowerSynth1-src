@@ -307,6 +307,7 @@ class New_layout_engine():
         #--------------------------------------------------------------------------
         # populate voltage and current information for Htree and Vtree tiles
         if voltage_info!=None or current_info!=None:
+            
 
             self.apply_IV_loading(cs_islands,voltage_info,current_info)
 
@@ -487,6 +488,7 @@ class New_layout_engine():
         scaler = 1000  # to get back original dimensions all coordinated will be scaled down by 1000
         #mode-0
         if level == 0:
+            #print("ENGINE_REL",self.reliability_constraints)
 
             #Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=None, W=None, H=None, XLoc=None, YLoc=None,seed=None,individual=None,Types=self.Types) # for minimum sized layout only one solution is generated
             #CS_SYM_information, Layout_Rects = CG1.update_min(Evaluated_X, Evaluated_Y , sym_to_cs, scaler)
@@ -917,16 +919,16 @@ class New_layout_engine():
 
                 for name in island.element_names:
 
-                    if name in voltage_info:
-                        voltage[island.name]=voltage_info[name]
+                    if name.split('.')[0] in voltage_info:
+                        voltage[island.name]=voltage_info[name.split('.')[0]]
 
         if current_info != None:
             for island in cs_islands:
                 for name in island.element_names:
-                    if name in current_info:
-                        current[island.name]=current_info[name]
+                    if name.split('.')[0] in current_info:
+                        current[island.name]=current_info[name.split('.')[0]]
 
-
+        
         for island in cs_islands:
             if island.name in voltage:
                 for rect in self.Htree.hNodeList[0].stitchList:

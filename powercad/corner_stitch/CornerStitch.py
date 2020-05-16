@@ -2625,6 +2625,9 @@ class CS_to_CG():
         :return: Updated x,y locations of nodes
         '''
         if self.level == 1:
+            if N == None or N==0:
+                print("Please enter Number of layouts to be generated")
+                exit()
             CG = constraintGraph(W=None, H=None, XLocation=None, YLocation=None)
             CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList, bondwires, self.level, cs_islands, N, seed, individual,
                               Types=Types, flexible=flexible, rel_cons=rel_cons)
@@ -2632,8 +2635,10 @@ class CS_to_CG():
             # if self.level!=1:
             if W == None or H == None:
                 print("Please enter Width and Height of the floorplan")
-            if N == None:
+                exit()
+            if N == None or N==0:
                 print("Please enter Number of layouts to be generated")
+                exit()
             else:
                 CG = constraintGraph(W, H, XLoc, YLoc)
                 CG.graphFromLayer(Htree.hNodeList, Vtree.vNodeList, bondwires, self.level, cs_islands, N, seed,

@@ -117,6 +117,7 @@ class constraintGraph:
         self.setEdgesFromLayer(cornerStitch_h, cornerStitch_v)
         """
         self.flexible=flexible
+        
         # Here only those nodes are considered which have children in the tree
         self.HorizontalNodeList = []
         self.VerticalNodeList = []
@@ -1760,7 +1761,7 @@ class constraintGraph:
                     # Applying I-V constraints
                     value1 = constraint.getConstraintVal(c, source=t1, dest=t2,Types=Types)
                     #print "here",rect.NORTH.voltage
-
+                    #print ("V_DIFF",rel_cons,rect.NORTH.voltage)
                     if rect.NORTH.voltage!=None and rect.SOUTH.voltage!=None:
                         #voltage_diff1=abs(rect.NORTH.voltage[0]-rect.SOUTH.voltage[1])
                         #voltage_diff2=abs(rect.NORTH.voltage[1]-rect.SOUTH.voltage[0])
@@ -1768,7 +1769,7 @@ class constraintGraph:
 
 
                         voltage_diff=self.find_voltage_difference(rect.NORTH.voltage,rect.SOUTH.voltage,rel_cons)
-                        #print "V_DIFF",voltage_diff
+                        #print ("V_DIFF",voltage_diff,rel_cons)
 
                         # tolerance is considered 10%
 
