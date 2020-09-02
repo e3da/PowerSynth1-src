@@ -952,7 +952,7 @@ class Cmd_Handler:
 
 if __name__ == "__main__":
     print("----------------------PowerSynth Version 1.4: Command line version------------------")
-    cmd = Cmd_Handler(debug=True)
+    cmd = Cmd_Handler(debug=False)
     print (str(sys.argv))
     debug = False
     if debug: # you can mannualy add the argument in the list as shown here
