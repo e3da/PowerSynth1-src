@@ -953,7 +953,7 @@ class Cmd_Handler:
 if __name__ == "__main__":
     print("----------------------PowerSynth Version 1.4: Command line version------------------")
     cmd = Cmd_Handler(debug=False)
-    print (str(sys.argv))
+    #print (str(sys.argv))
     debug = False
     if debug: # you can mannualy add the argument in the list as shown here
         sel= int(input("select a test case to run: 1-quang_simple_test_quang_nethome 2-Imam_journal_quang_nethome 3-quang_journal_quang_nethome 4-Imam_journal_Imam_pc 5-Imam_multi_size_quang_nethome"))

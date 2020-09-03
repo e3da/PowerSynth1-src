@@ -12,7 +12,7 @@ from powercad.sol_browser.cs_solution_handler import pareto_solutions,export_sol
 import time
 from powercad.electrical_mdl.cornerstitch_API import ElectricalMeasure
 from powercad.thermal.cornerstitch_API import ThermalMeasure
-from PyQt5 import QtCore, QtGui, QtWidgets
+#from PyQt5 import QtCore, QtGui, QtWidgets
 import pandas as pd
 # --------------Plot function---------------------
 def plot_layout(fig_data=None, rects=None, size=None, fig_dir=None):
@@ -681,11 +681,11 @@ def script_translator(input_script=None, bond_wire_info=None, fig_dir=None, cons
         #wire.printWire()
     #raw_input()
 
-    try:
-        app = QtGui.QApplication(sys.argv)
-    except:
+    #try:
+        #app = QtGui.QApplication(sys.argv)
+    #except:
         pass
-    window = QtWidgets.QMainWindow()
+    #window = QtWidgets.QMainWindow()
     
 
 

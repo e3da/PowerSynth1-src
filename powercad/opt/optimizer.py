@@ -26,6 +26,7 @@ from powercad.opt.simulated_anneal import Annealer
 
 
 import time
+"""
 import platform
 if platform.system() == 'Windows': # Easygui doesnt work on linux, this must be fixed later
     import matlab
@@ -33,7 +34,7 @@ if platform.system() == 'Windows': # Easygui doesnt work on linux, this must be 
     # These are win32pipes only work on Windows
     from powercad.interfaces.Pipe.sender import sender
     from powercad.interfaces.Pipe.listener import receiver
-
+"""
 class Solution():
     def __init__(self, ind,fval):
         '''

@@ -9,7 +9,7 @@ def save_file(object,file):
     :return: No Return, New file is created in the desired directory this is saved as a pickle binary file
     '''
     print(file)
-    pickle.dump(object, open(file, 'wb'))
+    pickle.dump(object, open(file, 'wb'),fix_imports=True)
     
 
 def load_file(file):
@@ -25,5 +25,9 @@ def load_file(file):
     except:
         data = open(file, 'rb')
         print (type(data))
-        obj = pickle.load(data,encoding='latin1')
+        print(file)
+        #obj = pickle.load(data,encoding='latin1')
+        obj=pickle.load(data, fix_imports=True ,encoding="latin1")
+        #obj = pickle.load(data,encoding='bytes')
+        
     return obj
