@@ -7,7 +7,7 @@ from powercad.cmd_run.cmd_layout_handler import generate_optimize_layout, script
 from powercad.cons_aware_en.database import create_connection, create_table
 from powercad.sol_browser.cs_solution_handler import pareto_frontiter2D
 from powercad.design.layout_module_data import ModuleDataCornerStitch
-
+from powercad.response_surface.Response_Surface import RS_model
 from powercad.layer_stack.layer_stack import LayerStack
 import matplotlib.pyplot as plt
 import os

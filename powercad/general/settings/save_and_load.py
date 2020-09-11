@@ -1,4 +1,6 @@
 import pickle
+from powercad.general.data_struct.Abstract_Data import TestObj
+import sys
 
 def save_file(object,file):
     '''
@@ -23,13 +25,20 @@ def load_file(file):
         obj = pickle.load(open(file, 'rb'))
     except:
         data = open(file, 'rb')
-        print (type(data))
-        print(file)
-        #obj = pickle.load(data,encoding='latin1')
         obj=pickle.load(data, fix_imports=True ,encoding="latin1")
-        rs_model = (obj["R"][0]['mdl'].__dict__)
-        print(rs_model['model'])
-        input()
-        #obj = pickle.load(data,encoding='bytes')
 
     return obj
+
+
+if __name__ == '__main__':
+    print(sys.path[0])
+
+    sel = int(input('1: to save,2 t0 load a test obj'))
+    file_name =str(input('type in a file name'))
+    obj = TestObj()
+
+    if sel == 1:
+        save_file(obj,file_name)
+    elif sel == 2:
+        obj = load_file(file_name)
+        print (obj.x, obj.y)
