@@ -3,6 +3,11 @@
 #   Stack,Linked_List, Buckets and so on...
 
 
+class TestObj():
+    def __init__(self):
+        self.x = 1
+        self.y = 1
+
 class Stack():
     # A stack can be present as a list in Python, however only allow single data to go in and out each time
     # then we just add the push and pop function, peek will
