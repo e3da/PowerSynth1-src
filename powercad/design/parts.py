@@ -3,8 +3,8 @@ import copy
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import platform
-if platform.system() == 'Windows': # Easygui doesnt work on linux, this must be fixed later
-    import easygui as eg
+#if platform.system() == 'Windows': # Easygui doesnt work on linux, this must be fixed later
+#    import easygui as eg
 
 from collections import OrderedDict
 class Connection_Table:
@@ -15,21 +15,6 @@ class Connection_Table:
             self.states=OrderedDict
         elif self.mode=='command':
             self.states = {}
-    def set_up_table(self):
-        ''' A simple multiple choice table to ask for the internal connections'''
-        conns_to_select={}
-        for conns in self.connections:
-            self.states[conns]=0
-            conns_to_select[conns]=conns[0]+' to '+conns[1]
-        res = eg.choicebox('Select connections', '', choices=list(conns_to_select.values()))
-        if not (isinstance(res,list)):
-            res = [res]
-        for r in res:
-            for s in self.states:
-                print(s,r)
-                if conns_to_select[s]==r:
-                    self.states[s]=1
-        print(self.states)
 
     def set_up_table_cmd(self):
         print("Input a sequence of 0 or 1 separate by commas e.g: 0,1,1 for each of the connection following this order")

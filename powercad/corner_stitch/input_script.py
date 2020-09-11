@@ -5,7 +5,6 @@ from pathlib import Path
 import re
 import sys
 sys.path.append('..')
-#from cons_aware_en.cons_engine import *
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import pandas as pd
@@ -13,13 +12,10 @@ import pandas as pd
 
 from powercad.corner_stitch.constraint import constraint
 from powercad.corner_stitch.CornerStitch import Rectangle
-#from pyqt import QtCore, QtGui
 
-#from powercad.project_builder.proj_dialogs import ConsDialog
 from powercad.design.parts import Part
 from powercad.design.Routing_paths import RoutingPath, BondingWires
-#from cons_aware_en.cons_engine import New_layout_engine
-#import getpass
+
 from powercad.design.group import Island
 
 '''

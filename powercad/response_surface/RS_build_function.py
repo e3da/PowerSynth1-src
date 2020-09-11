@@ -5,7 +5,6 @@ Created on Feb 26, 2017
 Functions for simple curve_fitting
 '''
 import numpy as np
-import math as m
 
 
 def f1 (f=1,a=1,b=1): 
