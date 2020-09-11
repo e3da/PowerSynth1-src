@@ -6,6 +6,7 @@ from copy import *
 
 from scipy.interpolate import InterpolatedUnivariateSpline
 from scipy.interpolate import interp1d
+'''
 # Set relative location
 import sys
 cur_path =sys.path[0] # get current path (meaning this file location)
@@ -13,6 +14,7 @@ print (cur_path)
 cur_path = cur_path[0:-25] #exclude "powercad/response_surface"
 print(cur_path)
 sys.path.append(cur_path)
+'''
 from powercad.general.data_struct.Unit import Unit
 #from powercad.general.settings.Error_messages import InputError, Notifier
 from powercad.general.settings.save_and_load import save_file

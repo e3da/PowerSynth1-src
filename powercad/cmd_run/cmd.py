@@ -5,6 +5,7 @@ import sys, os
 cur_path =sys.path[0] # get current path (meaning this file location)
 cur_path = cur_path[0:-16] #exclude "power/cmd_run"
 sys.path.append(cur_path)
+#print(cur_path)
 
 from powercad.electrical_mdl.cornerstitch_API import CornerStitch_Emodel_API
 from powercad.thermal.cornerstitch_API import CornerStitch_Tmodel_API
@@ -950,7 +951,8 @@ class Cmd_Handler:
         plt.savefig(fig_dir+'/'+'plot_mode-'+str(opt)+'.png')
 
 
-if __name__ == "__main__":
+#if __name__ == "__main__":
+def main():
     print("----------------------PowerSynth Version 1.4: Command line version------------------")
     cmd = Cmd_Handler(debug=False)
     #print (str(sys.argv))
@@ -981,3 +983,5 @@ if __name__ == "__main__":
         macro_script=input("Please enter the file path for the macro.txt script: ")
         args= ['python','cmd.py','-m',macro_script,'-settings',settings_file]
         cmd.cmd_handler_flow(arguments=args) # Default
+if __name__ == "__main__":
+    main()

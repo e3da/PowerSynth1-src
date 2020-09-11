@@ -1,4 +1,4 @@
-import pickle
+import pickle5 as pickle
 import sys
 
 def save_file(object,file):
@@ -26,8 +26,8 @@ def load_file(file):
         data = open(file, 'rb')
         print (type(data))
         print(file)
-        #obj = pickle.load(data,encoding='latin1')
-        obj=pickle.load(data, fix_imports=True ,encoding="latin1")
+        obj = pickle.load(data,encoding='latin1')
+        #obj=pickle.load(data, fix_imports=True, errors="strict")
         #obj = pickle.load(data,encoding='bytes')
         
     return obj
