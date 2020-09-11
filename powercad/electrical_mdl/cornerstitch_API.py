@@ -2,7 +2,6 @@
 from powercad.electrical_mdl.spice_eval.rl_mat_eval import RL_circuit
 from powercad.electrical_mdl.e_mesh_direct import EMesh
 from powercad.electrical_mdl.e_mesh_corner_stitch import EMesh_CS
-#from corner_stitch.input_script import *
 from powercad.electrical_mdl.e_module import E_plate,Sheet,EWires,EModule,EComp
 from powercad.electrical_mdl.e_hierarchy import EHier
 from powercad.design.parts import Part
@@ -13,17 +12,10 @@ from powercad.parasitics.mdl_compare import load_mdl
 import networkx as nx
 
 from datetime import datetime
-import psutil
 import networkx
-import cProfile
-import pstats
-from mpl_toolkits.mplot3d import Axes3D
-from collections import deque
-import gc
 import numpy as np
 import copy
 import os
-#import objgraph
 
 
 class ElectricalMeasure(object):

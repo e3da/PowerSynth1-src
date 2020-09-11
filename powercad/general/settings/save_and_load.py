@@ -1,5 +1,4 @@
-import pickle5 as pickle
-import sys
+import pickle
 
 def save_file(object,file):
     '''
@@ -17,8 +16,8 @@ def load_file(file):
     :param file: directory and file name e.g (C:/test.txt)
     :return: the object in pickled file whether this is unix or dos
     '''
-    
-    
+
+
     # python 2.x
     try:
         obj = pickle.load(open(file, 'rb'))
@@ -26,8 +25,11 @@ def load_file(file):
         data = open(file, 'rb')
         print (type(data))
         print(file)
-        obj = pickle.load(data,encoding='latin1')
-        #obj=pickle.load(data, fix_imports=True, errors="strict")
+        #obj = pickle.load(data,encoding='latin1')
+        obj=pickle.load(data, fix_imports=True ,encoding="latin1")
+        rs_model = (obj["R"][0]['mdl'].__dict__)
+        print(rs_model['model'])
+        input()
         #obj = pickle.load(data,encoding='bytes')
-        
+
     return obj

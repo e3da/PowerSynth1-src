@@ -1,25 +1,15 @@
 # This is the layout generation and optimization flow using command line only
 import sys, os
 
-# Set relative location
-cur_path =sys.path[0] # get current path (meaning this file location)
-cur_path = cur_path[0:-16] #exclude "power/cmd_run"
-sys.path.append(cur_path)
-#print(cur_path)
-
 from powercad.electrical_mdl.cornerstitch_API import CornerStitch_Emodel_API
 from powercad.thermal.cornerstitch_API import CornerStitch_Tmodel_API
-#from glob import glob
 from powercad.cmd_run.cmd_layout_handler import generate_optimize_layout, script_translator, eval_single_layout
-from powercad.cons_aware_en.database import create_connection, insert_record, create_table
+from powercad.cons_aware_en.database import create_connection, create_table
 from powercad.sol_browser.cs_solution_handler import pareto_frontiter2D
 from powercad.design.layout_module_data import ModuleDataCornerStitch
 
-#import objgraph
-from pympler import muppy,summary
 from powercad.layer_stack.layer_stack import LayerStack
 import matplotlib.pyplot as plt
-import types
 import os
 import glob
 import copy
