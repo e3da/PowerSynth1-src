@@ -149,7 +149,7 @@ def update_solution_data(layout_dictionary=None,module_info=None, opt_problem=No
         solution = CornerStitchSolution(name=name,index=i)
 
         solution.params = dict(list(zip(measure_names, results)))  # A dictionary formed by result and measurement name
-        print("Added", name,"Perf_values: ", solution.params)
+        print("Updated Peformance Values for: ", name,"\n --", solution.params)
         # temp code 
         #if solution.params['Inductance'] < 5:
             #input('found error case')
