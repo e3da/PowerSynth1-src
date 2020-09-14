@@ -1445,7 +1445,7 @@ class constraintGraph:
 
             Extend_h = 0 # to find if horizontal extension is there
             if rect.nodeId != ID or ((rect.EAST.cell.type=='EMPTY'and rect.WEST.cell.type=='EMPTY'and rect.NORTH.cell.type=='EMPTY'  and rect.SOUTH.cell.type=='EMPTY' and rect.nodeId==ID) or (rect.nodeId==ID and rect.cell.type.strip('Type_') in constraint.comp_type['Device'] and ((rect.EAST.cell.type=='EMPTY'and rect.WEST.cell.type=='EMPTY') or (rect.NORTH.cell.type=='EMPTY'  and rect.SOUTH.cell.type=='EMPTY')))):
-                if rect.nodeId == ID and rect.cell.type.strip('Type_') in constraint.comp_type['Device']:
+                #if rect.nodeId == ID and rect.cell.type.strip('Type_') in constraint.comp_type['Device']:
                     #print ("rect1",rect.cell.type)
                 origin = self.ZDL_H[ID].index(rect.cell.x) # if horizontal extension needs to set up node in horizontal constraint graph
                 vertex_found=False
@@ -1917,7 +1917,7 @@ class constraintGraph:
             Extend_v = 0
             
             if rect.nodeId != ID or (rect.EAST.cell.type=='EMPTY'and rect.WEST.cell.type=='EMPTY' and rect.NORTH.cell.type=='EMPTY'  and rect.SOUTH.cell.type=='EMPTY' and rect.nodeId==ID) or (rect.nodeId==ID and  rect.cell.type.strip('Type_') in constraint.comp_type['Device'] and ((rect.EAST.cell.type=='EMPTY'and rect.WEST.cell.type=='EMPTY') or (rect.NORTH.cell.type=='EMPTY'  and rect.SOUTH.cell.type=='EMPTY'))):
-                if rect.nodeId == ID and rect.cell.type.strip('Type_') in constraint.comp_type['Device']:
+                #if rect.nodeId == ID and rect.cell.type.strip('Type_') in constraint.comp_type['Device']:
                     #print ("rect",rect.cell.type)
                 origin = self.ZDL_V[ID].index(rect.cell.y)
                 vertex_found = False

@@ -177,7 +177,7 @@ def solve_TFSM(thermal_geometry, power_scale):
     die_temps = np.array(die_temps)+t_amb
     # addding 
     
-    print(("die pos", die_locations))
+    #print(("die pos", die_locations))
     #print (die_temps)
 
     #test_plot_layout(thermal_geometry.all_traces, all_dies, (83.82, 54.61))

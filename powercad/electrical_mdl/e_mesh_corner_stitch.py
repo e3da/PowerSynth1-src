@@ -108,7 +108,7 @@ class EMesh_CS(EMesh):
         '''
         method = "skin_depth"
         #method = "uniform"
-        print("accelerate the mesh generation")
+        #print("accelerate the mesh generation")
         isl_dict = {isl.name: isl for isl in self.islands}
         fig, ax = plt.subplots()
         self.hier_group_dict = {}
@@ -472,9 +472,9 @@ class EMesh_CS(EMesh):
                         l1, r1, b1, t1 = tc1.get_locs()  # get left right bottom top
                         l2, r2, b2, t2 = tc2.get_locs()
                         c_type = self.check_trace_to_trace_type(el1, el2)  # get types and check whether 2 pieces touch
-                        if c_type == T_SHAPE:
-                            print("handle T_SHAPE cut")
-                        elif c_type == L_SHAPE:
+                        #if c_type == T_SHAPE:
+                            #print("handle T_SHAPE cut")
+                        if c_type == L_SHAPE:
                             s = 0  # check the cases if not correct then switch el1 and el2 to handle all possible case
                             while (s == 0):
                                 if r1 == l2:  # el1 on the left of el2
