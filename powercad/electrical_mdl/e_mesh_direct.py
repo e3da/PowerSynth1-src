@@ -260,7 +260,7 @@ class EMesh():
         in 3D mode:
             A face to face model will be used for estimate for capacitance value
         '''
-        print (t,h,rel_perv,mode)
+        #print (t,h,rel_perv,mode)
         # rel_perv
         n_cap_dict = self.update_C_dict()
         C_tot = 0
@@ -417,7 +417,7 @@ class EMesh():
 
                             # edge_data.C = all_c[i]*1e-12
                         else:
-                            print ('-L w l :',self.all_W[i],self.all_L[i],all_l[i])
+                            #print ('-L w l :',self.all_W[i],self.all_L[i],all_l[i])
 
                             check_neg_L = True
                             temp_L = trace_inductance(self.all_W[i], self.all_L[i], t, h)
@@ -806,7 +806,7 @@ class EMesh():
 
         ''' Evaluation in Cython '''
         mutual_matrix = np.array(self.mutual_matrix)
-        print("start mutual eval")
+        #print("start mutual eval")
         result = []
         start = time.time()
         if lang == "Cython":  # evaluation with parallel programming
@@ -814,7 +814,7 @@ class EMesh():
         elif lang == "Python":  # normally use to double-check the evaluation
             for para in self.mutual_matrix:
                 result.append(mutual_between_bars(*para))
-        print(("finished mutual eval", time.time()-start))
+        #print(("finished mutual eval", time.time()-start))
         # We first eval all parallel pieces with bar equation, then, we
         debug = False
         for n in range(len(self.edges)):
@@ -1101,7 +1101,7 @@ class EMesh():
 
                     if SW == None:
                         print("ERROR")
-                        print(node_name)
+                        #print(node_name)
                     node_name = str(SW[0]) + '_' + str(SW[1])
                     # Compute SW data:
                     # 4 points on parent trace

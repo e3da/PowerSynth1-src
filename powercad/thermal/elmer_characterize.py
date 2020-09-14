@@ -177,9 +177,9 @@ def characterize_devices(sym_layout, temp_dir=settings.TEMP_DIR, conv_tol=1e-3):
             xs, ys, temp, z_flux = get_nodes_near_z_value(data_path, top_iso_z, 1e-7)
             z_flux *= -1 # Flip direction of flux (downward is positive)
             iso_temp = average(temp)
-            print(('iso_temp:',iso_temp))
-            print(('min iso_temp:', min(temp)))
-            print(('max iso temp:', max(temp)))
+            #print(('iso_temp:',iso_temp))
+            #print(('min iso_temp:', min(temp)))
+            #print(('max iso temp:', max(temp)))
             
             xs = 1000.0*xs; ys = 1000.0*ys # Convert back to mm
             temp_contours, _, avg_temp = characterize_dist(xs, ys, temp, t_amb, dev_dim[:2], False)

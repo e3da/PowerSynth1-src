@@ -1446,7 +1446,7 @@ class constraintGraph:
             Extend_h = 0 # to find if horizontal extension is there
             if rect.nodeId != ID or ((rect.EAST.cell.type=='EMPTY'and rect.WEST.cell.type=='EMPTY'and rect.NORTH.cell.type=='EMPTY'  and rect.SOUTH.cell.type=='EMPTY' and rect.nodeId==ID) or (rect.nodeId==ID and rect.cell.type.strip('Type_') in constraint.comp_type['Device'] and ((rect.EAST.cell.type=='EMPTY'and rect.WEST.cell.type=='EMPTY') or (rect.NORTH.cell.type=='EMPTY'  and rect.SOUTH.cell.type=='EMPTY')))):
                 if rect.nodeId == ID and rect.cell.type.strip('Type_') in constraint.comp_type['Device']:
-                    print ("rect1",rect.cell.type)
+                    #print ("rect1",rect.cell.type)
                 origin = self.ZDL_H[ID].index(rect.cell.x) # if horizontal extension needs to set up node in horizontal constraint graph
                 vertex_found=False
                 for vertex in vertex_list_h:
@@ -1918,7 +1918,7 @@ class constraintGraph:
             
             if rect.nodeId != ID or (rect.EAST.cell.type=='EMPTY'and rect.WEST.cell.type=='EMPTY' and rect.NORTH.cell.type=='EMPTY'  and rect.SOUTH.cell.type=='EMPTY' and rect.nodeId==ID) or (rect.nodeId==ID and  rect.cell.type.strip('Type_') in constraint.comp_type['Device'] and ((rect.EAST.cell.type=='EMPTY'and rect.WEST.cell.type=='EMPTY') or (rect.NORTH.cell.type=='EMPTY'  and rect.SOUTH.cell.type=='EMPTY'))):
                 if rect.nodeId == ID and rect.cell.type.strip('Type_') in constraint.comp_type['Device']:
-                    print ("rect",rect.cell.type)
+                    #print ("rect",rect.cell.type)
                 origin = self.ZDL_V[ID].index(rect.cell.y)
                 vertex_found = False
                 for vertex in vertex_list_v:
@@ -3108,29 +3108,30 @@ class constraintGraph:
         for node in list(incoming_edges.keys()):
             if node> reference_node:
                 path,value,max= self.LONGEST_PATH(B=matrix,source=reference_node,target=node) #path=list of nodes on the longest path, value=list of minimum constraints on that path, max=distance from source to target
-
-                weight=incoming_edges[node]-reference_value
-                if abs(weight)>=max:
-                    removable = True
-                    removed_edges.append(node)
-                    top_down_eval_edges[(node,reference_node)]=weight
-                else:
-                    removable = False
+                if max!=None:
+                    weight=incoming_edges[node]-reference_value
+                    if abs(weight)>=max:
+                        removable = True
+                        removed_edges.append(node)
+                        top_down_eval_edges[(node,reference_node)]=weight
+                    else:
+                        removable = False
             elif node< reference_node:
                 #print node,reference_node
                 removable=True
                 path, value, max = self.LONGEST_PATH(B=matrix, source=node, target=reference_node)
                 #print node, max
                 weight = incoming_edges[node] - reference_value
-                if weight>=max:
-                    removable = True
-                    removed_edges.append(node)
-                    top_down_eval_edges[(node,reference_node)] = weight
-                    new_weight = weight
-                    edge = Edge(source=node, dest=reference_node, constraint=new_weight, index=1, type='0',id=None)
-                    added_edges.append(edge)
-                else:
-                    removed_edges.append(node)
+                if max!=None:
+                    if weight>=max:
+                        removable = True
+                        removed_edges.append(node)
+                        top_down_eval_edges[(node,reference_node)] = weight
+                        new_weight = weight
+                        edge = Edge(source=node, dest=reference_node, constraint=new_weight, index=1, type='0',id=None)
+                        added_edges.append(edge)
+                    else:
+                        removed_edges.append(node)
 
 
 

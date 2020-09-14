@@ -9,7 +9,7 @@ def save_file(object,file):
     :param object: the python object to be saved
     :return: No Return, New file is created in the desired directory this is saved as a pickle binary file
     '''
-    print(file)
+    #print(file)
     pickle.dump(object, open(file, 'wb'),fix_imports=True)
     
 

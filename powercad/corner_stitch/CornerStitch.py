@@ -2857,9 +2857,9 @@ class CS_to_CG():
                     v[1] = stitchList
 
         for i in range(len(cs_sym_info_v)):
-            print(cs_sym_info_v)
+            #print(cs_sym_info_v)
             comp = cs_sym_info_v[i]
-            print(comp)
+            #print(comp)
             for k, v in list(comp.items()):
                 if v[1] == None:
                     v[0] = new_rects_v[k]
@@ -3191,8 +3191,8 @@ class CS_to_CG():
                 cs_sym_info[i] = {k: [init_rect, v[1]]}
 
         all_cs_sym_info = []
-        print(len(minx))
-        print(len(miny))
+        #print(len(minx))
+        #print(len(miny))
 
     def UPDATE_min(self, MINX, MINY, Htree, Vtree, sym_to_cs, s=1000):
         '''

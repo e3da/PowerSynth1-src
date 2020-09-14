@@ -147,7 +147,7 @@ class CornerStitch_Emodel_API:
 
     def load_rs_model(self, mdl_file):
         extension = os.path.splitext(mdl_file)[1]
-        print ("extension",extension)
+        #print ("extension",extension)
         if extension == '.rsmdl':
             self.mdl_type = 0
         elif extension == '.lmmdl':
@@ -280,7 +280,7 @@ class CornerStitch_Emodel_API:
         '''
         self.emesh = EMesh_CS(islands=islands,hier_E=self.hier, freq=self.freq, mdl=self.rs_model,mdl_type=self.mdl_type)
         self.emesh.trace_ori =self.trace_ori # Update the trace orientation if given
-        print (self.trace_ori)
+        #print (self.trace_ori)
         if self.trace_ori == {}:
             self.emesh.mesh_update(mode =0)
         else:
@@ -315,7 +315,7 @@ class CornerStitch_Emodel_API:
                 elif l_data[1]=='S':
                     t = l_data[2].thick
                 
-            print('height',h,'thickness',t,"permitivity",rel_perf)
+            #print('height',h,'thickness',t,"permitivity",rel_perf)
             self.emesh.update_C_val(h=h,t=t,mode=2,rel_perv = rel_perf)
         elif mode == '3D': # Go through layer_group and generate mesh for each ground plane. 
             # First go through each ground layer and mesh them
@@ -361,15 +361,15 @@ class CornerStitch_Emodel_API:
             #print ("case 2 trace to trace capacitance")
     def export_netlist(self,dir= "",mode = 0, loop_L = 0,src='',sink=''):
         # Loop_L value is used in mode 1 to approximate partial branches values
-        print (loop_L,src,sink)
+        #print (loop_L,src,sink)
         extern_terminals=[]
         devices_pins=[]
         net_graph = copy.deepcopy(self.emesh.graph)
 
         comp_net = self.emesh.comp_net_id
-        print (self.emesh.comp_edge)
+        #print (self.emesh.comp_edge)
         for e in self.emesh.comp_edge:
-            print ("remove internal edges formed for devices",e)
+            #print ("remove internal edges formed for devices",e)
             net_graph.remove_edge(e[2],e[3])
         for net_name in comp_net:
             if net_name[0] == 'L':
@@ -437,7 +437,7 @@ class CornerStitch_Emodel_API:
                             if len(path) >3: # not a direct connection
                                 continue
                             else: # found a direct path,
-                                print("find RL between",net1,net2)
+                                #print("find RL between",net1,net2)
                                 R,L= self.extract_RL(src = net1,sink=net2,export_netlist=False)
                                 lin_graph.add_edge(net1,net2,R = 1/R, L=1/L)
                                 #R=str(R) + 'm' # mOhm
@@ -465,7 +465,7 @@ class CornerStitch_Emodel_API:
             a = np.array(a)
             Leq = np.dot(x_st, a[0])
             ratio =loop_L/Leq
-            print(ratio)
+            #print(ratio)
             for i in range(len(all_found_paths)):
                 path = all_found_paths[i]['Path']
                 R = str(all_found_paths[i]['R']*ratio) + 'm' 
@@ -728,8 +728,8 @@ class CornerStitch_Emodel_API:
         self.circuit = RL_circuit()
         self.circuit._graph_read(self.emesh.graph)
         if not(networkx.has_path(self.emesh.graph,pt1,pt2)) or not(networkx.has_path(self.emesh.graph,pt3,pt4)) :
-            print (pt1,pt2)
-            print (pt3,pt4)
+            #print (pt1,pt2)
+            #print (pt3,pt4)
             eval(input("NO CONNECTION BETWEEN SOURCE AND SINK"))
         else:
             pass
@@ -782,7 +782,7 @@ class CornerStitch_Emodel_API:
         #print (pt1,pt2)
 
         if not(networkx.has_path(self.emesh.graph,pt1,pt2)):
-            print (pt1,pt2)
+            #print (pt1,pt2)
             eval(input("NO CONNECTION BETWEEN SOURCE AND SINK"))
         else:
             pass

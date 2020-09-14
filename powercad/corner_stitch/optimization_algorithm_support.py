@@ -97,9 +97,9 @@ class new_engine_opt:
     def convert_layout_data(self,layout_data=None):
 
         #print(layout_data)
-        for k,v in list(layout_data.items()):
-            print(k)
-            print(len(v))
+        #for k,v in list(layout_data.items()):
+            #print(k)
+            #print(len(v))
 
 
         layout_info={}

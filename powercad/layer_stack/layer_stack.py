@@ -110,7 +110,7 @@ class LayerStack:
         with open(filename) as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
-                print(row)
+                #print(row)
                 layer_id = int(row['ID'])
                 layer_name = row['Name']
                 layer_width = float(row['Width'])
@@ -207,7 +207,7 @@ class LayerStack:
         ts = []  # thickness of each layer
         for k in self.all_layers_info:  # layer are added from bottom to top. (OrderedDictionary type)
             layer = self.all_layers_info[k]
-            print(layer.type)
+            #print(layer.type)
             if layer.type == 'p':
                 ws.append(layer.width)
                 ls.append(layer.length)
@@ -234,7 +234,7 @@ class LayerStack:
                 t_conds.append(layer.material.thermal_cond)
             elif layer.type == 'a':
                 mat_id =device.material_id
-                print("mat_id",mat_id)
+                #print("mat_id",mat_id)
                 dev_mat = self.material_lib.get_mat(mat_id)
                 t_conds.append(dev_mat.thermal_cond)
         return t_conds

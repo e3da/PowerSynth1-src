@@ -532,7 +532,7 @@ class Cmd_Handler:
         
         self.db_file = os.path.join(database,'layout.db')
         self.db_file = os.path.abspath(self.db_file)
-        print (self.db_file)
+        #print (self.db_file)
         conn = create_connection(self.db_file)
         with conn:
             create_table(conn)
@@ -578,14 +578,14 @@ class Cmd_Handler:
             self.e_api.get_frequency()
             self.measures += self.e_api.measurement_setup()
         elif mode == 'macro':
-            print("macro mode")
+            #print("macro mode")
             
             self.e_api.form_connection_table(mode='macro',dev_conn=dev_conn)
             self.e_api.get_frequency(frequency)
             self.e_api.get_layer_stack(self.layer_stack)
             self.measures += self.e_api.measurement_setup(meas_data)
         if self.layout_ori_file != None:
-            print("this is a test now")
+            #print("this is a test now")
             self.e_api.process_trace_orientation(self.layout_ori_file)
         #if self.output_option:
         #    self.e_api.export_netlist(dir = self.netlist_dir, mode = self.netlist_mode)
@@ -645,7 +645,7 @@ class Cmd_Handler:
                     print("Loading macro file")
                     m, filep = mode.split(" ")
                     filep = os.path.abspath(filep)
-                    print (filep)
+                    #print (filep)
                     if os.path.isfile(filep):
                         # macro file exists
                         filename = os.path.basename(filep)
@@ -664,10 +664,10 @@ class Cmd_Handler:
         else: # Real CMD mode
             arg_dict = {"temp":[]}
             i = 0
-            print (arguments)
+            #print (arguments)
             cur_flag = "temp"
             while i < len(arguments): # Read through a list of arguments and build a table 
-                print(i,arguments[i])    
+                #print(i,arguments[i])    
                 if i == 0: # cmd.py 
                     i+=1
                     continue
@@ -684,20 +684,20 @@ class Cmd_Handler:
                 print("Loading settings file")
                 read_settings_file(setting_file)
                 self.layer_stack = LayerStack()
-                print("This will change the default settings file location")
+                #print("This will change the default settings file location")
             if "-m" in arg_dict.keys(): # - m: macro flag
                 filep = arg_dict['-m'][0]
                 print("Loading macro file")
                 filep = os.path.abspath(filep)
-                print (filep)
+                #print (filep)
                 if os.path.isfile(filep):
                     # macro file exists
                     filename = os.path.basename(filep)
                     # change current directory to workspace
                     work_dir = filep.replace(filename,'')
                     os.chdir(work_dir)
-                    print("Jump to current working dir")
-                    print(work_dir)
+                    #print("Jump to current working dir")
+                    #print(work_dir)
                     checked = self.load_macro_file(filep)
                 else:
                     print("wrong macro file format or wrong directory, please try again !")

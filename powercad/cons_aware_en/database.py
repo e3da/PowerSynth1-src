@@ -107,7 +107,7 @@ def main():
                 csv_writer.writerow(i)
 
         my_csv.close()
-        print(len(all_data),all_data)
+        #print(len(all_data),all_data)
 
 if __name__ == '__main__':
     '''

@@ -248,7 +248,7 @@ if platform.system() == 'Windows': # Conditonal class creation for Windows only
                 fval = self.eval_fn(individual=X.result()[0][i], opt_mode=False)
                 sol = Solution(X.result()[0][i], fval)  # DANNY EDIT
                 self.solutions.append(sol)
-            print(self.solutions)
+            #print(self.solutions)
 
         def _init_individual(self):
 

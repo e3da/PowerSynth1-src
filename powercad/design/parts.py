@@ -28,7 +28,7 @@ class Connection_Table:
         keys = list(self.connections.keys())
         for k in self.connections:
             self.states[k] = states[keys.index(k)]
-        print(self.states)
+        #print(self.states)
 
 
 
@@ -93,7 +93,7 @@ class Part:
             for line in inputfile.readlines():
                 line = line.strip("\r\n")
                 info = line.split(" ")
-                print(info)
+                #print(info)
                 if info[0] == "Material":
                     self.material_id = info[1]
                 if info[0] == "Name":

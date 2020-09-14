@@ -212,7 +212,7 @@ def plot_solutions(file_location=None):
             readCSV = csv.reader(csvfile, delimiter=',')
             for row in readCSV:
                 if row[0]=='Size':
-                    print(row)
+                    #print(row)
                     key1=row[1]
                     key2=row[2]
                     key3=row[0]
@@ -226,7 +226,7 @@ def plot_solutions(file_location=None):
                     data[key2]=(float(row[2])) # Temperature (K)
                     data[key3]=(row[0]) # size [w,h]
             all_data[name]=data
-    print(all_data)
+    #print(all_data)
     file_name = head + '/' + 'plot_data' + '.csv'
     with open(file_name, 'wb') as my_csv:
         csv_writer = csv.writer(my_csv, delimiter=',')
@@ -350,7 +350,7 @@ if __name__ == '__main__':
     #sol_data = np.array(sol_data)
     #print sol_data
     pareto_data = pareto_frontiter2D(sol_data)
-    print(len(pareto_data))
+    #print(len(pareto_data))
     file_name='D:\Demo\\New_Flow_w_Hierarchy\Journal_Case\Journal_Result_collection\Cmd_flow_case\Half_Bridge_Layout\Test_solutions_kelvin\Result_Processing\\final_pareto.csv'
     with open(file_name, 'wb') as my_csv:
         csv_writer = csv.writer(my_csv, delimiter=',')
