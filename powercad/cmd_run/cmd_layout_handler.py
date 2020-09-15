@@ -121,7 +121,7 @@ def eval_single_layout(layout_engine=None, layout_data=None, apis={}, measures=[
     solution.layout_info = layout_data
     solution.abstract_info = solution.form_abs_obj_rect_dict()
     Solutions.append(solution)
-    #print("Performance_results",results)
+    print("Performance_results",results)
     return Solutions
 
 
