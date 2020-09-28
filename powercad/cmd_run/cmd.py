@@ -942,7 +942,7 @@ class Cmd_Handler:
 
 #if __name__ == "__main__":
 def main():
-    print("----------------------PowerSynth Version 1.4: Command line version------------------")
+    print("----------------------PowerSynth Version 1.9: Command line version------------------")
     cmd = Cmd_Handler(debug=False)
     #print (str(sys.argv))
     debug = False
