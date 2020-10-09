@@ -958,7 +958,7 @@ def main():
             args = ['python','cmd.py','-m','/nethome/qmle/testcases/Case1_S-param/Layout1_macro.txt','-settings',"/nethome/qmle/testcases/settings.info"]
             cmd.cmd_handler_flow(arguments= args)
         elif sel==4:
-            args = ['python','cmd.py','-m','D:\Demo\\New_Flow_w_Hierarchy\Test_Cases_V_1.4\Test\Test_Cases\\Phase_Leg_Yuxian_V2\\test_macro.txt','-settings',"D:/Demo/New_Flow_w_Hierarchy/Journal_Case/settings.info"]
+            args = ['python','cmd.py','-m','D:/PowerSynth_V2/VS_CODE_VCS/New_Package_V1.9/Sample_Projects/Test_Cases/Half_Bridge_2/Half_bridge_macro.txt','-settings',"D:/Demo/New_Flow_w_Hierarchy/Journal_Case/settings.info"]
         elif sel == 5:
             args = ['python','cmd.py','-m','/nethome/qmle/testcases/Imam_multi_size/Test_case/Weird_Case_Test/half_bridge_pm_macro_1.txt','-settings',"/nethome/qmle/testcases/settings.info"]
         cmd.cmd_handler_flow(arguments= args)

@@ -915,16 +915,17 @@ class New_layout_engine():
 
                 for name in island.element_names:
 
-                    if name.split('.')[0] in voltage_info:
-                        voltage[island.name]=voltage_info[name.split('.')[0]]
+                    if name in voltage_info:
+                        voltage[island.name]=voltage_info[name]
+						
 
         if current_info != None:
             for island in cs_islands:
                 for name in island.element_names:
-                    if name.split('.')[0] in current_info:
-                        current[island.name]=current_info[name.split('.')[0]]
-
-        
+                    if name in current_info:
+                        current[island.name]=current_info[name]
+		
+		
         for island in cs_islands:
             if island.name in voltage:
                 for rect in self.Htree.hNodeList[0].stitchList:
