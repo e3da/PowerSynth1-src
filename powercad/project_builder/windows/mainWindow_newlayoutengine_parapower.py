@@ -1363,6 +1363,8 @@ class Ui_MainWindow(object):
         self.actionExport_Layout_Script.setObjectName("actionExport_Layout_Script")
         self.actionResponse_Surface_Setup = QtGui.QAction(MainWindow)
         self.actionResponse_Surface_Setup.setObjectName("actionResponse_Surface_Setup")
+        self.actionParaPower_Setup = QtGui.QAction(MainWindow)
+        self.actionParaPower_Setup.setObjectName("actionParaPower_Setup")
         self.actionInterface_Setup = QtGui.QAction(MainWindow)
         self.actionInterface_Setup.setObjectName("actionInterface_Setup")
         self.actionOpen_User_Manual = QtGui.QAction(MainWindow)
@@ -1379,6 +1381,7 @@ class Ui_MainWindow(object):
         self.menuLibraries.addAction(self.action_open_tech_lib_editor)
         self.menuLibraries.addAction(self.action_edit_tech_path)
         self.menuModel.addAction(self.actionResponse_Surface_Setup)
+        self.menuModel.addAction(self.actionParaPower_Setup)
         self.menubar.addAction(self.menuProject.menuAction())
         self.menubar.addAction(self.menuLibraries.menuAction())
         self.menubar.addAction(self.menuModel.menuAction())
@@ -1592,7 +1595,9 @@ class Ui_MainWindow(object):
         self.actionOpen_Layout_Editor.setText(QtGui.QApplication.translate("MainWindow", "Open Layout Editor", None, QtGui.QApplication.UnicodeUTF8))
         self.actionExport_Layout_Script.setText(QtGui.QApplication.translate("MainWindow", "Export Layout Script", None, QtGui.QApplication.UnicodeUTF8))
         self.actionResponse_Surface_Setup.setText(QtGui.QApplication.translate("MainWindow", "Response Surface Setup", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionParaPower_Setup.setText(
+            QtGui.QApplication.translate("MainWindow", "ParaPower Setup", None, QtGui.QApplication.UnicodeUTF8))
         self.actionInterface_Setup.setText(QtGui.QApplication.translate("MainWindow", "Interface Setup", None, QtGui.QApplication.UnicodeUTF8))
         self.actionOpen_User_Manual.setText(QtGui.QApplication.translate("MainWindow", "Open User Manual", None, QtGui.QApplication.UnicodeUTF8))
 
-import main_window_images_rc
+# import main_window_images_rc

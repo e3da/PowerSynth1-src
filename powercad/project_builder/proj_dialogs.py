@@ -26,7 +26,7 @@ from powercad.project_builder.UI_py.device_setup_dialog_ui import Ui_setup_devic
 from powercad.project_builder.UI_py.Env_setup_ui import Ui_EnvSetup
 from powercad.project_builder.UI_py.bondwire_setup_ui import Ui_Bondwire_setup
 from powercad.project_builder.UI_py.layoutEditor_ui import Ui_layouteditorDialog
-from powercad.project_builder.UI_py.CS_design_up_ui import Ui_CornerStitch_Dialog  # CS_design_ui
+# from powercad.project_builder.UI_py.CS_design_up_ui import Ui_CornerStitch_Dialog  # CS_design_ui
 from powercad.project_builder.UI_py.Fixed_loc_up_ui import Ui_Fixed_location_Dialog  # Fixed_loc_ui
 from powercad.project_builder.project import Project
 from powercad.sym_layout.symbolic_layout import SymbolicLayout

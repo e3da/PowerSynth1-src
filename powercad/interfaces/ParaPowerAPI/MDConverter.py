@@ -261,13 +261,48 @@ class ParaPowerWrapper(object):
         self.parameters = Params()
         self.parameters.Tinit = self.t_amb
         self.features_list = self.get_features()
+        self.material_names = []
+        self.materials = []
+        self.gather_materials()
         self.features = [feature.to_dict() for feature in self.features_list]
+
+
+        # Get settings from file
+        with open('C:\School\PowerSynth\Development\ARLRelease\PowerCAD-full\src\powercad\interfaces\ParaPowerAPI\settings.json', 'r') as settings_file:
+            self.settings = settings_file.read()
+        self.settings = json.loads(self.settings)
+
+        self.get_external_conditions()
+        self.get_params()
 
         self.parapower = ParaPowerInterface(self.external_conditions.to_dict(),
                                             self.parameters.to_dict(),
-                                            self.features)
+                                            self.features,
+                                            self.materials)
         # self.output = PPEncoder().encode(self.parapower)
         # self.write_md_output()
+
+        # Access materials by:
+        # feature.material.properties_dictionary
+        # ex: {'name': 'MarkeTech Mo70Cu Moly', 'density': 9700.0, 'electrical_res': 1.7e-08, 'rel_permeab': 1.0, 'rel_permit': None, 'thermal_cond': 190.0, 'spec_heat_cap': 385.0}
+        # Test material properties
+        # for feature in self.features:
+        #     for k, v in feature.material.properties_dictionary.iteritems():
+        #         print k, v
+        #
+        # print "CHECK ABOVE MATERIAL PROPERTIES"
+
+    def gather_materials(self):
+        for feature in self.features_list:
+            if feature.material.properties_dictionary['name'] not in self.material_names:
+                self.material_names.append(feature.material.properties_dictionary['name'])
+                self.materials.append(feature.material.properties_dictionary)
+            if feature.child_features:
+                for child in feature.child_features:
+                    if child.material.properties_dictionary['name'] not in self.material_names:
+                        self.material_names.append(child.material.properties_dictionary['name'])
+                        self.materials.append(child.material.properties_dictionary)
+
 
     def get_ref_locs(self):
         """Returns reference locations for each of the following:
@@ -368,6 +403,7 @@ class ParaPowerWrapper(object):
         for i in range(len(devices)):
             device_instance = Feature(entity=devices[i], ref_loc=self.ref_locs['devices'], dx=3, dy=3, dz=2)
             device_instance.name = self.device_id[i]
+            device_instance.material.properties_dictionary['name'] = "DeviceMaterial_" + str(self.device_id[i])
             if device_instance.child_features:
                 for child in device_instance.child_features:
                     child.name = device_instance.name + "_Attach"
@@ -384,6 +420,22 @@ class ParaPowerWrapper(object):
     def write_md_output(self):
         filename = 'PPExportTestMD.p'
         pickle.dump(self.module_design, open(filename, 'wb'), protocol=pickle.HIGHEST_PROTOCOL)
+
+    def get_external_conditions(self):
+        EC = ExternalConditions()
+        for key in EC.__dict__:
+            print key
+            print EC.__dict__[key]
+            print self.settings['ExternalConditions'][key]
+            EC.__dict__[key] = float(self.settings['ExternalConditions'][key])
+        self.external_conditions = EC
+
+    def get_params(self):
+        parameters = Params()
+        parameters.Tinit = float(self.settings['Params']['Tinit'])
+        parameters.DeltaT = int(self.settings['Params']['DeltaT'])
+        self.parameters = parameters
+
 
 
 class FeaturesClassDict(object):
@@ -409,15 +461,38 @@ class ParaPowerInterface(object):
     :param matlab_path: dict of :class:`~Feature`
 
     """
-    def __init__(self, external_conditions=None, parameters=None, features=None,
+    def __init__(self, external_conditions=None, parameters=None, features=None, materials=None,
                  matlab_path=MATLAB_PATH):
         self.ExternalConditions = external_conditions
         self.Params = parameters
         self.Features = features
+        self.Materials = materials
         self.PottingMaterial = 0
         self.temperature = None
         self.path = matlab_path
+        #self.Materials = self.gather_materials()
         #self.eng = self.init_matlab()
+
+    '''
+        # Access materials by:
+        # feature.material.properties_dictionary
+        # ex: {'name': 'MarkeTech Mo70Cu Moly', 'density': 9700.0, 'electrical_res': 1.7e-08, 'rel_permeab': 1.0, 'rel_permit': None, 'thermal_cond': 190.0, 'spec_heat_cap': 385.0}
+        # Test material properties
+        # for feature in self.features:
+        #     for k, v in feature.material.properties_dictionary.iteritems():
+        #         print k, v
+        #
+        # print "CHECK ABOVE MATERIAL PROPERTIES"
+
+    def gather_materials(self):
+        material_names = []
+        materials_list = []
+        for feature in self.Features:
+            if feature.material.properties_dictionary['name'] not in material_names:
+                material_names.append(feature.material.properties_dictionary['name'])
+                materials_list.append(feature.material.properties_dictionary)
+        return materials_list
+        '''
 
     def to_dict(self):
         """Converts all of the external conditions, parameters, features, and potting material to a dictionary.
@@ -426,10 +501,22 @@ class ParaPowerInterface(object):
         :return model_dict: A dictionary collection of the ParaPower model.
         :rtype model_dict: dict
         """
+        # Need to clean the material and feature names
+        import re
+        # Remove all non-alphanumeric using regular expressions
+        # re.sub(r'\W+', '', your_string)
+
+        for feature in self.Features:
+            feature['name'] = re.sub(r'\W+', '', feature['name'])
+            feature['Matl'] = re.sub(r'\W+', '', feature['Matl'])
+        for material in self.Materials:
+            material['name'] = re.sub(r'\W+', '', material['name'])
+
         model_dict = {'ExternalConditions': self.ExternalConditions,
                       'Params': self.Params,
                       'Features': self.Features,
-                      'PottingMaterial': self.PottingMaterial}
+                      'PottingMaterial': self.PottingMaterial,
+                      'Materials': self.Materials}
         return model_dict
 
     def init_matlab(self):
@@ -463,12 +550,16 @@ class ParaPowerInterface(object):
         if not matlab_engine:
             matlab_engine = self.init_matlab()
         md_json = json.dumps(self.to_dict())
-        temperature = matlab_engine.PowerSynthImport(md_json, visualize)
+        self.save_parapower()
+        temperature = matlab_engine.ParaPowerSynth_Thermal(md_json)
+        # old implementation:
+        # temperature = matlab_engine.PowerSynthImport(md_json, visualize)
         # self.eng.workspace['test_md'] = self.eng.ImportPSModuleDesign(json.dumps(self.to_dict()), nargout=1)
         # self.eng.save('test_md_file.mat', 'test_md')
         # return temperature + 273.5
-        self.save_parapower()
+
         return temperature + 273.5
+
 
     def save_parapower(self):
         """Saves the current JSON text stream so that it can be analyzed later. This is only used for debugging right
@@ -476,7 +567,7 @@ class ParaPowerInterface(object):
 
         :return: None
         """
-        fname = self.path + '/0_PowerSynth_MD_JSON.json'
+        fname = self.path + '/1_PowerSynth_MD_JSON.json'
         with open(fname, 'w') as outfile:
             json.dump(self.to_dict(), outfile)
 

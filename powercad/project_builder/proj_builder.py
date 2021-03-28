@@ -34,7 +34,7 @@ from powercad.project_builder.sol_window import SolutionWindow
 from powercad.project_builder.proj_dialogs import NewProjectDialog, OpenProjectDialog, EditTechLibPathDialog, \
     GenericDeviceDialog,LayoutEditorDialog, ResponseSurfaceDialog,ModelSelectionDialog,EnvironmentSetupDialog,SetupDeviceDialogs\
     ,WireConnectionDialogs
-
+from powercad.project_builder.dialogs.ParaPowerSetup import ParaPowerSetupDialog
 from powercad.drc.process_design_rules_editor import ProcessDesignRulesEditor
 from powercad.tech_lib.tech_lib_wiz import TechLibWizDialog
 
@@ -131,6 +131,7 @@ class ProjectBuilder(QtGui.QMainWindow):
         self.ui.actionExport_Layout_Script.triggered.connect(self.export_layout_script) # export layout to script action
         self.ui.actionOpen_Layout_Editor.triggered.connect(self.open_layout_editor) # Open script
         self.ui.actionResponse_Surface_Setup.triggered.connect(self.open_response_surface_dialog)
+        self.ui.actionParaPower_Setup.triggered.connect(self.open_parapower_dialog)
         self.ui.actionInterface_Setup.triggered.connect(self.setup_env)
         self.ui.actionOpen_User_Manual.triggered.connect(self.open_user_manual)
 
@@ -344,6 +345,12 @@ class ProjectBuilder(QtGui.QMainWindow):
         if self.ui.navigation.isEnabled():
             rs_settings=ResponseSurfaceDialog(self)
             rs_settings.show() # change this to a dialog
+
+    def open_parapower_dialog(self):
+        if self.ui.navigation.isEnabled():
+            print "Calling ParaPower object"
+            pp_settings = ParaPowerSetupDialog()
+            pp_settings.show()
 
     def setup_env(self):
         if self.ui.actionInterface_Setup.isEnabled():

@@ -6,7 +6,8 @@ import sys
 import timeit
 
 from PySide import QtGui, QtOpenGL
-from objective_widget_ui import Ui_ObjectiveWidget
+# from objective_widget_ui import Ui_ObjectiveWidget
+
 
 # class for individual objective widgets that will be inserted onto the graphing form
 class ObjectiveWidget(QtGui.QFrame):

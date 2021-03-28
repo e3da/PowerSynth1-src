@@ -34,7 +34,7 @@ else:   # For debugging and running PowerSynth from Eclipse
     #FASTHENRY_FOLDER = 'C:\PowerSynth_git\Master_for_danfoss\PowerCAD-full\FastHenry'
     FASTHENRY_FOLDER = 'C:\PowerSynth\FastHenry'
     MANUAL = "C:\Users\qmle\Desktop\Build_danfoss\PowerSynth User Tutorial.html"
-    MATLAB_PATH = 'C:/Users/tmevans/Documents/MATLAB/ParaPower/ARL_ParaPower/ARL_ParaPower'
+    MATLAB_PATH = 'G:/My Drive/ARL Project/ParaPower/WorkingFiles/20200317_StressUpdate/ParaPower-_develop/ARL_ParaPower'
 
 if __name__ == '__main__':  # Module test
     print DEFAULT_TECH_LIB_DIR
