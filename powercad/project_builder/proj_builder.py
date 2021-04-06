@@ -34,7 +34,7 @@ from powercad.project_builder.sol_window import SolutionWindow
 from powercad.project_builder.proj_dialogs import NewProjectDialog, OpenProjectDialog, EditTechLibPathDialog, \
     GenericDeviceDialog,LayoutEditorDialog, ResponseSurfaceDialog,ModelSelectionDialog,EnvironmentSetupDialog,SetupDeviceDialogs\
     ,WireConnectionDialogs
-from powercad.project_builder.dialogs.ParaPowerSetup import ParaPowerSetupDialog
+from powercad.project_builder.dialogs.ParaPowerSetup import launch_parapower_settings
 from powercad.drc.process_design_rules_editor import ProcessDesignRulesEditor
 from powercad.tech_lib.tech_lib_wiz import TechLibWizDialog
 
@@ -348,9 +348,15 @@ class ProjectBuilder(QtGui.QMainWindow):
 
     def open_parapower_dialog(self):
         if self.ui.navigation.isEnabled():
-            print "Calling ParaPower object"
-            pp_settings = ParaPowerSetupDialog()
-            pp_settings.show()
+            # print "Calling ParaPower object"
+            try:
+                ambient_temperature = round(float(self.ui.txt_ambTemp.text()) - 273.15, 2) # Convert to C for ParaPower
+                baseplate_convection = round(float(self.ui.txt_baseConvection.text()), 2)
+                print "Ambient Temperature: ", ambient_temperature
+                print "Baseplate Convection: ", baseplate_convection
+                launch_parapower_settings(temperature=ambient_temperature, convection=baseplate_convection)
+            except ValueError:
+                launch_parapower_settings()
 
     def setup_env(self):
         if self.ui.actionInterface_Setup.isEnabled():

@@ -256,7 +256,8 @@ class ParaPowerWrapper(object):
         self.module_design = module_design
         self.device_id = self.module_design.dv_id
         self.ref_locs = self.get_ref_locs()
-        self.t_amb = self.module_design.sym_layout.module.ambient_temp - self.c2k
+        self.t_amb = self.module_design.sym_layout.module.ambient_temp  # - self.c2k
+        # C to K conversion no longer necessary, handled in proj_builder.py
         self.external_conditions = ExternalConditions(Ta=self.t_amb)
         self.parameters = Params()
         self.parameters.Tinit = self.t_amb
@@ -268,7 +269,9 @@ class ParaPowerWrapper(object):
 
 
         # Get settings from file
-        with open('C:\School\PowerSynth\Development\ARLRelease\PowerCAD-full\src\powercad\interfaces\ParaPowerAPI\settings.json', 'r') as settings_file:
+        # with open('C:\School\PowerSynth\Development\ARLRelease\PowerCAD-full\src\powercad\interfaces\ParaPowerAPI\settings.json', 'r') as settings_file:
+        settings_file_location = MATLAB_PATH + "/settings.json"
+        with open(settings_file_location, 'r') as settings_file:
             self.settings = settings_file.read()
         self.settings = json.loads(self.settings)
 
@@ -342,8 +345,8 @@ class ParaPowerWrapper(object):
                     'substrate': [offset_x, offset_y, substrate_metal_z],
                     'traces': [offset_x, offset_y, trace_z],
                     'devices': [offset_x, offset_y, die_attach_z]}
-        for loc in ref_locs:
-            print loc, ref_locs[loc]
+        # for loc in ref_locs:
+        #     print loc, ref_locs[loc]
         return ref_locs
 
     def get_features(self):
@@ -424,9 +427,9 @@ class ParaPowerWrapper(object):
     def get_external_conditions(self):
         EC = ExternalConditions()
         for key in EC.__dict__:
-            print key
-            print EC.__dict__[key]
-            print self.settings['ExternalConditions'][key]
+            # print key
+            # print EC.__dict__[key]
+            # print self.settings['ExternalConditions'][key]
             EC.__dict__[key] = float(self.settings['ExternalConditions'][key])
         self.external_conditions = EC
 
@@ -435,7 +438,6 @@ class ParaPowerWrapper(object):
         parameters.Tinit = float(self.settings['Params']['Tinit'])
         parameters.DeltaT = int(self.settings['Params']['DeltaT'])
         self.parameters = parameters
-
 
 
 class FeaturesClassDict(object):
@@ -552,6 +554,7 @@ class ParaPowerInterface(object):
         md_json = json.dumps(self.to_dict())
         self.save_parapower()
         temperature = matlab_engine.ParaPowerSynth_Thermal(md_json)
+        print temperature
         # old implementation:
         # temperature = matlab_engine.PowerSynthImport(md_json, visualize)
         # self.eng.workspace['test_md'] = self.eng.ImportPSModuleDesign(json.dumps(self.to_dict()), nargout=1)
@@ -567,7 +570,7 @@ class ParaPowerInterface(object):
 
         :return: None
         """
-        fname = self.path + '/1_PowerSynth_MD_JSON.json'
+        fname = self.path + '/0_PowerSynth_MD_JSON.json'
         with open(fname, 'w') as outfile:
             json.dump(self.to_dict(), outfile)
 
