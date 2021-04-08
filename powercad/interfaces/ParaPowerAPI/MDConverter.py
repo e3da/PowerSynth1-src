@@ -9,7 +9,7 @@ import matplotlib.cm as cm
 # from matplotlib.pylab import *
 import seaborn as sns
 
-from powercad.general.settings.settings import MATLAB_PATH
+from powercad.general.settings.settings import MATLAB_PATH, PARAPOWER_API_PATH
 
 
 class Params(object):
@@ -270,7 +270,7 @@ class ParaPowerWrapper(object):
 
         # Get settings from file
         # with open('C:\School\PowerSynth\Development\ARLRelease\PowerCAD-full\src\powercad\interfaces\ParaPowerAPI\settings.json', 'r') as settings_file:
-        settings_file_location = MATLAB_PATH + "/settings.json"
+        settings_file_location = PARAPOWER_API_PATH + "/settings.json"
         with open(settings_file_location, 'r') as settings_file:
             self.settings = settings_file.read()
         self.settings = json.loads(self.settings)
@@ -464,14 +464,15 @@ class ParaPowerInterface(object):
 
     """
     def __init__(self, external_conditions=None, parameters=None, features=None, materials=None,
-                 matlab_path=MATLAB_PATH):
+                 matlab_path=MATLAB_PATH, parapower_api_path=PARAPOWER_API_PATH):
         self.ExternalConditions = external_conditions
         self.Params = parameters
         self.Features = features
         self.Materials = materials
         self.PottingMaterial = 0
         self.temperature = None
-        self.path = matlab_path
+        self.parapower_path = matlab_path
+        self.parapower_api_path = parapower_api_path
         #self.Materials = self.gather_materials()
         #self.eng = self.init_matlab()
 
@@ -528,7 +529,9 @@ class ParaPowerInterface(object):
         :return eng: An instance of the MATLAB engine.
         """
         eng = matlab.engine.start_matlab()
-        eng.cd(self.path)
+        eng.cd(self.parapower_api_path)
+        eng.addpath(self.parapower_path)
+        eng.addpath(self.parapower_api_path)
         return eng
 
     def run_parapower_thermal(self, matlab_engine=None, visualize=False):
@@ -552,6 +555,9 @@ class ParaPowerInterface(object):
         if not matlab_engine:
             matlab_engine = self.init_matlab()
         md_json = json.dumps(self.to_dict())
+        matlab_engine.cd(self.parapower_api_path)
+        matlab_engine.addpath(self.parapower_api_path)
+        matlab_engine.addpath(self.parapower_path)
         self.save_parapower()
         temperature = matlab_engine.ParaPowerSynth_Thermal(md_json)
         print temperature
@@ -570,14 +576,16 @@ class ParaPowerInterface(object):
 
         :return: None
         """
-        fname = self.path + '/0_PowerSynth_MD_JSON.json'
+        fname = self.parapower_api_path + '/0_PowerSynth_MD_JSON.json'
         with open(fname, 'w') as outfile:
             json.dump(self.to_dict(), outfile)
 
 
-def init_matlab(path):
+def init_matlab(parapower_api_path, parapower_path):
     eng = matlab.engine.start_matlab()
-    eng.cd(path)
+    eng.cd(parapower_api_path)
+    eng.addpath(parapower_path)
+    eng.addpath(parapower_api_path)
     return eng
 
 # The following classes and methods are currently only used for visualization testing in Python

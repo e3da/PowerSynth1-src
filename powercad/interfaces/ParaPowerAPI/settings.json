@@ -1,0 +1,22 @@
+{
+    "ExternalConditions": {
+        "h_Back": "0.0", 
+        "Ta_Right": "25.0", 
+        "Ta_Bottom": "25.0", 
+        "h_Top": "0.0", 
+        "h_Left": "0.0", 
+        "Ta_Top": "25.0", 
+        "h_Front": "0.0", 
+        "h_Right": "0.0", 
+        "Tproc": "260.0", 
+        "Ta_Back": "25.0", 
+        "Ta_Left": "25.0", 
+        "h_Bottom": "100.0", 
+        "Ta_Front": "25.0"
+    }, 
+    "Params": {
+        "Tsteps": "[]", 
+        "DeltaT": "1", 
+        "Tinit": "25.0"
+    }
+}

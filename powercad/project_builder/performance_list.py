@@ -340,11 +340,11 @@ class PerformanceListUI(object):
                 model = 'ParaPowerThermal'
                 import powercad.interfaces.ParaPowerAPI.MDConverter as mdc
                 try:
-                    from powercad.general.settings.settings import MATLAB_PATH
+                    from powercad.general.settings.settings import MATLAB_PATH, PARAPOWER_API_PATH
                 # TODO: Fix exception for ParaPower directory location
                 except:
                     MATLAB_PATH = 'C:/Users/tmevans/Documents/MATLAB/ParaPower/ARL_ParaPower/ARL_ParaPower'
-                matlab_engine = mdc.init_matlab(MATLAB_PATH)
+                matlab_engine = mdc.init_matlab(PARAPOWER_API_PATH, MATLAB_PATH)
 
             if self.ui.cmb_perform_type.currentText() == "Max":
                 stat_fn = ThermalMeasure.FIND_MAX

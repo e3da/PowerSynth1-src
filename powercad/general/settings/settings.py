@@ -39,6 +39,7 @@ else:   # For debugging and running PowerSynth from Eclipse
     MANUAL = "C:\Users\qmle\Desktop\Build_danfoss\PowerSynth User Tutorial.html"
     # MATLAB_PATH = 'G:/My Drive/ARL Project/ParaPower/WorkingFiles/20200317_StressUpdate/ParaPower-_develop/ARL_ParaPower'
     MATLAB_PATH = os.path.abspath("../../../ARL/ARL_ParaPower")
+    PARAPOWER_API_PATH = os.path.abspath("../../../ARLAPI")
 
 if __name__ == '__main__':  # Module test
     print DEFAULT_TECH_LIB_DIR

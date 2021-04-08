@@ -350,11 +350,14 @@ class ProjectBuilder(QtGui.QMainWindow):
         if self.ui.navigation.isEnabled():
             # print "Calling ParaPower object"
             try:
+                from powercad.general.settings.settings import PARAPOWER_API_PATH
                 ambient_temperature = round(float(self.ui.txt_ambTemp.text()) - 273.15, 2) # Convert to C for ParaPower
                 baseplate_convection = round(float(self.ui.txt_baseConvection.text()), 2)
                 print "Ambient Temperature: ", ambient_temperature
                 print "Baseplate Convection: ", baseplate_convection
-                launch_parapower_settings(temperature=ambient_temperature, convection=baseplate_convection)
+                settings_filename = PARAPOWER_API_PATH + "/settings.json"
+                launch_parapower_settings(temperature=ambient_temperature, convection=baseplate_convection,
+                                          settings_file=settings_filename)
             except ValueError:
                 launch_parapower_settings()
 
