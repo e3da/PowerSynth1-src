@@ -437,6 +437,8 @@ class ParaPowerWrapper(object):
         parameters = Params()
         parameters.Tinit = float(self.settings['Params']['Tinit'])
         parameters.DeltaT = int(self.settings['Params']['DeltaT'])
+        # TODO: Remove hard-coded time steps for transient
+        parameters.Tsteps = []
         self.parameters = parameters
 
 
@@ -555,6 +557,7 @@ class ParaPowerInterface(object):
         if not matlab_engine:
             matlab_engine = self.init_matlab()
         md_json = json.dumps(self.to_dict())
+        # print self.parapower_api_path
         matlab_engine.cd(self.parapower_api_path)
         matlab_engine.addpath(self.parapower_api_path)
         matlab_engine.addpath(self.parapower_path)

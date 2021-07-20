@@ -6,6 +6,30 @@ Brett Shook - Added separate Component Selection system 3/21/2014
             - 
 '''
 '''----------------------------------'''
+import os
+
+settings_dict = {}
+def load_PS_settings(file):
+    with open(file) as fsetting:
+        for line in fsetting:
+            info = line.split(";")
+            settings_dict[info[0]] = info[1]
+# For Testing
+load_PS_settings(os.path.abspath("../../../MATLAB/settings.txt"))
+# For Release
+# load_PS_settings(os.path.abspath("MATLAB/settings.txt"))
+
+
+
+import matlab
+matlab.MATLAB_BIN = settings_dict['MATLAB_BIN_DIR']
+# For testing
+matlab.MATLAB_ENGINE_PYD = os.path.abspath("../../../MATLAB/Engine")
+# For release
+# matlab.MATLAB_ENGINE_PYD = os.path.abspath("MATLAB/Engine")
+import matlab.engine
+
+
 import shutil
 import time
 import traceback
@@ -33,7 +57,7 @@ from powercad.project_builder.windows.mainWindow_newlayoutengine_parapower impor
 from powercad.project_builder.sol_window import SolutionWindow
 from powercad.project_builder.proj_dialogs import NewProjectDialog, OpenProjectDialog, EditTechLibPathDialog, \
     GenericDeviceDialog,LayoutEditorDialog, ResponseSurfaceDialog,ModelSelectionDialog,EnvironmentSetupDialog,SetupDeviceDialogs\
-    ,WireConnectionDialogs
+    ,WireConnectionDialogs,ParaPowerDialog
 from powercad.project_builder.dialogs.ParaPowerSetup import launch_parapower_settings
 from powercad.drc.process_design_rules_editor import ProcessDesignRulesEditor
 from powercad.tech_lib.tech_lib_wiz import TechLibWizDialog
@@ -341,14 +365,20 @@ class ProjectBuilder(QtGui.QMainWindow):
     def open_user_manual(self):
         webbrowser.open(MANUAL)
 
+
+
     def open_response_surface_dialog(self):
         if self.ui.navigation.isEnabled():
             rs_settings=ResponseSurfaceDialog(self)
             rs_settings.show() # change this to a dialog
 
     def open_parapower_dialog(self):
+
         if self.ui.navigation.isEnabled():
             # print "Calling ParaPower object"
+            para_settings = ParaPowerDialog(self)
+            para_settings.show()
+            '''
             try:
                 from powercad.general.settings.settings import PARAPOWER_API_PATH
                 ambient_temperature = round(float(self.ui.txt_ambTemp.text()) - 273.15, 2) # Convert to C for ParaPower
@@ -356,10 +386,13 @@ class ProjectBuilder(QtGui.QMainWindow):
                 print "Ambient Temperature: ", ambient_temperature
                 print "Baseplate Convection: ", baseplate_convection
                 settings_filename = PARAPOWER_API_PATH + "/settings.json"
+                print os.path.abspath(settings_filename)
                 launch_parapower_settings(temperature=ambient_temperature, convection=baseplate_convection,
                                           settings_file=settings_filename)
             except ValueError:
                 launch_parapower_settings()
+                
+            '''
 
     def setup_env(self):
         if self.ui.actionInterface_Setup.isEnabled():

@@ -13,12 +13,14 @@ import ttk
 import json
 import os
 
-SETTINGS_FILE = './settings.json'
+from powercad.general.settings.settings import PARAPOWER_API_PATH
+
+SETTINGS_FILE = PARAPOWER_API_PATH + '/settings.json'
 
 
 class ParaPowerSettingsDialog(ttk.Frame, object):
     def __init__(self, parent, temperature=25.0, convection=100.0, process_temperature=230.0,
-                 settings_file='./settings.json'):
+                 settings_file=SETTINGS_FILE):
         super(ParaPowerSettingsDialog, self).__init__(parent)
         self.root = parent
         self.grid(column=0, row=0, sticky=(N, W, E, S))
@@ -147,27 +149,25 @@ class ParaPowerSettingsDialog(ttk.Frame, object):
         self.set_defaults()
 
     def set_defaults(self, *args):
-        try:
-            self.h_left.set(0.0)
-            self.h_right.set(0.0)
-            self.h_front.set(0.0)
-            self.h_back.set(0.0)
-            self.h_top.set(0.0)
-            self.h_bottom.set(self.convection)
 
-            self.ta_left.set(self.temperature)
-            self.ta_right.set(self.temperature)
-            self.ta_front.set(self.temperature)
-            self.ta_back.set(self.temperature)
-            self.ta_top.set(self.temperature)
-            self.ta_bottom.set(self.temperature)
+        self.h_left.set(0.0)
+        self.h_right.set(0.0)
+        self.h_front.set(0.0)
+        self.h_back.set(0.0)
+        self.h_top.set(0.0)
+        self.h_bottom.set(self.convection)
 
-            self.time_steps.set('[]')
-            self.time_delta.set(1)
-            self.temperature_init.set(self.temperature)
-            self.temperature_proc.set(self.process_temperature)
-        except ValueError:
-            pass
+        self.ta_left.set(self.temperature)
+        self.ta_right.set(self.temperature)
+        self.ta_front.set(self.temperature)
+        self.ta_back.set(self.temperature)
+        self.ta_top.set(self.temperature)
+        self.ta_bottom.set(self.temperature)
+
+        self.time_steps.set('[]')
+        self.time_delta.set(1)
+        self.temperature_init.set(self.temperature)
+        self.temperature_proc.set(self.process_temperature)
 
     def write_settings(self, *args):
         try:
@@ -206,43 +206,49 @@ class ParaPowerSettingsDialog(ttk.Frame, object):
             self.root.destroy()
 
         except ValueError:
-            pass
+            "Unable to write settings"
+            self.root.destroy()
 
     def read_settings(self, *args):
         if os.path.exists(self.settings_file):
             with open(self.settings_file, 'rb') as data:
+                print self.settings_file
                 jsondata = json.load(data)
-            try:
-                extcond = jsondata['ExternalConditions']
-                params = jsondata['Params']
 
-                self.h_left.set(float(extcond['h_Left']))
-                self.h_right.set(float(extcond['h_Right']))
-                self.h_front.set(float(extcond['h_Front']))
-                self.h_back.set(float(extcond['h_Back']))
-                self.h_top.set(float(extcond['h_Top']))
-                self.h_bottom.set(float(extcond['h_Bottom']))
-                self.ta_left.set(float(extcond['Ta_Left']))
-                self.ta_right.set(float(extcond['Ta_Right']))
-                self.ta_front.set(float(extcond['Ta_Front']))
-                self.ta_back.set(float(extcond['Ta_Back']))
-                self.ta_top.set(float(extcond['Ta_Top']))
-                self.ta_bottom.set(float(extcond['Ta_Bottom']))
-                self.temperature_proc.set(float(extcond['Tproc']))
+            extcond = jsondata['ExternalConditions']
+            params = jsondata['Params']
 
-                self.time_steps.set(params['Tsteps'])
-                self.time_delta.set(int(params['DeltaT']))
-                self.temperature_init.set(float(params['Tinit']))
+            self.h_left.set(float(extcond['h_Left']))
+            self.h_right.set(float(extcond['h_Right']))
+            self.h_front.set(float(extcond['h_Front']))
+            self.h_back.set(float(extcond['h_Back']))
+            self.h_top.set(float(extcond['h_Top']))
+            self.h_bottom.set(float(extcond['h_Bottom']))
+            self.ta_left.set(float(extcond['Ta_Left']))
+            self.ta_right.set(float(extcond['Ta_Right']))
+            self.ta_front.set(float(extcond['Ta_Front']))
+            self.ta_back.set(float(extcond['Ta_Back']))
+            self.ta_top.set(float(extcond['Ta_Top']))
+            self.ta_bottom.set(float(extcond['Ta_Bottom']))
+            self.temperature_proc.set(float(extcond['Tproc']))
 
+            self.time_steps.set(params['Tsteps'])
+            self.time_delta.set(int(params['DeltaT']))
+            self.temperature_init.set(float(params['Tinit']))
+            '''
             except ValueError:
+                print "Failed"
+                print os.path.abspath(self.settings_file)
                 pass
+                '''
         else:
             print "No settings file found, creating new file with defaults."
-            self.write_settings()
+            # self.write_settings()
+            # self.root.destroy()
 
 
 def launch_parapower_settings(temperature=25.0, convection=100.0, process_temperature=230.0,
-                              settings_file='./settings.json'):
+                              settings_file=SETTINGS_FILE):
     root = Tk()
     root.title('ParaPower Settings')
     root.columnconfigure(0, weight=1)

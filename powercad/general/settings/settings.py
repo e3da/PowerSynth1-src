@@ -21,8 +21,11 @@ if POWERSYNTH_RELEASE:  # For packaged versions
     FASTHENRY_FOLDER = 'FastHenry'
     #MANUAL="PowerSynth User Tutorial.html"
     MANUAL = "PowerSynthUserManual.pdf"
+    MATLAB_PATH = 'C://PowerSynth//ARL//ARL_ParaPower'
+    PARAPOWER_API_PATH = 'C://PowerSynth//ARLAPI'
     # TODO: Add ParaPower working directory here.
     #  Place ParaPower and API code in same top-level directory as ELMER, etc.
+
 
 else:   # For debugging and running PowerSynth from Eclipse
     DEFAULT_TECH_LIB_DIR = os.path.abspath("../../../tech_lib")
@@ -41,6 +44,9 @@ else:   # For debugging and running PowerSynth from Eclipse
     MATLAB_PATH = os.path.abspath("../../../ARL/ARL_ParaPower")
     PARAPOWER_API_PATH = os.path.abspath("../../../ARLAPI")
 
+    # MATLAB_PATH = 'ARL/ARL_ParaPower'
+    # PARAPOWER_API_PATH = 'ARLAPI'
+
 if __name__ == '__main__':  # Module test
     print DEFAULT_TECH_LIB_DIR
     print LAST_ENTRIES_PATH
@@ -48,3 +54,5 @@ if __name__ == '__main__':  # Module test
     print GMSH_BIN_PATH
     print TEMP_DIR
     print CACHED_CHAR_PATH
+    print MATLAB_PATH
+    print PARAPOWER_API_PATH
