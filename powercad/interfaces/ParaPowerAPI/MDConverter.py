@@ -589,6 +589,7 @@ def init_matlab(parapower_api_path, parapower_path):
     eng.cd(parapower_api_path)
     eng.addpath(parapower_path)
     eng.addpath(parapower_api_path)
+
     return eng
 
 # The following classes and methods are currently only used for visualization testing in Python
