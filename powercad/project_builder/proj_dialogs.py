@@ -26,7 +26,8 @@ from powercad.project_builder.UI_py.device_setup_dialog_ui import Ui_setup_devic
 from powercad.project_builder.UI_py.Env_setup_ui import Ui_EnvSetup
 from powercad.project_builder.UI_py.bondwire_setup_ui import Ui_Bondwire_setup
 from powercad.project_builder.UI_py.layoutEditor_ui import Ui_layouteditorDialog
-from powercad.project_builder.UI_py.CS_design_up_ui import Ui_CornerStitch_Dialog  # CS_design_ui
+from powercad.project_builder.UI_py.para_power_diag_ui import Ui_ParaPowerSettingsDialog
+# from powercad.project_builder.UI_py.CS_design_up_ui import Ui_CornerStitch_Dialog  # CS_design_ui
 from powercad.project_builder.UI_py.Fixed_loc_up_ui import Ui_Fixed_location_Dialog  # Fixed_loc_ui
 from powercad.project_builder.project import Project
 from powercad.sym_layout.symbolic_layout import SymbolicLayout
@@ -59,6 +60,9 @@ import matplotlib
 import glob
 from tqdm import tqdm
 from time import sleep
+from powercad.general.settings.settings import PARAPOWER_API_PATH
+import json
+
 # CLASSES FOR DIALOG USAGE
 class GenericDeviceDialog(QtGui.QDialog):
     # Author: quang le
@@ -642,6 +646,113 @@ class LayoutEditorDialog(QtGui.QDialog):
         f = open(path, 'wb')
         f.write(self.parent.layout_script)
         self.close()
+
+
+class ParaPowerDialog(QtGui.QDialog):
+    def __init__(self,parent):
+        QtGui.QDialog.__init__(self, parent)
+        self.ui = Ui_ParaPowerSettingsDialog()
+        self.ui.setupUi(self)
+        self.parent = parent
+        self.ui.btn_save.pressed.connect(self.save)
+        self.ui.btn_load.pressed.connect(self.load)
+        self.amb_T = round(float(self.parent.ui.txt_ambTemp.text()) - 273.15, 2)
+        self.bp_conv = round(float(self.parent.ui.txt_baseConvection.text()), 2)
+        self.external_conditions = {}
+        self.params = {}
+        self.settings = {}
+
+        self.settings_file = PARAPOWER_API_PATH + '/settings.json'
+
+        #########################
+        # Initialize entries
+        # h values
+        self.ui.le_h_left.setText('0.0')
+        self.ui.le_h_right.setText('0.0')
+        self.ui.le_h_front.setText('0.0')
+        self.ui.le_h_back.setText('0.0')
+        self.ui.le_h_top.setText('0.0')
+        self.ui.le_h_bottom.setText(str(self.bp_conv))
+        #
+        # temperature values
+        self.temp_txt = str(self.amb_T)
+        self.ui.le_ta_left.setText(self.temp_txt)
+        self.ui.le_ta_right.setText(self.temp_txt)
+        self.ui.le_ta_front.setText(self.temp_txt)
+        self.ui.le_ta_back.setText(self.temp_txt)
+        self.ui.le_ta_top.setText(self.temp_txt)
+        self.ui.le_ta_bottom.setText(self.temp_txt)
+        #
+        # solver values
+        self.ui.le_time_steps.setText('[]')
+        self.ui.le_time_delta.setText('1')
+        self.ui.le_init_temp.setText(self.temp_txt)
+        self.ui.le_proc_temp.setText('230.0')
+
+    def save(self):
+        self.external_conditions = {
+            'h_Left': self.ui.le_h_left.text(),
+            'h_Right': self.ui.le_h_right.text(),
+            'h_Front': self.ui.le_h_front.text(),
+            'h_Back': self.ui.le_h_back.text(),
+            'h_Top': self.ui.le_h_top.text(),
+            'h_Bottom': self.ui.le_h_bottom.text(),
+            'Ta_Left': self.ui.le_ta_left.text(),
+            'Ta_Right': self.ui.le_ta_right.text(),
+            'Ta_Front': self.ui.le_ta_front.text(),
+            'Ta_Back': self.ui.le_ta_back.text(),
+            'Ta_Top': self.ui.le_ta_top.text(),
+            'Ta_Bottom': self.ui.le_ta_bottom.text(),
+            'Tproc': self.ui.le_proc_temp.text()
+        }
+
+        self.params = {
+            'Tsteps': self.ui.le_time_steps.text(),
+            'DeltaT': self.ui.le_time_delta.text(),
+            'Tinit': self.ui.le_init_temp.text()
+        }
+
+        self.settings = {
+            'ExternalConditions': self.external_conditions,
+            'Params': self.params
+        }
+
+        # Save output as JSON file
+        output = json.dumps(self.settings, indent=4)
+        with open(self.settings_file, 'w') as fp:
+            fp.write(output)
+        # print self.settings_file
+
+    def load(self):
+        if os.path.exists(self.settings_file):
+            with open(self.settings_file, 'rb') as data:
+                jsondata = json.load(data)
+
+            extcond = jsondata['ExternalConditions']
+            params = jsondata['Params']
+
+            self.ui.le_h_left.setText(extcond['h_Left'])
+            self.ui.le_h_right.setText(extcond['h_Right'])
+            self.ui.le_h_front.setText(extcond['h_Front'])
+            self.ui.le_h_back.setText(extcond['h_Back'])
+            self.ui.le_h_top.setText(extcond['h_Top'])
+            self.ui.le_h_bottom.setText(extcond['h_Bottom'])
+
+            self.ui.le_ta_left.setText(extcond['Ta_Left'])
+            self.ui.le_ta_right.setText(extcond['Ta_Right'])
+            self.ui.le_ta_front.setText(extcond['Ta_Front'])
+            self.ui.le_ta_back.setText(extcond['Ta_Back'])
+            self.ui.le_ta_top.setText(extcond['Ta_Top'])
+            self.ui.le_ta_bottom.setText(extcond['Ta_Bottom'])
+
+            self.ui.le_proc_temp.setText(extcond['Tproc'])
+
+            self.ui.le_time_steps.setText(params['Tsteps'])
+            self.ui.le_time_delta.setText(params['DeltaT'])
+            self.ui.le_init_temp.setText(params['Tinit'])
+
+        else:
+            print "No settings file found!"
 
 
 class ResponseSurfaceDialog(QtGui.QDialog):

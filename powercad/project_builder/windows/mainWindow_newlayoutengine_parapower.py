@@ -247,7 +247,7 @@ class Ui_MainWindow(object):
         self.label_4.setPalette(palette)
         self.label_4.setStyleSheet("background-color: qradialgradient(spread:pad, cx:0.5, cy:0.5, radius:0.481, fx:0.653409, fy:0.312, stop:0.698864 rgba(255, 255, 255, 194), stop:1 rgba(255, 255, 255, 0));")
         self.label_4.setText("")
-        self.label_4.setPixmap(QtGui.QPixmap(":/images/images/main_window/PowerSynth_Logo_Temp3.png"))
+        self.label_4.setPixmap(QtGui.QPixmap("../../../images/main_window/PowerSynth_Logo_Temp3.png"))
         self.label_4.setScaledContents(True)
         self.label_4.setAlignment(QtCore.Qt.AlignCenter)
         self.label_4.setObjectName("label_4")
@@ -1363,6 +1363,8 @@ class Ui_MainWindow(object):
         self.actionExport_Layout_Script.setObjectName("actionExport_Layout_Script")
         self.actionResponse_Surface_Setup = QtGui.QAction(MainWindow)
         self.actionResponse_Surface_Setup.setObjectName("actionResponse_Surface_Setup")
+        self.actionParaPower_Setup = QtGui.QAction(MainWindow)
+        self.actionParaPower_Setup.setObjectName("actionParaPower_Setup")
         self.actionInterface_Setup = QtGui.QAction(MainWindow)
         self.actionInterface_Setup.setObjectName("actionInterface_Setup")
         self.actionOpen_User_Manual = QtGui.QAction(MainWindow)
@@ -1379,6 +1381,7 @@ class Ui_MainWindow(object):
         self.menuLibraries.addAction(self.action_open_tech_lib_editor)
         self.menuLibraries.addAction(self.action_edit_tech_path)
         self.menuModel.addAction(self.actionResponse_Surface_Setup)
+        self.menuModel.addAction(self.actionParaPower_Setup)
         self.menubar.addAction(self.menuProject.menuAction())
         self.menubar.addAction(self.menuLibraries.menuAction())
         self.menubar.addAction(self.menuModel.menuAction())
@@ -1445,7 +1448,7 @@ class Ui_MainWindow(object):
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
 "p, li { white-space: pre-wrap; }\n"
 "</style></head><body style=\" font-family:\'MS Shell Dlg 2\'; font-size:8.25pt; font-weight:400; font-style:normal;\">\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><img src=\":/images/images/main_window/dimensions.png\" /></p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><img src=\"../../../images/main_window/dimensions.png\" /></p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
         self.btn_newProject.setText(QtGui.QApplication.translate("MainWindow", "New Project", None, QtGui.QApplication.UnicodeUTF8))
         self.btn_openProject.setText(QtGui.QApplication.translate("MainWindow", "Open Project", None, QtGui.QApplication.UnicodeUTF8))
         self.label_5.setText(QtGui.QApplication.translate("MainWindow", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
@@ -1592,7 +1595,9 @@ class Ui_MainWindow(object):
         self.actionOpen_Layout_Editor.setText(QtGui.QApplication.translate("MainWindow", "Open Layout Editor", None, QtGui.QApplication.UnicodeUTF8))
         self.actionExport_Layout_Script.setText(QtGui.QApplication.translate("MainWindow", "Export Layout Script", None, QtGui.QApplication.UnicodeUTF8))
         self.actionResponse_Surface_Setup.setText(QtGui.QApplication.translate("MainWindow", "Response Surface Setup", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionParaPower_Setup.setText(
+            QtGui.QApplication.translate("MainWindow", "ParaPower Setup", None, QtGui.QApplication.UnicodeUTF8))
         self.actionInterface_Setup.setText(QtGui.QApplication.translate("MainWindow", "Interface Setup", None, QtGui.QApplication.UnicodeUTF8))
         self.actionOpen_User_Manual.setText(QtGui.QApplication.translate("MainWindow", "Open User Manual", None, QtGui.QApplication.UnicodeUTF8))
 
-import main_window_images_rc
+# import main_window_images_rc

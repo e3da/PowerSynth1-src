@@ -14,7 +14,7 @@ from powercad.tech_lib.test_techlib import make_sub_dir
 class DieAttachPage(object):
     def __init__(self, parent):
         # Die attach root directory
-        self.sub_dir = os.path.join(parent.tech_lib_dir, "Die_Attaches")
+        self.sub_dir = os.path.join(parent.tech_lib_dir, "Device_Selection/Die_Attaches")
         
         # Set up device page GUI
         self.parent = parent
