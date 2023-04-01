@@ -14,8 +14,6 @@ R{4} P{2} P{5} R={6}
 '''
 SPICE_M='''K{0} L{1} L{2} {3} 
 '''
-
-
 class Netlist(object):
 
     def __init__(self, netlist_file):
@@ -121,19 +119,17 @@ class Netlist(object):
         # This will connect between import and export
         return self.df_assignment,self.ports_map
 
-class Netlist_export_ADS():
+class Netlis_export_ADS():
     # THIS CODE ONLY WORKS IF U HAVE NETLIST IMPORT
     def __init__(self,df,pm):
         self.data_frame=df
         self.net_data=None
         self.ports_map=pm
-
     def import_net_data(self,data):
         self.net_data=data
 
-    def export_ads2(self, file_name, port_include=False):
+    def export_ads2(self,file_name,port_include=False):
         '''PowerSynth lumped graph '''
-
         text_file = open(file_name, 'w')
         sub = ".subckt X1"
         for i in range(len(self.ports_map)):
@@ -158,11 +154,13 @@ class Netlist_export_ADS():
             else:
                 script += ' '.join([el, N1, N2, val, '\n'])
 
+
+
+
         script += ".end"
-        print script
+        print  script
         text_file.write(script)
         text_file.close()
-
     def export_ads(self,file_name,C=None):
         '''Fast Henry Handler'''
         text_file = open(file_name,'w')

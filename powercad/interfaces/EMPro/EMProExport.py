@@ -153,7 +153,7 @@ class Lead(object):
         self.md = module_design
         self.lead_id = self.md.lead_id
         self.lead = self.md.leads[self.lead_index]
-        #self.name = "Lead" + str(self.lead_index)
+        # self.name = "Lead" + str(self.lead_index)
         self.name = "Lead_" + self.lead_id[self.lead_index]
         self.sub = substrate
         self.base = baseplate
@@ -202,7 +202,7 @@ class Device(object):
         pad_y = []
         pad_z = wires[0].start_z
         bw_diameter = wires[0].diameter
-        offset = bw_diameter*expansion
+        offset = bw_diameter * expansion
         for wire in wires:
             pad_x.append(wire.start_x)
             pad_y.append(wire.start_y)
@@ -417,12 +417,12 @@ parts[-1].material = mats[material]
 ######################################
 #  Create rectangular solid for {7}
 ######################################
-xpos = {0:.2f} * mm
-ypos = {1:.2f} * mm
-zpos = {2:.2f} * mm
-width = {3:.2f} * mm
-length = {4:.2f} * mm
-height = {5:.2f} * mm
+xpos = {0} * mm
+ypos = {1} * mm
+zpos = {2} * mm
+width = {3} * mm
+length = {4} * mm
+height = {5} * mm
 material = "{6}"
 partName = "{7}"
 
@@ -460,7 +460,7 @@ makeJEDECProfile(name=bondDefName, radius=bondDefRadius)
 ######################################
 start_x = {0:.2f} * mm
 start_y = {1:.2f} * mm
-start_z = {2:.2f} * mm
+start_z = {2} * mm
 end_x = {3:.2f} * mm
 end_y = {4:.2f} * mm
 end_z = {5} * mm
@@ -696,7 +696,6 @@ class EMProScript(object):
         for leads in xrange(len(self.leads)):
             lead = Lead(leads, self.md, self.baseplate, self.substrate)
             self.output.append(self.gd.create_port.format(lead.tail, lead.head, lead.end, lead.name))
-
 
 
 if __name__ == '__main__':

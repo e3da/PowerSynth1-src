@@ -1155,8 +1155,6 @@ def test_build_bw_group_model_fh(f=100,num_wire=2,bw_pad_width=None,radius=0.276
     else:
         print "fail to add more wires"
     print "total characterization time", time.time()-start
-
-
 def test_build_trace_model_fh():
     fh_env_dir = "C://Users//qmle//Desktop//Testing//FastHenry//Fasthenry3_test_gp//WorkSpace//fasthenry.exe"
     read_output_dir = "C://Users//qmle//Desktop//Testing//FastHenry//Fasthenry3_test_gp//ReadOutput.exe"

@@ -16,11 +16,6 @@ from powercad.tech_lib.test_techlib import get_device, get_dieattach
 from powercad.tech_lib.test_techlib import get_power_bondwire, get_signal_bondwire
 from powercad.tech_lib.test_techlib import get_signal_lead
 
-import powercad.design.module_design as md
-
-
-import pandas as pd
-import powercad.interfaces.ParaPowerAPI.MDConverter as mdc
 
 #from powercad.design.MDConverter import MDEncoder
 
@@ -89,7 +84,6 @@ def make_test_bonds(df,bw_sig,bw_power):
     print df.iloc[0,0]
     return df
 
-
 def make_test_design_values(sym_layout, dimlist, default):
     hdv = []
     vdv = []
@@ -121,31 +115,37 @@ def make_test_design_values(sym_layout, dimlist, default):
     return hdv, vdv, dev_dv
 
 
-def add_test_measures(sym_layout, matlab_engine=None):
+def add_test_measures(sym_layout,dev_states):
+    ''' ADD Test Measure Here'''
     pts = []
+    ''' Read through all symbolic objects'''
+    ''' Here I only select 2 names for one loop from DC_plus to DC_neg (See the layout script)
+    If you need multiple loops, write a nested loop with pair of net name [[DC_plus,DC_neg]], .... ]  ? '''
     for sym in sym_layout.all_sym:
-        if sym.element.path_id == '0002':
+        if sym.element.path_id == 'DC_plus':
             pts.append(sym)
-        if sym.element.path_id == '0010':
+        if sym.element.path_id == 'DC_neg':
             pts.append(sym)
         if len(pts) > 1:
             break
+    ''' ELECTRICAL '''
 
+    ''' if there are 2 points this code will be the same as resistance and inductance measurement setup in your UI'''
     if len(pts) == 2:
-        m1 = ElectricalMeasure(pts[0], pts[1], ElectricalMeasure.MEASURE_IND, 100, "Loop Inductance", None, 'MS')
-        # sym_layout.perf_measures.append(m1)
-        m2 = ElectricalMeasure(pts[0], pts[1], ElectricalMeasure.MEASURE_RES, 100, "Loop Resistance", None, 'MS')
-        # sym_layout.perf_measures.append(m2)
+        m1 = ElectricalMeasure(pts[0], pts[1], ElectricalMeasure.MEASURE_IND, 100, "Loop Inductance", None, 'MS',
+                               device_state=dev_states)
+        sym_layout.perf_measures.append(m1)
+        m2 = ElectricalMeasure(pts[0], pts[1], ElectricalMeasure.MEASURE_RES, 100, "Loop Resistance", None, 'MS',
+                               device_state=dev_states)
+        sym_layout.perf_measures.append(m2)
 
+    ''' THERMAL '''
     devices = []
     for sym in sym_layout.all_sym:
         devices.append(sym)
-
-    m3 = ThermalMeasure(ThermalMeasure.FIND_MAX, devices, "PowerSynth Max Temp.", 'TFSM_MODEL')
+    m3 = ThermalMeasure(ThermalMeasure.FIND_MAX, devices, "Max Temp.", 'TFSM_MODEL')
     sym_layout.perf_measures.append(m3)
 
-    m4 = ThermalMeasure(ThermalMeasure.FIND_MAX, devices, "ParaPower Max Temp.", "ParaPowerThermal", matlab_engine=matlab_engine)
-    sym_layout.perf_measures.append(m4)
     print "perf", sym_layout.perf_measures
 
 
@@ -156,7 +156,7 @@ def setup_model(symlayout):
             symlayout.mdl_type['E']=pm.mdl
 
 
-def one_measure(symlayout, matlab_engine=None):
+def one_measure(symlayout):
     ret = []
     for measure in symlayout.perf_measures:
         if isinstance(measure, ElectricalMeasure):
@@ -190,9 +190,7 @@ def one_measure(symlayout, matlab_engine=None):
                 type_id = 2
             elif type == 'Matlab':
                 type_id = 3
-            elif type == 'ParaPowerThermal':
-                type_id = 4
-            val = symlayout._thermal_analysis(measure, type_id, matlab_engine=matlab_engine)
+            val = symlayout._thermal_analysis(measure, type_id)
             ret.append(val)
     return ret
 
@@ -221,6 +219,7 @@ def plot_lumped_graph(sym_layout):
     plt.show()
     plot_layout(sym_layout)
 
+
 def make_tbl_dev_states():
     ''' This will set up dev states'''
     data = [['M1', 1, 1, 1], ['M2', 1, 1, 1], ['M3', 1, 1, 1], ['M4', 1, 1, 1]]
@@ -229,26 +228,16 @@ def make_tbl_dev_states():
     print df
     return df
 
-def make_test_setup2(f, directory):
-
-    matlab_path = 'C:/Users/tmevans/Documents/MATLAB/ParaPower/ARL_ParaPower/ARL_ParaPower'
-    matlab_engine = mdc.init_matlab(matlab_path)
+def make_test_setup2(f,directory):
 
     temp_dir = os.path.abspath(settings.TEMP_DIR)  # The directory where thermal characterization files are stored
 
     test_file = os.path.abspath(directory)  # A layout script file, you can link this to any file you want
 
-    ps_results = []
-    pp_results = []
-    ps_time = []
-    pp_time = []
+    results=[]
     # powers= [[1.89,1.98,1.92,1.98],[2.31,2.44,2.34,2.41],[2.83,2.93,2.844,2.938],[3.6096,3.788,3.66,3.776],[3.966,4.1004,4.033,4.1004]]
-    # powers = [[8., 8., 8., 8.]]
-    powers = [[2.5, 2.5, 2.5, 2.5], [5., 5., 5., 5.], [7.5, 7.5, 7.5, 7.5], [10., 10., 10., 10.],
-              [12.5, 12.5, 12.5, 12.5]]
-    # h_val = [102.331, 105.986, 110.236, 115.238, 117.656]
-    h_val = [150.0, 150.0, 150.0, 150.0, 150.0]
-    # h_val = [150.0]
+    powers = [[1, 1, 1, 1]]
+    h_val =[102.331, 105.986, 110.236, 115.238, 117.656]
     for p, h in zip(powers, h_val):
         print "Test Case", p, h
         sym_layout = SymbolicLayout()  # initiate a symbolic layout object
@@ -269,10 +258,11 @@ def make_test_setup2(f, directory):
         table_df = make_test_bonds(table_df, signal_bw, power_bw)
 
         make_test_leads(sym_layout.all_sym, pow_lead,sig_lead)  # Depends on the layout script you have, you can assign the lead object to a SYM-POINT using the id of the object
-        make_test_devices(sym_layout.all_sym, dev_dict={'M1':dev1,'M2':dev2,'M3':dev3,'M4':dev4})  # Depends on the layout script you have, you can assign the device object to a SYM-POINT using the id of the object
+        make_test_devices(sym_layout.all_sym,dev_dict={'M1':dev1,'M2':dev2,'M3':dev3,'M4':dev4})  # Depends on the layout script you have, you can assign the device object to a SYM-POINT using the id of the object
         # make_test_symmetries(sym_layout) # You can assign the symmetry objects here
+        dev_states = make_tbl_dev_states()
 
-        add_test_measures(sym_layout, matlab_engine=matlab_engine)  # Assign a measurement between 2 SYM-Points (using their IDs)
+        add_test_measures(sym_layout,dev_states)  # Assign a measurement between 2 SYM-Points (using their IDs)
 
         module = gen_test_module_data(f, h)
 
@@ -280,93 +270,98 @@ def make_test_setup2(f, directory):
         sym_layout.form_design_problem(module, table_df, temp_dir) # Collect data to user interface
         sym_layout._map_design_vars()
 
-        #sym_layout.optimize(inum_gen=50)
-        individual = [10, 4, 10, 2.0, 2.0, 10, 4, 0.38232573137878245, 0.7, 0.68, 0.24]
+        #sym_layout.optimize()
+        individual =[10, 4, 10, 2.0, 2.0, 10, 4, 0.38232573137878245, 0.7, 0.68, 0.24]
         sym_layout.rev_map_design_vars(individual)
         sym_layout.generate_layout()
-        sym_layout.eval_count = 0
-        thermal_result = sym_layout._opt_eval(individual)
-
-        ps_results.append(thermal_result[0])
-        ps_time.append(thermal_result[1])
-        pp_results.append(thermal_result[2])
-        pp_time.append(thermal_result[3])
-
-        # add_thermal_measure(sym_layout)
+        add_thermal_measure(sym_layout)
         plot_layout(sym_layout)
         # plt.show()
-        # results.append(thermal_measure(sym_layout))
-        # print results
-    # for r in results:
-    #     print r
+        results.append(thermal_measure(sym_layout))
+        print results
+    for r in results:
+        print r
     ax = plt.subplot('111', adjustable='box', aspect=1.0)
-    plot_layout(sym_layout, filletFlag=False, ax=ax)
-    plot_compare_temp(powers, ps_results, pp_results)
-    return md.ModuleDesign(sym_layout), np.array(ps_time), np.array(pp_time)
+    plot_layout(sym_layout,filletFlag=False,ax=ax)
+    return md.ModuleDesign(sym_layout)
 # The test goes here, moddify the path below as you wish...
 
 
-def plot_compare_temp(power_list, ps_results, pp_results):
-    power = []
-    for powers in power_list:
-        p = 0.
-        for i in powers:
-            p += i
-        power.append(p)
-    print '\n'
-    print '=_=' * 30
-    print 'power', power
-    print 'PowerSynth Results', ps_results
-    print 'ParaPower Results', pp_results
-    print '=_=' * 30
-
-    ps_results = np.array(ps_results) - 273.5 - 20.
-    pp_results = np.array(pp_results) - 273.5 - 20.
-
-    error = np.abs((ps_results - pp_results)/ps_results)*100
-
-    font_small = 14
-    font_large = 16
-    lw = 4
-    fig, ax = plt.subplots(1, 1, figsize=(9, 5))
-    ax.plot(power, ps_results, color='navy', linewidth=lw, label='PowerSynth')
-    ax.scatter(power, ps_results, color='navy', s=40)
-    ax.plot(power, pp_results, color='darkorange', linewidth=lw, linestyle=':', label='ParaPower')
-    ax.scatter(power, pp_results, color='darkorange', s=40)
-    ax.set_ylabel('Temperature Rise $\Delta T_J$ ($^\circ$C)', fontsize=font_small)
-    ax.set_xlabel('Total Power Dissipation (W)', fontsize=font_small)
-    ax2 = ax.twinx()
-    ax2.plot(power, error, color='green', linestyle='--', linewidth=lw, label='Rel. Difference')
-    ax2.scatter(power, error, color='green', s=40)
-    ax2.set_ylabel('Relative Difference (%)', fontsize=font_small)
-    ax.legend(loc='upper left', fontsize=12)
-    ax2.legend(loc='lower right', fontsize=12)
-    plt.title('PowerSynth and ParaPower\nThermal Model Comparison', weight='bold', fontsize=font_large)
-    ax2.set_ylim(0.2, 0.26)
-    ax.set_ylim(10, 100)
-    ax.set_xlim(5, 55)
-    ax.grid(which='major', axis='both')
-    ax.tick_params(labelsize=12)
-    ax2.set_yticks([0.2, 0.22, 0.24, 0.25, 0.26], minor=True)
-    # ax2.tick_params(axis='y', which='minor', labelsize=12)
-    plt.savefig('0_3_PS_PP_Compare_Thermal.png', dpi=200)
-    plt.plot()
 
 
-# directory ='Layout/journal_2(v2).psc' # directory to layout script
-# md, ps_time, pp_time = make_test_setup2(100.0, directory)
-# pp = mdc.ParaPowerWrapper(md)
-# pp.parapower.save_parapower()
-#maxtemp = pp.parapower.run_parapower_thermal()
-'''
-print '\n'
-print '=' * 30
-print '|\tMax Temp: ', maxtemp
-print '=' * 30
-'''
+def make_test_setup3():
+    '''
+    This script will run the evaluation one single time for electrical and thermal
+    '''
+    temp_dir = os.path.abspath(settings.TEMP_DIR)  # The directory where thermal characterization files are stored
+    test_file = os.path.abspath(directory)  # A layout script file, you can link this to any file you want
+    sym_layout = SymbolicLayout()  # initiate a symbolic layout object
+    sym_layout.load_layout(test_file, 'script')  # load the script
+
+    ''' Set up devices with 10 W power dissipation'''
+    dev1 = DeviceInstance(0.1, 10, get_device(),
+                          get_dieattach())  # Create a device instance with 10 W power dissipation. Highlight + "Crtl+Shift+I" to see the definition of this object
+    dev2 = DeviceInstance(0.1, 10, get_device(),
+                          get_dieattach())  # Create a device instance with 10 W power dissipation. Highlight + "Crtl+Shift+I" to see the definition of this object
+    dev3 = DeviceInstance(0.1, 10, get_device(),
+                          get_dieattach())  # Create a device instance with 10 W power dissipation. Highlight + "Crtl+Shift+I" to see the definition of this object
+    dev4 = DeviceInstance(0.1, 10, get_device(),
+                          get_dieattach())  # Create a device instance with 10 W power dissipation. Highlight + "Crtl+Shift+I" to see the definition of this object
+    ''' Setup module design '''
+    module = gen_test_module_data(100.0, 1000.0)
+
+    ''' Setup leads connections'''
+    pow_lead = None  # Get a power lead object
+
+    sig_lead = get_signal_lead()  # Get a signal lead object
+
+    power_bw = get_power_bondwire()  # Get bondwire object
+    signal_bw = get_signal_bondwire()  # Get bondwire object
+
+    table_df = pd.DataFrame()
+    table_df = make_test_bonds(table_df, signal_bw, power_bw)
+
+    make_test_leads(sym_layout.all_sym, pow_lead,
+                    sig_lead)  # Depends on the layout script you have, you can assign the lead object to a SYM-POINT using the id of the object
+    ''' Setup devices here'''
+
+    make_test_devices(sym_layout.all_sym, dev_dict={'M1': dev1, 'M2': dev2, 'M3': dev3,
+                                                    'M4': dev4})  # Depends on the layout script you have, you can assign the device object to a SYM-POINT using the id of the object
+    # make_test_symmetries(sym_layout) # You can assign the symmetry objects here
+
+
+    ''' Setup measurement '''
+    dev_states = make_tbl_dev_states()
+    add_test_measures(sym_layout,dev_states)  # Assign a measurement between 2 SYM-Points (using their IDs)
+
+    ''' Setup optimization '''
+    sym_layout.form_design_problem(module, table_df, temp_dir)  # Collect data to user interface
+    sym_layout._map_design_vars()
+
+    ''' This will run optimization '''
+    sym_layout.optimize()
+    ''' List of layout solutions here:'''
+    print sym_layout.solutions
+    ''' Single Individual Evaluation'''
+    ''' During optimization you can print individual in opt_eval function to see the individual list. Change this manually
+    first to test your model. Then you can design your new EMI eval function in opt_eval and run optimization'''
+    individual = [10, 4, 10, 2.0, 2.0, 10, 4, 0.38232573137878245, 0.7, 0.68, 0.24]
+    sym_layout.rev_map_design_vars(individual)
+    sym_layout.generate_layout()
+    ''' This code will perform the measurements ( based on ones you had in measurement setup '''
+    ''' This will return a list with n values for n is number of measurements'''
+    results = sym_layout._opt_eval(individual)
+    print results
+    ''' This code below do 1 single thermal measurement only ( I commented it out)'''
+    #add_thermal_measure(sym_layout)
+    ''' Plot the layout'''
+    plot = False # Change this flag
+    if plot == True:
+        plot_layout(sym_layout)
+        plt.show()
 
 if __name__ == '__main__':
 
     directory ='Layout/journal_2(v2).psc' # directory to layout script
-    md = make_test_setup2(100.0,directory)
-    pp = mdc.ParaPowerWrapper(md)
+    #md = make_test_setup2(100.0,directory)
+    make_test_setup3()

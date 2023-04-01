@@ -10,12 +10,12 @@ import os
 import sys
 import time
 import traceback
-import pickle
+
 import numpy as np
 from PySide import QtGui
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
-from powercad.spice_handler.spice_import.NetlistImport import Netlist, Netlist_export_ADS
+from powercad.spice_handler.spice_import.NetlistImport import Netlist, Netlis_export_ADS
 from powercad.spice_handler.spice_export.thermal_netlist_graph import Module_Full_Thermal_Netlist_Graph
 from powercad.spice_handler.spice_export.netlist_graph import Module_SPICE_netlist_graph_v2, Module_SPICE_lumped_graph
 from powercad.design.module_design import ModuleDesign
@@ -88,7 +88,7 @@ class SolutionWindow(QtGui.QWidget):
         elif selected== 'Solidworks':
             self.export_solidworks()
         elif selected == 'electrical_mdl netlist ':
-            self.export_spice_parasitics()
+            self.export_spice_parasitics(self.sym_layout)
         elif selected == 'Thermal netlist':
             self.export_spice_thermal()
         elif selected == 'FastHenry':
@@ -109,15 +109,13 @@ class SolutionWindow(QtGui.QWidget):
                 print traceback.format_exc()
 
     def export_empro(self):
-        fn = QtGui.QFileDialog.getSaveFileName(self, dir=self.default_save_dir, options=QtGui.QFileDialog.ShowDirsOnly)
+        fn = QtGui.QFileDialog.getSaveFileName(self, dir=self.default_save_dir,options=QtGui.QFileDialog.ShowDirsOnly)
         print fn
         outname = fn[0]
 
         if len(outname) > 0:
             try:
                 md = ModuleDesign(self.sym_layout)
-                # TODO for testing, export module design object
-                # pickle.dump(md, open(outname + '.p', 'wb'))
                 empro_script = EMProScript(md, outname+".py")
                 empro_script.generate()
                 QtGui.QMessageBox.about(None, "EMPro Script", "Export successful.")
@@ -158,7 +156,7 @@ class SolutionWindow(QtGui.QWidget):
                 QtGui.QMessageBox.warning(None, "SolidWorks Script", "Failed to export vb script! Check log/console.")
                 print traceback.format_exc()
 
-    def export_spice_parasitics(self):
+    def export_spice_parasitics(self,sym_layout):
         fn = QtGui.QFileDialog.getSaveFileName(self,dir=self.default_save_dir, options=QtGui.QFileDialog.ShowDirsOnly)
         outname = fn[0]
 
@@ -168,11 +166,10 @@ class SolutionWindow(QtGui.QWidget):
                 #spice_netlist_graph = Module_SPICE_netlist_graph_v2(os.path.basename(outname), self.sym_layout, self.solution.index, template_graph=None)
                 #spice_netlist_graph.write_SPICE_subcircuit(os.path.dirname(outname))
 
-                self.sym_layout.gen_solution_layout(self.solution.index)
                 spice_netlist=Circuit()
                 self.sym_layout.build_lumped_graph()
                 spice_netlist._graph_read(self.sym_layout.lumped_graph)
-                ads_net = Netlist_export_ADS(df=spice_netlist.df_circuit_info, pm=spice_netlist.portmap)
+                ads_net = Netlis_export_ADS(df=spice_netlist.df_circuit_info, pm=spice_netlist.portmap)
                 ads_net.export_ads2(outname)
                 QtGui.QMessageBox.about(None, "SPICE electrical_mdl Parasitics Netlist", "Export successful.")
             except:

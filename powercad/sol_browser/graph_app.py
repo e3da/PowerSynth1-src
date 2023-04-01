@@ -33,11 +33,8 @@ from powercad.sol_browser.solution_lib import SolutionLibrary
 
 from powercad.sym_layout.plot import plot_layout
 from powercad.electro_thermal.ElectroThermal_toolbox import ET_analysis
-from powercad.thermal.analysis import parapower_thermal_analysis
-import csv
 from powercad.spice_handler.spice_export.thermal_netlist_graph import Module_Full_Thermal_Netlist_Graph
-from powercad.export.py_csv import py_csv
-
+from powercad.export.py_csv import py_csv 
 
 class GrapheneWindow(QtGui.QMainWindow):
     def __init__(self, parent):
@@ -352,7 +349,6 @@ class GrapheneWindow(QtGui.QMainWindow):
         p_frontX = [pair[0] for pair in p_front]
         p_frontY = [pair[1] for pair in p_front]
         return p_frontX, p_frontY
-
     def select_solution(self, event):
         # check that there are some indices
         if not len(event.ind): return True
@@ -387,9 +383,6 @@ class GrapheneWindow(QtGui.QMainWindow):
         self.sel_ind=closest_point
         self.draw_graph()
         self.draw_layout_preview(self.sol_index)
-        self.sym_layout.gen_solution_layout(self.sol_index)
-        # TODO: Bug in MATLAB visualization causes the figure window to be destroyed following creation.
-        # parapower_thermal_analysis(self.sym_layout, visualize=1)
 
 
     def draw_layout_preview(self, index):
@@ -456,11 +449,6 @@ class GrapheneWindow(QtGui.QMainWindow):
         if tgt_file[0]!="":
             # send data, file name, and directory to py_csv 
             py_csv(self.solution_library.measure_data, self.solution_library.measure_names_units, tgt_file[0])
-            fname = tgt_file[0]
-            thermal_time_fname = fname[:-4] + "_thermal_model_time.csv"
-            with open(thermal_time_fname, "wb") as myfile:
-                wr = csv.writer(myfile)
-                wr.writerow(self.sym_layout.thermal_timer)
         else: # if name is blank or user clicks 'cancel'
             pass
         

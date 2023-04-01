@@ -92,7 +92,7 @@ class ThermalMeasure(object):
     
     UNIT = ('K', 'Kelvin')
     
-    def __init__(self, stat_fn=None, devices=None, name=None, mdl=None, matlab_engine=None):
+    def __init__(self, stat_fn, devices, name,mdl):
         """
         Thermal performance measure object
         
@@ -103,15 +103,12 @@ class ThermalMeasure(object):
             FIND_STD_DEV -> find standard deviation of device temperatures
         devices -- list of SymPoint objects which represent devices
         name -- user given name to performance measure
-        mdl -- integer reference to
         """
         self.stat_fn = stat_fn
         self.devices = devices
         self.name = name
         self.units = self.UNIT[0]
-        self.mdl = mdl
-        self.matlab_engine = matlab_engine
-
+        self.mdl=mdl
 
 class ElectricalMeasure(object):
     MEASURE_RES = 1
@@ -122,7 +119,7 @@ class ElectricalMeasure(object):
     UNIT_IND = ('nH', 'nanoHenry')
     UNIT_CAP = ('pF', 'picoFarad')
 
-    def __init__(self, pt1=None, pt2=None, measure=None, name=None, lines=None, mdl=None, src_sink_type=[None,None],device_state=None):
+    def __init__(self, pt1, pt2, measure, name, lines=None, mdl=None,src_sink_type=[None,None],device_state=None):
         """
         Electrical parasitic measure object
 
@@ -391,8 +388,6 @@ class SymbolicLayout(object):
         self.opt_to_sym_index = None
         self.opt_dv_list = None
         self.opt_progress_fn = None # function to control optimization progress bar in GUI
-        # Model Evaluation Timers
-        # self.thermal_timer = [['Model Name', 'Eval Count', 'Time']]
 
         # Types
         self.SymLine = SymLine
@@ -2233,8 +2228,6 @@ class SymbolicLayout(object):
         self.rev_map_design_vars(individual)
         self.generate_layout()
         ret = []
-        measurement_list = []
-
         drc = DesignRuleCheck(self)
         drc_count = drc.count_drc_errors(True)
         #fig, ax = plt.subplots()
@@ -2283,7 +2276,6 @@ class SymbolicLayout(object):
                         source_terminal=measure.src_term
                         sink_terminal=measure.sink_term
 
-
                         src = measure.pt1.lumped_node
                         sink = measure.pt2.lumped_node
 
@@ -2311,29 +2303,18 @@ class SymbolicLayout(object):
                         except LinAlgError:
                             val = 1e6
                     ret.append(val)
-                    measurement_list.append(measure_type)
+
 
                 elif isinstance(measure, ThermalMeasure):
-
                     type = measure.mdl
-                    matlab_engine = None
                     if type == 'TFSM_MODEL':
                         type_id=1
                     elif type == 'RECT_FLUX_MODEL':
                         type_id=2
                     elif type == 'Matlab':
                         type_id=3
-                    elif type == 'ParaPowerThermal':
-                        type_id = 5
-                        matlab_engine = measure.matlab_engine
-                    # start = time.time()
-                    val = self._thermal_analysis(measure, type_id, matlab_engine=matlab_engine)
-                    # stop = time.time()
+                    val = self._thermal_analysis(measure,type_id)
                     ret.append(val)
-                    measurement_list.append(type)
-                    # ret.append(stop-start)
-                    # self.thermal_timer.append([type, self.eval_count, stop-start])
-
         # Update progress bar and eval count
         self.eval_count += 1
         print "Running... Current number of evaluations:", self.eval_count,self.trial
@@ -2366,15 +2347,15 @@ class SymbolicLayout(object):
                     trace = line.trace_rect
 
                 if trace is not None:
-                    total_cap += trace_capacitance(trace.width_eval(), trace.height_eval(), metal_t, iso_t, epsil)
+                    total_cap += trace_capacitance(trace.width(), trace.height(), metal_t, iso_t, epsil)
 
         return total_cap
     '''-----------------------------------------------------------------------------------------------------------------------------------------------------'''
-    def _thermal_analysis(self, measure, type, matlab_engine=None):
+    def _thermal_analysis(self, measure,type):
         # RECT_FLUX_MODEL
-        temps = perform_thermal_analysis(self, type, matlab_engine=matlab_engine)#<--RECT_FLUX_MODEL
+        temps = perform_thermal_analysis(self, type)#<--RECT_FLUX_MODEL
 
-        if isinstance(measure, int):
+        if isinstance(measure,int):
             return temps
         else:
             if measure.stat_fn == ThermalMeasure.FIND_MAX:
@@ -2695,8 +2676,7 @@ def optimization_test(sym_layout):
 #    sym_layout.rev_map_design_vars(sym_layout.solutions[mid_sol])
 #    sym_layout.generate_layout()
 #    plot_layout(sym_layout)
-
-
+            
 def build_test_layout():
     from powercad.sym_layout.plot import plot_layout
     

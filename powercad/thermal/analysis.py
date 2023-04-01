@@ -5,24 +5,22 @@ Created on Nov 2, 2012
          qmle added successive approximation model (date - time)
 '''
 
-from powercad.thermal.fast_thermal import ThermalGeometry, TraceIsland, DieThermal, solve_TFSM
-from powercad.thermal.rect_flux_channel_model import Baseplate, ExtaLayer, Device, layer_average, compound_top_surface_avg
-import powercad.interfaces.ParaPowerAPI.MDConverter as mdc
-import powercad.design.module_design as md
+import numpy as np
 
+from powercad.thermal.fast_thermal import ThermalGeometry, TraceIsland, DieThermal, solve_TFSM,\
+    ThermalProperties
+from powercad.thermal.rect_flux_channel_model import Baseplate, ExtaLayer, Device, layer_average, compound_top_surface_avg
+from powercad.electro_thermal.ElectroThermal_toolbox import *
 TFSM_MODEL = 1
 RECT_FLUX_MODEL = 2
-Successive_approximation_model = 3
-MATLAB = 4
-ParaPowerThermal = 5
+Successive_approximation_model=3
+MATLAB=4
 
-def perform_thermal_analysis(sym_layout, model=1, matlab_engine=None):
+def perform_thermal_analysis(sym_layout, model=1):
     if model == TFSM_MODEL:
         ret = tfsm_analysis(sym_layout)
     elif model == RECT_FLUX_MODEL:
         ret = rect_flux_analysis(sym_layout)
-    elif model == ParaPowerThermal:
-        ret = parapower_thermal_analysis(sym_layout, matlab_engine=matlab_engine)
     else:
         ret = tfsm_analysis(sym_layout)
     return ret
@@ -135,7 +133,6 @@ def successive_appoximation(sym_layout):  # in math this is known as bisection m
     tg.trace_islands = islands
     tg.sublayer_features = sym_layout.module.sublayers_thermal
 
-
 def tfsm_analysis(sym_layout):
     # Create trace islands
     islands = []
@@ -184,14 +181,6 @@ def tfsm_analysis(sym_layout):
 
     res= solve_TFSM(tg, 1.0)
     return res
-
-
-def parapower_thermal_analysis(sym_layout, matlab_engine=None, visualize=False):
-    module_design = md.ModuleDesign(sym_layout)
-    parapower_design = mdc.ParaPowerWrapper(module_design)
-    max_temperature = parapower_design.parapower.run_parapower_thermal(matlab_engine, visualize=visualize)
-    return max_temperature
-
 
 
 if __name__ == '__main__':

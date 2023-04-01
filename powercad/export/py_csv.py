@@ -28,8 +28,7 @@ def py_csv(data, names_units, tgt_file_name):
             
     # remove trailing decimal places in data by limiting to two decimal places:
     for i in range(len(data)):
-        # Was %.2f
-        data[i] = ["%.5f" % item for item in data[i]] # data stored as numbers but decimals removed if zeroes
+        data[i] = ["%.2f" % item for item in data[i]] # data stored as numbers but decimals removed if zeroes
     
     # convert list to array, transpose, and convert back to list:
     data = numpy.asarray(data).T.tolist()
