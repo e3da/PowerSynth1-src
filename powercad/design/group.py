@@ -1,7 +1,7 @@
 
 import matplotlib.pyplot as plt
 import numpy as np
-from powercad.corner_stitch.CornerStitch import draw_rect_list_cs
+#from powercad.corner_stitch.CornerStitch import draw_rect_list_cs
 
 class Island():
     def __init__(self):
@@ -27,14 +27,14 @@ class Island():
         return devices
 
     def print_island(self,plot=False,size=None):
-        print "Name", self.name
-        print "Num_elements", len(self.elements)
+        print("Name", self.name)
+        print("Num_elements", len(self.elements))
         for i in range(len(self.elements)):
-            print self.elements[i]
+            print(self.elements[i])
         if len(self.child)>0:
-            print "Num_child", len(self.child)
+            print("Num_child", len(self.child))
             for i in range(len(self.child)):
-                print self.child[i]
+                print(self.child[i])
         if plot == True and size!=None:
             self.plot_island_rects(size=size)
         if len(self.mesh_nodes)>0:
@@ -42,9 +42,9 @@ class Island():
 
                 self.plot_mesh_nodes(size=size)
             else:
-                print "Nodes_num", len(self.mesh_nodes)
+                print("Nodes_num", len(self.mesh_nodes))
                 for i in range(len(self.mesh_nodes)):
-                    print "id:", self.mesh_nodes[i].node_id, "pos", self.mesh_nodes[i].pos
+                    print("id:", self.mesh_nodes[i].node_id, "pos", self.mesh_nodes[i].pos)
 
         '''
         if len(self.points)>0:
@@ -67,18 +67,18 @@ class Island():
             rectlist.append([element[1],element[2],element[3],element[4],element[0]])
 
         fig,ax=plt.subplots()
-        draw_rect_list_cs(rectlist,ax,x_max=size[0],y_max=size[1])
+        #draw_rect_list_cs(rectlist,ax,x_max=size[0],y_max=size[1])
 
     def plot_points(self,all_points,all_boundaries,size=None):
         s = set(tuple(x) for x in all_points)
-        print len(all_points)
-        x, y = zip(*s)
+        print(len(all_points))
+        x, y = list(zip(*s))
 
         # plt.axis([0, 30, 0, 42])
         # plt.show()
         s = set(tuple(x) for x in all_boundaries)
         #print len(all_boundaries)
-        x2, y2 = zip(*s)
+        x2, y2 = list(zip(*s))
         # plt.axis([0, 30, 0, 42])
         # plt.show()
 
@@ -93,28 +93,28 @@ class Island():
     def plot_mesh_nodes(self,size=None):
         all_points=[]
         all_boundaries=[]
-        print "Mesh_nodes_num",len(self.mesh_nodes)
+        print("Mesh_nodes_num",len(self.mesh_nodes))
         for node in self.mesh_nodes:
             if len(self.mesh_nodes)==4:
-                print node.pos
+                print(node.pos)
             if len(node.b_type)==0:
                 all_points.append(node.pos)
             else:
                 all_boundaries.append(node.pos)
 
-        print"internal_points", len(all_points)
+        print("internal_points", len(all_points))
         if len(all_points)>0:
             s = set(tuple(x) for x in all_points)
 
 
-            x, y = zip(*s)
+            x, y = list(zip(*s))
             plt.scatter(x, y, s=10, c='b')
 
         # plt.axis([0, 30, 0, 42])
         # plt.show()
         s = set(tuple(x) for x in all_boundaries)
         # print len(all_boundaries)
-        x2, y2 = zip(*s)
+        x2, y2 = list(zip(*s))
         # plt.axis([0, 30, 0, 42])
         # plt.show()
 

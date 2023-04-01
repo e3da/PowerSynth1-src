@@ -69,8 +69,8 @@ class Module_SPICE_lumped_graph():
         # ensure every node begins with a letter for SPICE
         nbunch[:] = [('N{}'.format(node[0]),node[1]) for node in nbunch]
         ebunch[:] = [('N{}'.format(edge[0]),'N{}'.format(edge[1]),edge[2]) for edge in ebunch]
-        print nbunch
-        print ebunch
+        print(nbunch)
+        print(ebunch)
         
         
     def _check_node_types(self, graph):
@@ -187,7 +187,7 @@ class Module_SPICE_netlist_graph_v2():
         Keyword Arguments:
             graph -- networkx graph
         """
-        print graph
+        print(graph)
 
         for node,node_attrib in graph.nodes_iter(data=True):
             try:
@@ -317,7 +317,7 @@ class Module_SPICE_netlist_graph_v2():
         Returns:
             networkx node equivalent of spice_node
         """
-        for nx_node, spice_node_num in self.spice_node.iteritems():
+        for nx_node, spice_node_num in self.spice_node.items():
             if spice_node == spice_node_num:
                 return nx_node
     
@@ -670,13 +670,13 @@ class Module_SPICE_netlist_graph_v2():
         
         # write each device Verilog-A file to local directory
         try:
-            for model in self.device_models.itervalues():
+            for model in self.device_models.values():
                 full_path = os.path.join(directory, '{}.va'.format(model[0]))
                 model_file = open(full_path, 'w')
                 model_file.write(model[1])
                 model_file.close()
         except:
-            print "did not add model file, a temporary device is added"
+            print("did not add model file, a temporary device is added")
         # find leads of module
         lead_list = ''
         for lead in [node for node in self.spice_graph.nodes(data=True) if node[1]['type']=='lead']:
@@ -692,7 +692,7 @@ class Module_SPICE_netlist_graph_v2():
         
         # include each device model
         spice_file.write('\n*** Device Models ***\n')
-        for model in self.device_models.itervalues():
+        for model in self.device_models.values():
             spice_file.write('.hdl "{}.va"\n'.format(model[0]))
             
         # write subcircuit start line with list of lead nodes
@@ -726,7 +726,7 @@ class Module_SPICE_netlist_graph_v2():
         
         
         # write each device Verilog-A file to local directory
-        for model in self.device_models.itervalues():
+        for model in self.device_models.values():
             full_path = os.path.join(directory, '{}.va'.format(model[0]))
             model_file = open(full_path, 'w')
             model_file.write(model[1])
@@ -747,7 +747,7 @@ class Module_SPICE_netlist_graph_v2():
         
         # include each device model
         spice_file.write('\n*** Device Models ***\n')
-        for model in self.device_models.itervalues():
+        for model in self.device_models.values():
             spice_file.write('.hdl "{}.va"\n'.format(model[0]))
             
         # write subcircuit start line with list of lead nodes
@@ -799,12 +799,12 @@ class Module_SPICE_netlist_graph_v2():
                 #print i-count, a[i-count] 
                 a.pop(i-count)
                 count = count + 1 
-                print "number of items removed (count) = ", count
+                print("number of items removed (count) = ", count)
             
                 
-        print "\n New netlist"
+        print("\n New netlist")
         for items in a:
-            print items
+            print(items)
             
         # write netlist lines
         for spice_line in a:
@@ -1037,7 +1037,7 @@ class Module_SPICE_netlist_graph():
         Returns:
             networkx node equivalent of spice_node
         """
-        for nx_node, spice_node_num in self.spice_node.iteritems():
+        for nx_node, spice_node_num in self.spice_node.items():
             if spice_node == spice_node_num:
                 return nx_node
     
@@ -1380,7 +1380,7 @@ class Module_SPICE_netlist_graph():
         """
         
         # write each device Verilog-A file to local directory
-        for model in self.device_models.itervalues():
+        for model in self.device_models.values():
             full_path = os.path.join(directory, '{}.va'.format(model[0]))
             model_file = open(full_path, 'w')
             model_file.write(model[1])
@@ -1401,7 +1401,7 @@ class Module_SPICE_netlist_graph():
         
         # include each device model
         spice_file.write('\n*** Device Models ***\n')
-        for model in self.device_models.itervalues():
+        for model in self.device_models.values():
             spice_file.write('.hdl "{}.va"\n'.format(model[0]))
             
         # write subcircuit start line with list of lead nodes
@@ -1435,7 +1435,7 @@ class Module_SPICE_netlist_graph():
         
         
         # write each device Verilog-A file to local directory
-        for model in self.device_models.itervalues():
+        for model in self.device_models.values():
             full_path = os.path.join(directory, '{}.va'.format(model[0]))
             model_file = open(full_path, 'w')
             model_file.write(model[1])
@@ -1456,7 +1456,7 @@ class Module_SPICE_netlist_graph():
         
         # include each device model
         spice_file.write('\n*** Device Models ***\n')
-        for model in self.device_models.itervalues():
+        for model in self.device_models.values():
             spice_file.write('.hdl "{}.va"\n'.format(model[0]))
             
         # write subcircuit start line with list of lead nodes
@@ -1471,7 +1471,7 @@ class Module_SPICE_netlist_graph():
         for node in self.spice_graph.nodes(data=True):       
             sub_a=[]
             if node[1].get('component') is not None:
-                print node[1]['component']
+                print(node[1]['component'])
                 sub_a.append(node[1]['component'].SPICE[:8])      # name
                 sub_a.append(node[1]['component'].SPICE[9:13])    # node1  
                 sub_a.append(node[1]['component'].SPICE[14:18])   # node2
@@ -1505,7 +1505,7 @@ class Module_SPICE_netlist_graph():
                             #print i,j 
         #print "\n Old"
         for items in a:
-            print items
+            print(items)
         
         # remove the lines that have been accounted for (i.e. that lines marked with the word "remove")
         #print "\n -------------"
@@ -1601,7 +1601,7 @@ class Module_SPICE_netlist_graph():
 if __name__ == '__main__':
     
     import pickle
-    from test_functions import *
+    from .test_functions import *
 
     test_graph = None
 #    test_graph = build_test_graph();
@@ -1619,7 +1619,7 @@ if __name__ == '__main__':
     sym_layout = load_symbolic_layout("../../../export_data/symlayout.p")     
     
     spice_graph = Module_SPICE_netlist_graph('Module_2', sym_layout, 10, test_graph)
-    spice_graph.write_SPICE_subcircuit('C:\Users\qmle\Desktop\Thermal\BIN') 
+    spice_graph.write_SPICE_subcircuit('C:\\Users\qmle\Desktop\Thermal\BIN') 
     
     spice_graph.draw_layout()
 

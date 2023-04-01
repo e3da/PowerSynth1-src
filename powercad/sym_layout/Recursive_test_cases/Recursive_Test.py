@@ -40,7 +40,7 @@ def make_test_constraints(symbols):
 def make_test_devices(symbols, dev):
     # symbols list of all SymLine and SymPoints in a loaded layout (sym_layout.all_sym)
     for obj in symbols:
-        print obj.element.path_id
+        print(obj.element.path_id)
         if obj.element.path_id == '0016' or obj.element.path_id == '0017':
             obj.tech = dev
 
@@ -50,7 +50,7 @@ def make_test_leads(symbols, pow_lead, sig_lead):
         if obj.element.path_id == '0002':
             obj.tech = sig_lead
             obj.center_position = [6, 6]
-            print "center", obj.center_position, type(obj)
+            print("center", obj.center_position, type(obj))
         elif obj.element.path_id == '0005':
             obj.tech = sig_lead
         elif obj.element.path_id == '0007':
@@ -58,7 +58,7 @@ def make_test_leads(symbols, pow_lead, sig_lead):
         elif obj.element.path_id == '0010':
             obj.center_position = [6, 35]
             obj.tech = sig_lead
-            print "center", obj.center_position, type(obj)
+            print("center", obj.center_position, type(obj))
         elif obj.element.path_id == '0011':
             obj.tech = sig_lead
 
@@ -130,7 +130,7 @@ def add_test_measures(sym_layout):
 
     m3 = ThermalMeasure(ThermalMeasure.FIND_MAX, devices, "Max Temp.", 'TFSM_MODEL')
     sym_layout.perf_measures.append(m3)
-    print "perf", sym_layout.perf_measures
+    print("perf", sym_layout.perf_measures)
 
 
 def setup_model(symlayout):
@@ -222,14 +222,14 @@ def make_test_setup2(f,directory):
     #individual=raw_input("input individual")
     #print type(individual)
     individual = [10, 4, 10, 2, 2, 10, 4, 0.4, 0.4] # This one change depends on the number of design variables you have. This is the design vector basically
-    print 'individual', individual
-    print "opt_to_sym_index", sym_layout.opt_to_sym_index
+    print('individual', individual)
+    print("opt_to_sym_index", sym_layout.opt_to_sym_index)
     sym_layout.rev_map_design_vars(individual)
     sym_layout.generate_layout()
     plot_layout(sym_layout)
     sym_layout._build_lumped_graph()
     ret = one_measure(sym_layout)
-    print ret # As I set this up the first value is inductance, then resistance, then temperature
+    print(ret) # As I set this up the first value is inductance, then resistance, then temperature
     plot_lumped_graph(sym_layout)
 
 

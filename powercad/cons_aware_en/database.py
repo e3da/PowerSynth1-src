@@ -9,7 +9,7 @@ def create_connection(db_file):
         conn = sqlite3.connect(db_file)
         #print(sqlite3.version)
     except :
-        print "unable to create a file"
+        print("unable to create a file")
     return conn
 
 
@@ -44,12 +44,14 @@ def insert_record(conn,data,temp_file):
     try:
         with open(temp_file, 'rb') as f:
             ablob = f.read()
-            cur.execute("INSERT INTO LAYOUT_DATA(ID,Layout_info) VALUES (?,?)", [data[0], buffer(ablob)])
+            cur.execute("INSERT INTO LAYOUT_DATA(ID,Layout_info) VALUES (?,?)", [data[0], ablob])
+            #cur.execute("INSERT INTO LAYOUT_DATA(ID,Layout_info) VALUES (?,?)", [data[0], buffer(ablob)])
+            #cur.execute(sql, (lite.Binary(data), ))
             # [id,buffer(info)])
             conn.commit()
         f.close()
     except:
-        print "layout_info not found"
+        print("layout_info not found")
 
     return cur.lastrowid
 def retrieve_data(conn,ID):
@@ -79,7 +81,7 @@ def main():
         table='Layout_0'
         create_table(conn,name='Layout_0')
 
-        with open('C:\Users\ialrazi\PowerSynth\CornerStitch_Dev\PowerCAD-full\src\powercad\sym_layout\Recursive_test_cases\Mode_1\Layout 0.csv','rb') as fin:
+        with open('C:\\Users\ialrazi\PowerSynth\CornerStitch_Dev\PowerCAD-full\src\powercad\sym_layout\Recursive_test_cases\Mode_1\Layout 0.csv','rb') as fin:
             readCSV = csv.reader(fin, delimiter=',')
             for row in readCSV:
                 insert_record(conn,table,row)
@@ -105,7 +107,7 @@ def main():
                 csv_writer.writerow(i)
 
         my_csv.close()
-        print len(all_data),all_data
+        #print(len(all_data),all_data)
 
 if __name__ == '__main__':
     '''
@@ -134,7 +136,7 @@ con = sqlite3.connect("D:\\sqlite\db\pythonsqlite.db")
 cur = con.cursor()
 cur.execute("CREATE TABLE t (col1, col2, col3, col4,col5,col6,col7,col8);") # use your column names here
 
-with open('C:\Users\ialrazi\PowerSynth\CornerStitch_Dev\PowerCAD-full\src\powercad\sym_layout\Recursive_test_cases\Mode_1\Layout 0.csv','rb') as fin: # `with` statement available in 2.5+
+with open('C:\\Users\ialrazi\PowerSynth\CornerStitch_Dev\PowerCAD-full\src\powercad\sym_layout\Recursive_test_cases\Mode_1\Layout 0.csv','rb') as fin: # `with` statement available in 2.5+
     # csv.DictReader uses first line in file for column headings by default
     dr = csv.DictReader(fin) # comma is default delimiter
     to_db = [(i['col1'], i['col2'],i['col3'], i['col4'],i['col5'],i['col6'],i['col7'],i['col8']) for i in dr]

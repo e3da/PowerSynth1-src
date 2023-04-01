@@ -85,7 +85,7 @@ class DieAttachPage(object):
             save_file(dattach,os.path.join(self.sub_dir, dattach.properties.name+".p"))
             self.load_page()
         else:
-            print "Error Creating Die Attach"
+            print("Error Creating Die Attach")
         
     def load(self):
         if self.ui.DieAttachList.currentIndex()>0:

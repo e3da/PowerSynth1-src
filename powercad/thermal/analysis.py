@@ -53,7 +53,7 @@ def rect_flux_analysis(sym_layout):
         devices.append(device)
         
     temps = []
-    for i in xrange(len(devices)):
+    for i in range(len(devices)):
         # Find extra temp. through die
         dev = sym_layout.devices[i]
         A = dev.footprint_rect.width*dev.footprint_rect.height*1e-6

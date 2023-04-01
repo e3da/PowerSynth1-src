@@ -3,27 +3,84 @@ from powercad.electrical_mdl.e_mesh_direct import EMesh
 import copy
 import numpy as np
 import networkx as nx
+import matplotlib.pyplot as plt
 class ENetlist():
     '''
     This module convert the mesh structure with parasitics info and its original hierarchy structure into a SPICE netlist
     '''
 
-    def __init__(self, emodule=EModule(), emesh=EMesh()):
+    def __init__(self, *args, **kwargs):
         '''
         Args:
             emodule: the original structure
             emesh: the mesh with evaluated parasitic
         '''
-        self.module = emodule
-        self.mesh = emesh
+        self.module = EModule()
+        self.mesh = EMesh()
+        self.net_graph = nx.Graph()  # This will be a deep copy of the mesh.graph. Later, we need to modify this to disconnect
+        
+        for key in kwargs:
+            if key == 'emodule':
+                self.module = kwargs[key]
+            elif key == 'emesh':
+                self.mesh = kwargs[key]
+            elif key =='egraph':
+                self.net_graph = kwargs[key]
+            else:
+                print("the param",key,"is not available for this class")
+            
+        
         self.terminals = []  # a list of terminals name
         self.comp_net = []  # a list of list for all net (node id on the graph) for component pins
         self.mutual_mode = "K"  # if M then we need to rewrite the netlist accordingly
-        self.net_graph = None  # This will be a deep copy of the mesh.graph. Later, we need to modify this to disconnect
         # component internal nets used in loop calculation
         self.netlist = ""  # This is the exported netlist
+        self.input_netlist = None
+        self.output_netlist_format = [] # This is the output netlist based of the input
 
+    def netlist_input_ltspice(self,file=None,all_layout_net=[]):
+        self.input_netlist=nx.Graph()
+        self.net_update_ele = 0 # total number of elements to be updated.
+        with open(file, 'r') as inputfile:
+            for line in inputfile.readlines():
+                line = line.strip("\r\n")
+                info = line.split(" ")
+                if "R" in info[0] or "L" in info[0]:
+                    add_line = False
+                    self.net_update_ele += 1 
+                    
+                    if info[1] in all_layout_net:
+                        add_line = True
+                        format_line = info[0]+" " + info[1]+" "+info[2]+" "+"{0}"
+                        self.output_netlist_format.append({'type':"edit","line":format_line,'ori_line':line,'edited':False})
 
+                        if not self.input_netlist.has_node(info[1]):
+                            self.input_netlist.add_node(info[1],attr={'type':'on_layout'})
+                    else:
+                        self.input_netlist.add_node(info[1],attr={'type':'temp'})
+                    if info[2] in all_layout_net:
+                        format_line = info[0]+" " + info[1]+" "+info[2]+" "+"{0}"
+                        if not add_line:
+                            self.output_netlist_format.append({'type':"edit","line":format_line,'ori_line':line,'edited':False})
+
+                        if not self.input_netlist.has_node(info[2]):                        
+                            self.input_netlist.add_node(info[2],attr={'type':'on_layout'})
+                    else:
+                        self.input_netlist.add_node(info[2],attr={'type':'temp'})
+                    if "R" in info[0]:
+                        self.input_netlist.add_edge(info[1],info[2],attr={"type":"R","id":info[0],"line":len(self.output_netlist_format)-1})
+                    if "L" in info[0]:
+                        self.input_netlist.add_edge(info[1],info[2],attr={"type":"L","id":info[0],"line":len(self.output_netlist_format)-1})
+                else:
+                    self.output_netlist_format.append({'type':"const","line":line})
+                    continue
+        
+        nx.draw(self.input_netlist,with_labels = True)
+        plt.show()
+        #print(self.output_netlist_format)
+
+        
+    
     def find_terminals(self):
         '''
         Find all terminals from the original structure
@@ -50,7 +107,7 @@ class ENetlist():
                 for sh in comp.sheet:
                     all_net.append(net_graph_id[sh.net])  # create a list of net id for component pins
             self.comp_net.append(all_net)
-        # All edges among pins for each component need to be removed
+        # All edges among internal pins for each component need to be removed
         for pins in self.comp_net:
             edge = {}
             for p1 in pins:
@@ -60,9 +117,9 @@ class ENetlist():
             for e in edge:
                 try:
                     self.net_graph.remove_edge(*e)
-                    print "found one edge between", e[0], e[1]
+                    print(("found one edge between", e[0], e[1]))
                 except:
-                    print "no edge between", e[0], e[1], "continue"
+                    print(("no edge between", e[0], e[1], "continue"))
                     continue
 
     def find_all_lumped_connections(self, id_to_net):
@@ -82,20 +139,23 @@ class ENetlist():
                     pair[(k2, k1)] = 1
 
                     if nx.has_path(self.net_graph,k1,k2):
-                        print "there is a path:",path_id,id_to_net[k1], id_to_net[k2]
+                        print(("there is a path:",path_id,id_to_net[k1], id_to_net[k2]))
                         path_id+=1
 
-    def export_netlist_to_ads(self, file_name="test.net"):
 
+    def export_full_netlist_to_ads(self, file_name="test.net"):
+        '''
+        This only work for the full netlist extraction
+        '''
         text_file = open(file_name, 'w')
         self.prepare_graph_for_export()
-        # self.net_graph = copy.deepcopy(self.mesh.graph)
+        #self.net_graph = copy.deepcopy(self.mesh.graph)
 
         # invert the dictionary relationship for net_graph
-        keys = self.mesh.comp_net_id.values()
-        values = self.mesh.comp_net_id.keys()
-        id_to_net = dict(zip(keys, values))
-        print id_to_net
+        keys = list(self.mesh.comp_net_id.values())
+        values = list(self.mesh.comp_net_id.keys())
+        id_to_net = dict(list(zip(keys, values)))
+        print(id_to_net)
         self.find_all_lumped_connections(id_to_net=id_to_net)
         # refresh netlist prepare to write
         self.netlist = ""
@@ -168,8 +228,8 @@ class ENetlist():
         debug = False
 
         if debug:
-            print self.netlist
-            print M_text
+            print((self.netlist))
+            print(M_text)
     def export_netlist_to_spice(self,file_name = "test.net"):
 
         text_file = open(file_name, 'w')
@@ -177,10 +237,10 @@ class ENetlist():
         #self.net_graph = copy.deepcopy(self.mesh.graph)
 
         # invert the dictionary relationship for net_graph
-        keys = self.mesh.comp_net_id.values()
-        values = self.mesh.comp_net_id.keys()
-        id_to_net = dict(zip(keys, values))
-        print id_to_net
+        keys = list(self.mesh.comp_net_id.values())
+        values = list(self.mesh.comp_net_id.keys())
+        id_to_net = dict(list(zip(keys, values)))
+        print(id_to_net)
         self.find_all_lumped_connections(id_to_net=id_to_net)
         # refresh netlist prepare to write
         self.netlist = ""
@@ -254,8 +314,8 @@ class ENetlist():
         debug = False
 
         if debug:
-            print self.netlist
-            print M_text
+            print((self.netlist))
+            print(M_text)
 
 
 

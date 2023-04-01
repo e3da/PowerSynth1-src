@@ -46,7 +46,7 @@ def make_test_devices(symbols, dev=None, dev_dict=None):
                 obj.tech = dev
     else:
         for obj in symbols:
-            if obj.name in dev_dict.keys():
+            if obj.name in list(dev_dict.keys()):
                 obj.tech = dev_dict[obj.name]
 
 
@@ -120,7 +120,7 @@ def add_test_measures(sym_layout):
 
     m3 = ThermalMeasure(ThermalMeasure.FIND_MAX, devices, "Max Temp.", 'TFSM_MODEL')
     sym_layout.perf_measures.append(m3)
-    print "perf", sym_layout.perf_measures
+    print("perf", sym_layout.perf_measures)
 
 
 def setup_model(symlayout):

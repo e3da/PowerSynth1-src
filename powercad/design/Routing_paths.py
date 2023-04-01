@@ -2,26 +2,29 @@
 
 
 class RoutingPath():
-    def __init__(self,name=None,type=None,layout_component_id=None):
+    def __init__(self,name=None,type=None,layout_component_id=None,layer_id=None):
         '''
 
         :param name: routing path name: trace,bonding wire pads,vias etc.
         :param type: power:0, signal:1
         :param layout_component_id: 1,2,3.... id in the layout information
+        :param layer_id: id from layer stack # layer id from input script
         '''
         self.name = name
         self.type = type
         self.layout_component_id = layout_component_id
+        self.layer_id=layer_id # layer id from input script
         self.parent_component_id=None #parent component layout id
+
 
     def printRoutingPath(self):
 
-        print "Name: ", self.name
+        print("Name: ", self.name)
         if self.type==0:
-            print "Type:  power trace"
+            print("Type:  power trace")
         else:
-            print "Type:  signal trace"
-        print "ID in layout: ", self.layout_component_id
+            print("Type:  signal trace")
+        print("ID in layout: ", self.layout_component_id)
 
 class BondingWires():
     def __init__(self, name=None,info_file=None):
@@ -47,7 +50,7 @@ class BondingWires():
 
     def load_wire(self):
 
-        with open(self.info_file, 'rb') as inputfile:
+        with open(self.info_file, 'r') as inputfile:
             for line in inputfile.readlines():
                 line = line.strip("\r\n")
                 info = line.split(" ")
@@ -61,23 +64,23 @@ class BondingWires():
                     self.radius=float(info[1])
 
     def printWire(self):
-        print self.name
-        print self.info_file
-        print self.mat_resistivity
-        print self.radius
+        print(self.name)
+        print(self.info_file)
+        print(self.mat_resistivity)
+        print(self.radius)
 
-        print "src_comp:", self.source_comp
-        print "dest_comp:", self.dest_comp
-        print "src_coordinate:", self.source_coordinate
-        print "dest_coordinate:", self.dest_coordinate
-        print "src_nodeid:", self.source_node_id
-        print "dest_nodeid:", self.dest_node_id
+        print("src_comp:", self.source_comp)
+        print("dest_comp:", self.dest_comp)
+        print("src_coordinate:", self.source_coordinate)
+        print("dest_coordinate:", self.dest_coordinate)
+        print("src_nodeid:", self.source_node_id)
+        print("dest_nodeid:", self.dest_node_id)
         if self.dir_type==0:
-            print "type: Horizontal"
+            print("type: Horizontal")
         elif self.dir_type==1:
-            print "type: Vertical"
+            print("type: Vertical")
         else:
-            print "type",self.dir_type
+            print("type",self.dir_type)
 
 
 

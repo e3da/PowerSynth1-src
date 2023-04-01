@@ -1,16 +1,18 @@
-import math
-from scipy import optimize
-from powercad.opt.optimizer import NSGAII_Optimizer, DesignVar, Matlab_weighted_sum_fmincon, Matlab_hybrid_method, \
-    Matlab_gamultiobj, SimulatedAnnealing
-from powercad.opt.simulated_anneal import Annealer
+#import math
+#from scipy import optimize
+#from powercad.opt.optimizer import NSGAII_Optimizer, DesignVar
+#import platform
+#if platform.system() == 'Windows': # Matlab doesnt work on the server yet, this must be fixed later 
+#    from powercad.opt.optimizer import Matlab_weighted_sum_fmincon, Matlab_hybrid_method, Matlab_gamultiobj, SimulatedAnnealing
+#from opt.simulated_anneal import Annealer
 import collections
 import numpy as np
 import random
-import timeit
+#import timeit
 import os
 from powercad.electrical_mdl.cornerstitch_API import ElectricalMeasure
 from powercad.thermal.cornerstitch_API import ThermalMeasure
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 from powercad.corner_stitch.CornerStitch import Rectangle
 import time
 class new_engine_opt:
@@ -50,11 +52,11 @@ class new_engine_opt:
         converted_data_v = {}
         layout_data_h=layout_data['H']
         layout_data_v=layout_data['V']
-        for k,v in layout_data_h.items():
+        for k,v in list(layout_data_h.items()):
             #print k,v
             key=k
             for i in range(len(v)):
-                for k1,v1 in v[i].items():
+                for k1,v1 in list(v[i].items()):
                     #print k1,v1[0],v1[1]
                     if v1[1]==None:
                         continue
@@ -68,11 +70,11 @@ class new_engine_opt:
                         data=v1[0][1:6]
                         layout_info_h[k1]=[Rectangle(x=data[0],y=data[1],width=data[2],height=data[3])]
         converted_data_h[key]=layout_info_h
-        for k,v in layout_data_v.items():
+        for k,v in list(layout_data_v.items()):
             #print k,v
             key=k
             for i in range(len(v)):
-                for k1,v1 in v[i].items():
+                for k1,v1 in list(v[i].items()):
                     #print k1,v1[0],v1[1]
                     if v1[1]==None:
                         continue
@@ -89,25 +91,25 @@ class new_engine_opt:
 
         converted_data['H']=converted_data_h
         converted_data['V']=converted_data_v
-        print converted_data
+        #print(converted_data)
         return converted_data
 
     def convert_layout_data(self,layout_data=None):
 
-        print layout_data
-        for k,v in layout_data.items():
-            print k
-            print len(v)
+        #print(layout_data)
+        #for k,v in list(layout_data.items()):
+            #print(k)
+            #print(len(v))
 
 
         layout_info={}
         converted_data={}
-        for k,v in layout_data.items():
+        for k,v in list(layout_data.items()):
             #print k,v
             key=k
             for i in range(len(v)):
-                for k1,v1 in v[i].items():
-                    print k1,v1[0],v1[1]
+                for k1,v1 in list(v[i].items()):
+                    #print(k1,v1[0],v1[1])
                     if v1[1]==None:
                         continue
                     else:
@@ -127,17 +129,26 @@ class new_engine_opt:
         #print"Here_eval",module_data
         result = []
         #print "DATA",layout_data
+        #print "M", self.measures
+        measures=[None,None]
+
         for measure in self.measures:
+            if isinstance(measure,ElectricalMeasure):
+                measures[0]=measure
+            if isinstance(measure,ThermalMeasure):
+                measures[1]=measure
+        self.measures=measures
+        for i in range(len(self.measures)):
+            measure=self.measures[i]
             # TODO: APPLY LAYOUT INFO INTO ELECTRICAL MODEL
             if isinstance(measure, ElectricalMeasure):
                 type = measure.measure
 
                 self.e_api.init_layout_isl(module_data=module_data)
                 start=time.time()
-                try:
-                    R, L = self.e_api.extract_RL(src=measure.source, sink=measure.sink)
-                except:
-                    R, L=[100,100]
+
+                R, L = self.e_api.extract_RL(src=measure.source, sink=measure.sink)
+
                 #print 'R',R,'L',L
                 end = time.time()
                 #print "RT", end - start
@@ -158,24 +169,24 @@ class new_engine_opt:
         return result
 
     def find_individuals(self, X_Loc, Y_Loc):
-        for k, v in X_Loc.items():
+        for k, v in list(X_Loc.items()):
             for dict in v:
                 X_locations = collections.OrderedDict(sorted(dict.items()))
         # print X_locations
         # print"Y",Y_Loc
-        for k, v in Y_Loc.items():
+        for k, v in list(Y_Loc.items()):
             for dict in v:
                 Y_locations = collections.OrderedDict(sorted(dict.items()))
         # print Y_locations
         # print Y_locations
         X_params = []
-        X_Val = X_locations.values()
+        X_Val = list(X_locations.values())
         for i in range(len(X_Val) - 1):
             X_params.append(X_Val[i + 1] - X_Val[i])
 
         # X_individuals=[i/sum(X_params) for i in X_params]
         Y_params = []
-        Y_Val = Y_locations.values()
+        Y_Val = list(Y_locations.values())
         for i in range(len(Y_Val) - 1):
             Y_params.append(Y_Val[i + 1] - Y_Val[i])
 
@@ -199,7 +210,7 @@ class new_engine_opt:
         # self.solutions[(ret[0], ret[1])] = figure
         # if ret not in self.solution_data:
         #self.fig_data.append(fig_data)
-        print "added layout",self.count, result
+        #print("added layout",self.count, result)
         self.layout_data.append(cs_sym_info)
         self.module_info.append(module_data)
         self.perf_results.append(result)

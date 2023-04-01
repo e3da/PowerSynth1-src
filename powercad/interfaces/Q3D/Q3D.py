@@ -65,7 +65,7 @@ def output_q3d_vbscript(md, filename):
                                        DielectricYSize, DielectricZSize, DielectricMaterial)
     
     # Trace Creation
-    for index in xrange(len(md.traces)):
+    for index in range(len(md.traces)):
         trace = md.traces[index]
         trace.translate(sub_origin_x, sub_origin_y)
         name = "trace" + str(index+1)
@@ -76,7 +76,7 @@ def output_q3d_vbscript(md, filename):
     # Lead Creation- haven't built the case for round yet. Should be a simple addition, but will have to look up circle code
     # as well as fix the off-center issue 
     LeadZPos = TraceZPos+TraceZSize
-    for index in xrange(len(md.leads)): 
+    for index in range(len(md.leads)): 
         lead = md.leads[index]
         LeadCenterX, LeadCenterY = lead.position
         LeadCenterX += sub_origin_x
@@ -118,7 +118,7 @@ def output_q3d_vbscript(md, filename):
                 
             output += unite.format(name+" "+name2+" ")
     # Device(die) Creation
-    for index in xrange(len(md.devices)):
+    for index in range(len(md.devices)):
         device = md.devices[index]
         # die specific coordinates
         (DieWidth, DieLength, DieThick) = device.device_instance.device_tech.dimensions
@@ -136,7 +136,7 @@ def output_q3d_vbscript(md, filename):
         
 
     # Bondwire Creation
-    for index in xrange(len(md.bondwires)):
+    for index in range(len(md.bondwires)):
         bw = md.bondwires[index]
         BwXPos, BwYPos = bw.positions[0]
         BwDiam = bw.eff_diameter
@@ -341,4 +341,4 @@ if __name__ == '__main__':
     sym_layout.gen_solution_layout(58)
     md = ModuleDesign(sym_layout)
     output_q3d_vbscript(md, '../../../export_data/q3d_out.vbs')
-    print "finished."
+    print("finished.")

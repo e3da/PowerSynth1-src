@@ -14,7 +14,7 @@ class diag_prec:
         self.shape = A.shape
         n = self.shape[0]
         self.dinv = numpy.empty(n)
-        for i in xrange(n):
+        for i in range(n):
             self.dinv[i] = 1.0 / A[i, i]
 
     def precon(self, x, y):
@@ -200,7 +200,7 @@ class Circuit():
             RLname_ac = eac[2]['data'].name + '_ac'
             Lname_diff = eac[2]['data'].name + '_diff'
 
-            if node1 not in self.node_dict.keys():
+            if node1 not in list(self.node_dict.keys()):
                 net1 = net_id
                 self.node_dict[node1] = net1
                 net_id += 1
@@ -218,7 +218,7 @@ class Circuit():
             self._graph_add_comp(Rname.format(RLname_dc), net1, int_net1, Rdc)
             self._graph_add_comp(Lname.format(RLname_ac), int_net1, int_net2, Lac)
 
-            if node2 not in self.node_dict.keys():
+            if node2 not in list(self.node_dict.keys()):
                 net2 = net_id
                 self.node_dict[node2] = net2
                 net_id += 1
@@ -288,7 +288,7 @@ class Circuit():
                         node2 = temp
 
             RLname = edge[2]['data'].name
-            if node1 not in self.node_dict.keys():
+            if node1 not in list(self.node_dict.keys()):
                 net1 = net_id
                 self.node_dict[node1] = net1
                 net_id += 1
@@ -300,7 +300,7 @@ class Circuit():
             net_id += 1
             rval = edge[2]['res']
             self._graph_add_comp(Rname.format(RLname), net1, int_net, rval)
-            if node2 not in self.node_dict.keys():
+            if node2 not in list(self.node_dict.keys()):
                 net2 = net_id
                 self.node_dict[node2] = net2
                 net_id += 1
@@ -315,7 +315,7 @@ class Circuit():
         self.max_net_id=net_id
         #print "node dictionary", self.node_dict
     def cap_update(self,cap_dict):
-        for k in cap_dict.keys():
+        for k in list(cap_dict.keys()):
             n1 = k[0]
             n2 = k[1]
             cval = cap_dict[k]
@@ -380,21 +380,21 @@ class Circuit():
             nodes: list object
         Returns: Update the matrix
         '''
-        print self.node_dict
+        print(self.node_dict)
 
         if net==None: # Equiv multiple nets mode
             eq_net = self.node_dict[nodes[0]]
         else:
             eq_net=net
-        print "eq_net",eq_net
+        print("eq_net",eq_net)
         all_nets = [self.node_dict[n] for n in nodes]
         # Check over all p and n nodes, if they are in equiv list rename them to eq_net. If p and n node of a component
         # are the same, remove the component.
-        for k in self.pnode.keys():
+        for k in list(self.pnode.keys()):
             p_net = self.pnode[k]
             n_net = self.nnode[k]
             if p_net in all_nets and n_net in all_nets:
-                print "delete component", k
+                print("delete component", k)
                 del self.pnode[k]
                 del self.nnode[k]
                 del self.element[k]
@@ -407,7 +407,7 @@ class Circuit():
             elif n_net in all_nets:
                 self.nnode[k] = eq_net
 
-        print self.node_dict
+        print(self.node_dict)
     def _remove_comp(self,name=None):
         #print "delete component", name
         del self.pnode[name]
@@ -477,7 +477,7 @@ class Circuit():
             port_i = 'v' + str(self.node_dict[sel_port])
             vi = self.results[port_i]
             ii = -self.get_source_current('Vs')
-            print vi, ii
+            print(vi, ii)
             Zin = vi/ii
             Z0 = self.Rport
             if mode == 'mag':
@@ -500,7 +500,7 @@ class Circuit():
                         S_mat[id, id2] = 20 * np.log10(np.imag(2 * vj))
 
             if plot:
-                print "plot for:", sel_port
+                print("plot for:", sel_port)
                 all_I = []
                 result = self.results
                 for e in emesh.graph.edges(data=True):
@@ -544,7 +544,7 @@ class Circuit():
 
 
     def _compute_matrix(self, srcs=[], sinks=[]):
-        print "mat solve"
+        print("mat solve")
         '''
         Perform multiple calculation to find the loop inductance of each src sink pair
         Args:
@@ -594,7 +594,7 @@ class Circuit():
                 self.refresh_current_info()
 
         for row in imp_mat:
-            print row
+            print(row)
 
     def _compute_mutual(self,srcs=[],sinks=[],vname=None):
         '''
@@ -627,14 +627,14 @@ class Circuit():
         vs1 = self.results[src1] - self.results[sink1]
         vs2 = self.results[src2] - self.results[sink2]
         i1 = self.find_port_current(sinks[0])
-        print 'R1',np.real(vs1/i1),'L1',np.imag(vs1/i1)/abs(self.s)
+        print('R1',np.real(vs1/i1),'L1',np.imag(vs1/i1)/abs(self.s))
 
-        print 'R12', np.real(vs2/i1),'L12',np.imag(vs2/i1)/abs(self.s)
+        print('R12', np.real(vs2/i1),'L12',np.imag(vs2/i1)/abs(self.s))
 
     def _compute_imp(self,source_node,sink_node,I_node):
         source_net = self.node_dict[source_node]
         sink_net = self.node_dict[sink_node]
-        print 'src,sink',source_net,sink_net
+        print('src,sink',source_net,sink_net)
         source_v = 'v' + str(source_net)
         sink_v = 'v' + str(sink_net)
         v_source=self.results[source_v]
@@ -749,7 +749,7 @@ class Circuit():
                 self.D[ind2_index, ind1_index] += -s * Mval  # -s*Mxx
         # ERR CHECK
         if sn != i_unk:
-            print('source number, sn={:d} not equal to i_unk={:d} in matrix B and C'.format(sn, i_unk))
+            print(('source number, sn={:d} not equal to i_unk={:d} in matrix B and C'.format(sn, i_unk)))
 
 
     def V_mat(self, num_nodes):
@@ -860,7 +860,7 @@ class Circuit():
         self.init_solver()
         Z = self.Z
         A = self.A
-        print 'full',np.shape(A)
+        print('full',np.shape(A))
         #print cd_A.dinv
         #A=cd_A.dinv*A
         #Z=cd_A.dinv*Z
@@ -888,7 +888,7 @@ class Circuit():
             results_dict[str(self.X[i,0])]=self.results[i]
         self.results=results_dict
         #print self.results
-        print "R,L,M", self.R_count, self.L_count, self.M_count
+        print("R,L,M", self.R_count, self.L_count, self.M_count)
 
         #print "A matrix",A
         #print self.X
@@ -999,7 +999,7 @@ def validate_solver_2():
     #                        env=os.path.abspath('C:\synopsys\Hspice_O-2018.09\WIN64\hspice.exe'))
     #print circuit.cur_element
     #circuit.results=circuit.hspice_result
-    print circuit.results
+    print(circuit.results)
 def test_broadband():
 
     imp=[]

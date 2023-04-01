@@ -102,7 +102,7 @@ class ProjectBuilder(QtGui.QMainWindow):
         self.ui.lst_solution.itemDoubleClicked.connect(self.load_single_sol)
         self.ui.cmb_elec_model.currentIndexChanged.connect(self.model_selection)
         self.ui.btn_previous.pressed.connect(self.previous)
-        self.ui.btn_next.pressed.connect(self.next)
+        self.ui.btn_next.pressed.connect(self.__next__)
         self.ui.btn_clr_all.pressed.connect(self.clear_projet_solutions)
         self.ui.tbl_projDevices.cellPressed.connect(self.component_pressed)
         self.ui.btn_modify.pressed.connect(self.modify_component)
@@ -200,7 +200,7 @@ class ProjectBuilder(QtGui.QMainWindow):
             self.import_net=True
             return all_nets
         else:
-            print "no netlist was imported, assign net name later"
+            print("no netlist was imported, assign net name later")
             self.import_net=False
             return []
 
@@ -234,7 +234,7 @@ class ProjectBuilder(QtGui.QMainWindow):
                 table.removeRow(row-1)
             except:
                 row=0
-                print "no more row to remove"
+                print("no more row to remove")
 
     def change_stacked(self, index):
         """Keep stacked widget current with navigation"""
@@ -318,7 +318,7 @@ class ProjectBuilder(QtGui.QMainWindow):
             flag=False
         else:
             flag=True
-        print "FLAG",flag
+        print("FLAG",flag)
         if not self.build_module_stack(flag=flag):
             QtGui.QMessageBox.warning(self, "Module Stack Error",
                                       "One or more settings on the module stack page have an error.")
@@ -357,7 +357,7 @@ class ProjectBuilder(QtGui.QMainWindow):
         device_path = os.path.join(self.project.tech_lib_dir,'Layout_Selection\Device' )
         dev_dialog=GenericDeviceDialog(self,device_path)
         if(dev_dialog.exec_()):
-            print 1
+            print(1)
 
     def export_layout_script(self):
         # qmle 10-18-2016
@@ -422,7 +422,7 @@ class ProjectBuilder(QtGui.QMainWindow):
             if index > 0:
                 self.ui.navigation.setCurrentIndex(index-1)
         
-    def next(self):
+    def __next__(self):
         """Selects next navigation section"""
         if self.ui.navigation.isEnabled():
             index = self.ui.navigation.currentIndex()
@@ -440,7 +440,7 @@ class ProjectBuilder(QtGui.QMainWindow):
         self.symb_canvas = []
         self.symb_axis = []
         #self.symb_timer=[]
-        for window in xrange(4):
+        for window in range(4):
             # make canvas and axis
             self.symb_canvas.append(FigureCanvas(self.symb_fig[window]))
             #self.symb_timer.append(self.symb_canvas[window].new_timer(interval=10))
@@ -613,19 +613,20 @@ class ProjectBuilder(QtGui.QMainWindow):
                     for warning in self.layer_stack_import.warnings:
                         warnings_msg += ("WARNING: " + warning + "\n")
                     QtGui.QMessageBox.warning(self, "Layer Stack Import Warnings", warnings_msg)
+            #self.project.layer_stack_file = os.path.join(self.project.directory, "layer_stack.csv")
             self.project.layer_stack_file = os.path.join(self.project.directory, "all_layers_info.csv")
             if not os.path.exists(os.path.dirname(self.project.layer_stack_file)):
                 try:
                     os.makedirs(os.path.dirname(self.project.layer_stack_file))
                 except :
-                    print "No File exist"
+                    print("No File exist")
 
             if new_flag:
 
                 try:
                     copyfile(layer_stack_csv_file, self.project.layer_stack_file)
                 except:
-                    print "No file exists. First save the project."
+                    print("No file exists. First save the project.")
                 #copyfile(layer_stack_csv_file, self.project.layer_stack_file)
         else:
             # Layer stack not compatible - notify the user of import failure
@@ -641,7 +642,7 @@ class ProjectBuilder(QtGui.QMainWindow):
         try:
             self.load_moduleStack()
         except:
-            print "new project mode"
+            print("new project mode")
         self.ui.cmb_baseMaterial.setEnabled(True)
         self.ui.cmb_subAttchMaterial.setEnabled(True)
         self.ui.cmb_subMaterial.setEnabled(True)
@@ -721,10 +722,10 @@ class ProjectBuilder(QtGui.QMainWindow):
         except:
             self.ui.lbl_err_baseMaterial.setText("Error")
             error = True
-            print traceback.print_exc()
+            print(traceback.print_exc())
             
         if error:
-            print "Error Creating Baseplate"
+            print("Error Creating Baseplate")
        
         return error
         
@@ -765,10 +766,10 @@ class ProjectBuilder(QtGui.QMainWindow):
         except:
             self.ui.lbl_err_subMaterial.setText("Error")
             error = True
-            print traceback.print_exc()
+            print(traceback.print_exc())
             
         if error:
-            print "Error Creating Substrate"
+            print("Error Creating Substrate")
        
         return error
         
@@ -793,10 +794,10 @@ class ProjectBuilder(QtGui.QMainWindow):
         except:
             self.ui.lbl_err_subAttchMaterial.setText("Error")
             error = True
-            print traceback.print_exc()
+            print(traceback.print_exc())
 
         if error:
-            print "Error Creating Substrate Attach"
+            print("Error Creating Substrate Attach")
 
         return error
 
@@ -809,7 +810,7 @@ class ProjectBuilder(QtGui.QMainWindow):
         switch_check = not (self.ui.txt_switchFreq.text().replace(".", "", 1).replace("e", "", 1).isdigit())
         if switch_check:
             self.ui.lbl_err_switchFreq.setText("Error: Must be a number")
-            print "Error with Switching Frequency input"
+            print("Error with Switching Frequency input")
         else:
             self.ui.lbl_err_switchFreq.setText("")
             self.project.module_data.frequency = float(self.ui.txt_switchFreq.text())
@@ -818,11 +819,11 @@ class ProjectBuilder(QtGui.QMainWindow):
         temp_check = not (self.ui.txt_ambTemp.text().replace(".", "", 1).replace("e", "", 1).isdigit())
         if temp_check:
             self.ui.lbl_err_ambTemp.setText("Error: Must be a number")
-            print "Error with ambient temperature input"
+            print("Error with ambient temperature input")
         else:
             self.ui.lbl_err_ambTemp.setText("")
             self.project.module_data.ambient_temp = float(self.ui.txt_ambTemp.text())
-        print switch_check,temp_check
+        print(switch_check,temp_check)
         return switch_check or temp_check
 
     def build_module_stack(self,flag=True):
@@ -841,7 +842,7 @@ class ProjectBuilder(QtGui.QMainWindow):
 
 
         else:
-            print "load from layer stack"
+            print("load from layer stack")
             base_check = False
             sub_check=False
             attach_check=False
@@ -949,7 +950,7 @@ class ProjectBuilder(QtGui.QMainWindow):
             self.ui.btn_modify.setEnabled(False)
             self.ui.btn_removeDevice.setEnabled(False)
     def open_lead_setup(self):
-        print "selected Lead"
+        print("selected Lead")
     def add_device_error_check(self):
         error = False
         categ = self.ui.lst_categories.selectedIndexes()
@@ -1019,7 +1020,7 @@ class ProjectBuilder(QtGui.QMainWindow):
 
             except:
                 QtGui.QMessageBox.warning(self, "Add Component", "Error: Technology not found in Technology Library")
-                print traceback.print_exc()
+                print(traceback.print_exc())
             # clear selections
             self.ui.lst_devices.selectionModel().clear()
 
@@ -1028,7 +1029,7 @@ class ProjectBuilder(QtGui.QMainWindow):
         # get technology from table
         categ = self.categ_list_model.fileName(self.ui.lst_categories.selectedIndexes()[0])
         if categ=='Bond Wire':
-            print "cant select layout in Bondwire mode, press the Wire Connect button"
+            print("cant select layout in Bondwire mode, press the Wire Connect button")
             return
         try:
             symlayout = self.project.symb_layout
@@ -1082,7 +1083,7 @@ class ProjectBuilder(QtGui.QMainWindow):
             self.symb_canvas[0].draw()
 
         except Exception as e:
-            print e
+            print(e)
             QtGui.QMessageBox.warning(self, 'Error', 'Please Select Component on the Component Selection Tab')
 
 
@@ -1103,8 +1104,8 @@ class ProjectBuilder(QtGui.QMainWindow):
         '''
     def remove_component(self):
         selected_row = self.ui.tbl_projDevices.currentRow()
-        print "selected row"
-        print selected_row
+        print("selected row")
+        print(selected_row)
         self.ui.tbl_projDevices.selectionModel().selectedIndexes()[0].row()
         # Remove from row from table
         self.ui.tbl_projDevices.removeRow(selected_row)
@@ -1150,7 +1151,7 @@ class ProjectBuilder(QtGui.QMainWindow):
 
     def load_deviceTable(self):
         # clear component table
-        for row in xrange(self.ui.tbl_projDevices.rowCount()):
+        for row in range(self.ui.tbl_projDevices.rowCount()):
             self.ui.tbl_projDevices.removeRow(row)
 
         for row in self.project.deviceTable:
@@ -1356,7 +1357,7 @@ class ProjectBuilder(QtGui.QMainWindow):
             try:
                 obj.set_alpha(0.25)
             except:
-                print traceback.print_exc()
+                print(traceback.print_exc())
 
         # highlight everything in symmetry group
         if event.artist.symmetry is not None:
@@ -1392,7 +1393,7 @@ class ProjectBuilder(QtGui.QMainWindow):
                 self.patch_dict.get_layout_obj(self.constraint_select).constraint = None
             self.clear_constraints()
         else:
-            print 'Nothing selected.'
+            print('Nothing selected.')
 # ------------------------------------------------------------------------------------------
 # ------ Model Selection and Design Variable -----------------------------------------------
     def model_selection(self):
@@ -1433,27 +1434,27 @@ class ProjectBuilder(QtGui.QMainWindow):
                 QtGui.QMessageBox.warning(self, "Input Error", "Number of generations must be a number! Defaulting to 100.")
                 self.project.num_gen = 100
                 self.ui.txt_numGenerations.setText(str(self.project.num_gen))
-                print traceback.print_exc()
+                print(traceback.print_exc())
             
             try:
-                print "Starting Optimization"
+                print("Starting Optimization")
                 starttime = time.time()
-                print "proj_builder.py > start_optimization() > TEMP_DIR=", self.TEMP_DIR
+                print("proj_builder.py > start_optimization() > TEMP_DIR=", self.TEMP_DIR)
                 self.project.symb_layout.form_design_problem(self.project.module_data, self.project.tbl_bondwire_connect, self.TEMP_DIR)
-                print "project.symb_layout.form_design_problem() completed."
+                print("project.symb_layout.form_design_problem() completed.")
                 iseed = int(self.ui.txt_numseed.text())
                 ilambda=30
                 self.project.symb_layout.optimize(iseed,inum_gen = self.project.num_gen)
-                print 'Optimization Complete'
-                print 'seed is : ', iseed
-                print 'Runtime:',time.time()-starttime,'seconds.'
-                print 'Opening Solution Browser...'
+                print('Optimization Complete')
+                print('seed is : ', iseed)
+                print('Runtime:',time.time()-starttime,'seconds.')
+                print('Opening Solution Browser...')
                 self.project.symb_layout.opt_progress_fn = None
                 self.sol_browser = GrapheneWindow(self)
                 self.sol_browser.show()
             except:
                 QtGui.QMessageBox.warning(self, "Optimization Error", "Failed to complete optimization process. Please check console/log.")
-                print traceback.print_exc()
+                print(traceback.print_exc())
                 
         self.ui.btn_runSim.setEnabled(True)
         
@@ -1732,7 +1733,7 @@ class ProjectBuilder(QtGui.QMainWindow):
                 
                 # make project directory
                 save_path = self.project.directory
-                print "save", save_path
+                print("save", save_path)
                 if not os.path.exists(save_path):
                     os.makedirs(save_path)
                 
@@ -1750,7 +1751,7 @@ class ProjectBuilder(QtGui.QMainWindow):
                     shutil.copy(os.path.join(save_path, "project.p.temp"), os.path.join(save_path, "project.p"))
                 
                 QtGui.QMessageBox.warning(self, "Project Save Failed", "Your project was not saved! Please check console/log for details.")
-                print traceback.format_exc()
+                print(traceback.format_exc())
             
     def save_project_as(self):
         if self.ui.navigation.isEnabled():
@@ -1769,7 +1770,7 @@ class ProjectBuilder(QtGui.QMainWindow):
                 #save_path = os.path.join(self.project.directory, str(self.project.name))
                 if not os.path.exists(save_path):
                     os.makedirs(save_path)
-                print "save as", save_path
+                print("save as", save_path)
                 # Make temporary copy of existing project file, if it exists
                 if os.path.exists(os.path.join(save_path, "project.p")):
                     shutil.copy(os.path.join(save_path, "project.p"), os.path.join(save_path, "project.p.temp"))
@@ -1777,7 +1778,7 @@ class ProjectBuilder(QtGui.QMainWindow):
                 # Attempt to pickle the project
                 self.project.symb_layout.prepare_for_pickle() # prepare the symbolic layout object for pickling
                 self.project.directory=save_path
-                print "proj_dir",self.project.directory
+                print("proj_dir",self.project.directory)
                 save_file(self.project,os.path.join(save_path, "project.p"))
                 QtGui.QMessageBox.about(self,"Project Saved","Project Saved")
                 self.layout_script_dir = save_path
@@ -1790,7 +1791,7 @@ class ProjectBuilder(QtGui.QMainWindow):
                     shutil.copy(os.path.join(save_path, "project.p.temp"), os.path.join(save_path, "project.p"))
                 
                 QtGui.QMessageBox.warning(self, "Project Save Failed", "Your project was not saved! Please check console/log for details.")
-                print traceback.format_exc()
+                print(traceback.format_exc())
                 
     def load_symbolic_layout(self):
         QtGui.QMessageBox.warning(self, "Load Symbolic Layout", "Not implemented yet.")
@@ -1802,7 +1803,7 @@ class PatchDictionary(dict):
         dict.__init__(self)
 
     def get_patch(self, layout_obj, window):
-        patches = [patch[0] for patch in self.items() if (patch[1] == layout_obj and patch[0].window == window)]
+        patches = [patch[0] for patch in list(self.items()) if (patch[1] == layout_obj and patch[0].window == window)]
         return patches[0]
     
     def get_layout_obj(self, patch):

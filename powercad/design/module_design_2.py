@@ -94,7 +94,7 @@ class ModuleDesign(object):
         for wire in layout.bondwires:
             if (wire.device is not None) and (wire.land_pt is not None):
                 dev = wire.device
-                for pt_index in xrange(len(wire.start_pts)):
+                for pt_index in range(len(wire.start_pts)):
                     pt1 = translate_pt(wire.start_pts[pt_index], ledge_width, ledge_width)
                     pt2 = translate_pt(wire.end_pts[pt_index], ledge_width, ledge_width)
                     eff_diam = wire.tech.eff_diameter()
@@ -134,4 +134,4 @@ if __name__ == '__main__':
     sym_layout = build_test_layout()
     md = ModuleDesign(sym_layout)
     for dev in md.devices:
-        print dev.position
+        print(dev.position)

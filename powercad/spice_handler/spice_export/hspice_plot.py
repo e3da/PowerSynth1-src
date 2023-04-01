@@ -134,7 +134,7 @@ def hspice_plot(input_streams,fig1):
 			if myline.find("          ***** job concluded")==0:
 				start=False
 	
-				if DEBUG: print "RESET"
+				if DEBUG: print("RESET")
 				dep=[]
 				indep=""
 				indepv=[]
@@ -144,20 +144,20 @@ def hspice_plot(input_streams,fig1):
 				
 			if len(dep) >0 and len(sp) != (len(dep)+1) and start and len(sp) != 0:
 				#start=False
-				if DEBUG: print "DONE!"
+				if DEBUG: print("DONE!")
 	
-				if DEBUG: print "indep", indep
+				if DEBUG: print("indep", indep)
 				
-				if DEBUG: print "dep", dep
+				if DEBUG: print("dep", dep)
 				#if DEBUG: print "indepv", indepv
 				#if DEBUG: print "depv",depv
 				if len(depv[0]) == 0:
-					if DEBUG: print "bad line!",sp,lineno
-					if DEBUG: print len(sp)
+					if DEBUG: print("bad line!",sp,lineno)
+					if DEBUG: print(len(sp))
 				else:
-					if DEBUG: print len(depv[0])
-					if DEBUG: print len(indepv*1e6)
-					for deps in depv.keys():
+					if DEBUG: print(len(depv[0]))
+					if DEBUG: print(len(indepv*1e6))
+					for deps in list(depv.keys()):
 					#			fig1 = plt.figure()
 	
 							
@@ -182,7 +182,7 @@ def hspice_plot(input_streams,fig1):
 	
 	
 			elif len(units)>0 and len(dep)==0 and start:
-				if DEBUG: print "DEPS"
+				if DEBUG: print("DEPS")
 				dep=sp[0:]
 				i=0
 				for d in dep:
@@ -192,21 +192,21 @@ def hspice_plot(input_streams,fig1):
 				
 	
 			elif (start and indep=="" and len(units)==0 and (len(sp)>1)):
-				if DEBUG: print "UNITS"
-				if DEBUG: print units
-				if DEBUG: print sp
+				if DEBUG: print("UNITS")
+				if DEBUG: print(units)
+				if DEBUG: print(sp)
 				
 				try:
 					indep=sp[0]
 					units=sp[1:]
 					dep=[]
 				except:
-					if DEBUG: print "hit and a miss"
+					if DEBUG: print("hit and a miss")
 	
-				if DEBUG: print "The result"	
-				if DEBUG: print indep
-				if DEBUG: print myline
-				if DEBUG: print units
+				if DEBUG: print("The result")	
+				if DEBUG: print(indep)
+				if DEBUG: print(myline)
+				if DEBUG: print(units)
 				if len(units) == 0:
 					indep=""
 					dep=[]
@@ -229,8 +229,8 @@ def hspice_plot(input_streams,fig1):
 	
 					                                 #"  ******  transient"	
 			elif line.find("  ******  dc") == 0 or line.find("  ******  transient")==0:
-				if DEBUG: print "START!!!!"
-				if DEBUG: print sp
+				if DEBUG: print("START!!!!")
+				if DEBUG: print(sp)
 				start=True
 				indep=""
 				
@@ -241,7 +241,7 @@ def hspice_plot(input_streams,fig1):
 		#		if DEBUG: print "VALS"
 		#		if DEBUG: print sp
 				sp0=sp[0]
-				for s in ss.keys():
+				for s in list(ss.keys()):
 					sp0=sp0.replace(s,ss[s])
 	
 				indepv.append(str(float(sp0)*1e6))
@@ -249,7 +249,7 @@ def hspice_plot(input_streams,fig1):
 				try:
 					ee=float(sp0)
 				except:
-					if DEBUG: print "Error: invalid value on line",sp
+					if DEBUG: print("Error: invalid value on line",sp)
 					start=False
 					depv={}
 	
@@ -257,7 +257,7 @@ def hspice_plot(input_streams,fig1):
 				i=0
 				for v in sp[1:]:
 					vv=v
-					for s in ss.keys():
+					for s in list(ss.keys()):
 						vv=vv.replace(s,ss[s])
 	
 					try:
@@ -265,7 +265,7 @@ def hspice_plot(input_streams,fig1):
 						if ee > clip:
 							vv=str(clip)
 					except:
-						if DEBUG: print "Error: invalid value on line",sp
+						if DEBUG: print("Error: invalid value on line",sp)
 						start=False
 						depv={}
 	
@@ -274,18 +274,18 @@ def hspice_plot(input_streams,fig1):
 					i+=1
 	
 	
-	sets= resultSet.keys()
+	sets= list(resultSet.keys())
 	depLast=None
 	colors=['r-','b-','g-','o-']
 	#for dep in range(len(resultSet[sets[0]])):
 	for a in fig1.get_axes():
 	
 		fig1.delaxes(a)
-	print len(fig1.get_axes())	
+	print(len(fig1.get_axes()))	
 	for a in fig1.get_axes():
 	
 		fig1.delaxes(a)
-	print len(fig1.get_axes())	
+	print(len(fig1.get_axes()))	
 
 	for i in range(len(depList)):
 		idep = depList[i]
@@ -305,13 +305,13 @@ def hspice_plot(input_streams,fig1):
 				depLast=dep
 			else:
 				if depLast != dep:
-					print "Error! Result Mismatch!!! %s != %s on %s" % (dep, depLast, set)
+					print("Error! Result Mismatch!!! %s != %s on %s" % (dep, depLast, set))
 
 			plt.xlabel(indep)
 			plt.ylabel(units)
 			splot.ylim(min(indep)*1.5,max(indep))
 			tit=dep
-			for sub in subs.keys():
+			for sub in list(subs.keys()):
 				tit=tit.replace(sub,subs[sub])
 			plt.title(tit)
 			

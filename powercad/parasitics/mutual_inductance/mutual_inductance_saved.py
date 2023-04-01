@@ -5,7 +5,7 @@ import numpy as np
 import csv
 import matplotlib.pyplot as plt
 import operator
-from itertools import imap
+
 from mpl_toolkits.mplot3d import Axes3D
 
 
@@ -160,14 +160,14 @@ def bar_ind(w, l, t, fxyz=inter_func):
         for j in range(1, 3, 1):
             for k in range(1, 3, 1):
                 res += np.power(-1, (i + j + k + 1)) * fxyz(q[i - 1], r[j - 1], s[k - 1])
-    print res * Const * 1000
+    print((res * Const * 1000))
     return abs(res * Const * 1000)  # in nH
 
 
 def Test_Mutual():
     start = time.time()
-    print mutual_between_bars(w1=10, l1=30, t1=0.64, w2=10, l2=30, t2=0.64, l3=0, p=0, d=2)
-    print (time.time() - start)  # *factorial(5)
+    print((mutual_between_bars(w1=10, l1=30, t1=0.64, w2=10, l2=30, t2=0.64, l3=0, p=0, d=2)))
+    print((time.time() - start))  # *factorial(5)
     W1 = np.linspace(1, 20, 20)
     W2 = W1
     M = []
@@ -203,7 +203,7 @@ def Test_Mutual():
     for row in reader:
         M_Q3D.append(float(row['M']))
     for i in np.arange(2, 21, 1):
-        print i
+        print(i)
         M.append(mutual_between_bars(w1=10, l1=30, t1=0.64, w2=10, l2=30, t2=0.64, l3=0, p=0, d=i))
 
     plt.plot(np.arange(2, 21, 1), M, 'k:', label='Model', c='b', lw=3)
@@ -217,7 +217,7 @@ if __name__ == '__main__':
     start = time.time()
     mutual_between_bars(w1=10, l1=10, t1=0.2, w2=10, l2=16.67, t2=0.2, l3=16.67, p=0, E=10)
 
-    print "time",time.time()-start
+    print(("time",time.time()-start))
     start = time.time()
 
-    print "time", time.time() - start
+    print(("time", time.time() - start))

@@ -105,7 +105,7 @@ class SimData(object):
         while line != '':
             keylist = [st.strip(t) for t in st.split(line.replace('\0',''),':',1)]
             keyword = keylist[0].lower()
-            if debug & 1: print ">"+keyword+"<", ord(keyword[0])
+            if debug & 1: print(">"+keyword+"<", ord(keyword[0]))
             if keyword == 'title':
                 self.title = keylist[1]
             elif keyword == 'date':
@@ -134,7 +134,7 @@ class SimData(object):
                         self.nosteps = 0
                         self.steppoints = [0]
                     else:
-                        print 'unknown flag',flag
+                        print('unknown flag',flag)
             elif keyword == 'no. variables':
                 self.novariables = int(keylist[1]) #if this is wrong it will stuff up reading
             elif keyword == 'no. points':
@@ -149,7 +149,7 @@ class SimData(object):
                     line = simfile.readline()
                     varentry = st.split(st.strip(line.replace('\0','')))
                     if len(self.variables) != int(varentry[0]) or vno != int(varentry[0]):
-                        print 'unsuspected variable entry',line
+                        print('unsuspected variable entry',line)
                     self.variables.append(varentry[1])
                     self.variabletypes.append(varentry[2])
                     if self.real:
@@ -162,7 +162,7 @@ class SimData(object):
                     line = simfile.readline()
                     valentry = st.split(st.strip(line.replace('\0','')))
                     if int(valentry[0])!=pno:
-                        print 'unsuspected value entry',line
+                        print('unsuspected value entry',line)
                     self.values[0][pno] = self.getrcvalue(valentry[1],self.real)
                     if self.stepped:
                         if pno > 0:
@@ -183,7 +183,7 @@ class SimData(object):
                             self.values[vno][pno]=complex(alldata[index],alldata[index+1])
                 else:
                     for pno in range(self.nopoints):
-                        print simfile
+                        print(simfile)
                         self.values[0][pno]=np.fromfile(simfile,count=-1,dtype='float64')
                         pointdata = np.fromfile(simfile,count=self.novariables-1,dtype='float32')
                         for vno in range(1,self.novariables):
@@ -198,7 +198,7 @@ class SimData(object):
             elif keyword == 'backannotation':#just ignore
                 self.backannotation = keylist[1]
             else:
-                print 'unknown keyword',keylist[0]
+                print('unknown keyword',keylist[0])
             line = simfile.readline()
         if self.nosteps != None and self.nosteps != 0:#'and self.nosteps!=0 - fix for stepped .op
             self.nosteps += 1
@@ -213,7 +213,7 @@ class SimData(object):
 		    for sno in range(self.nosteps):
 			self.values[vno][sno]=alldata[vno][self.steppoints[sno]:self.steppoints[sno+1]]
             if not os.path.isfile(logfilename):
-                print 'no logfile for step info'
+                print('no logfile for step info')
             else:
                 logfile=open(logfilename,'r')
                 line = logfile.readline()
@@ -278,21 +278,21 @@ class SimData(object):
     def get_data_dict(self):
         keys = self.variables
         val = self.values
-        dictionary = dict(zip(keys, val))
+        dictionary = dict(list(zip(keys, val)))
         return dictionary
 if __name__ == '__main__':
     data = SimData("C://Users//qmle//Desktop//CR_BL//2016_10_ADS_Command//test1.raw")
-    print 'Title:', data.title
-    print 'Date:', data.date
-    print 'Plotname:', data.plotname
-    print 'No. variables:', data.novariables
-    print 'No. points:', data.nopoints
-    print 'Offset:', data.offset
-    print 'Output:', data.output
-    print 'Command:', data.command
-    print 'Binary:', data.binary
-    print 'Analysis:', data.analysis
-    print 'Flags:', data.flags
+    print('Title:', data.title)
+    print('Date:', data.date)
+    print('Plotname:', data.plotname)
+    print('No. variables:', data.novariables)
+    print('No. points:', data.nopoints)
+    print('Offset:', data.offset)
+    print('Output:', data.output)
+    print('Command:', data.command)
+    print('Binary:', data.binary)
+    print('Analysis:', data.analysis)
+    print('Flags:', data.flags)
     dictionary=data.get_data_dict()
     plt.figure(1)
     plt.plot(dictionary['time'],dictionary['V(n010)']) # put the name of the net you want here
@@ -300,5 +300,5 @@ if __name__ == '__main__':
     plt.plot(dictionary['time'], dictionary['I(V3)']) # put the name of the current you want here
     plt.show()
     if data.stepped:
-        print 'Steplengths:', data.steplen
-        print 'No. steps', data.nosteps
+        print('Steplengths:', data.steplen)
+        print('No. steps', data.nosteps)

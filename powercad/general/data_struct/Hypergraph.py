@@ -69,7 +69,7 @@ class Hypergraph:
         add_edge=True
         if nodes != []:
             for id in nodes:
-                if id in self.nodes.keys(): # check if this node exist in the hypergraph
+                if id in list(self.nodes.keys()): # check if this node exist in the hypergraph
                     new_edge.add_node(self.nodes[id])
                 else:
                     add_edge=False
@@ -80,7 +80,7 @@ class Hypergraph:
             self.edges[new_edge.id]=new_edge
             self.edge_count+=1
         else:
-            print " No edges was added, need to define all hypernodes first"
+            print(" No edges was added, need to define all hypernodes first")
 
     def add_node(self,id=None,attr_dict=None):
         '''
@@ -98,13 +98,13 @@ class Hypergraph:
         if attr_dict!=None:
             new_node.attr_dict=attr_dict
         add_node=True
-        if id in self.nodes.keys():
+        if id in list(self.nodes.keys()):
             add_node=False
         if add_node:
             self.nodes[id]=new_node
             self.node_count+=1
         else:
-            print "Failed to add node, node id already existed "
+            print("Failed to add node, node id already existed ")
 
     def plot_graph(self,pos={},ax=None,label=True,e_color='blue',v_color='red'):
         '''
@@ -118,12 +118,12 @@ class Hypergraph:
         '''
 
         if pos=={}:
-            for n in self.nodes.keys():
+            for n in list(self.nodes.keys()):
                 pos[n]=[random.random()*self.node_count, random.random() * self.node_count]
-        print pos
+        print(pos)
         for e in self.edges:
             edge=self.edges[e]
-            e_nodes=edge.nodes.keys()
+            e_nodes=list(edge.nodes.keys())
             x_pos=[pos[n][0] for n in e_nodes]
             y_pos = [pos[n][1] for n in e_nodes]
             ax.scatter(x_pos,y_pos,s=100,c=v_color)

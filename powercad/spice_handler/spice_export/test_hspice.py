@@ -10,7 +10,7 @@ Added documentation comments - jhmain 7-1-16
 '''
 
 import os
-from hspice_plot import *
+from .hspice_plot import *
 from pylab import figure, show
 
 class test_HSPICE_graph():

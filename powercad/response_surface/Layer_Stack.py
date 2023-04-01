@@ -107,7 +107,7 @@ def layers_setup():
     T1=Layer_Stack()
     T1.add_Layers([e1, e2, e3, e4])
     T1.define_trace(4)  # Select trace layer (where the optimization will be done)
-    script1=Q3D_ipy_script('16.2','C:\Users\qmle\Desktop\Testing\Py_Q3D_test','test1','C:\Users\qmle\Desktop\Testing\Py_Q3D_test')  # Initialize Script Object
+    script1=Q3D_ipy_script('16.2','C:\\Users\qmle\Desktop\Testing\Py_Q3D_test','test1','C:\\Users\qmle\Desktop\Testing\Py_Q3D_test')  # Initialize Script Object
     script1.add_script(T1.get_all_elayers())                                                                                            # Add Topology structure to script
     script1.set_params('Width', 9, 'XSize',e4,1)               # Set up parameters
     script1.set_params('Length', 9, 'YSize',e4,1)              # Set up parameters
@@ -125,9 +125,9 @@ def layers_setup():
     script1.change_properties('Length',12, 1)
     script1.analyze_all()
     script1.make()
-    script1.build('C:\Users\qmle\workspace\Python_Q3d_model\IronPython\ipy64.exe')  # Use Ipy64.exe to run simulation
+    script1.build('C:\\Users\qmle\workspace\Python_Q3d_model\IronPython\ipy64.exe')  # Use Ipy64.exe to run simulation
                                             # write all script to string
-    script2=Q3D_ipy_script('16.2','C:\Users\qmle\Desktop\Testing\Py_Q3D_test','test2','C:\Users\qmle\Desktop\Testing\Py_Q3D_test')
+    script2=Q3D_ipy_script('16.2','C:\\Users\qmle\Desktop\Testing\Py_Q3D_test','test2','C:\\Users\qmle\Desktop\Testing\Py_Q3D_test')
 
     script2.add_script(script1.script)
     script2.set_params('Width', 15, 'XSize',e4,1)               # Set up parameters
@@ -167,7 +167,7 @@ if __name__ == '__main__':
     T1.add_Layers([e1, e2, e3, e4])
     T1.add_trace(e5)
     T1.define_90_corner(4,5,2,10)
-    script1 = Q3D_ipy_script('16.2', 'C:/Users/qmle/Desktop/Testing/Py_Q3D_test/', '90corner1', 'C:\Users\qmle\Desktop\Testing\Py_Q3D_test')  # Initialize Script Object
+    script1 = Q3D_ipy_script('16.2', 'C:/Users/qmle/Desktop/Testing/Py_Q3D_test/', '90corner1', 'C:\\Users\qmle\Desktop\Testing\Py_Q3D_test')  # Initialize Script Object
     script1.add_script(T1.get_all_elayers())
     trace_high = e4.get_z()
     # Parameterization

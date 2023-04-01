@@ -1,0 +1,20 @@
+Min Dimensions,EMPTY,power_trace,signal_trace,power_lead,signal_lead,MOS,MOS_180
+Min Width,1.0,2.0,2.0,4.0,4.0,1.0,1.0
+Min Height,1.0,2.0,2.0,4.0,4.0,5.0,5.0
+Min Extension,1.0,2.0,2.0,4.0,4.0,5.0,5.0
+Min Spacing,EMPTY,power_trace,signal_trace,power_lead,signal_lead,MOS,MOS_180
+EMPTY,2.0,2.0,2.0,2.0,2.0,2.0,2.0
+power_trace,2.0,2.0,2.0,2.0,2.0,2.0,2.0
+signal_trace,2.0,2.0,2.0,2.0,2.0,2.0,2.0
+power_lead,2.0,2.0,2.0,2.0,2.0,2.0,2.0
+signal_lead,2.0,2.0,2.0,2.0,2.0,2.0,2.0
+MOS,2.0,2.0,2.0,2.0,2.0,2.0,2.0
+MOS_180,2.0,2.0,2.0,2.0,2.0,2.0,2.0
+Min Enclosure,EMPTY,power_trace,signal_trace,power_lead,signal_lead,MOS,MOS_180
+EMPTY,1.0,1.0,1.0,1.0,1.0,1.0,1.0
+power_trace,1.0,1.0,1.0,1.0,1.0,1.0,1.0
+signal_trace,1.0,1.0,1.0,1.0,1.0,1.0,1.0
+power_lead,1.0,1.0,1.0,1.0,1.0,1.0,1.0
+signal_lead,1.0,1.0,1.0,1.0,1.0,1.0,1.0
+MOS,1.0,1.0,1.0,1.0,1.0,1.0,1.0
+MOS_180,1.0,1.0,1.0,1.0,1.0,1.0,1.0

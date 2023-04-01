@@ -78,6 +78,6 @@ class Netdata():    # Stores netlist data in nested list structures
     
     def display(self):  # Displays the data after the operation
         for i in range(len(self.data)):
-            print self.data[i]
-            print '\n'
+            print(self.data[i])
+            print('\n')
 

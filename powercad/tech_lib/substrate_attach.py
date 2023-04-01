@@ -85,7 +85,7 @@ class SubAttachPage(object):
             save_file(sub_attach,os.path.join(self.sub_dir, sub_attach.properties.name+".p"))
             self.load_page()
         else:
-            print "Error Creating Substrate Attach"
+            print("Error Creating Substrate Attach")
         
     def load(self):
         if self.ui.SubAttachList.currentIndex() > 0:

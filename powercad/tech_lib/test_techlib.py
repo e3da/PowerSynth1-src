@@ -160,7 +160,7 @@ def make_sub_dir(dir_name):
 
 def pickle_those_devices():
     dir = "../../../tech_lib/"
-    print dir
+    print(dir)
     test_tech_dict = {"Substrates": [get_substrate, get_substrate2],
                       "Substrate_Attaches": [get_sub_attach, get_sub_attach2],
                       "Baseplates": [get_baseplate],
@@ -173,20 +173,20 @@ def pickle_those_devices():
     for key in test_tech_dict:
         value = test_tech_dict[key]
         sub_dir = os.path.join(dir, key)
-        print sub_dir
+        print(sub_dir)
         make_sub_dir(sub_dir)
         for func in value:
             obj = func()
             if hasattr(obj, 'name'):
-                print obj.name
+                print(obj.name)
                 pickle.dump(obj, open(os.path.join(sub_dir, obj.name+".p"),"wb"))
             else:
-                print obj.properties.name
+                print(obj.properties.name)
                 pickle.dump(obj, open(os.path.join(sub_dir, obj.properties.name+".p"),"wb"))
 
 if __name__ == '__main__':
     pickle_those_devices()
-    print "--- Pickle Complete ---"
+    print("--- Pickle Complete ---")
 #    get_substrate()
 #    get_dieattach()
 #    get_device()

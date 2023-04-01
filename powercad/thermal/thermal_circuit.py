@@ -71,4 +71,4 @@ if __name__ == '__main__':
     
     dies = [die0]
     temps = solve_for_temps(dies, rsub, 22)
-    print 'temps: ' + str(temps)
+    print(('temps: ' + str(temps)))

@@ -118,7 +118,7 @@ def add_test_measures(sym_layout):
 
     m3 = ThermalMeasure(ThermalMeasure.FIND_MAX, devices, "Max Temp.", 'TFSM_MODEL')
     sym_layout.perf_measures.append(m3)
-    print "perf", sym_layout.perf_measures
+    print("perf", sym_layout.perf_measures)
 
 
 def setup_model(symlayout):
@@ -232,8 +232,8 @@ def make_test_setup2(f,directory):
 
     individual=[i*layout_ratio if i>1 else i for i in individual] # layout i ratio i
     individual_spara =[4.723828657253275, 16.472407757897972, 3.027772807643007, 0.7291915966525637, 0.34930748270444323, 0.1808883006719934, 0.3962145355607477]
-    print 'individual', individual
-    print "opt_to_sym_index", sym_layout.opt_to_sym_index
+    print('individual', individual)
+    print("opt_to_sym_index", sym_layout.opt_to_sym_index)
     sym_layout.rev_map_design_vars(individual)
     sym_layout.generate_layout()
     plot_layout(sym_layout)
@@ -244,14 +244,14 @@ def make_test_setup2(f,directory):
     netlist= Netlist('Netlist//H_bridge4sw.txt')
     netlist.form_assignment_list_fh()
     external=netlist.get_external_list_fh()
-    output_fh_script(sym_layout,"C:\Users\qmle\Desktop\Balancing\Mutual_test\layout cases//BL_layout_pos1_200",external=external)
+    output_fh_script(sym_layout,"C:\\Users\qmle\Desktop\Balancing\Mutual_test\layout cases//BL_layout_pos1_200",external=external)
 
     #plot_lumped_graph(sym_layout)
     #print one_measure(sym_layout)
 def make_netlist():
     netlist = Netlist('Netlist//H_bridge4sw.txt')
     netlist.form_assignment_list_fh()
-    net_data = read_result("C:\Users\qmle\Desktop\Balancing\Mutual_test\layout cases//fh_results//BL_layout_pos1_200.inp.M.txt")
+    net_data = read_result("C:\\Users\qmle\Desktop\Balancing\Mutual_test\layout cases//fh_results//BL_layout_pos1_200.inp.M.txt")
     df, pm = netlist.get_assign_df()
     ads_net = Netlis_export_ADS(df=df, pm=pm)
     ads_net.import_net_data(net_data)

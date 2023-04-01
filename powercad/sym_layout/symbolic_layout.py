@@ -439,7 +439,7 @@ class SymbolicLayout(object):
         self.points = []
         self.all_lines=[]                   # stores all layout line objects
         self.all_points=[]                  # stores all layout points objects
-        for i in xrange(len(self.layout)): # iterate through the layout
+        for i in range(len(self.layout)): # iterate through the layout
             obj = self.layout[i]           # for each object in the layout add the normalized obj to obj list
             raw = self.raw_layout[i]       # add the raw object to object list
             if isinstance(obj, LayoutLine):# if this is a LayoutLine then make a SymLine object
@@ -870,9 +870,9 @@ class SymbolicLayout(object):
         # Each x,y location contains a dictionary of the elements (the keys) that exist
         # in that spot coupled with a value of whether the object is an endpoint (True) or midpoint (False)
         self.vg_matrix = []                # initialize virtual grid matrix
-        for x in xrange(self.trace_xlen):
+        for x in range(self.trace_xlen):
             col = []
-            for y in xrange(self.trace_ylen):
+            for y in range(self.trace_ylen):
                 col.append({})            # each element of the matrix is a dictionary
             self.vg_matrix.append(col)
 
@@ -884,7 +884,7 @@ class SymbolicLayout(object):
         # stamp the line into the matrix
         obj = line.trace_line
         if obj.vertical:
-            for y in xrange(obj.pt1[1], obj.pt2[1]+1):
+            for y in range(obj.pt1[1], obj.pt2[1]+1):
                 ele_dict = self.vg_matrix[obj.pt1[0]][y] # obtain the dictionary for each row
                 if y == obj.pt1[1]:
                     ele_dict[line] = True # Adds the SymLine to the ele_dict
@@ -893,7 +893,7 @@ class SymbolicLayout(object):
                 else:
                     ele_dict[line] = False
         else:
-            for x in xrange(obj.pt1[0], obj.pt2[0]+1):
+            for x in range(obj.pt1[0], obj.pt2[0]+1):
                 ele_dict = self.vg_matrix[x][obj.pt1[1]]
                 if x == obj.pt1[0]:
                     ele_dict[line] = True
@@ -1145,9 +1145,9 @@ class SymbolicLayout(object):
             ulen = self.trace_ylen # y is u
             vlen = self.trace_xlen # x is v
 
-        for u in xrange(ulen):
+        for u in range(ulen):
             col = RowCol()
-            for v in xrange(vlen):
+            for v in range(vlen):
                 # Coordinate transform
                 if h_scan: x = u; y = v;
                 else: x = v; y = u;
@@ -1169,7 +1169,7 @@ class SymbolicLayout(object):
             elif len(col.elements) == 1:
                 col.phantom = False
                 col.definable = True
-                ortho_ele = col.elements.items()[0][0]
+                ortho_ele = list(col.elements.items())[0][0]
                 # Check whether this element has a symmetry
                 dv_found = False
                 for sym_list in self.symmetries:
@@ -1232,7 +1232,7 @@ class SymbolicLayout(object):
                     # this is a col. element
                     if not obj.phantom:
                         # Check if single element column has a fixed constraint
-                        ortho_ele = obj.elements.items()[0][0]
+                        ortho_ele = list(obj.elements.items())[0][0]
                         if ortho_ele.constraint is not None:
                             if not ortho_ele.constraint[2] is None:
                                 # it has a fixed constraint
@@ -1307,7 +1307,7 @@ class SymbolicLayout(object):
         total_gap = 0.0
         total_known = 0.0
         undef_indices = []
-        for rowcol_index in xrange(len(rowcol_list)):
+        for rowcol_index in range(len(rowcol_list)):
             rowcol = rowcol_list[rowcol_index]
 
             # No gap in the row/col if all traces in the row/col are supertraces
@@ -1363,7 +1363,7 @@ class SymbolicLayout(object):
                         elif div_undef_width > rowcol.phantom_constraint[1]:
                             max_constraint_overflow += (div_undef_width - rowcol.phantom_constraint[1])
             else: # Check normal element constraints
-                ele = rowcol.elements.items()[0][0]
+                ele = list(rowcol.elements.items())[0][0]
                 if ele.constraint is not None:
                     if ele.constraint[0] is not None:
                         assert(ele.constraint[2] is None)
@@ -1376,7 +1376,7 @@ class SymbolicLayout(object):
         # End conservation pass
 
         # Make single forward pass now that all width values are known
-        for rowcol_index in xrange(len(rowcol_list)):
+        for rowcol_index in range(len(rowcol_list)):
             rowcol = rowcol_list[rowcol_index]
 
             if rowcol_index > 0:
@@ -1394,7 +1394,7 @@ class SymbolicLayout(object):
                 rowcol.right = rowcol.left + width
                 rowcol.mid = 0.5*(rowcol.left + rowcol.right)
             elif len(rowcol.elements) == 1:
-                ele = rowcol.elements.items()[0][0]
+                ele = list(rowcol.elements.items())[0][0]
 
                 if rowcol.removed:
                     width = rowcol.undef_width
@@ -2020,7 +2020,7 @@ class SymbolicLayout(object):
             wire_region = (2*trace_inset+(wire.num_wires-1)*wire.wire_sep)
             placement_space = vert_overlap-wire_region
             start_y = vert_interval[0]+trace_inset+frac_pos*placement_space
-            for i in xrange(wire.num_wires):
+            for i in range(wire.num_wires):
                 start_pts.append((start_x, start_y))
                 end_pts.append((end_x, start_y))
                 start_y += wire.wire_sep
@@ -2048,7 +2048,7 @@ class SymbolicLayout(object):
             wire_region = (2*trace_inset+(wire.num_wires-1)*wire.wire_sep)
             placement_space = horz_overlap-wire_region
             start_x = horz_interval[0]+trace_inset+frac_pos*placement_space
-            for i in xrange(wire.num_wires):
+            for i in range(wire.num_wires):
                 start_pts.append((start_x, start_y))
                 end_pts.append((start_x, end_y))
                 start_x += wire.wire_sep
@@ -2144,7 +2144,7 @@ class SymbolicLayout(object):
             dv_type = self.VERT_DV
             rem_index = self.removed_vert_dv_index
 
-        for i in xrange(len(scan_list)):
+        for i in range(len(scan_list)):
             # Get or make dv constraint
             constraint = None
             init_values = None
@@ -2163,7 +2163,7 @@ class SymbolicLayout(object):
                     if obj.phantom:
                         constraint = obj.phantom_constraint
                     else:
-                        constraint = obj.elements.items()[0][0].constraint
+                        constraint = list(obj.elements.items())[0][0].constraint
 
                 if constraint is None:
                     # Make default constraint (can't be larger than layout dim)
@@ -2191,7 +2191,7 @@ class SymbolicLayout(object):
                     self.opt_to_sym_index.append((dv_type, i))
 
     def _device_dv_scan(self):
-        for i in xrange(len(self.dev_dv_list)):
+        for i in range(len(self.dev_dv_list)):
             constraint = (0.0, 1.0)
             init_values = (0.0, 1.0)
             dv = DesignVar(constraint, init_values)
@@ -2199,7 +2199,7 @@ class SymbolicLayout(object):
             self.opt_to_sym_index.append((self.DEV_DV, i))
 
     def _bondwire_dv_scan(self):
-        for i in xrange(len(self.bondwire_dv_list)):
+        for i in range(len(self.bondwire_dv_list)):
             constraint = (0.0, 1.0)
             init_values = (0.0, 1.0)
             dv = DesignVar(constraint, init_values)
@@ -2207,7 +2207,7 @@ class SymbolicLayout(object):
             self.opt_to_sym_index.append((self.BONDWIRE_DV, i))
 
     def rev_map_design_vars(self, individual):
-        for i in xrange(len(self.opt_dv_list)):
+        for i in range(len(self.opt_dv_list)):
             dv_type, index = self.opt_to_sym_index[i]
             if dv_type == self.HORZ_DV:
                 self.h_design_values[index] = individual[i]
@@ -2236,7 +2236,7 @@ class SymbolicLayout(object):
         self.trial+=1
         if drc_count > 0:   # Non-convergence case
             #Brett's method
-            for i in xrange(len(self.perf_measures)):
+            for i in range(len(self.perf_measures)):
                 ret.append(drc_count+10000)
             return ret
         else:
@@ -2246,7 +2246,7 @@ class SymbolicLayout(object):
                 self.count =1
             #print self.count efficiency measure
 
-            print ' new solution is found *******'    # convergence case
+            print(' new solution is found *******')    # convergence case
             #self._build_lumped_graph()
             for measure in self.perf_measures:
 
@@ -2317,7 +2317,7 @@ class SymbolicLayout(object):
                     ret.append(val)
         # Update progress bar and eval count
         self.eval_count += 1
-        print "Running... Current number of evaluations:", self.eval_count,self.trial
+        print("Running... Current number of evaluations:", self.eval_count,self.trial)
         return ret
     '''-----------------------------------------------------------------------------------------------------------------------------------------------------'''
     def _measure_capacitance(self, measure):
@@ -2599,7 +2599,7 @@ def make_test_setup_journal_paper(p1,p2,f,h,tamb):
     #individual=[0.0, 19.993549748550485, 7.83473968924208, 2.0, 2.0, 7.83024382580129, 4.076805904566642, 0.353346526599453, 0.9966022253587258]
 
     #print 'individual', individual
-    print "opt_to_sym_index" ,sym_layout.opt_to_sym_index
+    print("opt_to_sym_index" ,sym_layout.opt_to_sym_index)
     sym_layout.rev_map_design_vars(individual)
     sym_layout.generate_layout()
     sym_layout._build_lumped_graph()
@@ -2682,7 +2682,7 @@ def build_test_layout():
     
     sym_layout = make_test_setup(10.0)
     sym_layout.debug_single_eval()
-    print sym_layout.passes_drc(True)
+    print(sym_layout.passes_drc(True))
     
     lg = sym_layout.lumped_graph
     if lg is not None:
@@ -2745,8 +2745,8 @@ def corner_overestimate(w1,w2,l,f):
 
 def continuity_test(w,l1,l2,f):
     mdl = load_file("C://Users//qmle//Desktop//Testing//FastHenry//Fasthenry3_test_gp//WorkSpace//model_tutorial.rsmdl")
-    print "discontinuous",trace_ind_krige(f,w,l1,mdl['L'])+trace_ind_krige(f,w,l2,mdl['L'])
-    print "continuous",trace_ind_krige(f,w,l1+l2,mdl['L'])
+    print("discontinuous",trace_ind_krige(f,w,l1,mdl['L'])+trace_ind_krige(f,w,l2,mdl['L']))
+    print("continuous",trace_ind_krige(f,w,l1+l2,mdl['L']))
 
 def journal_paper_test_thermal():
     f=1000.0
@@ -2769,14 +2769,14 @@ def journal_paper_test_thermal():
     '''
     for p1,p2,h,t_a in zip(p1,p2,h_coeff,tamb):
         ret.append([p1,p2,h,make_test_setup_journal_paper(p1,p2,f,h,t_a)[0]])
-    print ret
+    print(ret)
 
-    with open("C:\Users\qmle\Desktop\Journal Paper\\thermal_data.csv",'wb') as csvfile:
+    with open("C:\\Users\qmle\Desktop\Journal Paper\\thermal_data.csv",'wb') as csvfile:
         fieldnames = ['P1','P2','Ptotal', 'h_coeff', 'temp_1','temp_2']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         for res in ret:
-            print res[3]
+            print(res[3])
             if res[3][0]>res[3][1]:
                 t1=res[3][1]#[0][0]
                 t2=res[3][0]#[0][0]
@@ -2794,7 +2794,7 @@ def journal_paper_test_parasitics():
         ret.append([f1,make_test_setup_journal_paper(0.8,f1,42.64)[0]])
         #continuity_test(19.993549748550485,9.915121912900648,9.915121912900648,f1)
         continuity_test(4,11,11,f1)
-    with open("C:\Users\qmle\Desktop\Journal Paper\\Ind_data.csv", 'wb') as csvfile:
+    with open("C:\\Users\qmle\Desktop\Journal Paper\\Ind_data.csv", 'wb') as csvfile:
         fieldnames = ['Frequency', 'ind']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()

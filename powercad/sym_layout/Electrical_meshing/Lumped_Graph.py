@@ -499,52 +499,52 @@ class E_graph():
             dv_all=True
         except:
             dv_all=False
-            print " NO DEVICES IN THIS LAYOUT"
+            print(" NO DEVICES IN THIS LAYOUT")
         try:
             all_bondwires=df.loc[df['POI_Type']==BW_POI]
             bw_all=True
         except:
             bw_all = False
-            print " NO BONDWIRES IN THIS LAYOUT"
+            print(" NO BONDWIRES IN THIS LAYOUT")
         try:
             all_leads=df[(df['POI_Type']==BAR_LEAD_POI) | (df['POI_Type']==RND_LEAD_POI)]
             lead_all = True
         except:
             lead_all=False
-            print " NO LEADS IN THIS LAYOUT"
+            print(" NO LEADS IN THIS LAYOUT")
         try:
             all_trace_trace=df[df['POI_Type']==TRACE_POI]
             trace_all=True
         except:
             trace_all=False
             all_trace_trace=[]
-            print " NO TRACE TO TRACE FOUND"
+            print(" NO TRACE TO TRACE FOUND")
         try:
             all_trace_trace_bw=df[df['POI_Type']==TRACE_TRACE_BW_POI]
             bw_trace=True
         except:
             bw_trace=False
             all_trace_trace_bw=[]
-            print "NO TRACE TO TRACE BW"
+            print("NO TRACE TO TRACE BW")
         try:
             all_super_poi=df[df['POI_Type']==SUPER_POI]
             super_poi_all = True
         except:
             super_poi_all = False
-            print "NO SUPER TRACE"
+            print("NO SUPER TRACE")
         try:
             all_long_poi=df[df['POI_Type']==LONG_POI]
             long_poi_all = True
         except:
             long_poi_all=False
-            print "NO SUPER TRACE"
+            print("NO SUPER TRACE")
 
         try:
             all_end_poi = df[df['POI_Type'] == END_POI]
             end_all = True
         except:
             end_all=False
-            print "NO END POINTS"
+            print("NO END POINTS")
         #----------------------------------------------------------------
         # Represent special connections in device
         con_ind = 1e-7
@@ -662,8 +662,8 @@ class E_graph():
 
 
                         if lumped_graph != None and debug:
-                            print lumped_graph.nodes()
-                            print lumped_graph.edges()
+                            print(lumped_graph.nodes())
+                            print(lumped_graph.edges())
                             self.sym_layout.lumped_graph = lumped_graph
                             self.plot_lumped_graph()
         # CONNECT THE LEADS to TRACES
@@ -704,9 +704,9 @@ class E_graph():
                         lead_obj.lumped_node = lead_node  # used for measurement
                 trace_groups[trace_id].append(node)
                 if lumped_graph != None and debug:
-                    print "add lead"
-                    print lumped_graph.nodes()
-                    print lumped_graph.edges()
+                    print("add lead")
+                    print(lumped_graph.nodes())
+                    print(lumped_graph.edges())
                     self.sym_layout.lumped_graph = lumped_graph
                     self.plot_lumped_graph()
         conn_dict = {};
@@ -858,14 +858,14 @@ class E_graph():
 
         # NOW SINCE ALL SPECIAL CASES ARE SOLVED, WE JUST NEED TO WORK ON THE TRACE NODES
         # CONNECT ALL TRACE NODES
-        for trace_id in trace_groups.keys():
+        for trace_id in list(trace_groups.keys()):
             trace=self.all_trace_lines[trace_id] # Loop through each trace
             trace_data=[trace, thickness, sub_thick, lumped_graph, freq, resist, sub_epsil]
             nodes=trace_groups[trace_id]
             points=[]
             for n in nodes:
                 points.append(lumped_graph.node[n]['point'])
-            keydict=dict(zip(nodes, points))
+            keydict=dict(list(zip(nodes, points)))
             nodes.sort(key=keydict.get) # sort from high to low (vertical or horizontal)
             # NOW WE WILL CONNECT FROM LOW TO HIGH
             nodes.append(None) # add a tail
@@ -950,9 +950,9 @@ class E_graph():
             horiz_len = len(hPOI)
             vert_len = len(vPOI)
             mesh_nodes = []
-            for i in xrange(horiz_len):
+            for i in range(horiz_len):
                 col = []
-                for j in xrange(vert_len):
+                for j in range(vert_len):
                     x = hPOI[i][1]
                     y = vPOI[j][1]
                     lumped_graph.add_node(vert_count, point=(x, y), spine=True)
@@ -1048,14 +1048,14 @@ class E_graph():
         supertrace_sum, long_sum=self._build_normal_POI(supertrace_conn, supertrace_sum, long_conn, long_sum, lumped_graph,)
         # FORM GRAPH
         self.form_graph(lumped_graph, mesh_nodes,supertrace_conn,supertrace_sum,long_sum,vert_count)
-    def export_graph_to_file(self,lumped_graph,f_edge="C:\Users\qmle\Desktop\TestPy\Electrical\Solver\MNA//edges.txt",
-                             f_node="C:\Users\qmle\Desktop\TestPy\Electrical\Solver\MNA//nodes.txt"):
+    def export_graph_to_file(self,lumped_graph,f_edge="C:\\Users\qmle\Desktop\TestPy\Electrical\Solver\MNA//edges.txt",
+                             f_node="C:\\Users\qmle\Desktop\TestPy\Electrical\Solver\MNA//nodes.txt"):
         file = open(f_node, 'wb')
         # Clear the data so that a raw map can be extracted
         G = copy.deepcopy(lumped_graph)
         for n in G.nodes(data=True):
 
-            if 'obj' in G.node[n[0]].keys():
+            if 'obj' in list(G.node[n[0]].keys()):
                 del G.node[n[0]]['obj']
         for n in G.nodes(data=True):
             file.write(str(n))

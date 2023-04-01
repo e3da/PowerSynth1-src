@@ -67,7 +67,7 @@ def load_layout_from_project(project_file, solution_number):
         project.symb_layout.gen_solution_layout(sol.index)
         return project.symb_layout
     else:
-        print "Solution not found."
+        print("Solution not found.")
 
 if __name__ == "__main__":
     proj = r"C:\Users\shook\Documents\DropBox_madshook\Dropbox\PMLST\PMLST Projects\parasitic extraction layouts\pex_full2\project.p"

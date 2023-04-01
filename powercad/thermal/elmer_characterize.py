@@ -109,14 +109,17 @@ def characterize_devices(sym_layout, temp_dir=settings.TEMP_DIR, conv_tol=1e-3):
         ws, ls, ts, lcs, materials, layer_names = check_layer_thickness(ws, ls, ts, lcs, materials, layer_names)
         
         # Generate hash id before ws, ls, and ts get scaled to mm
-        hash_id = gen_cache_hash(ws, ls, ts, materials, bp_coeff, heat_flow)
+        hash_id = gen_cache_hash(ws, ls, ts, materials, bp_coeff, heat_flow) # to avoid hashlib issue in python 3.6
         cache_file = check_for_cached_char(settings.CACHED_CHAR_PATH, hash_id)
+
+        #cache_file=None
         
         # Check for a cached characterization first
         if cache_file is not None:
-            print 'found a cached version!'
+            print('found a cached version!')
             # load the cached copy
-            cached_obj = pickle.load(open(cache_file, 'r'))
+            #cached_obj = pickle.load(open(cache_file, 'r'))
+            cached_obj = load_file(cache_file) #python3 implementation
             dev_dict[dev] = cached_obj.thermal_features
             # get the sublayer features also
             if sub_tf is None:
@@ -124,7 +127,7 @@ def characterize_devices(sym_layout, temp_dir=settings.TEMP_DIR, conv_tol=1e-3):
                 # Update the ambient temperature
                 sub_tf.t_amb = t_amb
         else:
-            print 'Starting Characterization:',i
+            print(('Starting Characterization:',i))
             mesh_name = 'thermal_char'
             data_name = 'data'
             sif_name = 'thermal_char.sif'
@@ -145,19 +148,19 @@ def characterize_devices(sym_layout, temp_dir=settings.TEMP_DIR, conv_tol=1e-3):
             ts = array(ts)*1e-3
             lcs = array(lcs)*1e-3
             
-            print 'Meshing...'
+            print('Meshing...')
             create_box_stack_mesh(dir_name, geo_file, mesh_file, ws, ls, ts, lcs)
-            print 'Meshing complete.'
+            print('Meshing complete.')
             
-            print 'Solving Model...'
+            print('Solving Model...')
             write_module_elmer_sif(dir_name, sif_name, data_name, mesh_name, materials,
                                    heat_flow, t_amb, bp_coeff, (dev_dim[0], dev_dim[1]), conv_tol)
-            print "write_module_elmer_sif() completed; next: elmer_solve()"
+            print("write_module_elmer_sif() completed; next: elmer_solve()")
             #print dir_name,sif_name,mesh_name
             elmer_solve(dir_name, sif_name, mesh_name)
-            print 'Model Solved.'
+            print('Model Solved.')
             
-            print 'Characterizing data...'
+            print('Characterizing data...')
             data_path = os.path.join(dir_name, mesh_name, data_name+'.ep')
             #print data_path
             top_iso_z = 0.0
@@ -174,9 +177,9 @@ def characterize_devices(sym_layout, temp_dir=settings.TEMP_DIR, conv_tol=1e-3):
             xs, ys, temp, z_flux = get_nodes_near_z_value(data_path, top_iso_z, 1e-7)
             z_flux *= -1 # Flip direction of flux (downward is positive)
             iso_temp = average(temp)
-            print 'iso_temp:',iso_temp
-            print 'min iso_temp:', min(temp)
-            print 'max iso temp:', max(temp)
+            #print(('iso_temp:',iso_temp))
+            #print(('min iso_temp:', min(temp)))
+            #print(('max iso temp:', max(temp)))
             
             xs = 1000.0*xs; ys = 1000.0*ys # Convert back to mm
             temp_contours, _, avg_temp = characterize_dist(xs, ys, temp, t_amb, dev_dim[:2], False)
@@ -213,8 +216,14 @@ def characterize_devices(sym_layout, temp_dir=settings.TEMP_DIR, conv_tol=1e-3):
             #print os.path.join(settings.CACHED_CHAR_PATH,hash_id+'.p')
             if not os.path.exists(settings.CACHED_CHAR_PATH):
                 os.makedirs(settings.CACHED_CHAR_PATH)
+            '''
+            old implementation
             f = open(os.path.join(settings.CACHED_CHAR_PATH,hash_id+'.p'), 'w')
             pickle.dump(cached_char, f)
+            '''
+            #new implementation (python3)
+            file_name=os.path.join(settings.CACHED_CHAR_PATH, hash_id + '.p')
+            save_file(cached_char,file_name)
             f.close()
         i += 1 # Next, device
         
@@ -237,6 +246,7 @@ def gen_cache_hash(ws, ls, ts, materials, conv_coeff, heat_flow):
     data_string += str(materials)
     data_string += str(conv_coeff)
     data_string += str(heat_flow)
+    data_string=data_string.encode('utf-8') # for python 3
     f = hashlib.sha256(data_string)
     hash = f.hexdigest()
     del f
@@ -264,13 +274,13 @@ def check_layer_thickness(ws, ls, ts, lcs, materials, layer_names):
             new_materials.append(mat)
             new_layer_names.append(name)
         else:
-            print 'Warning: Layer',name,'removed, too thin! t < MIN_LAYER_THICKNESS: (',t,'<',MIN_LAYER_THICKNESS,')'
+            print(('Warning: Layer',name,'removed, too thin! t < MIN_LAYER_THICKNESS: (',t,'<',MIN_LAYER_THICKNESS,')'))
             
     return new_ws, new_ls, new_ts, new_lcs, new_materials, new_layer_names
 
 def convert_to_float(data_list):
     new_list = []
-    for i in xrange(len(data_list)):
+    for i in range(len(data_list)):
         new_list.append(float(data_list[i]))
     
     return new_list

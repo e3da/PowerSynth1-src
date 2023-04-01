@@ -16,20 +16,25 @@ from deap import base
 from deap import creator
 from deap import tools
 
-from powercad.interfaces.Matlab.Matlab_script import Matlab
-from powercad.interfaces.Pipe.sender import sender
-from powercad.interfaces.Pipe.listener import receiver
-import matlab
+
+
 import numpy as np
-from powercad.general.settings.save_and_load import *
+from powercad.general.settings.save_and_load import save_file,load_file
 import copy
 import math
 from powercad.opt.simulated_anneal import Annealer
 
 
 import time
-
-
+"""
+import platform
+if platform.system() == 'Windows': # Easygui doesnt work on linux, this must be fixed later
+    import matlab
+    from powercad.interfaces.Matlab.Matlab_script import Matlab
+    # These are win32pipes only work on Windows
+    from powercad.interfaces.Pipe.sender import sender
+    from powercad.interfaces.Pipe.listener import receiver
+"""
 class Solution():
     def __init__(self, ind,fval):
         '''
@@ -86,7 +91,7 @@ class NSGAII_Optimizer(object):
         nprandom.seed(self.seed)
 
         min_weights = []
-        for i in xrange(self.num_measures):
+        for i in range(self.num_measures):
             min_weights.append(-1.0)
         min_weights = tuple(min_weights)
         
@@ -114,7 +119,7 @@ class NSGAII_Optimizer(object):
     
     def _init_individual(self, Individual):
         ind = []
-        print "initialization"
+        print("initialization")
         for dv in self.design_vars:
             random.seed(self.seed)
             init0=dv.init_values[0]
@@ -134,7 +139,7 @@ class NSGAII_Optimizer(object):
             def wrap_check_bounds(*args, **kargs):
                 offsprings = func(*args, **kargs)
                 for child in offsprings:
-                    for i in xrange(len(self.design_vars)):
+                    for i in range(len(self.design_vars)):
                         consts = self.design_vars[i].constraints
                         # Min Check
                         if child[i] < consts[0]:
@@ -145,338 +150,338 @@ class NSGAII_Optimizer(object):
                 return offsprings
             return wrap_check_bounds
         return dec_check_bounds
+if platform.system() == 'Windows': # Conditonal class creation for Windows only
 
+    class Matlab_gamultiobj():
+        def __init__(self, design_vars, eval_fn, num_measures, num_gen, num_obj, matlab_dir):
+            self.design_vars = design_vars
+            self.eval_fn = eval_fn
+            self.num_gen = num_gen
+            self.num_measures = num_measures
+            self.solutions = None
+            self.matlab_engine = Matlab()
+            self.dir = matlab_dir
 
-class Matlab_gamultiobj():
-    def __init__(self, design_vars, eval_fn, num_measures, num_gen, num_obj, matlab_dir):
-        self.design_vars = design_vars
-        self.eval_fn = eval_fn
-        self.num_gen = num_gen
-        self.num_measures = num_measures
-        self.solutions = None
-        self.matlab_engine = Matlab()
-        self.dir = matlab_dir
-
-    def run(self):
-        eng = matlab.engine.start_matlab()
-        eng.cd(self.dir)
-        X_init = self._init_individual()
-        # print "x0",X_init,len(X_init)
-        future = eng.Optimization_Module(self.num_gen, matlab.double(X_init), len(X_init), 2, self.num_measures, 0,
-                                         async=True, nargout=2)
-        while not (future.done()):
-            # print "Done",future.done()
-            r1 = receiver('test1_x')
-            x = r1.read(future)
-            # print "here",x
-            if not (x == None):
-                # x=self._reverse_individual(x)
-                ret = self.eval_fn(x)
-                # print ret
-                s1 = sender(ret, 'test1_ret')
-                s1.send()
-
-        # print 'solution', future.result()
-        self.solutions = []
-        for i in range(len(future.result()[0])):
-            # sol=Solution(self._reverse_individual(future.result()[0][i]),future.result()[1][i])
-            sol = Solution(future.result()[0][i], future.result()[1][i])
-            self.solutions.append(sol)
-        # print self.solutions
-
-    def _init_individual(self):
-        '''
-        ind=[]
-        for dv in self.design_vars:
-            ind.append(random.uniform(dv.init_values[0], dv.init_values[1])/dv.init_values[1])
-        '''
-        ind = np.random.rand(self.design_vars)
-        ind = ind.tolist()
-        # print "type", type(ind)
-        return ind
-
-    def _reverse_individual(self, ind):
-        design_val = []
-        for i in range(len(self.design_vars)):
-            design_val.append(ind[i] * self.design_vars[i].init_values[1])
-        return design_val
-
-
-class Matlab_FMC_OLD():
-    def __init__(self, design_vars, eval_fn, num_measures, num_gen, matlab_dir):
-        self.design_vars = design_vars
-        self.eval_fn = eval_fn
-        self.num_gen = num_gen
-        self.init_fval = []
-        self.constraint = []
-        self.objSel = []
-        self.num_measures = num_measures
-        self.solutions = None
-        self.matlab_engine = Matlab()
-        self.alpha = []
-        self.dir = matlab_dir
-
-    def run(self, option=5):
-        eng = matlab.engine.start_matlab()
-        eng.cd(self.dir)
-        X_init = self._init_individual()
-        self.init_fval = self.eval_fn(individual=X_init, opt_mode=False)
-        # print "x0", X_init,len(X_init)
-        X = eng.Optimization_Module(self.num_gen, matlab.double(X_init), len(X_init), 5, async=True, nargout=2)
-        while not (X.done()):
-            r1 = ('test1_x')
-            temp = r1.read(X)  # Temporary storage for variables
-            if not (X.done()):
-                # DANNY EDIT
-                alpha = temp[0]
-                x = temp[1:]
+        def run(self):
+            eng = matlab.engine.start_matlab()
+            eng.cd(self.dir)
+            X_init = self._init_individual()
+            # print "x0",X_init,len(X_init)
+            future = eng.Optimization_Module(self.num_gen, matlab.double(X_init), len(X_init), 2, self.num_measures, 0,
+                                            background=True, nargout=2)
+            while not (future.done()):
+                # print "Done",future.done()
+                r1 = receiver('test1_x')
+                x = r1.read(future)
                 # print "here",x
-                # print type(x)
-                # x=self._reverse_individual(x)
-                ret = self.eval_fn(individual=x, alpha=alpha, feval_init=self.init_fval)
-                # print ret
-                s1 = sender(ret, 'test1_ret')
-                s1.send()
-        # print "solution", X.result()
-        self.solutions = []
-        for i in range(len(X.result()[0])):
-            fval = self.eval_fn(individual=X.result()[0][i], opt_mode=False)
-            sol = Solution(X.result()[0][i], fval)  # DANNY EDIT
-            self.solutions.append(sol)
-        print self.solutions
+                if not (x == None):
+                    # x=self._reverse_individual(x)
+                    ret = self.eval_fn(x)
+                    # print ret
+                    s1 = sender(ret, 'test1_ret')
+                    s1.send()
 
-    def _init_individual(self):
+            # print 'solution', future.result()
+            self.solutions = []
+            for i in range(len(future.result()[0])):
+                # sol=Solution(self._reverse_individual(future.result()[0][i]),future.result()[1][i])
+                sol = Solution(future.result()[0][i], future.result()[1][i])
+                self.solutions.append(sol)
+            # print self.solutions
 
-        '''
-        for dv in self.design_vars:
-            ind.append(random.uniform(dv.init_values[0], dv.init_values[1])/dv.init_values[1])
-        '''
-        # ind = np.random.rand(self.design_vars)
-        ind = 0.5 * np.ones(self.design_vars)
-        ind = ind.tolist()
-        # print "type", type(ind)
-        return ind
-
-    def _reverse_individual(self, ind):
-        design_val = []
-        for i in range(len(self.design_vars)):
-            design_val.append(ind[i] * self.design_vars[i].init_values[1])
-        return design_val
-
-
-class Matlab_epsilon_constraint():
-    def __init__(self, design_vars, eval_fn, num_measures, num_gen, matlab_dir):
-        self.design_vars = design_vars
-        self.eval_fn = eval_fn
-        self.num_gen = num_gen
-        self.init_fval = []
-        self.constraint = []
-        self.objSel = []
-        self.num_measures = num_measures
-        self.solutions = None
-        self.matlab_engine = Matlab()
-        self.alpha = 1.0 / (num_measures)
-        self.dir = matlab_dir
-
-    def run(self, option=3):
-        eng = matlab.engine.start_matlab()
-        eng.cd(self.dir)
-        X_init = self._init_individual()
-        self.init_fval = self.eval_fn(individual=X_init, opt_mode=False)
-        # print "x0", X_init,len(X_init)
-        X = eng.Optimization_Module(self.num_gen, matlab.double(X_init), len(X_init), 3, async=True, nargout=2)
-        while not (X.done()):
-            r1 = receiver('test1_x')
-            temp = r1.read(X)  # Temporary storage for variables
-            if not (X.done()):
-                # DANNY EDIT
-                constraint = temp[0]
-                objSel = int(temp[1])
-                x = temp[2:]
-                # print "here",x
-                # print type(x)
-                # x=self._reverse_individual(x)
-                ret = self.eval_fn(individual=x, constraint=constraint, objSel=objSel, feval_init=self.init_fval)
-                # print ret
-                s1 = sender(ret, 'test1_ret')
-                s1.send()
-        # print "solution", X.result()
-        self.solutions = []
-        for i in range(len(X.result()[0])):
-            fval = self.eval_fn(individual=X.result()[0][i], opt_mode=False)
-            sol = Solution(X.result()[0][i], fval)  # DANNY EDIT
-            self.solutions.append(sol)
-        print self.solutions
-
-    def _init_individual(self):
-
-        '''
-        for dv in self.design_vars:
-            ind.append(random.uniform(dv.init_values[0], dv.init_values[1])/dv.init_values[1])
-        '''
-        # ind = np.random.rand(self.design_vars)
-        ind = 0.5 * np.ones(self.design_vars)
-        ind = ind.tolist()
-        # print "type", type(ind)
-        return ind
-
-    def _reverse_individual(self, ind):
-        design_val = []
-        for i in range(len(self.design_vars)):
-            design_val.append(ind[i] * self.design_vars[i].init_values[1])
-        return design_val
-
-
-class Matlab_hybrid_method():
-    '''
-    Hybrid method using GA and WS (fmincon)
-    '''
-    ''' GA is used to initially find the good collection of X, fmincon is used to further optimized the collection'''
-
-    def __init__(self, design_vars, eval_fn, num_measures, num_gen, matlab_dir):
-        '''
-
-        :param design_vars:
-        :param eval_fn:
-        :param num_measures:
-        :param num_gen:
-        :param matlab_dir:
-        '''
-        self.design_vars = design_vars
-        self.eval_fn = eval_fn
-        self.num_gen = num_gen
-        self.init_fval = []
-        self.num_measures = num_measures
-        self.solutions = None
-        self.matlab_engine = Matlab()
-        self.alpha = 1.0 / (num_measures)
-        self.dir = matlab_dir
-
-    def run(self, option=4):
-        eng = matlab.engine.start_matlab()
-        eng.cd(self.dir)
-        X_init = self._init_individual()
-        self.init_fval = self.eval_fn(individual=X_init, opt_mode=False)
-        # print "x0",X_init,len(X_init)
-        X = eng.Optimization_Module(self.num_gen, matlab.double(X_init), len(X_init), 4, async=True, nargout=2)
-        while not (X.done()):
-            r1 = receiver('test1_x')
-            temp = r1.read(X)  # Temporary storage for variables
-            if not (X.done()):
-                # DANNY EDIT
-                alpha = temp[0]
-                x = temp[1:]
-                ret = self.eval_fn(individual=x, alpha=alpha, feval_init=self.init_fval)
-                s1 = sender(ret, 'test1_ret')
-                s1.send()
-        # print "solution", X.result()
-        self.solutions = []
-        for i in range(len(X.result()[0])):
-            fval = self.eval_fn(individual=X.result()[0][i], opt_mode=False)
-            sol = Solution(X.result()[0][i], fval)  # DANNY EDIT
-            self.solutions.append(sol)
-        print self.solutions
-
-    def _init_individual(self):
-
-        '''
-        for dv in self.design_vars:
-            ind.append(random.uniform(dv.init_values[0], dv.init_values[1])/dv.init_values[1])
-        '''
-        # ind = np.random.rand(self.design_vars)
-        ind = 0.5 * np.ones(self.design_vars)
-        ind = ind.tolist()
-        # print "type", type(ind)
-        return ind
-
-    def _reverse_individual(self, ind):
-        design_val = []
-        for i in range(len(self.design_vars)):
-            design_val.append(ind[i] * self.design_vars[i].init_values[1])
-        return design_val
-
-
-class Matlab_weighted_sum_fmincon():
-    def __init__(self, design_vars, eval_fn, num_measures, num_gen, num_disc, matlab_dir, individual=None):
-        self.individual = individual
-        self.design_vars = design_vars
-        self.eval_fn = eval_fn
-        self.num_gen = num_gen
-        self.init_fval = []
-        self.num_disc = num_disc
-        self.num_measures = num_measures
-        self.solutions = None
-        self.matlab_engine = Matlab()
-        self.alpha = 1.0 / (num_measures)
-        # self.alpha=0.8
-        self.dir = matlab_dir
-        self.update = None
-
-    def run(self, option=2):
-
-        # start=time.time()
-        eng = matlab.engine.start_matlab()
-        eng.cd(self.dir)
-        X_init = self._init_individual()
-        self.init_fval = self.eval_fn(individual=X_init, opt_mode=False)
-        X = eng.Optimization_Module(self.num_gen, matlab.double(X_init), len(X_init), 1, self.num_measures,
-                                    self.num_disc, async=True, nargout=2)
-
-        while not (X.done()):
-
-            r1 = receiver('test1_x')
-
-            temp = r1.read(X)  # Temporary storage for variables
+        def _init_individual(self):
             '''
-            print len(temp)
-            alpha = temp[0:self.num_measures]
-            x = temp[self.num_measures:-1]
-            print alpha
-            print len(x),x
-            print"G", temp[-1]
-            raw_input()
+            ind=[]
+            for dv in self.design_vars:
+                ind.append(random.uniform(dv.init_values[0], dv.init_values[1])/dv.init_values[1])
             '''
-            if temp != None:
-                self.update = temp[-1]
-            if not (X.done()):
+            ind = np.random.rand(self.design_vars)
+            ind = ind.tolist()
+            # print "type", type(ind)
+            return ind
+
+        def _reverse_individual(self, ind):
+            design_val = []
+            for i in range(len(self.design_vars)):
+                design_val.append(ind[i] * self.design_vars[i].init_values[1])
+            return design_val
+
+
+    class Matlab_FMC_OLD():
+        def __init__(self, design_vars, eval_fn, num_measures, num_gen, matlab_dir):
+            self.design_vars = design_vars
+            self.eval_fn = eval_fn
+            self.num_gen = num_gen
+            self.init_fval = []
+            self.constraint = []
+            self.objSel = []
+            self.num_measures = num_measures
+            self.solutions = None
+            self.matlab_engine = Matlab()
+            self.alpha = []
+            self.dir = matlab_dir
+
+        def run(self, option=5):
+            eng = matlab.engine.start_matlab()
+            eng.cd(self.dir)
+            X_init = self._init_individual()
+            self.init_fval = self.eval_fn(individual=X_init, opt_mode=False)
+            # print "x0", X_init,len(X_init)
+            X = eng.Optimization_Module(self.num_gen, matlab.double(X_init), len(X_init), 5, background=True, nargout=2)
+            while not (X.done()):
+                r1 = ('test1_x')
+                temp = r1.read(X)  # Temporary storage for variables
+                if not (X.done()):
+                    # DANNY EDIT
+                    alpha = temp[0]
+                    x = temp[1:]
+                    # print "here",x
+                    # print type(x)
+                    # x=self._reverse_individual(x)
+                    ret = self.eval_fn(individual=x, alpha=alpha, feval_init=self.init_fval)
+                    # print ret
+                    s1 = sender(ret, 'test1_ret')
+                    s1.send()
+            # print "solution", X.result()
+            self.solutions = []
+            for i in range(len(X.result()[0])):
+                fval = self.eval_fn(individual=X.result()[0][i], opt_mode=False)
+                sol = Solution(X.result()[0][i], fval)  # DANNY EDIT
+                self.solutions.append(sol)
+            #print(self.solutions)
+
+        def _init_individual(self):
+
+            '''
+            for dv in self.design_vars:
+                ind.append(random.uniform(dv.init_values[0], dv.init_values[1])/dv.init_values[1])
+            '''
+            # ind = np.random.rand(self.design_vars)
+            ind = 0.5 * np.ones(self.design_vars)
+            ind = ind.tolist()
+            # print "type", type(ind)
+            return ind
+
+        def _reverse_individual(self, ind):
+            design_val = []
+            for i in range(len(self.design_vars)):
+                design_val.append(ind[i] * self.design_vars[i].init_values[1])
+            return design_val
+
+
+    class Matlab_epsilon_constraint():
+        def __init__(self, design_vars, eval_fn, num_measures, num_gen, matlab_dir):
+            self.design_vars = design_vars
+            self.eval_fn = eval_fn
+            self.num_gen = num_gen
+            self.init_fval = []
+            self.constraint = []
+            self.objSel = []
+            self.num_measures = num_measures
+            self.solutions = None
+            self.matlab_engine = Matlab()
+            self.alpha = 1.0 / (num_measures)
+            self.dir = matlab_dir
+
+        def run(self, option=3):
+            eng = matlab.engine.start_matlab()
+            eng.cd(self.dir)
+            X_init = self._init_individual()
+            self.init_fval = self.eval_fn(individual=X_init, opt_mode=False)
+            # print "x0", X_init,len(X_init)
+            X = eng.Optimization_Module(self.num_gen, matlab.double(X_init), len(X_init), 3, background=True, nargout=2)
+            while not (X.done()):
+                r1 = receiver('test1_x')
+                temp = r1.read(X)  # Temporary storage for variables
+                if not (X.done()):
+                    # DANNY EDIT
+                    constraint = temp[0]
+                    objSel = int(temp[1])
+                    x = temp[2:]
+                    # print "here",x
+                    # print type(x)
+                    # x=self._reverse_individual(x)
+                    ret = self.eval_fn(individual=x, constraint=constraint, objSel=objSel, feval_init=self.init_fval)
+                    # print ret
+                    s1 = sender(ret, 'test1_ret')
+                    s1.send()
+            # print "solution", X.result()
+            self.solutions = []
+            for i in range(len(X.result()[0])):
+                fval = self.eval_fn(individual=X.result()[0][i], opt_mode=False)
+                sol = Solution(X.result()[0][i], fval)  # DANNY EDIT
+                self.solutions.append(sol)
+            print(self.solutions)
+
+        def _init_individual(self):
+
+            '''
+            for dv in self.design_vars:
+                ind.append(random.uniform(dv.init_values[0], dv.init_values[1])/dv.init_values[1])
+            '''
+            # ind = np.random.rand(self.design_vars)
+            ind = 0.5 * np.ones(self.design_vars)
+            ind = ind.tolist()
+            # print "type", type(ind)
+            return ind
+
+        def _reverse_individual(self, ind):
+            design_val = []
+            for i in range(len(self.design_vars)):
+                design_val.append(ind[i] * self.design_vars[i].init_values[1])
+            return design_val
+
+
+    class Matlab_hybrid_method():
+        '''
+        Hybrid method using GA and WS (fmincon)
+        '''
+        ''' GA is used to initially find the good collection of X, fmincon is used to further optimized the collection'''
+
+        def __init__(self, design_vars, eval_fn, num_measures, num_gen, matlab_dir):
+            '''
+
+            :param design_vars:
+            :param eval_fn:
+            :param num_measures:
+            :param num_gen:
+            :param matlab_dir:
+            '''
+            self.design_vars = design_vars
+            self.eval_fn = eval_fn
+            self.num_gen = num_gen
+            self.init_fval = []
+            self.num_measures = num_measures
+            self.solutions = None
+            self.matlab_engine = Matlab()
+            self.alpha = 1.0 / (num_measures)
+            self.dir = matlab_dir
+
+        def run(self, option=4):
+            eng = matlab.engine.start_matlab()
+            eng.cd(self.dir)
+            X_init = self._init_individual()
+            self.init_fval = self.eval_fn(individual=X_init, opt_mode=False)
+            # print "x0",X_init,len(X_init)
+            X = eng.Optimization_Module(self.num_gen, matlab.double(X_init), len(X_init), 4, background=True, nargout=2)
+            while not (X.done()):
+                r1 = receiver('test1_x')
+                temp = r1.read(X)  # Temporary storage for variables
+                if not (X.done()):
+                    # DANNY EDIT
+                    alpha = temp[0]
+                    x = temp[1:]
+                    ret = self.eval_fn(individual=x, alpha=alpha, feval_init=self.init_fval)
+                    s1 = sender(ret, 'test1_ret')
+                    s1.send()
+            # print "solution", X.result()
+            self.solutions = []
+            for i in range(len(X.result()[0])):
+                fval = self.eval_fn(individual=X.result()[0][i], opt_mode=False)
+                sol = Solution(X.result()[0][i], fval)  # DANNY EDIT
+                self.solutions.append(sol)
+            print(self.solutions)
+
+        def _init_individual(self):
+
+            '''
+            for dv in self.design_vars:
+                ind.append(random.uniform(dv.init_values[0], dv.init_values[1])/dv.init_values[1])
+            '''
+            # ind = np.random.rand(self.design_vars)
+            ind = 0.5 * np.ones(self.design_vars)
+            ind = ind.tolist()
+            # print "type", type(ind)
+            return ind
+
+        def _reverse_individual(self, ind):
+            design_val = []
+            for i in range(len(self.design_vars)):
+                design_val.append(ind[i] * self.design_vars[i].init_values[1])
+            return design_val
+
+
+    class Matlab_weighted_sum_fmincon():
+        def __init__(self, design_vars, eval_fn, num_measures, num_gen, num_disc, matlab_dir, individual=None):
+            self.individual = individual
+            self.design_vars = design_vars
+            self.eval_fn = eval_fn
+            self.num_gen = num_gen
+            self.init_fval = []
+            self.num_disc = num_disc
+            self.num_measures = num_measures
+            self.solutions = None
+            self.matlab_engine = Matlab()
+            self.alpha = 1.0 / (num_measures)
+            # self.alpha=0.8
+            self.dir = matlab_dir
+            self.update = None
+
+        def run(self, option=2):
+
+            # start=time.time()
+            eng = matlab.engine.start_matlab()
+            eng.cd(self.dir)
+            X_init = self._init_individual()
+            self.init_fval = self.eval_fn(individual=X_init, opt_mode=False)
+            X = eng.Optimization_Module(self.num_gen, matlab.double(X_init), len(X_init), 1, self.num_measures,
+                                        self.num_disc, background=True, nargout=2)
+
+            while not (X.done()):
+
+                r1 = receiver('test1_x')
+
+                temp = r1.read(X)  # Temporary storage for variables
+                '''
+                print len(temp)
                 alpha = temp[0:self.num_measures]
                 x = temp[self.num_measures:-1]
-                ret = self.eval_fn(individual=x, alpha=alpha, feval_init=self.init_fval, update=self.update)
-                s1 = sender(ret, 'test1_ret')
-                s1.send()
+                print alpha
+                print len(x),x
+                print"G", temp[-1]
+                raw_input()
+                '''
+                if temp != None:
+                    self.update = temp[-1]
+                if not (X.done()):
+                    alpha = temp[0:self.num_measures]
+                    x = temp[self.num_measures:-1]
+                    ret = self.eval_fn(individual=x, alpha=alpha, feval_init=self.init_fval, update=self.update)
+                    s1 = sender(ret, 'test1_ret')
+                    s1.send()
 
-        self.solutions = []
+            self.solutions = []
 
-        for i in range(len(X.result()[0])):
-            individual = X.result()[0][i]
-            # print type(individual)
-            individual = list(individual)
-            fval = self.eval_fn(individual=individual, opt_mode=False)
-            sol = Solution(X.result()[0][i], fval)  # DANNY EDIT
-            self.solutions.append(sol)
-        # print self.solutions
+            for i in range(len(X.result()[0])):
+                individual = X.result()[0][i]
+                # print type(individual)
+                individual = list(individual)
+                fval = self.eval_fn(individual=individual, opt_mode=False)
+                sol = Solution(X.result()[0][i], fval)  # DANNY EDIT
+                self.solutions.append(sol)
+            # print self.solutions
 
-    def _init_individual(self):
+        def _init_individual(self):
 
-        '''
-        for dv in self.design_vars:
-            ind.append(random.uniform(dv.init_values[0], dv.init_values[1])/dv.init_values[1])
-        '''
-        # ind = np.random.rand(self.design_vars)
-        # print "INDI",self.individual
-        if self.individual == None:
-            ind = 0.0 * np.ones(self.design_vars)
-            ind = ind.tolist()
-        else:
-            ind = self.individual
-        # print "type", type(ind)
-        return ind
+            '''
+            for dv in self.design_vars:
+                ind.append(random.uniform(dv.init_values[0], dv.init_values[1])/dv.init_values[1])
+            '''
+            # ind = np.random.rand(self.design_vars)
+            # print "INDI",self.individual
+            if self.individual == None:
+                ind = 0.0 * np.ones(self.design_vars)
+                ind = ind.tolist()
+            else:
+                ind = self.individual
+            # print "type", type(ind)
+            return ind
 
-    def _reverse_individual(self, ind):
-        design_val = []
-        for i in range(len(self.design_vars)):
-            design_val.append(ind[i] * self.design_vars[i].init_values[1])
-        return design_val
+        def _reverse_individual(self, ind):
+            design_val = []
+            for i in range(len(self.design_vars)):
+                design_val.append(ind[i] * self.design_vars[i].init_values[1])
+            return design_val
 
 
 class SimulatedAnnealing(Annealer):
@@ -646,7 +651,7 @@ if __name__=='__main__':
         count+=1
         f1.append(sol.fitness.values[0])
         f2.append(sol.fitness.values[1])
-    print count    
+    print(count)    
     plot(f1, f2, 'o')
     show()
         

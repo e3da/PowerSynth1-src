@@ -235,8 +235,8 @@ class SpiceNameError(Exception):
 
 # unit-testing
 if __name__ == '__main__':
-    print (Resistor("1", "n1", "n2", 456,l=1.0,w=2.0,temp=4)).SPICE
-    print (Capacitor("1", "n1", "n2", 456)).SPICE
-    print (Inductor("1", "n1", "n2", 456)).SPICE
-    print (Diode("1","n1","n2","model")).SPICE
-    print (Mosfet("1","n1","n2","n3","model")).SPICE
+    print((Resistor("1", "n1", "n2", 456,l=1.0,w=2.0,temp=4)).SPICE)
+    print((Capacitor("1", "n1", "n2", 456)).SPICE)
+    print((Inductor("1", "n1", "n2", 456)).SPICE)
+    print((Diode("1","n1","n2","model")).SPICE)
+    print((Mosfet("1","n1","n2","n3","model")).SPICE)

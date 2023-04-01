@@ -206,8 +206,8 @@ def trace_capacitance(w, l, t, h, k = 8.8):
     try:
         keff = (k+1.0)/2.0 + ((k-1.0)/2.0)*math.pow(1.0 + (12.0*h1)/w1, -0.5) - 0.217*(k-1.0)*t1/math.sqrt(w1*h1) # same as below.
     except:
-        print 'h1', h1, 'w1', w1
-        print 1.0 + (12.0*h1)/w1
+        print('h1', h1, 'w1', w1)
+        print(1.0 + (12.0*h1)/w1)
         
     keff = (k+1.0)/2.0 + ((k-1.0)/2.0)*math.pow(1.0 + (12.0*h1)/w1, -0.5) - 0.217*(k-1.0)*t1/math.sqrt(w1*h1)
     

@@ -60,7 +60,7 @@ class Netlist(object):
             self.models.append(entries[-1])
 
         # Create a dictionary with components as keys and ports as values
-        self.components_and_ports = dict(zip(self.components, self.ports))
+        self.components_and_ports = dict(list(zip(self.components, self.ports)))
         # Create a list of ports
         port_list = []
         for ports in self.ports:
@@ -109,7 +109,7 @@ class Netlist(object):
                         self.df_assignment.loc[row, 'neg_pin'] = self.ports_map[n2]
                         row+=1
         self.df_assignment.to_csv("assignment.csv")
-        print self.ports_map
+        print(self.ports_map)
     def get_external_list_fh(self):
         out = ''
         for row in range(len(self.df_assignment)):
@@ -134,7 +134,7 @@ class Netlis_export_ADS():
         sub = ".subckt X1"
         for i in range(len(self.ports_map)):
             sub += " " + str(self.ports_map.loc[i, "Net_id"]).zfill(4)
-        print sub
+        print(sub)
         script = sub + "\n"
 
         for i in range(len(self.data_frame)):
@@ -158,7 +158,7 @@ class Netlis_export_ADS():
 
 
         script += ".end"
-        print  script
+        print(script)
         text_file.write(script)
         text_file.close()
     def export_ads(self,file_name,C=None):
@@ -210,25 +210,25 @@ class Netlis_export_ADS():
         script=sub+"\n"
         script+= lr_text+mu_text
         script+=".end"
-        print script
+        print(script)
         text_file.write(script)
         text_file.close()
                # search each col
-        for key in self.ports_map.keys():
-            print 'P'+str(self.ports_map[key]), key
+        for key in list(self.ports_map.keys()):
+            print('P'+str(self.ports_map[key]), key)
 
 
 
 if __name__=="__main__":
 
     nl = Netlist("C:\PowerSynth_git\Response_Surface\PowerCAD-full\src\powercad\sym_layout\Recursive_test_cases\Netlist//H_bridge4sw.txt")
-    print nl.netlist
+    print(nl.netlist)
     graph = nl.graph
-    print graph.nodes()
-    print nl.components
-    print graph.edges('DC_plus')
+    print(graph.nodes())
+    print(nl.components)
+    print(graph.edges('DC_plus'))
     nl.form_assignment_list_fh()
-    print nl.get_external_list_fh()
+    print(nl.get_external_list_fh())
     nx.draw(graph, pos=nx.spring_layout(graph, k=0.15, iterations=12), with_labels=True)
 
     plt.show()

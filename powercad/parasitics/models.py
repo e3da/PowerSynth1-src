@@ -81,7 +81,7 @@ def trace_resistance(f, w, l, t, h, p=1.724e-8):             # see main for unit
 
 
 def trace_resistance_svr(f,w,l,t,h,p=1.724e-8):       # Quang's model SVR ,KR based just for testing now
-    save_path='C:\Users\qmle\Desktop\SingleFEM'
+    save_path='C:\\Users\qmle\Desktop\SingleFEM'
     KR_mdl=pickle.load(open(os.path.join(save_path,'KR_mdl.mdl'),'rb'))
     ht_fixed = True
     if ht_fixed:
@@ -308,7 +308,7 @@ def unit_test_ind_res():
        For 72 data points, the simulations will take approximately 12 hours to complete...
     2. Please read through all comments... understand how it works'''
     
-    DataPath='C:\Users\qmle\Desktop\Testing\Surrogate Model\Surrogate_Data_Parasitic'  # data export path where this analysis will be perform ... Data will also be exported into this directory
+    DataPath='C:\\Users\qmle\Desktop\Testing\Surrogate Model\Surrogate_Data_Parasitic'  # data export path where this analysis will be perform ... Data will also be exported into this directory
     ipy64='ipy64'                                                                        # name of the exe will be called in cmd... I added it to path variable 
     ipy64 = 'C:\Program Files\AnsysEM\AnsysEM16.2\Win64\common\IronPython\ipy64.exe'     # In the case that you dont know how to change path variable use this method
     '''--------------------------------------------------------------------------------------------------------------------------------------------------------------------'''    
@@ -446,5 +446,5 @@ def harvest_data_boundary_linear_approximation(height, thickness, width, length,
 
 if __name__ == '__main__':
     pri
-    print trace_mutual1(9,4)
-    print trace_mutual(9,9,0.2,4)
+    print(trace_mutual1(9,4))
+    print(trace_mutual(9,9,0.2,4))

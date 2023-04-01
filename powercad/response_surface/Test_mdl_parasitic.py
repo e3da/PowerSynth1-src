@@ -46,7 +46,7 @@ if __name__ == '__main__':
     mdl1.create_uniform_DOE([10,10], True)
     mdl1.create_DOE(2,100)
     #
-    print mdl1.DOE
+    print(mdl1.DOE)
     mdl1.generate_fname()
     for [w,l] in mdl1.DOE.tolist():
         name=mdl1.mdl_name+'_W_'+str(w)+'_L_'+str(l)

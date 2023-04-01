@@ -40,11 +40,11 @@ class CostFunction():
         try:
             for i in range(len(self.var)):
                 variable=str(self.var[i])+'='+str(list_of_value[i])
-                print variable
+                print(variable)
                 exec(variable)
                 exec('print {0}'.format(self.var[i]))
         except:
-            print "fail"
+            print("fail")
         res=0
         out='res='+self.formula
         exec(out)

@@ -1,13 +1,12 @@
-import csv
 import math
 import math as m
 import os
 from math import fabs
 
-import matplotlib.pyplot as plt
 import numpy as np
 
 from powercad.general.settings.save_and_load import load_file
+from powercad.response_surface.RS_build_function import f_ms
 
 LOWEST_ASPECT_RES = 1.0         # I changed it back to 1.0 Quang as stated in Brett's thesis
 LOWEST_ASPECT_IND = 1.0
@@ -17,8 +16,11 @@ u_0 = 4.0*math.pi*1e-7          # permeability of vaccum;
 e_0 = 8.85e-12                  # permittivity of vaccum;
 
 
+
+
 # -----------  resistance model of traces on ground plane ------------------
 # --------------------------------------------------------------------------
+
 def trace_resistance(f=None, w=None, l=None, t=None, h=None, p=1.724e-8):
     # f: Hz (AC frequency)
     # w: mm (trace width, perpendicular to current flow)
@@ -53,6 +55,52 @@ def trace_resistance(f=None, w=None, l=None, t=None, h=None, p=1.724e-8):
     if r <= 0.0:
         r = 1e-6
 
+    # returns resistance in milli-ohms
+    return r
+
+#--------------------------------------------------------------------------
+#-----------  resistance model of traces on ground plane ------------------
+#--------------------------------------------------------------------------
+def trace_resistance_full(f, w, l, t, h, p=1.724e-8):
+    # f: Hz (AC frequency)
+    # w: mm (trace width, perpendicular to current flow)
+    # l: mm (trace length, parallel to current flow)
+    # t: mm (trace thickness)
+    # h: mm (height of trace above ground plane)
+    # p: Ohm*meter (trace resistivity)
+    w = fabs(w)
+    l = fabs(l)
+    f=f*1000
+    #if w > l*LOWEST_ASPECT_RES:
+    #   w = l*LOWEST_ASPECT_RES
+
+    u0 = 1.257e-6               # permeability of vaccum;
+               
+    t1 = t*1e-3                 # transfer to unit in m;
+    w1 = w*1e-3                 # transfer to unit in m;
+    h1 = h*1e-3                 # transfer to unit in m;
+    l1 = l*1e-3                 # transfer to unit in m;
+    
+    # resistance part of trace (trace resistance + ground plane resistance): 
+    LR = 0.94 + 0.132*(w1/h1) - 0.0062*(w1/h1)*(w1/h1)
+    R0 = math.sqrt(2.0*math.pi*f*u0*p)
+    #Rg = (w1 / h1) / ((w1 / h1) + 5.8 + 0.03 * (h1 / w1)) * R0 / w1  # in Zihao thesis page 52 he said we can ignore rground... but I think it doesnt take too much time to compute this -- Quang
+    comp1 = (l1*R0)/(2.0*math.pi*math.pi*w1)
+    comp2 = math.pi + math.log((4.0*math.pi*w1)/t1)
+    # resistance calculation:
+    #print 'RG',Rg
+    Rac = (LR*comp1*comp2)*1e3# unit in mOhms
+    Rdc = p*l1/w1/t1*1e3
+    Rdc_1=p/w1/t1/1e3
+    #print 'Rac',Rac,'Rdc',Rdc,'w_rdc',Rdc_1
+    #r1=math.sqrt(Rac+Rdc_1) # RAC <0 sometimes
+    r=math.sqrt(Rac**2+Rdc**2)
+    #print "r and rw",r,r1
+    # Zihao's old code (this may be wrong, not sure) -Brett
+    # r = LR*(1/math.pi + 1/math.pow(math.pi, 2)*math.log(4*math.pi*w1/t1))*math.sqrt(math.pi*u0*f*p)/(math.sqrt(2)*w1)*l1*1e3 # unit in mOhms
+    if r <= 0.0:
+        r = 1e-6
+    
     # returns resistance in milli-ohms
     return r
 
@@ -166,6 +214,35 @@ def wire_over_plane(r,h,l):
 
     return Ind
 
+
+def trace_ind_lm(f,w,l,mdl):
+    frange=[]
+    
+    for m in mdl:
+       frange.append(m['f'])
+    ferr=[f for i in range(len(frange))]
+    ferr=(abs(np.array(frange)-np.array(ferr))).tolist()
+    f_index=ferr.index(min(ferr))
+    fselect= mdl[f_index]['f']
+    print ('selected f',fselect,"kHz")
+    m_sel=mdl[f_index]['mdl']
+    params = m_sel
+    # form width length matrix
+    
+    a,b1,b2,c,d= params
+    X = np.zeros((len(w),2))
+    err_index = []
+    for i in range(len(w)):
+        if w[i] > 35 * l[i]:
+            err_index.append(i)
+        X[i,0] = w[i]
+        X[i,1] = l [i]
+    ind = f_ms(x=X,a=a,b1=b1,b2=b2,c=c,d=d)
+    for ie in err_index:
+        ind[ie] = 1e-6
+    return ind
+    
+    
 def trace_res_krige1(f,w,l,t,p,mdl):
     model = mdl.model[0]
     op_freq=mdl.op_point
@@ -190,28 +267,36 @@ def trace_res_krige(f,w,l,t,p,mdl,mode='Krigg'):
     # f in kHz
     # Select a model for the closest frequency point
     frange=[]
+    # linear approximation for length less than 1
+    rat = [ 1 for i in range(len(l))]
+    for i in range(len(l)):
+        if l[i]<1:
+            rat[i] = l[i]
+            l[i] = 1.0
+    rat = np.asarray(rat)
     for m in mdl:
        frange.append(m['f'])
     ferr=[f for i in range(len(frange))]
     ferr=(abs(np.array(frange)-np.array(ferr))).tolist()
     f_index=ferr.index(min(ferr))
     fselect= mdl[f_index]['f']
-    #print 'f',fselect
+    print ('selected f',fselect,"kHz")
     m_sel=mdl[f_index]['mdl']
     model = m_sel.model[0]
     if mode == "Krigg":
         r=model.execute('points',w,l)
         r = np.ma.asarray(r[0])
+        r = r*rat
     else:
         dim = np.ndarray((len(w), 2))
         dim[:,0] = w
         dim[:,1] = l
         r= model.predict(dim)
-
+        
     if isinstance(r,np.ma.masked_array) and isinstance(w,float):
         return r[0]
     else:
-        return r
+        return r*rat
 
 def trace_ind_krige1(f,w,l,mdl):
     # unit is nH
@@ -290,10 +375,10 @@ if __name__ == '__main__':
     c3 = trace_capacitance(2, 20, 0.035, 0.2, 4.4, True)
     #c4 = trace_capacitance(0.035, 20, 1, 1, 1, False)
 
-    print c1+c2,c3
+    print((c1+c2,c3))
     '''
     mdl_dir='D:\Testing\Py_Q3D_test\All rs models'
-    mdl_dir='C:\Users\qmle\Desktop\Testing\Py_Q3D_test\All rs models'
+    mdl_dir='C:\\Users\qmle\Desktop\Testing\Py_Q3D_test\All rs models'
     mdl1=load_mdl(mdl_dir,'RAC[4x4].rsmdl')
     DOE=mdl1.DOE
     Q3D_R=mdl1.input[0]
@@ -347,7 +432,7 @@ if __name__ == '__main__':
     surf1 = ax.plot_surface(X, Y, Z)
     #ax.scatter(X,Y,Z,c='b',s=10)
     Z2 = []
-    with open('C:\Users\qmle\Desktop\Testing\Comparison\Weekly_3_28\Corner.csv','rb') as csvfile:
+    with open('C:\\Users\qmle\Desktop\Testing\Comparison\Weekly_3_28\Corner.csv','rb') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
             Z2.append(float(row['ACR'])*1000)
@@ -364,7 +449,7 @@ if __name__ == '__main__':
     ax.set_ylabel('W2 (mm)')
     ax.set_zlabel('Inductance (nH)')
     plt.show()
-    with open('C:\Users\qmle\Desktop\Testing\Comparison\RAC_BEST CASE\PowerSynth.csv', 'wb') as csvfile:
+    with open('C:\\Users\qmle\Desktop\Testing\Comparison\RAC_BEST CASE\PowerSynth.csv', 'wb') as csvfile:
         fieldnames = ['W1', 'W2','Resistance']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
