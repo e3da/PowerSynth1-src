@@ -115,7 +115,7 @@ def add_test_measures(sym_layout):
 
     m3 = ThermalMeasure(ThermalMeasure.FIND_MAX, devices, "Max Temp.", 'TFSM_MODEL')
     sym_layout.perf_measures.append(m3)
-    print "perf", sym_layout.perf_measures
+    print("perf", sym_layout.perf_measures)
 
 
 def setup_model(symlayout):
@@ -213,12 +213,12 @@ def make_test_setup2(f,directory):
     #individual=raw_input("input individual")
     #print type(individual)
     individual = [10.587399611715744, 3.908872570664664, 8.434638538321302, 2.722549459983272, 1.0] # This one change depends on the number of design variables you have. This is the design vector basically
-    print 'individual', individual
-    print "opt_to_sym_index", sym_layout.opt_to_sym_index
+    print('individual', individual)
+    print("opt_to_sym_index", sym_layout.opt_to_sym_index)
     sym_layout.rev_map_design_vars(individual)
     sym_layout.generate_layout()
     sym_layout._build_lumped_graph()
-    print one_measure(sym_layout)
+    print(one_measure(sym_layout))
     plot_layout(sym_layout)
     sym_layout._build_lumped_graph()
     plot_lumped_graph(sym_layout)

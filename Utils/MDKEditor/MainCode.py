@@ -231,7 +231,7 @@ class EditLibrary(QMainWindow, Ui_MDKWindow):
         msg.setWindowTitle("Message")
         msg.exec_()
         EditLibrary.selected = material
-        print material
+        print(material)
         return material
 
     def load(self):
@@ -1225,7 +1225,7 @@ class EditLibrary(QMainWindow, Ui_MDKWindow):
                         row.rel_permit = pmit.encode('utf-8')
                         row.rel_permeab = pmea.encode('utf-8')
                         row.thermal_expansion_coefficient = tm_co.encode('utf-8')
-                        print row
+                        print(row)
                     number += 1
                 id2 += 1
             EditLibrary.mat_lib = rows
@@ -1572,7 +1572,7 @@ class EditLibrary(QMainWindow, Ui_MDKWindow):
                         row.rel_permit = pmit.encode('utf-8')
                         row.rel_permeab = pmea.encode('utf-8')
                         row.thermal_expansion_coefficient = tm_co.encode('utf-8')
-                        print row
+                        print(row)
                     num2 += 1
                 id2 += 1
             EditLibrary.mat_lib = rows

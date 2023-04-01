@@ -56,7 +56,7 @@ def plot_layout(Layout_Rects,path,name,level):
 
     if level==0: # single layout solution
         Rectangles=[]
-        for k,v in Layout_Rects.items():
+        for k,v in list(Layout_Rects.items()):
             if k=='H':
                 for rect in v:                    #rect=[x,y,width,height,type]
                     Rectangles.append(rect)
@@ -99,7 +99,7 @@ def plot_layout(Layout_Rects,path,name,level):
 
 
     else: # N number of layout solutions
-        for k,v in Layout_Rects.items():
+        for k,v in list(Layout_Rects.items()):
 
             if k=='H':
                 Total_H = {}
@@ -127,7 +127,7 @@ def plot_layout(Layout_Rects,path,name,level):
                             min_y = i[1]
                     Total_H[(max_x,max_y)]=Rectangles
         j = 0
-        for k,v in Total_H.items():
+        for k,v in list(Total_H.items()):
             Rectangles = v
             max_x=k[0]
             max_y=k[1]
@@ -228,7 +228,7 @@ def input_conversion(sym_layout):
                 if obj1.pt1[0] >= obj2.pt1[0] and obj1.pt1[0] <= obj2.pt2[0] and \
                         obj2.pt1[1] >= obj1.pt1[1] and obj2.pt1[1] <= obj1.pt2[1]:
                     pt =intersection_pt(obj1, obj2)
-                    if not (frozenset([obj1, obj2]) in Connected.values()):
+                    if not (frozenset([obj1, obj2]) in list(Connected.values())):
                         Connected[pt ] =([obj1 ,obj2])
 
 
@@ -246,7 +246,7 @@ def input_conversion(sym_layout):
 
     # Finds connected components at each intersection points
     Intersections ={}
-    for k, v in Connected.items():
+    for k, v in list(Connected.items()):
 
         lines =list(set(v))
         if len(lines ) >1:
@@ -263,7 +263,7 @@ def input_conversion(sym_layout):
     for obj in sym_layout.all_lines:
         if obj not in Super_Traces:
             y_ind2 = y_coordinates.index(obj.pt2[1])
-            if obj.vertical == True and y_ind2 == mx_y and obj.pt2  not in Intersections.keys() :
+            if obj.vertical == True and y_ind2 == mx_y and obj.pt2  not in list(Intersections.keys()) :
                 if ext==1:
                     Extend.append(obj)
 
@@ -306,7 +306,7 @@ def input_conversion(sym_layout):
             Rectangles.append(R)
         else:
             if obj.vertical == True:
-                for k, v in Super_Traces_dict.items():
+                for k, v in list(Super_Traces_dict.items()):
                     if k == obj:
                         if k.pt1[1] < k.pt2[1]:
                             y_ind = y_coordinates.index(obj.pt1[1])
@@ -336,7 +336,7 @@ def input_conversion(sym_layout):
     # the following part is used to remove overlapping between two parts (So that they should not be in same group)
     for rect1 in Rectangles:
         for rect2 in Rectangles:
-            for element in Intersections.values() :
+            for element in list(Intersections.values()) :
 
                 if element[0].vertical == True:
                     if rect1.name == element[0].path_id and rect2.name == element[1].path_id:
@@ -373,7 +373,7 @@ def input_conversion(sym_layout):
         rect.Echar = '/'
         Input_rects.append(rect)
     for rect in Rectangles:
-        for k,v in Super_Traces_dict.items():
+        for k,v in list(Super_Traces_dict.items()):
             if k.path_id==rect.name:
                 rect1=Rectangle('Type_1', rect.x, rect.y, rect.width, rect.height, name=v.path_id)
                 rect1.Schar = '/'

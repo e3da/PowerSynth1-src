@@ -335,7 +335,7 @@ class Module_Full_Thermal_Netlist_Graph():
         Returns:
             networkx node equivalent of spice_node
         """
-        for nx_node, spice_node_num in self.spice_node.iteritems():
+        for nx_node, spice_node_num in self.spice_node.items():
             if spice_node == spice_node_num:
                 return nx_node
     

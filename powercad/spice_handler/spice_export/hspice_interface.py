@@ -13,9 +13,9 @@ Added documentation comments and spacing for better readability - jhmain 7-1-16
 import os
 import pickle
 import matplotlib.pyplot as plt
-from hspice_plot import *
+from .hspice_plot import *
 from pylab import figure, show
-from netlist_graph import Module_SPICE_netlist_graph
+from .netlist_graph import Module_SPICE_netlist_graph
 from powercad.sym_layout.symbolic_layout import build_test_layout
 
 def write_SPICE_netlist(directory, simulation, *modules):
@@ -86,7 +86,7 @@ def draw_HSPICE_output(self):
 
 
 if __name__ == '__main__':
-    from test_functions import *
+    from .test_functions import *
     test_graph = None
 
     #    test_graph = build_test_graph();
@@ -112,7 +112,7 @@ if __name__ == '__main__':
     #    spice_graph.draw_layout()
     #    spice_graph.draw_graph()
 
-    from simulations import *
+    from .simulations import *
     trans_sim = TransientSimulation('Trans Simulation 1', 'NL1', 'NL2', 'NL1', 'NL3')
     netlist = write_SPICE_netlist('C:/Users/jhmain/Dropbox/Spice Import and Export files',trans_sim, spice_graph)
     #    spice_graph.run_hspice()

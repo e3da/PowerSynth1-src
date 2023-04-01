@@ -17,7 +17,7 @@ class HSPICE:
         self.probe=['.probe']
     def run(self):
         args = [self.env, self.file]
-        print args
+        print(args)
         p = subprocess.Popen(args, shell=False, stdout=subprocess.PIPE)
         stdout, stderr = p.communicate()
 
@@ -180,7 +180,7 @@ class HSPICE:
             values = d._data_array[0]
         else:
             values =d._data_array
-        data = dict(zip(keys, values))
+        data = dict(list(zip(keys, values)))
         # CONVERT RESULTS to PEEC SOLVER FORMAT
         real = "REAL({0})"
         imag = "IMAG({0})"

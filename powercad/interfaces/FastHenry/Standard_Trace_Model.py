@@ -4,17 +4,30 @@ def write_to_file(script,file_des):
     text_file.write(script)
     text_file.close()
 
-Element = '''
+Init = '''
 * This is a single element in FASTHENRY. 
 * This will be used to build adaptive mesh for internal and external models in PS 
 .units mm
 *////////////////////
+'''
+
+
+GroundPlane = '''
+g_M{0} x1=-{1} y1=-{2} z1={3} x2={1} y2=-{2} z2={3} x3={1} y3={2} z3={3}
++ thick={4}
++ seg1=20 seg2=2
++ sigma={5}
++ nhinc={6} 
+'''
+
+
+Element = '''
+
 * Plane A
 NA1s x=0 y=-{0} z={1}
 NA1e x=0 y={0} z={1}
 EA1 NA1s NA1e w={2} h={3} sigma={4}
 + nwinc={5} nhinc={6}
-*////////////////////
 '''
 
 
@@ -73,6 +86,9 @@ EA1 NA1s NA1e w={13} h={14} sigma={15}
 .freq fmin={18} fmax={19} ndec={20}
 .end
 '''
+
+
+
 
 Uniform_Trace= '''
 * This is not a generic code for now, just to test the standard PowerSynth topology
@@ -270,4 +286,4 @@ E{0} N{0}s N{0}e w={5} h=0.2 sigma=58000.0
 if __name__ =="__main__":
     corner_test=Square_corner.format(30,30,6,58000,5,19,24,6.1,0.2,58000,3,-17,22,18,-13,6.94,0.2,58000,3
     ,-15,8,4,4,20,-3,5,5,10,100,3)
-    print corner_test
+    print(corner_test)

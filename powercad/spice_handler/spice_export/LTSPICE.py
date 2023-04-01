@@ -14,11 +14,11 @@ class LTSPICE:
 
     def run(self):
         args = [self.env, '-b', self.file]
-        print args
+        print(args)
 
         p = subprocess.Popen(args, shell=False, stdout=subprocess.PIPE)
         stdout, stderr = p.communicate()
-        print stdout,stderr
+        print(stdout,stderr)
 
     def ac_lin(self, fmin, fmax, nump):
         return ".ac lin {0} {1}Hz {2}Hz".format(nump, fmin, fmax)

@@ -40,14 +40,14 @@ def non_linear_leastsquare():
     for i in range(n_samples):
         Y[i] = f(X1[0, i], X1[1, i], 0.2, X1[2, i], X1[3, i], 0.2, X1[4, i], 0, X1[5, i])
     Y *= 1e-9
-    print X.shape,Y.shape
+    print(X.shape,Y.shape)
     popt,pcov = curve_fit(func,X1,Y)
     for i in range(n_samples):
         Y_new[i] = func(X[i],*popt)
         err[i]=abs(Y_new[i]-Y[i])/Y[i]
-    print max(err)
-    print popt
-    print pcov
+    print(max(err))
+    print(popt)
+    print(pcov)
 def idea1_ressponse_surface():
 
     n_samples= 1000
@@ -66,15 +66,15 @@ def idea1_ressponse_surface():
     start = timer()
     for i in range(n_samples):
         Y[i] = f(X[i,0], X[i,1],0.2, X[i,2], X[i,3],0.2, X[i,4],0, X[i,5])
-    print "eval",n_samples,'samples', timer()-start,'s'
-    print np.shape(X),np.shape(Y)
+    print("eval",n_samples,'samples', timer()-start,'s')
+    print(np.shape(X),np.shape(Y))
 
     clf = SVR(kernel='linear',gamma='scale', C=1.0, epsilon=0.2)
     clf.fit(X, Y)
     start = timer()
     Y1=clf.predict(X)
-    print "predict", n_samples, 'samples', timer() - start, 's'
-    print clf.score(X, Y)
+    print("predict", n_samples, 'samples', timer() - start, 's')
+    print(clf.score(X, Y))
 
     k = 100
 
@@ -117,7 +117,7 @@ def idea2_SVM():
     clf = svm.SVC(gamma='scale')
 
     clf.fit(X_norm, Decisions)
-    print  clf.score(X_norm,Decisions)
+    print(clf.score(X_norm,Decisions))
 
     X_2 = sample(problem, N=10000, num_levels=4, grid_jump=2, optimal_trajectories=None)
     n_samples = np.shape(X_2)[0]
@@ -126,7 +126,7 @@ def idea2_SVM():
     start = timer()
     for i in range(n_samples):
         Y_2[i] = f(X_2[i, 0], X_2[i, 1], 0.2, X_2[i, 2], X_2[i, 3], 0.2, X_2[i, 4], 0, X_2[i, 5])
-    print "eval 700000 samples", timer()-start
+    print("eval 700000 samples", timer()-start)
     X_2 = X_2 / np.max(X_2)
 
     Y_2 *= 1e-9
@@ -134,15 +134,15 @@ def idea2_SVM():
     start = timer()
 
     new_prediction = clf.predict(X_2)
-    print "predict time", timer()-start,'s'
+    print("predict time", timer()-start,'s')
 
     right_decisions = np.where(Y_2 > 1e-10, 1, 0)
     #print new_prediction
     #print right_decisions
     diff = right_decisions-new_prediction
     diff = np.where(diff==0,1,0)
-    print sum(diff)
-    print len(right_decisions)
+    print(sum(diff))
+    print(len(right_decisions))
 
 def idea3_MLP():
     problem = {
@@ -156,8 +156,8 @@ def idea3_MLP():
                    [1, 40]]
     }
     X = sample(problem, N=100000, num_levels=4, grid_jump=2, optimal_trajectories=None)
-    print X
-    raw_input()
+    print(X)
+    input()
 
     n_samples = np.shape(X)[0]
     Y = np.zeros((n_samples), dtype=np.float64)
@@ -175,7 +175,7 @@ def idea3_MLP():
                         hidden_layer_sizes=(10,), random_state=1)
 
     clf.fit(X_norm, Decisions)
-    print  clf.score(X_norm, Decisions)
+    print(clf.score(X_norm, Decisions))
 
     X_2 = sample(problem, N=10000, num_levels=4, grid_jump=2, optimal_trajectories=None)
     n_samples = np.shape(X_2)[0]
@@ -184,7 +184,7 @@ def idea3_MLP():
     start = timer()
     for i in range(n_samples):
         Y_2[i]= f(X_2[i, 0], X_2[i, 1], 0.2, X_2[i, 2], X_2[i, 3], 0.2, X_2[i, 4], 0, X_2[i, 5])
-    print "eval", n_samples , "samples", timer() - start
+    print("eval", n_samples , "samples", timer() - start)
     X_2 = X_2 / np.max(X_2)
 
     Y_2 *= 1e-9
@@ -192,14 +192,14 @@ def idea3_MLP():
     start = timer()
 
     new_prediction = clf.predict(X_2)
-    print "predict time", timer() - start, 's'
+    print("predict time", timer() - start, 's')
 
     right_decisions = np.where(Y_2 > 1.1e-10, 1, 0)
     start = timer()
     for i in new_prediction:
         if i == 1:
             f(X_2[0, 0], X_2[0, 1], 0.2, X_2[0, 2], X_2[0, 3], 0.2, X_2[0, 4], 0, X_2[0, 5])
-    print "Boosted", timer() - start
+    print("Boosted", timer() - start)
 
     # print new_prediction
     # print right_decisions
@@ -208,9 +208,9 @@ def idea3_MLP():
     for i in range(len(diff)):
         if diff[i]==0:
             if Y_2[i]< 1e-10:
-                print Y_2[i]
-    print sum(diff)
-    print len(right_decisions)
+                print(Y_2[i])
+    print(sum(diff))
+    print(len(right_decisions))
 
         
 

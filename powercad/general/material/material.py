@@ -19,10 +19,10 @@ class Material_lib:
         if fdir.endswith('.amat'):
             file=open(fdir,'rb')
         else:
-            print "wrong file format"
+            print("wrong file format")
             return
         file_data = file.readlines()
-        print file_data
+        print(file_data)
         check=[]
         for line in file_data:
             line=line.strip('\n').strip('\r')
@@ -90,11 +90,11 @@ class Material_lib:
         :return:
         '''
         if self.mat_lib==[]:
-            print 'loading material from csv'
+            print('loading material from csv')
         else:
             self.mat_lib=[]
-            print 'overwrite material list'
-        print fname
+            print('overwrite material list')
+        print(fname)
         with open(fname) as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
@@ -171,12 +171,12 @@ class Material_lib:
             for mat in self.mat_lib:
                 if material.name == mat.name:  # in case the material existed
                     mat=material
-                    print "material",mat.name,"updated"
+                    print("material",mat.name,"updated")
                 else:
                     self.mat_lib.append(material)
-                    print "new material",material.name,'added to lib'
+                    print("new material",material.name,'added to lib')
 
-        print "add one material to the list:", material.name
+        print("add one material to the list:", material.name)
 
     def remove_mat(self,mat_name):
         '''

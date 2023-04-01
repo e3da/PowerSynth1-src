@@ -18,7 +18,7 @@ class Connect_line:
                 self.orient=0 # horizontal
         else:
             self.orient=None
-            print "same point, no orientation"
+            print("same point, no orientation")
         self.trace1 = None
         self.trace2 = None
     def length(self):
@@ -100,7 +100,7 @@ def form_conn_line(traces,conn_mesh):
                         conn_line.append(line)
 
     for line in conn_line:
-        print line.pt1, line.pt2
+        print(line.pt1, line.pt2)
     return conn_line
 ''''''
 def trace_splits_rect(trace,split_list,orient):
@@ -130,9 +130,9 @@ def trace_splits_rect(trace,split_list,orient):
         all_trace=[]
         for group in x_trace:
             all_trace.append(Rect(left=group[0],right=group[1],bottom=trace.bottom,top=trace.top))
-        pts=[zip(x_trace[i],[y,y]) for i in range(len(x_trace))]
+        pts=[list(zip(x_trace[i],[y,y])) for i in range(len(x_trace))]
         ori=[0 for i in range(len(x_trace))]
-        return zip(all_trace,pts,ori)
+        return list(zip(all_trace,pts,ori))
 
     if orient==1:
         y_list = split_list
@@ -151,9 +151,9 @@ def trace_splits_rect(trace,split_list,orient):
         all_trace = []
         for group in y_trace:
             all_trace.append(Rect(bottom=group[0], top=group[1], left=trace.left, right=trace.right))
-        pts = [zip([x, x],y_trace[i]) for i in range(len(y_trace))]
+        pts = [list(zip([x, x],y_trace[i])) for i in range(len(y_trace))]
         ori = [1 for i in range(len(y_trace))]
-        return zip(all_trace, pts, ori)
+        return list(zip(all_trace, pts, ori))
 
 class Conn_point:
     # Plane connection point / FH format

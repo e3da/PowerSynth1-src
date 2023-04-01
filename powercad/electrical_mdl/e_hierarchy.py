@@ -1,4 +1,4 @@
-from powercad.general.data_struct.Tree import *
+from powercad.general.data_struct.Tree import T_Node,Tree
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -12,6 +12,7 @@ class EHier():
         self.sheets = []
         self.traces=[]
         self.isl_group_data = {}
+        self.z_dict = {} # store z_id vs z value
 
     # Form tree based on sheet + plate intersection
     def __del__(self):
@@ -24,7 +25,7 @@ class EHier():
         for isl_node in self.isl_group:
             isl_node.__del__()
         del self.isl_group
-        self.tree.__del__()
+        #self.tree.__del__()
 
     def update_module(self,new_module):
         #form new hierarchy.
@@ -69,7 +70,12 @@ class EHier():
         '''
         self.tree =Tree()
         for isl in self.module.group:
-            isl_node = T_Node(name=str(isl), type='isl', tree=self.tree)
+            # get one trace in isl
+            Ep = self.module.group[isl][0]
+            z_id = Ep.z_id 
+            if not (z_id in self.z_dict):
+                self.z_dict[z_id] = Ep.z
+            isl_node = T_Node(name=str(isl), type='isl', tree=self.tree,z_id = z_id)
             self.tree.root.add_child(isl_node)
             self.isl_group.append(isl_node)
             if self.module.layer_stack != None:
@@ -92,4 +98,4 @@ class EHier():
                         self.sheets.append(sh_node)
 
                         # Test plot of the hierarchy
-        self.tree.print_tree()
+        #self.tree.print_tree()

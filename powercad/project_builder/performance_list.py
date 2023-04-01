@@ -4,13 +4,11 @@ Created on Apr 29, 2013
 @author: bxs003
 '''
 
-from PySide import QtGui
+from PySide import QtCore, QtGui
 from matplotlib.patches import Circle, Rectangle
 import psidialogs
-from powercad.sym_layout.symbolic_layout import ThermalMeasure, ElectricalMeasure,SymLine
+from powercad.sym_layout.symbolic_layout import ThermalMeasure, ElectricalMeasure,SymLine,SymPoint
 from powercad.project_builder.proj_dialogs import Device_states_dialog
-
-
 class PerformanceItem(object):
     def __init__(self, PerfUI, measure, row_item):
         self.PerfUI = PerfUI
@@ -41,11 +39,9 @@ class PerformanceItem(object):
         self.table.removeRow(self.row_index())
         self.PerfUI.perf_items.remove(self)
         self.PerfUI.refresh_window()
-
     def row_index(self):
         return self.table.row(self.row_item)
-
-
+        
 class PerformanceListUI(object):
     
     def __init__(self, parent):
@@ -109,7 +105,6 @@ class PerformanceListUI(object):
                         if device.name in all_names:
                             self.parent.patch_dict.get_patch(device, 3).set_facecolor('#00FF00')
         self.parent.symb_canvas[3].draw()
-
     def open_device_state_dialog(self):
         device_state=Device_states_dialog(self.parent,self)
         device_state.exec_()
@@ -121,7 +116,7 @@ class PerformanceListUI(object):
             if (Matlab_dialog.exec_()):
 
 
-                print "successfully open new dialog"
+                print("successfully open new dialog")
 
     def thermal_model_options(self):
         if self.ui.cmb_thermal_model.currentText()=='Matlab':
@@ -129,7 +124,7 @@ class PerformanceListUI(object):
             Matlab_dialog.set_matlab_script(Thermal_Module.format(""))
             Matlab_dialog.open_instruction("Instruction for Thermal Model goes here")
             if (Matlab_dialog.exec_()):
-                print "successfully open new dialog"
+                print("successfully open new dialog")
 
     def populate_cmb_elec_therm(self):
         self.refresh_window()
@@ -271,9 +266,6 @@ class PerformanceListUI(object):
     def _handle_cap(self, event):
         if isinstance(event.artist, Rectangle):
             layout_line = self.parent.patch_dict.get_layout_obj(event.artist)
-            print "==" * 30
-            print "layout line",layout_line
-            print "==" * 30
             # color the object
             col = self.parent.color_wheel[0]
             color = col.getRgbF()
@@ -312,39 +304,29 @@ class PerformanceListUI(object):
             elif self.ui.cmb_perform_type.currentText() == "Inductance":
                 measure = ElectricalMeasure.MEASURE_IND
             else: 
-                print "Error"
+                print("Error")
                 return 1
             # get frequency
             try:
                 freq = float(self.ui.txt_switchFreq.text())*1e3 # Convert to kHz
             except (ValueError):
-                print "Error: No switching frequency"
+                print("Error: No switching frequency")
                 return 1
             if freq == 0:  
-                print "Error: Switching frequency must be greater than zero"
+                print("Error: Switching frequency must be greater than zero")
                 return 1
             # create performace measure
             if measure == ElectricalMeasure.MEASURE_CAP:
-                performance_measure = ElectricalMeasure(pt1=None,pt2=None,measure=measure,name=self.ui.txt_perform_name.text(),lines=self.perform_lines,mdl=model)
+                performance_measure = ElectricalMeasure(None,None,measure,freq,self.ui.txt_perform_name.text(),self.perform_lines,model)
             else:
                 performance_measure = ElectricalMeasure(pt1=self.perform_devices[0],pt2=self.perform_devices[1],measure=measure,name=self.ui.txt_perform_name.text(),lines=None,mdl=model,src_sink_type=self.perform_devices_pins,device_state=self.device_states_df)
         elif self.ui.cmb_perform_elecTherm.currentText() == "Thermal":
             # get type
             # get type
-            matlab_engine = None
             if self.ui.cmb_thermal_model.currentText() == "Fast Thermal (FEM)":
                 model = 'TFSM_MODEL'
             elif self.ui.cmb_thermal_model.currentText() == "Rectangle Flux":
                 model = 'RECT_FLUX_MODEL'
-            elif self.ui.cmb_thermal_model.currentText() == "ParaPower Thermal":
-                model = 'ParaPowerThermal'
-                import powercad.interfaces.ParaPowerAPI.MDConverter as mdc
-                try:
-                    from powercad.general.settings.settings import MATLAB_PATH, PARAPOWER_API_PATH
-                # TODO: Fix exception for ParaPower directory location
-                except:
-                    MATLAB_PATH = 'C:/Users/tmevans/Documents/MATLAB/ParaPower/ARL_ParaPower/ARL_ParaPower'
-                matlab_engine = mdc.init_matlab(PARAPOWER_API_PATH, MATLAB_PATH)
 
             if self.ui.cmb_perform_type.currentText() == "Max":
                 stat_fn = ThermalMeasure.FIND_MAX
@@ -353,11 +335,10 @@ class PerformanceListUI(object):
             elif self.ui.cmb_perform_type.currentText() == "Std. Dev.":
                 stat_fn = ThermalMeasure.FIND_STD_DEV
             else: 
-                print "Error"
+                print("Error")
                 return 1
             # create performace measure
-            performance_measure = ThermalMeasure(stat_fn,self.perform_devices, self.ui.txt_perform_name.text(),
-                                                 mdl=model, matlab_engine=matlab_engine)
+            performance_measure = ThermalMeasure(stat_fn,self.perform_devices,self.ui.txt_perform_name.text(),model)
         
         performance_measure.disp = (self.ui.cmb_perform_elecTherm.currentText(),self.ui.cmb_perform_type.currentText())
             
@@ -417,4 +398,4 @@ class PerformanceListUI(object):
             self.perf_items.append(perf_item)
 
     def show_selected(self):
-        print self.ui.tbl_performance
+        print(self.ui.tbl_performance)

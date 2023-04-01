@@ -7,8 +7,9 @@ import math
 
 import numpy as np
 from powercad.general.data_struct.util import draw_rect_list
-from powercad.electrical_mdl.e_hierarchy import *
-from powercad.electrical_mdl.e_struct import *
+from powercad.electrical_mdl.e_hierarchy import EHier
+import networkx as nx 
+from powercad.electrical_mdl.e_struct import E_plate,Sheet
 from powercad.parasitics.models_bondwire import wire_inductance, wire_partial_mutual_ind, wire_resistance, \
     ball_mutual_indutance, ball_self_inductance
 from collections import OrderedDict
@@ -52,11 +53,11 @@ class Escript:
                 self._handle_comp(l)
 
     def _handle_material(self,line):
-        print "handle Material"
+        print("handle Material")
         data = line.strip('\t').split(" ")
         self.materials[data[0]]= data[1]
     def _handle_layerstack(self, line):
-        print "handle Layer Stack"
+        print("handle Layer Stack")
         data = line.strip('\t').split(" ")
         # Update layer stack data
         self.stack.layer_id.append(data[0])
@@ -65,7 +66,7 @@ class Escript:
         self.stack.mat[data[0]]= self.materials[data[3]] # TODO: this is conductivity need to update from the material lib
 
     def _handle_traces(self,line):
-        print "handle Traces"
+        print("handle Traces")
         data = line.strip('\t').split(" ")
         top,bot,left,right = data[1:5]
         #print float(top),float(bot),float(left),float(right)
@@ -77,7 +78,7 @@ class Escript:
         trace=E_plate(rect=rect, z=z, dz=dz)
         self.module.plate.append(trace)
     def _handle_terminals(self,line):
-        print "handle Terminals"
+        print("handle Terminals")
         data = line.strip('\t').split(" ")
         pin_id = data[0]
         top, bot, left, right = data[1:5]
@@ -94,7 +95,7 @@ class Escript:
         elif net_type=="I":
             net_type="internal"
         else:
-            print "wrong input"
+            print("wrong input")
 
         if n_dir=='U':
             n_dir = (0, 0, 1)
@@ -106,15 +107,15 @@ class Escript:
         self.pins[pin_id]=terminal
         self.module.sheet.append(terminal)
     def _handle_comp_def(self,line):
-        print "handle comp definition"
+        print("handle comp definition")
         data = line.strip('\t').split(" ")
-        print data
+        print(data)
     def _handle_comp(self,line):
-        print "handle components"
+        print("handle components")
         data = line.strip('\t').split(" ")
         pin_list=[]
 
-        print data
+        print(data)
 
 class EComp:
     def __init__(self, sheet=[], conn=[], val=[], type="active"):
@@ -132,7 +133,7 @@ class EComp:
         # else: this is a dict of {'R','L','C'}
         self.type = type
         self.update_nodes()
-
+        self.class_type ='comp'
     def update_nodes(self):
         for sh in self.sheet:
             self.net_graph.add_node(sh.net, node=sh)
@@ -168,6 +169,7 @@ class EWires(EComp):
         self.p = p
         self.d = wire_dis
         self.circuit = circuit
+        self.class_type ='wire'
 
         if wire_model == None:
             self.mode = 'analytical'
@@ -181,7 +183,12 @@ class EWires(EComp):
         '''
         c_s = self.sheet[0].get_center()
         c_e = self.sheet[1].get_center()
-        length = math.sqrt((c_s[0] - c_e[0]) ** 2 + (c_s[1] - c_e[1]) ** 2)
+        length = math.sqrt((c_s[0] - c_e[0]) ** 2 + (c_s[1] - c_e[1]) ** 2) /1000.0 # using integer input
+        # length of the bondwires in reality are usually longer due to different bonding techinque, for JEDEC
+        # https://awrcorp.com/download/faq/english/docs/Elements/BWIRES.htm
+        # first divide the wire in 3 section and assume alpha,beta to be 30 degree
+        #length = length/3 + 4*length/math.sqrt(3)/3
+         
         start = 1
         end = 0
         if self.mode == 'analytical':
@@ -203,6 +210,8 @@ class EWires(EComp):
                             L2_name = 'B{0}'.format(j)
                             M_name = 'M' + '_' + L1_name + '_' + L2_name
                             M_val = wire_partial_mutual_ind(length, distance) * 1e-9
+                            #print (L_val,M_val)
+                            #input()
                             self.circuit._graph_add_M(M_name, L1_name, L2_name, M_val)
                 self.circuit.assign_freq(self.f)
                 self.circuit.indep_current_source(0, 1, val=1)
@@ -216,11 +225,12 @@ class EWires(EComp):
                     #print "Error occur, fast estimation used"
                     debug = False
                     if debug:
-                        print "num wires" ,self.num_wires
-                        print "connections", self.conn
+                        print(("num wires" ,self.num_wires))
+                        print(("connections", self.conn))
                     R=R_val/self.num_wires
                     L=L_val/self.num_wires
-                #print "wire R,L", R, L
+                #print("length",length)
+                #print("wire R,L", R, L)
                 self.net_graph.add_edge(self.sheet[0].net, self.sheet[1].net, edge_data={'R': R, 'L': L, 'C': None})
             else : # No mutual eval needed, fast evaluation
                 self.net_graph.add_edge(self.sheet[0].net, self.sheet[1].net, edge_data={'R': R_val, 'L': L_val, 'C': None})
@@ -312,7 +322,7 @@ class ESolderBalls(EComp):
             R, L = self.circuit._compute_imp2(1, 0)
             self.net_graph.add_edge(self.sheet[0].net, self.sheet[1].net, edge_data={'R': R, 'L': L, 'C': None})
             # print self.net_graph.edges(data=True)
-            print R, L
+            #print((R, L))
 
     def build_graph(self):
         self.update_sb_parasitic()
@@ -354,19 +364,21 @@ class EModule:
             layer_stack: A layer stack for material properties and thickness information
         '''
         self.sheet = sheet  # list Sheet objects
+        self.sh_nets = [sh.net for sh in self.sheet]
         self.plate = plate  # list of 3D plates
         self.layer_stack = layer_stack  # Will be used later to store layer info
         self.group = OrderedDict()  # trace islands in any layer
         self.components = components
-        if self.components != []:
+        if self.components != []: # If the components have extra pins, which are not touching the traces
             self.unpack_comp()
 
     def unpack_comp(self):
         for comp in self.components:
             for sh in comp.sheet:
-                if comp.type == "active":
-                    sh.net_type = "external"
-                self.sheet.append(sh)
+                if not(sh.net in self.sh_nets): # prevent adding a sheet twice
+                    if comp.type == "active":
+                        sh.net_type = "external"
+                    self.sheet.append(sh)
 
     def form_group_split_rect(self):
         '''
@@ -385,9 +397,9 @@ class EModule:
             self.d = OrderedDict((tuple(t),set(t)) for t in a)  # forces keys to be unique
 
             while True:
-                for tuple_, set1 in self.d.items():
+                for tuple_, set1 in list(self.d.items()):
                     try:
-                        match = next(k for k, set2 in self.d.items() if k != tuple_ and set1 & set2)
+                        match = next(k for k, set2 in list(self.d.items()) if k != tuple_ and set1 & set2)
                     except StopIteration:
                         # no match for this key - keep looking
                         continue
@@ -397,7 +409,7 @@ class EModule:
                 else:
                     # no match for any key - we are done!
                     break
-            self.output = sorted(tuple(s) for s in self.d.values())
+            self.output = sorted(tuple(s) for s in list(self.d.values()))
 
         else:
             self.output = [[traces[0]]]
@@ -445,7 +457,7 @@ class EModule:
         self.plate = []
         self.group_layer_dict = OrderedDict()
         self.splitted_group = OrderedDict()
-        for group in self.group.keys():  # First collect all xs and ys coordinates
+        for group in list(self.group.keys()):  # First collect all xs and ys coordinates
             h_rects = []
             v_rects = []
             split_rects = []
@@ -527,7 +539,7 @@ class EModule:
         self.plate = []
         self.group_layer_dict = OrderedDict()
         self.splitted_group = OrderedDict()
-        for group in self.group.keys():  # First collect all xs and ys coordinates
+        for group in list(self.group.keys()):  # First collect all xs and ys coordinates
             rects = []
             counter = 0
             xs = []
@@ -547,16 +559,16 @@ class EModule:
             ys = list(set(ys))
             xs.sort()
             ys.sort()
-            ls = range(len(xs) - 1)  # left
+            ls = list(range(len(xs) - 1))  # left
             ls = [xs[i] for i in ls]
             ls.sort()
-            rs = range(1, len(xs))  # right
+            rs = list(range(1, len(xs)))  # right
             rs = [xs[i] for i in rs]
             rs.sort()
-            bs = range(len(ys) - 1)  # bot
+            bs = list(range(len(ys) - 1))  # bot
             bs = [ys[i] for i in bs]
             bs.sort()
-            ts = range(1, len(ys))  # top
+            ts = list(range(1, len(ys)))  # top
             ts = [ys[i] for i in ts]
             ts.sort()
 
@@ -727,7 +739,7 @@ def test_bondwires_group_with_length():
         rects_sh = [R1, R2]
         sheets = [Sheet(rect=sh, net_name=nets[rects_sh.index(sh)], type='point', n=(0, 0, 1), z=0.4) for sh in
                   rects_sh]
-        print 'length:',l
+        #print(('length:',l))
         wire_group = EWires(0.15, 5, 0.8, sheets[0], sheets[1], None, 1000e3,circuit=Circuit())
         wire_group.update_wires_parasitic()
 def test_solderball_group():
@@ -737,7 +749,7 @@ def test_solderball_group():
     sheet1 = Sheet(rect=R7, net_name=nets[0], type='point', n=(0, 0, 1), z=0.2)
     sheet2 = Sheet(rect=R7, net_name=nets[0], type='point', n=(0, 0, 1), z=0.4)
     ball_grid = np.random.choice([0, 1], size=(3,3), p=[0. / 10, 10. / 10])
-    print ball_grid
+    print(ball_grid)
     dis = [0.508, 0.762, 1.016, 1.27]
     for d in dis:
         ball_group = ESolderBalls(ball_radi=0.2032, ball_grid=ball_grid, ball_height=0.2032, pitch=d, start=sheet1,
@@ -746,7 +758,7 @@ def test_solderball_group():
         ball_group.build_graph()
 
 def test_read_srcipt():
-    dir = "C:\Users\qmle\Desktop\Documents\Conferences\IWIPP\\template.txt"
+    dir = "C:\\Users\qmle\Desktop\Documents\Conferences\IWIPP\\template.txt"
     src=Escript(dir)
     src.make_module()
 

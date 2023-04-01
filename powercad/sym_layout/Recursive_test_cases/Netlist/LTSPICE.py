@@ -23,7 +23,7 @@ class LTSPICE:
         with open(self.file, 'w') as f:
             f.write(strftime("* %Y-%m-%d %H:%M:%S", gmtime()) + '\n')
             for e in all_elements:
-                print e
+                print(e)
                 if e[0]!='M':
                     pnode = str(circuit.pnode[e])
                     nnode = str(circuit.nnode[e])

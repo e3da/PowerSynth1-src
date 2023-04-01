@@ -5,7 +5,7 @@ import os
 import matplotlib.pyplot as plt
 import networkx as nx
 
-from powercad.spice_handler.spice_import.NetlistImport import Netlist, Netlist_export_ADS
+from powercad.spice_handler.spice_import.NetlistImport import Netlist, Netlis_export_ADS
 from powercad.design.module_data import gen_test_module_data_RD100
 from powercad.general.settings import settings
 from powercad.interfaces.FastHenry.fh_layers import output_fh_script, read_result
@@ -118,7 +118,7 @@ def add_test_measures(sym_layout):
 
     m3 = ThermalMeasure(ThermalMeasure.FIND_MAX, devices, "Max Temp.", 'TFSM_MODEL')
     sym_layout.perf_measures.append(m3)
-    print "perf", sym_layout.perf_measures
+    print("perf", sym_layout.perf_measures)
 
 
 def setup_model(symlayout):
@@ -219,8 +219,8 @@ def make_test_setup2(f,directory):
     sym_layout._map_design_vars()
     setup_model(sym_layout)
     individual=[8.84742407213129, 8.84742407213129, 8.84742407213129, 8.84742407213129, 8.84742407213129, 8.84742407213129, 8.84742407213129, 8.84742407213129, 8.84742407213129, 8.84742407213129, 8.84742407213129, 8.84742407213129, 9.830471191256986, 9.830471191256986, 9.830471191256986, 9.830471191256986, 9.830471191256986, 9.830471191256986, 9.830471191256986, 9.830471191256986, 0.4745706786885481, 0.4745706786885481, 0.4745706786885481, 0.4745706786885481]
-    print 'individual', individual
-    print "opt_to_sym_index", sym_layout.opt_to_sym_index
+    print('individual', individual)
+    print("opt_to_sym_index", sym_layout.opt_to_sym_index)
     sym_layout.optimize()
     sym_layout.rev_map_design_vars(individual)
     sym_layout.generate_layout()
@@ -233,17 +233,17 @@ def make_test_setup2(f,directory):
     netlist.form_assignment_list_fh()
     external = netlist.get_external_list_fh()
 
-    output_fh_script(sym_layout,"C:\Users\qmle\Desktop\Balancing\Mutual_test\layout cases//RD100",external=external)
+    output_fh_script(sym_layout,"C:\\Users\qmle\Desktop\Balancing\Mutual_test\layout cases//RD100",external=external)
 
 
-    net_data = read_result("C:\Users\qmle\Desktop\Balancing\Mutual_test\layout cases//RD100.inp.M.txt")
+    net_data = read_result("C:\\Users\qmle\Desktop\Balancing\Mutual_test\layout cases//RD100.inp.M.txt")
     
     df, pm = netlist.get_assign_df()
-    ads_net = Netlist_export_ADS(df=df, pm=pm)
+    ads_net = Netlis_export_ADS(df=df, pm=pm)
     ads_net.import_net_data(net_data)
     ads_net.export_ads('rd100_4sw.net')
     plot_lumped_graph(sym_layout)
-    print one_measure(sym_layout)
+    print(one_measure(sym_layout))
 # The test goes here, moddify the path below as you wish...
 directory ='Layout//RD100Layout2sw.psc' # directory to layout script
 make_test_setup2(100.0,directory)

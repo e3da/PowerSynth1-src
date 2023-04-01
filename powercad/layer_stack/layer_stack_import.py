@@ -18,6 +18,7 @@ from powercad.design.project_structures import BaseplateInstance, SubstrateAttac
 from powercad.design.library_structures import *
 from powercad.general.material.material import *
 from powercad.general.settings.settings import MATERIAL_LIB_PATH
+import getpass
 
 class LayerStackHandler:
     
@@ -27,8 +28,12 @@ class LayerStackHandler:
         # Load Material Lib
         self.material_lib=Material_lib()
         if mat_lib==None:
-            self.material_lib.load_csv(MATERIAL_LIB_PATH)
-            print os.path.abspath(MATERIAL_LIB_PATH)
+            if getpass.getuser() == "qmle":
+                    material_path = "C:\PowerSynth_git\Electrical_Dev\PowerCAD-full\\tech_lib\Material\Materials.csv"
+            else:
+                material_path = MATERIAL_LIB_PATH
+            self.material_lib.load_csv(material_path)
+            #print((os.path.abspath(MATERIAL_LIB_PATH)))
         else:
             self.material_lib.load_csv(mat_lib)
         # Initialize design stucture
@@ -98,7 +103,7 @@ class LayerStackHandler:
                 break
             
             # Check for valid layer type and position
-            if layer_type not in self.layer_type_abbrev_dict.keys():
+            if layer_type not in list(self.layer_type_abbrev_dict.keys()):
                 self.compatible = False
                 self.error_msg = 'Unrecognized layer type ' + layer_type
                 break
@@ -171,7 +176,7 @@ class LayerStackHandler:
                 
             elif layer_type == self.interconnect_abbrev :
                 try:
-                    print  ledge_width
+                    print(ledge_width)
                 except:
                     self.compatible = False
                     self.error_msg = 'Could not find all values in interconnect layer ' + name + '. Interconnect layers must contain the following fields: layer type, num, name, pos, ledge width.'
@@ -189,10 +194,10 @@ class LayerStackHandler:
                 
         if self.warnings != []:
             for warning in self.warnings:
-                print 'WARNING: ' + warning
+                print(('WARNING: ' + warning))
                 
         if self.error_msg != None:
-            print 'ERROR: ' + self.error_msg
+            print(('ERROR: ' + self.error_msg))
             
 
 # Module test
@@ -206,6 +211,6 @@ if __name__ == '__main__':
     #print 'compatible layer order' + str(test.compatible_layer_order)
     test.layer_list = layer_list_test
     test.check_layer_stack_compatibility()
-    print 'compatible: ' + str(test.compatible)
+    print(('compatible: ' + str(test.compatible)))
     
     

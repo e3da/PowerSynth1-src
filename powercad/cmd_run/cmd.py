@@ -1,15 +1,65 @@
 # This is the layout generation and optimization flow using command line only
-from powercad.electrical_mdl.cornerstitch_API import *
-from powercad.thermal.cornerstitch_API import *
-from glob import glob
+import sys, os
+cur_path =sys.path[0] # get current path (meaning this file location)
+cur_path = cur_path[0:-16] #exclude "power/cmd_run"
+sys.path.append(cur_path)
+from powercad.electrical_mdl.cornerstitch_API import CornerStitch_Emodel_API
+from powercad.thermal.cornerstitch_API import CornerStitch_Tmodel_API
 from powercad.cmd_run.cmd_layout_handler import generate_optimize_layout, script_translator, eval_single_layout
-import objgraph
-from pympler import muppy,summary
+from powercad.cons_aware_en.database import create_connection, create_table
+from powercad.sol_browser.cs_solution_handler import pareto_frontiter2D
+from powercad.design.layout_module_data import ModuleDataCornerStitch
+from powercad.response_surface.Response_Surface import RS_model
 from powercad.layer_stack.layer_stack import LayerStack
-import types
+import matplotlib.pyplot as plt
 import os
-import sys
+import glob
+import copy
+import csv
+from powercad.general.settings import settings
 
+
+
+def read_settings_file(filepath):
+    
+    if os.path.isfile(filepath): 
+        
+        filename = os.path.basename(filepath)
+        work_dir = filepath.replace(filename,'')
+        os.chdir(work_dir)
+        with open(filename, 'r') as inputfile:
+            for line in inputfile.readlines():
+                line = line.strip("\r\n")
+                info = line.split(" ")
+                if line == '':
+                    continue
+                if line[0] == "#":
+                    continue
+                if info[0] == "DEFAULT_TECH_LIB_DIR:":
+                    settings.DEFAULT_TECH_LIB_DIR = os.path.abspath(info[1])
+                if info[0] == "LAST_ENTRIES_PATH:":
+                    settings.LAST_ENTRIES_PATH = os.path.abspath(info[1])
+                if info[0] == "TEMP_DIR:":
+                    settings.TEMP_DIR = os.path.abspath(info[1])
+                if info[0] == "CACHED_CHAR_PATH:":
+                    settings.CACHED_CHAR_PATH = os.path.abspath(info[1])
+                if info[0] == "MATERIAL_LIB_PATH:":
+                    settings.MATERIAL_LIB_PATH = os.path.abspath(info[1])
+                    print (settings.MATERIAL_LIB_PATH)
+                if info[0] == "EXPORT_DATA_PATH:":
+                    settings.EXPORT_DATA_PATH = os.path.abspath(info[1])
+                if info[0] == "GMSH_BIN_PATH:":
+                    settings.GMSH_BIN_PATH = os.path.abspath(info[1])
+                if info[0] == "ELMER_BIN_PATH:":
+                    settings.ELMER_BIN_PATH = os.path.abspath(info[1])
+                if info[0] == "ANSYS_IPY64:":
+                    settings.ANSYS_IPY64 = os.path.abspath(info[1])
+                if info[0] == "FASTHENRY_FOLDER:":
+                    settings.FASTHENRY_FOLDER = os.path.abspath(info[1])
+                if info[0] == "MANUAL:":
+                    settings.MANUAL = os.path.abspath(info[1])
+        print ("Settings loaded.")
+        print ("settings.GMSH",settings.GMSH_BIN_PATH)
 class Cmd_Handler:
     def __init__(self,debug=False):
         # Input files
@@ -23,6 +73,8 @@ class Cmd_Handler:
         self.constraint_file=None # Default csv file to save constraint table
         self.i_v_constraint=0 # reliability constraint flag
         self.new_mode=1 # 1: constraint table setup required, 0: constraint file will be reloaded
+        self.flexible=False # bondwire connection is flexible or strictly horizontal and vertical
+        self.plot=False # flag for plotting solution layouts
         # Data storage
         self.db_file = None  # A file to store layout database
 
@@ -34,7 +86,7 @@ class Cmd_Handler:
         self.raw_layout_info = {}
         self.min_size_rect_patches = {}
         # Struture
-        self.layer_stack = LayerStack(debug=debug)
+        self.layer_stack = None
         # APIs
         self.measures = []
         self.e_api = None
@@ -43,18 +95,22 @@ class Cmd_Handler:
         self.soluions = None
 
         self.macro =None
-
+        self.layout_ori_file = None
+        # Macro mode
+        self.output_option= False
+        self.thermal_mode = None
+        self.electrical_mode = None
     def setup_file(self,file):
         self.macro=os.path.abspath(file)
         if not(os.path.isfile(self.macro)):
-            print "file path is wrong, please give another input"
+            print ("file path is wrong, please give another input")
             sys.exit()
 
     def run_parse(self):
         if self.macro!=None:
             self.load_macro_file(self.macro)
         else:
-            print "Error, please check your test case"
+            print ("Error, please check your test case")
             sys.exit()
 
     def load_macro_file(self, file):
@@ -70,10 +126,10 @@ class Cmd_Handler:
         algorithm = None
         t_name =None
         e_name = None
+        num_gen=None
         dev_conn ={}
-        with open(file, 'rb') as inputfile:
-            self.thermal_mode = None
-            self.electrical_mode =None
+        with open(file, 'r') as inputfile:
+
             dev_conn_mode=False
             for line in inputfile.readlines():
                 line = line.strip("\r\n")
@@ -82,6 +138,8 @@ class Cmd_Handler:
                     continue
                 if line[0] == '#':  # Comments
                     continue
+                if info[0] == "Trace_Ori:":
+                    self.layout_ori_file = os.path.abspath(info[1])
                 if info[0] == "Layout_script:":
                     self.layout_script = os.path.abspath(info[1])
                 if info[0] == "Bondwire_setup:":
@@ -100,6 +158,19 @@ class Cmd_Handler:
                     self.i_v_constraint = int(info[1])  # 0: no reliability constraints, 1: worst case, 2: average case
                 if info[0] =="New:":
                     self.new_mode = int(info[1])
+
+                if info[0]=="Plot_Solution:":
+                    if int(info[1])==1:
+                        self.plot=True
+                    else:
+                        self.plot = False
+
+                if info[0]=="Flexible_Wire:":
+                    if int(info[1])==1:
+                        self.flexible=True
+                    else:
+                        self.flexible = False
+
                 if info[0] == "Option:":  # engine option
                     run_option = int(info[1])
                 if info[0] == "Num_of_layouts:":  # engine option
@@ -113,7 +184,7 @@ class Cmd_Handler:
                 if info[0] == "Floor_plan:":
                     floor_plan = info[1]
                     floor_plan = floor_plan.split(",")
-                    floor_plan = [int(i) for i in floor_plan]
+                    floor_plan = [float(i) for i in floor_plan]
                 if info[0] == 'Num_generations:':
                     num_gen = int(info[1])
                 if info[0]== 'Thermal_Setup:':
@@ -122,9 +193,18 @@ class Cmd_Handler:
                     self.thermal_mode = False
                 if info[0] == 'Electrical_Setup:':
                     self.electrical_mode = True
-                if info[0] == 'End_Electrical_Setup..':
+                if info[0] == 'End_Electrical_Setup.':
                     self.electrical_mode = False
-                if self.thermal_mode:
+                if info[0] == 'Output_Script':
+                    self.output_option = True
+                if info[0] == 'End_Output_Script.':
+                    self.output_option = False
+                if self.output_option !=None:
+                    if info[0] == 'Netlist_Dir':
+                        self.netlist_dir = info[1]
+                    if info[0] == 'Netlist_Mode':
+                        self.netlist_mode = int(info[1])
+                if self.thermal_mode !=None:
                     if info[0] == 'Model_Select:':
                         thermal_model = int(info[1])
                     if info[0] == 'Measure_Name:' and t_name==None:
@@ -138,7 +218,7 @@ class Cmd_Handler:
                         h_conv = float(info[1])
                     if info[0] == 'Ambient_Temperature:':
                         t_amb = float(info[1])
-                if self.electrical_mode:
+                if self.electrical_mode != None:
                     if info[0] == 'Measure_Name:' and e_name==None:
                         e_name = info[1]
                     if info[0] == 'Measure_Type:':
@@ -169,38 +249,48 @@ class Cmd_Handler:
                and check_file(self.rs_model_file) \
                and check_file(self.constraint_file)
         # make dir if they are not existed
-        print "self.new_mode",self.new_mode
-        if not (check_dir(self.fig_dir)) or not(check_dir(self.db_dir)):
+        #print(("self.new_mode",self.new_mode))
+        #print(("self.flex",self.flexible))
+        if not (check_dir(self.fig_dir)):
             try:
                 os.mkdir(self.fig_dir)
             except:
-                print "cant make directory for figures"
+                print ("cant make directory for figures")
                 cont =False
+        if not(check_dir(self.db_dir)):
             try:
                 os.mkdir(self.db_dir)
             except:
-                print "cant make directory for database"
+                print ("cant make directory for database")
                 cont =False
 
         if cont:
+            if self.layout_ori_file!=None:
+                print ("Trace orientation is included, mesh acceleration for electrical evaluation is activated")
+            else:
+                print ("Normal meshing algorithm is used")
 
-            print "run the optimization"
+            print ("run the optimization")
             self.init_cs_objects()
-            self.set_up_db()
+            self.set_up_db() # temp commented out
 
             if run_option == 0:
+                
                 self.solutions=generate_optimize_layout(layout_engine=self.engine, mode=layout_mode,rel_cons=self.i_v_constraint,
-                                         optimization=False, db_file=self.db_file,fig_dir=self.fig_dir,sol_dir=self.db_dir, num_layouts=num_layouts, seed=seed,
+                                         optimization=False, db_file=self.db_file,fig_dir=self.fig_dir,sol_dir=self.db_dir,plot=self.plot, num_layouts=num_layouts, seed=seed,
                                          floor_plan=floor_plan)
             elif run_option == 1:
                 self.measures=[]
+                if self.electrical_mode != None:
+                    e_measure_data = {'name': e_name, 'type': type, 'source': source, 'sink': sink}
+                    self.setup_electrical(mode='macro', dev_conn=dev_conn, frequency=frequency,
+                                          meas_data=e_measure_data)
+
                 if self.thermal_mode!=None:
+
                     t_setup_data={'Power': power,'heat_conv':h_conv,'t_amb':t_amb}
                     t_measure_data={'name':t_name,'devices':devices}
                     self.setup_thermal(mode='macro', setup_data=t_setup_data,meas_data=t_measure_data,model_type=thermal_model)
-                if self.electrical_mode!=None:
-                    e_measure_data = {'name': e_name, 'type': type, 'source': source, 'sink': sink}
-                    self.setup_electrical(mode='macro', dev_conn=dev_conn, frequency=frequency, meas_data=e_measure_data)
 
                 # Convert a list of patch to rectangles
                 patch_dict = self.engine.init_data[0]
@@ -209,12 +299,12 @@ class Cmd_Handler:
                 init_cs_islands=self.engine.init_data[2]
                 fp_width, fp_height = self.engine.init_size
                 fig_dict = {(fp_width, fp_height): []}
-                for k, v in patch_dict.items():
+                for k, v in list(patch_dict.items()):
                     fig_dict[(fp_width, fp_height)].append(v)
                 init_rects = {}
                 #print self.engine.init_data
                 #print "here"
-                for k, v in self.engine.init_data[1].items(): # sym_to_cs={'T1':[[x1,y1,x2,y2],[nodeid],type,hierarchy_level]
+                for k, v in list(self.engine.init_data[1].items()): # sym_to_cs={'T1':[[x1,y1,x2,y2],[nodeid],type,hierarchy_level]
 
                     rect=v[0]
                     x,y,width,height= [rect[0],rect[1],rect[2]-rect[0],rect[3]-rect[1]]
@@ -253,6 +343,10 @@ class Cmd_Handler:
                         if isl.name==island.name:
                             island.mesh_nodes= copy.deepcopy(isl.mesh_nodes)
 
+                #for island in init_data_islands:
+                    #island.print_island(True,size=[60000,60000])
+
+
                 md_data = ModuleDataCornerStitch()
                 md_data.islands[0] = init_data_islands
                 md_data.footprint = [fp_width * s1, fp_height * s1]
@@ -278,117 +372,121 @@ class Cmd_Handler:
 
 
                 self.solutions=generate_optimize_layout(layout_engine=self.engine, mode=layout_mode,rel_cons=self.i_v_constraint,
-                                         optimization=True, db_file=self.db_file,fig_dir=self.fig_dir,sol_dir=self.db_dir,
+                                         optimization=True, db_file=self.db_file,fig_dir=self.fig_dir,sol_dir=self.db_dir,plot=self.plot,
                                          apis={'E': self.e_api, 'T': self.t_api}, num_layouts=num_layouts, seed=seed,
                                          algorithm=algorithm, floor_plan=floor_plan,num_gen=num_gen,measures=self.measures)
+
+                
+                
+                self.export_solution_params(self.fig_dir,self.db_dir,self.solutions,layout_mode)
         else:
             # First check all file path
             if not (check_file(self.layout_script)):
-                print self.layout_script, "is not a valid file path"
+                print((self.layout_script, "is not a valid file path"))
             elif not(check_file(self.bondwire_setup)):
-                print self.bondwire_setup, "is not a valid file path"
+                print((self.bondwire_setup, "is not a valid file path"))
             elif not (check_file(self.layer_stack_file)):
-                print self.layer_stack_file, "is not a valid file path"
+                print((self.layer_stack_file, "is not a valid file path"))
             elif not (check_file(self.rs_model_file)):
-                print self.rs_model_file, "is not a valid file path"
+                print((self.rs_model_file, "is not a valid file path"))
             elif not (check_dir(self.fig_dir)):
-                print self.fig_dir, "is not a valid directory"
+                print((self.fig_dir, "is not a valid directory"))
             elif not (check_dir(self.db_dir)):
-                print self.db_dir, "is not a valid directory"
+                print((self.db_dir, "is not a valid directory"))
             elif not(check_file(self.constraint_file)):
-                print self.constraint_file, "is not a valid file path"
-            print "Check your input again ! "
+                print((self.constraint_file, "is not a valid file path"))
+            print ("Check your input again ! ")
 
             return cont
 
     # ------------------ File Resquest -------------------------------------------------
     def database_dir_request(self):
-        print "Please enter a directory to save layout database"
+        print ("Please enter a directory to save layout database")
         correct = True
         while (correct):
-            db_dir = raw_input("Database dir:")
+            db_dir = (eval(input("Database dir:")))
             if os.path.isdir(db_dir):
                 self.db_dir = db_dir
                 correct = False
             else:
-                print "wrong input"
+                print ("wrong input")
 
     def fig_dir_request(self):
-        print "Please enter a directory to save figures"
+        print("Please enter a directory to save figures")
         correct = True
         while (correct):
-            fig_dir = raw_input("Fig dir:")
+            fig_dir = eval(input("Fig dir:"))
             if os.path.isdir(fig_dir):
                 self.fig_dir = fig_dir
                 correct = False
             else:
-                print "wrong input"
+                print("wrong input")
 
     def layout_script_request(self):
-        print "Please enter a layout file directory"
+        print("Please enter a layout file directory")
         correct = True
         while (correct):
-            file = raw_input("Layout Script File:")
+            file = eval(input("Layout Script File:"))
             if os.path.isfile(file):
                 self.layout_script = file
                 correct = False
             else:
-                print "wrong input"
+                print("wrong input")
 
     def bondwire_file_request(self):
-        print "Please enter a bondwire setup file directory"
+        print("Please enter a bondwire setup file directory")
         correct = True
         while (correct):
-            file = raw_input("Bondwire Setup File:")
+            file = eval(input("Bondwire Setup File:"))
             if os.path.isfile(file):
                 self.bondwire_setup = file
                 correct = False
             else:
-                print "wrong input"
+                print("wrong input")
 
     def layer_stack_request(self):
-        print "Please enter a layer stack file directory"
+        print("Please enter a layer stack file directory")
         correct = True
         while (correct):
-            file = raw_input("Layer Stack File:")
+            file = eval(input("Layer Stack File:"))
             if os.path.isfile(file):
                 self.layer_stack_file = file
                 correct = False
             else:
-                print "wrong input"
+                print("wrong input")
 
     def res_model_request(self):
-        print "Please enter a model file directory"
+        print("Please enter a model file directory")
         correct = True
         while (correct):
-            file = raw_input("Model File:")
+            file = eval(input("Model File:"))
             if os.path.isfile(file):
                 self.rs_model_file = file
                 correct = False
             else:
-                print "wrong input"
+                print("wrong input")
 
     def cons_dir_request(self):
-        print "Please enter a constraint file directory"
+        print("Please enter a constraint file directory")
         correct = True
         while (correct):
-            file = raw_input("Constraint File:")
+            file = eval(input("Constraint File:"))
             if os.path.isfile(file):
                 self.constraint_file = file
                 correct = False
             else:
-                print "wrong input"
+                print("wrong input")
     def rel_cons_request(self):
-        self.i_v_constraint=int(raw_input("Please eneter: 1 if you want to apply reliability constraints for worst case, 2 if you want to evaluate average case, 0 if there is no reliability constraints"))
+        self.i_v_constraint=int(eval(input("Please eneter: 1 if you want to apply reliability constraints for worst case, 2 if you want to evaluate average case, 0 if there is no reliability constraints")))
     def cons_file_edit_request(self):
-        self.new_mode=int(raw_input( "If you want to edit the constraint file, enter 1. Else enter 0: "))
+        self.new_mode=int(eval(input( "If you want to edit the constraint file, enter 1. Else enter 0: ")))
 
     def option_request(self):
-        print "Please enter an option:"
-        print "0: layout generation, 1:single layout evaluation, 2:layout optimization, quit:to quit,help:to get help"
+        print("Please enter an option:")
+        print("0: layout generation, 1:single layout evaluation, 2:layout optimization, quit:to quit,help:to get help")
         correct = True
         while (correct):
-            opt = raw_input("Option:")
+            opt = eval(input("Option:"))
             if opt in ['0', '1', '2']:
                 return True, int(opt)
             elif opt == 'quit':
@@ -396,21 +494,21 @@ class Cmd_Handler:
             elif opt == 'help':
                 self.help()
             else:
-                print "wrong input"
+                print("wrong input")
 
     def help(self):
-        print "Layout Generation Mode: generate layout only without evaluation"
-        print "Layout Evaluation Mode: single layout evaluation"
-        print "Layout Optimization Mode: optimize layout based on initial input"
+        print("Layout Generation Mode: generate layout only without evaluation")
+        print("Layout Evaluation Mode: single layout evaluation")
+        print("Layout Optimization Mode: optimize layout based on initial input")
 
     def option_layout_gen(self):
-        print "Please enter an option:"
-        print "0: minimum size, 1:variable size, 2:fixed size, 3:fixed size with fixed locations, quit:to quit"
-        print "back: return to the previous stage"
+        print("Please enter an option:")
+        print("0: minimum size, 1:variable size, 2:fixed size, 3:fixed size with fixed locations, quit:to quit")
+        print("back: return to the previous stage")
 
         correct = True
         while (correct):
-            opt = raw_input("Option:")
+            opt = eval(input("Option:"))
             if opt in ['0', '1', '2', '3']:
                 return True, int(opt)
             elif opt == 'quit':
@@ -418,22 +516,25 @@ class Cmd_Handler:
             elif opt == 'back':
                 return True, opt
             else:
-                print "wrong input"
+                print("wrong input")
 
     # -------------------INITIAL SETUP--------------------------------------
     def set_up_db(self):
         database = os.path.join(self.db_dir, 'layouts_db')
-        filelist = glob(os.path.join(database + '/*'))
+        filelist = glob.glob(os.path.join(database + '/*'))
         # print filelist
         for f in filelist:
             try:
                 os.remove(f)
             except:
-                print "can't remove file"
+                print("can't remove file")
 
         if not os.path.exists(database):
             os.makedirs(database)
-        self.db_file = database + '/' + 'layout.db'
+        
+        self.db_file = os.path.join(database,'layout.db')
+        self.db_file = os.path.abspath(self.db_file)
+        #print (self.db_file)
         conn = create_connection(self.db_file)
         with conn:
             create_table(conn)
@@ -456,21 +557,22 @@ class Cmd_Handler:
         :return:
         '''
         self.layer_stack.import_layer_stack_from_csv(self.layer_stack_file)
+        
         self.engine, self.wire_table = script_translator(
-            input_script=self.layout_script, bond_wire_info=self.bondwire_setup, fig_dir=self.fig_dir, constraint_file=self.constraint_file,rel_cons=self.i_v_constraint,mode=self.new_mode)
+            input_script=self.layout_script, bond_wire_info=self.bondwire_setup, fig_dir=self.fig_dir, constraint_file=self.constraint_file,rel_cons=self.i_v_constraint,flexible=self.flexible,mode=self.new_mode)
         for comp in self.engine.all_components:
+
             self.comp_dict[comp.layout_component_id] = comp
 
 
 
-
-
     # --------------- API --------------------------------
+
+
     def setup_electrical(self,mode='command',dev_conn={},frequency=None,meas_data={}):
-        print "init api"
-        layer_to_z = {'T': [0, 0.2], 'D': [0.2, 0], 'B': [0.2, 0],
-                      'L': [0.2, 0]}
-        self.e_api = CornerStitch_Emodel_API(comp_dict=self.comp_dict, layer_to_z=layer_to_z, wire_conn=self.wire_table)
+        print("init api")
+
+        self.e_api = CornerStitch_Emodel_API(comp_dict=self.comp_dict, wire_conn=self.wire_table)
         self.e_api.load_rs_model(self.rs_model_file)
         #print mode
         if mode == 'command':
@@ -478,12 +580,17 @@ class Cmd_Handler:
             self.e_api.get_frequency()
             self.measures += self.e_api.measurement_setup()
         elif mode == 'macro':
-            print "macro mode"
-
+            #print("macro mode")
+            
             self.e_api.form_connection_table(mode='macro',dev_conn=dev_conn)
             self.e_api.get_frequency(frequency)
+            self.e_api.get_layer_stack(self.layer_stack)
             self.measures += self.e_api.measurement_setup(meas_data)
-
+        if self.layout_ori_file != None:
+            #print("this is a test now")
+            self.e_api.process_trace_orientation(self.layout_ori_file)
+        #if self.output_option:
+        #    self.e_api.export_netlist(dir = self.netlist_dir, mode = self.netlist_mode)
 
     def setup_thermal(self,mode = 'command',meas_data ={},setup_data={},model_type=2):
         '''
@@ -502,7 +609,7 @@ class Cmd_Handler:
         if mode == 'command':
             self.measures += self.t_api.measurement_setup()
             self.t_api.set_up_device_power()
-            self.t_api.model = raw_input("Input 0=TFSM or 1=Rect_flux: ")
+            self.t_api.model = eval(input("Input 0=TFSM or 1=Rect_flux: "))
 
         elif mode == 'macro':
             self.measures += self.t_api.measurement_setup(data=meas_data)
@@ -518,43 +625,88 @@ class Cmd_Handler:
         self.setup_thermal()
         self.setup_electrical()
 
-    def cmd_handler_flow(self):
-        print "This is the command line mode for PowerSynth layout optimization"
-        print "Type -m [macro file] to run a macro file"
-        print "Type -f to go through a step by step setup"
-        print "Type -quit to quit"
+    def cmd_handler_flow(self, arguments =[]):
+        if len(arguments) <= 1: # Turn on simple user interface mode
+            print("This is the command line mode for PowerSynth layout optimization")
+            print("Type -m [macro file] to run a macro file")
+            print("Type -f to go through a step by step setup")
+            print("Type -quit to quit")
 
-        cont = True
-        while (cont):
-            mode = raw_input("Enter command here")
-            if mode == '-f':
-                self.input_request()
-                self.init_cs_objects()
-                self.set_up_db()
-                self.cmd_loop()
-                cont = False
-            elif mode == '-quit':
-                cont = False
-            elif mode[0:2] == '-m':
-                print "Loading macro file"
-                m, file = mode.split(" ")
-                if os.path.isfile(file):
-                    # macro file exists
-                    filename = os.path.basename(file)
-                    # change current directory to workspace
-                    work_dir = file.replace(filename,'')
-                    os.chdir(work_dir)
-                    print "Jump to current working dir"
-                    print work_dir
-                    checked = self.load_macro_file(file)
-                    if not (checked):
-                        continue
+            cont = True
+            while (cont):
+                mode = input("Enter command here")
+                if mode == '-f':
+                    self.input_request()
+                    self.init_cs_objects()
+                    self.set_up_db()
+                    self.cmd_loop()
+                    cont = False
+                elif mode == '-quit':
+                    cont = False
+                elif mode[0:2] == '-m':
+                    print("Loading macro file")
+                    m, filep = mode.split(" ")
+                    filep = os.path.abspath(filep)
+                    #print (filep)
+                    if os.path.isfile(filep):
+                        # macro file exists
+                        filename = os.path.basename(filep)
+                        # change current directory to workspace
+                        work_dir = filep.replace(filename,'')
+                        os.chdir(work_dir)
+                        print("Jump to current working dir")
+                        print(work_dir)
+                        checked = self.load_macro_file(filep)
+                        if not (checked):
+                            continue
+                    else:
+                        print("wrong macro file format or wrong directory, please try again !")
                 else:
-                    print "wrong macro file format or wrong directory, please try again !"
-
-
-            else:
-                print "Wrong Input, please double check and try again !"
+                    print("Wrong Input, please double check and try again !")
+        else: # Real CMD mode
+            arg_dict = {"temp":[]}
+            i = 0
+            #print (arguments)
+            cur_flag = "temp"
+            while i < len(arguments): # Read through a list of arguments and build a table 
+                #print(i,arguments[i])    
+                if i == 0: # cmd.py 
+                    i+=1
+                    continue
+                else:
+                    if arguments[i][0] == '-':
+                        cur_flag = arguments[i]
+                        arg_dict[cur_flag] = []
+                    else: # keep adding the arg_val until next flag 
+                        arg_dict[cur_flag].append(arguments[i]) 
+                i+=1
+            # Process args
+            if "-settings" in arg_dict.keys(): # Special case
+                setting_file = arg_dict['-settings'][0]
+                print("Loading settings file")
+                read_settings_file(setting_file)
+                self.layer_stack = LayerStack()
+                #print("This will change the default settings file location")
+            if "-m" in arg_dict.keys(): # - m: macro flag
+                filep = arg_dict['-m'][0]
+                print("Loading macro file")
+                filep = os.path.abspath(filep)
+                #print (filep)
+                if os.path.isfile(filep):
+                    # macro file exists
+                    filename = os.path.basename(filep)
+                    # change current directory to workspace
+                    work_dir = filep.replace(filename,'')
+                    os.chdir(work_dir)
+                    #print("Jump to current working dir")
+                    #print(work_dir)
+                    checked = self.load_macro_file(filep)
+                else:
+                    print("wrong macro file format or wrong directory, please try again !")
+                    quit()
+            if '-help' in arg_dict.keys():
+                print("This is PowerSynth cmd mode, more flags will be added in the future")
+                
 
     def cmd_loop(self):
         cont = True
@@ -580,12 +732,12 @@ class Cmd_Handler:
                 #print init_data_islands
                 fp_width, fp_height = self.engine.init_size
                 fig_dict = {(fp_width, fp_height): []}
-                for k, v in patch_dict.items():
+                for k, v in list(patch_dict.items()):
                     fig_dict[(fp_width, fp_height)].append(v)
                 init_rects = {}
                 # print self.engine.init_data
                 # print "here"
-                for k, v in self.engine.init_data[1].items():  # sym_to_cs={'T1':[[x1,y1,x2,y2],[nodeid],type,hierarchy_level]
+                for k, v in list(self.engine.init_data[1].items()):  # sym_to_cs={'T1':[[x1,y1,x2,y2],[nodeid],type,hierarchy_level]
 
                     rect = v[0]
                     x, y, width, height = [rect[0], rect[1], rect[2] - rect[0], rect[3] - rect[1]]
@@ -631,23 +783,197 @@ class Cmd_Handler:
                 cont, layout_mode = self.option_layout_gen()
                 if layout_mode in range(3):
                     self.set_up_db()
+
                     self.soluions = generate_optimize_layout(layout_engine=self.engine, mode=layout_mode,
                                                              optimization=True, db_file=self.db_file,fig_dir=self.fig_dir,sol_dir=self.db_dir,
                                                              apis={'E': self.e_api, 'T': self.t_api},
                                                              measures=self.measures)
 
 
+                    self.export_solution_params(self.fig_dir,self.db_dir, self.solutions,layout_mode)
 
             elif opt == 'quit':
                 cont = False
 
+    def find_pareto_dataset(self,sol_dir=None,opt=None,fig_dir=None):
+        #print "so",sol_dir
+        
+        folder_name = sol_dir+'\\'+'Layout_Solutions'
+        if (os.path.exists(folder_name)):
+            all_data = []
+            i = 0
+            for filename in glob.glob(os.path.join(folder_name, '*.csv')):
+                with open(filename) as csvfile:
+                    base_name = os.path.basename(filename)
+                    readCSV = csv.reader(csvfile, delimiter=',')
+                    for row in readCSV:
+                        if row[0] == 'Size':
+                            continue
+                        else:
+                            #print (row, len(row))
+                            if row[0][0] == '[' and len(row)>2:
+                                try:
+                                    data = [base_name, float(row[1]), float(row[2])]
+                                except:
+                                    data = [None, None, None]
+                                all_data.append(data)
 
+                            else:
+                                continue
+                    i += 1
+            # for data in all_data:
+            # print data
+            if opt>0:
+                file_name = sol_dir+'\\all_data.csv'
+                with open(file_name, 'w',newline='') as my_csv:
+                    csv_writer = csv.writer(my_csv, delimiter=',')
+                    csv_writer.writerow(['Layout_ID','Inductance','Temperature'])
+                    for data in all_data:
+                        #if data[2] > 20: # special case to handle invalid electrical evaluations
+                        try:
+                            data = [data[0].rsplit('.csv')[0], data[1], data[2]]
+                        except:
+                            data=[None,None,None]
+                        csv_writer.writerow(data)
+                    my_csv.close()
+            # '''
+                sol_data = {}
+                file = file_name
+                with open(file) as csvfile:
+                    readCSV = csv.reader(csvfile, delimiter=',')
+                    for row in readCSV:
+                        if row[0] == 'Layout_ID':
+                            #sol_data[row[0]]=[row[2],row[1]]
+                            continue
+                        else:
+                            #print("here",row[0],row[1],row[2])
+                            sol_data[row[0]] = ([float(row[2]), float(row[1])])
+                # sol_data = np.array(sol_data)
+                #print (sol_data)
+                if len(sol_data)>0:
+                    pareto_data = pareto_frontiter2D(sol_data)
+                    #print len(pareto_data)
+                    file_name = sol_dir+'\\final_pareto.csv'
+                    with open(file_name, 'w', newline='') as my_csv:
+                        csv_writer = csv.writer(my_csv, delimiter=',')
+                        csv_writer.writerow(['Layout_ID', 'Temperature', 'Inductance'])
+                        for k, v in list(pareto_data.items()):
+                            data = [k, v[0], v[1]]
+                            csv_writer.writerow(data)
+                    my_csv.close()
+
+                    data_x = []
+                    data_y = []
+                    for id, value in list(pareto_data.items()):
+                        #print id,value
+                        data_x.append(value[1])
+                        data_y.append(value[0])
+
+                    #print data_x
+                    #print data_y
+                    plt.cla()
+
+                    plt.scatter(data_x, data_y)
+
+                    x_label = 'Inductance'
+                    y_label = 'Max_Temperature'
+
+                    plt.xlim(min(data_x) - 2, max(data_x) + 2)
+                    plt.ylim(min(data_y) - 0.5, max(data_y) + 0.5)
+                    # naming the x axis
+                    plt.xlabel(x_label)
+                    # naming the y axis
+                    plt.ylabel(y_label)
+
+                    # giving a title to my graph
+                    plt.title('Pareto-front Solutions')
+
+                    # function to show the plot
+                    # plt.show()
+                    plt.savefig(fig_dir + '/' + 'pareto_plot_mode-' + str(opt) + '.png')
+
+    def export_solution_params(self,fig_dir=None,sol_dir=None,solutions=None,opt=None):
+        if len(self.measures)==2:
+            self.find_pareto_dataset(sol_dir,opt,fig_dir)
+
+        data_x=[]
+        data_y=[]
+        for sol in solutions:
+            #if sol.params['Inductance']>50:
+                #continue
+            data_x.append(sol.params['Inductance'])
+            if (len(sol.params)>=2):
+                data_y.append(sol.params['Max_Temperature'])
+            else:
+                data_y.append(sol.index)
+
+        plt.cla()
+        
+        #print (data_x,data_y)
+        plt.scatter(data_x, data_y)
+        for solution in solutions:
+            labels=list(solution.params.keys())
+            break
+        #if len(labels)==2:
+        if len(labels)<2:
+            for i in range(2-len(labels)):
+                labels.append('index')
+        if labels[0]=='Inductance':
+            x_label = labels[0]
+        else:
+            x_label='index'
+        if labels[1]=='Max_Temperature':
+            y_label = labels[1]
+        else:
+            y_label='index'
+        
+
+        plt.xlim(min(data_x)-2, max(data_x)+2)
+        plt.ylim(min(data_y)-0.5, max(data_y)+0.5)
+        # naming the x axis
+        plt.xlabel(x_label)
+        # naming the y axis
+        plt.ylabel(y_label)
+
+        # giving a title to my graph
+        plt.title('Solution Space')
+
+        # function to show the plot
+        #plt.show()
+        plt.savefig(fig_dir+'/'+'plot_mode-'+str(opt)+'.png')
+
+
+#if __name__ == "__main__":
+def main():
+    print("----------------------PowerSynth Version 1.9: Command line version------------------")
+    cmd = Cmd_Handler(debug=False)
+    #print (str(sys.argv))
+    debug = False
+    if debug: # you can mannualy add the argument in the list as shown here
+        sel= int(input("select a test case to run: 1-quang_simple_test_quang_nethome 2-Imam_journal_quang_nethome 3-quang_journal_quang_nethome 4-Imam_journal_Imam_pc 5-Imam_multi_size_quang_nethome"))
+        if sel == 1: 
+            args = ['python','cmd.py','-m','/nethome/qmle/testcases/Mutual_IND_Case/two_dev_macro.txt','-settings',"/nethome/qmle/testcases/settings.info"]
+            cmd.cmd_handler_flow(arguments= args)
+        elif sel ==2:
+            args = ['python','cmd.py','-m','/nethome/qmle/testcases/Imam_journal/Cmd_flow_case/Imam_journal/half_bridge_pm_macro.txt','-settings',"/nethome/qmle/testcases/settings.info"]
+            cmd.cmd_handler_flow(arguments= args)
+        elif sel ==3:
+            args = ['python','cmd.py','-m','/nethome/qmle/testcases/Case1_S-param/Layout1_macro.txt','-settings',"/nethome/qmle/testcases/settings.info"]
+            cmd.cmd_handler_flow(arguments= args)
+        elif sel==4:
+            args = ['python','cmd.py','-m','D:/PowerSynth_V2/VS_CODE_VCS/New_Package_V1.9/Sample_Projects/Test_Cases/Half_Bridge_2/Half_bridge_macro.txt','-settings',"D:/Demo/New_Flow_w_Hierarchy/Journal_Case/settings.info"]
+        elif sel == 5:
+            args = ['python','cmd.py','-m','/nethome/qmle/testcases/Imam_multi_size/Test_case/Weird_Case_Test/half_bridge_pm_macro_1.txt','-settings',"/nethome/qmle/testcases/settings.info"]
+        cmd.cmd_handler_flow(arguments= args)
+
+            
+            #D:/Demo/New_Flow_w_Hierarchy/Journal_Case/Journal_Result_collection/Cmd_flow_case/Half_Bridge_Layout/half_bridge_pm_macro.txt
+            #D:\Demo\New_Flow_w_Hierarchy/Imam_journal/Cmd_flow_case/Imam_journal/half_bridge_pm_macro.txt
+            #D:/Demo/New_Flow_w_Hierarchy/Journal_Case/Testing_Journal_case_w_Py_3/Cmd_flow_case/Half_Bridge_Layout/half_bridge_pm_macro.txt
+    else:
+        settings_file=input("Please enter the file path for settings.info file: ")
+        macro_script=input("Please enter the file path for the macro.txt script: ")
+        args= ['python','cmd.py','-m',macro_script,'-settings',settings_file]
+        cmd.cmd_handler_flow(arguments=args) # Default
 if __name__ == "__main__":
-    print "----------------------PowerSynth Version 1.4: Command line version------------------"
-    cmd = Cmd_Handler(debug=True)
-    cmd.cmd_handler_flow()
-    objgraph.show_most_common_types()
-    all_objects = muppy.get_objects()
-    my_types = muppy.filter(all_objects, Type=types.DictType)
-    sum1 = summary.summarize(my_types)
-    summary.print_(sum1)
+    main()

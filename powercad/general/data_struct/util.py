@@ -58,13 +58,13 @@ class Circle: # Todo: do this later
         '''Source: Weisstein, Eric W. "Circle-Line Intersection." From MathWorld--A Wolfram Web Resource. http://mathworld.wolfram.com/Circle-LineIntersection.html'''
         # Case 1: 2 points outside:
         if self.encloses(line.pt1) and self.encloses(line.pt2):
-            print "no intersection, 2 pts are inside cirlce"
+            print("no intersection, 2 pts are inside cirlce")
             return [] # 2 pts are inside circle, no intersection
         # move the line to the new xy frame begin at Center
         pt1 = self.move_frame(line.pt1)
         pt2 = self.move_frame(line.pt2)
         if self.encloses(line.pt1) or self.encloses(line.pt2): # check for intersection at one single poinr
-            print "one point inside, one point outside single intersection"
+            print("one point inside, one point outside single intersection")
             # using the coordinate to see which
 
 
@@ -75,9 +75,9 @@ class Circle: # Todo: do this later
         dy=pt2[1]-pt1[1]
 
         dr=math.sqrt(dx**2+dy**2)
-        print dx, dy,dr
+        print((dx, dy,dr))
         D=pt1[0]*pt2[1]-pt2[0]*pt1[1]
-        print D
+        print(D)
         delta=self.r**2*dr**2-D**2 # discriminant
         if delta>0:
 
@@ -394,7 +394,7 @@ def translate_pt(pt, *args):
         return None
 
     ret_pt = []
-    for i in xrange(len(args)):
+    for i in range(len(args)):
         ret_pt.append(pt[i]+args[i])
 
     return tuple(ret_pt)
@@ -428,6 +428,6 @@ if __name__ == '__main__':
     pts= [(1,2),(1,3),(1,4)]
     new_set=l1.split(pts)
     for l in new_set:
-        print l.pt1,l.pt2
+        print((l.pt1,l.pt2))
 
 

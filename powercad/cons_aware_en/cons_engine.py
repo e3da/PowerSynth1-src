@@ -1,17 +1,18 @@
-from powercad.project_builder.proj_dialogs import New_layout_engine_dialog
+#from project_builder.proj_dialogs import New_layout_engine_dialog
 import pandas as pd
-from powercad.corner_stitch.API_PS import *
-from powercad.corner_stitch.CornerStitch import *
-from powercad.design.library_structures import *
-from powercad.cons_aware_en.database import *
+import copy
+import matplotlib
+import os
+import collections
 from tqdm import tqdm
+import matplotlib.pyplot as plt
+import itertools
+from powercad.corner_stitch.CornerStitch import CornerStitch,CS_to_CG
+from powercad.cons_aware_en.database import create_connection,insert_record
 from powercad.design import parts
 from powercad.design.group import Island
 from powercad.electrical_mdl.e_mesh_direct import MeshNode
-import matplotlib.pyplot as plt
 from powercad.corner_stitch.constraintGraph_Dev import constraintGraph
-import itertools
-from powercad.general.data_struct.util import *
 from powercad.design.layout_module_data import ModuleDataCornerStitch
 
 # GLOBAL VARIABLE FOR DEBUG ONLY
@@ -30,6 +31,7 @@ class New_layout_engine():
         self.Min_X = None
         self.Min_Y = None
         self.cons_info = None
+        self.flexible=False
         self.ledge_width=1000.0
         self.ledge_height=1000.0
 
@@ -96,7 +98,7 @@ class New_layout_engine():
         return
 
 
-    def init_layout(self, sym_layout=None,input_format=None,islands=None,bondwires=None,voltage_info=None,current_info=None):
+    def init_layout(self, sym_layout=None,input_format=None,islands=None,bondwires=None,flexible=None,voltage_info=None,current_info=None):
         '''
 
         :param sym_layout: old symbolic layout
@@ -105,7 +107,7 @@ class New_layout_engine():
         :return: creates corner stitch data structure from initial layout and creates islands with corner stitch tiles, updates mesh node objects for each island,
         creates a map between input rectangle to corner stitch tile. If it's a connected group (island), mapping is done by group wise, else it is one-to-one
         '''
-        print "initializing ....."
+        print("initializing .....")
         self.sym_layout = sym_layout
 
         if sym_layout != None:
@@ -131,6 +133,7 @@ class New_layout_engine():
             size=input_format[1] # list [width,height] initial floorplan size given by user
             self.W=size[0] # width
             self.H=size[1] # hieght
+            self.flexible=flexible
             # creates horizontal and vertical corner stitch
             self.create_cornerstitch(input_rects,size,islands,bondwires,voltage_info,current_info)
 
@@ -199,6 +202,8 @@ class New_layout_engine():
                     colour="cyan"
                 elif i[-2]=='Type_8':
                     colour="purple"
+                else:
+                    colour='black'
 
 
                 ax5.add_patch(
@@ -255,32 +260,32 @@ class New_layout_engine():
                 self.plotrectH_old(node)
             #raw_input()
         #-------------------------------------------------------
-        '''
-        plot = False
-        if plot:
-            fig2, ax2 = plt.subplots()
-            Names = patches.keys()
-            Names.sort()
-            for k, p in patches.items():
+        #'''
+        #plot = False
+        #if plot:
+            #fig2, ax2 = plt.subplots()
+            #Names = patches.keys()
+            #Names.sort()
+            #for k, p in patches.items():
 
-                if k[0] == 'T':
-                    x = p.get_x()
-                    y = p.get_y()
-                    ax2.text(x + 0.1, y + 0.1, k)
-                    ax2.add_patch(p)
+                #if k[0] == 'T':
+                    #x = p.get_x()
+                    #y = p.get_y()
+                    #ax2.text(x + 0.1, y + 0.1, k)
+                    #ax2.add_patch(p)
 
-            for k, p in patches.items():
+            #for k, p in patches.items():
 
-                if k[0] != 'T':
-                    x = p.get_x()
-                    y = p.get_y()
-                    ax2.text(x + 0.1, y + 0.1, k, weight='bold')
-                    ax2.add_patch(p)
-            ax2.set_xlim(0, size[0])
-            ax2.set_ylim(0, size[1])
-            ax2.set_aspect('equal')
-            plt.savefig('D:\Demo\New_Flow_w_Hierarchy\Figs'+'/_initial_layout.png')
-        '''
+                #if k[0] != 'T':
+                    #x = p.get_x()
+                    #y = p.get_y()
+                    #ax2.text(x + 0.1, y + 0.1, k, weight='bold')
+                    #ax2.add_patch(p)
+            #ax2.set_xlim(0, size[0])
+            #ax2.set_ylim(0, size[1])
+            #ax2.set_aspect('equal')
+            #plt.savefig('D:\Demo\New_Flow_w_Hierarchy\Figs'+'/_initial_layout.png')
+        #'''
 
         # creating corner stitch islands and map between input rectangle(s) and corner stitch tile(s)
         cs_islands,sym_to_cs= self.form_cs_island(islands, self.Htree, self.Vtree) # creates a list of island objects populated with corner stitch tiles
@@ -298,61 +303,66 @@ class New_layout_engine():
         #--------------------------------------------------------------------------
         # populate voltage and current information for Htree and Vtree tiles
         if voltage_info!=None or current_info!=None:
+            
+
             self.apply_IV_loading(cs_islands,voltage_info,current_info)
 
         #--------------------------------------------for debugging----------------------
 
 
         # populating node ids in bondwire objects
-        bondwire_to_trace={} # to find traces on which bondwire pads are located
+        bondwire_to_trace = {}  # to find traces on which bondwire pads are located
         for wire in bondwires:
 
-            if wire.source_comp[0]=='B':
+            if wire.source_comp[0] == 'B':
                 for island in islands:
                     for element in island.child:
                         if wire.source_comp in element:
-                            bondwire_to_trace[wire.source_comp]=island.name
+                            bondwire_to_trace[wire.source_comp] = island.name
 
-            if wire.dest_comp[0]=='B':
+            if wire.dest_comp[0] == 'B':
                 for island in islands:
                     for element in island.child:
                         if wire.dest_comp in element:
-                            bondwire_to_trace[wire.dest_comp]=island.name
+                            bondwire_to_trace[wire.dest_comp] = island.name
 
+        #flexible=True
+        #if flexible==False:
+        if self.flexible==False:
+            # adding source and destination node ids for each wire
+            for wire in bondwires:
 
+                for island in cs_islands:
 
-        # adding source and destination node ids for each wire
-        for wire in bondwires:
+                    if wire.source_comp in island.child_names:
+                        for child in island.child:
+                            #if wire.source_coordinate!=None:
+                            if wire.source_coordinate[0]>=child[1] and wire.source_coordinate[0]<=child[1]+child[3] and  wire.source_coordinate[1]>=child[2] and wire.source_coordinate[1]<=child[2]+child[4]:
+                                wire.source_node_id=child[-1]
+                for island in cs_islands:
+                    if wire.dest_comp in island.child_names:
 
-            for island in cs_islands:
+                        for child in island.child:
+                            #if wire.dest_coordinate != None:
+                            if wire.dest_coordinate[0]>=child[1] and wire.dest_coordinate[0]<=child[1]+child[3] and  wire.dest_coordinate[1]>=child[2] and wire.dest_coordinate[1]<=child[2]+child[4]:
+                                wire.dest_node_id=child[-1]
 
-                if wire.source_comp in island.child_names:
-                    for child in island.child:
-                        if wire.source_coordinate[0]>=child[1] and wire.source_coordinate[0]<=child[1]+child[3] and  wire.source_coordinate[1]>=child[2] and wire.source_coordinate[1]<=child[2]+child[4]:
-                            wire.source_node_id=child[-1]
-            for island in cs_islands:
-                if wire.dest_comp in island.child_names:
-
-                    for child in island.child:
-
-                        if wire.dest_coordinate[0]>=child[1] and wire.dest_coordinate[0]<=child[1]+child[3] and  wire.dest_coordinate[1]>=child[2] and wire.dest_coordinate[1]<=child[2]+child[4]:
-                            wire.dest_node_id=child[-1]
-
-        for wire in bondwires:
-            for island in cs_islands:
-                if wire.dest_comp in bondwire_to_trace:
-                    if island.name==bondwire_to_trace[wire.dest_comp]:
-                        for element in island.elements:
-                            wire.dest_node_id=element[-1] # node id
-                            break
-                if wire.source_comp in bondwire_to_trace:
-                    if island.name==bondwire_to_trace[wire.source_comp]:
-                        for element in island.elements:
-                            wire.source_node_id=element[-1] # node id
-                            break
+            for wire in bondwires:
+                for island in cs_islands:
+                    if wire.dest_comp in bondwire_to_trace:
+                        if island.name==bondwire_to_trace[wire.dest_comp]:
+                            for element in island.elements:
+                                wire.dest_node_id=element[-1] # node id
+                                break
+                    if wire.source_comp in bondwire_to_trace:
+                        if island.name==bondwire_to_trace[wire.source_comp]:
+                            for element in island.elements:
+                                wire.source_node_id=element[-1] # node id
+                                break
         self.bondwires = copy.deepcopy(bondwires)  # to pass bondwire info to CG
         #for wire in self.bondwires:
-            #print"here", wire.printWire()
+            #print("here", wire.printWire())
+        #raw_input()
 
 
 
@@ -381,76 +391,7 @@ class New_layout_engine():
         self.init_data = [patches, sym_to_cs,cs_islands,islands, combined_graph]
 
 
-    def collect_sym_cons_info(self, sym_layout):
-        '''
-        Go through sym objs and search for dimensions, sym DRC
-        :return:
-        '''
-        # NOTE: There can be multiple types of mosfets and diodes themselves for now assume all mosfet are the same
-        # Take the maximum width and height of the mosfet group, Init with all 0s for cases they are not used
-        diode_widths = [0]
-        diode_heights = [0]
-        mosfet_widths = [0]
-        mosfet_heights = [0]
-        lead_widths = [0]
-        lead_heights = [0]
-        # Go through all devices and find max dimensions
 
-        for dev in sym_layout.devices:
-            width, height, thickness = dev.tech.device_tech.dimensions
-            if dev.is_diode():
-                diode_widths.append(width)
-                diode_heights.append(height)
-            if dev.is_transistor():
-                mosfet_widths.append(width)
-                mosfet_heights.append(height)
-
-        for lead in sym_layout.leads:
-            if lead.tech.shape == Lead.BUSBAR:
-                width = lead.tech.dimensions[0]
-                height = lead.tech.dimensions[1]
-            elif lead.tech.shape == Lead.ROUND:
-                width = lead.tech.dimensions[0]  # Radius
-                height = lead.tech.dimensions[0]
-            lead_widths.append(width)
-            lead_heights.append(height)
-
-        # Info is here
-        Type2_W = max(mosfet_widths + mosfet_heights)
-        Type2_H = Type2_W  # Because a device can rotate
-        Type3_W = max(lead_widths + lead_heights)
-        Type3_H = Type3_W  # Because a lead can rotate
-        Type4_W = max(diode_widths + diode_heights)
-        Type4_H = Type4_W  # Because a diode can rotate
-        # Design_rule
-        design_rule = sym_layout.module.design_rules
-        # SEE powercad/design/project_structures.py
-        Type1_W = design_rule.min_trace_width
-        Gap_1_1 = design_rule.min_trace_trace_width
-        Gap_1_2 = design_rule.min_die_trace_dist
-        Gap_1_3 = Gap_1_2
-        Gap_1_4 = Gap_1_2
-        Gap_2_2 = design_rule.min_die_die_dist
-        Gap_2_3 = Gap_2_2
-        Gap_3_3 = Gap_2_2
-        Gap_3_4 = Gap_2_2
-        Gap_4_4 = Gap_2_2
-        Gap_0_0 = 2  # [EMPTY type]
-        # Ledge Width (Type EMPTY to 1 ?)
-        ledge_width = sym_layout.module.substrate.ledge_width
-        minWidth = [ledge_width, Type1_W, Type2_W, Type3_W, Type4_W]  # Trace,MOS,Lead,Diode
-        minHeight = [ledge_width, Type1_W, Type2_H, Type3_H, Type4_H]
-        minExtension = [ledge_width, Type1_W, Type2_W, Type3_W, Type4_W]
-        Gaps = [Gap_0_0, Gap_1_1, Gap_2_2, Gap_3_3, Gap_4_4, Gap_2_3, Gap_3_4]
-        Enclosures = [ledge_width, Gap_1_2, Gap_1_3, Gap_1_4]
-        #print Type1_W, Type2_W, Type3_W, Type4_W, Gap_1_2, Gap_2_2, ledge_width
-        #print"W", minWidth
-        #print"H", minHeight
-        #print"E", minExtension
-        #print"G", Gaps
-        #print"Enc",Enclosures
-
-        return minWidth, minHeight, minExtension, Gaps, Enclosures
 
     def mode_zero(self): # evaluates mode 0(minimum sized layouts)
 
@@ -471,7 +412,7 @@ class New_layout_engine():
 
 
         #self.cons_df.to_csv('out_2.csv', sep=',', header=None, index=None)
-        Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree,bondwires=self.bondwires, N=None,cs_islands=self.init_data[2], W=None, H=None,XLoc=None, YLoc=None, seed=None, individual=None,Types=self.Types,rel_cons=self.reliability_constraints)  #
+        Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree,bondwires=self.bondwires, N=None,cs_islands=self.init_data[2], W=None, H=None,XLoc=None, YLoc=None, seed=None, individual=None,Types=self.Types,rel_cons=self.reliability_constraints,flexible=self.flexible)  #
 
 
         return Evaluated_X, Evaluated_Y
@@ -543,6 +484,7 @@ class New_layout_engine():
         scaler = 1000  # to get back original dimensions all coordinated will be scaled down by 1000
         #mode-0
         if level == 0:
+            #print("ENGINE_REL",self.reliability_constraints)
 
             #Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=None, W=None, H=None, XLoc=None, YLoc=None,seed=None,individual=None,Types=self.Types) # for minimum sized layout only one solution is generated
             #CS_SYM_information, Layout_Rects = CG1.update_min(Evaluated_X, Evaluated_Y , sym_to_cs, scaler)
@@ -555,7 +497,8 @@ class New_layout_engine():
             #CS_SYM_information, Layout_Rects = CG1.UPDATE_min(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree ,sym_to_cs,scaler)  # CS_SYM_information is a dictionary where key=path_id(component name) and value=list of updated rectangles, Layout Rects is a dictionary for minimum HCS and VCS evaluated rectangles (used for plotting only)
             Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree,bondwires=self.bondwires, N=None,cs_islands=cs_islands, W=None, H=None,
                                                       XLoc=None, YLoc=None, seed=None, individual=None,
-                                                      Types=self.Types,rel_cons=self.reliability_constraints)  # for minimum sized layout only one solution is generated
+                                                      Types=self.Types,rel_cons=self.reliability_constraints,flexible=self.flexible)  # for minimum sized layout only one solution is generated
+
 
             CS_SYM_information, Layout_Rects = CG1.update_min(Evaluated_X, Evaluated_Y, sym_to_cs,self.bondwires, scaler)
             # raw_input()
@@ -571,7 +514,7 @@ class New_layout_engine():
             self.cur_fig_data = plot_layout(Layout_Rects, level)
             CS_SYM_Updated = {}
             for i in self.cur_fig_data:
-                for k, v in i.items(): # k is footprint, v layout data
+                for k, v in list(i.items()): # k is footprint, v layout data
                     k = (k[0] * scaler, k[1] * scaler)
                     CS_SYM_Updated[k] = CS_SYM_information
             CS_SYM_Updated = [CS_SYM_Updated]  # mapped solution layout information to symbolic layout objects
@@ -616,10 +559,77 @@ class New_layout_engine():
                 cs_islands_up = self.update_islands(CS_SYM_Updated1, Evaluated_X[i], Evaluated_Y[i], cs_islands)
                 updated_cs_islands.append(cs_islands_up)
                 Layout_Rects.append(Layout_Rects1)
+            
+
+            Evaluated_X0, Evaluated_Y0 = self.mode_zero()  # mode-0 evaluation is required to check the validity of given floorplan size
+            # print Evaluated_X0, Evaluated_Y0
+
+            ZDL_H = {}
+            ZDL_V = {}
+            for k, v in Evaluated_X0[1].items():
+                ZDL_H[k] = v
+            for k, v in Evaluated_Y0[1].items():
+                ZDL_V[k] = v
+            MIN_X = {}
+            MIN_Y = {}
+            for k, v in ZDL_H.items():
+                MIN_X[ZDL_H.keys().index(k)] = v
+            for k, v in ZDL_V.items():
+                MIN_Y[ZDL_V.keys().index(k)] = v
+
+            min_width = max(MIN_X.values())  # finding minimum width of the floorplan
+            min_height = max(MIN_Y.values())  # finding minimum height of the floorplan
+            XLoc = MIN_X.keys()
+            YLoc = MIN_Y.keys()
+
+            XLoc.sort()
+            YLoc.sort()
+
+
+
+
+            widths = [min_width]
+            heights=[min_height]
+            if num_layouts <= 1000:
+
+                for i in range(1,num_layouts):
+                    widths.append(widths[i-1] + 40000 / float(num_layouts))
+                    heights.append(heights[i-1] + 40000 / float(num_layouts))
+            else:
+                for i in range(num_layouts):
+                    widths.append(widths[i - 1] + 60000 / float(num_layouts))
+                    heights.append(heights[i - 1] + 60000 / float(num_layouts))
+
+            Min_X_Locs=[]
+            Min_Y_Locs=[]
+            for i in range(num_layouts):
+                Min_X_Loc={}
+                Min_Y_Loc={}
+
+                Min_X_Loc[0] = 0
+                Min_X_Loc[1] = self.ledge_width * scaler
+                Min_X_Loc[len(XLoc) - 2] = widths[i] - self.ledge_width * scaler
+                Min_X_Loc[len(XLoc) - 1] = widths[i]
+                Min_X_Locs.append(Min_X_Loc)
+
+                Min_Y_Loc[0] = 0
+                Min_Y_Loc[1] = self.ledge_height * scaler
+                Min_Y_Loc[len(YLoc) - 2] = heights[i] - self.ledge_height * scaler
+                Min_Y_Loc[len(YLoc) - 1] = heights[i]
+                Min_Y_Locs.append(Min_Y_Loc)
+            #print Min_X_Locs
+            #print Min_Y_Locs
+            Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, bondwires=self.bondwires,
+                                                      N=num_layouts, cs_islands=cs_islands, W=W, H=H,
+                                                      XLoc=Min_X_Locs, YLoc=Min_Y_Locs, seed=seed, individual=individual,
+                                                      Types=self.Types, rel_cons=self.reliability_constraints,
+                                                      flexible=self.flexible)
+
             '''
             Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree,bondwires=self.bondwires, N=num_layouts,cs_islands=cs_islands, W=None, H=None,
                                                       XLoc=None, YLoc=None, seed=seed, individual=individual,
-                                                      Types=self.Types,rel_cons=self.reliability_constraints)
+                                                      Types=self.Types,rel_cons=self.reliability_constraints,flexible=self.flexible)
+
             # CS_SYM_Updated, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree, sym_to_cs,scaler)
             CS_SYM_Updated = []
             Layout_Rects = []
@@ -629,7 +639,7 @@ class New_layout_engine():
                 self.cur_fig_data = plot_layout(Layout_Rects1, level=0)
                 CS_SYM_info = {}
                 for item in self.cur_fig_data:
-                    for k, v in item.items():
+                    for k, v in list(item.items()):
                         k = (k[0] * scaler, k[1] * scaler)
                         CS_SYM_info[k] = CS_SYM_Updated1
                 CS_SYM_Updated.append(CS_SYM_info)
@@ -662,21 +672,21 @@ class New_layout_engine():
 
             ZDL_H = {}
             ZDL_V = {}
-            for k, v in Evaluated_X0[1].items():
+            for k, v in list(Evaluated_X0[1].items()):
                 ZDL_H[k] = v
-            for k, v in Evaluated_Y0[1].items():
+            for k, v in list(Evaluated_Y0[1].items()):
                 ZDL_V[k] = v
             MIN_X = {}
             MIN_Y = {}
-            for k, v in ZDL_H.items():
-                MIN_X[ZDL_H.keys().index(k)] = v
-            for k, v in ZDL_V.items():
-                MIN_Y[ZDL_V.keys().index(k)] = v
+            for k, v in list(ZDL_H.items()):
+                MIN_X[list(ZDL_H.keys()).index(k)] = v
+            for k, v in list(ZDL_V.items()):
+                MIN_Y[list(ZDL_V.keys()).index(k)] = v
 
             max_x = max(MIN_X.values())  # finding minimum width of the floorplan
             max_y = max(MIN_Y.values())  # finding minimum height of the floorplan
-            XLoc = MIN_X.keys()
-            YLoc = MIN_Y.keys()
+            XLoc = list(MIN_X.keys())
+            YLoc = list(MIN_Y.keys())
 
             Min_X_Loc = {}
             Min_Y_Loc = {}
@@ -686,7 +696,7 @@ class New_layout_engine():
             Min_X_Loc[len(XLoc) - 1] = max_x
             Min_Y_Loc[len(YLoc) - 1] = max_y
 
-            for k, v in Min_X_Loc.items():  # checking if the given width is greater or equal minimum width
+            for k, v in list(Min_X_Loc.items()):  # checking if the given width is greater or equal minimum width
 
                 if W >= v:
                     #Min_X_Loc[0] = 0
@@ -696,9 +706,9 @@ class New_layout_engine():
                     Min_X_Loc[k - 1] = W-self.ledge_width*scaler
                     Min_X_Loc[k] = W
                 else:
-                    print"Enter Width greater than or equal Minimum Width"
+                    print("Enter Width greater than or equal Minimum Width")
                     return
-            for k, v in Min_Y_Loc.items():# checking if the given height is greater or equal minimum width
+            for k, v in list(Min_Y_Loc.items()):# checking if the given height is greater or equal minimum width
                 if H >= v:
                     #Min_Y_Loc[0] = 0
                     #Min_Y_Loc[k] = H
@@ -708,7 +718,7 @@ class New_layout_engine():
                     Min_Y_Loc[k - 1] = H-self.ledge_height*scaler
                     Min_Y_Loc[k] = H
                 else:
-                    print"Enter Height greater than or equal Minimum Height"
+                    print("Enter Height greater than or equal Minimum Height")
                     return
             # sorting the given locations based on the graph vertices in ascending order
             Min_X_Loc = collections.OrderedDict(sorted(Min_X_Loc.items()))
@@ -716,7 +726,7 @@ class New_layout_engine():
 
             Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree,bondwires=self.bondwires, N=num_layouts,cs_islands=cs_islands, W=W, H=H,
                                                       XLoc=Min_X_Loc, YLoc=Min_Y_Loc, seed=seed, individual=individual,
-                                                      Types=self.Types,rel_cons=self.reliability_constraints)  # evaluates and finds updated locations for each coordinate
+                                                      Types=self.Types,rel_cons=self.reliability_constraints,flexible=self.flexible)  # evaluates and finds updated locations for each coordinate
             '''
             CS_SYM_Updated, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree, sym_to_cs,scaler)
             CS_SYM_Updated = CS_SYM_Updated['H'] # takes only horizontal corner stitch data
@@ -735,7 +745,7 @@ class New_layout_engine():
                 self.cur_fig_data = plot_layout(Layout_Rects1, level=0)
                 CS_SYM_info = {}
                 for item in self.cur_fig_data:
-                    for k, v in item.items():
+                    for k, v in list(item.items()):
                         k = (k[0] * scaler, k[1] * scaler)
                         CS_SYM_info[k] = CS_SYM_Updated1
                 CS_SYM_Updated.append(CS_SYM_info)
@@ -757,6 +767,8 @@ class New_layout_engine():
             # print Layout_Rects
             # CS_SYM_Updated = CS_SYM_Updated['H']
             # self.cur_fig_data = plot_layout(Layout_Rects, level,self.min_dimensions)
+            
+            #''' Data base issue
             if count == None:
                 # for i in range(len(Layout_Rects)):
                 for i in range(len(Layout_Rects)):
@@ -765,7 +777,7 @@ class New_layout_engine():
             else:
                 # for i in range(len(Layout_Rects)):
                 self.save_layouts(Layout_Rects[0], count=count, db=db)
-
+            #'''
 
 
             #mode-3
@@ -773,16 +785,16 @@ class New_layout_engine():
             Evaluated_X0, Evaluated_Y0=self.mode_zero()
             ZDL_H = {}
             ZDL_V = {}
-            for k, v in Evaluated_X0.items():
+            for k, v in list(Evaluated_X0.items()):
                 ZDL_H = v
-            for k, v in Evaluated_Y0.items():
+            for k, v in list(Evaluated_Y0.items()):
                 ZDL_V = v
             MIN_X = {}
             MIN_Y = {}
-            for k, v in ZDL_H.items():
-                MIN_X[ZDL_H.keys().index(k)] = v
-            for k, v in ZDL_V.items():
-                MIN_Y[ZDL_V.keys().index(k)] = v
+            for k, v in list(ZDL_H.items()):
+                MIN_X[list(ZDL_H.keys()).index(k)] = v
+            for k, v in list(ZDL_V.items()):
+                MIN_Y[list(ZDL_V.keys()).index(k)] = v
 
 
             self.Min_X = Evaluated_X0
@@ -790,18 +802,18 @@ class New_layout_engine():
 
             Min_X_Loc = {}
             Min_Y_Loc = {}
-            for k, v in Evaluated_X0.items():
-                XLoc = v.keys()
+            for k, v in list(Evaluated_X0.items()):
+                XLoc = list(v.keys())
                 max_x = v[max(XLoc)]
-            for k, v in Evaluated_Y0.items():
-                YLoc = v.keys()
+            for k, v in list(Evaluated_Y0.items()):
+                YLoc = list(v.keys())
                 max_y = v[max(YLoc)]
             XLoc.sort()
             YLoc.sort()
             Min_X_Loc[len(XLoc) - 1] = max_x
             Min_Y_Loc[len(YLoc) - 1] = max_y
 
-            for k, v in Min_X_Loc.items():
+            for k, v in list(Min_X_Loc.items()):
                 if W >= v:
                     Min_X_Loc[0] = 0
                     Min_X_Loc[k] = W
@@ -815,9 +827,9 @@ class New_layout_engine():
                     '''
 
                 else:
-                    print"Enter Width greater than or equal Minimum Width"
+                    print("Enter Width greater than or equal Minimum Width")
                     return None,None
-            for k, v in Min_Y_Loc.items():
+            for k, v in list(Min_Y_Loc.items()):
                 if H >= v:
                     Min_Y_Loc[0] = 0
                     Min_Y_Loc[k] = H
@@ -830,12 +842,12 @@ class New_layout_engine():
                     fixed_y_location[k] = H+2000
                     '''
                 else:
-                    print"Enter Height greater than or equal Minimum Height"
+                    print("Enter Height greater than or equal Minimum Height")
                     return None,None
 
             #data from GUI
-            Nodes_H=fixed_x_location.keys()
-            Nodes_V=fixed_y_location.keys()
+            Nodes_H=list(fixed_x_location.keys())
+            Nodes_V=list(fixed_y_location.keys())
             Nodes_H.sort()
             Nodes_V.sort()
             distance_H={}
@@ -850,29 +862,29 @@ class New_layout_engine():
                 min_distance_V[Nodes_V[i]]=MIN_Y[Nodes_V[i+1]]-MIN_Y[Nodes_V[i]]
 
             ### Creates fixed location table in (vertex:location) format
-            for k, v in fixed_x_location.items():
+            for k, v in list(fixed_x_location.items()):
                 Min_X_Loc[k] = v
-            for k, v in fixed_y_location.items():
+            for k, v in list(fixed_y_location.items()):
                 Min_Y_Loc[k] = v
 
             Min_X_Loc = collections.OrderedDict(sorted(Min_X_Loc.items()))
             Min_Y_Loc = collections.OrderedDict(sorted(Min_Y_Loc.items()))
 
 
-            for k,v in Min_X_Loc.items():
+            for k,v in list(Min_X_Loc.items()):
                 if k in distance_H:
                     if distance_H[k]<min_distance_H[k] or Min_X_Loc[k]<MIN_X[k] :
-                        print"Invalid Location for X coordinate"
+                        print("Invalid Location for X coordinate")
                         return None,None
-            for k,v in Min_Y_Loc.items():
+            for k,v in list(Min_Y_Loc.items()):
                 if k in distance_V:
                     if distance_V[k]<min_distance_V[k]or Min_Y_Loc[k]<MIN_Y[k]  :
-                        print"Invalid Location for Y coordinate"
+                        print("Invalid Location for Y coordinate")
                         return None,None
 
             Evaluated_X, Evaluated_Y = CG1.evaluation(Htree=self.Htree, Vtree=self.Vtree, N=num_layouts,
                                                       W=W, H=H, XLoc=Min_X_Loc, YLoc=Min_Y_Loc, seed=seed,
-                                                      individual=individual,Types=self.Types,rel_cons=self.reliability_constraints)
+                                                      individual=individual,Types=self.Types,rel_cons=self.reliability_constraints,flexible=self.flexible)
 
             CS_SYM_Updated, Layout_Rects = CG1.UPDATE(Evaluated_X, Evaluated_Y, self.Htree, self.Vtree, sym_to_cs,scaler)
 
@@ -897,18 +909,23 @@ class New_layout_engine():
 
         voltage={}
         current={}
+
         if voltage_info!=None:
             for island in cs_islands:
+
                 for name in island.element_names:
+
                     if name in voltage_info:
                         voltage[island.name]=voltage_info[name]
+						
 
         if current_info != None:
             for island in cs_islands:
                 for name in island.element_names:
                     if name in current_info:
                         current[island.name]=current_info[name]
-
+		
+		
         for island in cs_islands:
             if island.name in voltage:
                 for rect in self.Htree.hNodeList[0].stitchList:
@@ -973,10 +990,10 @@ class New_layout_engine():
                 min_x_combined={}
                 min_y_combined={}
                 for node_id in nodeids:
-                    for k,v in minx.items():
+                    for k,v in list(minx.items()):
                         if k==node_id:
                             min_x_combined.update(v)
-                    for k, v in miny.items():
+                    for k, v in list(miny.items()):
                         if k == node_id:
                             min_y_combined.update(v)
 
@@ -1374,6 +1391,7 @@ class New_layout_engine():
                                                     if (x1!=rect.cell.x and y1!=rect.cell.y) or (x1!=rect.cell.x and y1!=rect.cell.y+rect.getHeight()) or (x1!=rect.cell.x+rect.getWidth() and y1!=rect.cell.y+rect.getHeight()) and (x1!=rect.cell.x+rect.getWidth() and y1!=rect.cell.y) :
                                                         common.append(point)
 
+
                             # removing four corner points of each element from common list
                             for point in common:
                                 for element in island.elements:
@@ -1500,7 +1518,7 @@ class New_layout_engine():
                         for h_element in island.elements:
                             if h_element[1] <= x and h_element[2] <= y and h_element[1] + h_element[3] >= x and h_element[2] + h_element[4] >=y:
                                 if  not (h_element[2] in ys):
-                                    raw_input()
+                                    input()
                                 point_left = (h_element[1], y)  # adding left boundary
                                 point_right = (h_element[1] + h_element[3], y) # adding right boundary
                                 bw_points.append(point_left)
@@ -1520,34 +1538,11 @@ class New_layout_engine():
 
                         # internal neighbors for bondwire points
                         new_points=[]
-                        '''
-                        for h_element in island.elements:
-                            h_x,h_y,h_w,h_h=h_element[1:5]
-                            # is the bw x location within the range of the h_element
-                            if x>h_x and x<h_x+h_w:
-                                # append the vertical cut points
-                                point_top = [x, h_y + h_h]
-                                bw_points.append(point_top)
-                                point_bottom = [x, h_y]
-                                bw_points.append(point_bottom)
-                        '''
+
                         for y_cut in ys:
                             new_point = (x,y_cut)
                             new_points.append(new_point)
 
-
-
-                        '''
-                        for v_element in island.elements_v:
-                            v_x, v_y, v_w, v_h = v_element[1:5]
-                            # is the bw x location within the range of the h_element
-                            if y > v_y and y < v_y + v_h:
-                                # append the vertical cut points
-                                point_left = [v_x,y]
-                                bw_points.append(point_left)
-                                point_right = [v_x+v_w, y]
-                                bw_points.append(point_right)
-                        '''
                         for x_cut in xs:
                             new_point = (x_cut,y)
                             new_points.append(new_point)
@@ -1558,6 +1553,23 @@ class New_layout_engine():
                                 h_x, h_y, h_w, h_h = h_element[1:5]
                                 if h_x <= new_x and h_y <= new_y and h_x + h_w >= new_x and h_y + h_h >= new_y:
                                     selected_pt.append(new_pt)
+                                    if h_x==new_x:
+                                        W.append(new_pt) # adding W boundary point
+                                    if h_x + h_w == new_x:
+                                        E.append(new_pt) # adding E boundary point
+
+                        # adding N, S boundary points for new points due to bond wire
+                        for new_pt in new_points:
+                            new_x ,new_y = new_pt
+                            for v_element in island.elements_v:
+                                v_x, v_y, v_w, v_h = v_element[1:5]
+                                #if h_x <= new_x and h_y <= new_y and h_x + h_w >= new_x and h_y + h_h >= new_y:
+                                if new_pt in selected_pt:
+                                    if v_y==new_y:
+                                        S.append(new_pt)
+                                    if v_y + v_h== new_y:
+                                        N.append(new_pt)
+
 
                         bw_points +=selected_pt
                         #print bw_points
@@ -1607,6 +1619,7 @@ class New_layout_engine():
             cs_island = Island()
             cs_island.name = island.name
             elements = island.elements
+            cs_island.element_names=island.element_names
 
             child = island.child
             cs_elements = []
@@ -1668,22 +1681,36 @@ class New_layout_engine():
 
             cs_island.elements = cs_elements
             cs_island.elements_v=cs_elements_v
+
             if len(child) > 0:
                 for rect in child:
-                    if rect[5][0]=='B':
-                        node_id=cs_elements[0][-1]
-                        r = [rect[0], rect[1], rect[2], rect[3], rect[4],node_id]  # type,x,y,width,height, hierarchy_level, parent nodeId
-                        cs_child.append(r)
+                    if self.flexible==False:
+                        if rect[5][0]=='B':
+                            node_id=cs_elements[0][-1]
+                            r = [rect[0], rect[1], rect[2], rect[3], rect[4],node_id]  # type,x,y,width,height, hierarchy_level, parent nodeId
+                            cs_child.append(r)
 
-                        cs_island.child_names.append(rect[5])
+                            cs_island.child_names.append(rect[5])
 
+                        else:
+                            for node in HorizontalNodeList:
+                                for i in node.stitchList:
+                                    if rect[1] == i.cell.x and rect[2] == i.cell.y and rect[3] == i.getWidth() and rect[4] == i.getHeight() and rect[0] == i.cell.type:
+                                        r = [rect[0], rect[1], rect[2], rect[3], rect[4], node.id]  # type,x,y,width,height, hierarchy_level, parent nodeId
+                                        cs_child.append(r)
+                                        cs_mapped_input[rect[5]] = [[rect[1], rect[2], rect[1] + rect[3], rect[2] + rect[4]],[node.id],rect[0], rect[8], i.rotation_index]
+                                        cs_island.child_names.append(rect[5])
                     else:
                         for node in HorizontalNodeList:
                             for i in node.stitchList:
-                                if rect[1] == i.cell.x and rect[2] == i.cell.y and rect[3] == i.getWidth() and rect[4] == i.getHeight() and rect[0] == i.cell.type:
-                                    r = [rect[0], rect[1], rect[2], rect[3], rect[4], node.id]  # type,x,y,width,height, hierarchy_level, parent nodeId
+                                if rect[1] == i.cell.x and rect[2] == i.cell.y and rect[3] == i.getWidth() and rect[
+                                    4] == i.getHeight() and rect[0] == i.cell.type:
+                                    r = [rect[0], rect[1], rect[2], rect[3], rect[4],
+                                         node.id]  # type,x,y,width,height, hierarchy_level, parent nodeId
                                     cs_child.append(r)
-                                    cs_mapped_input[rect[5]] = [[rect[1], rect[2], rect[1] + rect[3], rect[2] + rect[4]],[node.id],rect[0], rect[8], i.rotation_index]
+                                    cs_mapped_input[rect[5]] = [
+                                        [rect[1], rect[2], rect[1] + rect[3], rect[2] + rect[4]], [node.id], rect[0],
+                                        rect[8], i.rotation_index]
                                     cs_island.child_names.append(rect[5])
 
 
@@ -1790,7 +1817,7 @@ class New_layout_engine():
 
         data = []
 
-        for k, v in Layout_Rects.items():
+        for k, v in list(Layout_Rects.items()):
             for R_in in v:
                 data.append(R_in)
 
@@ -1834,7 +1861,7 @@ class New_layout_engine():
             j = 0
         else:
             j = count
-        for k, v in Total_H.items():
+        for k, v in list(Total_H.items()):
             for c in range(len(v)):
                 data = []
                 Rectangles = v[c]
@@ -1846,7 +1873,7 @@ class New_layout_engine():
                         if i[4] == t:
                             type_ind = type.index(t)
                             colour = colors[type_ind]
-                            if type[type_ind] in self.min_dimensions:
+                            if type[type_ind] in self.min_dimensions :
                                 if i[-1]==1 or i[-1]==3:  # rotation_index
                                     h = self.min_dimensions[t][0][0]
                                     w = self.min_dimensions[t][0][1]
@@ -1857,27 +1884,39 @@ class New_layout_engine():
                                 parent_type=self.min_dimensions[t][1]
                                 p_type_ind = type.index(parent_type)
                                 p_colour = colors[p_type_ind]
+                                if i[-2]-1>=0:
+                                    p_z_order=i[-2]-1
+                                else:
+                                    p_z_order=1
                             else:
                                 w = None
                                 h = None
-                    if w == None and h == None:
-                        R_in = [i[0], i[1], i[2], i[3], colour, i[-2], 'None', 'None'] # i[-2]=zorder
+                    if (w == None and h == None) :
+                        R_in = [i[0], i[1], i[2], i[3], colour, i[4],i[-2], 'None', 'None'] # i[-2]=zorder
                     else:
 
                         center_x = (i[0] + i[0] + i[2]) / float(2)
                         center_y = (i[1] + i[1] + i[3]) / float(2)
                         x = center_x - w / float(2)
                         y = center_y - h / float(2)
-                        R_in = [i[0], i[1], i[2], i[3], p_colour, 1, '--', 'black']
-                        R_in1 = [x, y, w, h, colour, i[-2], 'None', 'None']
+                        R_in = [i[0], i[1], i[2], i[3], p_colour,i[4], p_z_order, '--', 'black']
+                        R_in1 = [x, y, w, h, colour,i[4], i[-2], 'None', 'None']
                         data.append(R_in1)
                     data.append(R_in)
                 data.append([k[0], k[1]])
 
                 l_data = [j, data]
+                #print(l_data)
                 directory = os.path.dirname(db)
                 temp_file = directory + '/out.txt'
-                with open(temp_file, 'wb') as f:
+                with open(temp_file, 'w+') as f:
+                    #res = [''.join(format(ord(i), 'b') for i in data)]
+                    
+                    #for item in data:
+                        #line=[str(i).encode('utf-8') for i in item]
+                        #line=[i for i in item]
+                    #line.append('\n')
+                    #f.write(json.dumps(line))
                     f.writelines(["%s\n" % item for item in data])
                 conn = create_connection(db)
                 with conn:
@@ -1943,7 +1982,7 @@ def plot_layout(Layout_Rects,level,min_dimensions=None,Min_X_Loc=None,Min_Y_Loc=
     else:
 
 
-        for k,v in Layout_Rects.items():
+        for k,v in list(Layout_Rects.items()):
 
             if k=='H':
                 Total_H = {}
@@ -1975,7 +2014,7 @@ def plot_layout(Layout_Rects,level,min_dimensions=None,Min_X_Loc=None,Min_Y_Loc=
                     Total_H.setdefault(key,[])
                     Total_H[(max_x,max_y)].append(Rectangles)
         plot = 0
-        for k,v in Total_H.items():
+        for k,v in list(Total_H.items()):
 
             for i in range(len(v)):
 
@@ -1996,14 +2035,15 @@ def plot_layout(Layout_Rects,level,min_dimensions=None,Min_X_Loc=None,Min_Y_Loc=
                             type_ind = type.index(t)
                             colour = colors[type_ind]
 
-                            if type[type_ind] in min_dimensions:
+                            if type[type_ind] in min_dimensions and min_dimensions[t][0]!=i[2] and min_dimensions[t][1]!=i[3] :
 
                                 w=min_dimensions[t][0]
                                 h=min_dimensions[t][1]
                             else:
+                                
                                 w=None
                                 h=None
-                    if w==None and h==None:
+                    if (w==None and h==None ) or (w==i[2] and h==i[3]):
 
                         R= matplotlib.patches.Rectangle(
                                 (i[0], i[1]),  # (x,y)
@@ -2101,7 +2141,7 @@ def Sym_to_CS(input_rects,Htree,Vtree):
                     i.name=j.name
                     if node.parent!=None:
                         for m in ALL_RECTS['H']:
-                            for k,v in m.items():
+                            for k,v in list(m.items()):
                                 if v[0].nodeId==node.id:
                                     i.parent_name=v[0].name
 
@@ -2124,7 +2164,7 @@ def Sym_to_CS(input_rects,Htree,Vtree):
                     i.name=j.name
                     if node.parent!=None:
                         for m in ALL_RECTS['V']:
-                            for k,v in m.items():
+                            for k,v in list(m.items()):
                                 if v[0].nodeId==node.id:
                                     i.parent_name=v[0].name
                     if node.parent==None:

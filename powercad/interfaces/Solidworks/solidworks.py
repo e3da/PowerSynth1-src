@@ -111,7 +111,7 @@ def output_solidworks_vbscript(md, output_filename, data_dir, final_dir):
     MaterialLib += custom_material.format("Attach", SolderMatName, SolderDensity, SolderThermal, SolderHeat)
     # add material - Device (Die)
     DieMatName = ""
-    for index in xrange(len(md.devices)):
+    for index in range(len(md.devices)):
         die = md.devices[index]
         DieMatNameNew = die.device_instance.device_tech.properties.name
         if DieMatNameNew != DieMatName:
@@ -122,7 +122,7 @@ def output_solidworks_vbscript(md, output_filename, data_dir, final_dir):
             DieMatName = DieMatNameNew
     # add material - dieattach
     DieAttachMatName = ""
-    for index in xrange(len(md.devices)):
+    for index in range(len(md.devices)):
         DieAttachMatNameNew = die.device_instance.attach_tech.properties.name    
         if DieAttachMatNameNew != DieAttachMatName and DieAttachMatNameNew != SolderMatName:
             DieAttachThermal = die.device_instance.attach_tech.properties.thermal_cond
@@ -183,7 +183,7 @@ def output_solidworks_vbscript(md, output_filename, data_dir, final_dir):
     zpos += DielectricZSize
 
     # Trace Creation
-    for index in xrange(len(md.traces)):
+    for index in range(len(md.traces)):
         trace = md.traces[index]
         trace.scale(0.001) # Convert to meters
         trace.translate(sub_origin_x, sub_origin_y)
@@ -195,7 +195,7 @@ def output_solidworks_vbscript(md, output_filename, data_dir, final_dir):
     zpos += MetalZSize
     
     # Device(die) Creation
-    for index in xrange(len(md.devices)):
+    for index in range(len(md.devices)):
         # die specific coordinates
         die = md.devices[index]
         (DieWidth, DieLength, DieThick) = die.device_instance.device_tech.dimensions

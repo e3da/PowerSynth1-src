@@ -87,7 +87,7 @@ if __name__ == '__main__':
     
     topology=[E1,E2,E3,E4]    
     for layers in topology:
-        print layers.get_type()
+        print(layers.get_type())
     
     
         

@@ -28,7 +28,7 @@ class Fixed_locations_Dialog(QtGui.QDialog):
         self.x_dynamic_range = {}  # dynamic x range mapped to each x coordinate{x_coord:(x_min,x_max)}
         self.y_dynamic_range = {}  # dynamic y range mapped to each y coordinate{y_coord:(y_min,y_max)}
         self.current_range = {}  # to check if the input coordinate is within the valid range
-        if len(self.parent.input_node_info.keys()) == 0:
+        if len(list(self.parent.input_node_info.keys())) == 0:
             self.setup_initial_range()
             self.inserted_order = []
 
@@ -51,45 +51,45 @@ class Fixed_locations_Dialog(QtGui.QDialog):
 
     #sets up initial range for each node in the layout based on minimum location
     def setup_initial_range(self):
-        x_values = self.Min_X[1].values()
+        x_values = list(self.Min_X[1].values())
         x_values.sort()
         max_x = x_values[-1]
         if self.parent.mode3_width != None and self.parent.mode3_width >= max_x:
             self.x_space = self.parent.mode3_width - max_x
         else:
-            print "Please enter floorplan width greater or equal to minimum width ", float(max_x) / 1000
-        y_values = self.Min_Y[1].values()
+            print("Please enter floorplan width greater or equal to minimum width ", float(max_x) / 1000)
+        y_values = list(self.Min_Y[1].values())
         y_values.sort()
         max_y = y_values[-1]
         if self.parent.mode3_height != None and self.parent.mode3_height >= max_y:
             self.y_space = self.parent.mode3_height - max_y
         else:
-            print "Please enter floorplan height greater or equal to minimum height ", float(max_y) / 1000
+            print("Please enter floorplan height greater or equal to minimum height ", float(max_y) / 1000)
 
-        for k, v in self.parent.graph[1].items():
+        for k, v in list(self.parent.graph[1].items()):
 
-            for k1, v1 in self.Min_X.items():
-                for k2, v2 in v1.items():
+            for k1, v1 in list(self.Min_X.items()):
+                for k2, v2 in list(v1.items()):
 
                     if k2 == v[0]:
                         x_min = v2
                         if self.x_space != None:
                             x_max = v2 + self.x_space
                         else:
-                            print "No horizontal space is allocated"
+                            print("No horizontal space is allocated")
 
                         self.initial_range_x[k] = (x_min, x_max)
                         self.x_init_range[k2] = (x_min, x_max)
                         self.dynamic_range_x[k] = (x_min, x_max)
                         self.x_dynamic_range[k2] = (x_min, x_max)
-                for k1, v1 in self.Min_Y.items():
-                    for k2, v2 in v1.items():
+                for k1, v1 in list(self.Min_Y.items()):
+                    for k2, v2 in list(v1.items()):
                         if k2 == v[1]:
                             y_min = v2
                             if self.y_space != None:
                                 y_max = v2 + self.y_space
                             else:
-                                print "No vertical space is allocated"
+                                print("No vertical space is allocated")
                             self.initial_range_y[k] = (y_min, y_max)
                             self.y_init_range[k2] = (y_min, y_max)
                             self.dynamic_range_y[k] = (y_min, y_max)
@@ -102,22 +102,22 @@ class Fixed_locations_Dialog(QtGui.QDialog):
 
         x_fixed = []
         y_fixed = []
-        if len(self.new_node_dict.keys()) > 0:
-            for k, v in self.new_node_dict.items():
+        if len(list(self.new_node_dict.keys())) > 0:
+            for k, v in list(self.new_node_dict.items()):
                 if v[0] != None:
-                    for k1, v1 in self.node_dict.items():
+                    for k1, v1 in list(self.node_dict.items()):
                         if k1 == k:
                             x_fixed.append(v1[0])
 
                 if v[1] != None:
-                    for k1, v1 in self.node_dict.items():
+                    for k1, v1 in list(self.node_dict.items()):
                         if k1 == k:
                             y_fixed.append(v1[1])
 
         x_fixed.sort()
         y_fixed.sort()
         if len(x_fixed) > 0:
-            for k, v in self.node_dict.items():
+            for k, v in list(self.node_dict.items()):
                 if k == self.current_node:
                     x_fixed.append(v[0])
                     current_x = v[0]
@@ -126,12 +126,12 @@ class Fixed_locations_Dialog(QtGui.QDialog):
             x_fixed.sort()
             if x_fixed.index(current_x) == 0:
                 start = x_fixed[1]
-                for k1, v1 in self.node_dict.items():
+                for k1, v1 in list(self.node_dict.items()):
                     if v1[0] > start:
                         x_fixed.append(v1[0])
             elif x_fixed.index(current_x) == len(x_fixed) - 1:
                 start = x_fixed[-2]
-                for k1, v1 in self.node_dict.items():
+                for k1, v1 in list(self.node_dict.items()):
                     if v1[0] < start:
                         x_fixed.append(v1[0])
 
@@ -140,13 +140,13 @@ class Fixed_locations_Dialog(QtGui.QDialog):
             else:
                 start = x_fixed.index(current_x) - 1
                 end = x_fixed.index(current_x) + 1
-                for k1, v1 in self.node_dict.items():
+                for k1, v1 in list(self.node_dict.items()):
                     if v1[0] < x_fixed[start] or v1[0] > x_fixed[end]:
                         x_fixed.append(v1[0])
                     else:
                         continue
         if len(y_fixed) > 0:
-            for k, v in self.node_dict.items():
+            for k, v in list(self.node_dict.items()):
                 if k == self.current_node:
                     y_fixed.append(v[1])
                     current_y = v[1]
@@ -156,13 +156,13 @@ class Fixed_locations_Dialog(QtGui.QDialog):
             y_fixed.sort()
 
             if y_fixed.index(current_y) == 0:
-                for k1, v1 in self.node_dict.items():
+                for k1, v1 in list(self.node_dict.items()):
                     if v1[1] > y_fixed[1]:
                         y_fixed.append(v1[1])
                     else:
                         continue
             elif y_fixed.index(current_y) == len(y_fixed) - 1:
-                for k1, v1 in self.node_dict.items():
+                for k1, v1 in list(self.node_dict.items()):
                     if v1[1] < y_fixed[-2]:
                         y_fixed.append(v1[1])
                     else:
@@ -170,7 +170,7 @@ class Fixed_locations_Dialog(QtGui.QDialog):
             else:
                 start = y_fixed.index(current_y) - 1
                 end = y_fixed.index(current_y) + 1
-                for k1, v1 in self.node_dict.items():
+                for k1, v1 in list(self.node_dict.items()):
                     if v1[1] < y_fixed[start] or v1[1] > y_fixed[end]:
                         y_fixed.append(v1[1])
                     else:
@@ -189,7 +189,7 @@ class Fixed_locations_Dialog(QtGui.QDialog):
         min_y_change = []
         max_y_change = []
         y_unchange = []
-        for k, v in self.node_dict.items():
+        for k, v in list(self.node_dict.items()):
 
             if x0 != None:
                 if v[0] > self.node_dict[self.current_node][0] and v[0] not in x_fixed:
@@ -220,7 +220,7 @@ class Fixed_locations_Dialog(QtGui.QDialog):
 
                     x_min = self.x_dynamic_range[x][0] + (x0 - self.x_dynamic_range[self.node_dict[self.current_node][0]][0])
                     x_max = self.x_dynamic_range[x][1]
-                    for k, v in self.node_dict.items():
+                    for k, v in list(self.node_dict.items()):
                         if v[0] == x:
                             self.dynamic_range_x[k] = (x_min, x_max)
                             self.x_dynamic_range[x] = (x_min, x_max)
@@ -232,7 +232,7 @@ class Fixed_locations_Dialog(QtGui.QDialog):
 
                     x_min = self.x_dynamic_range[x][0]
                     x_max = (x0 - (self.x_dynamic_range[self.node_dict[self.current_node][0]][0] - x_min))
-                    for k, v in self.node_dict.items():
+                    for k, v in list(self.node_dict.items()):
                         if v[0] == x:
                             self.dynamic_range_x[k] = (x_min, x_max)
                             self.x_dynamic_range[x] = (x_min, x_max)
@@ -241,7 +241,7 @@ class Fixed_locations_Dialog(QtGui.QDialog):
             if len(x_unchange) > 0:
                 for x in x_unchange:
                     x_min = x_max = x0
-                    for k, v in self.node_dict.items():
+                    for k, v in list(self.node_dict.items()):
                         if v[0] == x:
                             self.dynamic_range_x[k] = (x_min, x_max)
                             self.x_dynamic_range[x] = (x_min, x_max)
@@ -254,7 +254,7 @@ class Fixed_locations_Dialog(QtGui.QDialog):
                     y_min = self.y_dynamic_range[y][0] + (
                             y0 - self.y_dynamic_range[self.node_dict[self.current_node][1]][0])
                     y_max = self.y_dynamic_range[y][1]
-                    for k, v in self.node_dict.items():
+                    for k, v in list(self.node_dict.items()):
                         if v[1] == y:
                             self.dynamic_range_y[k] = (y_min, y_max)
                             self.y_dynamic_range[y] = (y_min, y_max)
@@ -264,7 +264,7 @@ class Fixed_locations_Dialog(QtGui.QDialog):
                 for y in max_y_change:
                     y_min = self.y_dynamic_range[y][0]
                     y_max = (y0 - abs(self.y_dynamic_range[self.node_dict[self.current_node][1]][0] - y_min))
-                    for k, v in self.node_dict.items():
+                    for k, v in list(self.node_dict.items()):
                         if v[1] == y:
                             self.dynamic_range_y[k] = (y_min, y_max)
                             self.y_dynamic_range[y] = (y_min, y_max)
@@ -273,7 +273,7 @@ class Fixed_locations_Dialog(QtGui.QDialog):
             if len(y_unchange) > 0:
                 for y in y_unchange:
                     y_min = y_max = y0
-                    for k, v in self.node_dict.items():
+                    for k, v in list(self.node_dict.items()):
                         if v[1] == y:
                             self.dynamic_range_y[k] = (y_min, y_max)
                             self.y_dynamic_range[y] = (y_min, y_max)
@@ -283,24 +283,24 @@ class Fixed_locations_Dialog(QtGui.QDialog):
 
     # dynamically updates the location range upon removal of any fixed location.
     def dynamic_remove(self):
-        if len(self.new_node_dict.keys()) == 0:
-            for k, v in self.x_init_range.items():
+        if len(list(self.new_node_dict.keys())) == 0:
+            for k, v in list(self.x_init_range.items()):
                 self.x_dynamic_range[k] = v
-            for k, v in self.y_init_range.items():
+            for k, v in list(self.y_init_range.items()):
                 self.y_dynamic_range[k] = v
-            for k, v in self.initial_range_x.items():
+            for k, v in list(self.initial_range_x.items()):
                 self.dynamic_range_x[k] = v
-            for k, v in self.initial_range_y.items():
+            for k, v in list(self.initial_range_y.items()):
                 self.dynamic_range_y[k] = v
         else:
 
-            for k, v in self.x_init_range.items():
+            for k, v in list(self.x_init_range.items()):
                 self.x_dynamic_range[k] = v
-            for k, v in self.y_init_range.items():
+            for k, v in list(self.y_init_range.items()):
                 self.y_dynamic_range[k] = v
-            for k, v in self.initial_range_x.items():
+            for k, v in list(self.initial_range_x.items()):
                 self.dynamic_range_x[k] = v
-            for k, v in self.initial_range_y.items():
+            for k, v in list(self.initial_range_y.items()):
                 self.dynamic_range_y[k] = v
 
             Keys = [i for i in self.inserted_order]
@@ -311,7 +311,7 @@ class Fixed_locations_Dialog(QtGui.QDialog):
             for i in range(len(Keys)):
                 x0 = self.new_node_dict[Keys[i]][0]
                 y0 = self.new_node_dict[Keys[i]][1]
-                for k, v in self.node_dict.items():
+                for k, v in list(self.node_dict.items()):
                     if k == Keys[i]:
                         x_fixed.append(v[0])
                         current_x = v[0]
@@ -322,12 +322,12 @@ class Fixed_locations_Dialog(QtGui.QDialog):
                 if len(x_fixed) > 1:
                     if x_fixed.index(current_x) == 0:
                         start = x_fixed[1]
-                        for k1, v1 in self.node_dict.items():
+                        for k1, v1 in list(self.node_dict.items()):
                             if v1[0] > start:
                                 x_fixed.append(v1[0])
                     elif x_fixed.index(current_x) == len(x_fixed) - 1:
                         start = x_fixed[-2]
-                        for k1, v1 in self.node_dict.items():
+                        for k1, v1 in list(self.node_dict.items()):
                             if v1[0] < start:
                                 x_fixed.append(v1[0])
 
@@ -337,12 +337,12 @@ class Fixed_locations_Dialog(QtGui.QDialog):
 
                         start = x_fixed.index(current_x) - 1
                         end = x_fixed.index(current_x) + 1
-                        for k1, v1 in self.node_dict.items():
+                        for k1, v1 in list(self.node_dict.items()):
                             if v1[0] < x_fixed[start] or v1[0] > x_fixed[end]:
                                 x_fixed.append(v1[0])
                             else:
                                 continue
-                for k, v in self.node_dict.items():
+                for k, v in list(self.node_dict.items()):
                     if k == Keys[i]:
                         y_fixed.append(v[1])
                         current_y = v[1]
@@ -351,13 +351,13 @@ class Fixed_locations_Dialog(QtGui.QDialog):
                 y_fixed.sort()
                 if len(y_fixed) > 1:
                     if y_fixed.index(current_y) == 0:
-                        for k1, v1 in self.node_dict.items():
+                        for k1, v1 in list(self.node_dict.items()):
                             if v1[1] > y_fixed[1]:
                                 y_fixed.append(v1[1])
                             else:
                                 continue
                     elif y_fixed.index(current_y) == len(y_fixed) - 1:
-                        for k1, v1 in self.node_dict.items():
+                        for k1, v1 in list(self.node_dict.items()):
                             if v1[1] < y_fixed[-2]:
                                 y_fixed.append(v1[1])
                             else:
@@ -365,7 +365,7 @@ class Fixed_locations_Dialog(QtGui.QDialog):
                     else:
                         start = y_fixed.index(current_y) - 1
                         end = y_fixed.index(current_y) + 1
-                        for k1, v1 in self.node_dict.items():
+                        for k1, v1 in list(self.node_dict.items()):
                             if v1[1] < y_fixed[start] or v1[1] > y_fixed[end]:
                                 y_fixed.append(v1[1])
                             else:
@@ -379,7 +379,7 @@ class Fixed_locations_Dialog(QtGui.QDialog):
                 min_y_change = []
                 max_y_change = []
                 y_unchange = []
-                for k, v in self.node_dict.items():
+                for k, v in list(self.node_dict.items()):
                     if x0 != None:
                         if v[0] > self.node_dict[Keys[i]][0] and v[0] not in x_fixed:
                             min_x_change.append(v[0])
@@ -408,7 +408,7 @@ class Fixed_locations_Dialog(QtGui.QDialog):
                             x_min = self.x_dynamic_range[x][0] + (
                                     x0 - self.x_dynamic_range[self.node_dict[Keys[i]][0]][0])
                             x_max = self.x_dynamic_range[x][1]
-                            for k, v in self.node_dict.items():
+                            for k, v in list(self.node_dict.items()):
                                 if v[0] == x:
                                     self.dynamic_range_x[k] = (x_min, x_max)
                                     self.x_dynamic_range[x] = (x_min, x_max)
@@ -418,7 +418,7 @@ class Fixed_locations_Dialog(QtGui.QDialog):
                         for x in max_x_change:
                             x_min = self.x_dynamic_range[x][0]
                             x_max = (x0 - (self.x_dynamic_range[self.node_dict[Keys[i]][0]][0] - x_min))
-                            for k, v in self.node_dict.items():
+                            for k, v in list(self.node_dict.items()):
                                 if v[0] == x:
                                     self.dynamic_range_x[k] = (x_min, x_max)
                                     self.x_dynamic_range[x] = (x_min, x_max)
@@ -427,7 +427,7 @@ class Fixed_locations_Dialog(QtGui.QDialog):
                     if len(x_unchange) > 0:
                         for x in x_unchange:
                             x_min = x_max = x0
-                            for k, v in self.node_dict.items():
+                            for k, v in list(self.node_dict.items()):
                                 if v[0] == x:
                                     self.dynamic_range_x[k] = (x_min, x_max)
                                     self.x_dynamic_range[x] = (x_min, x_max)
@@ -439,7 +439,7 @@ class Fixed_locations_Dialog(QtGui.QDialog):
                             y_min = self.y_dynamic_range[y][0] + (
                                     y0 - self.y_dynamic_range[self.node_dict[Keys[i]][1]][0])
                             y_max = self.y_dynamic_range[y][1]
-                            for k, v in self.node_dict.items():
+                            for k, v in list(self.node_dict.items()):
                                 if v[1] == y:
                                     self.dynamic_range_y[k] = (y_min, y_max)
                                     self.y_dynamic_range[y] = (y_min, y_max)
@@ -449,7 +449,7 @@ class Fixed_locations_Dialog(QtGui.QDialog):
                         for y in max_y_change:
                             y_min = self.y_dynamic_range[y][0]
                             y_max = (y0 - abs(self.y_dynamic_range[self.node_dict[Keys[i]][1]][0] - y_min))
-                            for k, v in self.node_dict.items():
+                            for k, v in list(self.node_dict.items()):
                                 if v[1] == y:
                                     self.dynamic_range_y[k] = (y_min, y_max)
                                     self.y_dynamic_range[y] = (y_min, y_max)
@@ -458,7 +458,7 @@ class Fixed_locations_Dialog(QtGui.QDialog):
                     if len(y_unchange) > 0:
                         for y in y_unchange:
                             y_min = y_max = y0
-                            for k, v in self.node_dict.items():
+                            for k, v in list(self.node_dict.items()):
                                 if v[1] == y:
                                     self.dynamic_range_y[k] = (y_min, y_max)
                                     self.y_dynamic_range[y] = (y_min, y_max)
@@ -472,8 +472,8 @@ class Fixed_locations_Dialog(QtGui.QDialog):
         if self.parent.input_node_info != None:
             self.new_node_dict = self.parent.input_node_info
         row_id = self.ui.table_Fixedloc.rowCount()
-        if len(self.parent.input_node_info.keys()) > 0:
-            for k, v in self.parent.input_node_info.items():
+        if len(list(self.parent.input_node_info.keys())) > 0:
+            for k, v in list(self.parent.input_node_info.items()):
 
                 self.ui.table_Fixedloc.insertRow(row_id)
                 self.ui.table_Fixedloc.setItem(row_id, 0, QtGui.QTableWidgetItem())
@@ -496,7 +496,7 @@ class Fixed_locations_Dialog(QtGui.QDialog):
         self.node_dict = node_dict
 
         self.ui.cmb_nodes.clear()
-        for i in node_dict.keys():
+        for i in list(node_dict.keys()):
             item = 'Node ' + str(i)
             self.ui.cmb_nodes.addItem(item)
             self.Nodes.append(item)
@@ -529,7 +529,7 @@ class Fixed_locations_Dialog(QtGui.QDialog):
                 self.Y = None
                 node_id = int(i.split()[1])
                 self.current_node = node_id
-                if len(self.new_node_dict.keys()) == 0:
+                if len(list(self.new_node_dict.keys())) == 0:
                     xrange = self.initial_range_x[self.current_node]
                     yrange = self.initial_range_y[self.current_node]
                 else:
@@ -575,7 +575,7 @@ class Fixed_locations_Dialog(QtGui.QDialog):
     def valid_check(self):
         invalid_x = 0
         invalid_y = 0
-        for k, v in self.current_range.items():
+        for k, v in list(self.current_range.items()):
             if k == self.current_node:
                 if self.X != None:
                     if self.X < v[0][0] or self.X > v[0][1]:
@@ -607,8 +607,8 @@ class Fixed_locations_Dialog(QtGui.QDialog):
                 self.ui.table_Fixedloc.item(row_id, 1).setText(str(float(self.X) / 1000))
             else:
                 self.ui.table_Fixedloc.item(row_id, 1).setText('Invalid')
-                print "X value is out of valid range"
-                print "Please remove the row and try again"
+                print("X value is out of valid range")
+                print("Please remove the row and try again")
         else:
             self.ui.table_Fixedloc.item(row_id, 1).setText('None')
 
@@ -619,8 +619,8 @@ class Fixed_locations_Dialog(QtGui.QDialog):
                 self.ui.table_Fixedloc.item(row_id, 2).setText(str(float(self.Y) / 1000))
             else:
                 self.ui.table_Fixedloc.item(row_id, 2).setText('Invalid')
-                print" Y value is out of valid range"
-                print "Please remove the row and try again"
+                print(" Y value is out of valid range")
+                print("Please remove the row and try again")
 
         else:
             self.ui.table_Fixedloc.item(row_id, 2).setText('None')
@@ -634,11 +634,11 @@ class Fixed_locations_Dialog(QtGui.QDialog):
         row_id = self.ui.table_Fixedloc.selectionModel().selectedIndexes()[0].row()
         node_id = str(self.ui.table_Fixedloc.item(row_id, 0).text())
         self.ui.table_Fixedloc.removeRow(selected_row)
-        for k1, v1 in self.parent.input_node_info.items():
+        for k1, v1 in list(self.parent.input_node_info.items()):
             if k1 == int(node_id):
                 del self.parent.input_node_info[k1]
 
-        for k, v in self.new_node_dict.items():
+        for k, v in list(self.new_node_dict.items()):
             if k == int(node_id):
                 del self.new_node_dict[k]
                 self.inserted_order.remove(k)
@@ -652,17 +652,17 @@ class Fixed_locations_Dialog(QtGui.QDialog):
         self.parent.fixed_x_locations = {}
         self.parent.fixed_y_locations = {}
         Xloc = {}
-        for k, v in self.Min_X.items():
-            Xloc = v.keys()
+        for k, v in list(self.Min_X.items()):
+            Xloc = list(v.keys())
         Yloc = {}
-        for k, v in self.Min_Y.items():
-            Yloc = v.keys()
+        for k, v in list(self.Min_Y.items()):
+            Yloc = list(v.keys())
 
-        for k1, v1 in self.new_node_dict.items():
+        for k1, v1 in list(self.new_node_dict.items()):
             self.parent.input_node_info[k1] = v1
-        for k1, v1 in self.parent.input_node_info.items():
+        for k1, v1 in list(self.parent.input_node_info.items()):
             # self.parent.input_node_info[k1] = v1
-            for k, v in self.node_dict.items():
+            for k, v in list(self.node_dict.items()):
                 if k1 == k:
 
                     if v1[0] != None and v1[1] != None:

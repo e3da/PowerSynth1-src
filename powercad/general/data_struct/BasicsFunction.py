@@ -8,7 +8,7 @@ def add_num_to_list(list, num):
         res.append(data)
     return res
 def print_test(a):
-    print a
+    print(a)
     
 def list_mult(list):
     # return multiplication of all list elements

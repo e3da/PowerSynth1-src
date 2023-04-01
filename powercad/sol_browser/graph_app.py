@@ -26,18 +26,15 @@ from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT  as Navigati
 
 from mpl_toolkits.mplot3d import Axes3D
 
-from graphing_form import Ui_GrapheneWindow
-from objective_widget import ObjectiveWidget
+from .graphing_form import Ui_GrapheneWindow
+from .objective_widget import ObjectiveWidget
 from powercad.sol_browser.solution import Solution
 from powercad.sol_browser.solution_lib import SolutionLibrary
 
 from powercad.sym_layout.plot import plot_layout
 from powercad.electro_thermal.ElectroThermal_toolbox import ET_analysis
-from powercad.thermal.analysis import parapower_thermal_analysis
-import csv
 from powercad.spice_handler.spice_export.thermal_netlist_graph import Module_Full_Thermal_Netlist_Graph
-from powercad.export.py_csv import py_csv
-
+from powercad.export.py_csv import py_csv 
 
 class GrapheneWindow(QtGui.QMainWindow):
     def __init__(self, parent):
@@ -155,7 +152,7 @@ class GrapheneWindow(QtGui.QMainWindow):
     # NOTE: THIS METHOD IS NEVER CALLED IN GRAPH_APP.PY; It is called from objective_widget.py
     def set_graph_axis(self, objective, axis):
         #print axis, objective.name_units[0]
-        print "graph axis (previous state): ", "x", self.graph_axis['x'].name_units[0] if self.graph_axis['x'] is not None else "none", "y", self.graph_axis['y'].name_units[0] if self.graph_axis['y'] is not None else "none", "z", self.graph_axis['z'].name_units[0] if self.graph_axis['z'] is not None else "none"
+        print("graph axis (previous state): ", "x", self.graph_axis['x'].name_units[0] if self.graph_axis['x'] is not None else "none", "y", self.graph_axis['y'].name_units[0] if self.graph_axis['y'] is not None else "none", "z", self.graph_axis['z'].name_units[0] if self.graph_axis['z'] is not None else "none")
         # if the check box got checked
         if objective.chkbox_dict[axis].isChecked() is True:            
             # if there is already another objective on this axis
@@ -189,7 +186,7 @@ class GrapheneWindow(QtGui.QMainWindow):
         # if less than 2 axes have been assigned
         if n<2:
             # clear graph
-            print "clearing graph..."
+            print("clearing graph...")
             self.figure.clear()
             # add empty subplot
             self.figure.add_subplot(111)
@@ -198,15 +195,15 @@ class GrapheneWindow(QtGui.QMainWindow):
             #self.figure.suptitle("Select at least two performance parameters.") # ADDS TEXT ABOVE THE GRAPH (CENTERED)
             # draw canvas as specified above (blank plot with text)
             self.canvas.draw() 
-            print "graph cleared."
+            print("graph cleared.")
         else:
             # redraw the graph
             self.draw_graph()
-            print "new graph drawn."
-        print "graph axis (new state): ", "x", self.graph_axis['x'].name_units[0] if self.graph_axis['x'] is not None else "none", "y", self.graph_axis['y'].name_units[0] if self.graph_axis['y'] is not None else "none", "z", self.graph_axis['z'].name_units[0] if self.graph_axis['z'] is not None else "none"
+            print("new graph drawn.")
+        print("graph axis (new state): ", "x", self.graph_axis['x'].name_units[0] if self.graph_axis['x'] is not None else "none", "y", self.graph_axis['y'].name_units[0] if self.graph_axis['y'] is not None else "none", "z", self.graph_axis['z'].name_units[0] if self.graph_axis['z'] is not None else "none")
             
     def save_2D_paretofront_solutions(self):
-        print 'here'    
+        print('here')    
     def draw_graph(self):
         #clear figure
         self.figure.clear()
@@ -311,7 +308,7 @@ class GrapheneWindow(QtGui.QMainWindow):
         
         electrothermal=ET_analysis(thermal_netlist_graph)
         thermal_mdl=electrothermal.ET_formation_1(20e3)
-        filedes='C:\Users\qmle\Desktop\Transistors_data\cpmf_1200_0080B'
+        filedes='C:\\Users\qmle\Desktop\Transistors_data\cpmf_1200_0080B'
         rds_fn='Rdson.csv'
         crss_fn='Crss.csv'
         vth_fn='Vth.csv'
@@ -324,7 +321,7 @@ class GrapheneWindow(QtGui.QMainWindow):
             objective.displayable_data = []
             self.disp_data_indx_map = []
             # filter data inside objective
-            objective.bool_data = map(objective.filter_point,objective.data)
+            objective.bool_data = list(map(objective.filter_point,objective.data))
             
     def filter_graph2(self):
         for data_point in range(0,self.obj_widg[0].data_size):
@@ -352,7 +349,6 @@ class GrapheneWindow(QtGui.QMainWindow):
         p_frontX = [pair[0] for pair in p_front]
         p_frontY = [pair[1] for pair in p_front]
         return p_frontX, p_frontY
-
     def select_solution(self, event):
         # check that there are some indices
         if not len(event.ind): return True
@@ -387,9 +383,6 @@ class GrapheneWindow(QtGui.QMainWindow):
         self.sel_ind=closest_point
         self.draw_graph()
         self.draw_layout_preview(self.sol_index)
-        self.sym_layout.gen_solution_layout(self.sol_index)
-        # TODO: Bug in MATLAB visualization causes the figure window to be destroyed following creation.
-        # parapower_thermal_analysis(self.sym_layout, visualize=1)
 
 
     def draw_layout_preview(self, index):
@@ -456,11 +449,6 @@ class GrapheneWindow(QtGui.QMainWindow):
         if tgt_file[0]!="":
             # send data, file name, and directory to py_csv 
             py_csv(self.solution_library.measure_data, self.solution_library.measure_names_units, tgt_file[0])
-            fname = tgt_file[0]
-            thermal_time_fname = fname[:-4] + "_thermal_model_time.csv"
-            with open(thermal_time_fname, "wb") as myfile:
-                wr = csv.writer(myfile)
-                wr.writerow(self.sym_layout.thermal_timer)
         else: # if name is blank or user clicks 'cancel'
             pass
         

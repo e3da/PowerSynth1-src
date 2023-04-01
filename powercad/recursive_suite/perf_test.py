@@ -20,7 +20,7 @@ def run_test():
     #f = open(dt_string+'.log', 'w')
     #sys.stdout = f
 
-    for k in test_cases_dirs.keys():
+    for k in list(test_cases_dirs.keys()):
         cmd_run = Cmd_Handler()
         cmd_run.new_mode=0
         cmd_run.setup_file(os.path.abspath(test_cases_dirs[k]))
@@ -30,7 +30,7 @@ def run_test():
         os.chdir(work_dir)
         cmd_run.run_parse()
         all_objects = muppy.get_objects()
-        my_types = muppy.filter(all_objects, Type=types.DictType)
+        my_types = muppy.filter(all_objects, Type=dict)
         sum1 = summary.summarize(my_types)
         summary.print_(sum1)
 

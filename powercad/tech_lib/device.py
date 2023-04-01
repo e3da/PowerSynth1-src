@@ -174,7 +174,7 @@ class DevicePage(object):
             save_file(dev,os.path.join(self.sub_dir, dev.name+".p"))
             self.load_page()
         else:
-            print "Error Creating Device"
+            print("Error Creating Device")
             
     def find_device_power_side(self, device):
         """Finds which side the power bondwires are connected on a device (left or right)"""
@@ -187,10 +187,10 @@ class DevicePage(object):
         
         if avg_x <= float(self.ui.DeviceWidthInput.text())*0.5:
             return Device.LEFT_SIDE
-            print 'left side'
+            print('left side')
         else:
             return Device.RIGHT_SIDE
-            print 'right side'
+            print('right side')
    
     def load_device(self):
         if self.ui.DeviceList.currentIndex() > 0:
@@ -261,7 +261,7 @@ class DevicePage(object):
         """Save all the inputs"""    
         if not error:
             self.wire_landings.append(self.get_point_data())
-            print self.wire_landings
+            print(self.wire_landings)
             self.ui.PositionList.clear()
             for landing in self.wire_landings:
                 if landing.bond_type == 1:
@@ -286,10 +286,10 @@ class DevicePage(object):
                     self.ui.PositionList.addItem(str(type+':'+str(landing.position)))
                     
                 else:
-                    print 'bond type is None'
+                    print('bond type is None')
 
         else:
-            print 'wire landing is none'
+            print('wire landing is none')
             self.wire_landings = []
             self.ui.PositionList.clear()
             self._clear_position_form()
@@ -312,8 +312,8 @@ class DevicePage(object):
                 self.ui.PowerButton.setChecked(False)
                 
         elif (self.ui.DeviceList.currentIndex()==0 and self.ui.PositionList.currentIndex()>0):
-            print 'current list index:', self.ui.PositionList.currentIndex()
-            print 'current wire landing list index:', str(self.wire_landings)
+            print('current list index:', self.ui.PositionList.currentIndex())
+            print('current wire landing list index:', str(self.wire_landings))
 #            self.ui.XInput.setText(str(self.wire_landings[self.ui.PositionList.currentIndex()].position[0]))
 #            self.ui.YInput.setText(str(self.wire_landings[self.ui.PositionList.currentIndex()].position[1]))
                 

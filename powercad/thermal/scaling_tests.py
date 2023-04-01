@@ -115,7 +115,7 @@ def solve_TFSM(thermal_geometry):
     test_ratios = []
     test_res = []
     
-    for i in xrange(len(test_w)):
+    for i in range(len(test_w)):
         w = test_w[i]
         l = test_l[i]
         cx, cy = die0.position

@@ -66,7 +66,7 @@ def output_q3d_vbscript(md, filename):
                                        DielectricYSize, DielectricZSize, DielectricMaterial)
     
     # Trace Creation
-    for index in xrange(len(md.traces)):
+    for index in range(len(md.traces)):
         trace = md.traces[index]
         trace.translate(sub_origin_x, sub_origin_y)
         name = "trace" + str(index+1)
@@ -77,7 +77,7 @@ def output_q3d_vbscript(md, filename):
     # Lead Creation- haven't built the case for round yet. Should be a simple addition, but will have to look up circle code
     # as well as fix the off-center issue 
     LeadZPos = TraceZPos+TraceZSize
-    for index in xrange(len(md.leads)): 
+    for index in range(len(md.leads)): 
         lead = md.leads[index]
         LeadCenterX, LeadCenterY = lead.position
         LeadCenterX += sub_origin_x
@@ -85,7 +85,7 @@ def output_q3d_vbscript(md, filename):
         name = "lead" + str(index+1)
         if lead.lead_tech.lead_type == Lead.BUSBAR:
             name2 = "lead_" +str(index+1)
-            print lead.lead_tech.dimensions
+            print(lead.lead_tech.dimensions)
             (LeadWidth, LeadLength, LeadThick, LeadHeight) = lead.lead_tech.dimensions
             # the cases find the orientation of the lead. This makes the top part of the lead build in the right direction,
             # into the rectangle it is placed on
@@ -139,7 +139,7 @@ def output_q3d_vbscript(md, filename):
         
     '''
     # Bondwire Creation
-    for index in xrange(len(md.bondwires)):
+    for index in range(len(md.bondwires)):
         bw = md.bondwires[index]
         BwXPos, BwYPos = bw.positions[0]
         BwDiam = bw.eff_diameter
@@ -344,4 +344,4 @@ if __name__ == '__main__':
     sym_layout.gen_solution_layout(58)
     md = ModuleDesign(sym_layout)
     output_q3d_vbscript(md, '../../../export_data/q3d_out.vbs')
-    print "finished."
+    print("finished.")

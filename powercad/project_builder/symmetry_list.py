@@ -37,7 +37,7 @@ class SymmetryItem(object): #done
             obj.constraint = None
 
         # remove color from associated elements
-        for patch, symbolic in patch_dict.items():
+        for patch, symbolic in list(patch_dict.items()):
             if symbolic in self.symmetry_list:
                 if patch.window == self.SymmUI.parent.SYMMETRY_PLOT or\
                    patch.window == self.SymmUI.parent.CONSTRAINT_PLOT:
@@ -125,7 +125,7 @@ class SymmetryListUI(object): #done
             return
             
         # get free color from color wheel
-        for i in xrange(len(self.color_wheel)):
+        for i in range(len(self.color_wheel)):
             if not self.used_colors[i]:
                 color_index = i
                 break
@@ -143,7 +143,7 @@ class SymmetryListUI(object): #done
             self.project.symb_layout.symmetries.append(symmetry_list)
         else:
             # color objects in symmetry list the designated color
-            for patch, symbolic in patch_dict.items():
+            for patch, symbolic in list(patch_dict.items()):
                 if symbolic in symmetry_list:
                     if patch.window == self.parent.SYMMETRY_PLOT or \
                        patch.window == self.parent.CONSTRAINT_PLOT:

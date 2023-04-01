@@ -8,7 +8,7 @@ from copy import copy
 
 from powercad.design.solution_structures import DeviceSolution, LeadSolution, BondwireSolution
 from powercad.general.data_struct.util import translate_pt
-# from powercad.sym_layout.symbolic_layout import build_test_layout
+from powercad.sym_layout.symbolic_layout import build_test_layout
 
 class ModuleDesignError(Exception):
     def __init__(self, msg):
@@ -79,7 +79,7 @@ class ModuleDesign(object):
 
         # Leads
         self.leads = []
-        self.lead_id = []
+        self.lead_id=[]
         for lead in layout.leads:
             cpos = lead.center_position
             # Translate points over by ledge_width (reference to substrate corner)
@@ -92,7 +92,7 @@ class ModuleDesign(object):
         for wire in layout.bondwires:
             if (wire.device is not None) and (wire.land_pt is not None):
                 dev = wire.device
-                for pt_index in xrange(len(wire.start_pts)):
+                for pt_index in range(len(wire.start_pts)):
                     pt1 = translate_pt(wire.start_pts[pt_index], ledge_width, ledge_width)
                     pt2 = translate_pt(wire.end_pts[pt_index], ledge_width, ledge_width)
                     eff_diam = wire.tech.eff_diameter()
@@ -132,4 +132,4 @@ if __name__ == '__main__':
     sym_layout = build_test_layout()
     md = ModuleDesign(sym_layout)
     for dev in md.devices:
-        print dev.position
+        print(dev.position)

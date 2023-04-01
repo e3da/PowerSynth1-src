@@ -10,12 +10,12 @@ import os
 import sys
 import time
 import traceback
-import pickle
+
 import numpy as np
 from PySide import QtGui
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
-from powercad.spice_handler.spice_import.NetlistImport import Netlist, Netlist_export_ADS
+from powercad.spice_handler.spice_import.NetlistImport import Netlist, Netlis_export_ADS
 from powercad.spice_handler.spice_export.thermal_netlist_graph import Module_Full_Thermal_Netlist_Graph
 from powercad.spice_handler.spice_export.netlist_graph import Module_SPICE_netlist_graph_v2, Module_SPICE_lumped_graph
 from powercad.design.module_design import ModuleDesign
@@ -88,7 +88,7 @@ class SolutionWindow(QtGui.QWidget):
         elif selected== 'Solidworks':
             self.export_solidworks()
         elif selected == 'electrical_mdl netlist ':
-            self.export_spice_parasitics()
+            self.export_spice_parasitics(self.sym_layout)
         elif selected == 'Thermal netlist':
             self.export_spice_thermal()
         elif selected == 'FastHenry':
@@ -106,28 +106,26 @@ class SolutionWindow(QtGui.QWidget):
                 QtGui.QMessageBox.about(None, "FH Script", "Export successful.")
             except:
                 QtGui.QMessageBox.warning(None, "FH Script", "Failed to export FH script! Check log/console.")
-                print traceback.format_exc()
+                print(traceback.format_exc())
 
     def export_empro(self):
-        fn = QtGui.QFileDialog.getSaveFileName(self, dir=self.default_save_dir, options=QtGui.QFileDialog.ShowDirsOnly)
-        print fn
+        fn = QtGui.QFileDialog.getSaveFileName(self, dir=self.default_save_dir,options=QtGui.QFileDialog.ShowDirsOnly)
+        print(fn)
         outname = fn[0]
 
         if len(outname) > 0:
             try:
                 md = ModuleDesign(self.sym_layout)
-                # TODO for testing, export module design object
-                # pickle.dump(md, open(outname + '.p', 'wb'))
                 empro_script = EMProScript(md, outname+".py")
                 empro_script.generate()
                 QtGui.QMessageBox.about(None, "EMPro Script", "Export successful.")
             except:
                 QtGui.QMessageBox.warning(None, "EMPro Script", "Failed to export script! Check log/console.")
-                print traceback.format_exc()
+                print(traceback.format_exc())
 
     def export_q3d(self):
         fn = QtGui.QFileDialog.getSaveFileName(self,dir=self.default_save_dir, options=QtGui.QFileDialog.ShowDirsOnly)
-        print fn
+        print(fn)
         outname = fn[0]
 
         if len(outname) > 0:
@@ -137,7 +135,7 @@ class SolutionWindow(QtGui.QWidget):
                 QtGui.QMessageBox.about(None, "Q3D VB Script", "Export successful.")
             except:
                 QtGui.QMessageBox.warning(None, "Q3D VB Script", "Failed to export vb script! Check log/console.")
-                print traceback.format_exc()
+                print(traceback.format_exc())
 
     def export_solidworks(self):
         version=SolidworkVersionCheckDialog(self)
@@ -147,7 +145,7 @@ class SolutionWindow(QtGui.QWidget):
         outname = fn[0]
 
         if len(outname) > 0:
-            print 'exporting solidworks file'
+            print('exporting solidworks file')
             try:
                 md = ModuleDesign(self.sym_layout)
 
@@ -156,35 +154,34 @@ class SolutionWindow(QtGui.QWidget):
                 QtGui.QMessageBox.about(None, "SolidWorks Script", "Export successful.")
             except:
                 QtGui.QMessageBox.warning(None, "SolidWorks Script", "Failed to export vb script! Check log/console.")
-                print traceback.format_exc()
+                print(traceback.format_exc())
 
-    def export_spice_parasitics(self):
+    def export_spice_parasitics(self,sym_layout):
         fn = QtGui.QFileDialog.getSaveFileName(self,dir=self.default_save_dir, options=QtGui.QFileDialog.ShowDirsOnly)
         outname = fn[0]
 
         if len(outname) > 0:
-            print 'exporting spice electrical parasitics netlist file'
+            print('exporting spice electrical parasitics netlist file')
             try:
                 #spice_netlist_graph = Module_SPICE_netlist_graph_v2(os.path.basename(outname), self.sym_layout, self.solution.index, template_graph=None)
                 #spice_netlist_graph.write_SPICE_subcircuit(os.path.dirname(outname))
 
-                self.sym_layout.gen_solution_layout(self.solution.index)
                 spice_netlist=Circuit()
                 self.sym_layout.build_lumped_graph()
                 spice_netlist._graph_read(self.sym_layout.lumped_graph)
-                ads_net = Netlist_export_ADS(df=spice_netlist.df_circuit_info, pm=spice_netlist.portmap)
+                ads_net = Netlis_export_ADS(df=spice_netlist.df_circuit_info, pm=spice_netlist.portmap)
                 ads_net.export_ads2(outname)
                 QtGui.QMessageBox.about(None, "SPICE electrical_mdl Parasitics Netlist", "Export successful.")
             except:
                 QtGui.QMessageBox.warning(None, "SPICE electrical_mdl Parasitics Netlist", "Failed to export netlist! Check log/console.")
-                print traceback.format_exc()
+                print(traceback.format_exc())
 
     def Run_Sucessive_approximation(self):
         outname='aaa'
         thermal_netlist_graph = Module_Full_Thermal_Netlist_Graph(os.path.basename(outname), self.sym_layout, self.solution.index)
         electrothermal=ET_analysis(thermal_netlist_graph)
         thermal_mdl=electrothermal.ET_formation_1(20e3)
-        filedes='C:\Users\qmle\Desktop\Transistors_data\cpmf_1200_0080B'
+        filedes='C:\\Users\qmle\Desktop\Transistors_data\cpmf_1200_0080B'
         rds_fn='Rdson.csv'
         crss_fn='Crss.csv'
         vth_fn='Vth.csv'
@@ -200,20 +197,20 @@ class SolutionWindow(QtGui.QWidget):
         start=time.time()
         electrothermal.sucessive_approximation(Po, parameters)
         runtime=time.time()-start
-        print 'runtime: ' + str(runtime)
+        print('runtime: ' + str(runtime))
     def export_spice_reduced_parasitics(self): #sxm; new function added (template based on export_spice_parasitics() function defined above)
         fn = QtGui.QFileDialog.getSaveFileName(self, options=QtGui.QFileDialog.ShowDirsOnly)
         outname = fn[0]
 
         if len(outname) > 0:
-            print 'exporting spice electrical parasitics (reduced) netlist file'
+            print('exporting spice electrical parasitics (reduced) netlist file')
             try:
                 spice_reduced_netlist_graph = Module_SPICE_lumped_graph(os.path.basename(outname), self.sym_layout, self.solution.index, template_graph=None)
                 spice_reduced_netlist_graph.write_SPICE_reduced_subcircuit(os.path.dirname(outname))
                 QtGui.QMessageBox.about(None, "SPICE electrical_mdl Parasitics (reduced) Netlist", "Export successful.")
             except:
                 QtGui.QMessageBox.warning(None, "SPICE electrical_mdl Parasitics (reduced) Netlist", "Failed to export netlist! Check log/console.")
-                print traceback.format_exc()
+                print(traceback.format_exc())
 
 
     def export_spice_thermal(self):
@@ -221,7 +218,7 @@ class SolutionWindow(QtGui.QWidget):
         outname = fn[0]
 
         if len(outname) > 0:
-            print 'exporting spice thermal netlist file'
+            print('exporting spice thermal netlist file')
             try:
                 thermal_netlist_graph = Module_Full_Thermal_Netlist_Graph(os.path.basename(outname), self.sym_layout, self.solution.index)
                 #electrothermal=ET_analysis(thermal_netlist_graph)
@@ -229,7 +226,7 @@ class SolutionWindow(QtGui.QWidget):
                 QtGui.QMessageBox.about(None, "SPICE Thermal Netlist", "Export successful.")
             except:
                 QtGui.QMessageBox.warning(None, "SPICE Thermal Netlist", "Failed to export netlist! Check log/console.")
-                print traceback.format_exc()
+                print(traceback.format_exc())
 
 #    def electro_thermal_simulation(self):
 

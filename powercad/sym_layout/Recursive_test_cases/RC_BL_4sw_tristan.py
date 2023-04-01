@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import pandas as pd
 
-from powercad.spice_handler.spice_import.NetlistImport import Netlist, Netlist_export_ADS
+from powercad.spice_handler.spice_import.NetlistImport import Netlist, Netlis_export_ADS
 from powercad.design.module_data import gen_test_module_data_BL_te
 from powercad.design.module_design import ModuleDesign
 from powercad.general.settings import settings
@@ -75,8 +75,8 @@ def make_test_bonds(df, bw_sig, bw_power):
     for row in range(8):
         for col in range(5):
             df.loc[row, col] = bw_data[row][col]
-    print df
-    print df.iloc[0, 0]
+    print(df)
+    print(df.iloc[0, 0])
     return df
 
 def make_test_design_values(sym_layout, dimlist, default):
@@ -132,7 +132,7 @@ def add_test_measures(sym_layout):
 
     m3 = ThermalMeasure(ThermalMeasure.FIND_MAX, devices, "Max Temp.", 'TFSM_MODEL')
     sym_layout.perf_measures.append(m3)
-    print "perf", sym_layout.perf_measures
+    print("perf", sym_layout.perf_measures)
 
 
 def setup_model(symlayout):
@@ -236,15 +236,15 @@ def make_test_setup2(f,directory):
     setup_model(sym_layout)
     #sym_layout.optimize()
     individual=[11.374, 11.2557, 17.265866846201355, 15.45, 2.0, 4.611548973825832, 3.77, 0.059880225267239205, 0.3988074701262332, 0.4894976020309876, 1.0]
-    print len(individual)
-    print 'individual', individual
-    print "opt_to_sym_index", sym_layout.opt_to_sym_index
+    print(len(individual))
+    print('individual', individual)
+    print("opt_to_sym_index", sym_layout.opt_to_sym_index)
     sym_layout.rev_map_design_vars(individual)
     sym_layout.generate_layout()
     plot_layout(sym_layout)
     #plt.show()
 
-    mdl = load_file("C:\Users\qmle\Desktop\Testing\FastHenry\Fasthenry3_test_gp\WorkSpace//high_f_bl.rsmdl")
+    mdl = load_file("C:\\Users\qmle\Desktop\Testing\FastHenry\Fasthenry3_test_gp\WorkSpace//high_f_bl.rsmdl")
     sym_layout.mdl_type['E'] = 'RS'
     sym_layout.set_RS_model(mdl)
 
@@ -258,7 +258,7 @@ def make_test_setup2(f,directory):
     #netlist.form_assignment_list_fh()
     #external=netlist.get_external_list_fh()
     #output_fh_script(sym_layout,"C:\Users\qmle\Desktop\Balancing\Mutual_test\layout cases//BL_layout_pos_TE",external=external)
-    ads_net = Netlist_export_ADS(df=this_circuit.df_circuit_info, pm=this_circuit.portmap)
+    ads_net = Netlis_export_ADS(df=this_circuit.df_circuit_info, pm=this_circuit.portmap)
     ads_net.export_ads2('RC_BL_4sw_TE'+'_'+str(f)+'kHz'+'.net')
     empro_script = EMProScript(ModuleDesign(sym_layout), 'RC_BL_4sw_TE' + '_' + str(f) + 'kHz'+'.py')
     empro_script.generate()
@@ -267,9 +267,9 @@ def make_test_setup2(f,directory):
 def make_netlist():
     netlist = Netlist('Netlist//H_bridge4sw.txt')
     netlist.form_assignment_list_fh()
-    net_data = read_result("C:\Users\qmle\Desktop\Balancing\Mutual_test\layout cases//fh_results//BL_layout_pos1_200.inp.M.txt")
+    net_data = read_result("C:\\Users\qmle\Desktop\Balancing\Mutual_test\layout cases//fh_results//BL_layout_pos1_200.inp.M.txt")
     df, pm = netlist.get_assign_df()
-    ads_net = Netlist_export_ADS(df=df, pm=pm)
+    ads_net = Netlis_export_ADS(df=df, pm=pm)
     ads_net.import_net_data(net_data)
     ads_net.export_ads('RC_BL_4sw_pos1_200.net')
 

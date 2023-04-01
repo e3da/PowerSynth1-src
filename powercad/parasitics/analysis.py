@@ -23,8 +23,8 @@ def capt_analysis(lumped_graph,src_node,sink_node,node_dict,node_type=None):
     string = ''
     string += 'src node:' + str(src_node)
     string += 'sink node:' + str(sink_node)
-    print string
-    print src_node, sink_node
+    print(string)
+    print(src_node, sink_node)
     if sink_node is None:
         raise Exception("No sink node was specified! Sink node is None!")
 
@@ -38,7 +38,7 @@ def capt_analysis(lumped_graph,src_node,sink_node,node_dict,node_type=None):
         topology_checked = True
     all_paths=nx.all_simple_paths(lumped_graph,src_node,sink_node)
     for path in all_paths:
-        print path
+        print(path)
 def parasitic_analysis(lumped_graph, src_node, sink_node, measure_type,node_dict,node_type=None):
     ''' Measures the total path inductance, resistance, or capacitance from
         src_node to sink_node of a lumped element graph (lumped_graph).

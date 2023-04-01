@@ -51,7 +51,7 @@ class ParticleSwarm:
         self.particles = list()
         
         hist_temp = []    
-        for i in xrange(self.pso_config.num_particles):
+        for i in range(self.pso_config.num_particles):
             des = self.design_imp(self.design_config)
             p = Particle(des)
             self.particles.append(p)
@@ -98,7 +98,7 @@ class ParticleSwarm:
                 pi = p.best_position
                  
                 # Update Velocity and Position
-                for d in xrange(design_config.num_dimensions):
+                for d in range(design_config.num_dimensions):
                     # Find new velocity
                     vi[d] = wV*vi[d] + rP*(pi[d] - xi[d]) + rG*(self.g_best_position[d] - xi[d])
                     
@@ -138,13 +138,13 @@ class ParticleSwarm:
                         
 
 if __name__ == '__main__':
-    from design_2d import Design2DConfig, Design2D
-    import pso_config
+    from .design_2d import Design2DConfig, Design2D
+    from . import pso_config
     
     config = Design2DConfig()
     opt = ParticleSwarm(Design2D, config, pso_config)
     opt.setup()
     opt.run()
     
-    print opt.particle_hist
+    print(opt.particle_hist)
     

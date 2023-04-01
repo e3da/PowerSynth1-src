@@ -2179,4 +2179,4 @@ class Ui_Wizard(object):
         self.SaveBaseplateLabel.setText(QtGui.QApplication.translate("Wizard", "Save Baseplate as:", None, QtGui.QApplication.UnicodeUTF8))
         self.SaveBaseplate.setText(QtGui.QApplication.translate("Wizard", "Save", None, QtGui.QApplication.UnicodeUTF8))
 
-import images_rc
+from . import images_rc

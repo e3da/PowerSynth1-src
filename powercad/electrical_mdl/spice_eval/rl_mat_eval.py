@@ -10,7 +10,7 @@ class diag_prec:
         self.shape = A.shape
         n = self.shape[0]
         self.dinv = np.empty(n)
-        for i in xrange(n):
+        for i in range(n):
             self.dinv[i] = 1.0 / A[i, i]
 
     def precon(self, x, y):
@@ -121,6 +121,7 @@ class RL_circuit():
         self.pnode[name] = pnode
         self.nnode[name] = nnode
         self.value[name] = val
+        # name,pnode,nnode,val
 
     def _graph_add_M(self,name,L1_name,L2_name,val):
         self.element.append(name)
@@ -142,7 +143,7 @@ class RL_circuit():
         self.value[name] = float(val)
 
 
-    def _add_termial(self, node, ground=0,val=1e-6):
+    def _add_termial(self, node, ground=0,val=1e-4 + 1e-10j):
         #newport = self.node_dict[node]
         Equiv_name = 'Bt_' + str(node)
         self._graph_add_comp(Equiv_name, node, ground, val)
@@ -183,9 +184,9 @@ class RL_circuit():
             n2 = edge[1]
             edged = edge[2]['data']
             data = edged.data
-            node1 = graph.node[n1]['node']
+            node1 = graph.nodes[n1]['node']
             pos1 = node1.pos
-            node2 = graph.node[n2]['node']
+            node2 = graph.nodes[n2]['node']
 
             pos2 = node2.pos
             node1 = n1
@@ -213,9 +214,9 @@ class RL_circuit():
                         n_node = node1
                         p_node = node2
 
-            if p_node not in self.node_dict.keys():
+            if p_node not in list(self.node_dict.keys()):
                 self.node_dict[p_node] = p_node
-            if n_node not in self.node_dict.keys():
+            if n_node not in list(self.node_dict.keys()):
                 self.node_dict[n_node] = n_node
             ''' Since an edge will have R and L together we can group them in one value to reduce the matrix'''
             RLname = edge[2]['data'].name
@@ -228,9 +229,6 @@ class RL_circuit():
             self.R_count+=1
             branch_val = 1j*Lval+Rval
             self._graph_add_comp("B{0}".format(RLname), p_node, n_node, branch_val)
-
-
-
 
     def m_graph_read(self,m_graph,debug =False):
         '''
@@ -246,7 +244,6 @@ class RL_circuit():
             for edge in m_graph.edges(data=True):
                 M_val = edge[2]['attr']['Mval']
                 #if not M_val in all_vals:
-
                 all_vals.append(M_val)
             all_vals.sort()
             plt.bar(np.arange(len(all_vals)),all_vals,align='center', alpha=0.5)
@@ -273,7 +270,7 @@ class RL_circuit():
 
     def build_current_info(self):
         ''' collect all branches'''
-        for i in xrange(len(self.element)):
+        for i in range(len(self.element)):
             # process all the elements creating unknown currents
             el = self.element[i]
             x = self.element[i][0]  # get 1st letter of element name
@@ -320,7 +317,7 @@ class RL_circuit():
         return v_port/self.Rport
 
     def find_vname(self, name):
-        for i in xrange(len(self.cur_element)):
+        for i in range(len(self.cur_element)):
             el = self.cur_element[i]
             if name == el:
                 n1 = self.cur_pnode[name]
@@ -333,7 +330,7 @@ class RL_circuit():
         s = self.s
         sn =0
 
-        for i in xrange(len(self.element)):
+        for i in range(len(self.element)):
             el = self.element[i]
 
             x = el[0]
@@ -424,25 +421,25 @@ class RL_circuit():
 
         # ERR CHECK
         if sn != i_unk:
-            print('source number, sn={:d} not equal to i_unk={:d} in matrix B and C'.format(sn, i_unk))
+            print(('source number, sn={:d} not equal to i_unk={:d} in matrix B and C'.format(sn, i_unk)))
 
 
     def V_mat(self, num_nodes):
         # generate the V matrix
-        for i in xrange(num_nodes):
+        for i in range(num_nodes):
             self.V[i] = 'v{0}'.format(i + 1)
 
     def J_mat(self):
         # The J matrix is an mx1 matrix, with one entry for each i_unk from a source
         # sn = 0   # count i_unk source number
         # oan = 0   #count op amp number
-        for i in xrange(len(self.cur_element)):
+        for i in range(len(self.cur_element)):
             # process all the unknown currents
             self.J[i] = 'I_{0}'.format(self.cur_element[i])
 
     def Ii_mat(self):
         if self.cur_src!=[]:
-            for i in xrange(len(self.cur_src)):
+            for i in range(len(self.cur_src)):
                 el = self.cur_src[i]
                 n1 = self.src_pnode[el]
                 n2 = self.src_nnode[el]
@@ -455,12 +452,12 @@ class RL_circuit():
     def Vi_mat(self):
         # generate the E matrix
         sn = 0  # count source number
-        for i in xrange(len(self.cur_element)):
+        for i in range(len(self.cur_element)):
             # process all the passive elements
             el = self.cur_element[i]
             x = el[0]
             if x == 'V':
-                print "added V source"
+                print ("added V source")
                 self.Vi[sn] = self.cur_value[el]
                 sn += 1
             else:
@@ -530,13 +527,14 @@ class RL_circuit():
             A = self.D
 
         t = time.time()
-        #self.debug_singular_mat_issue(A)
+        #self.debug_singular_mat_issue(A) # uncomment to debug
 
         method=1
 
         if method ==1:
             self.results= scipy.sparse.linalg.spsolve(A,Z)
         elif method ==2:
+            print(A)
             self.results= np.linalg.solve(A,Z)
         elif method ==3:
             self.results = scipy.linalg.solve(A, Z)
@@ -545,23 +543,23 @@ class RL_circuit():
         elif method ==5: # direct inverse method.
             self.results = np.linalg.inv(A)*Z
             self.results=np.squeeze(np.asarray(self.results))
-        #print "solve", time.time() - t, "s"
+        #print(("solve", time.time() - t, "s"))
 
         #print np.shape(self.A)
         #print "RESULTS",self.results
         if debug: # for debug and time analysis
-            print 'RL', np.shape(A)
+            print(('RL', np.shape(A)))
             np.savetxt("M.csv", self.M_t, delimiter=",")
             np.savetxt("Mt.csv", self.M, delimiter=",")
             np.savetxt("D.csv", self.D, delimiter=",")
-            print self.J
-            print self.V
-            print self.Z
+            print((self.J))
+            print((self.V))
+            print((self.Z))
 
             np.savetxt("M.csv", self.M_t, delimiter=",")
             np.savetxt("A.csv", self.A, delimiter=",")
             np.savetxt("Z.csv", Z, delimiter=",")
-            print "solve", time.time() - t, "s"
+            print(("solve", time.time() - t, "s"))
         self.results_dict={}
         rlmode=True
 
@@ -571,10 +569,10 @@ class RL_circuit():
             names = self.X
         elif case == "no_voltage":
             names = self.J
-            print self.J.shape
+            print((self.J.shape))
         if rlmode:
-            for i in xrange(len(names)):
-                self.results_dict[str(names[i,0])]=self.results[i]
+            for i in range(len(names)):
+                self.results_dict[names[i,0].decode()]=self.results[i]
 
         self.results=self.results_dict
         #print "R,L,M", self.R_count,self.L_count,self.M_count
@@ -584,24 +582,25 @@ class RL_circuit():
         :return: a debug sequence. Use pycharm debugger for better view
         '''
         if not (np.linalg.cond(mat_A) < 1 / sys.float_info.epsilon):
-            print "A is singular, check it"
+            print(("machine epsilon", sys.float_info.epsilon))
+            print(("A is singular, check it", np.linalg.cond(mat_A), "1/eps", 1 / sys.float_info.epsilon))
             N = mat_A.shape[0]
             V=np.zeros((N,N)) # Make a matrix V for view, to see if a row or a collumn is all 0
             for r in range(N):
                 for c in range(N):
                     if int(mat_A[r,c]) != 0:
                         V[r,c] =1
-            #print V
-            print np.where(~V.any(axis=1))[0]
-            #raw_input()
+            #print(V)
+            #print((np.where(~V.any(axis=1))[0]))
+
 
 def test_RL_circuit1():
-    print "new method"
+    print("new method")
     circuit = RL_circuit()
     circuit._graph_add_comp('B1', 1, 2, 1 + 1e-9j)
-    circuit._graph_add_comp('B2', 1, 2, 1 + 1e-9j)
-    circuit._graph_add_comp('B3', 2, 0, 1 + 1e-9j)
-    circuit._graph_add_M('M12', 'B1', 'B2', 0.5e-9)
+    circuit._graph_add_comp('B2', 3, 4, 1 + 1e-9j)
+    #circuit._graph_add_comp('B3', 2, 0, 1 + 1e-9j)
+    circuit._graph_add_M('M12', 'B1', 'B2', 0.2e-9)
 
     circuit.indep_current_source(1,0,1)
     #circuit.indep_voltage_source(1, 0, 1)
@@ -609,12 +608,12 @@ def test_RL_circuit1():
     circuit.assign_freq(10000)
     circuit.build_current_info()
     circuit.solve_iv()
-    print circuit.results
+    print((circuit.results))
 
 
 
     imp = (circuit.results['v1'])# / circuit.results['I_Vs']
-    print np.real(imp), np.imag(imp) / circuit.s
+    print((np.real(imp), np.imag(imp) / circuit.s))
 
 
 def test_RL_circuit2():
@@ -633,10 +632,10 @@ def test_RL_circuit2():
     circuit.assign_freq(100)
     circuit.build_current_info()
     circuit.solve_iv()
-    print circuit.results
+    print((circuit.results))
 
     imp = (circuit.results['v1']) / 1
-    print np.real(imp), np.imag(imp) / circuit.s
+    print((np.real(imp), np.imag(imp) / circuit.s))
 
 if __name__ == "__main__":
     #validate_solver_simple()

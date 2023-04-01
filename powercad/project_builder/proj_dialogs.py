@@ -26,8 +26,7 @@ from powercad.project_builder.UI_py.device_setup_dialog_ui import Ui_setup_devic
 from powercad.project_builder.UI_py.Env_setup_ui import Ui_EnvSetup
 from powercad.project_builder.UI_py.bondwire_setup_ui import Ui_Bondwire_setup
 from powercad.project_builder.UI_py.layoutEditor_ui import Ui_layouteditorDialog
-from powercad.project_builder.UI_py.para_power_diag_ui import Ui_ParaPowerSettingsDialog
-# from powercad.project_builder.UI_py.CS_design_up_ui import Ui_CornerStitch_Dialog  # CS_design_ui
+from powercad.project_builder.UI_py.CS_design_up_ui import Ui_CornerStitch_Dialog  # CS_design_ui
 from powercad.project_builder.UI_py.Fixed_loc_up_ui import Ui_Fixed_location_Dialog  # Fixed_loc_ui
 from powercad.project_builder.project import Project
 from powercad.sym_layout.symbolic_layout import SymbolicLayout
@@ -60,21 +59,17 @@ import matplotlib
 import glob
 from tqdm import tqdm
 from time import sleep
-from powercad.general.settings.settings import PARAPOWER_API_PATH
-import json
-
 # CLASSES FOR DIALOG USAGE
 class GenericDeviceDialog(QtGui.QDialog):
     # Author: quang le
     # Date: 9-27-2016
     def __init__(self, parent, device_dir):
-        '''Constructor for Generic Device Dialog
-        Description: This is the constructor generic device dialog in PowerSynth. Libraries -> Generic Model ->triggered
-        This dialog will load existed data_sheet information of a device (MosFet or Diode) or letting user modify such information
-        Using the Electrothermal_toolbox in PowerSynth, curve fitting methods are used to find best fit parameters for each required datasheet curve
-        Inputs: DataSheet Information Qrr, Ciss, Vpl, Vth vs Tj curve, Rds vs Tj curve, Crss vs Vds curve
-        Outputs: Under tech_lib->Layout_selection->Device->Device_PModel-> *.pmdl files
-        '''
+        '''Constructor for Generic Device Dialog'''
+        '''Description: This is the constructor generic device dialog in PowerSynth. Libraries -> Generic Model ->triggered'''
+        '''This dialog will load existed data_sheet information of a device (MosFet or Diode) or letting user modify such information'''
+        '''Using the Electrothermal_toolbox in PowerSynth, curve fitting methods are used to find best fit parameters for each required datasheet curve '''
+        '''Inputs: DataSheet Information Qrr, Ciss, Vpl, Vth vs Tj curve, Rds vs Tj curve, Crss vs Vds curve'''
+        '''Outputs: Under tech_lib->Layout_selection->Device->Device_PModel-> *.pmdl files '''
         # Basic Constructor of any dialog connected a a Mianwindow
         QtGui.QDialog.__init__(self, None)
         self.ui = Ui_generic_device_builder()
@@ -336,7 +331,7 @@ class DevicePropertiesDialog(QtGui.QDialog):
         self.ui.lst_devices.setModel(self.list_dv_model)
 
     def load_device_model(self):
-        print 1
+        print(1)
 
     def load_device_att(self):
         for f in os.listdir(self.device_att_path):
@@ -508,7 +503,7 @@ class NewProjectDialog(QtGui.QDialog):
         # If netlist, create symbolic layout
         if self.filetype == 'netlist':
             self.net_to_svg_file = self.convert_netlist()  # sxm- save the newly created svg file.
-            print "netlist converted to svg."
+            print("netlist converted to svg.")
         # print "net_to_svg_file= ", self.net_to_svg_file
 
         # Read in symbolic layout
@@ -522,7 +517,7 @@ class NewProjectDialog(QtGui.QDialog):
         elif self.filetype == 'script':
             symb_layout.load_layout(self.ui.txt_symbnet_address.text(),
                                     'script')  # qmle-- read the script and directly build the layout
-        print "symbolic layout created."
+        print("symbolic layout created.")
         try:
             netlist = Netlist(netlist_file=self.ui.txt_symbnet_address_2.text())
         except:
@@ -573,7 +568,7 @@ class OpenProjectDialog(QtGui.QDialog):
         except:
             QtGui.QMessageBox.about(self, "Project Load Error", "Error loading project -- Contact developer.")
             self.reject()
-            print traceback.format_exc()
+            print(traceback.format_exc())
 
 
 class SolidworkVersionCheckDialog(QtGui.QDialog):
@@ -609,14 +604,14 @@ class EditTechLibPathDialog(QtGui.QDialog):
             tech_dir = str(QFileDialog.getExistingDirectory(self, "Select Tech. Lib. Directory", dir=prev_dir))
             self.ui.txt_library_path.setText(tech_dir)
         except:
-            print traceback.print_exc()
+            print(traceback.print_exc())
 
     def update_path(self):
         path = self.ui.txt_library_path.text()
         # Check that new path exists
         if os.path.exists(path):
             self.parent.project.tech_lib_dir = path
-            print self.parent.project.tech_lib_dir
+            print(self.parent.project.tech_lib_dir)
             self.accept()
         else:
             QtGui.QMessageBox.warning(self, "Tech. Lib. Path", "Directory selected doesn't exist!")
@@ -646,113 +641,6 @@ class LayoutEditorDialog(QtGui.QDialog):
         f = open(path, 'wb')
         f.write(self.parent.layout_script)
         self.close()
-
-
-class ParaPowerDialog(QtGui.QDialog):
-    def __init__(self,parent):
-        QtGui.QDialog.__init__(self, parent)
-        self.ui = Ui_ParaPowerSettingsDialog()
-        self.ui.setupUi(self)
-        self.parent = parent
-        self.ui.btn_save.pressed.connect(self.save)
-        self.ui.btn_load.pressed.connect(self.load)
-        self.amb_T = round(float(self.parent.ui.txt_ambTemp.text()) - 273.15, 2)
-        self.bp_conv = round(float(self.parent.ui.txt_baseConvection.text()), 2)
-        self.external_conditions = {}
-        self.params = {}
-        self.settings = {}
-
-        self.settings_file = PARAPOWER_API_PATH + '/settings.json'
-
-        #########################
-        # Initialize entries
-        # h values
-        self.ui.le_h_left.setText('0.0')
-        self.ui.le_h_right.setText('0.0')
-        self.ui.le_h_front.setText('0.0')
-        self.ui.le_h_back.setText('0.0')
-        self.ui.le_h_top.setText('0.0')
-        self.ui.le_h_bottom.setText(str(self.bp_conv))
-        #
-        # temperature values
-        self.temp_txt = str(self.amb_T)
-        self.ui.le_ta_left.setText(self.temp_txt)
-        self.ui.le_ta_right.setText(self.temp_txt)
-        self.ui.le_ta_front.setText(self.temp_txt)
-        self.ui.le_ta_back.setText(self.temp_txt)
-        self.ui.le_ta_top.setText(self.temp_txt)
-        self.ui.le_ta_bottom.setText(self.temp_txt)
-        #
-        # solver values
-        self.ui.le_time_steps.setText('[]')
-        self.ui.le_time_delta.setText('1')
-        self.ui.le_init_temp.setText(self.temp_txt)
-        self.ui.le_proc_temp.setText('230.0')
-
-    def save(self):
-        self.external_conditions = {
-            'h_Left': self.ui.le_h_left.text(),
-            'h_Right': self.ui.le_h_right.text(),
-            'h_Front': self.ui.le_h_front.text(),
-            'h_Back': self.ui.le_h_back.text(),
-            'h_Top': self.ui.le_h_top.text(),
-            'h_Bottom': self.ui.le_h_bottom.text(),
-            'Ta_Left': self.ui.le_ta_left.text(),
-            'Ta_Right': self.ui.le_ta_right.text(),
-            'Ta_Front': self.ui.le_ta_front.text(),
-            'Ta_Back': self.ui.le_ta_back.text(),
-            'Ta_Top': self.ui.le_ta_top.text(),
-            'Ta_Bottom': self.ui.le_ta_bottom.text(),
-            'Tproc': self.ui.le_proc_temp.text()
-        }
-
-        self.params = {
-            'Tsteps': self.ui.le_time_steps.text(),
-            'DeltaT': self.ui.le_time_delta.text(),
-            'Tinit': self.ui.le_init_temp.text()
-        }
-
-        self.settings = {
-            'ExternalConditions': self.external_conditions,
-            'Params': self.params
-        }
-
-        # Save output as JSON file
-        output = json.dumps(self.settings, indent=4)
-        with open(self.settings_file, 'w') as fp:
-            fp.write(output)
-        # print self.settings_file
-
-    def load(self):
-        if os.path.exists(self.settings_file):
-            with open(self.settings_file, 'rb') as data:
-                jsondata = json.load(data)
-
-            extcond = jsondata['ExternalConditions']
-            params = jsondata['Params']
-
-            self.ui.le_h_left.setText(extcond['h_Left'])
-            self.ui.le_h_right.setText(extcond['h_Right'])
-            self.ui.le_h_front.setText(extcond['h_Front'])
-            self.ui.le_h_back.setText(extcond['h_Back'])
-            self.ui.le_h_top.setText(extcond['h_Top'])
-            self.ui.le_h_bottom.setText(extcond['h_Bottom'])
-
-            self.ui.le_ta_left.setText(extcond['Ta_Left'])
-            self.ui.le_ta_right.setText(extcond['Ta_Right'])
-            self.ui.le_ta_front.setText(extcond['Ta_Front'])
-            self.ui.le_ta_back.setText(extcond['Ta_Back'])
-            self.ui.le_ta_top.setText(extcond['Ta_Top'])
-            self.ui.le_ta_bottom.setText(extcond['Ta_Bottom'])
-
-            self.ui.le_proc_temp.setText(extcond['Tproc'])
-
-            self.ui.le_time_steps.setText(params['Tsteps'])
-            self.ui.le_time_delta.setText(params['DeltaT'])
-            self.ui.le_init_temp.setText(params['Tinit'])
-
-        else:
-            print "No settings file found!"
 
 
 class ResponseSurfaceDialog(QtGui.QDialog):
@@ -859,10 +747,10 @@ class ResponseSurfaceDialog(QtGui.QDialog):
                                                 , env=env_dir, options=options)
                 else:
                     env_dir = QFileDialog.getOpenFileName(caption=r"Find ANSYS Q3D IPY dir", filter="(*.exe)")
-                    print env_dir[0]
+                    print(env_dir[0])
                     env_dir = os.path.abspath(env_dir[0])
                     version = psidialogs.ask_string("what is the ANSYS version (folder name ANSYSEM...)")
-                    print version
+                    print(version)
                     form_trace_model_optimetric(layer_stack=self.layer_stack_import, Width=w_range, Length=l_range,
                                                 freq=f_range, wdir=self.wp_dir, savedir=self.model_dir,
                                                 mdl_name=mdl_name
@@ -1053,7 +941,7 @@ class SetupDeviceDialogs(QtGui.QDialog):
                         row_item.tech.heat_flow = float(self.ui.txt_device_heat_flow.text())
                         row_item.tech.attach_thickness = float(self.ui.txt_devAttchThickness.text())
                 self.close()
-            print "return device and wires"
+            print("return device and wires")
 
 
 class WireConnectionDialogs(QtGui.QDialog):
@@ -1081,7 +969,7 @@ class WireConnectionDialogs(QtGui.QDialog):
 
     def load_table(self):
         table_df = self.parent.project.tbl_bondwire_connect
-        if isinstance(table_df, types.NoneType) == False:
+        if isinstance(table_df, type(None)) == False:
             total_rows = len(table_df.axes[0])
             for r in range(total_rows):
                 self.ui.tbl_bw_connection.insertRow(r)
@@ -1163,7 +1051,7 @@ class WireConnectionDialogs(QtGui.QDialog):
         self.parent.symb_canvas[0].draw()
 
     def remove_item(self):
-        print "ITEM REMOVED"
+        print("ITEM REMOVED")
         selected_row = self.ui.tbl_bw_connection.currentRow()
         self.ui.tbl_bw_connection.selectionModel().selectedIndexes()[0].row()
         self.ui.tbl_bw_connection.removeRow(selected_row)
@@ -1267,7 +1155,7 @@ class ConsDialog(QtGui.QDialog):
             self.load_table(mode=0) # not a mode, cons_df is imported
 
     def load_table(self, mode=1):
-        print mode
+        print(mode)
         if mode == 1:  # from csv
             cons_file = QFileDialog.getOpenFileName(self, "Select Constraint File", 'C://', "Constraints Files (*.csv)")
             self.cons_df = pd.read_csv(cons_file[0])
@@ -1386,7 +1274,7 @@ class Fixed_locations_Dialog(QtGui.QDialog):
         self.x_dynamic_range = {}  # dynamic x range mapped to each x coordinate{x_coord:(x_min,x_max)}
         self.y_dynamic_range = {}  # dynamic y range mapped to each y coordinate{y_coord:(y_min,y_max)}
         self.current_range = {}  # to check if the input coordinate is within the valid range
-        if len(self.parent.input_node_info.keys()) == 0:
+        if len(list(self.parent.input_node_info.keys())) == 0:
             self.setup_initial_range()
             self.inserted_order = []
 
@@ -1409,41 +1297,41 @@ class Fixed_locations_Dialog(QtGui.QDialog):
 
     #sets up initial range for each node in the layout based on minimum location
     def setup_initial_range(self):
-        x_values = self.Min_X[1].values()
+        x_values = list(self.Min_X[1].values())
         x_values.sort()
         max_x = x_values[-1]
         if self.parent.mode3_width != None and self.parent.mode3_width >= max_x:
             self.x_space = self.parent.mode3_width - max_x
         else:
-            print "Please enter floorplan width greater or equal to minimum width ", float(max_x) / 1000
-        y_values = self.Min_Y[1].values()
+            print("Please enter floorplan width greater or equal to minimum width ", float(max_x) / 1000)
+        y_values = list(self.Min_Y[1].values())
         y_values.sort()
         max_y = y_values[-1]
         if self.parent.mode3_height != None and self.parent.mode3_height >= max_y:
             self.y_space = self.parent.mode3_height - max_y
         else:
-            print "Please enter floorplan height greater or equal to minimum height ", float(max_y) / 1000
-        for k, v in self.parent.graph[1].items():
-            for k1, v1 in self.Min_X.items():
-                for k2, v2 in v1.items():
+            print("Please enter floorplan height greater or equal to minimum height ", float(max_y) / 1000)
+        for k, v in list(self.parent.graph[1].items()):
+            for k1, v1 in list(self.Min_X.items()):
+                for k2, v2 in list(v1.items()):
                     if k2 == v[0]:
                         x_min = v2
                         if self.x_space != None:
                             x_max = v2 + self.x_space
                         else:
-                            print "No horizontal space is allocated"
+                            print("No horizontal space is allocated")
                         self.initial_range_x[k] = (x_min, x_max)
                         self.x_init_range[k2] = (x_min, x_max)
                         self.dynamic_range_x[k] = (x_min, x_max)
                         self.x_dynamic_range[k2] = (x_min, x_max)
-                for k1, v1 in self.Min_Y.items():
-                    for k2, v2 in v1.items():
+                for k1, v1 in list(self.Min_Y.items()):
+                    for k2, v2 in list(v1.items()):
                         if k2 == v[1]:
                             y_min = v2
                             if self.y_space != None:
                                 y_max = v2 + self.y_space
                             else:
-                                print "No vertical space is allocated"
+                                print("No vertical space is allocated")
                             self.initial_range_y[k] = (y_min, y_max)
                             self.y_init_range[k2] = (y_min, y_max)
                             self.dynamic_range_y[k] = (y_min, y_max)
@@ -1455,22 +1343,22 @@ class Fixed_locations_Dialog(QtGui.QDialog):
 
         x_fixed = []
         y_fixed = []
-        if len(self.new_node_dict.keys()) > 0:
-            for k, v in self.new_node_dict.items():
+        if len(list(self.new_node_dict.keys())) > 0:
+            for k, v in list(self.new_node_dict.items()):
                 if v[0] != None:
-                    for k1, v1 in self.node_dict.items():
+                    for k1, v1 in list(self.node_dict.items()):
                         if k1 == k:
                             x_fixed.append(v1[0])
 
                 if v[1] != None:
-                    for k1, v1 in self.node_dict.items():
+                    for k1, v1 in list(self.node_dict.items()):
                         if k1 == k:
                             y_fixed.append(v1[1])
 
         x_fixed.sort()
         y_fixed.sort()
         if len(x_fixed) > 0:
-            for k, v in self.node_dict.items():
+            for k, v in list(self.node_dict.items()):
                 if k == self.current_node:
                     x_fixed.append(v[0])
                     current_x = v[0]
@@ -1479,12 +1367,12 @@ class Fixed_locations_Dialog(QtGui.QDialog):
             x_fixed.sort()
             if x_fixed.index(current_x) == 0:
                 start = x_fixed[1]
-                for k1, v1 in self.node_dict.items():
+                for k1, v1 in list(self.node_dict.items()):
                     if v1[0] > start:
                         x_fixed.append(v1[0])
             elif x_fixed.index(current_x) == len(x_fixed) - 1:
                 start = x_fixed[-2]
-                for k1, v1 in self.node_dict.items():
+                for k1, v1 in list(self.node_dict.items()):
                     if v1[0] < start:
                         x_fixed.append(v1[0])
 
@@ -1493,13 +1381,13 @@ class Fixed_locations_Dialog(QtGui.QDialog):
             else:
                 start = x_fixed.index(current_x) - 1
                 end = x_fixed.index(current_x) + 1
-                for k1, v1 in self.node_dict.items():
+                for k1, v1 in list(self.node_dict.items()):
                     if v1[0] < x_fixed[start] or v1[0] > x_fixed[end]:
                         x_fixed.append(v1[0])
                     else:
                         continue
         if len(y_fixed) > 0:
-            for k, v in self.node_dict.items():
+            for k, v in list(self.node_dict.items()):
                 if k == self.current_node:
                     y_fixed.append(v[1])
                     current_y = v[1]
@@ -1509,13 +1397,13 @@ class Fixed_locations_Dialog(QtGui.QDialog):
             y_fixed.sort()
 
             if y_fixed.index(current_y) == 0:
-                for k1, v1 in self.node_dict.items():
+                for k1, v1 in list(self.node_dict.items()):
                     if v1[1] > y_fixed[1]:
                         y_fixed.append(v1[1])
                     else:
                         continue
             elif y_fixed.index(current_y) == len(y_fixed) - 1:
-                for k1, v1 in self.node_dict.items():
+                for k1, v1 in list(self.node_dict.items()):
                     if v1[1] < y_fixed[-2]:
                         y_fixed.append(v1[1])
                     else:
@@ -1523,7 +1411,7 @@ class Fixed_locations_Dialog(QtGui.QDialog):
             else:
                 start = y_fixed.index(current_y) - 1
                 end = y_fixed.index(current_y) + 1
-                for k1, v1 in self.node_dict.items():
+                for k1, v1 in list(self.node_dict.items()):
                     if v1[1] < y_fixed[start] or v1[1] > y_fixed[end]:
                         y_fixed.append(v1[1])
                     else:
@@ -1540,7 +1428,7 @@ class Fixed_locations_Dialog(QtGui.QDialog):
         min_y_change = []
         max_y_change = []
         y_unchange = []
-        for k, v in self.node_dict.items():
+        for k, v in list(self.node_dict.items()):
             if x0 != None:
                 if v[0] > self.node_dict[self.current_node][0] and v[0] not in x_fixed:
                     min_x_change.append(v[0])
@@ -1569,7 +1457,7 @@ class Fixed_locations_Dialog(QtGui.QDialog):
                     x_min = self.x_dynamic_range[x][0] + (
                             x0 - self.x_dynamic_range[self.node_dict[self.current_node][0]][0])
                     x_max = self.x_dynamic_range[x][1]
-                    for k, v in self.node_dict.items():
+                    for k, v in list(self.node_dict.items()):
                         if v[0] == x:
                             self.dynamic_range_x[k] = (x_min, x_max)
                             self.x_dynamic_range[x] = (x_min, x_max)
@@ -1579,7 +1467,7 @@ class Fixed_locations_Dialog(QtGui.QDialog):
                 for x in max_x_change:
                     x_min = self.x_dynamic_range[x][0]
                     x_max = (x0 - (self.x_dynamic_range[self.node_dict[self.current_node][0]][0] - x_min))
-                    for k, v in self.node_dict.items():
+                    for k, v in list(self.node_dict.items()):
                         if v[0] == x:
                             self.dynamic_range_x[k] = (x_min, x_max)
                             self.x_dynamic_range[x] = (x_min, x_max)
@@ -1588,7 +1476,7 @@ class Fixed_locations_Dialog(QtGui.QDialog):
             if len(x_unchange) > 0:
                 for x in x_unchange:
                     x_min = x_max = x0
-                    for k, v in self.node_dict.items():
+                    for k, v in list(self.node_dict.items()):
                         if v[0] == x:
                             self.dynamic_range_x[k] = (x_min, x_max)
                             self.x_dynamic_range[x] = (x_min, x_max)
@@ -1601,7 +1489,7 @@ class Fixed_locations_Dialog(QtGui.QDialog):
                     y_min = self.y_dynamic_range[y][0] + (
                             y0 - self.y_dynamic_range[self.node_dict[self.current_node][1]][0])
                     y_max = self.y_dynamic_range[y][1]
-                    for k, v in self.node_dict.items():
+                    for k, v in list(self.node_dict.items()):
                         if v[1] == y:
                             self.dynamic_range_y[k] = (y_min, y_max)
                             self.y_dynamic_range[y] = (y_min, y_max)
@@ -1611,7 +1499,7 @@ class Fixed_locations_Dialog(QtGui.QDialog):
                 for y in max_y_change:
                     y_min = self.y_dynamic_range[y][0]
                     y_max = (y0 - abs(self.y_dynamic_range[self.node_dict[self.current_node][1]][0] - y_min))
-                    for k, v in self.node_dict.items():
+                    for k, v in list(self.node_dict.items()):
                         if v[1] == y:
                             self.dynamic_range_y[k] = (y_min, y_max)
                             self.y_dynamic_range[y] = (y_min, y_max)
@@ -1620,7 +1508,7 @@ class Fixed_locations_Dialog(QtGui.QDialog):
             if len(y_unchange) > 0:
                 for y in y_unchange:
                     y_min = y_max = y0
-                    for k, v in self.node_dict.items():
+                    for k, v in list(self.node_dict.items()):
                         if v[1] == y:
                             self.dynamic_range_y[k] = (y_min, y_max)
                             self.y_dynamic_range[y] = (y_min, y_max)
@@ -1630,24 +1518,24 @@ class Fixed_locations_Dialog(QtGui.QDialog):
 
     # dynamically updates the location range upon removal of any fixed location.
     def dynamic_remove(self):
-        if len(self.new_node_dict.keys()) == 0:
-            for k, v in self.x_init_range.items():
+        if len(list(self.new_node_dict.keys())) == 0:
+            for k, v in list(self.x_init_range.items()):
                 self.x_dynamic_range[k] = v
-            for k, v in self.y_init_range.items():
+            for k, v in list(self.y_init_range.items()):
                 self.y_dynamic_range[k] = v
-            for k, v in self.initial_range_x.items():
+            for k, v in list(self.initial_range_x.items()):
                 self.dynamic_range_x[k] = v
-            for k, v in self.initial_range_y.items():
+            for k, v in list(self.initial_range_y.items()):
                 self.dynamic_range_y[k] = v
         else:
 
-            for k, v in self.x_init_range.items():
+            for k, v in list(self.x_init_range.items()):
                 self.x_dynamic_range[k] = v
-            for k, v in self.y_init_range.items():
+            for k, v in list(self.y_init_range.items()):
                 self.y_dynamic_range[k] = v
-            for k, v in self.initial_range_x.items():
+            for k, v in list(self.initial_range_x.items()):
                 self.dynamic_range_x[k] = v
-            for k, v in self.initial_range_y.items():
+            for k, v in list(self.initial_range_y.items()):
                 self.dynamic_range_y[k] = v
 
             Keys = [i for i in self.inserted_order]
@@ -1658,7 +1546,7 @@ class Fixed_locations_Dialog(QtGui.QDialog):
             for i in range(len(Keys)):
                 x0 = self.new_node_dict[Keys[i]][0]
                 y0 = self.new_node_dict[Keys[i]][1]
-                for k, v in self.node_dict.items():
+                for k, v in list(self.node_dict.items()):
                     if k == Keys[i]:
                         x_fixed.append(v[0])
                         current_x = v[0]
@@ -1669,12 +1557,12 @@ class Fixed_locations_Dialog(QtGui.QDialog):
                 if len(x_fixed) > 1:
                     if x_fixed.index(current_x) == 0:
                         start = x_fixed[1]
-                        for k1, v1 in self.node_dict.items():
+                        for k1, v1 in list(self.node_dict.items()):
                             if v1[0] > start:
                                 x_fixed.append(v1[0])
                     elif x_fixed.index(current_x) == len(x_fixed) - 1:
                         start = x_fixed[-2]
-                        for k1, v1 in self.node_dict.items():
+                        for k1, v1 in list(self.node_dict.items()):
                             if v1[0] < start:
                                 x_fixed.append(v1[0])
 
@@ -1684,12 +1572,12 @@ class Fixed_locations_Dialog(QtGui.QDialog):
 
                         start = x_fixed.index(current_x) - 1
                         end = x_fixed.index(current_x) + 1
-                        for k1, v1 in self.node_dict.items():
+                        for k1, v1 in list(self.node_dict.items()):
                             if v1[0] < x_fixed[start] or v1[0] > x_fixed[end]:
                                 x_fixed.append(v1[0])
                             else:
                                 continue
-                for k, v in self.node_dict.items():
+                for k, v in list(self.node_dict.items()):
                     if k == Keys[i]:
                         y_fixed.append(v[1])
                         current_y = v[1]
@@ -1698,13 +1586,13 @@ class Fixed_locations_Dialog(QtGui.QDialog):
                 y_fixed.sort()
                 if len(y_fixed) > 1:
                     if y_fixed.index(current_y) == 0:
-                        for k1, v1 in self.node_dict.items():
+                        for k1, v1 in list(self.node_dict.items()):
                             if v1[1] > y_fixed[1]:
                                 y_fixed.append(v1[1])
                             else:
                                 continue
                     elif y_fixed.index(current_y) == len(y_fixed) - 1:
-                        for k1, v1 in self.node_dict.items():
+                        for k1, v1 in list(self.node_dict.items()):
                             if v1[1] < y_fixed[-2]:
                                 y_fixed.append(v1[1])
                             else:
@@ -1712,7 +1600,7 @@ class Fixed_locations_Dialog(QtGui.QDialog):
                     else:
                         start = y_fixed.index(current_y) - 1
                         end = y_fixed.index(current_y) + 1
-                        for k1, v1 in self.node_dict.items():
+                        for k1, v1 in list(self.node_dict.items()):
                             if v1[1] < y_fixed[start] or v1[1] > y_fixed[end]:
                                 y_fixed.append(v1[1])
                             else:
@@ -1726,7 +1614,7 @@ class Fixed_locations_Dialog(QtGui.QDialog):
                 min_y_change = []
                 max_y_change = []
                 y_unchange = []
-                for k, v in self.node_dict.items():
+                for k, v in list(self.node_dict.items()):
                     if x0 != None:
                         if v[0] > self.node_dict[Keys[i]][0] and v[0] not in x_fixed:
                             min_x_change.append(v[0])
@@ -1755,7 +1643,7 @@ class Fixed_locations_Dialog(QtGui.QDialog):
                             x_min = self.x_dynamic_range[x][0] + (
                                     x0 - self.x_dynamic_range[self.node_dict[Keys[i]][0]][0])
                             x_max = self.x_dynamic_range[x][1]
-                            for k, v in self.node_dict.items():
+                            for k, v in list(self.node_dict.items()):
                                 if v[0] == x:
                                     self.dynamic_range_x[k] = (x_min, x_max)
                                     self.x_dynamic_range[x] = (x_min, x_max)
@@ -1765,7 +1653,7 @@ class Fixed_locations_Dialog(QtGui.QDialog):
                         for x in max_x_change:
                             x_min = self.x_dynamic_range[x][0]
                             x_max = (x0 - (self.x_dynamic_range[self.node_dict[Keys[i]][0]][0] - x_min))
-                            for k, v in self.node_dict.items():
+                            for k, v in list(self.node_dict.items()):
                                 if v[0] == x:
                                     self.dynamic_range_x[k] = (x_min, x_max)
                                     self.x_dynamic_range[x] = (x_min, x_max)
@@ -1774,7 +1662,7 @@ class Fixed_locations_Dialog(QtGui.QDialog):
                     if len(x_unchange) > 0:
                         for x in x_unchange:
                             x_min = x_max = x0
-                            for k, v in self.node_dict.items():
+                            for k, v in list(self.node_dict.items()):
                                 if v[0] == x:
                                     self.dynamic_range_x[k] = (x_min, x_max)
                                     self.x_dynamic_range[x] = (x_min, x_max)
@@ -1786,7 +1674,7 @@ class Fixed_locations_Dialog(QtGui.QDialog):
                             y_min = self.y_dynamic_range[y][0] + (
                                     y0 - self.y_dynamic_range[self.node_dict[Keys[i]][1]][0])
                             y_max = self.y_dynamic_range[y][1]
-                            for k, v in self.node_dict.items():
+                            for k, v in list(self.node_dict.items()):
                                 if v[1] == y:
                                     self.dynamic_range_y[k] = (y_min, y_max)
                                     self.y_dynamic_range[y] = (y_min, y_max)
@@ -1796,7 +1684,7 @@ class Fixed_locations_Dialog(QtGui.QDialog):
                         for y in max_y_change:
                             y_min = self.y_dynamic_range[y][0]
                             y_max = (y0 - abs(self.y_dynamic_range[self.node_dict[Keys[i]][1]][0] - y_min))
-                            for k, v in self.node_dict.items():
+                            for k, v in list(self.node_dict.items()):
                                 if v[1] == y:
                                     self.dynamic_range_y[k] = (y_min, y_max)
                                     self.y_dynamic_range[y] = (y_min, y_max)
@@ -1805,7 +1693,7 @@ class Fixed_locations_Dialog(QtGui.QDialog):
                     if len(y_unchange) > 0:
                         for y in y_unchange:
                             y_min = y_max = y0
-                            for k, v in self.node_dict.items():
+                            for k, v in list(self.node_dict.items()):
                                 if v[1] == y:
                                     self.dynamic_range_y[k] = (y_min, y_max)
                                     self.y_dynamic_range[y] = (y_min, y_max)
@@ -1819,8 +1707,8 @@ class Fixed_locations_Dialog(QtGui.QDialog):
         if self.parent.input_node_info != None:
             self.new_node_dict = self.parent.input_node_info
         row_id = self.ui.table_Fixedloc.rowCount()
-        if len(self.parent.input_node_info.keys()) > 0:
-            for k, v in self.parent.input_node_info.items():
+        if len(list(self.parent.input_node_info.keys())) > 0:
+            for k, v in list(self.parent.input_node_info.items()):
 
                 self.ui.table_Fixedloc.insertRow(row_id)
                 self.ui.table_Fixedloc.setItem(row_id, 0, QtGui.QTableWidgetItem())
@@ -1843,7 +1731,7 @@ class Fixed_locations_Dialog(QtGui.QDialog):
         self.node_dict = node_dict
 
         self.ui.cmb_nodes.clear()
-        for i in node_dict.keys():
+        for i in list(node_dict.keys()):
             item = 'Node ' + str(i)
             self.ui.cmb_nodes.addItem(item)
             self.Nodes.append(item)
@@ -1876,7 +1764,7 @@ class Fixed_locations_Dialog(QtGui.QDialog):
                 self.Y = None
                 node_id = int(i.split()[1])
                 self.current_node = node_id
-                if len(self.new_node_dict.keys()) == 0:
+                if len(list(self.new_node_dict.keys())) == 0:
                     xrange = self.initial_range_x[self.current_node]
                     yrange = self.initial_range_y[self.current_node]
                 else:
@@ -1920,7 +1808,7 @@ class Fixed_locations_Dialog(QtGui.QDialog):
     def valid_check(self):
         invalid_x = 0
         invalid_y = 0
-        for k, v in self.current_range.items():
+        for k, v in list(self.current_range.items()):
             if k == self.current_node:
                 if self.X != None:
                     if self.X < v[0][0] or self.X > v[0][1]:
@@ -1952,8 +1840,8 @@ class Fixed_locations_Dialog(QtGui.QDialog):
                 self.ui.table_Fixedloc.item(row_id, 1).setText(str(float(self.X) / 1000))
             else:
                 self.ui.table_Fixedloc.item(row_id, 1).setText('Invalid')
-                print" X value is out of valid range"
-                print "Please remove the row and try again"
+                print(" X value is out of valid range")
+                print("Please remove the row and try again")
         else:
             self.ui.table_Fixedloc.item(row_id, 1).setText('None')
 
@@ -1964,8 +1852,8 @@ class Fixed_locations_Dialog(QtGui.QDialog):
                 self.ui.table_Fixedloc.item(row_id, 2).setText(str(float(self.Y) / 1000))
             else:
                 self.ui.table_Fixedloc.item(row_id, 2).setText('Invalid')
-                print" Y value is out of valid range"
-                print "Please remove the row and try again"
+                print(" Y value is out of valid range")
+                print("Please remove the row and try again")
 
         else:
             self.ui.table_Fixedloc.item(row_id, 2).setText('None')
@@ -1979,11 +1867,11 @@ class Fixed_locations_Dialog(QtGui.QDialog):
         row_id = self.ui.table_Fixedloc.selectionModel().selectedIndexes()[0].row()
         node_id = str(self.ui.table_Fixedloc.item(row_id, 0).text())
         self.ui.table_Fixedloc.removeRow(selected_row)
-        for k1, v1 in self.parent.input_node_info.items():
+        for k1, v1 in list(self.parent.input_node_info.items()):
             if k1 == int(node_id):
                 del self.parent.input_node_info[k1]
 
-        for k, v in self.new_node_dict.items():
+        for k, v in list(self.new_node_dict.items()):
             if k == int(node_id):
                 del self.new_node_dict[k]
                 self.inserted_order.remove(k)
@@ -1997,17 +1885,17 @@ class Fixed_locations_Dialog(QtGui.QDialog):
         self.parent.fixed_x_locations = {}
         self.parent.fixed_y_locations = {}
         Xloc = {}
-        for k, v in self.Min_X.items():
-            Xloc = v.keys()
+        for k, v in list(self.Min_X.items()):
+            Xloc = list(v.keys())
         Yloc = {}
-        for k, v in self.Min_Y.items():
-            Yloc = v.keys()
+        for k, v in list(self.Min_Y.items()):
+            Yloc = list(v.keys())
 
-        for k1, v1 in self.new_node_dict.items():
+        for k1, v1 in list(self.new_node_dict.items()):
             self.parent.input_node_info[k1] = v1
-        for k1, v1 in self.parent.input_node_info.items():
+        for k1, v1 in list(self.parent.input_node_info.items()):
             # self.parent.input_node_info[k1] = v1
-            for k, v in self.node_dict.items():
+            for k, v in list(self.node_dict.items()):
                 if k1 == k:
 
                     if v1[0] != None and v1[1] != None:
@@ -2106,7 +1994,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
 
     # saves layout patch data in csv file for NSGAII generated solutions
     def save_layouts(self,Layout_Rects,count):
-        for k,v in Layout_Rects.items():
+        for k,v in list(Layout_Rects.items()):
 
             if k=='H':
                 Total_H = {}
@@ -2140,7 +2028,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
         colors = ['White', 'green', 'red', 'blue', 'yellow', 'pink']
         type = ['EMPTY', 'Type_1', 'Type_2', 'Type_3', 'Type_4']
 
-        for k, v in Total_H.items():
+        for k, v in list(Total_H.items()):
             #print v, len(v)
             for c in range(len(v)):
                 #print "C",c,len(v)
@@ -2249,9 +2137,9 @@ class New_layout_engine_dialog(QtGui.QDialog):
         if not os.path.exists(sol_path):
             os.makedirs(sol_path)
         layout_symb_dict = self.form_sym_obj_rect_dict()
-        if len(layout_symb_dict.keys())>1000:
+        if len(list(layout_symb_dict.keys()))>1000:
             QtGui.QMessageBox.about(self,"Caution:Memory issue might occur!!","Thousands of csv files are going to be generated.")
-        for i in range(len(layout_symb_dict.keys())):
+        for i in range(len(list(layout_symb_dict.keys()))):
             item = 'Layout ' + str(i)
             file_name =sol_path+'/'+ item + '.csv'
             with open(file_name, 'wb') as my_csv:
@@ -2266,7 +2154,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
                 data = [Size, Perf_1, unit_1, Perf_2, unit_2]
                 csv_writer.writerow(data)
                 csv_writer.writerow(["Component_Name", "x_coordinate", "y_coordinate", "width", "length"])
-                for k, v in layout_symb_dict[item]['sym_info'].items():
+                for k, v in list(layout_symb_dict[item]['sym_info'].items()):
                     layout_data = [k, v.x, v.y, v.width, v.height]
                     csv_writer.writerow(layout_data)
             my_csv.close()
@@ -2274,7 +2162,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
             if not os.path.exists(pareto_path):
                 # print "path doesn't exist. trying to make"
                 os.makedirs(pareto_path)
-            for i in range(len(layout_symb_dict.keys())):
+            for i in range(len(list(layout_symb_dict.keys()))):
                 if self.perf1_pareto['data'][i]!=0:
                     item = 'Layout ' + str(i)
                     file_name = pareto_path + '/' + item + '.csv'
@@ -2290,7 +2178,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
                         data = [Size, Perf_1, unit_1, Perf_2, unit_2]
                         csv_writer.writerow(data)
                         csv_writer.writerow(["Component_Name", "x_coordinate", "y_coordinate", "width", "length"])
-                        for k, v in layout_symb_dict[item]['sym_info'].items():
+                        for k, v in list(layout_symb_dict[item]['sym_info'].items()):
                             layout_data = [k, v.x, v.y, v.width, v.height]
                             csv_writer.writerow(layout_data)
                     my_csv.close()
@@ -2309,7 +2197,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
                     #data.append(sol_info)
             my_csv.close()
         except:
-            print "Please save a valid format"
+            print("Please save a valid format")
 
         self.parent.clear_projet_solutions()
         '''
@@ -2431,8 +2319,8 @@ class New_layout_engine_dialog(QtGui.QDialog):
             self.perf1 = {"label": 'layout index', 'data': []}
             self.perf2 = {"label": 'layout index', 'data': []}
 
-            for layout in self.generated_layouts.keys():
-                id = self.generated_layouts.keys().index(layout)
+            for layout in list(self.generated_layouts.keys()):
+                id = list(self.generated_layouts.keys()).index(layout)
                 self.perf1['data'].append(id)
                 self.perf2['data'].append(id)
         if self.pareto_plot_flag==0:
@@ -2454,7 +2342,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
                 self.ax3.set_xlim(x[1]-0.001,x[-1]+0.001)
                 self.ax3.set_ylim(y[1]-0.001,y[-1]+0.001)
             except:
-                print"Please Generate Layouts First."
+                print("Please Generate Layouts First.")
         self.ax3.set_xlabel(self.perf1['label'])
         self.ax3.set_ylabel(self.perf2['label'])
         self.canvas_sol_browser.draw()
@@ -2468,7 +2356,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
         self.layout_plot(layout_ind=self.selected_ind)
         self.canvas_sols.draw()
         self.canvas_sol_browser.draw()
-        if len(self.perf_dict.keys())>0:
+        if len(list(self.perf_dict.keys()))>0:
             self.sol_params = [[self.perf1['type'], self.perf1['data'][self.selected_ind], self.perf1['unit']],
                        [self.perf2['type'], self.perf2['data'][self.selected_ind], self.perf2['unit']]]
 
@@ -2483,7 +2371,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
             '''
             # Display only the pareto front solution
             # ID=data[:, 0].tolist()
-            data_1 = data_in.values()
+            data_1 = list(data_in.values())
             data=np.array(data_1)
             X = data[:, 0].tolist()
             Y = data[:, 1].tolist()
@@ -2501,8 +2389,8 @@ class New_layout_engine_dialog(QtGui.QDialog):
                     if pair[1] >= p_front[-1][1]:  # Look for lower values of Y
                         p_front.append(pair)  # and add them to the Pareto frontie
 
-            print "No of Solutions on Pareto-front", len(p_front)
-            print "Total solutions", len(data_1)
+            print("No of Solutions on Pareto-front", len(p_front))
+            print("Total solutions", len(data_1))
             pareto_data = np.array(p_front)
 
             plot = False
@@ -2511,7 +2399,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
                 plt.scatter(pareto_data[:, 0], pareto_data[:, 1])
                 plt.show()
             pareto_dataset=[]
-            for k,v in data_in.items():
+            for k,v in list(data_in.items()):
                 p_data={}
                 if v in p_front:
                     p_data[k]=v
@@ -2531,15 +2419,15 @@ class New_layout_engine_dialog(QtGui.QDialog):
                                                               individual=individual)
         self.save_layouts(Patches,count=self.count)
         self.count += 1
-        print"Added solution no.", self.count
+        print("Added solution no.", self.count)
         self.layout_data[item] = {'Rects': cs_sym_data[0]}
 
         if self.engine.sym_layout != None:
             layout_data = self.form_sym_obj_rect_dict_opt(layout_data=cs_sym_data)
-            for k, v in layout_data.items():
+            for k, v in list(layout_data.items()):
                 sym_info = v
             self._sym_update_layout(sym_info=sym_info)
-            dims = layout_data.keys()[0]
+            dims = list(layout_data.keys())[0]
             bp_dims = [dims[0] + 4, dims[1] + 4]
             update_sym_baseplate_dims(sym_layout=self.engine.sym_layout, dims=bp_dims)
             update_substrate_dims(sym_layout=self.engine.sym_layout, dims=dims)
@@ -2557,11 +2445,11 @@ class New_layout_engine_dialog(QtGui.QDialog):
         try:
             self.parent.project.layout_engine = "CS"
         except:
-            print "debug mode"
+            print("debug mode")
 
         # Evaluate performace for all all layouts
-        if len(self.perf_dict.keys())!=0:
-            for p in self.perf_dict.keys():
+        if len(list(self.perf_dict.keys()))!=0:
+            for p in list(self.perf_dict.keys()):
                 perf = self.perf_dict[p]
                 measure = perf['measure']
             try: # Attempt to characterize the structure
@@ -2570,7 +2458,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
             except:
                 self.mdl = 2
         if not (self.constraint):
-            print "can't generate layouts"
+            print("can't generate layouts")
             return
         else:
 
@@ -2581,7 +2469,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
                 try:
                     os.remove(f)
                 except:
-                    print "can't remove file"
+                    print("can't remove file")
 
 
             if not os.path.exists(database):
@@ -2600,11 +2488,11 @@ class New_layout_engine_dialog(QtGui.QDialog):
                 create_table(conn)
             conn.close()
 
-            if len(self.perf_dict.keys()) < 2:
+            if len(list(self.perf_dict.keys())) < 2:
                 QtGui.QMessageBox.about(self, "Caution:Optimization setup is wrong!!",
                                         "Check design peformance setup.")
                 return
-            print "generate layout"
+            print("generate layout")
             self.perf1 = {"label": None, 'data': [], 'unit': '', 'type': ''}
             self.perf2 = {"label": None, 'data': [], 'unit': '', 'type': ''}
             self.generated_layouts = {}
@@ -2641,7 +2529,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
                     if self.W==None or self.H==None or N==0 or self.seed==None:
                         QtGui.QMessageBox.about(self, "Caution:Something is missing!!",
                                                 "Check input parameters.")
-                        print "Check input parameters. Something is missing."
+                        print("Check input parameters. Something is missing.")
                         return
                     opt = NSGAII_Optimizer(design_vars=Design_Vars, eval_fn=self.cost_func_NSGAII, num_measures=2,
                                            seed=self.seed, num_gen=N)
@@ -2655,7 +2543,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
                     if N==0 or self.seed==None:
                         QtGui.QMessageBox.about(self, "Caution:Something is missing!!",
                                                 "Check input parameters.")
-                        print "Check input parameters. Something is missing."
+                        print("Check input parameters. Something is missing.")
                         return
                     Patches, cs_sym_data = self.engine.generate_solutions(self.current_mode, num_layouts=N, W=W, H=H,
                                                                           fixed_x_location=self.fixed_x_locations,
@@ -2663,7 +2551,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
                                                                           seed=self.seed,bar=True)
 
                     if cs_sym_data == None: #Patches!=None or
-                        print "ERROR: Invalid Information"
+                        print("ERROR: Invalid Information")
                         return
                     Layouts = []
                     for i in range(int(N)):
@@ -2677,7 +2565,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
                                 #self.generated_layouts[Layouts[i]] = {'Patches': Patches[i]}
 
                     else:
-                        print "Patches not found"
+                        print("Patches not found")
             else:
                 N = 1
                 #item = 'Layout 0'
@@ -2696,7 +2584,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
 
                             self.generated_layouts[Layouts[i]] = {'Patches': Patches[i]}
                 else:
-                    print"Patches not found"
+                    print("Patches not found")
 
 
         # Convert Data info to Symb object for evaluation
@@ -2705,7 +2593,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
                 sym_info = self.form_sym_obj_rect_dict()
                 self._sym_eval_perf(sym_info=sym_info)
             if self.pareto_plot_flag == 1:
-                measurements=zip(self.perf1['data'],self.perf2['data'])
+                measurements=list(zip(self.perf1['data'],self.perf2['data']))
                 for i in range(len(measurements)):
                     item='Layout ' + str(i)
                     self.solutions[item]=[measurements[i][0],measurements[i][1]]
@@ -2728,13 +2616,13 @@ class New_layout_engine_dialog(QtGui.QDialog):
         self.perf1_pareto['type'] = self.perf1['type']
         self.perf2_pareto['type'] = self.perf2['type']
         for i in pareto_data:
-            for k, v in i.items():
-                for k1, v1 in self.layout_data.items():
+            for k, v in list(i.items()):
+                for k1, v1 in list(self.layout_data.items()):
                     if k1 == k:
                         layout_data[k] = v1
                         perf_data.append(v)
 
-                for k1, v1 in self.generated_layouts.items():
+                for k1, v1 in list(self.generated_layouts.items()):
                     if k1 == k:
                         generated_layout[k] = v1
         for j in zip(self.perf1['data'], self.perf2['data']):
@@ -2763,9 +2651,9 @@ class New_layout_engine_dialog(QtGui.QDialog):
         else:
 
             choice = 'Layout 0'
-            for k, v in self.generated_layouts.items():
+            for k, v in list(self.generated_layouts.items()):
                 if choice == k:
-                    for k1, v1 in v['Patches'].items():
+                    for k1, v1 in list(v['Patches'].items()):
                         W = (float(k1[0]) / 1000)
                         H = (float(k1[1]) / 1000)
 
@@ -2919,9 +2807,9 @@ class New_layout_engine_dialog(QtGui.QDialog):
                 '''
             else:
 
-                for k, v in self.generated_layouts.items():
+                for k, v in list(self.generated_layouts.items()):
                     if choice == k:
-                        for k1, v1 in v['Patches'].items():
+                        for k1, v1 in list(v['Patches'].items()):
                             for p in v1:
                                 self.ax1.add_patch(p)
                             self.ax1.set_xlim(0, k1[0])
@@ -2950,16 +2838,16 @@ class New_layout_engine_dialog(QtGui.QDialog):
         self.ui.Node_ID.setText(label)
         self.ax2.set_position([0.07, 0.07, 0.9, 0.9])
 
-        Names = self.init_fig.keys()
+        Names = list(self.init_fig.keys())
         Names.sort()
-        for k, p in self.init_fig.items():
+        for k, p in list(self.init_fig.items()):
 
             if k[0] == 'T':
                 x = p.get_x()
                 y = p.get_y()
                 self.ax2.text(x + 1, y + 1, k)
                 self.ax2.add_patch(p)
-        for k, p in self.init_fig.items():
+        for k, p in list(self.init_fig.items()):
 
             if k[0] != 'T':
                 x = p.get_x()
@@ -2980,16 +2868,16 @@ class New_layout_engine_dialog(QtGui.QDialog):
 
     def refresh_layout_mode3(self):
         self.ax2.clear()
-        Names = self.init_fig.keys()
+        Names = list(self.init_fig.keys())
         Names.sort()
-        for k, p in self.init_fig.items():
+        for k, p in list(self.init_fig.items()):
 
             if k[0] == 'T':
                 x = p.get_x()
                 y = p.get_y()
                 self.ax2.text(x + 1, y + 1, k)
                 self.ax2.add_patch(p)
-        for k, p in self.init_fig.items():
+        for k, p in list(self.init_fig.items()):
 
             if k[0] != 'T':
                 x = p.get_x()
@@ -2998,7 +2886,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
                 self.ax2.add_patch(p)
 
         data = {"x": [], "y": [], "label": []}
-        for label, coord in self.init_graph[1].items():
+        for label, coord in list(self.init_graph[1].items()):
             data["x"].append(coord[0])
             data["y"].append(coord[1])
             data["label"].append(label)
@@ -3016,7 +2904,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
         y = round(event.mouseevent.ydata, 2)
         self.ax2.plot(x, y, 'o', c='red')
         self.canvas_init.draw()
-        for k, v in self.init_graph[1].items():
+        for k, v in list(self.init_graph[1].items()):
             if ((abs(x - v[0]) <= 0.99 and abs(y - v[1]) <= 0.99)):
                 self.show_node_id(k)
 
@@ -3064,16 +2952,16 @@ class New_layout_engine_dialog(QtGui.QDialog):
             self.ax2 = fig2.add_subplot(111, aspect=1.0)
             self.ax2.plot([0, 1, 2], [1, 2, 3])
         else:
-            Names = fig.keys()
+            Names = list(fig.keys())
             Names.sort()
-            for k, p in fig.items():
+            for k, p in list(fig.items()):
 
                 if k[0] == 'T':
                     x = p.get_x()
                     y = p.get_y()
                     self.ax2.text(x + 1, y + 1, k)
                     self.ax2.add_patch(p)
-            for k, p in fig.items():
+            for k, p in list(fig.items()):
 
                 if k[0] != 'T':
                     x = p.get_x()
@@ -3100,11 +2988,11 @@ class New_layout_engine_dialog(QtGui.QDialog):
         symb_rect_dict = {}
         p_data = layout_data[0]
         # print "p_data",p_data
-        W, H = p_data.keys()[0]
+        W, H = list(p_data.keys())[0]
         W = float(W) / div
         H = float(H) / div
-        rect_dict = p_data.values()[0]
-        for r_id in rect_dict.keys():
+        rect_dict = list(p_data.values())[0]
+        for r_id in list(rect_dict.keys()):
             left = 1e32
             bottom = 1e32
             right = 0
@@ -3135,15 +3023,15 @@ class New_layout_engine_dialog(QtGui.QDialog):
         where symb_rect_dict= {'Symbolic ID': [R1,R2 ... Ri]} where Ri is a Rectangle object
         '''
         layout_symb_dict = {}
-        for layout in self.layout_data.keys():
+        for layout in list(self.layout_data.keys()):
             symb_rect_dict = {}
             p_data = self.layout_data[layout]['Rects']
 
-            W, H = p_data.keys()[0]
+            W, H = list(p_data.keys())[0]
             W = float(W) / div
             H = float(H) / div
-            rect_dict = p_data.values()[0]
-            for r_id in rect_dict.keys():
+            rect_dict = list(p_data.values())[0]
+            for r_id in list(rect_dict.keys()):
                 # print 'rect id',r_id
                 left = 1e32
                 bottom = 1e32
@@ -3168,23 +3056,25 @@ class New_layout_engine_dialog(QtGui.QDialog):
             #print layout_symb_dict[layout]
         return layout_symb_dict
 
+
+
     def _sym_eval_perf(self, sym_info=None):
         sym_layout = self.engine.sym_layout
         perf_plot = [self.perf1, self.perf2]
         if self.opt_algo=="NG-RANDOM": # multiple evaluation
-            print "performance evaluation"
+            print("performance evaluation")
             #total = len(sym_info.keys() * len(self.perf_dict.keys()))
             #print "T",total
-            t = tqdm(total=len(sym_info.keys()*len(self.perf_dict.keys())), ncols=50)
+            t = tqdm(total=len(list(sym_info.keys())*len(list(self.perf_dict.keys()))), ncols=50)
             count = 0
 
-            for p, pdraw in zip(self.perf_dict.keys(), perf_plot):
+            for p, pdraw in zip(list(self.perf_dict.keys()), perf_plot):
                 perf = self.perf_dict[p]
 
                 measure = perf['measure']
 
-                for i in range(len(sym_info.keys())):
-                    layout = sym_info.keys()[i]
+                for i in range(len(list(sym_info.keys()))):
+                    layout = list(sym_info.keys())[i]
                     symb_rect_dict = sym_info[layout]['sym_info']
                     dims = sym_info[layout]['Dims']
                     bp_dims = [dims[0] + 4, dims[1] + 4]
@@ -3198,7 +3088,7 @@ class New_layout_engine_dialog(QtGui.QDialog):
                     self.update_perf_values(perf=perf,pdraw=pdraw,measure=measure,sym_layout=sym_layout)
         elif self.opt_algo=="NSGAII": # single evaluation
             ret = []
-            for p, pdraw in zip(self.perf_dict.keys(), perf_plot):
+            for p, pdraw in zip(list(self.perf_dict.keys()), perf_plot):
                 perf = self.perf_dict[p]
                 measure = perf['measure']
                 val= self.update_perf_values(perf=perf, pdraw=pdraw, measure=measure, sym_layout=sym_layout)
@@ -3500,8 +3390,8 @@ class ET_standalone_Dialog(QtGui.QDialog):
             self.parent.seed=self.seed
 
         except:
-            print "Please enter an integer seed"
-            print "ERROR: Invalid Information"
+            print("Please enter an integer seed")
+            print("ERROR: Invalid Information")
             return
     def layout_gen_param_setup(self):
         #if self.parent.num_layouts==0:
@@ -3510,8 +3400,8 @@ class ET_standalone_Dialog(QtGui.QDialog):
             self.parent.num_layouts=self.num_of_layouts
 
         except:
-            print "Please enter Num of Layouts greater than 0"
-            print "ERROR: Invalid Information"
+            print("Please enter Num of Layouts greater than 0")
+            print("ERROR: Invalid Information")
             return
 
     def opt_algo_handler(self):
@@ -3567,7 +3457,7 @@ class ET_standalone_Dialog(QtGui.QDialog):
         self.ui.tbl_perf_list.clearContents()
         self.ui.tbl_perf_list.setRowCount(0)
         row_id = 0
-        for p_k in self.perf_dict.keys():
+        for p_k in list(self.perf_dict.keys()):
             perf = self.perf_dict[p_k]
             self.ui.tbl_perf_list.insertRow(row_id)
             self.ui.tbl_perf_list.setItem(row_id, 0, QtGui.QTableWidgetItem())
@@ -3584,9 +3474,9 @@ class ET_standalone_Dialog(QtGui.QDialog):
 
     def add_perf(self):
 
-        if len(self.perf_dict.keys()) < 2:
+        if len(list(self.perf_dict.keys())) < 2:
             if self.ui.Tab_model_select.currentIndex() == 0:
-                print "Add thermal performance"
+                print("Add thermal performance")
                 perf_name = str(self.ui.txt_perfname.text())
                 type = 'Thermal'
                 mdl_str = str(self.ui.cmb_thermal_mdl.currentText())
@@ -3623,7 +3513,7 @@ class ET_standalone_Dialog(QtGui.QDialog):
                 else:
                     QtGui.QMessageBox.about(self, "Reminder", "Please select devices for measurement")
             if self.ui.Tab_model_select.currentIndex() == 1:
-                print "Add electrical performance"
+                print("Add electrical performance")
                 perf_name = str(self.ui.txt_perfname.text())
                 type = 'Electrical'
                 mdl_str = str(self.ui.cmb_electrical_mdl.currentText())
@@ -3652,10 +3542,10 @@ class ET_standalone_Dialog(QtGui.QDialog):
                         measure_type = 2
                     if eval_type == "Resistance":
                         measure_type = 1
-                    measure = ElectricalMeasure(pt1=pt1, pt2=pt2, name=perf_name ,mdl=mdl,
-                                                src_sink_type=[src_type,sink_type], device_state=self.dev_df,
-                                                measure=measure_type)
-                    print "add to perf", measure.pt1,measure.pt2
+                    measure = ElectricalMeasure(pt1=pt1, pt2=pt2, name=perf_name, mdl=mdl,
+                                                src_sink_type=[src_type, sink_type],
+                                                device_state=self.dev_df, measure=measure_type)
+                print("add to perf", measure.pt1,measure.pt2)
                 self.perf_dict[perf_name] = {'type': type, 'measure': measure, 'Eval': eval_type}
                 row_id = self.ui.tbl_perf_list.rowCount()
 
@@ -3712,7 +3602,7 @@ class ET_standalone_Dialog(QtGui.QDialog):
             opt_setup = load_file(filename[0])
         except:
             opt_setup=None
-            print "upload a valid optimization setup file"
+            print("upload a valid optimization setup file")
         if opt_setup!=None:
             #print opt_setup.perf_table
             # thermal
@@ -3726,7 +3616,7 @@ class ET_standalone_Dialog(QtGui.QDialog):
                     if dev.name == dev_key:
                         self.ui.tbl_thermal_data.cellWidget(row, 2).setChecked(1)
         except:
-            print "WRONG SETUP"
+            print("WRONG SETUP")
         # electrical
         if opt_setup != None:
             self.ui.cmb_electrical_mdl.setCurrentIndex(opt_setup.electrical_mode)
@@ -3756,7 +3646,7 @@ class ET_standalone_Dialog(QtGui.QDialog):
 
 
     def save_opt_setup(self):
-        print "save setup"
+        print("save setup")
 
 
 
@@ -3765,7 +3655,7 @@ class ET_standalone_Dialog(QtGui.QDialog):
         try:
             opt_setup.thermal_dev_tbl = self.thermal_dev_sel
         except:
-            print "ERROR in optimization setup"
+            print("ERROR in optimization setup")
         mdl_str = str(self.ui.cmb_thermal_mdl.currentText())
         eval_type = str(self.ui.cmb_thermal_type.currentText())
 
@@ -3824,7 +3714,7 @@ class ET_standalone_Dialog(QtGui.QDialog):
             filename = QFileDialog.getSaveFileName(self, "Save optimziation options", "C://", "Opt Setup (*.log)")
             save_file(opt_setup,filename[0])
         except:
-            print"Try to save optimization setup file in a valid format"
+            print("Try to save optimization setup file in a valid format")
 
         #filename = QFileDialog.getSaveFileName(self,"Save symlayout", "C://", "Opt Setup (*.sol)")
         #save_file(self.parent.engine.sym_layout,filename[0])
